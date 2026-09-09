@@ -950,8 +950,13 @@ function refreshCard(){
   // Re-run the real model over a hypothetical line for this one player.
   const add=parseFloat($("pcslider").value)||0;
   const base=evaluate(L.cells.map(x=>({...x})),{});
+  // Move the expected *final* total, not the banked total. Adding to `scored`
+  // alone just converts points he was already expected to score into points
+  // already scored, which leaves the margin exactly where it was - the slider
+  // moved and nothing happened. Raising both keeps his remaining projection
+  // intact and shifts the finish line by `add`, at any point in his game.
   const hypo=evaluate(L.cells.map(x=>x.id===c.id
-      ?{...x,scored:x.scored+add,projected:Math.max(x.projected,x.scored+add)}
+      ?{...x,scored:x.scored+add,projected:x.projected+add}
       :{...x}),{});
   const d=(hypo.winProb-base.winProb)*100;
   setText($("pcdelta"),(add>=0?"+":"")+add.toFixed(1)+" pts");
