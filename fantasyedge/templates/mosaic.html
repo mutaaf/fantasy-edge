@@ -75,10 +75,10 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
 .team.a .pts{color:var(--you)}.team.b .pts{color:var(--opp)}
 .team .proj{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-top:4px}
 .odds{text-align:center;min-width:132px}
-.odds .pct{font-size:42px;font-weight:800;line-height:1;letter-spacing:-.03em;
+.odds .pct{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.03em;
   font-variant-numeric:tabular-nums}
-.odds .cap{font-family:var(--cond);font-size:11px;color:var(--ink-faint);
-  letter-spacing:.16em;text-transform:uppercase;margin-top:3px}
+.odds .cap{font-family:var(--cond);font-size:10.5px;color:var(--ink-faint);
+  letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
 .probbar{height:6px;background:var(--opp);overflow:hidden;display:flex;
   border-radius:var(--r-chip)}
 .probbar[hidden]{display:none!important}
@@ -210,6 +210,14 @@ body.noimg .mono,.tile.noshot .mono{display:block}
 body.noimg .face img{display:none}
 .face .ini{display:none}
 body.noimg .face .ini,.face.noshot .ini{display:flex}
+.lc-pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lc-pick select{font-family:var(--ui);font-size:12.5px;font-weight:600;
+  background:rgba(255,255,255,.10);color:var(--ink);border:1px solid var(--hair-2);
+  border-radius:var(--r-chip);padding:5px 11px;cursor:pointer;max-width:220px}
+.lc-pick .lc-pk{font-family:var(--cond);font-size:10.5px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint)}
+.lcell.unset{border-color:var(--hot)}
+.lcell.unset .lc-pk{color:var(--hot)}
 .lc-lead{font-family:var(--cond);font-size:12px;font-weight:600;color:var(--ink-dim);
   letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
@@ -377,14 +385,19 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
 .sweep i{position:absolute;inset:-40% auto;width:36%;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.10) 46%,transparent);
   animation:sweep 1.5s var(--ease)}
-.odds{position:relative}
-.odds svg{position:absolute;left:50%;top:calc(50% - 7px);transform:translate(-50%,-50%);
-  width:112px;height:112px;pointer-events:none;overflow:visible}
+/* The ring belongs around the number, not across the label under it. Giving
+   it its own square keeps the two from ever colliding at any type size. */
+.odds{display:flex;flex-direction:column;align-items:center;gap:7px}
+.odds-ring{position:relative;width:104px;height:104px;display:grid;place-items:center;
+  flex:none}
+.odds-ring svg{position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;overflow:visible}
 .odds svg circle{fill:none;stroke-linecap:round}
 .odds .ring-bg{stroke:rgba(255,255,255,.10);stroke-width:3}
 .odds .ring-fg{stroke:var(--you);stroke-width:3;
   filter:drop-shadow(0 0 6px var(--you));transition:stroke-dashoffset .8s var(--ease)}
-.odds .pct,.odds .cap{position:relative;z-index:2}
+.odds .pct{position:relative;z-index:2;margin:0}
+.odds .cap{position:relative;z-index:2;margin:0}
 .hudline{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--ink-faint)}
 
@@ -417,7 +430,7 @@ body.tv .b-md .t-name{font-size:23px}
 body.tv .b-sm{grid-column:span 1;grid-row:span 1}body.tv .b-sm .t-pts{font-size:31px}
 body.tv .b-sm .t-name{font-size:19px}
 body.tv h1{font-size:44px}body.tv .team .pts{font-size:90px}body.tv .team .nm{font-size:20px}
-body.tv .odds .pct{font-size:58px}body.tv .t-state{font-size:15px}body.tv .pos{font-size:13px}
+body.tv .odds .pct{font-size:46px}body.tv .odds-ring{width:140px;height:140px}body.tv .t-state{font-size:15px}body.tv .pos{font-size:13px}
 body.tv .lcell{grid-column:span 6}body.tv .lc-name{font-size:32px}
 body.tv .lc-pts{font-size:56px}body.tv .face{width:58px;height:58px}
 body.tv .face.lead{width:74px;height:74px}body.tv .lc-lead{font-size:16px}
@@ -508,6 +521,39 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
    doubt, so the board stops pretending otherwise and shows judgement instead:
    what is expected, when it starts, and how well the projections doing the
    sizing have actually done. */
+/* ── the day bar ───────────────────────────────────────────
+   The parent board answers "which league" but not "what is my day". This
+   does: every league at once, what is still to play, what needs attention.
+   Each figure is one the board can defend - nothing here is a vibe. */
+.daybar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;margin-top:4px}
+.daybar[hidden]{display:none!important}
+.db{background:var(--card);border:1px solid var(--hair);border-radius:16px;
+  padding:13px 15px;backdrop-filter:blur(30px) saturate(1.7);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset}
+.db-k{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.db-v{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px;
+  font-variant-numeric:tabular-nums;line-height:1.05}
+.db-n{font-size:11.5px;color:var(--ink-dim);margin-top:3px;line-height:1.35}
+.db.good .db-v{color:var(--you)}
+.db.act{border-color:var(--hot)}
+.db.act .db-v{color:var(--hot)}
+.db.act .db-k{color:var(--hot)}
+body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-size:15px}
+
+.teampick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--hair);border-radius:16px;
+  padding:12px 16px;margin-top:16px;backdrop-filter:blur(30px) saturate(1.7)}
+.teampick[hidden]{display:none!important}
+.teampick .tp-k{font-family:var(--cond);font-size:11px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.teampick select{font-family:var(--ui);font-size:14px;font-weight:600;
+  background:rgba(255,255,255,.10);color:var(--ink);border:1px solid var(--hair-2);
+  border-radius:var(--r-chip);padding:8px 13px;cursor:pointer;max-width:min(60vw,320px)}
+.teampick select:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.teampick.unset{border-color:var(--hot);box-shadow:0 0 30px rgba(255,214,10,.16)}
+.teampick.unset .tp-k{color:var(--hot)}
 .pregame{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
   gap:12px;margin-top:16px}
 .pregame[hidden]{display:none!important}
@@ -550,13 +596,15 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
     <div class="team a"><div class="nm" id="youname">You</div>
       <div class="pts" id="youpts">0.0</div><div class="proj" id="youproj">proj 0.0</div></div>
     <div class="odds">
-      <svg viewBox="0 0 112 112" aria-hidden="true">
-        <circle class="ring-bg" cx="56" cy="56" r="50"></circle>
-        <circle class="ring-fg" id="ring" cx="56" cy="56" r="50"
-                transform="rotate(-90 56 56)" stroke-dasharray="314.16"
-                stroke-dashoffset="157"></circle>
-      </svg>
-      <div class="pct" id="odds">50%</div>
+      <div class="odds-ring">
+        <svg viewBox="0 0 112 112" aria-hidden="true">
+          <circle class="ring-bg" cx="56" cy="56" r="50"></circle>
+          <circle class="ring-fg" id="ring" cx="56" cy="56" r="50"
+                  transform="rotate(-90 56 56)" stroke-dasharray="314.16"
+                  stroke-dashoffset="157"></circle>
+        </svg>
+        <div class="pct" id="odds">50%</div>
+      </div>
       <div class="cap">win probability</div></div>
     <div class="team b"><div class="nm" id="oppname">Opponent</div>
       <div class="pts" id="opppts">0.0</div><div class="proj" id="oppproj">proj 0.0</div></div>
@@ -566,7 +614,12 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
     <span id="clock">pre-game</span><span id="intensity"></span><span id="src">simulated feed</span>
   </div>
 
+  <div class="daybar" id="daybar" hidden></div>
   <div class="lgrid" id="lgrid"></div>
+  <div class="teampick" id="teampick" hidden>
+    <span class="tp-k" id="tp-label">Your team</span>
+    <select id="tp-select" aria-label="Which team is yours"></select>
+  </div>
   <div class="pregame" id="pregame" hidden></div>
   <div class="rfilters" id="mmodes" hidden>
     <button class="chip" data-m="matchup" aria-pressed="true">Matchup</button>
@@ -725,10 +778,41 @@ function simSnapshot(sim,minute){
   return out;}
 
 /* ── state ─────────────────────────────────────────────────────────── */
-const leagues=(DATA.leagues||[]).map(L=>({
-  ...L, cells:[...L.you.starters.map(p=>({...p,side:"you"})),
-               ...L.opp.starters.map(p=>({...p,side:"opp"}))],
-  roster:(L.roster||[]).map(p=>({...p}))}));
+/* ── whose board is this ───────────────────────────────────────────────
+   Without ESPN_SWID the server cannot know which team belongs to the viewer,
+   and its fallback is whichever team sorts first - which quietly puts a
+   stranger's roster under the word "you". So the choice lives here, is asked
+   for once per league, and is remembered. The payload ships the whole bracket
+   so switching teams is instant and needs no round trip. */
+const TEAMKEY=id=>"fe.team."+id;
+function savedTeam(L){
+  try{const v=localStorage.getItem(TEAMKEY(L.id));
+      if(v&&L.teams.some(t=>String(t.teamId)===v))return v;}catch(_){}
+  return null;}
+function setTeam(L,tid){
+  try{localStorage.setItem(TEAMKEY(L.id),String(tid));}catch(_){}
+  L.myTeam=String(tid);rebuild(L);}
+
+function rebuild(L){
+  const me=String(L.myTeam);
+  const opp=L.matchups?String(L.matchups[me]||""):"";
+  const side=(tid,which)=>(L.roster||[])
+    .filter(r=>String(r.teamId)===String(tid)&&r.started)
+    .map(p=>({...p,side:which}));
+  const nameOf=tid=>{
+    const t=(L.teams||[]).find(x=>String(x.teamId)===String(tid));
+    return t?String(t.name).trim():"";};
+  L.you={teamId:me,name:nameOf(me),starters:side(me,"you")};
+  L.opp=opp?{teamId:opp,name:nameOf(opp),starters:side(opp,"opp")}:null;
+  L.cells=[...L.you.starters,...(L.opp?L.opp.starters:[])];
+  return L;}
+
+const leagues=(DATA.leagues||[]).map(L=>{
+  const o={...L,roster:(L.roster||[]).map(p=>({...p})),
+           teams:(L.teams||[]).map(t=>({...t,name:String(t.name).trim()}))};
+  o.myTeam=savedTeam(o)||String(L.you.teamId);
+  o.chosen=!!savedTeam(o);
+  return rebuild(o);});
 // Every object that needs a live line - starters and bench alike. A player can
 // appear twice (once in a matchup, once in the rankings) and both must agree.
 const allPlayers=[];
@@ -776,6 +860,48 @@ function faceNode(c,lead){
   f.appendChild(i);
   return f;}
 
+function renderDaybar(evals){
+  const box=$("daybar");
+  if(!evals.length){box.hidden=true;return;}
+  box.hidden=false;
+  let ahead=0,proj=0,toPlay=0,playing=0,done=0,unset=0,byes=0;
+  let nextKick=null;
+  for(const {L,m} of evals){
+    if(m.winProb>=0.5)ahead++;
+    proj+=m.yourProjected;
+    if(!L.chosen)unset++;
+    for(const c of L.cells){
+      if(c.side!=="you")continue;
+      if(c.state==="BYE"){byes++;continue;}
+      if(c.remaining>=1)toPlay++;
+      else if(c.remaining<=0)done++;
+      else playing++;
+      const g=gameInfo[c.team];
+      if(g&&g.state==="pre"&&g.kickoff&&(!nextKick||g.kickoff<nextKick))
+        nextKick=g.kickoff;}}
+  const cards=[
+    ["Leagues", String(evals.length),
+     `${ahead} ahead · ${evals.length-ahead} behind`, ahead>evals.length/2?"good":""],
+    ["Projected today", nf(proj),
+     "your combined starters across every league", ""],
+    ["Yet to play", String(toPlay),
+     playing?`${playing} in progress · ${done} final`:`${done} final`, ""],
+    ["Next kickoff", nextKick?KICK(nextKick):"—",
+     "earliest game with a starter of yours in it", ""],
+  ];
+  if(unset)
+    cards.push(["Pick your team", String(unset),
+      `${unset} league${unset===1?"":"s"} still showing somebody else's roster`, "act"]);
+  if(byes)
+    cards.push(["Starters on bye", String(byes),
+      "starting a player with no game this week", "act"]);
+  const key=cards.map(c=>c[1]).join("|");
+  if(box.dataset.k===key)return;
+  box.dataset.k=key;
+  box.innerHTML=cards.map(([k,v,n,cls])=>
+    `<div class="db ${cls}"><div class="db-k">${k}</div>`+
+    `<div class="db-v">${v}</div><div class="db-n">${n}</div></div>`).join("");}
+
 function makeLeagueCell(L){
   const el=document.createElement("button");
   el.className="lcell";el.dataset.id=L.id;
@@ -785,7 +911,17 @@ function makeLeagueCell(L){
       `<div class="lc-side a"><div class="lc-team"></div><div class="lc-pts"></div></div>`+
       `<div class="lc-odds"></div>`+
       `<div class="lc-side b"><div class="lc-team"></div><div class="lc-pts"></div></div></div>`+
-    `<div class="lc-bar"><i></i></div><div class="faces"></div><div class="lc-lead"></div>`;
+    `<div class="lc-bar"><i></i></div><div class="faces"></div>`+
+    `<div class="lc-pick"><span class="lc-pk">You</span>`+
+    `<select aria-label="Your team in this league"></select></div>`+
+    `<div class="lc-lead"></div>`;
+  const sel=el.querySelector(".lc-pick select");
+  sel.addEventListener("click",ev=>ev.stopPropagation());   // do not open the league
+  sel.addEventListener("change",ev=>{
+    ev.stopPropagation();
+    L.chosen=true;setTeam(L,ev.target.value);
+    lnodes.delete(L.id);lgrid.replaceChildren();
+    draw(clockMinute());});
   el.querySelector(".lc-name").textContent=L.league;
   el.querySelector(".lc-side.a .lc-team").textContent=L.you.name;
   el.querySelector(".lc-side.b .lc-team").textContent=L.opp.name;
@@ -806,6 +942,14 @@ function renderLeagues(minute){
     setText(el.querySelector(".lc-side.b .lc-pts"),nf(m.oppScore));
     setText(el.querySelector(".lc-odds"),Math.round(m.winProb*100)+"%");
     el.querySelector(".lc-bar i").style.width=(m.winProb*100)+"%";
+    el.classList.toggle("unset",!L.chosen);
+    const sel=el.querySelector(".lc-pick select");
+    const pk=(L.teams||[]).map(t=>t.teamId).join(",")+"|"+L.myTeam;
+    if(sel.dataset.k!==pk){sel.dataset.k=pk;
+      sel.innerHTML=(L.teams||[]).map(t=>
+        `<option value="${t.teamId}"${String(t.teamId)===String(L.myTeam)?" selected":""}>`+
+        `${t.name}</option>`).join("");}
+    setText(el.querySelector(".lc-pk"),L.chosen?"You":"Pick your team");
     const faces=el.querySelector(".faces");
     const mine=m.cells.filter(c=>c.side==="you").slice(0,8);
     if(faces.dataset.k!==mine.map(c=>c.id).join(",")){
@@ -822,6 +966,7 @@ function renderLeagues(minute){
     lgrid.appendChild(el);                 // reorders, never recreates
   });
   applySpatial(lgrid);
+  renderDaybar(evals);
   const hot=evals[0];
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
@@ -900,7 +1045,7 @@ function renderLeague(minute,statsOnly){
     el.dataset.hot=c.share>0.075?"1":"0";
     grid.appendChild(el);});
   applySpatial(grid);
-  renderPregame(L,m);
+  renderPicker(L);renderPregame(L,m);
   // the room glows in the colours of the two cells that matter most
   {const lead=shown[0]||{},foil=shown.find(x=>x.side!==lead.side)||shown[1]||lead;
    setAmbience(lead.color||"#0A84FF",(foil&&foil.color)||"#D50A0A");}
@@ -1192,7 +1337,8 @@ function showView(){
   // the parent level from ever being half-dressed in a league's chrome.
   if(!openLeague){
     $("viewseg").hidden=true;$("rank").hidden=true;grid.hidden=true;
-    $("mmodes").hidden=true;$("pregame").hidden=true;
+    $("mmodes").hidden=true;$("pregame").hidden=true;$("teampick").hidden=true;
+    $("daybar").hidden=false;
     $("score").hidden=true;$("pbwrap").hidden=true;lgrid.hidden=false;
     draw(clockMinute());return;}
   const board=view==="board";
@@ -1251,6 +1397,27 @@ function subLine(c,phase){
     return `${c.team} · ${c.started?"starting":"bench"} · proj ${nf(c.projected)}`;
   return `${c.team} · proj ${nf(c.projected)} · lev ${(c.share*100).toFixed(1)}%`;}
 
+function renderPicker(L){
+  const box=$("teampick"),sel=$("tp-select");
+  box.hidden=false;
+  box.classList.toggle("unset",!L.chosen);
+  setText($("tp-label"),L.chosen?"Your team":"Which team is yours?");
+  const key=(L.teams||[]).map(t=>t.teamId).join(",")+"|"+L.myTeam;
+  if(sel.dataset.k!==key){
+    sel.dataset.k=key;
+    sel.innerHTML=(L.teams||[]).map(t=>
+      `<option value="${t.teamId}"${String(t.teamId)===String(L.myTeam)?" selected":""}>`+
+      `${t.name}</option>`).join("");}
+}
+$("tp-select").addEventListener("change",e=>{
+  const L=leagues.find(x=>x.id===openLeague);if(!L)return;
+  L.chosen=true;setTeam(L,e.target.value);
+  bands={};tnodes.clear();grid.replaceChildren();
+  rnodes.clear();rtable.replaceChildren();
+  $("youname").textContent=L.you.name;
+  $("oppname").textContent=L.opp?L.opp.name:"—";
+  draw(clockMinute());});
+
 function renderPregame(L,m){
   const box=$("pregame");
   if(m.phase!=="pre"){box.hidden=true;return;}
@@ -1299,7 +1466,8 @@ const cellById=id=>{
 
 function draw(minute){
   if(!openLeague){renderLeagues(minute);}
-  else if(view==="rank"){renderLeague(minute,true);renderRank();}
+  else if(view==="rank"){renderLeague(minute,true);renderPicker(
+    leagues.find(x=>x.id===openLeague));renderRank();}
   else{renderLeague(minute);}
   if(!veil.hidden)refreshCard();       // the card is live too
 }
@@ -1310,6 +1478,7 @@ function openLeagueView(id){
   $("title").textContent=L.league;
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
+  $("daybar").hidden=true;
   $("back").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
   rnodes.clear();rtable.replaceChildren();
@@ -1320,7 +1489,8 @@ function backToLeagues(){
   $("title").textContent="All leagues";$("wk").textContent="";
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
   $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
-  $("pregame").hidden=true;lgrid.hidden=false;grid.hidden=true;
+  $("pregame").hidden=true;$("teampick").hidden=true;
+  lgrid.hidden=false;grid.hidden=true;
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);

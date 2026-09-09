@@ -400,8 +400,20 @@ class Api:
                    "logo": livemod.logo_url(r["team"])}
                   for r in rows]
 
+        # Every pairing this week, not just yours. Without ESPN_SWID there is no
+        # way to know which team is the user's, and guessing puts a stranger's
+        # roster on the board under the word "you". Shipping the whole bracket
+        # lets the client switch teams instantly and without asking again.
+        pairs = {}
+        for row in store.q(
+                "SELECT team_id, opponent_id FROM matchup WHERE provider=? "
+                "AND league_id=? AND season=? AND week=?",
+                (provider, str(league), season, week)):
+            if row["opponent_id"]:
+                pairs[str(row["team_id"])] = str(row["opponent_id"])
+
         return {"provider": provider, "leagueId": str(league), "season": season,
-                "week": week, "roster": roster,
+                "week": week, "roster": roster, "matchups": pairs,
                 "you": {"teamId": want, "name": names.get(want, want),
                         "starters": side(want)},
                 "opp": ({"teamId": opp, "name": names.get(opp, opp),
@@ -451,6 +463,7 @@ class Api:
                         "name": (m["opp"]["name"] or "").strip(),
                         "starters": m["opp"]["starters"]},
                 "roster": m["roster"], "priors": m["priors"],
+                "matchups": m["matchups"], "teams": m["teams"],
                 "accuracy": accuracy,
             })
         if not out:
