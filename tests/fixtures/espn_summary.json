@@ -1,0 +1,117 @@
+{
+ "boxscore": {
+  "players": [
+   {
+    "team": {
+     "abbreviation": "AAA"
+    },
+    "statistics": [
+     {
+      "name": "passing",
+      "keys": [
+       "completions/passingAttempts",
+       "passingYards",
+       "yardsPerPassAttempt",
+       "passingTouchdowns",
+       "interceptions"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "3139477",
+         "displayName": "Patrick Mahomes"
+        },
+        "stats": [
+         "22/31",
+         "264",
+         "8.5",
+         "2",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "2577417",
+         "displayName": "Dak Prescott"
+        },
+        "stats": [
+         "18/29",
+         "198",
+         "6.8",
+         "1",
+         "2"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "receiving",
+      "keys": [
+       "receptions",
+       "receivingYards",
+       "yardsPerReception",
+       "receivingTouchdowns",
+       "longReception",
+       "receivingTargets"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4258173",
+         "displayName": "Nico Collins"
+        },
+        "stats": [
+         "8",
+         "112",
+         "14.0",
+         "1",
+         "38",
+         "11"
+        ]
+       },
+       {
+        "athlete": {
+         "id": "4241389",
+         "displayName": "CeeDee Lamb"
+        },
+        "stats": [
+         "3",
+         "29",
+         "9.7",
+         "0",
+         "12",
+         "7"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "rushing",
+      "keys": [
+       "rushingAttempts",
+       "rushingYards",
+       "yardsPerRushAttempt",
+       "rushingTouchdowns",
+       "longRushing"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "4430807",
+         "displayName": "Bijan Robinson"
+        },
+        "stats": [
+         "16",
+         "84",
+         "5.3",
+         "1",
+         "22"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

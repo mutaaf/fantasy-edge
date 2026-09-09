@@ -202,6 +202,8 @@ class SimulatedSource(LiveSource):
 
 SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl"
               "/scoreboard{q}")
+SUMMARY = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl"
+           "/summary?event={event}")
 GAME_LENGTH_MIN = 60.0          # four quarters of game clock
 
 
@@ -222,27 +224,49 @@ class EspnLiveSource(LiveSource):
     board needs before kickoff and between plays.
     """
 
-    def __init__(self, players: list[dict], ttl: float = 20.0, http=None):
+    def __init__(self, players: list[dict], ttl: float = 20.0, http=None,
+                 scoring=None, box_ttl: float = 25.0):
         self.players = [{"id": str(p["player_id"]), "team": p.get("team") or "FA",
                          "projected": float(p.get("projected") or 0.0)}
                         for p in players]
         self.ttl = ttl
+        self.box_ttl = box_ttl
         self._http = http
         self._cache: dict | None = None
         self._at = 0.0
         self._fail_until = 0.0
+        self._boxes: dict[str, tuple[float, dict]] = {}
+        if scoring is None:
+            from .scoring import Scoring
+            scoring = Scoring()
+        self.scoring = scoring
 
-    def _fetch(self, q: str = "") -> dict:
+    def _fetch(self, url: str) -> dict:
+        """One way in, so a captured payload stands in for every endpoint.
+
+        ESPN's edge rate-limits an address that polls too eagerly, and being
+        able to point at real recorded data is the difference between
+        developing against the truth and developing against a simulator. The
+        override covers box scores too - a slate that moves but never scores is
+        exactly as misleading as a simulator.
+        """
         if self._http is not None:                 # injected for tests
-            return self._http(SCOREBOARD.format(q=q))
-        # A captured payload stands in for the live endpoint. ESPN's edge will
-        # rate-limit an address that polls too eagerly, and being able to point
-        # at a real recorded slate is the difference between developing against
-        # the truth and developing against a simulator.
-        path = os.environ.get("FANTASYEDGE_SCOREBOARD_FILE")
-        if path:
-            return json.loads(pathlib.Path(path).read_text())
-        return _get_json(SCOREBOARD.format(q=q))
+            return self._http(url)
+        if "summary?event=" in url:
+            event = url.split("summary?event=", 1)[1].split("&")[0]
+            d = os.environ.get("FANTASYEDGE_SUMMARY_DIR")
+            if d:
+                f = pathlib.Path(d) / f"{event}.json"
+                if f.exists():
+                    return json.loads(f.read_text())
+            one = os.environ.get("FANTASYEDGE_SUMMARY_FILE")
+            if one:
+                return json.loads(pathlib.Path(one).read_text())
+        else:
+            path = os.environ.get("FANTASYEDGE_SCOREBOARD_FILE")
+            if path:
+                return json.loads(pathlib.Path(path).read_text())
+        return _get_json(url)
 
     def scoreboard(self) -> dict:
         """The raw slate, cached. A 403 backs off rather than retrying hot."""
@@ -252,7 +276,7 @@ class EspnLiveSource(LiveSource):
         if now < self._fail_until:
             return self._cache or {"events": []}
         try:
-            data = self._fetch()
+            data = self._fetch(SCOREBOARD.format(q=""))
             self._cache, self._at, self._fail_until = data, now, 0.0
         except Exception:
             # Back off hard: the edge blocks an IP that keeps knocking.
@@ -260,6 +284,51 @@ class EspnLiveSource(LiveSource):
             if self._cache is None:
                 self._cache, self._at = {"events": []}, now
         return self._cache
+
+    def _events(self) -> list[tuple[str, str, list[str]]]:
+        """(event id, state, club abbreviations) for this week's slate."""
+        out = []
+        for ev in (self.scoreboard().get("events") or []):
+            comp = (ev.get("competitions") or [{}])[0]
+            state = ((comp.get("status") or {}).get("type") or {}).get("state") or "pre"
+            clubs = [((c.get("team") or {}).get("abbreviation") or "").upper()
+                     for c in (comp.get("competitors") or [])]
+            if ev.get("id"):
+                out.append((str(ev["id"]), state, [c for c in clubs if c]))
+        return out
+
+    def boxscores(self) -> dict[str, float]:
+        """Fantasy points per athlete, for games that have actually started.
+
+        Only in-progress and finished games are fetched, and each is cached on
+        its own clock, because this is the expensive half of the feed: one call
+        per game rather than one for the slate. On a Sunday afternoon that is a
+        dozen or so requests a minute at worst, which the edge tolerates; asking
+        for all sixteen every poll is how an address gets blocked.
+
+        A finished game is fetched once and then held - its numbers cannot
+        change again, so re-asking is pure waste.
+        """
+        from .scoring import score_boxscore
+
+        now = time.time()
+        points: dict[str, float] = {}
+        for event, state, _clubs in self._events():
+            if state == "pre":
+                continue                       # nothing to score yet
+            hit = self._boxes.get(event)
+            fresh = hit and (state == "post" or now - hit[0] < self.box_ttl)
+            if not fresh:
+                try:
+                    data = self._fetch(SUMMARY.format(event=event))
+                    hit = (now, score_boxscore(data, self.scoring))
+                    self._boxes[event] = hit
+                except Exception:
+                    # keep whatever we had; a single bad game must not blank a board
+                    hit = hit or (now, {})
+                    self._boxes[event] = (now, hit[1])
+            points.update(hit[1])
+        return points
 
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
@@ -291,6 +360,10 @@ class EspnLiveSource(LiveSource):
 
     def snapshot(self, at: float | None = None) -> dict:
         g = self.games()
+        # Fantasy ids and site athlete ids are the same numbers for real people.
+        # Team defences are negative in fantasy and absent from a box score, so
+        # they stay unscored rather than being invented.
+        pts = self.boxscores() if any(v["state"] != "pre" for v in g.values()) else {}
         # No slate means the feed is unreachable, not that the league is on bye.
         # Saying "BYE" would be a definite claim the data does not support, so
         # an unavailable feed degrades to "not started" and says so out loud.
@@ -303,14 +376,21 @@ class EspnLiveSource(LiveSource):
             elif info is None:                     # club genuinely has no game
                 players[p["id"]] = {"s": 0.0, "r": 0.0, "g": "BYE"}
             else:
-                players[p["id"]] = {"s": 0.0,
-                                    "r": round(1.0 - info["played"], 4),
-                                    "g": info["label"]}
+                # Points only count once that player's own game has started.
+                # A real box score cannot report otherwise, but a stale or
+                # hand-made one can, and "12.4 points, PRE" is incoherent on a
+                # board - it reads as a bug in the scoring, not in the feed.
+                started = info["state"] != "pre"
+                players[p["id"]] = {
+                    "s": float(pts.get(p["id"], 0.0)) if started else 0.0,
+                    "r": round(1.0 - info["played"], 4),
+                    "g": info["label"]}
         sb = self.scoreboard()
         payload = {
             "asOf": 0.0,
             "window": (sb.get("week") or {}).get("number", 0),
             "source": "espn" if ok else "espn-unavailable",
+            "scored": len(pts),
             "games": g,
             "players": players,
         }

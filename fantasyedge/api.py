@@ -305,7 +305,15 @@ class Api:
                 src = livemod.SimulatedSource(players, seed=7, speed=90.0,
                                               start=time.time() - 100.0)
             else:
-                src = livemod.EspnLiveSource(players)
+                # The league's own scoring, so a half-PPR board is not told it
+                # is winning by a point it does not actually score.
+                from .cli import load_config
+                from .scoring import Scoring
+                try:
+                    rules = Scoring.from_config(load_config())
+                except Exception:
+                    rules = Scoring()
+                src = livemod.EspnLiveSource(players, scoring=rules)
             with self._lock:
                 self._live = src
         return src

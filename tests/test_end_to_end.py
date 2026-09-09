@@ -913,6 +913,152 @@ class TestEspnLiveSource(unittest.TestCase):
         self.assertEqual(len(calls), 1, "the edge blocks an address that keeps knocking")
 
     def test_snapshot_still_carries_no_user_context(self):
+        """`scored` is a count of how many athletes the box scores covered - a
+        property of the slate, not of whoever is asking. Everything here must
+        stay that way or the payload stops being cacheable for everyone."""
         snap = self.source().snapshot()
-        self.assertEqual(set(snap),
-                         {"asOf", "window", "source", "games", "players", "version"})
+        self.assertEqual(set(snap), {"asOf", "window", "source", "games",
+                                     "players", "version", "scored"})
+        for v in snap["players"].values():
+            self.assertEqual(set(v), {"s", "r", "g"})
+
+
+class TestScoring(unittest.TestCase):
+    """A box score reports football; a fantasy board needs points. This is the
+    translation, and getting a weight wrong is invisible on screen."""
+
+    def setUp(self):
+        from fantasyedge import scoring
+
+        self.sc = scoring
+        self.fixture = json.loads((FIX / "espn_summary.json").read_text())
+
+    def test_known_lines_score_correctly(self):
+        s = self.sc.Scoring()
+        # 264 pass yds (10.56) + 2 TD (8)
+        self.assertAlmostEqual(
+            s.points({"passingYards": 264, "passingTouchdowns": 2}), 18.56, places=2)
+        # 8 rec (8) + 112 yds (11.2) + 1 TD (6)
+        self.assertAlmostEqual(
+            s.points({"receptions": 8, "receivingYards": 112,
+                      "receivingTouchdowns": 1}), 25.2, places=2)
+        # 198 yds (7.92) + 1 TD (4) - 2 INT (4) nets back to the yardage
+        self.assertAlmostEqual(
+            s.points({"passingYards": 198, "passingTouchdowns": 1,
+                      "interceptions": 2}), 7.92, places=2)
+        self.assertEqual(s.points({}), 0.0)
+
+    def test_stats_are_read_by_key_not_by_position(self):
+        """ESPN reorders these columns. A positional parser would keep working
+        while quietly scoring interceptions as rushing yards."""
+        shuffled = json.loads(json.dumps(self.fixture))
+        for team in shuffled["boxscore"]["players"]:
+            for cat in team["statistics"]:
+                order = list(range(len(cat["keys"])))[::-1]
+                cat["keys"] = [cat["keys"][i] for i in order]
+                for ath in cat["athletes"]:      # every athlete, not just the first
+                    ath["stats"] = [ath["stats"][i] for i in order]
+        self.assertEqual(self.sc.score_boxscore(self.fixture),
+                         self.sc.score_boxscore(shuffled))
+
+    def test_espn_placeholders_do_not_become_numbers(self):
+        for raw in (None, "", "--", "n/a"):
+            self.assertEqual(self.sc._num(raw), 0.0)
+        self.assertEqual(self.sc._num("20/35"), 20.0)     # made/attempted
+        self.assertEqual(self.sc._num("1,024"), 1024.0)
+
+    def test_league_scoring_overrides_the_default(self):
+        half = self.sc.Scoring.from_config({"scoring": {"reception": 0.5}})
+        full = self.sc.Scoring()
+        line = {"receptions": 10, "receivingYards": 100}
+        self.assertEqual(full.points(line) - half.points(line), 5.0)
+
+    def test_an_unknown_category_contributes_nothing(self):
+        junk = {"boxscore": {"players": [{"statistics": [
+            {"name": "mystery", "keys": ["somethingNew"],
+             "athletes": [{"athlete": {"id": "9"}, "stats": ["99"]}]}]}]}}
+        self.assertEqual(self.sc.score_boxscore(junk), {})
+
+
+class TestLiveBoxScores(unittest.TestCase):
+    """Points must move during a game without asking the edge for every game."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.sb = json.loads((FIX / "espn_scoreboard.json").read_text())
+        cls.box = json.loads((FIX / "espn_summary.json").read_text())
+
+    def source(self, state="in"):
+        import copy
+
+        from fantasyedge.live import EspnLiveSource
+
+        sb = copy.deepcopy(self.sb)
+        sb["events"][0]["competitions"][0]["status"] = {
+            "period": 3, "clock": 420.0,
+            "type": {"state": state, "shortDetail": "7:00 - 3rd"}}
+        self.calls = []
+
+        def http(url):
+            self.calls.append(url)
+            return self.box if "summary" in url else sb
+
+        # the ids in the fixture are real starters from a real matchup
+        players = [{"player_id": "3139477", "team": "SEA", "projected": 18.0},
+                   {"player_id": "4258173", "team": "SEA", "projected": 15.0},
+                   {"player_id": "-16026", "team": "SEA", "projected": 7.0},
+                   {"player_id": "999999", "team": "KC", "projected": 12.0}]
+        return EspnLiveSource(players, http=http)
+
+    def test_points_arrive_from_the_box_score(self):
+        snap = self.source().snapshot()
+        self.assertAlmostEqual(snap["players"]["3139477"]["s"], 18.56, places=2)
+        self.assertAlmostEqual(snap["players"]["4258173"]["s"], 25.2, places=2)
+        self.assertEqual(snap["scored"], 5)
+
+    def test_only_started_games_are_fetched(self):
+        """Sixteen summary calls a poll is how an address gets blocked."""
+        self.source().snapshot()
+        summaries = [c for c in self.calls if "summary" in c]
+        self.assertEqual(len(summaries), 1, "only the in-progress game")
+
+    def test_repeat_polls_do_not_refetch(self):
+        src = self.source()
+        src.snapshot()
+        n = len([c for c in self.calls if "summary" in c])
+        for _ in range(5):
+            src.snapshot()
+        self.assertEqual(len([c for c in self.calls if "summary" in c]), n)
+
+    def test_a_defence_is_left_unscored_rather_than_invented(self):
+        snap = self.source().snapshot()
+        self.assertEqual(snap["players"]["-16026"]["s"], 0.0)
+
+    def test_a_player_not_in_the_box_score_stays_at_zero(self):
+        snap = self.source().snapshot()
+        self.assertEqual(snap["players"]["999999"]["s"], 0.0)
+
+    def test_a_failing_summary_does_not_blank_the_board(self):
+        import copy
+
+        from fantasyedge.live import EspnLiveSource
+
+        sb = copy.deepcopy(self.sb)
+        sb["events"][0]["competitions"][0]["status"] = {
+            "period": 2, "clock": 300.0, "type": {"state": "in", "shortDetail": "Q2"}}
+        state = {"fail": False}
+
+        def http(url):
+            if "summary" in url:
+                if state["fail"]:
+                    raise OSError("503")
+                return self.box
+            return sb
+
+        src = EspnLiveSource(
+            [{"player_id": "3139477", "team": "SEA", "projected": 18.0}], http=http)
+        first = src.snapshot()["players"]["3139477"]["s"]
+        self.assertGreater(first, 0)
+        state["fail"] = True
+        src._boxes.clear()                    # force a refetch that will fail
+        self.assertEqual(src.snapshot()["players"]["3139477"]["s"], 0.0)
