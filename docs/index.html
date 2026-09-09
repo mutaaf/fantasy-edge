@@ -606,6 +606,8 @@ body{padding-bottom:46px}
   border-radius:16px;padding:12px 16px;backdrop-filter:blur(30px) saturate(1.7);
   text-decoration:none;color:inherit;transition:.2s var(--ease)}
 .story:hover{border-color:var(--hair-2);transform:translateY(-2px)}
+.story.rz{border-color:var(--hot);box-shadow:0 0 30px rgba(255,214,10,.16)}
+.story.rz .st-m{color:var(--hot);font-weight:700}
 .story .r-face{width:46px;height:46px}
 .st-h{font-weight:650;letter-spacing:-.015em;line-height:1.3}
 .st-m{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.1em;
@@ -694,6 +696,7 @@ body{padding-bottom:46px}
   <div class="daybar" id="daybar" hidden></div>
   <div class="hidden-leagues" id="hidden" hidden></div>
   <div class="lgrid" id="lgrid"></div>
+  <div class="rfilters" id="whenfilters" hidden></div>
   <div class="feedwrap" id="feedwrap" hidden></div>
   <div class="teampick" id="teampick" hidden>
     <span class="tp-k" id="tp-label">Your team</span>
@@ -1019,22 +1022,69 @@ const AGO=iso=>{
   const h=Math.round((Date.now()-d)/3600000);
   return h<1?"just now":h<24?h+"h ago":Math.round(h/24)+"d ago";};
 
+/* A player is interesting in a strict order: on the field in the red zone,
+   then on the field, then about to be, then finished. Sorting by that is what
+   makes "who is active right now" a view rather than a filter you have to
+   apply yourself. */
+let whenFilter="auto";
+const SAMEDAY=(iso)=>{
+  if(!iso)return false;
+  const d=new Date(iso.length<=16?iso+":00Z":iso);
+  const n=new Date();
+  return !isNaN(d)&&d.toDateString()===n.toDateString();};
+
+function playerRows(){
+  const byId=Object.fromEntries(allPlayers.map(c=>[c.id,c]));
+  return ALLP.map(p=>{
+    const c=byId[p.id]||{};
+    const g=gameInfo[p.team]||{};
+    const live=c.remaining>0&&c.remaining<1;
+    const rz=c.state==="RZ";
+    const final=c.remaining<=0&&c.state!=="PRE";
+    return {...p,state:c.state||"",scored:c.scored||0,kickoff:g.kickoff||"",
+            live,rz,final,today:SAMEDAY(g.kickoff)||live||rz,
+            rank:rz?0:live?1:(g.state==="pre"?2:3)};});}
+
+function renderWhenFilters(rows){
+  const box=$("whenfilters");
+  const nNow=rows.filter(p=>p.live||p.rz).length;
+  const nToday=rows.filter(p=>p.today).length;
+  const opts=[["now",`Playing now${nNow?" · "+nNow:""}`,nNow],
+              ["today",`Today${nToday?" · "+nToday:""}`,nToday],
+              ["all",`All · ${rows.length}`,rows.length]];
+  // "auto" lands on the most specific bucket that actually has anybody in it
+  const eff=whenFilter!=="auto"?whenFilter:(nNow?"now":nToday?"today":"all");
+  box.hidden=false;
+  box.innerHTML=opts.map(([k,label,n])=>
+    `<button class="chip" data-when="${k}" aria-pressed="${k===eff}"`+
+    `${n?"":" disabled style=opacity:.4"}>${label}</button>`).join("");
+  return eff;}
+
+$("whenfilters").addEventListener("click",e=>{
+  const b=e.target.closest("[data-when]");if(!b||b.disabled)return;
+  whenFilter=b.dataset.when;renderPlayersFeed();});
+
 function renderPlayersFeed(){
   const box=$("feedwrap");
-  const byId=Object.fromEntries(allPlayers.map(c=>[c.id,c]));
-  const rows=ALLP.map(p=>{
-    const liveC=byId[p.id];
-    return {...p, state:liveC?liveC.state:"", scored:liveC?liveC.scored:0};});
+  const all=playerRows();
+  const eff=renderWhenFilters(all);
+  let rows=eff==="now"?all.filter(p=>p.live||p.rz)
+         :eff==="today"?all.filter(p=>p.today):all;
+  rows.sort((a,b)=>a.rank-b.rank
+    ||(a.kickoff||"").localeCompare(b.kickoff||"")
+    ||b.leagues.length-a.leagues.length||b.projected-a.projected);
   box.innerHTML=rows.map(p=>{
     const n=p.leagues.length;
     const tag=n>1?`<span class="exposure ${n>2?"hot":""}">${n} leagues</span>`
                  :`<span class="st-when">${p.leagues[0]?p.leagues[0].league:""}</span>`;
-    return `<div class="story"><div>${faceHTML(p)}</div>`+
+    const when=p.rz?"RED ZONE":p.live?p.state
+      :p.final?"FINAL":(p.kickoff?KICK(p.kickoff):"—");
+    return `<div class="story${p.rz?" rz":""}"><div>${faceHTML(p)}</div>`+
       `<div><div class="st-h">${p.name}</div>`+
-      `<div class="st-m">${p.pos} · ${p.team} · proj ${nf(p.projected)} · `+
-      `starting in ${p.starting} of ${n}${p.state?" · "+p.state:""}</div></div>`+
+      `<div class="st-m">${p.pos} · ${p.team} · ${when} · proj ${nf(p.projected)}`+
+      ` · starting in ${p.starting} of ${n}</div></div>`+
       `<div>${tag}</div></div>`;}).join("")
-    || '<div class="rempty">No rostered players found.</div>';}
+    || '<div class="rempty">Nobody you roster is in that window.</div>';}
 
 function newsByStory(){
   // One wire story can name several of your players; it is still one story.
@@ -1063,7 +1113,8 @@ function renderNewsFeed(){
 
 function showHome(){
   const isL=home==="leagues";
-  lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hidden").hidden=!isL||!hiddenIds().length;
+  lgrid.hidden=!isL;$("daybar").hidden=!isL;
+  $("whenfilters").hidden=home!=="players";$("hidden").hidden=!isL||!hiddenIds().length;
   $("feedwrap").hidden=isL;
   if(home==="players")renderPlayersFeed();
   else if(home==="news")renderNewsFeed();
@@ -1127,6 +1178,43 @@ function renderHidden(){
     return `<button class="chip" data-un="${id}">${L?L.league:id} +</button>`;}).join("");}
 $("hidden").addEventListener("click",e=>{
   const b=e.target.closest("[data-un]");if(b)unhideLeague(b.dataset.un);});
+
+/* ── what deserves the big tile ────────────────────────────────────────
+   Intensity alone cannot answer this. Before kickoff every matchup is a
+   coin flip, so every league scores 100% and the "hottest" one is whichever
+   happened to sort first - a made-up answer to a real question.
+
+   Relevance asks what is actually happening to *your* players: someone in the
+   red zone outranks someone merely playing, playing outranks about to start,
+   and when nothing is running at all the honest answer is whoever kicks off
+   first. Intensity only breaks ties, which is what it is good for. */
+const HOUR=3600000;
+function relevance(L,m){
+  let live=0,rz=0,soonest=null,done=0;
+  for(const c of L.cells){
+    if(c.side!=="you")continue;
+    if(c.state==="RZ")rz++;
+    if(c.remaining>0&&c.remaining<1)live++;
+    else if(c.remaining<=0)done++;
+    else{
+      const g=gameInfo[c.team];
+      if(g&&g.kickoff){const t=Date.parse(g.kickoff.length<=16?g.kickoff+":00Z":g.kickoff);
+        if(!isNaN(t)&&(soonest===null||t<soonest))soonest=t;}}}
+  let reason;
+  if(rz)      reason=`${rz} in the red zone`;
+  else if(live) reason=`${live} player${live===1?"":"s"} in progress`;
+  else if(soonest!==null){
+    const h=(soonest-Date.now())/HOUR;
+    reason=h<=0?"kicking off now"
+      :h<1?`kicks off in ${Math.max(1,Math.round(h*60))} min`
+      :h<24?`kicks off in ${Math.round(h)}h`
+      :`kicks off ${KICK(new Date(soonest).toISOString())}`;}
+  else reason=done?"all games final":"no games scheduled";
+  // red zone, then live bodies, then soonest kickoff; intensity only breaks ties
+  const score=rz*1e9+live*1e6
+    +(soonest!==null?Math.max(0,1e6-(soonest-Date.now())/60000):0)
+    +m.intensity;
+  return {score,reason,live,rz,soonest,done};}
 
 function renderDaybar(evals){
   const box=$("daybar");
@@ -1247,18 +1335,19 @@ function makeLeagueCell(L){
 
 function renderLeagues(minute){
   const vis=visibleLeagues();
-  const evals=vis.map(L=>({L,m:evaluate(L.cells.slice(),{})}));
+  const evals=vis.map(L=>{const m=evaluate(L.cells.slice(),{});
+                          return {L,m,rel:relevance(L,m)};});
   // An explicit order beats the automatic one: if you have arranged your
   // leagues, the board must not rearrange them behind you.
-  if(!readList(ORDKEY).length)evals.sort((a,b)=>b.m.intensity-a.m.intensity);
+  if(!readList(ORDKEY).length)evals.sort((a,b)=>b.rel.score-a.rel.score);
   const ordered=[];
-  evals.forEach(({L,m},i)=>{
+  evals.forEach(({L,m,rel},i)=>{
     let el=lnodes.get(L.id);
     if(!el){el=makeLeagueCell(L);lnodes.set(L.id,el);}
     el.classList.toggle("big",i===0&&evals.length>1);
     if(surface==="tv")el.dataset.focus=i===focusIdx?"1":"0";else delete el.dataset.focus;
     setText(el.querySelector(".lc-wk"),
-      `wk ${L.week} · ${L.season} · intensity ${Math.round(m.intensity*100)}%`);
+      `wk ${L.week} · ${L.season} · ${rel.reason}`);
     setText(el.querySelector(".lc-side.a .lc-pts"),nf(m.yourScore));
     setText(el.querySelector(".lc-side.b .lc-pts"),nf(m.oppScore));
     setText(el.querySelector(".lc-odds"),Math.round(m.winProb*100)+"%");
@@ -1293,7 +1382,7 @@ function renderLeagues(minute){
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
     setAmbience(a.color||"#0A84FF",b.color||"#D50A0A");}
-  setText($("intensity"),hot?`hottest: ${hot.L.league} @ ${Math.round(hot.m.intensity*100)}%`:"");
+  setText($("intensity"),hot?`focus: ${hot.L.league} — ${hot.rel.reason}`:"");
   setText($("clock"),minute<=0?"pre-game":`sunday +${Math.round(minute)}m`);
   document.querySelector(".wrap").style.setProperty("--sat",
     (0.3+(hot?hot.m.intensity:1)*0.7).toFixed(2));}
@@ -1805,6 +1894,7 @@ function openLeagueView(id){
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
   $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
+  $("whenfilters").hidden=true;
   $("homeseg").hidden=true;
   $("back").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
@@ -1821,7 +1911,7 @@ function backToLeagues(){
   home="leagues";
   $("homeseg").querySelectorAll("[data-h]").forEach(o=>
     o.setAttribute("aria-pressed",String(o.dataset.h==="leagues")));
-  $("feedwrap").hidden=true;
+  $("feedwrap").hidden=true;$("whenfilters").hidden=true;
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);
