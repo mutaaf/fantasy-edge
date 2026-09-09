@@ -1,0 +1,1464 @@
+<title>Fantasy Command Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  /* One committed visual world: a dim draft-night war room. Every colour is
+     painted explicitly so the page holds on any host ground. */
+  :root{
+    --ground:#0B0F0D; --surface:#131A17; --surface-2:#182220; --surface-3:#1E2A26;
+    --line:#233029; --chalk:#EDF2EE; --muted:#7C8F86; --dim:#55655D;
+    --amber:#F0B429; --amber-dim:#8A6A18;
+    --qb:#E8734A; --rb:#3FBF7F; --wr:#4C9BE8; --te:#B87DE0; --dst:#6E8079;
+    --good:#3FBF7F; --warn:#F0B429; --crit:#E8574A;
+    --hdr:64px; --s1:4px; --s2:8px; --s3:12px; --s4:18px; --s5:28px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--ground); color:var(--chalk);
+       font-family:Barlow,"Helvetica Neue",Arial,sans-serif; font-size:15px; line-height:1.45;
+       -webkit-font-smoothing:antialiased}
+  h1,h2,h3,.dsp{font-family:Oswald,"Arial Narrow",Arial,sans-serif; font-weight:600;
+                letter-spacing:.02em; margin:0; text-wrap:balance}
+  .num{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums}
+  .lbl{font-family:Oswald,Arial,sans-serif; font-size:11px; letter-spacing:.14em;
+       text-transform:uppercase; color:var(--muted); font-weight:500}
+  button{font:inherit; color:inherit; background:none; border:none; cursor:pointer}
+  button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{
+    outline:2px solid var(--amber); outline-offset:2px}
+  a{color:var(--amber)}
+
+  header{position:sticky; top:0; z-index:30; background:var(--ground);
+    border-bottom:1px solid var(--line); display:flex; align-items:center;
+    gap:var(--s4); flex-wrap:wrap; padding:var(--s3) var(--s4)}
+  .brand h1{font-size:20px; letter-spacing:.06em; text-transform:uppercase}
+  .hstat{display:flex; align-items:baseline; gap:6px}
+  .hstat .v{font-family:Oswald,Arial,sans-serif; font-size:24px; font-weight:700;
+            line-height:1; color:var(--amber)}
+  .hstat .v.plain{color:var(--chalk)}
+  .spacer{flex:1}
+  select,input[type=search]{background:var(--surface-2); border:1px solid var(--line);
+    color:var(--chalk); padding:6px 9px; border-radius:3px; font-size:14px}
+  input[type=search]{width:170px}
+  .btn{border:1px solid var(--line); background:var(--surface-2); padding:6px 12px;
+    border-radius:3px; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    font-family:Oswald,Arial,sans-serif; color:var(--muted)}
+  .btn:hover{border-color:var(--amber-dim); color:var(--chalk)}
+  .btn[aria-pressed=true]{background:var(--amber); color:#0B0F0D; border-color:var(--amber)}
+  .seg{display:flex; border:1px solid var(--line); border-radius:3px; overflow:hidden}
+  .seg .btn{border:none; border-radius:0}
+
+  .wrap{display:grid; grid-template-columns:230px minmax(0,1fr) 320px; gap:1px;
+        background:var(--line); min-height:calc(100vh - var(--hdr))}
+  .col{background:var(--ground); padding:var(--s4); min-width:0}
+  @media (max-width:1180px){ .wrap{grid-template-columns:1fr} }
+  .sec{margin-bottom:var(--s5)}
+  /* Every panel folds. On a laptop mid-draft the board is the only thing that
+     always needs to be on screen. */
+  .fold{display:flex; align-items:center; gap:var(--s2); width:100%; text-align:left;
+        margin-bottom:var(--s3); padding-bottom:var(--s2); border-bottom:1px solid var(--line);
+        font-family:Oswald,Arial,sans-serif; font-size:11px; letter-spacing:.14em;
+        text-transform:uppercase; color:var(--muted); font-weight:500}
+  .fold:hover{color:var(--chalk)}
+  .fold .chev{flex:none; width:11px; transition:transform .15s ease; color:var(--dim)}
+  .fold[aria-expanded=false] .chev{transform:rotate(-90deg)}
+  .fold .grow{flex:1}
+  .fold .cnt{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--dim)}
+  .foldable[hidden]{display:none!important}
+  .sec>.lbl{display:block; margin-bottom:var(--s3); padding-bottom:var(--s2);
+            border-bottom:1px solid var(--line)}
+
+  /* roster rail */
+  .slot{display:flex; align-items:center; gap:var(--s2); padding:5px 0;
+        border-bottom:1px solid var(--line); min-height:32px}
+  .slot .pos{width:36px; flex:none; font-family:Oswald,Arial,sans-serif; font-size:11px;
+             letter-spacing:.1em; color:var(--dim)}
+  .slot .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+            white-space:nowrap; font-size:14px}
+  .slot .nm.empty{color:var(--dim); font-style:italic; font-size:13px}
+  .slot .rd{font-size:11px; color:var(--dim)}
+  .pk{display:flex; gap:var(--s2); align-items:baseline; font-size:13px; padding:2px 0}
+  .pk .n{color:var(--dim); width:32px; flex:none}
+  .pk.done{color:var(--amber)} .pk.next{color:var(--chalk); font-weight:600}
+  .pk.next .n{color:var(--amber)}
+
+  /* recommendation */
+  .rec{margin-bottom:var(--s5)}
+  .rec .hd{display:flex; align-items:baseline; gap:var(--s3); margin-bottom:var(--s3); flex-wrap:wrap}
+  .rec h2{font-size:15px; letter-spacing:.12em; text-transform:uppercase; color:var(--amber)}
+  .rec .at{font-size:12px; color:var(--dim)}
+  .reccards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s3)}
+  @media (max-width:900px){ .reccards{grid-template-columns:1fr} }
+  .rc{background:var(--surface); border:1px solid var(--line); border-top:3px solid var(--amber);
+      border-radius:4px; padding:var(--s3); display:flex; flex-direction:column; gap:6px; cursor:pointer}
+  .rc:hover{background:var(--surface-2)}
+  .rc.r2{border-top-color:#9A7B2E} .rc.r3{border-top-color:var(--line)}
+  .rc .rank{font-family:Oswald,Arial,sans-serif; font-size:10px; letter-spacing:.16em; color:var(--dim)}
+  .rc .nm{font-family:Oswald,Arial,sans-serif; font-size:19px; font-weight:600; line-height:1.05}
+  .rc .why{font-size:12.5px; color:var(--muted); line-height:1.45; flex:1}
+  .rc .why b{color:var(--chalk)}
+
+  /* signals */
+  .sig{display:inline-flex; align-items:center; font-family:Oswald,Arial,sans-serif;
+       font-size:10.5px; font-weight:600; letter-spacing:.06em; padding:2px 6px;
+       border-radius:2px; border:1px solid currentColor; white-space:nowrap; line-height:1.25}
+  .sigs{row-gap:3px}
+  .sig.val{color:var(--amber)} .sig.now{color:var(--crit)} .sig.wait{color:var(--good)}
+  .sig.need{color:var(--chalk)} .sig.thin{color:var(--warn)} .sig.quiet{color:var(--dim)}
+  .track{height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+  .fill{display:block; height:100%; border-radius:3px}
+  .sig.vor{color:var(--amber)} .sig.scarce{color:var(--crit)}
+  .sig.role{color:var(--muted)} .sig.use{color:var(--good)} .sig.over{color:var(--crit)}
+  .sig.up{color:var(--good)} .sig.down{color:var(--crit)} .sig.flat{color:var(--muted)}
+  .sigs{display:flex; gap:4px; flex-wrap:wrap}
+
+  /* board */
+  .tabs{display:flex; gap:var(--s1); flex-wrap:wrap; margin-bottom:var(--s3)}
+  .tab{padding:5px 11px; border:1px solid var(--line); border-radius:3px;
+       font-family:Oswald,Arial,sans-serif; font-size:12px; letter-spacing:.08em;
+       color:var(--muted); background:var(--surface)}
+  .tab[aria-pressed=true]{background:var(--amber); color:#0B0F0D; border-color:var(--amber); font-weight:600}
+  .tab .c{opacity:.6; margin-left:5px; font-size:11px}
+  table{width:100%; border-collapse:collapse}
+  thead th{position:sticky; top:var(--hdr); background:var(--ground); z-index:5; text-align:left;
+    padding:var(--s2); border-bottom:1px solid var(--line); font-family:Oswald,Arial,sans-serif;
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:500}
+  tbody td{padding:6px var(--s2); border-bottom:1px solid var(--line); vertical-align:middle}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--surface)}
+  tbody tr[aria-selected=true]{background:var(--surface-2); box-shadow:inset 3px 0 0 var(--amber)}
+  .rk{color:var(--dim); font-size:12px; width:32px}
+  .pname{font-size:15px; font-weight:500}
+  .pchip{display:inline-block; min-width:32px; text-align:center; padding:2px 5px;
+    border-radius:2px; font-family:Oswald,Arial,sans-serif; font-size:10px;
+    letter-spacing:.1em; font-weight:600; color:#0B0F0D}
+  .QB{background:var(--qb)} .RB{background:var(--rb)} .WR{background:var(--wr)}
+  .TE{background:var(--te)} .K{background:var(--dst)} .DEF{background:var(--dst)}
+  .adpc{font-size:13px; color:var(--muted); width:52px}
+  .acts{width:92px; text-align:right; white-space:nowrap}
+  .mini{border:1px solid var(--line); border-radius:3px; padding:3px 7px; font-size:11px;
+    font-family:Oswald,Arial,sans-serif; letter-spacing:.08em; color:var(--muted); background:var(--surface-2)}
+  .mini:hover{color:var(--chalk); border-color:var(--muted)}
+  .mini.take{color:var(--amber); border-color:var(--amber-dim)}
+  .empty-row td{color:var(--dim); font-style:italic; padding:var(--s4) var(--s2)}
+  .runalert{border:1px solid var(--crit); background:rgba(232,87,74,.1); padding:var(--s2) var(--s3);
+    border-radius:3px; font-size:13px; margin-bottom:var(--s3)}
+  .runalert b{color:var(--crit); font-family:Oswald,Arial,sans-serif}
+
+  /* detail drawer */
+  .detail{position:sticky; top:calc(var(--hdr) + var(--s4))}
+  .dt-empty{color:var(--dim); font-size:13.5px; line-height:1.5; font-style:italic}
+  .dt h3{font-size:22px; line-height:1.1; margin-bottom:2px}
+  .dt .meta{display:flex; align-items:center; gap:var(--s2); font-size:12.5px;
+            color:var(--muted); margin-bottom:var(--s3)}
+  .fit{background:var(--surface); border:1px solid var(--line); border-radius:4px;
+       padding:var(--s3); font-size:13.5px; line-height:1.5; color:var(--muted); margin-bottom:var(--s3)}
+  .fit b{color:var(--chalk)}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:3px var(--s3); font-size:13px;
+      margin-bottom:var(--s3)}
+  .kv dt{color:var(--dim)} .kv dd{margin:0; text-align:right}
+  .art{border-top:1px solid var(--line); padding:var(--s2) 0; font-size:13px}
+  .art .h{color:var(--chalk); line-height:1.35; display:block}
+  .art .m{color:var(--dim); font-size:11.5px; margin-top:2px; display:flex; gap:var(--s2); align-items:center}
+  .ai{border:1px solid var(--amber-dim); border-radius:4px; padding:var(--s3);
+      background:rgba(240,180,41,.05); font-size:13.5px; line-height:1.55; margin-top:var(--s3);
+      white-space:pre-wrap}
+  .ai.err{border-color:var(--crit); background:rgba(232,87,74,.07); color:var(--muted)}
+  .askrow{display:flex; gap:var(--s2); margin-top:var(--s3); flex-wrap:wrap}
+  .mgr{padding:var(--s3) 0; border-bottom:1px solid var(--line)}
+  .mgr:last-child{border-bottom:none}
+  .mgr .top{display:flex; align-items:baseline; gap:var(--s2); margin-bottom:2px}
+  .mgr .who{font-family:Oswald,Arial,sans-serif; font-size:13.5px; flex:1}
+  .mgr.you .who{color:var(--amber)}
+  .flag{font-family:Oswald,Arial,sans-serif; font-size:9px; letter-spacing:.12em;
+        padding:2px 5px; border-radius:2px; font-weight:600}
+  .f-danger{background:var(--crit); color:#0B0F0D} .f-soft{background:var(--good); color:#0B0F0D}
+  .mgr .bars{display:flex; gap:var(--s2); font-size:11.5px; color:var(--muted)}
+  .mgr .bars b{font-family:"IBM Plex Mono",monospace}
+  .mgr{cursor:pointer}
+  .mgr:hover{background:var(--surface))}
+  .mgr .note{font-size:12px; color:var(--muted); line-height:1.4; margin-top:2px}
+  .pgood{color:var(--good)} .pbad{color:var(--crit)}
+  .ovl{position:fixed; inset:0; background:rgba(4,7,6,.82); z-index:60;
+       display:flex; align-items:flex-start; justify-content:center; padding:var(--s5) var(--s4); overflow:auto}
+  .ovl[hidden]{display:none!important}
+  .modal{background:var(--surface); border:1px solid var(--line); border-radius:6px;
+         max-width:660px; width:100%; padding:var(--s5)}
+  .modal h2{font-size:20px; letter-spacing:.04em; text-transform:uppercase; color:var(--amber); margin-bottom:var(--s2)}
+  .modal p{color:var(--muted); font-size:14px; line-height:1.55; margin:0 0 var(--s3); max-width:62ch}
+  .step{display:grid; grid-template-columns:30px 1fr; gap:var(--s3); margin-bottom:var(--s4); align-items:start}
+  .step .n{font-family:Oswald,Arial,sans-serif; font-size:13px; font-weight:600; color:#0B0F0D;
+           background:var(--amber); width:24px; height:24px; border-radius:50%;
+           display:flex; align-items:center; justify-content:center}
+  .step h3{font-size:15px; margin-bottom:3px}
+  .step p{margin-bottom:var(--s2); font-size:13.5px}
+  .bmk{display:inline-block; background:var(--amber); color:#0B0F0D!important; text-decoration:none;
+       font-family:Oswald,Arial,sans-serif; font-size:14px; letter-spacing:.06em; padding:9px 18px;
+       border-radius:4px; cursor:grab; font-weight:600}
+  .bmk:active{cursor:grabbing}
+  textarea{width:100%; min-height:96px; background:var(--surface-2); border:1px solid var(--line);
+           color:var(--chalk); border-radius:4px; padding:var(--s2); font-family:"IBM Plex Mono",monospace;
+           font-size:12px; resize:vertical}
+  .msg{font-size:13px; margin-top:var(--s2); min-height:18px}
+  .msg.ok{color:var(--good)} .msg.bad{color:var(--crit)}
+  .lgrow{display:flex; align-items:center; gap:var(--s2); padding:6px 0; border-bottom:1px solid var(--line); font-size:13.5px}
+  .lgrow .t{flex:1} .lgrow .tag{font-size:11px; color:var(--dim)}
+  .mgrhead{display:flex; align-items:baseline; gap:var(--s2); margin-bottom:var(--s2)}
+  .mgrhead h3{font-size:19px; flex:1}
+  .statline{display:flex; gap:var(--s3); flex-wrap:wrap; font-size:12.5px;
+            color:var(--muted); margin-bottom:var(--s3)}
+  .statline b{color:var(--chalk); font-family:"IBM Plex Mono",monospace}
+  .rosterlist{font-size:12.5px; color:var(--muted); line-height:1.6; margin-bottom:var(--s3)}
+  .rosterlist b{color:var(--chalk)}
+  .roast{border:1px solid var(--crit); border-left-width:3px; background:rgba(232,87,74,.06);
+         padding:var(--s3); border-radius:3px; font-size:14px; line-height:1.6;
+         margin-top:var(--s3); white-space:pre-wrap}
+  .serious{border:1px solid var(--line); border-left:3px solid var(--wr);
+           background:var(--surface); padding:var(--s3); border-radius:3px;
+           font-size:13.5px; line-height:1.6; margin-top:var(--s3); white-space:pre-wrap}
+  .scrub{display:flex; align-items:center; gap:var(--s3); background:var(--surface);
+         border:1px solid var(--line); border-radius:4px; padding:var(--s3); margin-bottom:var(--s4)}
+  .scrub input[type=range]{flex:1; accent-color:var(--amber)}
+  .scrub .now{font-family:Oswald,Arial,sans-serif; font-size:13px; white-space:nowrap}
+  .scrub .now b{color:var(--amber); font-size:17px}
+  .onclock{border:1px solid var(--amber-dim); background:rgba(240,180,41,.06);
+           border-radius:4px; padding:var(--s3); margin-bottom:var(--s4)}
+  .onclock h3{font-size:16px; margin-bottom:var(--s2)}
+  .alt{display:flex; align-items:center; gap:var(--s2); padding:5px 0;
+       border-bottom:1px solid var(--line); font-size:13.5px}
+  .alt .n{flex:1} .alt .d{color:var(--muted); font-size:12px}
+  .whatif{border:1px solid var(--wr); border-left-width:3px; background:rgba(76,155,232,.07);
+          padding:var(--s3); border-radius:3px; margin-top:var(--s3); font-size:13.5px; line-height:1.6}
+  .whatif b{color:var(--chalk)}
+  .whatif .cost{color:var(--crit)} .whatif .gain{color:var(--good)}
+  .foot{padding:var(--s4); border-top:1px solid var(--line); color:var(--dim);
+        font-size:12px; line-height:1.55}
+  .foot b{color:var(--muted)}
+  /* ── phones and tablets ─────────────────────────────────────────
+     Stacking alone is not a mobile design. On a phone the board IS the
+     page, so it moves to the top, the header keeps only what matters on
+     the clock, tap targets grow to thumb size, and the ADP and rank
+     gutters give their width back to the name and the tags. Landscape is
+     short and wide, so the roster rail comes back and nothing sticks. */
+  @media (max-width:900px){
+    body{font-size:16px}
+    header{gap:var(--s2); padding:var(--s2) var(--s3); row-gap:var(--s2)}
+    .brand h1{font-size:16px}
+    .spacer{display:none}
+    header .lbl{display:none}
+    #q{order:9; flex:1 0 100%; width:100%; font-size:16px}
+    .hstat .v{font-size:20px}
+    .wrap{grid-template-columns:1fr; gap:0}
+    .col{padding:var(--s3)}
+    .wrap > .col:nth-child(2){order:-1; border-bottom:1px solid var(--line)}
+    .reccards{grid-template-columns:1fr; gap:var(--s2)}
+    .rc{padding:var(--s2) var(--s3)} .rc .nm{font-size:17px}
+    thead th{top:0}
+    thead th:nth-child(4), tbody td:nth-child(4){display:none}
+    tbody td{padding:10px var(--s1)}
+    .pname{font-size:16px}
+    .acts{width:auto}
+    .mini{padding:8px 10px; min-height:38px}
+    .btn{padding:9px 12px; min-height:38px}
+    .sig{font-size:11px; padding:3px 7px}
+    .fold{padding:10px 0; font-size:12px}
+    .modal{padding:var(--s4) var(--s3)}
+    .scrub{flex-wrap:wrap} .scrub .now{width:100%; text-align:center}
+    textarea{font-size:16px}
+  }
+  @media (max-width:560px){
+    thead th:nth-child(1), tbody td:nth-child(1){display:none}
+    .sigs{max-width:160px}
+    .statline{gap:var(--s2); font-size:12px}
+    .two{grid-template-columns:1fr}
+  }
+  @media (max-height:520px) and (orientation:landscape){
+    .wrap{grid-template-columns:200px minmax(0,1fr)}
+    .wrap > .col:nth-child(3){grid-column:1/-1}
+    header{position:static}
+    thead th{position:static}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header>
+  <div class="brand"><h1>Command Board</h1></div>
+  <select id="leagueSel" aria-label="League"></select>
+  <div class="seg" role="group" aria-label="Mode">
+    <button class="btn" id="mDraft" aria-pressed="true">Draft</button>
+    <button class="btn" id="mWaiver" aria-pressed="false">Waivers</button>
+    <button class="btn" id="mReplay" aria-pressed="false">Replay</button>
+  </div>
+  <div class="hstat" id="hRoundWrap"><span class="lbl">Rd</span><span class="v num" id="hRound">1</span></div>
+  <div class="hstat"><span class="lbl">Pick</span><span class="v num plain" id="hPick">1</span></div>
+  <div class="hstat"><span class="lbl">Up in</span><span class="v num" id="hUntil">&mdash;</span></div>
+  <div class="spacer"></div>
+  <span class="lbl">Slot</span><select id="slotSel" aria-label="Your draft slot"></select>
+  <input type="search" id="q" placeholder="Find player&hellip;" aria-label="Search players">
+  <span class="lbl" id="liveBadge" hidden></span>
+  <button class="btn" id="syncBtn">Sync picks</button>
+  <button class="btn" id="undo">Undo</button>
+  <button class="btn" id="reset">Reset</button>
+</header>
+
+<div class="wrap">
+  <div class="col">
+    <div class="sec">
+      <button class="fold" data-fold="roster" aria-expanded="true">
+        <span class="chev">&#9660;</span><span class="grow">Your roster</span>
+        <span class="cnt" id="rosterCnt"></span></button>
+      <div class="foldable" id="roster"></div>
+    </div>
+    <div class="sec">
+      <button class="fold" data-fold="mypicks" aria-expanded="true">
+        <span class="chev">&#9660;</span><span class="grow">Your picks</span></button>
+      <div class="foldable" id="mypicks"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div id="scrubBox"></div>
+    <div class="rec" id="rec"></div>
+    <button class="fold" data-fold="board" aria-expanded="true">
+      <span class="chev">&#9660;</span><span class="grow">Board</span>
+      <span class="cnt" id="boardCnt"></span></button>
+    <div class="foldable" id="boardWrap">
+    <div class="tabs" id="tabs"></div>
+    <div id="runbox"></div>
+    <table>
+      <thead><tr>
+        <th class="rk">BA</th><th>Player</th><th>Pos</th><th class="adpc">ADP</th>
+        <th>Signals</th><th class="acts">Mark</th>
+      </tr></thead>
+      <tbody id="board"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="detail" id="detail"></div>
+    <div class="sec" style="margin-top:var(--s5)">
+      <button class="fold" data-fold="scarcity" aria-expanded="true">
+        <span class="chev">&#9660;</span><span class="grow">Positional value</span>
+        <span class="cnt" id="scarCnt"></span></button>
+      <div class="foldable" id="scarcity"></div>
+    </div>
+    <div class="sec" style="margin-top:var(--s5)">
+      <button class="fold" data-fold="dossier" aria-expanded="true">
+        <span class="chev">&#9660;</span><span class="grow" id="dossHead">Opponent dossier</span></button>
+      <div class="foldable" id="dossier"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ovl" id="syncOvl" hidden role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+  <div class="modal">
+    <h2 id="syncTitle">Sync picks from ESPN</h2>
+    <p>Two clicks, any time during the draft. Do step 1 once, before you start.</p>
+    <div class="step"><span class="n">1</span><div>
+      <h3>Drag this to your bookmarks bar (once)</h3>
+      <a class="bmk" id="syncBmk" href="#">Sync picks</a>
+    </div></div>
+    <div class="step"><span class="n">2</span><div>
+      <h3>During the draft: click the bookmark, then click Apply</h3>
+      <p>Click it on your ESPN draft page any time you want to catch up. It copies every pick made
+        so far. Come back here and press Apply &mdash; the whole board updates at once.</p>
+      <textarea id="syncBox" placeholder="Paste here" aria-label="Paste picks"></textarea>
+      <div style="display:flex; gap:var(--s2); margin-top:var(--s2); flex-wrap:wrap">
+        <button class="btn" id="syncApply">Apply</button>
+        <button class="btn" id="syncPaste">Paste &amp; apply</button>
+        <button class="btn" id="syncClose">Close</button>
+      </div>
+      <div class="msg" id="syncMsg"></div>
+    </div></div>
+    <p style="font-size:12.5px">Syncing replaces what is on the board with what ESPN actually has,
+      so anything you marked by hand is corrected rather than duplicated.</p>
+  </div>
+</div>
+
+<div class="ovl" id="addOvl" hidden role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <div class="modal">
+    <h2 id="addTitle">Add your league</h2>
+    <p>No terminal, no cookies to hunt for, nothing to install. Three steps, about a minute.
+      Everything runs in your own browser and your ESPN password is never involved.</p>
+
+    <div class="step"><span class="n">1</span><div>
+      <h3>Drag this button to your bookmarks bar</h3>
+      <p>Drag it &mdash; don&rsquo;t click it here. If your bookmarks bar is hidden, press
+        <b>Cmd&#8209;Shift&#8209;B</b> (Mac) or <b>Ctrl&#8209;Shift&#8209;B</b> (Windows) to show it.</p>
+      <a class="bmk" id="bmk" href="#">Grab my league</a>
+    </div></div>
+
+    <div class="step"><span class="n">2</span><div>
+      <h3>Open your league on ESPN, then click the bookmark</h3>
+      <p>Any page of your league works, as long as the address bar has
+        <span class="num">leagueId=</span> in it. It reads your league settings, the draft order and
+        up to six past seasons, then copies the result to your clipboard.</p>
+    </div></div>
+
+    <div class="step"><span class="n">3</span><div>
+      <h3>Paste it here</h3>
+      <textarea id="impBox" placeholder="Paste here (it will look like a long line starting with { )" aria-label="Paste league data"></textarea>
+      <div style="display:flex; gap:var(--s2); margin-top:var(--s2); flex-wrap:wrap">
+        <button class="btn" id="impBtn">Add league</button>
+        <button class="btn" id="copyBmk">Copy the code instead</button>
+        <button class="btn" id="closeAdd">Close</button>
+      </div>
+      <div class="msg" id="impMsg"></div>
+    </div></div>
+
+    <span class="lbl">Leagues on this device</span>
+    <div id="lgList"></div>
+    <p style="margin-top:var(--s3); font-size:12.5px">
+      Added leagues are saved in this browser only. The opponent read for an added league is
+      record, all&#8209;play and luck from its own past seasons &mdash; not the draft&#8209;value
+      figures, which need season-long scoring the bookmark does not collect.</p>
+  </div>
+</div>
+
+<div class="foot">
+  <b>Tags.</b>
+  <span class="sig val">FELL n</span> n picks past his ADP and still here &middot;
+  <span class="sig now">TAKE NOW</span> gone before your next pick &middot;
+  <span class="sig wait">CAN WAIT</span> survives to your following pick &middot;
+  <span class="sig need">FILLS RB</span> fills that open starting slot &middot;
+  <span class="sig thin">2 LEFT</span> that many left in his tier &middot;
+  <span class="sig role">WR2</span> his 2025 target-share rank on his own team &middot;
+  <span class="sig role">26% TGT</span> his 2025 target share &middot;
+  <span class="sig use">UNDERUSED PRICE</span> used far more in 2025 than his price implies &middot;
+  <span class="sig over">OVERPRICED</span> the reverse &middot;
+  <span class="sig up">GOOD NEWS</span> / <span class="sig down">BAD NEWS</span> /
+  <span class="sig quiet">NO NEWS</span> keyword scan of real recent headlines.
+  <br><br>
+  <b>What the news signal is and is not.</b> Headlines are real, dated and linked, pulled from
+  ESPN's public feed. The arrow beside them is a <em>keyword scan</em> of that text - injury words
+  down, opportunity words up - not a language model and not a judgement. Roughly two in three
+  ranked players have recent coverage; the rest read QUIET, which means no article mentioned them,
+  not that nothing happened. For an actual read, use <b>Ask Claude</b>, which reasons over the same
+  real headlines plus your roster and never invents a story.
+</div>
+
+<script>
+const D = __DATA__;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const P = D.players;                       // [name, pos, adp]
+const IDX = new Map(P.map((p,i)=>[p[0],i]));
+const BYID = new Map(P.map((p,i)=>[String(p[3]),i]));
+const FLEXOK = {RB:1, WR:1, TE:1};
+const vorOf  = nm => ((D.vorByLeague||{})[L.id]||{})[nm] || null;
+const replOf = pos => ((D.replByLeague||{})[L.id]||{})[pos] || null;
+
+/* Football-specific keyword scan. Deliberately small and legible: it is a
+   word count over real headlines, presented as one, never as a model. */
+const NEG = /\b(injur|hamstring|acl|mcl|concussion|out |ruled out|doubtful|questionable|surgery|setback|strain|sprain|placed on ir|suspend|holdout|benched|demoted|limited|dnp|arrest)/i;
+const POS_ = /\b(breakout|career-high|cleared|returns|activated|starter|starting|expanded role|workhorse|target share|touches|impress|standout|healthy|full participant|promoted|lead back|WR1|RB1)\b/i;
+function newsRead(name){
+  const arts = D.news[name];
+  if(!arts || !arts.length) return {sym:"○", cls:"quiet", word:"QUIET", arts:[]};
+  let s=0;
+  for(const a of arts){ const t=a.h+" "+a.d; if(NEG.test(t)) s--; if(POS_.test(t)) s++; }
+  if(s>0) return {sym:"▲", cls:"up", word:"NEWS", arts};
+  if(s<0) return {sym:"▼", cls:"down", word:"NEWS", arts};
+  return {sym:"▬", cls:"flat", word:"NEWS", arts};
+}
+
+/* ── league + state ───────────────────────────────────────────── */
+let L, S, filter="ALL", mode="draft", sel=null;
+
+function keyFor(l){ return `fe-board-${l.leagueId}-v1`; }
+function loadLeague(id){
+  L = allLeagues().find(x=>x.id===id) || D.leagues[0];
+  S = {slot:L.slot, taken:{}, mine:{}, order:[]};
+  try{ const r=localStorage.getItem(keyFor(L)); if(r) S=Object.assign(S,JSON.parse(r)); }catch(e){}
+  // A league whose draft already happened opens with that draft already on the
+  // board, so waivers mode is usable from the first paint.
+  if(!S.order.length && L.allPicks){
+    for(const pk of L.allPicks){
+      const i=IDX.get(pk.nm); if(i===undefined) continue;
+      S.taken[i]=1; if(pk.tid===L.myTid) S.mine[i]=1;
+      S.order.push({i, n:pk.o, rd:Math.min(Math.ceil(pk.o/L.teams),L.rounds)});
+    }
+    save();
+  }
+  mode = L.drafted ? "waiver" : "draft";
+}
+const save = ()=>{ try{ localStorage.setItem(keyFor(L), JSON.stringify(S)); }catch(e){} };
+
+const pickNo = (r,s)=> r%2 ? (r-1)*L.teams + s : (r-1)*L.teams + (L.teams+1-s);
+const myPicks = ()=> Array.from({length:L.rounds},(_,i)=>pickNo(i+1,S.slot));
+const current = ()=> S.order.length + 1;
+function nextTwo(){ const c=current(), ps=myPicks().filter(p=>p>=c); return [ps[0]??null, ps[1]??null]; }
+const available = ()=>{
+  if(mode==="replay"){
+    const gone=takenBy(replayAt);
+    return P.map((p,i)=>({p,i})).filter(x=>!gone.has(x.p[0]));
+  }
+  return P.map((p,i)=>({p,i})).filter(x=>!S.taken[x.i]);
+};
+
+function openSlots(){
+  const mine=S.order.filter(o=>S.mine[o.i]).map(o=>P[o.i]);
+  const filled=L.slots.map(s=>({slot:s,p:null}));
+  for(const p of mine){
+    const pos=p[1];
+    let i=filled.findIndex(f=>!f.p && f.slot===pos);
+    if(i<0 && FLEXOK[pos]) i=filled.findIndex(f=>!f.p && f.slot==="FLEX");
+    if(i>=0) filled[i].p=p;
+  }
+  const open={}; for(const f of filled) if(!f.p) open[f.slot]=(open[f.slot]||0)+1;
+  return {open, filled, bench: mine.length - filled.filter(f=>f.p).length};
+}
+
+/* ── scoring, shared by the table and the recommendation ───────── */
+function score(x){
+  const [nm,pos,adp]=x.p;
+  const c=current(), [n1,n2]=nextTwo(), ref=(mode==="waiver")?null:(n1??c);
+  const {open}=openSlots();
+  const rd=Math.min(Math.ceil((ref||c)/L.teams), L.rounds);
+  const av=available();
+  let need;
+  if(pos==="K"||pos==="DEF") need=(open[pos]&&rd>=L.rounds-2)?1:0.02;
+  else if(open[pos]) need=1;
+  else if(FLEXOK[pos]&&open.FLEX) need=0.6;
+  else need=0.25;
+  const fall = ref ? ref-adp : 0;
+  const urgent = ref!==null && (n2===null || adp<=n2);
+  const tierLeft = av.filter(y=>y.p[1]===pos && y.p[2]<=adp+12).length;
+  const news = newsRead(nm);
+  const V = vorOf(nm);
+  const vorPts = V ? V.vor : 0;
+  // Value over replacement is the spine: it prices scarcity and quality
+  // together, which ADP alone cannot. Everything else only nudges it.
+  let s = vorPts/5 + need*18 + (urgent?8:0) + (tierLeft<=3?5:0) + fall*0.4;
+  if(news.cls==="down") s-=6; if(news.cls==="up") s+=3;
+  if((pos==="K"||pos==="DEF") && rd<L.rounds-2) s-=500;
+  if(mode==="waiver") s = vorPts/5 + need*18 + (tierLeft<=3?5:0)
+      + (news.cls==="up"?4:0) - (news.cls==="down"?6:0);
+  return {...x, nm, pos, adp, fall, need, urgent, tierLeft, news, s, n2, V};
+}
+
+function signals(r){
+  const out=[];
+  if(mode==="draft"){
+    if(r.fall>3) out.push(`<span class="sig val">FELL ${Math.round(r.fall)}</span>`);
+    else if(r.urgent) out.push('<span class="sig now">TAKE NOW</span>');
+    else out.push('<span class="sig wait">CAN WAIT</span>');
+  }
+  if(r.need>=1) out.push(`<span class="sig need">FILLS ${r.pos}</span>`);
+  if(r.tierLeft<=3) out.push(`<span class="sig thin">${r.tierLeft} LEFT</span>`);
+  if(r.V){
+    out.push(`<span class="sig vor">${r.V.vor>=0?"+":""}${Math.round(r.V.vor)} VOR</span>`);
+    out.push(`<span class="sig role">${r.V.pos}${r.V.posRank}</span>`);
+    if(!r.V.startable) out.push('<span class="sig scarce">BENCH TIER</span>');
+  }
+  const a=(D.adv||{})[r.nm];
+  if(a){
+    if(a.role) out.push(`<span class="sig role">${a.role}</span>`);
+    if(a.gap>=20) out.push('<span class="sig use">UNDERUSED PRICE</span>');
+    else if(a.gap<=-20) out.push('<span class="sig over">OVERPRICED</span>');
+    if(a.ts>=22) out.push(`<span class="sig role">${a.ts}% TGT</span>`);
+  }
+  if(r.news.cls==="down") out.push('<span class="sig down">BAD NEWS</span>');
+  else if(r.news.cls==="up") out.push('<span class="sig up">GOOD NEWS</span>');
+  else if(r.news.cls==="quiet") out.push('<span class="sig quiet">NO NEWS</span>');
+  else out.push('<span class="sig flat">NEWS</span>');
+  return `<span class="sigs">${out.join("")}</span>`;
+}
+
+/* ── folding ───────────────────────────────────────────────────── */
+const FOLD_KEY="fe-folds-v1";
+let FOLDS={};
+try{ FOLDS=JSON.parse(localStorage.getItem(FOLD_KEY)||"{}"); }catch(e){ FOLDS={}; }
+function foldState(k){ return FOLDS[k]; }               // undefined means open
+function setFold(k, open){
+  FOLDS[k]=open;
+  try{ localStorage.setItem(FOLD_KEY, JSON.stringify(FOLDS)); }catch(e){}
+  applyFolds();
+}
+function applyFolds(){
+  document.querySelectorAll("[data-fold]").forEach(btn=>{
+    const k=btn.dataset.fold, open=FOLDS[k]!==false;
+    btn.setAttribute("aria-expanded", String(open));
+    const target = document.getElementById(
+      k==="board" ? "boardWrap" : k==="rec" ? "recCards" : k);
+    if(target) target.hidden = !open;
+  });
+}
+document.addEventListener("click", e=>{
+  const f=e.target.closest("[data-fold]");
+  if(!f) return;
+  e.stopPropagation();
+  setFold(f.dataset.fold, f.getAttribute("aria-expanded")==="false");
+});
+
+/* ── replay ────────────────────────────────────────────────────────
+   Steps through a finished draft. At any of your picks you can swap in a
+   player who was genuinely on the board and see what it would have cost.
+
+   The model holds every other manager's pick fixed. That is a real
+   simplification - in a live room a different pick changes what everyone
+   after you does - but it is the only assumption that stays honest, because
+   nothing in the data says how a rival would have reacted. So read a branch
+   as "what this pick was worth", never as a simulated alternate season. */
+let replayAt=0, whatIf=null;
+const dlog = ()=> (D.draftLog||{})[L.id] || [];
+const myTeamName = ()=>{
+  const d=(D.dossiers||{})[L.id]||{};
+  const mine=Object.entries(d).find(([,m])=>m.you);
+  return mine?mine[0]:null;
+};
+function takenBy(upto){
+  const s=new Set();
+  for(const row of dlog().slice(0,upto)) s.add(row[3]);
+  return s;
+}
+function renderScrub(){
+  const box=document.getElementById("scrubBox");
+  if(mode!=="replay"){ box.innerHTML=""; return; }
+  const log=dlog(), n=log.length;
+  const cur=log[Math.max(replayAt-1,0)];
+  box.innerHTML=`<div class="scrub">
+      <button class="btn" data-step="-1">&#8592; Back</button>
+      <input type="range" id="scrubR" min="1" max="${n}" value="${replayAt}" aria-label="Pick number">
+      <button class="btn" data-step="1">Next &#8594;</button>
+      <span class="now">Pick <b>${replayAt}</b> of ${n} &middot; R${cur?cur[1]:1}</span>
+    </div>
+    ${cur?`<div class="rosterlist" style="margin-bottom:var(--s4)">
+      <b>#${cur[0]}</b> ${esc(cur[2])} took <b>${esc(cur[3])}</b> (${cur[4]})
+      ${cur[5]!=null?`&middot; ADP ${cur[5]}`:""}</div>`:""}
+    ${renderOnClock()}`;
+  const r=document.getElementById("scrubR");
+  if(r) r.oninput=()=>{ replayAt=+r.value; whatIf=null; renderAll(); };
+}
+function renderOnClock(){
+  const log=dlog(), me=myTeamName();
+  if(!me) return "";
+  const cur=log[replayAt-1];
+  if(!cur || cur[2]!==me) return "";
+  const avail=[];
+  const gone=takenBy(replayAt-1);
+  for(const pl of P){
+    if(gone.has(pl[0])) continue;
+    if(pl[0]===cur[3]) continue;
+    avail.push(pl);
+    if(avail.length>=200) break;
+  }
+  const top=avail.sort((a,b)=>a[2]-b[2]).slice(0,6);
+  return `<div class="onclock">
+    <h3>You were on the clock at #${cur[0]} &mdash; you took ${esc(cur[3])}</h3>
+    <div class="rosterlist">Best players actually still on the board:</div>
+    ${top.map(pl=>`<div class="alt">
+        <span class="n">${esc(pl[0])} <span class="d">${pl[1]} &middot; ADP ${pl[2]}</span></span>
+        <button class="mini take" data-whatif="${esc(pl[0])}">What if?</button>
+      </div>`).join("")}
+    ${whatIf?renderWhatIf(cur, whatIf):""}</div>`;
+}
+function renderWhatIf(cur, altName){
+  const log=dlog(), me=myTeamName();
+  const alt=P.find(p=>p[0]===altName);
+  if(!alt) return "";
+  const actual=P.find(p=>p[0]===cur[3]);
+  const advA=(D.adv||{})[altName], advB=(D.adv||{})[cur[3]];
+  // Who actually ended up with the alternative, and when?
+  const laterRow=log.find(r=>r[3]===altName);
+  const myNext=log.find(r=>r[2]===me && r[0]>cur[0]);
+  // Would the alternative have survived to your next pick?
+  const survives = laterRow && myNext && laterRow[0] > myNext[0];
+  const line=[];
+  line.push(`Instead of <b>${esc(cur[3])}</b> (ADP ${actual?actual[2]:"?"}) you take <b>${esc(altName)}</b> (ADP ${alt[2]}).`);
+  if(advA&&advB){
+    const f=(a)=> a.pos==="WR"||a.pos==="TE" ? `${a.ts}% targets, ${a.adot} aDOT` : `${Math.round(10*(a.car+a.tgt)/Math.max(a.g,1))/10} touches/g`;
+    line.push(`2025 usage: ${esc(cur[3])} ran ${f(advB)}; ${esc(altName)} ran ${f(advA)}.`);
+  } else if(advA||advB){
+    line.push(`Only one of the two has a 2025 record, so the usage comparison is not available.`);
+  }
+  if(laterRow){
+    line.push(`In the real draft <b>${esc(laterRow[2])}</b> took ${esc(altName)} at <b>#${laterRow[0]}</b>${laterRow[2]===me?" (that was you, later)":""}.`);
+    if(myNext){
+      line.push(survives
+        ? `<span class="cost">He would still have been there at your next pick, #${myNext[0]}</span> &mdash; so taking him here spends a pick you did not need to.`
+        : `<span class="gain">He was gone before your next pick at #${myNext[0]}</span> &mdash; this was the only turn you could have had him.`);
+    }
+  } else {
+    line.push(`${esc(altName)} went undrafted in this league.`);
+  }
+  return `<div class="whatif">${line.join("<br>")}</div>`;
+}
+
+/* ── renders ───────────────────────────────────────────────────── */
+function renderHeader(){
+  const c=current(), [n1]=nextTwo();
+  document.getElementById("hRound").textContent=Math.min(Math.ceil(c/L.teams),L.rounds);
+  document.getElementById("hPick").textContent=c;
+  const el=document.getElementById("hUntil");
+  el.textContent = mode==="waiver" ? "—" : (n1===null?"done":(n1===c?"NOW":(n1-c)+" picks"));
+  document.getElementById("mDraft").setAttribute("aria-pressed", mode==="draft");
+  document.getElementById("mWaiver").setAttribute("aria-pressed", mode==="waiver");
+  document.getElementById("mReplay").setAttribute("aria-pressed", mode==="replay");
+}
+function renderRoster(){
+  const {filled}=openSlots();
+  const mine=S.order.filter(o=>S.mine[o.i]).map(o=>({p:P[o.i], rd:o.rd}));
+  const starters=new Set(filled.filter(f=>f.p).map(f=>f.p[0]));
+  const bench=mine.filter(m=>!starters.has(m.p[0]));
+  let h="";
+  for(const f of filled){
+    const rd=(mine.find(m=>m.p[0]===(f.p||[])[0])||{}).rd;
+    h+=`<div class="slot"><span class="pos">${f.slot}</span>`+
+      (f.p?`<span class="nm">${esc(f.p[0])}</span><span class="rd num">R${rd??"-"}</span>`
+          :`<span class="nm empty">open</span>`)+`</div>`;
+  }
+  for(let i=0;i<L.bench;i++){
+    const b=bench[i];
+    h+=`<div class="slot"><span class="pos" style="opacity:.6">BN</span>`+
+      (b?`<span class="nm">${esc(b.p[0])}</span><span class="rd num">R${b.rd}</span>`
+        :`<span class="nm empty">open</span>`)+`</div>`;
+  }
+  document.getElementById("roster").innerHTML=h;
+}
+function renderMyPicks(){
+  if(mode==="waiver"){ document.getElementById("mypicks").innerHTML=
+    `<div class="dt-empty">Draft complete. Waivers rank the free-agent pool against the holes still in your roster.</div>`; return; }
+  const c=current(), ps=myPicks(), nxt=ps.find(p=>p>=c);
+  document.getElementById("mypicks").innerHTML=ps.map((p,i)=>{
+    const done=p<c, cls=p===nxt?"pk next":(done?"pk done":"pk");
+    const got=S.order.find(o=>o.n===p && S.mine[o.i]);
+    return `<div class="${cls}"><span class="n num">R${i+1}</span><span class="num">#${p}</span> <span>${got?esc(P[got.i][0]):(done?"—":"")}</span></div>`;
+  }).join("");
+}
+function renderTabs(){
+  const av=available(), counts={ALL:av.length};
+  for(const k of ["QB","RB","WR","TE","K","DEF"]) counts[k]=av.filter(x=>x.p[1]===k).length;
+  document.getElementById("tabs").innerHTML=["ALL","RB","WR","TE","QB","DEF","K"].map(k=>
+    `<button class="tab" data-f="${k}" aria-pressed="${filter===k}">${k}<span class="c num">${counts[k]}</span></button>`).join("");
+}
+function ranked(){
+  let rows=available().map(score);
+  if(filter!=="ALL") rows=rows.filter(r=>r.pos===filter);
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  if(q) rows=rows.filter(r=>r.nm.toLowerCase().includes(q));
+  return rows;
+}
+function renderBoard(){
+  const rows=ranked().sort((a,b)=> mode==="waiver" ? b.s-a.s : a.adp-b.adp).slice(0,60);
+  const el=document.getElementById("board");
+  if(!rows.length){ el.innerHTML=`<tr class="empty-row"><td colspan="6">Nothing matches. Clear the search or pick another position.</td></tr>`; return; }
+  el.innerHTML=rows.map((r,i)=>`<tr data-i="${r.i}" aria-selected="${sel===r.i}">
+    <td class="rk num">${i+1}</td>
+    <td class="pname">${esc(r.nm)}</td>
+    <td><span class="pchip ${r.pos}">${r.pos}</span></td>
+    <td class="adpc num">${r.adp.toFixed(1)}</td>
+    <td>${signals(r)}</td>
+    <td class="acts">
+      <button class="mini take" data-take="${r.i}" title="You took him">MINE</button>
+      <button class="mini" data-gone="${r.i}" title="Someone else took him">GONE</button>
+    </td></tr>`).join("");
+}
+function renderRec(){
+  const box=document.getElementById("rec");
+  if(mode==="replay"){ box.innerHTML=""; return; }
+  const [n1,n2]=nextTwo(), c=current();
+  if(mode==="draft" && n1===null){ box.innerHTML=`<div class="hd"><h2>Draft complete</h2></div>`; return; }
+  const recs=ranked().sort((a,b)=>b.s-a.s).slice(0,3);
+  const title = mode==="waiver" ? "Best available now" : "Take one of these";
+  const sub = mode==="waiver" ? "Ranked against the holes left in your roster"
+    : (n1===c?`You are on the clock at #${c}`:`Pick #${c} is someone else&rsquo;s &mdash; you are up at #${n1}`);
+  const head = `<div class="hd">
+    <h2><button class="fold" data-fold="rec" aria-expanded="${foldState("rec")!==false}"
+      style="border:none;padding:0;margin:0;display:inline-flex;width:auto;color:inherit;font-size:15px;letter-spacing:.12em">
+      <span class="chev">&#9660;</span><span>${title}</span></button></h2>
+    <span class="at">${sub}</span></div>`;
+  box.innerHTML = head + (recs.length?`<div class="reccards foldable" id="recCards"`
+    + (foldState("rec")===false?" hidden":"") + `>`+recs.map((r,i)=>`
+    <div class="rc r${i+1}" data-i="${r.i}" tabindex="0" role="button">
+      <span class="rank">${["First choice","Second","Third"][i]}</span>
+      <span class="nm">${esc(r.nm)}</span>
+      <span class="sigs">${signals(r)}</span>
+      <span class="why">${why(r)}</span>
+    </div>`).join("")+`</div>`:`<p class="dt-empty">No players left.</p>`);
+}
+function why(r){
+  const b=[];
+  if(mode==="draft"){
+    if(r.fall>4) b.push(`Fell <b>${Math.round(r.fall)} picks</b> past ADP ${r.adp.toFixed(1)}.`);
+    else if(r.fall>-3) b.push(`Going right about here (ADP ${r.adp.toFixed(1)}).`);
+    else b.push(`A <b>${Math.abs(Math.round(r.fall))}-pick reach</b> on ADP ${r.adp.toFixed(1)}.`);
+  } else b.push(`ADP ${r.adp.toFixed(1)}, undrafted in this league.`);
+  if(r.V) b.push(`Worth <b>${r.V.vor>=0?"+":""}${Math.round(r.V.vor)}</b> over replacement as ${r.V.pos}${r.V.posRank}.`);
+  if(r.need>=1) b.push(`Fills your open <b>${r.pos}</b>.`);
+  else if(r.need>=0.6) b.push(`Slots into your <b>FLEX</b>.`);
+  else b.push(`Depth &mdash; ${r.pos} starters set.`);
+  if(mode==="draft"){ if(r.n2===null) b.push("Last pick.");
+    else if(r.urgent) b.push(`<b>Gone before #${r.n2}</b>.`);
+    else b.push(`Survives to #${r.n2}.`); }
+  if(r.tierLeft<=3) b.push(`Only <b>${r.tierLeft}</b> left in his tier.`);
+  if(r.news.cls==="down") b.push(`Recent coverage reads <b>negative</b>.`);
+  return b.join(" ");
+}
+function renderRun(){
+  const last=S.order.slice(-8), c={};
+  for(const o of last){ const p=P[o.i][1]; c[p]=(c[p]||0)+1; }
+  const hot=Object.entries(c).filter(([k,v])=>v>=4 && ["RB","WR","TE","QB"].includes(k));
+  document.getElementById("runbox").innerHTML = (mode==="draft" && hot.length)
+    ? `<div class="runalert"><b>${hot[0][0]} RUN</b> &mdash; ${hot[0][1]} of the last ${last.length} picks were ${hot[0][0]}s. Get in front of it, or fade it and take what everyone just skipped.</div>` : "";
+}
+
+/* ── player detail ─────────────────────────────────────────────── */
+let selMgr=null;
+
+function dossierFor(name){
+  const byLeague=(D.dossiers||{})[L.id]||{};
+  if(byLeague[name]) return byLeague[name];
+  const key=Object.keys(byLeague).find(k=>name.includes(k)||k.includes(name.replace(/^You \(|\)$/g,"")));
+  return key?byLeague[key]:null;
+}
+
+function renderManager(){
+  const el=document.getElementById("detail");
+  const m=dossierFor(selMgr);
+  if(!m){ el.innerHTML=`<span class="lbl">Manager</span>
+    <p class="dt-empty">No history on record for ${esc(selMgr)} in this league.</p>
+    <button class="btn" id="mgrBack">Back to players</button>`;
+    document.getElementById("mgrBack").onclick=()=>{selMgr=null; renderDetail();}; return; }
+  const pos={};
+  for(const r of m.roster) pos[r.pos]=(pos[r.pos]||0)+1;
+  el.innerHTML=`<span class="lbl">Manager dossier</span>
+    <div class="mgrhead"><h3>${esc(m.name)}</h3></div>
+    <div class="statline">
+      <span>Record <b>${m.record}</b></span>
+      <span>All-play <b>${m.allplay}</b></span>
+      <span>Luck <b>${m.luck>=0?"+":""}${m.luck}</b></span>
+      <span>Seasons <b>${m.seasons}</b></span>
+    </div>
+    <div class="statline">
+      <span>Draft value R1&ndash;5 <b>${m.early>=0?"+":""}${m.early}</b></span>
+      <span>R6+ <b>${m.late>=0?"+":""}${m.late}</b></span>
+      ${m.meanReach!==null?`<span>Mean reach <b>${m.meanReach>=0?"+":""}${m.meanReach}</b></span>`:""}
+    </div>
+    ${m.bestValue?`<div class="rosterlist">Best value ever: <b>${esc(m.bestValue.nm)}</b>
+       R${m.bestValue.round} ${m.bestValue.season} (${m.bestValue.reach>=0?"+":""}${m.bestValue.reach})<br>
+       Worst reach ever: <b>${esc(m.worstReach.nm)}</b> R${m.worstReach.round} ${m.worstReach.season}
+       (${m.worstReach.reach>=0?"+":""}${m.worstReach.reach})</div>`:""}
+    <div class="rosterlist"><b>${L.season||"This year"} roster</b> &mdash;
+      ${Object.entries(pos).map(([k,v])=>`${v}${k}`).join(" ")}<br>
+      ${m.roster.map(r=>`R${r.round} ${esc(r.nm)}`).join(" &middot; ")||"no picks recorded"}</div>
+    <div class="askrow">
+      <button class="btn" id="roastBtn">Roast them</button>
+      <button class="btn" id="analyzeBtn">Serious analysis</button>
+      <button class="btn" id="mgrBack">Back</button>
+    </div>
+    <div id="mgrOut"></div>`;
+  document.getElementById("mgrBack").onclick=()=>{selMgr=null; renderDetail();};
+  document.getElementById("roastBtn").onclick=e=>askManager(m,"roast",e.target);
+  document.getElementById("analyzeBtn").onclick=e=>askManager(m,"serious",e.target);
+}
+
+function mgrFacts(m){
+  const pos={}; for(const r of m.roster) pos[r.pos]=(pos[r.pos]||0)+1;
+  return `MANAGER: ${m.name}
+LEAGUE: ${L.name}, ${L.teams} teams
+CAREER: ${m.record} over ${m.seasons} seasons. Win rate ${m.win}. All-play ${m.allplay} (what they would win against the whole league every week).
+LUCK: ${m.luck>=0?"+":""}${m.luck} points of win rate above what their scoring earned. Positive means the schedule flattered them; negative means it robbed them.
+DRAFT VALUE vs the league median for each round: ${m.early>=0?"+":""}${m.early} in rounds 1-5, ${m.late>=0?"+":""}${m.late} after round 5. Positive is good.
+${m.meanReach!==null?`REACHING: on average they pick a player ${m.meanReach>=0?m.meanReach+" picks BEFORE":Math.abs(m.meanReach)+" picks AFTER"} the market expects.`:""}
+${m.bestValue?`BEST PICK EVER: ${m.bestValue.nm}, round ${m.bestValue.round} of ${m.bestValue.season}.`:""}
+${m.worstReach?`WORST REACH EVER: ${m.worstReach.nm} in round ${m.worstReach.round} of ${m.worstReach.season}, ${m.worstReach.reach} picks early.`:""}
+THIS YEAR'S ROSTER: ${Object.entries(pos).map(([k,v])=>v+" "+k).join(", ")}. Picks in order: ${m.roster.map(r=>`R${r.round} ${r.nm} (${r.pos})`).join("; ")||"none recorded"}`;
+}
+
+async function askManager(m, mode, btn){
+  const out=document.getElementById("mgrOut");
+  const s=await getSample();
+  if(!s){ out.className="serious"; out.textContent="Claude is not available in this view, so there is no written read here. The numbers above are unaffected."; return; }
+  btn.disabled=true;
+  out.className = mode==="roast" ? "roast" : "serious";
+  out.textContent="Thinking…";
+  const facts=mgrFacts(m);
+  const prompt = mode==="roast"
+    ? `You are roasting a fantasy football manager, stand-up style: fast, punchy, specific. Kevin Hart energy - incredulous, escalating, self-aware.
+
+${facts}
+
+Rules: 120 words max. Roast their FANTASY DECISIONS only - the picks, the reaches, the luck, the roster shape. Never their name, looks, family, or anything personal. Every joke must be anchored to a real number above; the specificity is what makes it land. If the numbers say they are actually good, roast the thing that is still wrong, or roast how lucky they have been. No preamble, no signoff.`
+    : `You are a fantasy football analyst writing a scouting report on a rival manager.
+
+${facts}
+
+150 words max. Cover: are they actually good or just lucky (compare record to all-play), where in the draft they gain or lose value, and one concrete way to play against them this season. Plain language, no hedging, no bullet points. Say when the sample is too small to trust rather than dressing it up.`;
+  try{
+    const res=await s(prompt,{modelTier:"default", onText:({text})=>{ out.textContent=text; }});
+    out.textContent=res.text;
+  }catch(e){
+    out.className="serious";
+    out.textContent = e && e.code==="rate_limited"
+      ? "Rate limited. Try again in a moment."
+      : "Could not get a written read. The numbers above are unaffected.";
+  } finally { btn.disabled=false; }
+}
+
+function renderDetail(){
+  if(selMgr) return renderManager();
+  const el=document.getElementById("detail");
+  if(sel===null || S.taken[sel]){
+    el.innerHTML=`<span class="lbl">Player detail</span>
+      <p class="dt-empty">Pick any row to see how he fits your roster, what the board says, and the most recent real coverage of him.</p>`;
+    sel=null; return;
+  }
+  const r=score({p:P[sel], i:sel});
+  const {open,filled}=openSlots();
+  const posLeft=available().filter(x=>x.p[1]===r.pos).length;
+  const posRank=P.filter(p=>p[1]===r.pos && p[2]<=r.adp).length;
+
+  let fit;
+  if(r.need>=1) fit=`Goes straight into your open <b>${r.pos}</b>. After him you would still need ${Object.entries(open).filter(([k])=>k!==r.pos).map(([k,v])=>`${v} ${k}`).join(", ")||"nothing"}.`;
+  else if(r.need>=0.6) fit=`Your ${r.pos} slots are full, so he takes the <b>FLEX</b>. That closes your last flexible starting spot.`;
+  else fit=`Pure depth. Your ${r.pos} starters are set, so he sits on a bench with ${L.bench} seats.`;
+
+  const arts=r.news.arts;
+  el.innerHTML=`<span class="lbl">Player detail</span>
+    <div class="dt">
+      <h3>${esc(r.nm)}</h3>
+      <div class="meta"><span class="pchip ${r.pos}">${r.pos}</span>
+        <span>${r.pos}${posRank} by ADP</span><span>&middot;</span><span>${posLeft} left on the board</span></div>
+      <div class="sigs" style="margin-bottom:var(--s3)">${signals(r)}</div>
+      <div class="fit">${fit}</div>
+      <dl class="kv">
+        <dt>ADP</dt><dd class="num">${r.adp.toFixed(1)}</dd>
+        ${mode==="draft"?`<dt>Your next pick</dt><dd class="num">#${nextTwo()[0]??"—"}</dd>
+        <dt>Then</dt><dd class="num">#${r.n2??"—"}</dd>
+        <dt>Versus ADP</dt><dd class="num" style="color:${r.fall>=0?"var(--amber)":"var(--muted)"}">${r.fall>=0?"+":""}${r.fall.toFixed(1)}</dd>`:""}
+        <dt>Left in tier</dt><dd class="num">${r.tierLeft}</dd>
+      </dl>
+      ${valueBlock(r)}
+      ${advBlock(r)}
+      <span class="lbl">Recent coverage${D.newsAsOf?` &middot; to ${D.newsAsOf}`:""}</span>
+      ${arts.length?arts.map(a=>`<div class="art">
+          ${a.u?`<a class="h" href="${esc(a.u)}" target="_blank" rel="noopener">${esc(a.h)}</a>`:`<span class="h">${esc(a.h)}</span>`}
+          <div class="m"><span class="num">${esc(a.p)}</span><span class="sig ${r.news.cls}">${r.news.sym}</span></div>
+        </div>`).join("")
+        :`<p class="dt-empty">No article in the last ${D.articleCount} NFL stories mentioned him. That is silence in the feed, not a verdict on the player.</p>`}
+      <div class="askrow">
+        <button class="btn" id="askBtn">Ask Claude</button>
+        <button class="btn" id="takeBtn">Draft him</button>
+      </div>
+      <div id="aiOut"></div>
+    </div>`;
+  document.getElementById("takeBtn").onclick=()=>mark(sel,true);
+  const ask=document.getElementById("askBtn");
+  ask.onclick=()=>askClaude(r, ask);
+}
+
+/* What a pick is worth once positional scarcity is priced in. */
+function valueBlock(r){
+  const V=r.V, info=replOf(r.pos);
+  if(!V||!info) return "";
+  const persist=info.persist;
+  const trust = persist>=.6 ? "holds up well season to season"
+    : persist>=.35 ? "only partly repeats year to year"
+    : "barely repeats year to year, so treat any edge here as small";
+  return `<span class="lbl">Value over replacement &middot; ${L.teams}-team</span>
+    <div class="fit">
+      As <b>${r.pos}${V.posRank}</b> he is worth <b>${V.vor>=0?"+":""}${Math.round(V.vor)} points</b>
+      over the last ${r.pos} who starts anywhere in this league
+      (${V.starts} start; replacement scores ${Math.round(info.replacement)}).
+      ${V.startable?"":" <b>He sits below the line that starts</b> - bench depth, not a starter."}
+      <br><br>Scoring at ${r.pos} ${trust} (r=${persist}).
+      ${info.cliff&&info.cliff.drop>40?` The steepest fall is right after
+        <b>${r.pos}${info.cliff.after}</b>, a ${Math.round(info.cliff.drop)}-point drop.`:""}
+    </div>`;
+}
+
+/* Last season's opportunity. Absent for rookies, and that is stated rather
+   than shown as zero. */
+function advBlock(r){
+  const a=(D.adv||{})[r.nm];
+  if(!a) return `<span class="lbl">Last season</span>
+    <p class="dt-empty">No 2025 usage on record &mdash; a rookie, or he did not play. That is missing data, not a low score.</p>`;
+  const rec = a.pos==="WR"||a.pos==="TE";
+  const rows = [
+    ["Role", a.role||a.pos],
+    ["Games", a.g],
+    rec ? ["Target share", a.ts+"%"] : ["Touches / game", (Math.round(10*(a.car+a.tgt)/Math.max(a.g,1))/10)],
+    rec ? ["aDOT", a.adot] : ["Targets", a.tgt],
+    rec ? ["Air-yards share", a.ays+"%"] : ["Carries", a.car],
+    rec ? ["WOPR", a.wopr] : ["Yards after catch", a.yac],
+    ["PPR / game", a.ppg],
+  ];
+  let verdict="";
+  if(a.gap>=20) verdict=`<div class="fit" style="border-color:var(--good)">
+      Used like a <b>top ${100-a.use}%</b> ${a.pos} last year, priced like a <b>bottom ${100-a.cost}%</b> one.
+      That gap is the case for taking him early.</div>`;
+  else if(a.gap<=-20) verdict=`<div class="fit" style="border-color:var(--crit)">
+      Priced in the <b>top ${100-a.cost}%</b> at his position but used like the
+      <b>${a.use}th percentile</b> last year. The market is paying for something 2025 did not show.</div>`;
+  return `<span class="lbl">Last season &middot; 2025 usage</span>
+    ${verdict}
+    <dl class="kv">${rows.map(([k,v])=>`<dt>${k}</dt><dd class="num">${v}</dd>`).join("")}</dl>`;
+}
+
+/* ── Claude, over real data only ───────────────────────────────── */
+let sampleNs; let sampleTried=false;
+async function getSample(){
+  if(!sampleTried){
+    sampleTried=true;
+    try{ sampleNs = (typeof claude!=="undefined" && claude.use) ? await claude.use("sample") : null; }
+    catch(e){ sampleNs=null; }
+  }
+  return sampleNs;
+}
+async function askClaude(r, btn){
+  const out=document.getElementById("aiOut");
+  const s=await getSample();
+  if(!s){ out.className="ai err"; out.textContent="Claude is not available in this view, so there is no AI read here. Everything else on this page still works."; return; }
+  btn.disabled=true; out.className="ai"; out.textContent="Thinking…";
+  const {open}=openSlots();
+  const roster=S.order.filter(o=>S.mine[o.i]).map(o=>`${P[o.i][0]} (${P[o.i][1]}, R${o.rd})`);
+  const arts=(r.news.arts||[]).map(a=>`- ${a.p}: ${a.h}. ${a.d}`).join("\n") || "(no recent articles found)";
+  const prompt =
+`You are advising a fantasy football manager mid-draft. Be concise and concrete: at most 120 words, no preamble.
+
+LEAGUE: ${L.name}, ${L.teams} teams, ${L.rounds} rounds, ${L.scoring}, snake, my slot ${S.slot}.
+MODE: ${mode==="waiver"?"post-draft waiver pickup":"live draft"}.
+${mode==="draft"?`CURRENT PICK: #${current()}. My next pick #${nextTwo()[0]}, then #${r.n2}.`:""}
+MY ROSTER SO FAR: ${roster.length?roster.join("; "):"empty"}
+STILL UNFILLED STARTING SLOTS: ${Object.entries(open).map(([k,v])=>`${v} ${k}`).join(", ")||"none"}
+
+PLAYER UNDER CONSIDERATION: ${r.nm}, ${r.pos}, ADP ${r.adp.toFixed(1)}, ${r.tierLeft} comparable players left in his tier.
+POSITIONAL VALUE in this exact league (${L.teams} teams): ${(()=>{const V=r.V,i=replOf(r.pos);
+  if(!V||!i) return "not available for this position";
+  return `${V.pos}${V.posRank}, worth ${Math.round(V.vor)} points over replacement. `
+    + `${i.starts} ${V.pos}s start league-wide; replacement scores ${Math.round(i.replacement)}. `
+    + `Scoring at ${V.pos} persists year to year at r=${i.persist}.`;
+})()}
+LAST SEASON (2025 regular season, real data): ${(()=>{const a=(D.adv||{})[r.nm];
+  if(!a) return "no 2025 record - rookie or did not play. Do not invent one.";
+  return (a.role?a.role+", ":"")+`${a.g} games, `
+    + ((a.pos==="WR"||a.pos==="TE")
+        ? `${a.ts}% target share, ${a.adot} aDOT, ${a.ays}% air-yards share, WOPR ${a.wopr}`
+        : `${a.car} carries and ${a.tgt} targets`)
+    + `, ${a.ppg} PPR points a game`
+    + (a.gap!==undefined?`. Usage percentile ${a.use}, price percentile ${a.cost}.`:".");
+})()}
+RECENT REAL HEADLINES ABOUT HIM:
+${arts}
+
+Using ONLY the facts above, say whether to take him and why, and name the main risk. If the headlines say nothing useful, say so rather than speculating. Do not invent news, injuries, statistics or depth-chart facts that are not in the headlines above.`;
+  try{
+    const res=await s(prompt,{modelTier:"default", onText:({text})=>{ out.textContent=text; }});
+    out.textContent=res.text;
+  }catch(e){
+    out.className="ai err";
+    out.textContent = e && e.code==="rate_limited"
+      ? "Claude is rate limited right now. Try again in a moment."
+      : "Could not get a read from Claude. The board numbers above are unaffected.";
+  } finally { btn.disabled=false; }
+}
+
+/* ── the bookmarklet, written as a function and serialized ──────── */
+function FE_GRAB(){
+  (async function(){
+    var box=document.createElement("div");
+    box.style.cssText="position:fixed;z-index:2147483647;right:16px;top:16px;max-width:330px;background:#131A17;color:#EDF2EE;border:1px solid #F0B429;border-radius:6px;padding:14px 16px;font:14px system-ui,sans-serif;line-height:1.45;box-shadow:0 8px 30px rgba(0,0,0,.5)";
+    box.textContent="Reading your league\u2026";
+    document.body.appendChild(box);
+    var say=function(t){ box.innerHTML=t; setTimeout(function(){box.remove();},9000); };
+    try{
+      var H="https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl";
+      var lid=(location.href.match(/leagueId=(\d+)/)||[])[1];
+      if(!lid){ return say("No league in this address. Open a page of your ESPN league \u2014 the address must contain leagueId= \u2014 then click again."); }
+      var yr=+((location.href.match(/seasonId=(\d+)/)||[])[1]||new Date().getFullYear());
+      var g=async function(u){ var r=await fetch(u,{credentials:"include"}); if(!r.ok) throw new Error(r.status); return r.json(); };
+      var SL={0:"QB",2:"RB",4:"WR",6:"TE",16:"DEF",17:"K",23:"FLEX"};
+      var nm=function(t){ return (t.name||((t.location||"")+" "+(t.nickname||""))).trim()||("Team "+t.id); };
+      var cur=await g(H+"/seasons/"+yr+"/segments/0/leagues/"+lid+"?view=mSettings&view=mTeam&view=mDraftDetail");
+      var s=cur.settings, slots=[], bench=0, rs=s.rosterSettings.lineupSlotCounts, k;
+      for(k in rs){ var v=rs[k]; if(!v) continue; var n=SL[+k];
+        if(n){ for(var i=0;i<v;i++) slots.push(n); } else if(+k===20){ bench=v; } }
+      var swid=(document.cookie.match(/SWID=([^;]+)/)||[])[1]||"";
+      var norm=function(x){ return decodeURIComponent(x||"").toUpperCase().replace(/[{}]/g,""); };
+      var me=(cur.teams||[]).find(function(t){ return (t.owners||[]).some(function(o){ return norm(o)===norm(swid); }); });
+      var picks=((cur.draftDetail||{}).picks||[]).filter(function(p){ return p.overallPickNumber; });
+      var slotOf={}; picks.filter(function(p){return p.roundId===1;})
+        .sort(function(a,b){return a.roundPickNumber-b.roundPickNumber;})
+        .forEach(function(p){ slotOf[p.teamId]=p.roundPickNumber; });
+      var curOwner={};
+      (cur.teams||[]).forEach(function(t){ var o=(t.owners||[])[0]; if(o) curOwner[o]=nm(t); });
+      var agg={}, seasons=0;
+      for(var y=yr-1;y>=yr-6;y--){
+        var d=null; try{ d=await g(H+"/seasons/"+y+"/segments/0/leagues/"+lid+"?view=mTeam&view=mMatchupScore"); }catch(e){ continue; }
+        if(!d||!d.teams) continue; seasons++;
+        var own={},lab={}; d.teams.forEach(function(t){ var o=(t.owners||[])[0]||nm(t); own[t.id]=o; lab[o]=nm(t); });
+        var wk={};
+        (d.schedule||[]).forEach(function(m){
+          var hm=m.home, aw=m.away; if(!hm||!aw||hm.totalPoints==null) return;
+          (wk[m.matchupPeriodId]=wk[m.matchupPeriodId]||[]).push([hm.teamId,hm.totalPoints],[aw.teamId,aw.totalPoints]);
+          [[hm,aw],[aw,hm]].forEach(function(pr){
+            var key=own[pr[0].teamId]; if(!key) return;
+            var a=agg[key]=agg[key]||{w:0,l:0,ap:0,apn:0,name:lab[key]||key};
+            if(pr[0].totalPoints>pr[1].totalPoints) a.w++; else if(pr[0].totalPoints<pr[1].totalPoints) a.l++;
+          });
+        });
+        Object.keys(wk).forEach(function(w){
+          var list=wk[w];
+          list.forEach(function(e){
+            var key=own[e[0]], a=agg[key]; if(!a) return;
+            a.ap+=list.filter(function(x){ return x[0]!==e[0] && e[1]>x[1]; }).length;
+            a.apn+=list.length-1;
+          });
+        });
+      }
+      var hist={}; Object.keys(agg).forEach(function(key){ var a=agg[key];
+        var label=curOwner[key]||a.name;
+        var gp=Math.max(a.w+a.l,1), win=a.w/gp, ap=a.ap/Math.max(a.apn,1);
+        hist[label]={rec:a.w+"-"+a.l, win:+win.toFixed(3), allplay:+ap.toFixed(3), luck:+((win-ap)*100).toFixed(1)};
+      });
+      var out={v:1, leagueId:lid, season:yr, name:s.name, teams:s.size,
+        rounds:Math.round(picks.length/s.size)||0, bench:bench, slots:slots,
+        scoring:(s.scoringSettings&&s.scoringSettings.scoringType)||"",
+        drafted:!!(cur.draftDetail||{}).drafted,
+        myTeam: me?nm(me):null, mySlot: me?(slotOf[me.id]||null):null,
+        order:(cur.teams||[]).map(function(t){ return {t:nm(t), slot:slotOf[t.id]||0}; }).sort(function(a,b){return a.slot-b.slot;}),
+        picks:picks.map(function(p){ return {o:p.overallPickNumber, tid:String(p.teamId), pid:String(p.playerId)}; }),
+        history:hist, seasons:seasons};
+      var txt=JSON.stringify(out);
+      try{ await navigator.clipboard.writeText(txt); }
+      catch(e){
+        var ta=document.createElement("textarea"); ta.value=txt;
+        ta.style.cssText="position:fixed;left:-9999px"; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy"); ta.remove();
+      }
+      say("<b style='color:#F0B429'>Copied \u2713</b><br>"+out.name+" \u2014 "+out.teams+
+          " teams, "+out.rounds+" rounds, "+seasons+" past seasons."+
+          (out.myTeam?"<br>Your team: "+out.myTeam+(out.mySlot?" (slot "+out.mySlot+")":""):"")+
+          "<br><br>Now paste it into the Command Board.");
+    }catch(err){ say("Could not read that league.<br>Make sure you are signed in to ESPN and on your own league page.<br><small>"+err+"</small>"); }
+  })();
+}
+const BMK_HREF = "javascript:" + encodeURIComponent("(" + FE_GRAB.toString() + ")()");
+
+function FE_SYNC(){
+  (async function(){
+    var box=document.createElement("div");
+    box.style.cssText="position:fixed;z-index:2147483647;right:16px;top:16px;max-width:320px;background:#131A17;color:#EDF2EE;border:1px solid #F0B429;border-radius:6px;padding:14px 16px;font:14px system-ui,sans-serif;line-height:1.45;box-shadow:0 8px 30px rgba(0,0,0,.5)";
+    box.textContent="Reading picks\u2026"; document.body.appendChild(box);
+    var say=function(t){ box.innerHTML=t; setTimeout(function(){box.remove();},7000); };
+    try{
+      var lid=(location.href.match(/leagueId=(\d+)/)||[])[1];
+      if(!lid) return say("Open your ESPN league page first \u2014 the address needs leagueId= in it.");
+      var yr=+((location.href.match(/seasonId=(\d+)/)||[])[1]||new Date().getFullYear());
+      var r=await fetch("https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/"+yr+
+        "/segments/0/leagues/"+lid+"?view=mDraftDetail",{credentials:"include"});
+      if(!r.ok) throw new Error(r.status);
+      var dd=(await r.json()).draftDetail||{};
+      var picks=(dd.picks||[]).filter(function(p){ return p.overallPickNumber && p.playerId>0; })
+        .map(function(p){ return [p.overallPickNumber, String(p.teamId), String(p.playerId)]; })
+        .sort(function(a,b){ return a[0]-b[0]; });
+      var txt=JSON.stringify({sync:1, leagueId:lid, drafted:!!dd.drafted, picks:picks});
+      try{ await navigator.clipboard.writeText(txt); }
+      catch(e){ var ta=document.createElement("textarea"); ta.value=txt;
+        ta.style.cssText="position:fixed;left:-9999px"; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy"); ta.remove(); }
+      say("<b style='color:#F0B429'>Copied \u2713</b><br>"+picks.length+
+          " picks so far.<br><br>Go to the board and press Apply.");
+    }catch(e){ say("Could not read the draft.<br>Make sure you are signed in and on your league page.<br><small>"+e+"</small>"); }
+  })();
+}
+const SYNC_HREF = "javascript:" + encodeURIComponent("(" + FE_SYNC.toString() + ")()");
+
+/* Replace the board state with what ESPN actually has. Authoritative, so a
+   hand-marked mistake is corrected rather than layered on top. */
+function applySync(raw){
+  let o;
+  try{ o=JSON.parse(raw); }catch(e){ throw new Error("That is not the copied text. Click the bookmark on your ESPN draft page, then paste the whole thing."); }
+  if(!o || !o.sync || !Array.isArray(o.picks)) throw new Error("That looks like the wrong thing. Use the Sync picks bookmark, not the Add-a-league one.");
+  if(String(o.leagueId)!==String(L.leagueId))
+    throw new Error(`Those picks are from league ${o.leagueId}, but you are looking at ${L.name}. Switch league first.`);
+  if(!o.picks.length) throw new Error("No picks made yet in that draft, so there is nothing to sync.");
+  const myTid=String(L.myTid||"");
+  let hit=0, miss=0;
+  S.taken={}; S.mine={}; S.order=[];
+  for(const [ov,tid,pid] of o.picks){
+    const i=BYID.get(String(pid));
+    if(i===undefined){ miss++; continue; }   // drafted someone outside the top 400
+    hit++;
+    S.taken[i]=1; if(String(tid)===myTid) S.mine[i]=1;
+    S.order.push({i, n:ov, rd:Math.min(Math.ceil(ov/L.teams),L.rounds)});
+  }
+  S.order.sort((a,b)=>a.n-b.n);
+  save();
+  return {hit, miss, total:o.picks.length};
+}
+
+/* ── added leagues ─────────────────────────────────────────────── */
+const ADDED_KEY="fe-added-leagues-v1";
+function addedLeagues(){ try{ return JSON.parse(localStorage.getItem(ADDED_KEY)||"[]"); }catch(e){ return []; } }
+function saveAdded(list){ try{ localStorage.setItem(ADDED_KEY, JSON.stringify(list)); }catch(e){} }
+
+function importLeague(raw){
+  let o;
+  try{ o=JSON.parse(raw); }catch(e){ throw new Error("That does not look like the copied text. Paste the whole thing, starting with {"); }
+  if(!o || !o.leagueId || !o.teams) throw new Error("That text is missing the league details. Click the bookmark again on your league page.");
+  if(!o.rounds) throw new Error("No draft found for that league yet, so there is nothing to build a board from.");
+  const flagOf=h=>!h?"":(h.allplay>=.55?"danger":(h.allplay<=.45?"soft":""));
+  const noteOf=(t,h)=>!h?"No past seasons found for this manager - unknown, not average."
+    :`${h.rec} (${h.win.toFixed(3)}) on a ${h.allplay.toFixed(3)} all-play, ${h.luck>=0?"+":""}${h.luck} points of luck.`;
+  const mine=o.myTeam;
+  return {
+    id:"x"+o.leagueId, leagueId:String(o.leagueId), name:o.name||("League "+o.leagueId),
+    teams:o.teams, rounds:o.rounds, bench:o.bench||6, slot:o.mySlot||1,
+    scoring:o.scoring==="H2H_POINTS"?"Head to head points":(o.scoring||""),
+    drafted:!!o.drafted,
+    slots:(o.slots&&o.slots.length)?o.slots:["QB","RB","RB","WR","WR","TE","FLEX","DEF","K"],
+    mgrs:(o.order||[]).map(t=>{
+      const h=(o.history||{})[t.t];
+      return [t.t===mine?`You (${t.t})`:t.t, t.slot, null, null,
+              t.t===mine?"you":flagOf(h), noteOf(t.t,h)];
+    }),
+    imported:true, seasons:o.seasons||0
+  };
+}
+
+function allLeagues(){ return D.leagues.concat(addedLeagues()); }
+function renderLeagueSel(){
+  const cur=L?L.id:null;
+  lsel.innerHTML=allLeagues().map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")
+    + `<option value="__add">+ Add a league…</option>`;
+  if(cur) lsel.value=cur;
+}
+function renderLgList(){
+  const add=addedLeagues();
+  document.getElementById("lgList").innerHTML =
+    D.leagues.map(l=>`<div class="lgrow"><span class="t">${esc(l.name)}</span><span class="tag">built in</span></div>`).join("")
+    + (add.length?add.map(l=>`<div class="lgrow"><span class="t">${esc(l.name)}</span>
+        <span class="tag">${l.teams} teams · ${l.seasons} past seasons</span>
+        <button class="mini" data-drop="${esc(l.id)}">Remove</button></div>`).join("")
+      : `<div class="lgrow"><span class="t" style="color:var(--dim);font-style:italic">Nothing added yet</span></div>`);
+}
+
+/* ── actions ───────────────────────────────────────────────────── */
+function mark(i, mine){
+  if(S.taken[i]) return;
+  const n=current();
+  S.taken[i]=1; if(mine) S.mine[i]=1;
+  S.order.push({i, n, rd:Math.min(Math.ceil(n/L.teams),L.rounds)});
+  if(sel===i) sel=null;
+  save(); renderAll();
+}
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-take]"), g=e.target.closest("[data-gone]"),
+        f=e.target.closest("[data-f]"), row=e.target.closest("tr[data-i], .rc[data-i]");
+  if(t){ e.stopPropagation(); return mark(+t.dataset.take,true); }
+  if(g){ e.stopPropagation(); return mark(+g.dataset.gone,false); }
+  if(f){ filter=f.dataset.f; renderTabs(); renderBoard(); return; }
+  const st=e.target.closest("[data-step]");
+  if(st){ const log=dlog();
+    replayAt=Math.min(Math.max(replayAt+ +st.dataset.step,1),log.length);
+    whatIf=null; renderAll(); return; }
+  const wi=e.target.closest("[data-whatif]");
+  if(wi){ whatIf=wi.dataset.whatif; renderAll(); return; }
+  const mg=e.target.closest("[data-mgr]");
+  if(mg){ selMgr=mg.dataset.mgr; sel=null; renderDetail(); return; }
+  if(row){
+    sel=+row.dataset.i; selMgr=null; renderBoard(); renderDetail();
+    // On a phone the detail panel sits below the fold; a tap should go there.
+    if(window.matchMedia("(max-width:900px)").matches){
+      document.getElementById("detail").scrollIntoView({behavior:"smooth", block:"start"});
+    }
+  }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key==="Enter" || e.key===" "){
+    const c=e.target.closest(".rc[data-i]");
+    if(c){ e.preventDefault(); sel=+c.dataset.i; renderBoard(); renderDetail(); }
+  }
+});
+document.getElementById("q").addEventListener("input", ()=>{ renderBoard(); renderRec(); });
+document.getElementById("undo").onclick=()=>{ const l=S.order.pop(); if(!l) return;
+  delete S.taken[l.i]; delete S.mine[l.i]; save(); renderAll(); };
+document.getElementById("reset").onclick=()=>{ S.taken={}; S.mine={}; S.order=[]; sel=null; save(); renderAll(); };
+document.getElementById("mDraft").onclick=()=>{ mode="draft"; renderAll(); };
+document.getElementById("mWaiver").onclick=()=>{ mode="waiver"; renderAll(); };
+document.getElementById("mReplay").onclick=()=>{
+  const log=(D.draftLog||{})[L.id];
+  if(!log||!log.length){ alertLine("No completed draft stored for this league yet."); return; }
+  mode="replay"; replayAt=log.length; whatIf=null; renderAll();
+};
+function alertLine(msg){
+  const b=document.getElementById("runbox");
+  b.innerHTML=`<div class="runalert"><b>NOTE</b> &mdash; ${esc(msg)}</div>`;
+}
+
+const lsel=document.getElementById("leagueSel");
+lsel.onchange=()=>{
+  if(lsel.value==="__add"){ lsel.value=L.id; openAdd(); return; }
+  loadLeague(lsel.value); sel=null; syncSlot(); renderAll();
+};
+
+const sovl=document.getElementById("syncOvl");
+function openSync(){ document.getElementById("syncBmk").href=SYNC_HREF; sovl.hidden=false;
+  document.getElementById("syncBox").focus(); }
+document.getElementById("syncBtn").onclick=()=>{ if(D.live){ lastSig=""; poll(); } else openSync(); };
+document.getElementById("syncClose").onclick=()=>{ sovl.hidden=true; };
+sovl.addEventListener("click", e=>{ if(e.target===sovl) sovl.hidden=true; });
+document.getElementById("syncBmk").addEventListener("click", e=>{
+  e.preventDefault(); const m=document.getElementById("syncMsg");
+  m.className="msg bad"; m.textContent="Drag it to your bookmarks bar — it only works on an ESPN page.";
+});
+function doSync(text){
+  const m=document.getElementById("syncMsg");
+  try{
+    const r=applySync(text.trim());
+    m.className="msg ok";
+    m.textContent=`Synced ${r.hit} picks`+(r.miss?` (${r.miss} were outside the top 400 and are ignored)`:"")+".";
+    document.getElementById("syncBox").value="";
+    sel=null; renderAll();
+  }catch(err){ m.className="msg bad"; m.textContent=err.message; }
+}
+document.getElementById("syncApply").onclick=()=>doSync(document.getElementById("syncBox").value);
+document.getElementById("syncPaste").onclick=async ()=>{
+  const m=document.getElementById("syncMsg");
+  try{ doSync(await navigator.clipboard.readText()); }
+  catch(e){ m.className="msg bad"; m.textContent="This browser will not let the page read your clipboard. Paste into the box and press Apply."; }
+};
+addEventListener("keydown", e=>{ if(e.key==="Escape" && !sovl.hidden) sovl.hidden=true; });
+
+const ovl=document.getElementById("addOvl");
+function openAdd(){ document.getElementById("bmk").href=BMK_HREF; renderLgList();
+  ovl.hidden=false; document.getElementById("impBox").focus(); }
+function closeAdd(){ ovl.hidden=true; }
+document.getElementById("closeAdd").onclick=closeAdd;
+ovl.addEventListener("click", e=>{ if(e.target===ovl) closeAdd(); });
+addEventListener("keydown", e=>{ if(e.key==="Escape" && !ovl.hidden) closeAdd(); });
+document.getElementById("bmk").addEventListener("click", e=>{
+  e.preventDefault();
+  const m=document.getElementById("impMsg"); m.className="msg bad";
+  m.textContent="Drag that button up to your bookmarks bar rather than clicking it here — it only works on an ESPN page.";
+});
+document.getElementById("copyBmk").onclick=async ()=>{
+  const m=document.getElementById("impMsg");
+  try{ await navigator.clipboard.writeText(BMK_HREF); m.className="msg ok";
+    m.textContent="Code copied. Make a new bookmark by hand and paste that as its address."; }
+  catch(e){ m.className="msg bad"; m.textContent="Could not reach the clipboard. Drag the button instead."; }
+};
+document.getElementById("impBtn").onclick=()=>{
+  const box=document.getElementById("impBox"), m=document.getElementById("impMsg");
+  try{
+    const lg=importLeague(box.value.trim());
+    const list=addedLeagues().filter(x=>x.id!==lg.id);
+    list.push(lg); saveAdded(list);
+    box.value=""; m.className="msg ok";
+    m.textContent=`Added ${lg.name} — ${lg.teams} teams, ${lg.rounds} rounds${lg.slot?`, you are slot ${lg.slot}`:""}. Choose it from the league menu.`
+      + (lg.seasons?"":" No past seasons exist under this league id, so the opponent read is empty — normal if your league was recreated this year.");
+    renderLeagueSel(); renderLgList();
+  }catch(err){ m.className="msg bad"; m.textContent=err.message; }
+};
+document.addEventListener("click", e=>{
+  const d=e.target.closest("[data-drop]"); if(!d) return;
+  saveAdded(addedLeagues().filter(x=>x.id!==d.dataset.drop));
+  if(L.id===d.dataset.drop){ loadLeague(D.leagues[0].id); syncSlot(); }
+  renderLeagueSel(); renderLgList(); renderAll();
+});
+
+const ssel=document.getElementById("slotSel");
+function syncSlot(){
+  ssel.innerHTML=Array.from({length:L.teams},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+  ssel.value=S.slot;
+}
+ssel.onchange=()=>{ S.slot=+ssel.value; save(); renderAll(); };
+
+function renderScarcity(){
+  const R=(D.replByLeague||{})[L.id]||{};
+  const box=document.getElementById("scarcity");
+  document.getElementById("scarCnt").textContent = `${L.teams}-team`;
+  const order=["RB","WR","TE","QB","K"].filter(p=>R[p]);
+  if(!order.length){ box.innerHTML=`<p class="dt-empty">No value curve for this league yet.</p>`; return; }
+  const max=Math.max(...order.map(p=>R[p].best));
+  box.innerHTML = order.map(p=>{
+    const i=R[p], w=Math.max(4,Math.round(100*i.best/max));
+    const weak = i.persist<.35;
+    return `<div style="margin-bottom:var(--s3)">
+      <div style="display:flex;gap:var(--s2);align-items:baseline;font-size:12.5px">
+        <span class="lbl" style="width:30px">${p}</span>
+        <span style="flex:1;color:var(--muted)">${i.starts} start &middot; replacement ${Math.round(i.replacement)}
+          ${weak?'<span class="sig quiet">NOISY</span>':""}</span>
+        <span class="num" style="color:var(--amber)">+${Math.round(i.best)}</span>
+      </div>
+      <div class="track" style="margin-top:3px"><span class="fill"
+        style="width:${w}%;background:${weak?"var(--dim)":"var(--amber)"}"></span></div>
+      ${i.cliff&&i.cliff.drop>40?`<div style="font-size:11.5px;color:var(--dim);margin-top:2px">
+        cliff after ${p}${i.cliff.after}: &minus;${Math.round(i.cliff.drop)}</div>`:""}
+    </div>`;
+  }).join("") + `<p class="note" style="font-size:11.5px;margin-top:var(--s2)">
+    Bar is the best player's value over replacement in <b>this</b> league size.
+    NOISY means last season's first half barely predicted its second, so the
+    gap is not reliably capturable.</p>`;
+}
+
+function renderDossier(){
+  document.getElementById("dossHead").textContent =
+    `Opponent dossier · ${L.name}`;
+  document.getElementById("dossier").innerHTML = L.mgrs
+    .slice().sort((a,b)=>(b[2]??-999)-(a[2]??-999)).map(m=>{
+    const [n,slot,early,late,flag,note]=m;
+    const f = flag==="danger"?'<span class="flag f-danger">Danger</span>'
+            : flag==="soft" ?'<span class="flag f-soft">Soft</span>' : "";
+    const sg = v => v===null||v===undefined ? '<b style="color:var(--dim)">n/a</b>'
+              : `<b class="${v>=0?"pgood":"pbad"}">${v>=0?"+":""}${v}</b>`;
+    return `<div class="mgr ${flag==="you"?"you":""}" data-mgr="${esc(n)}" tabindex="0" role="button">
+      <div class="top"><span class="who"><span class="num" style="color:var(--dim);font-size:11px">#${slot}</span> ${esc(n)}</span>${f}</div>
+      <div class="bars"><span>R1–5 ${sg(early)}</span><span>R6+ ${sg(late)}</span></div>
+      <div class="note">${esc(note)}</div></div>`;
+  }).join("");
+}
+
+function renderAll(){
+  renderHeader(); renderScrub(); renderRec(); renderRoster(); renderMyPicks();
+  renderTabs(); renderBoard(); renderRun(); renderDetail(); renderScarcity(); renderDossier();
+  const {filled}=openSlots();
+  document.getElementById("rosterCnt").textContent =
+    `${filled.filter(f=>f.p).length}/${L.slots.length} starters`;
+  document.getElementById("boardCnt").textContent = `${available().length} left`;
+  applyFolds();
+}
+function syncHdr(){
+  document.documentElement.style.setProperty("--hdr",
+    document.querySelector("header").offsetHeight+"px");
+}
+addEventListener("resize", syncHdr);
+if(window.ResizeObserver) new ResizeObserver(syncHdr).observe(document.querySelector("header"));
+
+/* Only `fantasyedge serve` sets D.live: that process holds the ESPN cookie and
+   may poll, which a sandboxed published page may not. */
+let lastSig="", pollTimer=null;
+function setLive(n, when){
+  const b=document.getElementById("liveBadge");
+  b.hidden=false;
+  b.innerHTML=`<span style="color:var(--good)">&#9679; LIVE</span> ${n} picks &middot; ${when}`;
+}
+async function poll(){
+  try{
+    const r=await fetch("/api/picks?league="+encodeURIComponent(L.leagueId),{cache:"no-store"});
+    if(!r.ok) return;
+    const o=await r.json();
+    const sig=o.picks.length+":"+((o.picks[o.picks.length-1]||[]).join(","));
+    const when=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    if(o.source==="not-live"){ 
+      document.getElementById("liveBadge").innerHTML =
+        '<span style="color:var(--dim)">no live feed for this league</span>';
+      document.getElementById("liveBadge").hidden=false; return; }
+    if(sig!==lastSig && o.picks.length){
+      lastSig=sig;
+      applySync(JSON.stringify({sync:1, leagueId:o.leagueId, picks:o.picks}));
+      sel=null; renderAll();
+    }
+    setLive(o.picks.length, when);
+  }catch(e){ /* a failed poll must never take the board down mid-draft */ }
+}
+function startLive(){
+  if(pollTimer) clearInterval(pollTimer);
+  poll(); pollTimer=setInterval(poll, (D.pollSeconds||30)*1000);
+}
+
+loadLeague(D.leagues[0].id);
+renderLeagueSel(); lsel.value=L.id; syncSlot(); syncHdr(); renderAll();
+if(D.live) startLive();
+</script>

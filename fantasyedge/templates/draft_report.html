@@ -1,0 +1,298 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* Light is the base. Dark redefines only tokens, three ways, so the
+     un-stamped "system" state resolves too. */
+  :root{
+    --paper:#F5F7F5; --card:#FFFFFF; --ink:#121814; --ink-2:#3C4842;
+    --muted:#5C6B62; --rule:#DCE3DE; --rule-2:#EDF1EE;
+    --reach:#C2591A;          /* taken before the market  */
+    --value:#2B5CA8;          /* got him after the market */
+    --mid:#98A49D;
+    --accent:#1D5C3F;
+    --s1:4px; --s2:8px; --s3:14px; --s4:22px; --s5:36px; --s6:60px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#121714; --card:#191F1B; --ink:#E7EDE9; --ink-2:#BAC5BE;
+      --muted:#8B9A92; --rule:#2A342E; --rule-2:#202823;
+      --reach:#D26F22; --value:#4E96DB; --mid:#6E7C74; --accent:#5FBF8D;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#121714; --card:#191F1B; --ink:#E7EDE9; --ink-2:#BAC5BE;
+    --muted:#8B9A92; --rule:#2A342E; --rule-2:#202823;
+    --reach:#D26F22; --value:#4E96DB; --mid:#6E7C74; --accent:#5FBF8D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--paper); color:var(--ink);
+       font-family:"Source Serif 4",Georgia,serif; font-size:16px; line-height:1.6;
+       -webkit-font-smoothing:antialiased}
+  .page{max-width:940px; margin:0 auto; padding:var(--s5) var(--s4) var(--s6)}
+  h1,h2,h3,.dsp{font-family:Archivo,"Helvetica Neue",Arial,sans-serif; margin:0; text-wrap:balance}
+  .mono,.num{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums}
+
+  /* ── masthead ─────────────────────────────────── */
+  .mast{border-bottom:2px solid var(--ink); padding-bottom:var(--s3); margin-bottom:var(--s4)}
+  .kick{font-family:Archivo,Arial,sans-serif; font-size:11px; font-weight:600; letter-spacing:.18em;
+        text-transform:uppercase; color:var(--reach); margin-bottom:var(--s2)}
+  h1{font-size:clamp(30px,5vw,46px); font-weight:700; letter-spacing:-.02em; line-height:1.04}
+  .dek{margin-top:var(--s2); color:var(--muted); font-size:15px}
+  .dek .mono{color:var(--ink-2)}
+
+  /* ── stat row ─────────────────────────────────── */
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+         gap:var(--s3); margin:var(--s4) 0 var(--s5)}
+  .stat{border-top:2px solid var(--rule); padding-top:var(--s2)}
+  .stat .k{font-family:Archivo,Arial,sans-serif; font-size:10px; font-weight:600; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--muted)}
+  .stat .v{font-family:Archivo,Arial,sans-serif; font-size:34px; font-weight:700; line-height:1.1;
+           letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .stat .n{font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px}
+  .stat.hi{border-top-color:var(--reach)}
+
+  section{margin-bottom:var(--s5)}
+  h2{font-size:12px; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+     color:var(--muted); padding-bottom:var(--s2); border-bottom:1px solid var(--rule);
+     margin-bottom:var(--s3)}
+  h3{font-size:19px; font-weight:600; letter-spacing:-.01em; margin-bottom:var(--s1)}
+  p{margin:0 0 var(--s3); max-width:66ch}
+  .lede{font-size:17px; color:var(--ink-2)}
+
+  /* ── the one chart form: a diverging bar around zero ── */
+  .key{display:flex; gap:var(--s4); align-items:center; font-size:12.5px;
+       color:var(--muted); margin-bottom:var(--s3); flex-wrap:wrap}
+  .key i{display:inline-block; width:22px; height:9px; border-radius:2px; vertical-align:-1px; margin-right:6px}
+  .rows{display:flex; flex-direction:column}
+  .row{display:grid; grid-template-columns:var(--lw,168px) 1fr 62px; gap:var(--s3);
+       align-items:center; padding:5px 0; border-bottom:1px solid var(--rule-2)}
+  .row:hover{background:var(--rule-2)}
+  .row .lab{font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .row .lab .sub{color:var(--muted); font-size:12px}
+  .row.you .lab{font-weight:600}
+  .row.you .lab::after{content:"you"; font-family:Archivo,Arial,sans-serif; font-size:9px;
+      letter-spacing:.1em; text-transform:uppercase; background:var(--accent); color:var(--paper);
+      padding:1px 5px; border-radius:2px; margin-left:6px; vertical-align:1px}
+  .plot{position:relative; height:20px}
+  .plot .axis{position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--rule)}
+  .bar{position:absolute; top:4px; height:12px; border-radius:2px}
+  .bar.pos{left:50%; background:var(--reach); border-radius:0 4px 4px 0; margin-left:1px}
+  .bar.neg{right:50%; background:var(--value); border-radius:4px 0 0 4px; margin-right:1px}
+  .row .val{text-align:right; font-size:13px; font-weight:500}
+  .val.pos{color:var(--reach)} .val.neg{color:var(--value)}
+  .scaleft{display:flex; justify-content:space-between; font-size:11px; color:var(--muted);
+           margin-top:var(--s2); padding-left:calc(var(--lw,168px) + var(--s3))}
+
+  /* ── tables ───────────────────────────────────── */
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:var(--s5)}
+  @media (max-width:760px){ .two{grid-template-columns:1fr} .row{grid-template-columns:120px 1fr 54px} }
+  .tw{overflow-x:auto}
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th{font-family:Archivo,Arial,sans-serif; font-size:10px; font-weight:600; letter-spacing:.12em;
+     text-transform:uppercase; color:var(--muted); text-align:left;
+     padding:0 var(--s2) var(--s2) 0; border-bottom:1px solid var(--rule)}
+  td{padding:6px var(--s2) 6px 0; border-bottom:1px solid var(--rule-2); vertical-align:baseline}
+  th.r,td.r{text-align:right; padding-right:0}
+  tr.you td{background:var(--rule-2)}
+  .read{font-family:Archivo,Arial,sans-serif; font-size:10px; font-weight:600; letter-spacing:.1em;
+        text-transform:uppercase; padding:2px 7px; border-radius:3px; white-space:nowrap;
+        border:1px solid currentColor}
+  .read.Gunslinger{color:var(--reach)} .read.Assertive{color:var(--reach); opacity:.8}
+  .read.Patient{color:var(--value)} .read.Streaky{color:var(--muted)}
+  .pos{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--muted)}
+  .nm{font-weight:600}
+
+  .note{font-size:13.5px; color:var(--muted); line-height:1.55; border-left:2px solid var(--rule);
+        padding-left:var(--s3); max-width:66ch}
+  .note b{color:var(--ink-2)}
+  footer{border-top:1px solid var(--rule); padding-top:var(--s3); margin-top:var(--s5);
+         font-size:13px; color:var(--muted)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="page">
+  <div class="mast">
+    <div class="kick" id="kick"></div>
+    <h1 id="title"></h1>
+    <p class="dek" id="dek"></p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <section>
+    <h2 id="mineHead">Draft, pick by pick</h2>
+    <p class="lede" id="lede">Bars run right when a manager took a player
+      <em>before</em> the market had him, left when he was still there <em>after</em> his
+      ADP said he&rsquo;d be gone.</p>
+    <div class="key">
+      <span><i style="background:var(--reach)"></i>Took him early &mdash; a reach</span>
+      <span><i style="background:var(--value)"></i>Got him late &mdash; a value</span>
+      <span>Every bar carries its own number, so the colour is never doing the work alone.</span>
+    </div>
+    <div class="rows" id="mine" style="--lw:210px"></div>
+    <div class="scaleft" id="scaleMine"></div>
+  </section>
+
+  <section>
+    <h2>Who stayed disciplined</h2>
+    <p>Mean picks ahead of ADP across all 14 rounds. The whole league drafted
+      ahead of the market &mdash; that is normal, because ADP is a national average and a
+      10-team room runs shallower than it. What matters is the spread between managers.</p>
+    <div class="rows" id="league"></div>
+    <div class="scaleft" id="scaleLeague"></div>
+  </section>
+
+  <section>
+    <h2>Storylines</h2>
+    <p id="storyLede" class="lede"></p>
+    <div class="tw"><table><thead><tr>
+      <th>Manager</th><th>Read</th><th class="r">Mean</th><th>What happened</th>
+    </tr></thead><tbody id="stories"></tbody></table></div>
+    <p class="note" id="storyNote" style="margin-top:var(--s3)"></p>
+  </section>
+
+  <div class="two">
+    <section>
+      <h2>Best values in the room</h2>
+      <div class="tw"><table><thead><tr>
+        <th>Player</th><th class="r">Pick</th><th class="r">ADP</th><th class="r">Gain</th>
+      </tr></thead><tbody id="values"></tbody></table></div>
+    </section>
+    <section>
+      <h2>Biggest reaches</h2>
+      <div class="tw"><table><thead><tr>
+        <th>Player</th><th class="r">Pick</th><th class="r">ADP</th><th class="r">Early</th>
+      </tr></thead><tbody id="reaches"></tbody></table></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>Roster shape</h2>
+    <p>What each manager walked away with. Starting requirements are
+      1 QB, 2 RB, 2 WR, 1 TE, 1 FLEX, 1 DEF, 1 K, plus five bench.</p>
+    <div class="tw"><table><thead><tr>
+      <th>Manager</th><th class="r">Slot</th><th class="r">QB</th><th class="r">RB</th>
+      <th class="r">WR</th><th class="r">TE</th><th class="r">K</th><th class="r">DEF</th>
+      <th class="r">Mean early</th>
+    </tr></thead><tbody id="shape"></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>How to read this &mdash; and where it stops</h2>
+    <p class="note">
+      <b>The number is market disagreement, not skill.</b> A positive score means you took a
+      player earlier than the national ADP said you needed to. That is only a mistake if the
+      market was right about him. Every good contrarian pick in history scores as a reach here.
+      <br><br>
+      <b>ADP is where players go, not how they score.</b> Nothing on this page knows a single
+      2026 fantasy point, because none have been played. This measures draft-day process
+      against consensus, and it will look very different from a value review in December.
+      <br><br>
+      <b>Kickers and defences distort the tails.</b> They have almost no real ADP signal, so a
+      K taken in round 8 posts a huge reach that means little &mdash; everyone must take one
+      eventually, and the market barely ranks them. Two of the six biggest reaches are kickers.
+      Read the skill-position picks first.
+      <br><br>
+      <b>Ten teams, one draft.</b> Fourteen picks per manager is a small sample, and the
+      spread you see here is well within what one unusual run at a position can produce.
+    </p>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const D = __DATA__;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sgn = v => (v>=0?"+":"−") + Math.abs(v).toFixed(1);
+
+const you = D.teams.find(t=>t.you) || D.teams[0];
+const YOURS = D.teams.some(t=>t.you);
+
+document.getElementById("kick").textContent = `${D.leagueName} · Post-draft`;
+document.getElementById("title").textContent = `${D.season} Draft Report`;
+document.getElementById("dek").innerHTML =
+  `${D.teamCount} teams &middot; ${D.rounds} rounds &middot; <span class="mono">${D.pickCount}</span> picks`
+  + (D.scoring?` &middot; ${esc(D.scoring)}`:"")
+  + `. Every pick measured against average draft position for ${D.season}.`;
+document.getElementById("mineHead").textContent =
+  YOURS ? "Your draft, pick by pick" : `${you.team}, pick by pick`;
+document.getElementById("lede").innerHTML =
+  (YOURS?`You drafted from slot ${you.slot}. `:`${esc(you.team)} drafted from slot ${you.slot}. `)
+  + `Bars run right when a player was taken <em>before</em> the market had him, left when he was still there <em>after</em> his ADP said he would be gone.`;
+document.getElementById("foot").innerHTML =
+  `Built with fantasy-edge from ${esc(D.provider)} league ${esc(D.leagueId)}, season ${D.season}: `
+  + `${D.pickCount} draft picks joined to ${D.adpRows} rows of ADP. `
+  + `Reach is <span class="mono">adp &minus; overall pick</span>.`;
+
+/* ── storylines ───────────────────────────────────── */
+if (D.stories && D.stories.rows.length){
+  document.getElementById("storyLede").textContent = D.stories.headline;
+  document.getElementById("stories").innerHTML = D.stories.rows.map(r=>{
+    const mine = YOURS && r[0]===you.team;
+    return `<tr${mine?' class="you"':""}>
+      <td class="nm">${esc(r[0])}</td>
+      <td><span class="read ${esc(r[1])}">${esc(r[1])}</span></td>
+      <td class="r num ${r[2]>=0?"val pos":"val neg"}">${sgn(r[2])}</td>
+      <td>${esc(r[3])}</td></tr>`;
+  }).join("");
+  document.getElementById("storyNote").innerHTML =
+    (D.stories.note?`<b>${esc(D.stories.note)}</b><br><br>`:"") + esc(D.stories.caveat);
+} else {
+  document.querySelector("#storyLede").closest("section").remove();
+}
+
+/* ── stat row ─────────────────────────────────────── */
+const early = you.earlyReach, mean = you.meanReach;
+const ranked = [...D.teams].sort((a,b)=>a.earlyReach-b.earlyReach);
+const rank = ranked.findIndex(t=>t.you)+1;
+document.getElementById("stats").innerHTML = [
+  {k:"Your mean reach", v:sgn(mean), n:`Across all 14 picks. League average is ${sgn(D.leagueMean)}, so you sat just under the room.`},
+  {k:"Your first five rounds", v:sgn(early), n:`${rank}${["st","nd","rd"][rank-1]||"th"} most disciplined early. This is the half of the draft that decides seasons.`, hi:1},
+  {k:"Best value you got", v:sgn(you.bestVal.reach), n:`${you.bestVal.nm} at #${you.bestVal.o}, ADP ${you.bestVal.adp.toFixed(1)}.`},
+  {k:"Furthest you reached", v:sgn(you.worstReach.reach), n:`${you.worstReach.nm} at #${you.worstReach.o}, ADP ${you.worstReach.adp.toFixed(1)}.`}
+].map(s=>`<div class="stat${s.hi?" hi":""}"><div class="k">${s.k}</div>
+   <div class="v">${s.v}</div><div class="n">${esc(s.n)}</div></div>`).join("");
+
+/* ── diverging bars, one shared builder ───────────── */
+function bars(el, scaleEl, items, max){
+  const lim = Math.ceil(max/5)*5;
+  el.innerHTML = items.map(it=>{
+    const w = Math.abs(it.v)/lim*50;
+    return `<div class="row${it.you?" you":""}">
+      <span class="lab">${esc(it.label)}${it.sub?` <span class="sub">${esc(it.sub)}</span>`:""}</span>
+      <span class="plot" title="${esc(it.label)}: ${sgn(it.v)} picks">
+        <span class="axis"></span>
+        <span class="bar ${it.v>=0?"pos":"neg"}" style="width:${w}%"></span>
+      </span>
+      <span class="val ${it.v>=0?"pos":"neg"}">${sgn(it.v)}</span></div>`;
+  }).join("");
+  scaleEl.innerHTML = `<span>${lim} picks late</span><span>ADP exactly</span><span>${lim} picks early</span>`;
+}
+
+const mineMax = Math.max(...you.picks.map(p=>Math.abs(p.reach)));
+bars(document.getElementById("mine"), document.getElementById("scaleMine"),
+  you.picks.map(p=>({label:p.nm, sub:`${p.pos} · R${p.rd} · #${p.o}`, v:p.reach})), mineMax);
+
+const lg = [...D.teams].sort((a,b)=>a.meanReach-b.meanReach);
+bars(document.getElementById("league"), document.getElementById("scaleLeague"),
+  lg.map(t=>({label:t.team, sub:`slot ${t.slot}`, v:t.meanReach, you:t.you})),
+  Math.max(...lg.map(t=>Math.abs(t.meanReach))));
+
+/* ── tables ───────────────────────────────────────── */
+const prow = (p,cls) => `<tr${p.team===you.team?' class="you"':""}>
+  <td><span class="nm">${esc(p.nm)}</span> <span class="pos">${p.pos}</span><br>
+      <span class="pos">${esc(p.team)}</span></td>
+  <td class="r num">#${p.o}</td><td class="r num">${p.adp.toFixed(1)}</td>
+  <td class="r num ${cls}">${sgn(p.reach)}</td></tr>`;
+document.getElementById("values").innerHTML  = D.values.map(p=>prow(p,"val neg")).join("");
+document.getElementById("reaches").innerHTML = D.reaches.map(p=>prow(p,"val pos")).join("");
+
+document.getElementById("shape").innerHTML = [...D.teams]
+  .sort((a,b)=>a.slot-b.slot).map(t=>`<tr${t.you?' class="you"':""}>
+    <td class="nm">${esc(t.team)}</td><td class="r num">${t.slot}</td>
+    ${["QB","RB","WR","TE","K","DEF"].map(k=>`<td class="r num">${t.pos[k]||0}</td>`).join("")}
+    <td class="r num ${t.earlyReach>=0?"val pos":"val neg"}">${sgn(t.earlyReach)}</td></tr>`).join("");
+</script>

@@ -1,0 +1,11 @@
+data/*.db
+report.html
+__pycache__/
+*.pyc
+.fantasy-edge/
+*.env
+
+# build + scratch
+/tmp/
+*.log
+.DS_Store

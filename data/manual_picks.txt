@@ -1,0 +1,3 @@
+# BAWA 2026 live draft — one player name per line, in pick order.
+# Appending a line updates the board within 30s. Partial names work.
+# Ignored the moment ESPN's API starts returning real picks.
