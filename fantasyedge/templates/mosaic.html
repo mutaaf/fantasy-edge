@@ -260,7 +260,8 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
 .rrow.bench{opacity:.5}
 .r-rk{font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
   font-variant-numeric:tabular-nums}
-.r-face{width:38px;height:38px;border-radius:50%;overflow:hidden;position:relative;
+.r-face{display:block;width:38px;height:38px;border-radius:50%;overflow:hidden;
+  position:relative;
   background:var(--fc,#222);border:1.5px solid rgba(255,255,255,.14)}
 .r-face img{width:120%;height:120%;object-fit:cover;object-position:top center;
   position:absolute;left:-10%;top:-5%}
@@ -568,6 +569,77 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
 .pg.edge .pg-v{color:var(--you)}
 .pg.warn .pg-v{color:var(--hot)}
 
+
+/* ── the ticker ────────────────────────────────────────────
+   Fixed to the foot of the screen, the way a broadcast lower third is. It
+   carries only stories that name somebody you actually roster - a wire feed
+   of every NFL headline would be wallpaper. */
+.ticker{position:fixed;left:0;right:0;bottom:0;z-index:60;height:38px;
+  display:flex;align-items:center;gap:14px;overflow:hidden;
+  background:rgba(8,10,13,.92);border-top:1px solid var(--hair);
+  backdrop-filter:blur(26px) saturate(1.6)}
+.ticker[hidden]{display:none!important}
+.tk-tag{flex:none;display:flex;align-items:center;gap:7px;padding:0 14px;height:100%;
+  background:var(--espn);color:#fff;font-family:var(--cond);font-weight:700;
+  font-size:11.5px;letter-spacing:.17em;text-transform:uppercase}
+.tk-tag i{width:6px;height:6px;border-radius:50%;background:#fff;
+  animation:pulse 2s var(--ease) infinite}
+.tk-rail{flex:1;overflow:hidden;position:relative;height:100%}
+.tk-run{position:absolute;white-space:nowrap;will-change:transform;
+  display:flex;align-items:center;height:100%;gap:34px;
+  animation:tkrun var(--tkdur,80s) linear infinite}
+.tk-run:hover{animation-play-state:paused}
+@keyframes tkrun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-i{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-dim)}
+.tk-i b{color:var(--ink);font-weight:700}
+.tk-i .dot{width:5px;height:5px;border-radius:50%;background:var(--you);flex:none}
+.tk-close{flex:none;background:transparent;border:0;color:var(--ink-faint);
+  font-size:15px;cursor:pointer;padding:0 12px;height:100%}
+.tk-close:hover{color:var(--ink)}
+body{padding-bottom:46px}
+
+/* ── headlines and cross-league players ───────────────────── */
+.feedwrap{margin-top:18px;display:grid;gap:12px}
+.feedwrap[hidden]{display:none!important}
+.story{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:14px;
+  align-items:center;background:var(--card);border:1px solid var(--hair);
+  border-radius:16px;padding:12px 16px;backdrop-filter:blur(30px) saturate(1.7);
+  text-decoration:none;color:inherit;transition:.2s var(--ease)}
+.story:hover{border-color:var(--hair-2);transform:translateY(-2px)}
+.story .r-face{width:46px;height:46px}
+.st-h{font-weight:650;letter-spacing:-.015em;line-height:1.3}
+.st-m{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);margin-top:3px}
+.st-when{font-family:var(--mono);font-size:11px;color:var(--ink-faint);white-space:nowrap}
+.exposure{display:inline-flex;align-items:center;gap:5px;background:rgba(10,132,255,.18);
+  color:var(--you);font-family:var(--cond);font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:var(--r-chip)}
+.exposure.hot{background:rgba(255,214,10,.2);color:var(--hot)}
+
+/* ── league controls ──────────────────────────────────────── */
+.lc-ctl{position:absolute;top:14px;right:16px;z-index:4;display:flex;gap:6px;
+  opacity:0;transition:opacity .2s var(--ease)}
+.lcell:hover .lc-ctl,.lcell:focus-within .lc-ctl{opacity:1}
+.lc-ctl button{width:28px;height:28px;border-radius:9px;border:1px solid var(--hair-2);
+  background:rgba(0,0,0,.5);color:var(--ink-dim);cursor:pointer;font-size:13px;
+  line-height:1;display:grid;place-items:center;backdrop-filter:blur(10px)}
+.lc-ctl button:hover{background:rgba(255,255,255,.16);color:var(--ink)}
+.lc-ctl button.rm:hover{background:var(--espn);color:#fff;border-color:transparent}
+.hidden-leagues{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.hidden-leagues[hidden]{display:none!important}
+.hl-k{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint)}
+
+/* ── insight ──────────────────────────────────────────────── */
+.insight{grid-column:1/-1;background:linear-gradient(120deg,rgba(10,132,255,.16),
+  rgba(213,10,10,.10));border:1px solid var(--hair-2);border-radius:16px;
+  padding:14px 17px;display:flex;gap:13px;align-items:flex-start}
+.ins-b{flex:none;font-family:var(--cond);font-size:10.5px;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--you);
+  border:1px solid var(--you);border-radius:var(--r-chip);padding:3px 9px;margin-top:1px}
+.ins-t{font-size:14.5px;line-height:1.5;color:var(--ink)}
+.ins-t b{color:var(--you);font-weight:700}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -583,6 +655,11 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
         <button data-s="web" aria-pressed="true">Web</button>
         <button data-s="tv" aria-pressed="false">TV</button>
         <button data-s="xr" aria-pressed="false">Spatial</button>
+      </div>
+      <div class="seg" id="homeseg" role="group" aria-label="Console view">
+        <button data-h="leagues" aria-pressed="true">Leagues</button>
+        <button data-h="players" aria-pressed="false">My players</button>
+        <button data-h="news" aria-pressed="false">Headlines</button>
       </div>
       <div class="seg" id="viewseg" hidden role="group" aria-label="View">
         <button data-v="board" aria-pressed="true">Board</button>
@@ -615,7 +692,9 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
   </div>
 
   <div class="daybar" id="daybar" hidden></div>
+  <div class="hidden-leagues" id="hidden" hidden></div>
   <div class="lgrid" id="lgrid"></div>
+  <div class="feedwrap" id="feedwrap" hidden></div>
   <div class="teampick" id="teampick" hidden>
     <span class="tp-k" id="tp-label">Your team</span>
     <select id="tp-select" aria-label="Which team is yours"></select>
@@ -697,6 +776,12 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
       </div>
     </div>
   </div>
+</div>
+
+<div class="ticker" id="ticker" hidden>
+  <span class="tk-tag"><i></i>Your players</span>
+  <span class="tk-rail"><span class="tk-run" id="tkrun"></span></span>
+  <button class="tk-close" id="tkclose" aria-label="Hide ticker">✕</button>
 </div>
 
 <script>
@@ -784,13 +869,37 @@ function simSnapshot(sim,minute){
    stranger's roster under the word "you". So the choice lives here, is asked
    for once per league, and is remembered. The payload ships the whole bracket
    so switching teams is instant and needs no round trip. */
+/* Preferences live on the server, because this console is meant to run on more
+   than one screen and they have to agree: a team picked on the laptop is the
+   team the television shows. Browser storage is kept as a mirror so the page
+   still remembers when it is opened somewhere with no API behind it. */
+const PREFS={teams:{},order:[],hidden:[],...(DATA.prefs||{})};
 const TEAMKEY=id=>"fe.team."+id;
+
+function pushPrefs(patch){
+  Object.assign(PREFS,patch);
+  try{localStorage.setItem("fe.prefs",JSON.stringify(PREFS));}catch(_){}
+  if(!location.protocol.startsWith("http"))return;
+  fetch("/api/prefs",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(patch)}).catch(()=>{});   // best effort; the mirror holds
+}
+
+(function seedFromMirror(){
+  if(Object.keys(PREFS.teams).length||PREFS.hidden.length||PREFS.order.length)return;
+  try{const m=JSON.parse(localStorage.getItem("fe.prefs")||"null");
+      if(m)Object.assign(PREFS,m);}catch(_){}
+})();
+
 function savedTeam(L){
-  try{const v=localStorage.getItem(TEAMKEY(L.id));
-      if(v&&L.teams.some(t=>String(t.teamId)===v))return v;}catch(_){}
+  const v=PREFS.teams[L.id];
+  if(v&&L.teams.some(t=>String(t.teamId)===String(v)))return String(v);
+  try{const old=localStorage.getItem(TEAMKEY(L.id));   // pre-server installs
+      if(old&&L.teams.some(t=>String(t.teamId)===old))return old;}catch(_){}
   return null;}
+
 function setTeam(L,tid){
-  try{localStorage.setItem(TEAMKEY(L.id),String(tid));}catch(_){}
+  PREFS.teams[L.id]=String(tid);
+  pushPrefs({teams:PREFS.teams});
   L.myTeam=String(tid);rebuild(L);}
 
 function rebuild(L){
@@ -874,7 +983,13 @@ function busyIn(host){
 function reorder(host,ordered){
   if(busyIn(host))return;
   const cur=[...host.children];
-  const same=cur.length===ordered.length&&ordered.every((el,i)=>cur[i]===el);
+  const want=new Set(ordered);
+  // Anything no longer in the list has to go, or a hidden league keeps its
+  // card: appending the survivors leaves the removed one exactly where it was.
+  let removed=false;
+  for(const el of cur) if(!want.has(el)){el.remove();removed=true;}
+  const now=[...host.children];
+  const same=!removed&&now.length===ordered.length&&ordered.every((el,i)=>now[i]===el);
   if(same)return;                       // already in the right order: touch nothing
   for(const el of ordered)host.appendChild(el);}
 
@@ -885,6 +1000,133 @@ function holdWhileOpen(host,el){
   el.addEventListener("change",release);
   el.addEventListener("blur",release);
   el.addEventListener("keyup",e=>{if(e.key==="Escape")release();});}
+
+/* ── league-agnostic views ─────────────────────────────────────────────
+   The board is organised by league because a matchup is. These answer the two
+   questions a league cannot: who do I actually own, and what happened today
+   that touches them. */
+const ALLP=(DATA.players&&DATA.players.players)||[];
+const NEWS=(DATA.headlines&&DATA.headlines.stories)||[];
+let home="leagues";
+
+const faceHTML=p=>`<span class="r-face" style="--fc:${p.color||'#222'}">`+
+  (src(p)?`<img alt="" src="${src(p)}" onerror="this.closest('.r-face').classList.add('noshot');this.remove()">`:"")+
+  `<span class="ini">${initials(p.name)}</span></span>`;
+const AGO=iso=>{
+  if(!iso)return "";
+  const d=new Date(iso.length<=10?iso+"T12:00:00Z":iso);
+  if(isNaN(d))return iso;
+  const h=Math.round((Date.now()-d)/3600000);
+  return h<1?"just now":h<24?h+"h ago":Math.round(h/24)+"d ago";};
+
+function renderPlayersFeed(){
+  const box=$("feedwrap");
+  const byId=Object.fromEntries(allPlayers.map(c=>[c.id,c]));
+  const rows=ALLP.map(p=>{
+    const liveC=byId[p.id];
+    return {...p, state:liveC?liveC.state:"", scored:liveC?liveC.scored:0};});
+  box.innerHTML=rows.map(p=>{
+    const n=p.leagues.length;
+    const tag=n>1?`<span class="exposure ${n>2?"hot":""}">${n} leagues</span>`
+                 :`<span class="st-when">${p.leagues[0]?p.leagues[0].league:""}</span>`;
+    return `<div class="story"><div>${faceHTML(p)}</div>`+
+      `<div><div class="st-h">${p.name}</div>`+
+      `<div class="st-m">${p.pos} · ${p.team} · proj ${nf(p.projected)} · `+
+      `starting in ${p.starting} of ${n}${p.state?" · "+p.state:""}</div></div>`+
+      `<div>${tag}</div></div>`;}).join("")
+    || '<div class="rempty">No rostered players found.</div>';}
+
+function newsByStory(){
+  // One wire story can name several of your players; it is still one story.
+  const seen=new Map();
+  for(const st of NEWS){
+    const k=st.headline;
+    if(!seen.has(k))seen.set(k,{...st,players:[]});
+    if(!seen.get(k).players.includes(st.player))seen.get(k).players.push(st.player);}
+  return [...seen.values()];}
+
+function renderNewsFeed(){
+  const box=$("feedwrap");
+  const rows=newsByStory();
+  box.innerHTML=rows.map(st=>{
+    const p=ALLP.find(x=>x.name===st.players[0])||{name:st.players[0],color:"#555"};
+    const who=st.players.length>1
+      ? `${st.players.slice(0,3).join(" · ")}`+
+        (st.players.length>3?` +${st.players.length-3}`:"")
+      : st.players[0];
+    return `<a class="story" href="${st.url||"#"}" target="_blank" rel="noopener">`+
+      `<div>${faceHTML(p)}</div>`+
+      `<div><div class="st-h">${st.headline}</div>`+
+      `<div class="st-m">${who}</div></div>`+
+      `<div class="st-when">${AGO(st.published)}</div></a>`;}).join("")
+    || '<div class="rempty">No stories today name a player you roster.</div>';}
+
+function showHome(){
+  const isL=home==="leagues";
+  lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hidden").hidden=!isL||!hiddenIds().length;
+  $("feedwrap").hidden=isL;
+  if(home==="players")renderPlayersFeed();
+  else if(home==="news")renderNewsFeed();
+  else draw(clockMinute());}
+
+$("homeseg").addEventListener("click",e=>{
+  const b=e.target.closest("[data-h]");if(!b||openLeague)return;
+  home=b.dataset.h;
+  $("homeseg").querySelectorAll("[data-h]").forEach(o=>
+    o.setAttribute("aria-pressed",String(o===b)));
+  showHome();});
+
+/* ── the ticker ─────────────────────────────────────────────────────── */
+function renderTicker(){
+  const run=$("tkrun");
+  if(!NEWS.length){$("ticker").hidden=true;return;}
+  try{if(localStorage.getItem("fe.ticker")==="0"){$("ticker").hidden=true;return;}}catch(_){}
+  $("ticker").hidden=false;
+  const items=newsByStory().slice(0,18).map(st=>
+    `<span class="tk-i"><span class="dot"></span>`+
+    `<b>${st.players.slice(0,2).join(" · ")}</b> ${st.headline}</span>`);
+  // duplicated so the -50% loop is seamless
+  run.innerHTML=items.join("")+items.join("");
+  run.style.setProperty("--tkdur",Math.max(40,items.length*7)+"s");}
+$("tkclose").addEventListener("click",()=>{
+  $("ticker").hidden=true;
+  try{localStorage.setItem("fe.ticker","0");}catch(_){}});
+
+/* ── which leagues, in what order ───────────────────────────────────── */
+const readList=k=>PREFS[k]||[];
+const writeList=(k,v)=>{PREFS[k]=v;pushPrefs({[k]:v});};
+const ORDKEY="order",HIDKEY="hidden";
+const hiddenIds=()=>readList(HIDKEY);
+function visibleLeagues(){
+  const hid=new Set(hiddenIds()),ord=readList(ORDKEY);
+  const shown=leagues.filter(L=>!hid.has(L.id));
+  if(!ord.length)return shown;
+  return shown.slice().sort((a,b)=>{
+    const ia=ord.indexOf(a.id),ib=ord.indexOf(b.id);
+    return (ia<0?999:ia)-(ib<0?999:ib);});}
+function moveLeague(id,dir){
+  let ord=readList(ORDKEY);
+  if(!ord.length)ord=visibleLeagues().map(L=>L.id);
+  const i=ord.indexOf(id);if(i<0)return;
+  const j=Math.max(0,Math.min(ord.length-1,i+dir));
+  ord.splice(j,0,ord.splice(i,1)[0]);
+  writeList(ORDKEY,ord);
+  lnodes.clear();lgrid.replaceChildren();draw(clockMinute());}
+function hideLeague(id){
+  writeList(HIDKEY,[...new Set([...hiddenIds(),id])]);
+  lnodes.delete(id);lgrid.replaceChildren();draw(clockMinute());}
+function unhideLeague(id){
+  writeList(HIDKEY,hiddenIds().filter(x=>x!==id));
+  lgrid.replaceChildren();draw(clockMinute());}
+function renderHidden(){
+  const box=$("hidden"),ids=hiddenIds();
+  if(!ids.length||home!=="leagues"){box.hidden=true;return;}
+  box.hidden=false;
+  box.innerHTML='<span class="hl-k">Hidden</span>'+ids.map(id=>{
+    const L=leagues.find(x=>x.id===id);
+    return `<button class="chip" data-un="${id}">${L?L.league:id} +</button>`;}).join("");}
+$("hidden").addEventListener("click",e=>{
+  const b=e.target.closest("[data-un]");if(b)unhideLeague(b.dataset.un);});
 
 function renderDaybar(evals){
   const box=$("daybar");
@@ -921,12 +1163,48 @@ function renderDaybar(evals){
   if(byes)
     cards.push(["Starters on bye", String(byes),
       "starting a player with no game this week", "act"]);
-  const key=cards.map(c=>c[1]).join("|");
+  const line=buildInsight(evals);
+  const key=cards.map(c=>c[1]).join("|")+"|"+line;
   if(box.dataset.k===key)return;
   box.dataset.k=key;
   box.innerHTML=cards.map(([k,v,n,cls])=>
     `<div class="db ${cls}"><div class="db-k">${k}</div>`+
-    `<div class="db-v">${v}</div><div class="db-n">${n}</div></div>`).join("");}
+    `<div class="db-v">${v}</div><div class="db-n">${n}</div></div>`).join("")
+    + (line?`<div class="insight"><span class="ins-b">Insight</span>`+
+            `<span class="ins-t">${line}</span></div>`:"");}
+
+/* Every line below is derived from a number already on this page - the
+   cross-league roster, the stored history, or the measured accuracy of the
+   projections. Nothing here is generated prose, because a console that
+   invents a reason to worry is worse than one that stays quiet. */
+function buildInsight(evals){
+  const out=[];
+  const multi=ALLP.filter(p=>p.leagues.length>1&&p.starting>1)
+    .sort((a,b)=>b.starting-a.starting)[0];
+  if(multi)
+    out.push(`You are concentrated: <b>${multi.name}</b> starts in `+
+      `${multi.starting} of your ${evals.length} line-ups, so one quiet afternoon `+
+      `costs you in all of them.`);
+  let worst=null;
+  for(const {L,m} of evals){
+    const pri=(L.priors||{})[L.opp&&L.opp.name]||{};
+    if(pri.bench!=null&&(!worst||pri.bench>worst.b))
+      worst={b:pri.bench,name:L.opp.name,league:L.league};}
+  if(worst)
+    out.push(`In <b>${worst.league}</b>, ${worst.name} has historically left `+
+      `<b>${worst.b}%</b> of available points on the bench - the kind of margin `+
+      `that decides a close week.`);
+  const acc=(evals[0]&&evals[0].L.accuracy)||null;
+  if(acc&&acc.bias>0)
+    out.push(`These projections lean high by <b>${acc.bias}</b> points over `+
+      `${acc.weeks} weeks, so treat every total on this board as an optimistic one.`);
+  const nStories=newsByStory().length;
+  if(nStories)
+    out.push(`<b>${nStories}</b> ${nStories===1?"story":"stories"} today `+
+      `name a player you roster - see Headlines.`);
+  if(!out.length)return "";
+  // rotate slowly so the console is not shouting the same sentence all day
+  return out[Math.floor(Date.now()/20000)%out.length];}
 
 function makeLeagueCell(L){
   const el=document.createElement("button");
@@ -941,6 +1219,17 @@ function makeLeagueCell(L){
     `<div class="lc-pick"><span class="lc-pk">You</span>`+
     `<select aria-label="Your team in this league"></select></div>`+
     `<div class="lc-lead"></div>`;
+  el.insertAdjacentHTML("beforeend",
+    '<span class="lc-ctl">'+
+    '<button data-mv="-1" title="Move up" aria-label="Move up">\u2191</button>'+
+    '<button data-mv="1" title="Move down" aria-label="Move down">\u2193</button>'+
+    '<button class="rm" data-hide="1" title="Hide league" aria-label="Hide league">\u2715</button>'+
+    '</span>');
+  el.querySelector(".lc-ctl").addEventListener("click",ev=>{
+    const b=ev.target.closest("button");if(!b)return;
+    ev.stopPropagation();ev.preventDefault();
+    if(b.dataset.hide)hideLeague(L.id);
+    else moveLeague(L.id,parseInt(b.dataset.mv,10));});
   const sel=el.querySelector(".lc-pick select");
   sel.addEventListener("click",ev=>ev.stopPropagation());   // do not open the league
   sel.addEventListener("pointerdown",ev=>ev.stopPropagation());
@@ -957,8 +1246,11 @@ function makeLeagueCell(L){
   return el;}
 
 function renderLeagues(minute){
-  const evals=leagues.map(L=>({L,m:evaluate(L.cells.slice(),{})}));
-  evals.sort((a,b)=>b.m.intensity-a.m.intensity);
+  const vis=visibleLeagues();
+  const evals=vis.map(L=>({L,m:evaluate(L.cells.slice(),{})}));
+  // An explicit order beats the automatic one: if you have arranged your
+  // leagues, the board must not rearrange them behind you.
+  if(!readList(ORDKEY).length)evals.sort((a,b)=>b.m.intensity-a.m.intensity);
   const ordered=[];
   evals.forEach(({L,m},i)=>{
     let el=lnodes.get(L.id);
@@ -996,7 +1288,7 @@ function renderLeagues(minute){
   });
   reorder(lgrid,ordered);                // only if the order actually changed
   applySpatial(lgrid);
-  renderDaybar(evals);
+  renderDaybar(evals);renderHidden();
   const hot=evals[0];
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
@@ -1371,7 +1663,7 @@ function showView(){
   if(!openLeague){
     $("viewseg").hidden=true;$("rank").hidden=true;grid.hidden=true;
     $("mmodes").hidden=true;$("pregame").hidden=true;$("teampick").hidden=true;
-    $("daybar").hidden=false;
+    $("daybar").hidden=false;$("homeseg").hidden=false;
     $("score").hidden=true;$("pbwrap").hidden=true;lgrid.hidden=false;
     draw(clockMinute());return;}
   const board=view==="board";
@@ -1512,7 +1804,8 @@ function openLeagueView(id){
   $("title").textContent=L.league;
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
-  $("daybar").hidden=true;
+  $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
+  $("homeseg").hidden=true;
   $("back").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
   rnodes.clear();rtable.replaceChildren();
@@ -1523,8 +1816,12 @@ function backToLeagues(){
   $("title").textContent="All leagues";$("wk").textContent="";
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
   $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
-  $("pregame").hidden=true;$("teampick").hidden=true;
+  $("pregame").hidden=true;$("teampick").hidden=true;$("homeseg").hidden=false;
   lgrid.hidden=false;grid.hidden=true;
+  home="leagues";
+  $("homeseg").querySelectorAll("[data-h]").forEach(o=>
+    o.setAttribute("aria-pressed",String(o.dataset.h==="leagues")));
+  $("feedwrap").hidden=true;
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);
@@ -1578,6 +1875,7 @@ const idleState=()=>Object.fromEntries(
   allPlayers.map(c=>[c.id,{s:0,r:1,g:"PRE"}]));
 applyLive(SIM?simSnapshot(sim,clockMinute()):idleState());
 draw(SIM?clockMinute():0);
+renderTicker();
 if(SIM){
   $("src").textContent="simulated feed (?sim=1)";
   setInterval(()=>{if(!usingFeed){applyLive(simSnapshot(sim,clockMinute()));

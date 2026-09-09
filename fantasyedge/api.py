@@ -47,6 +47,10 @@ ROUTES = [
     ["GET", "/api/mosaic", "every league at once - the parent board"],
     ["GET", "/api/mosaic/{provider}/{id}", "static half of one league's board"],
     ["GET", "/api/live", "shared game state - identical for every user"],
+    ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
+    ["GET", "/api/players", "every player you roster, across every league"],
+    ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
+    ["POST", "/api/prefs", "update those - loopback only, see the handler"],
 ]
 
 COUNTED = ("league", "manager", "player", "draft_pick", "roster_slot",
@@ -319,6 +323,14 @@ class Api:
             return b"<p>mosaic.html is missing from fantasyedge/templates/</p>"
         try:
             data = self.mosaics()
+            # Inlined so the page is whole on first paint and still whole when
+            # published somewhere with no API behind it.
+            data["prefs"] = self.prefs()
+            for key, fn in (("players", self.players), ("headlines", self.headlines)):
+                try:
+                    data[key] = fn()
+                except Exception:
+                    data[key] = None
         except Exception as exc:
             data = {"leagues": [], "error": str(exc)}
         page = (MOSAIC.read_text(encoding="utf-8")
@@ -471,6 +483,76 @@ class Api:
                             "pull a season with rosters, then retry")
         return {"leagues": out}
 
+    def headlines(self) -> dict:
+        """Recent NFL news, tagged with whoever you actually roster.
+
+        Shared like the live tier - the same stories for everyone - so it caches
+        the same way. The tagging is the useful part: a hamstring in a wire
+        story matters to you only if he is in one of your line-ups, and this is
+        the process that knows which.
+        """
+        from .providers.sleeper import normalise
+        from . import serve as srv
+
+        mine = {}
+        for r in self.store().q(
+                "SELECT DISTINCT p.name FROM roster_slot r "
+                "JOIN player p ON p.provider=r.provider AND p.player_id=r.player_id "
+                "WHERE r.started=1"):
+            if r["name"]:
+                mine[normalise(r["name"])] = r["name"]
+
+        def build():
+            try:
+                news, as_of, count = srv.fetch_news(sorted(mine.values()), pages=1)
+            except Exception:
+                return {"stories": [], "asOf": "", "count": 0}
+            flat = []
+            for name, items in news.items():
+                for it in items:
+                    flat.append({"player": name, "headline": it["h"],
+                                 "detail": it["d"][:200], "published": it["p"],
+                                 "url": it["u"]})
+            flat.sort(key=lambda x: x["published"], reverse=True)
+            return {"stories": flat[:60], "asOf": as_of, "count": count}
+
+        return self.cached(("headlines",), build)
+
+    def prefs(self) -> dict:
+        from . import prefs as pf
+        return pf.load()
+
+    def save_prefs(self, patch: dict) -> dict:
+        from . import prefs as pf
+        return pf.save(pf.merge(pf.load(), patch))
+
+    def players(self) -> dict:
+        """Every player you roster, across every league you follow.
+
+        The board is organised by league because a matchup is. This is the
+        other question - "who do I actually own" - and it only has an answer
+        once the leagues are collapsed. Exposure is the number that matters:
+        a player in three of your line-ups is three times the Sunday.
+        """
+        agg: dict[str, dict] = {}
+        for L in self.mosaics()["leagues"]:
+            me = str(L["you"]["teamId"])
+            for r in L["roster"]:
+                if str(r["teamId"]) != me:
+                    continue
+                slot = agg.setdefault(str(r["id"]), {
+                    "id": str(r["id"]), "name": r["name"], "pos": r["pos"],
+                    "team": r["team"], "color": r["color"], "img": r["img"],
+                    "logo": r["logo"], "projected": r["projected"],
+                    "leagues": [], "starting": 0})
+                slot["leagues"].append({"league": L["league"], "id": L["id"],
+                                        "started": bool(r["started"])})
+                slot["starting"] += 1 if r["started"] else 0
+        out = sorted(agg.values(),
+                     key=lambda x: (-len(x["leagues"]), -x["projected"]))
+        return {"players": out, "count": len(out),
+                "exposed": sum(1 for p in out if len(p["leagues"]) > 1)}
+
     # ---------- routing ----------
 
     def dispatch(self, path: str, qs: dict):
@@ -490,6 +572,12 @@ class Api:
             return self.health(), PRIVATE
         if rest == ["live"]:
             return self.live(), LIVE
+        if rest == ["headlines"]:
+            return self.headlines(), DERIVED
+        if rest == ["players"]:
+            return self.players(), CONFIG
+        if rest == ["prefs"]:
+            return self.prefs(), PRIVATE
         if rest == ["leagues"]:
             return self.leagues(), CONFIG
         if rest == ["mosaic"]:
@@ -534,7 +622,8 @@ def make_handler(app: Api):
             # Read-only, no credentials, no cookies: any origin may read it,
             # which is what lets a web client live somewhere other than here.
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
             self.send_header("Cache-Control", policy)
             if etag:
                 self.send_header("ETag", etag)
@@ -626,6 +715,39 @@ def make_handler(app: Api):
                 self._send({"error": exc.message, "fix": exc.fix}, exc.code)
             except Exception as exc:                 # a client never sees a traceback
                 self._send({"error": str(exc), "fix": "check the server log"}, 500)
+
+        def do_POST(self):
+            """The only write in this process, and the only one there should be.
+
+            Everything else here is read-only on purpose, which is what makes
+            it safe to bind to the LAN. Preferences are the exception because
+            the console runs on several screens and they have to agree - but a
+            write is still a write, so it is refused from anywhere but this
+            machine unless FANTASYEDGE_ALLOW_REMOTE_PREFS is set. No credential
+            is ever readable or writable through this endpoint.
+            """
+            path = self.path.split("?", 1)[0]
+            if path != "/api/prefs":
+                return self._send({"error": f"No route {path}.",
+                                   "fix": "POST /api/prefs is the only write"}, 404)
+            host = (self.client_address or ["?"])[0]
+            if host not in ("127.0.0.1", "::1", "localhost") and \
+                    os.environ.get("FANTASYEDGE_ALLOW_REMOTE_PREFS") != "1":
+                return self._send(
+                    {"error": "Preferences may only be changed from this machine.",
+                     "fix": "set FANTASYEDGE_ALLOW_REMOTE_PREFS=1 to allow it"}, 403)
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if n > 64_000:
+                    return self._send({"error": "Payload too large.",
+                                       "fix": "prefs are small"}, 413)
+                patch = json.loads(self.rfile.read(n) or b"{}")
+                if not isinstance(patch, dict):
+                    raise ValueError("expected an object")
+            except Exception as exc:
+                return self._send({"error": f"Bad JSON: {exc}",
+                                   "fix": "send {teams, order, hidden}"}, 400)
+            self._send(app.save_prefs(patch), 200)
 
         do_GET = do_HEAD = _handle
 
