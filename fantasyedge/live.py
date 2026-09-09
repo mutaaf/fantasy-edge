@@ -89,6 +89,13 @@ def logo_url(team: str) -> str:
     return f"https://a.espncdn.com/i/teamlogos/nfl/500/{ab}.png" if ab and ab != "fa" else ""
 
 
+def _num_score(raw) -> float:
+    try:
+        return float(str(raw).strip() or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
 def team_abbr(raw) -> str:
     """A club id, an abbreviation, or nothing, rendered as an abbreviation."""
     if raw in (None, ""):
@@ -291,13 +298,16 @@ class EspnLiveSource(LiveSource):
         for ev in (self.scoreboard().get("events") or []):
             comp = (ev.get("competitions") or [{}])[0]
             state = ((comp.get("status") or {}).get("type") or {}).get("state") or "pre"
-            clubs = [((c.get("team") or {}).get("abbreviation") or "").upper()
-                     for c in (comp.get("competitors") or [])]
+            clubs = []
+            for c in (comp.get("competitors") or []):
+                ab = ((c.get("team") or {}).get("abbreviation") or "").upper()
+                if ab:
+                    clubs.append((ab, _num_score(c.get("score"))))
             if ev.get("id"):
-                out.append((str(ev["id"]), state, [c for c in clubs if c]))
+                out.append((str(ev["id"]), state, clubs))
         return out
 
-    def boxscores(self) -> dict[str, float]:
+    def boxscores(self) -> tuple[dict[str, float], dict[str, float]]:
         """Fantasy points per athlete, for games that have actually started.
 
         Only in-progress and finished games are fetched, and each is cached on
@@ -309,11 +319,12 @@ class EspnLiveSource(LiveSource):
         A finished game is fetched once and then held - its numbers cannot
         change again, so re-asking is pure waste.
         """
-        from .scoring import score_boxscore
+        from .scoring import dst_points, parse_team_defence, score_boxscore
 
         now = time.time()
         points: dict[str, float] = {}
-        for event, state, _clubs in self._events():
+        dst: dict[str, float] = {}
+        for event, state, clubs in self._events():
             if state == "pre":
                 continue                       # nothing to score yet
             hit = self._boxes.get(event)
@@ -321,14 +332,28 @@ class EspnLiveSource(LiveSource):
             if not fresh:
                 try:
                     data = self._fetch(SUMMARY.format(event=event))
-                    hit = (now, score_boxscore(data, self.scoring))
-                    self._boxes[event] = hit
+                    hit = (now, score_boxscore(data, self.scoring),
+                           parse_team_defence(data))
                 except Exception:
                     # keep whatever we had; a single bad game must not blank a board
-                    hit = hit or (now, {})
-                    self._boxes[event] = (now, hit[1])
+                    hit = hit or (now, {}, {})
+                    hit = (now, hit[1], hit[2] if len(hit) > 2 else {})
+                self._boxes[event] = hit
             points.update(hit[1])
-        return points
+
+            # A defence is scored from the other side of its own game, which is
+            # the only place points and yards allowed are paired up. Yards need
+            # the box score; points do not, so a defence still scores if the
+            # summary is unavailable - on points and big plays alone.
+            teams = hit[2] if len(hit) > 2 else {}
+            if len(clubs) == 2:
+                for me, other in ((0, 1), (1, 0)):
+                    ab, _ = clubs[me]
+                    opp_ab, opp_score = clubs[other]
+                    allowed_yards = (teams.get(opp_ab) or {}).get("yards")
+                    dst[ab] = dst_points(opp_score, allowed_yards,
+                                         teams.get(ab) or {})
+        return points, dst
 
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
@@ -363,7 +388,8 @@ class EspnLiveSource(LiveSource):
         # Fantasy ids and site athlete ids are the same numbers for real people.
         # Team defences are negative in fantasy and absent from a box score, so
         # they stay unscored rather than being invented.
-        pts = self.boxscores() if any(v["state"] != "pre" for v in g.values()) else {}
+        started = any(v["state"] != "pre" for v in g.values())
+        pts, dst = self.boxscores() if started else ({}, {})
         # No slate means the feed is unreachable, not that the league is on bye.
         # Saying "BYE" would be a definite claim the data does not support, so
         # an unavailable feed degrades to "not started" and says so out loud.
@@ -380,9 +406,15 @@ class EspnLiveSource(LiveSource):
                 # A real box score cannot report otherwise, but a stale or
                 # hand-made one can, and "12.4 points, PRE" is incoherent on a
                 # board - it reads as a bug in the scoring, not in the feed.
-                started = info["state"] != "pre"
+                live_now = info["state"] != "pre"
+                if p["id"].startswith("-"):
+                    # A fantasy defence is -16000 minus its club id, so it is
+                    # scored as a club rather than looked up as a person.
+                    val = dst.get(p["team"], 0.0)
+                else:
+                    val = pts.get(p["id"], 0.0)
                 players[p["id"]] = {
-                    "s": float(pts.get(p["id"], 0.0)) if started else 0.0,
+                    "s": float(val) if live_now else 0.0,
                     "r": round(1.0 - info["played"], 4),
                     "g": info["label"]}
         sb = self.scoreboard()
@@ -390,7 +422,7 @@ class EspnLiveSource(LiveSource):
             "asOf": 0.0,
             "window": (sb.get("week") or {}).get("number", 0),
             "source": "espn" if ok else "espn-unavailable",
-            "scored": len(pts),
+            "scored": len(pts) + len(dst),
             "games": g,
             "players": players,
         }

@@ -3,7 +3,7 @@
   "players": [
    {
     "team": {
-     "abbreviation": "AAA"
+     "abbreviation": "KC"
     },
     "statistics": [
      {
@@ -109,6 +109,88 @@
         ]
        }
       ]
+     },
+     {
+      "name": "defensive",
+      "keys": [
+       "totalTackles",
+       "sacks",
+       "defensiveTouchdowns"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "d1"
+        },
+        "stats": [
+         "6",
+         "3",
+         "0"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "interceptions",
+      "keys": [
+       "interceptions",
+       "interceptionYards"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "d2"
+        },
+        "stats": [
+         "1",
+         "14"
+        ]
+       }
+      ]
+     },
+     {
+      "name": "fumbles",
+      "keys": [
+       "fumbles",
+       "fumblesLost",
+       "fumblesRecovered"
+      ],
+      "athletes": [
+       {
+        "athlete": {
+         "id": "d3"
+        },
+        "stats": [
+         "0",
+         "0",
+         "1"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "teams": [
+   {
+    "team": {
+     "abbreviation": "KC"
+    },
+    "statistics": [
+     {
+      "name": "totalYards",
+      "displayValue": "402"
+     }
+    ]
+   },
+   {
+    "team": {
+     "abbreviation": "HOU"
+    },
+    "statistics": [
+     {
+      "name": "totalYards",
+      "displayValue": "188"
      }
     ]
    }

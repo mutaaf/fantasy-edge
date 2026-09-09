@@ -1014,7 +1014,8 @@ class TestLiveBoxScores(unittest.TestCase):
         snap = self.source().snapshot()
         self.assertAlmostEqual(snap["players"]["3139477"]["s"], 18.56, places=2)
         self.assertAlmostEqual(snap["players"]["4258173"]["s"], 25.2, places=2)
-        self.assertEqual(snap["scored"], 5)
+        # five athletes plus the clubs in the games that have started
+        self.assertGreaterEqual(snap["scored"], 7)
 
     def test_only_started_games_are_fetched(self):
         """Sixteen summary calls a poll is how an address gets blocked."""
@@ -1030,9 +1031,12 @@ class TestLiveBoxScores(unittest.TestCase):
             src.snapshot()
         self.assertEqual(len([c for c in self.calls if "summary" in c]), n)
 
-    def test_a_defence_is_left_unscored_rather_than_invented(self):
+    def test_a_defence_is_scored_from_the_other_side_of_its_game(self):
+        """-16026 is Seattle: -16000 minus the club id. It has no row in a box
+        score, so it is scored as a club - from what the opponent failed to do."""
         snap = self.source().snapshot()
-        self.assertEqual(snap["players"]["-16026"]["s"], 0.0)
+        self.assertNotEqual(snap["players"]["-16026"]["s"], 0.0)
+        self.assertEqual(snap["players"]["-16026"]["s"], 5.0)   # a shutout so far
 
     def test_a_player_not_in_the_box_score_stays_at_zero(self):
         snap = self.source().snapshot()
@@ -1062,3 +1066,92 @@ class TestLiveBoxScores(unittest.TestCase):
         state["fail"] = True
         src._boxes.clear()                    # force a refetch that will fail
         self.assertEqual(src.snapshot()["players"]["3139477"]["s"], 0.0)
+
+
+class TestTeamDefence(unittest.TestCase):
+    """A defence is scored from what the other side failed to do, which is why
+    it needs the whole game rather than one athlete's stat line."""
+
+    def setUp(self):
+        from fantasyedge import scoring
+
+        self.sc = scoring
+
+    def test_the_points_allowed_tiers(self):
+        d = self.sc.dst_points
+        for allowed, expect in ((0, 5.0), (3, 4.0), (10, 3.0), (16, 1.0),
+                                (24, 0.0), (31, -1.0), (41, -3.0), (52, -5.0)):
+            self.assertEqual(d(allowed, None), expect, f"{allowed} allowed")
+
+    def test_the_yards_allowed_tiers_stack_on_top(self):
+        d = self.sc.dst_points
+        self.assertEqual(d(0, 80), 10.0)        # shutout (5) + under 100 (5)
+        self.assertEqual(d(10, 310), 3.0)       # 3 + 0
+        self.assertEqual(d(31, 420), -4.0)      # -1 + -3
+        self.assertEqual(d(52, 560), -12.0)     # -5 + -7
+
+    def test_big_plays_are_added(self):
+        d = self.sc.dst_points
+        self.assertEqual(
+            d(0, 180, {"sacks": 4, "interceptions": 2}), 16.0)
+        self.assertEqual(
+            d(0, 90, {"defensiveTouchdowns": 1}), 16.0)
+        self.assertEqual(d(14, 300, {"safeties": 1, "fumblesRecovered": 1}), 5.0)
+
+    def test_it_still_scores_without_a_box_score(self):
+        """Points allowed come from the scoreboard; yards need the summary. A
+        defence scored on points and big plays alone is a real answer, not a
+        wrong one."""
+        d = self.sc.dst_points
+        self.assertEqual(d(6, None, {"sacks": 3}), 7.0)
+        self.assertEqual(d(6, None), 4.0)
+
+    def test_team_yards_and_defensive_plays_are_parsed(self):
+        summary = {"boxscore": {
+            "teams": [{"team": {"abbreviation": "SEA"},
+                       "statistics": [{"name": "totalYards", "displayValue": "388"}]},
+                      {"team": {"abbreviation": "NE"},
+                       "statistics": [{"name": "totalYards", "displayValue": "241"}]}],
+            "players": [{"team": {"abbreviation": "SEA"}, "statistics": [
+                {"name": "defensive",              # ESPN's real category split
+                 "keys": ["totalTackles", "sacks", "defensiveTouchdowns"],
+                 "athletes": [{"athlete": {"id": "1"}, "stats": ["7", "2", "0"]},
+                              {"athlete": {"id": "2"}, "stats": ["4", "1", "1"]}]},
+                {"name": "interceptions",
+                 "keys": ["interceptions", "interceptionYards"],
+                 "athletes": [{"athlete": {"id": "3"}, "stats": ["1", "18"]}]},
+                {"name": "fumbles",
+                 "keys": ["fumbles", "fumblesLost", "fumblesRecovered"],
+                 "athletes": [{"athlete": {"id": "4"}, "stats": ["0", "0", "1"]}]}]}]}}
+        out = self.sc.parse_team_defence(summary)
+        self.assertEqual(out["SEA"]["yards"], 388.0)
+        self.assertEqual(out["NE"]["yards"], 241.0)
+        self.assertEqual(out["SEA"]["sacks"], 3.0)          # summed across players
+        self.assertEqual(out["SEA"]["interceptions"], 1.0)
+        self.assertEqual(out["SEA"]["fumblesRecovered"], 1.0)
+        self.assertEqual(out["SEA"]["defensiveTouchdowns"], 1.0)
+
+    def test_a_league_can_override_the_big_play_values(self):
+        d = self.sc.dst_points
+        self.assertEqual(d(24, 300, {"sacks": 2}), 2.0)
+        self.assertEqual(d(24, 300, {"sacks": 2}, rules={"sack": 2.0}), 4.0)
+
+
+class TestDefensiveStatSources(unittest.TestCase):
+    def test_a_quarterbacks_thrown_picks_are_not_his_defences_takeaways(self):
+        """`interceptions` is a key in the passing category too. Reading it
+        wherever it appears hands a defence two points for its own offence
+        turning the ball over."""
+        from fantasyedge import scoring
+
+        summary = {"boxscore": {"players": [{"team": {"abbreviation": "KC"},
+            "statistics": [
+              {"name": "passing",
+               "keys": ["passingYards", "passingTouchdowns", "interceptions"],
+               "athletes": [{"athlete": {"id": "qb"}, "stats": ["250", "1", "3"]}]},
+              {"name": "interceptions",
+               "keys": ["interceptions", "interceptionYards"],
+               "athletes": [{"athlete": {"id": "cb"}, "stats": ["1", "22"]}]}]}]}}
+        out = scoring.parse_team_defence(summary)
+        self.assertEqual(out["KC"]["interceptions"], 1.0,
+                         "only the pick the defence actually caught")
