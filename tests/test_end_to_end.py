@@ -800,3 +800,119 @@ class TestProjectionAccuracy(unittest.TestCase):
             self.assertIn("projection", r.caveat.lower())
         finally:
             store.close(); tmp.cleanup()
+
+
+class TestPhase(unittest.TestCase):
+    """Leverage answers "what is still in doubt". Before kickoff nothing is,
+    and after the final whistle nothing is - so the board has to size by
+    something else or show eighteen identical tiles."""
+
+    PROJ = [("QB", 18.2), ("RB", 15.1), ("RB", 11.4), ("WR", 21.1), ("WR", 13.8),
+            ("TE", 9.2), ("WR", 8.6), ("DEF", 6.1), ("K", 7.4)]
+
+    def team(self, side, remaining, scored_frac):
+        from fantasyedge.leverage import Cell
+
+        return [Cell(id=f"{side}{i}", label=f"{side}{i}", pos=p, side=side,
+                     scored=v * scored_frac, projected=v, remaining=remaining)
+                for i, (p, v) in enumerate(self.PROJ)]
+
+    def test_phase_reads_the_clock_not_the_scoreboard(self):
+        from fantasyedge.leverage import evaluate
+
+        self.assertEqual(evaluate(self.team("you", 1.0, 0.0)
+                                  + self.team("opp", 1.0, 0.0)).phase, "pre")
+        self.assertEqual(evaluate(self.team("you", 0.5, 0.4)
+                                  + self.team("opp", 0.5, 0.4)).phase, "live")
+        # points already scored must not make a finished week look live
+        self.assertEqual(evaluate(self.team("you", 0.0, 1.0)
+                                  + self.team("opp", 0.0, 1.0)).phase, "final")
+
+    def test_pre_game_sizes_by_projection_not_uniformly(self):
+        from fantasyedge.leverage import evaluate
+
+        m = evaluate(self.team("you", 1.0, 0.0) + self.team("opp", 1.0, 0.0))
+        shares = [c.share for c in m.cells]
+        self.assertGreater(max(shares), min(shares) * 2)
+        top = m.cells[0]
+        self.assertEqual(top.projected, max(v for _, v in self.PROJ))
+        self.assertGreater(len({c.band for c in m.cells}), 1)
+
+    def test_final_sizes_by_what_was_actually_scored(self):
+        from fantasyedge.leverage import evaluate
+
+        cells = self.team("you", 0.0, 1.0) + self.team("opp", 0.0, 1.0)
+        cells[8].scored = 40.0                      # the kicker had a night
+        star = cells[8].id                          # evaluate sorts in place
+        m = evaluate(cells)
+        self.assertEqual(m.phase, "final")
+        self.assertEqual(m.cells[0].id, star)
+
+    def test_bands_are_relative_to_an_even_split(self):
+        """Absolute cuts made every pre-game tile identical, because nobody
+        holds 18% of the projected points in an eighteen-cell line-up."""
+        from fantasyedge.leverage import band_for
+
+        # the same share means different things at different board sizes
+        self.assertEqual(band_for(0.20, even=1 / 4)[0], "sm")     # below 1/4
+        self.assertEqual(band_for(0.30, even=1 / 4)[0], "md")     # just above it
+        self.assertEqual(band_for(0.09, even=1 / 18)[0], "md")    # above 1/18
+        self.assertEqual(band_for(0.20, even=1 / 18)[0], "xl")    # far above it
+
+
+class TestEspnLiveSource(unittest.TestCase):
+    """Real game state, no credentials, and honest about being unreachable."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.fixture = json.loads(
+            (FIX / "espn_scoreboard.json").read_text())
+
+    def source(self, http=None):
+        from fantasyedge.live import EspnLiveSource
+
+        players = [{"player_id": "1", "team": "SEA", "projected": 18.0},
+                   {"player_id": "2", "team": "KC", "projected": 21.0},
+                   {"player_id": "3", "team": "ZZZ", "projected": 5.0}]
+        return EspnLiveSource(players, http=http or (lambda url: self.fixture))
+
+    def test_reads_the_real_slate(self):
+        snap = self.source().snapshot()
+        self.assertEqual(snap["source"], "espn")
+        self.assertEqual(snap["window"], 1)
+        self.assertEqual(len(snap["games"]), 32)
+        self.assertEqual(snap["players"]["1"]["g"], "PRE")
+        self.assertEqual(snap["players"]["1"]["r"], 1.0)
+
+    def test_a_club_with_no_game_is_a_bye(self):
+        snap = self.source().snapshot()
+        self.assertEqual(snap["players"]["3"]["g"], "BYE")
+
+    def test_an_unreachable_feed_does_not_claim_a_bye(self):
+        """Saying BYE when the feed is down is a definite claim the data does
+        not support, and it silently zeroes everyone's remaining game."""
+        def boom(url):
+            raise OSError("403")
+
+        snap = self.source(http=boom).snapshot()
+        self.assertEqual(snap["source"], "espn-unavailable")
+        for v in snap["players"].values():
+            self.assertEqual(v["g"], "PRE")
+            self.assertEqual(v["r"], 1.0)
+
+    def test_it_caches_rather_than_hammering_the_edge(self):
+        calls = []
+
+        def counted(url):
+            calls.append(url)
+            return self.fixture
+
+        src = self.source(http=counted)
+        for _ in range(5):
+            src.snapshot()
+        self.assertEqual(len(calls), 1, "the edge blocks an address that keeps knocking")
+
+    def test_snapshot_still_carries_no_user_context(self):
+        snap = self.source().snapshot()
+        self.assertEqual(set(snap),
+                         {"asOf", "window", "source", "games", "players", "version"})

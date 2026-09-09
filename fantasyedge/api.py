@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import pathlib
 import threading
 import time
@@ -290,12 +291,17 @@ class Api:
             players = [{"player_id": r["player_id"], "name": r["name"],
                         "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
                         "projected": r["proj"] or 0.0} for r in rows]
-            # Wound forward into the afternoon. At kickoff every player has the
-            # same uncertainty and so the same leverage, which is correct and
-            # completely uninformative; mid-slate is where the model has
-            # something to say.
-            src = livemod.SimulatedSource(players, seed=7, speed=90.0,
-                                          start=time.time() - 100.0)
+            # Real game state by default. It needs no credential - this is the
+            # same public feed espn.com renders - so it belongs in this
+            # credential-free process rather than in `serve`. The simulator
+            # stays available for working on the board out of season, but it
+            # is opt-in: a board that invents a Sunday is worse than one that
+            # honestly says nothing has kicked off.
+            if os.environ.get("FANTASYEDGE_SIMULATE") == "1":
+                src = livemod.SimulatedSource(players, seed=7, speed=90.0,
+                                              start=time.time() - 100.0)
+            else:
+                src = livemod.EspnLiveSource(players)
             with self._lock:
                 self._live = src
         return src
@@ -371,10 +377,14 @@ class Api:
 
         # Priors are what a history database buys you that a scoreboard cannot:
         # win probability that knows this opponent leaves points on the bench.
+        # Team names arrive from the provider with stray whitespace, and the
+        # payload trims them. Trim the prior keys to match or every join here
+        # silently misses - which reads as "this manager has no history"
+        # rather than as the bug it is.
         priors = {}
         for r in self.analyses(provider, league, ["bench", "luck"])["analyses"]:
             for row in r["rows"]:
-                priors.setdefault(row[0], {})[r["key"]] = row[-1]
+                priors.setdefault(str(row[0]).strip(), {})[r["key"]] = row[-1]
 
         # Every rostered player, not just the two starting line-ups. The board
         # only needs your matchup, but the rankings answer a league-wide
@@ -408,6 +418,20 @@ class Api:
         rather than a summary - the client computes both levels from one
         payload and never asks twice.
         """
+        # Before kickoff the board has no scores to show, so it shows judgement
+        # instead: how well the projections it is sizing by have actually done.
+        accuracy = None
+        try:
+            first = self.leagues()["leagues"][0]
+            acc = self.analyses(first["provider"], first["league_id"],
+                                ["projection_accuracy"])["analyses"][0]
+            if not acc["empty"]:
+                r = acc["rows"][0]
+                accuracy = {"source": r[0], "weeks": r[1], "mae": r[3],
+                            "bias": r[4], "hit": r[5]}
+        except Exception:
+            accuracy = None
+
         out = []
         for c in self.leagues()["leagues"]:
             try:
@@ -427,6 +451,7 @@ class Api:
                         "name": (m["opp"]["name"] or "").strip(),
                         "starters": m["opp"]["starters"]},
                 "roster": m["roster"], "priors": m["priors"],
+                "accuracy": accuracy,
             })
         if not out:
             raise HttpError(404, "No league has both rosters and a matchup stored.",

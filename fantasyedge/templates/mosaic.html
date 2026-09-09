@@ -361,7 +361,6 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
    is bound to a number. Bracket brightness is leverage. The constellation
    behind the board draws a real edge between two players only when they are
    in the same NFL game. The sweep runs once a tick, when the data does. */
-canvas#neural{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.85}
 .hud-bracket{position:absolute;width:15px;height:15px;pointer-events:none;z-index:5;
   border:1.5px solid var(--sidecol,var(--you));opacity:var(--hud,0);
   transition:opacity .6s var(--ease);filter:drop-shadow(0 0 5px var(--sidecol,var(--you)))}
@@ -456,8 +455,8 @@ body.xr .grid{gap:30px;grid-auto-rows:76px}
 body.xr .lgrid{gap:26px}
 body.xr .tile,body.xr .lcell{transform-style:preserve-3d;
   /* visionOS glass: far more transparent than a dark card, with a lit rim */
-  background:rgba(255,255,255,.07);
-  backdrop-filter:blur(52px) saturate(2);-webkit-backdrop-filter:blur(52px) saturate(2);
+  background:rgba(255,255,255,.09);
+  backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);
   border-radius:30px;border:1px solid rgba(255,255,255,.26);
   box-shadow:0 1px 0 rgba(255,255,255,.42) inset,
              0 0 0 .5px rgba(255,255,255,.12),
@@ -503,10 +502,29 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
   .lcell,.lcell.big{grid-column:span 12}
   .team .pts{font-size:44px}h1{font-size:24px}.wrap{padding:18px}
 }
+
+/* ── pre-kickoff ───────────────────────────────────────────
+   Before a snap is played there are no scores, no leverage and nothing in
+   doubt, so the board stops pretending otherwise and shows judgement instead:
+   what is expected, when it starts, and how well the projections doing the
+   sizing have actually done. */
+.pregame{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px;margin-top:16px}
+.pregame[hidden]{display:none!important}
+.pg{background:var(--card);border:1px solid var(--hair);border-radius:16px;
+  padding:14px 16px;backdrop-filter:blur(30px) saturate(1.7);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset}
+.pg-k{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.pg-v{font-size:23px;font-weight:800;letter-spacing:-.028em;margin-top:5px;
+  font-variant-numeric:tabular-nums}
+.pg-n{font-size:12px;color:var(--ink-dim);margin-top:4px;line-height:1.4}
+.pg.edge .pg-v{color:var(--you)}
+.pg.warn .pg-v{color:var(--hot)}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
-<canvas id="neural" aria-hidden="true"></canvas>
 <div class="wrap">
   <div class="top">
     <div class="brandwrap">
@@ -549,6 +567,7 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
   </div>
 
   <div class="lgrid" id="lgrid"></div>
+  <div class="pregame" id="pregame" hidden></div>
   <div class="rfilters" id="mmodes" hidden>
     <button class="chip" data-m="matchup" aria-pressed="true">Matchup</button>
     <button class="chip" data-m="myteam" aria-pressed="false">My team</button>
@@ -638,8 +657,13 @@ function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+.3275911*x);
   return s*(1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x));}
 const cdf=z=>.5*(1+erf(z/Math.SQRT2));
 const pdf=z=>Math.exp(-.5*z*z)/Math.sqrt(2*Math.PI);
-const CUTS=[["xl",.18],["lg",.10],["md",.045],["sm",0]],ORDER={xl:0,lg:1,md:2,sm:3};
-function bandFor(share,prev,h=.15){
+const ORDER={xl:0,lg:1,md:2,sm:3};
+// Cuts are multiples of an even split, not absolute numbers: the metric behind
+// `share` changes with the phase of the week, and absolute cuts made every
+// pre-game tile identical. Mirrors leverage.py exactly.
+const cutsFor=even=>[["xl",even*3.0],["lg",even*1.9],["md",even*1.05],["sm",0]];
+function bandFor(share,prev,h=.15,even=1/18){
+  const CUTS=cutsFor(even);
   let t=CUTS.find(c=>share>=c[1])[0];
   if(prev&&prev!==t){const c=Object.fromEntries(CUTS);
     if(ORDER[t]<ORDER[prev]){if(share<c[t]*(1+h))t=prev;}
@@ -657,12 +681,22 @@ function evaluate(cells,previous){
   let winProb,sens;
   if(s<=1e-9){winProb=margin>0?1:(margin<0?0:.5);sens=0;}
   else{const z=margin/s;winProb=cdf(z);sens=pdf(z)/s;}
-  let total=0;
-  for(const c of cells){c.leverage=sens*c.sigma;total+=c.leverage;}
-  for(const c of cells){c.share=total>1e-12?c.leverage/total:0;
-    c.band=bandFor(c.share,previous[c.id]);}
-  cells.sort((a,b)=>b.leverage-a.leverage||(a.id<b.id?-1:1));
-  return {winProb,margin,sigma:s,intensity:2*Math.min(winProb,1-winProb),
+  for(const c of cells)c.leverage=sens*c.sigma;
+  // Which question the board can answer right now. Before kickoff every player
+  // carries identical uncertainty, so leverage is uniform and says nothing;
+  // once the week is over there is none left. Both times the board falls back
+  // to the metric that does carry information. Mirrors leverage.py.
+  let phase="live";
+  if(cells.every(c=>c.remaining>=1))phase="pre";
+  else if(cells.every(c=>c.remaining<=0))phase="final";
+  const basis=c=>phase==="pre"?Math.max(0,c.projected)
+                :phase==="final"?Math.max(0,c.scored):c.leverage;
+  let btot=0;for(const c of cells)btot+=basis(c);
+  const even=1/Math.max(1,cells.length);
+  for(const c of cells){c.share=btot>1e-12?basis(c)/btot:0;
+    c.band=bandFor(c.share,previous[c.id],.15,even);}
+  cells.sort((a,b)=>b.share-a.share||b.leverage-a.leverage||(a.id<b.id?-1:1));
+  return {winProb,margin,sigma:s,phase,intensity:2*Math.min(winProb,1-winProb),
           yourScore:ys,oppScore:os,yourProjected:ys+yr,oppProjected:os+orr,cells};}
 
 /* ── the stand-in feed, mirroring live.py ──────────────────────────── */
@@ -788,7 +822,6 @@ function renderLeagues(minute){
     lgrid.appendChild(el);                 // reorders, never recreates
   });
   applySpatial(lgrid);
-  nodes=[];                       // the parent board is cards, not a constellation
   const hot=evals[0];
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
@@ -840,7 +873,8 @@ function renderLeague(minute,statsOnly){
   const m=evaluate(L.cells.slice(),bands);
   const pool=mosaicCells(L,m);
   if(mosaicMode!=="matchup"){          // re-band the alternative sets
-    for(const c of pool)c.band=bandFor(c.share,bands[c.id]);
+    {const even=1/Math.max(1,pool.length);
+     for(const c of pool)c.band=bandFor(c.share,bands[c.id],.15,even);}
     pool.sort((a,b)=>b.share-a.share||(a.id<b.id?-1:1));}
   bands=Object.fromEntries(pool.map(c=>[c.id,c.band]));
   const shown=surface==="tv"?pool.slice(0,8):pool;
@@ -860,13 +894,13 @@ function renderLeague(minute,statsOnly){
     if(surface!=="xr"){el.style.transform="";el.style.filter="";el.style.opacity="";}
     setText(el.querySelector(".t-pts"),nf(c.scored));
     setText(el.querySelector(".t-state"),c.state);
-    setText(el.querySelector(".t-sub"),subLine(c));
+    setText(el.querySelector(".t-sub"),subLine(c,m.phase));
     // brackets brighten with leverage; nothing here glows for its own sake
     el.style.setProperty("--hud",Math.min(1,c.share*7).toFixed(2));
     el.dataset.hot=c.share>0.075?"1":"0";
     grid.appendChild(el);});
   applySpatial(grid);
-  captureNodes(grid,shown);sweep(grid);
+  renderPregame(L,m);
   // the room glows in the colours of the two cells that matter most
   {const lead=shown[0]||{},foil=shown.find(x=>x.side!==lead.side)||shown[1]||lead;
    setAmbience(lead.color||"#0A84FF",(foil&&foil.color)||"#D50A0A");}
@@ -890,9 +924,13 @@ function renderLeague(minute,statsOnly){
   $("pb").style.width=(m.winProb*100)+"%";
   const ring=$("ring");
   if(ring)ring.setAttribute("stroke-dashoffset",(314.16*(1-m.winProb)).toFixed(1));
-  setText($("intensity"),"intensity "+Math.round(m.intensity*100)+"%");
+  const label={pre:"sized by projection · no game has kicked off",
+               final:"sized by points scored · week complete",
+               live:"sized by leverage · intensity "+Math.round(m.intensity*100)+"%"}[m.phase];
+  setText($("intensity"),label);
   setText($("clock"),minute<=0?"pre-game":`sunday +${Math.round(minute)}m`);
-  document.querySelector(".wrap").style.setProperty("--sat",(.25+m.intensity*.75).toFixed(2));}
+  document.querySelector(".wrap").style.setProperty("--sat",
+    (m.phase==="live"?(.25+m.intensity*.75):.85).toFixed(2));}
 
 /* ── the player card ───────────────────────────────────────────────────
    A tile answers "who matters"; the card answers "why, and what happens
@@ -1010,13 +1048,16 @@ function applySpatial(host){
   for(const {el,cx} of geo){
     const lev=parseFloat(el.dataset.lev||"0");
     const fwd=Math.min(1,lev*5);              // leverage brings a cell forward
-    const depth=-215*(1-fwd);                 // ...and lets the rest fall back
+    const depth=-150*(1-fwd);                 // ...and lets the rest fall back
     const arc=-Math.abs(cx)*52;               // the wall curves around you
     el.style.transform=
       `translate3d(0,0,${(depth+arc).toFixed(1)}px) rotateY(${(-cx*8.5).toFixed(2)}deg)`;
+    // No blur. A cell that has receded still has to be readable - depth is
+    // carried by size and contrast instead, which the eye reads just as well
+    // and a screenshot survives.
     const far=Math.min(1,(-depth)/215);
-    el.style.filter=`blur(${(far*2.1).toFixed(2)}px)`;      // depth of field
-    el.style.opacity=(1-far*.38).toFixed(2);}}
+    el.style.filter="";
+    el.style.opacity=(1-far*.30).toFixed(2);}}
 
 function sceneLean(){
   rafPending=false;
@@ -1151,7 +1192,7 @@ function showView(){
   // the parent level from ever being half-dressed in a league's chrome.
   if(!openLeague){
     $("viewseg").hidden=true;$("rank").hidden=true;grid.hidden=true;
-    $("mmodes").hidden=true;
+    $("mmodes").hidden=true;$("pregame").hidden=true;
     $("score").hidden=true;$("pbwrap").hidden=true;lgrid.hidden=false;
     draw(clockMinute());return;}
   const board=view==="board";
@@ -1159,79 +1200,6 @@ function showView(){
   $("score").hidden=false;$("pbwrap").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
   draw(clockMinute());}
-
-/* ── the constellation ─────────────────────────────────────────────────
-   A neural-network read that is not decoration: a node per visible cell, and
-   an edge only between two players who are in the same real NFL game. Edge
-   brightness is the pair's combined leverage, so the lines that light up are
-   the ones where one play moves two of your cells at once. Same-side pairs
-   get a fainter tie so the two line-ups still read as two constellations.
-
-   Drawn on a canvas behind the glass at device resolution, from positions
-   measured once per update - it never reads layout inside its own frame. */
-const neural=$("neural"),nctx=neural?neural.getContext("2d"):null;
-let nodes=[],npulse=0;
-
-function sizeNeural(){
-  if(!neural)return;
-  const d=Math.min(2,devicePixelRatio||1);
-  neural.width=innerWidth*d;neural.height=innerHeight*d;
-  neural.style.width=innerWidth+"px";neural.style.height=innerHeight+"px";
-  if(nctx)nctx.setTransform(d,0,0,d,0,0);}
-addEventListener("resize",sizeNeural);sizeNeural();
-
-function captureNodes(host,cells){
-  if(!nctx)return;
-  const byId=new Map(cells.map(c=>[c.id,c]));
-  nodes=[...host.children].map(el=>{
-    const c=byId.get(el.dataset.id);if(!c)return null;
-    const r=el.getBoundingClientRect();
-    return {x:r.left+r.width/2,y:r.top+r.height/2,
-            share:c.share||0,side:c.side,team:c.team,color:c.color||"#0A84FF"};
-  }).filter(Boolean);}
-
-function drawNeural(t){
-  if(!nctx)return;
-  nctx.clearRect(0,0,innerWidth,innerHeight);
-  if(!nodes.length||document.hidden){requestAnimationFrame(drawNeural);return;}
-  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  npulse=reduce?0:t/1000;
-  for(let i=0;i<nodes.length;i++){
-    for(let j=i+1;j<nodes.length;j++){
-      const a=nodes[i],b=nodes[j];
-      const sameGame=a.team===b.team&&a.team!=="FA";
-      const sameSide=a.side===b.side;
-      if(!sameGame&&!sameSide)continue;
-      const w=(a.share+b.share)/2;
-      // a shared game is the meaningful tie; a shared line-up is a whisper
-      const alpha=sameGame?Math.min(.7,w*9+.22):Math.min(.16,w*3+.03);
-      if(alpha<=.012)continue;
-      nctx.beginPath();nctx.moveTo(a.x,a.y);nctx.lineTo(b.x,b.y);
-      nctx.strokeStyle=sameGame?a.color:"rgba(160,190,220,1)";
-      nctx.globalAlpha=alpha*(sameGame?(.75+.25*Math.sin(npulse*1.7+i)):1);
-      nctx.lineWidth=sameGame?1.7:.7;nctx.stroke();}}
-  for(const n of nodes){
-    const r=2.4+Math.min(9,n.share*46);
-    const pulse=.6+.4*Math.sin(npulse*2.1+n.x*.01);
-    nctx.globalAlpha=Math.min(.95,.34+n.share*5)*pulse;
-    nctx.beginPath();nctx.arc(n.x,n.y,r,0,Math.PI*2);
-    nctx.fillStyle=n.color;nctx.fill();
-    nctx.globalAlpha=Math.min(.42,.12+n.share*2.4)*pulse;
-    nctx.beginPath();nctx.arc(n.x,n.y,r*3.1,0,Math.PI*2);
-    nctx.fillStyle=n.color;nctx.fill();}
-  nctx.globalAlpha=1;
-  requestAnimationFrame(drawNeural);}
-requestAnimationFrame(drawNeural);
-
-// one pass of light per update, so motion always means the data moved
-let lastSweep=0;
-function sweep(host){
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
-  const now=performance.now();if(now-lastSweep<2600)return;lastSweep=now;
-  const el=host.children[0];if(!el)return;
-  const s=document.createElement("span");
-  s.className="sweep";s.innerHTML="<i></i>";
-  el.appendChild(s);setTimeout(()=>s.remove(),1600);}
 
 /* ── what the mosaic is *of* ───────────────────────────────────────────
    Tiling by area is a way of showing any ranked set of players, not only a
@@ -1245,6 +1213,13 @@ function sweep(host){
      top      the league's top scorers, sized by production rather than by
               what is still in doubt */
 let mosaicMode="matchup";
+let gameInfo={};          // club -> {kickoff, label, state}, from the live feed
+
+const KICK=iso=>{
+  if(!iso)return "";
+  const d=new Date(iso.length<=16?iso+":00Z":iso);
+  if(isNaN(d))return "";
+  return d.toLocaleString(undefined,{weekday:"short",hour:"numeric",minute:"2-digit"});};
 
 function mosaicCells(L,m){
   if(mosaicMode==="myteam"){
@@ -1263,12 +1238,51 @@ function mosaicCells(L,m){
     return pool;}
   return m.cells;}
 
-function subLine(c){
+function subLine(c,phase){
+  const g=gameInfo[c.team];
+  if(phase==="pre"){
+    // Nothing has happened yet, so the useful facts are when it starts and
+    // what is expected - not a leverage share that is identical for everyone.
+    const when=g?KICK(g.kickoff):"";
+    return `${c.team} · proj ${nf(c.projected)}${when?" · "+when:""}`;}
   if(mosaicMode==="top")
     return `${c.team} · ${c.owner||""} · ${nf(c.projected)} proj`;
   if(mosaicMode==="myteam")
     return `${c.team} · ${c.started?"starting":"bench"} · proj ${nf(c.projected)}`;
   return `${c.team} · proj ${nf(c.projected)} · lev ${(c.share*100).toFixed(1)}%`;}
+
+function renderPregame(L,m){
+  const box=$("pregame");
+  if(m.phase!=="pre"){box.hidden=true;return;}
+  box.hidden=false;
+  const pri=L.priors||{}, opp=pri[L.opp.name]||{}, you=pri[L.you.name]||{};
+  const acc=L.accuracy;
+  const kicks=[...new Set(L.cells.map(c=>gameInfo[c.team]&&gameInfo[c.team].kickoff)
+    .filter(Boolean))].sort();
+  const cards=[
+    ["Projected", `${nf(m.yourProjected)} – ${nf(m.oppProjected)}`,
+     `${Math.round(m.winProb*100)}% on projections alone`, ""],
+    ["First kickoff", kicks.length?KICK(kicks[0]):"—",
+     `${kicks.length} game window${kicks.length===1?"":"s"} across your line-up`, ""],
+  ];
+  if(opp.bench!=null)
+    cards.push(["Opponent leaves", opp.bench+"%",
+      `${L.opp.name} has historically left this share of available points on the bench`,
+      "edge"]);
+  if(you.luck!=null)
+    cards.push(["Your schedule luck", (you.luck>0?"+":"")+you.luck,
+      "points of win rate above your all-play record, across all seasons", ""]);
+  if(acc)
+    cards.push(["These projections", "±"+acc.mae,
+      `${acc.source} mean error over ${acc.weeks} weeks, leaning `+
+      `${acc.bias>0?"high":"low"} by ${Math.abs(acc.bias)}. Top-12 hit ${acc.hit}%.`,
+      "warn"]);
+  const key=cards.map(c=>c[1]).join("|");
+  if(box.dataset.k===key)return;
+  box.dataset.k=key;
+  box.innerHTML=cards.map(([k,v,n,cls])=>
+    `<div class="pg ${cls}"><div class="pg-k">${k}</div>`+
+    `<div class="pg-v">${v}</div><div class="pg-n">${n}</div></div>`).join("");}
 
 $("mmodes").addEventListener("click",e=>{
   const b=e.target.closest(".chip");if(!b||!openLeague)return;
@@ -1306,7 +1320,7 @@ function backToLeagues(){
   $("title").textContent="All leagues";$("wk").textContent="";
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
   $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
-  lgrid.hidden=false;grid.hidden=true;
+  $("pregame").hidden=true;lgrid.hidden=false;grid.hidden=true;
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);
@@ -1350,10 +1364,23 @@ addEventListener("keydown",e=>{
 const T0=Date.now()-100000;                    // open mid-slate, see api.live_source
 const clockMinute=()=>((Date.now()-T0)/1000)*1.5;
 
+/* A board with no feed shows the real pre-kickoff state - every player yet to
+   play, which is the truth - rather than inventing a Sunday. The simulator is
+   still here for working out of season, but it is opt-in via ?sim=1: a board
+   that fabricates scores is worse than one that honestly has none yet. */
+const SIM=new URLSearchParams(location.search).get("sim")==="1";
 let usingFeed=false;
-applyLive(simSnapshot(sim,clockMinute()));
-draw(clockMinute());
-setInterval(()=>{if(!usingFeed){applyLive(simSnapshot(sim,clockMinute()));draw(clockMinute());}},1000);
+const idleState=()=>Object.fromEntries(
+  allPlayers.map(c=>[c.id,{s:0,r:1,g:"PRE"}]));
+applyLive(SIM?simSnapshot(sim,clockMinute()):idleState());
+draw(SIM?clockMinute():0);
+if(SIM){
+  $("src").textContent="simulated feed (?sim=1)";
+  setInterval(()=>{if(!usingFeed){applyLive(simSnapshot(sim,clockMinute()));
+    draw(clockMinute());}},1000);
+}else{
+  $("src").textContent="awaiting live slate";
+}
 
 if(location.protocol.startsWith("http")){
   try{
@@ -1361,6 +1388,10 @@ if(location.protocol.startsWith("http")){
     let merged={};
     const apply=e=>{
       const f=JSON.parse(e.data);Object.assign(merged,f.players);
+      if(f.games)gameInfo=f.games;
+      if(f.source)$("src").innerHTML=f.source==="espn"
+        ?'<span class="live-pill"><i></i>ESPN</span> live slate'
+        :'<span class="live-pill" style="background:#8E93A0"><i></i>'+f.source+'</span>';
       if(Object.keys(merged).length){
         usingFeed=true;
         $("src").innerHTML='<span class="live-pill"><i></i>Live</span> delta stream';

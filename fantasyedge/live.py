@@ -31,6 +31,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
+import pathlib
 import random
 import time
 from abc import ABC, abstractmethod
@@ -194,6 +196,126 @@ class SimulatedSource(LiveSource):
         # answer "has this changed" without understanding the payload.
         payload["version"] = hashlib.sha1(
             json.dumps(payload["players"], sort_keys=True,
+                       separators=(",", ":")).encode()).hexdigest()[:16]
+        return payload
+
+
+SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl"
+              "/scoreboard{q}")
+GAME_LENGTH_MIN = 60.0          # four quarters of game clock
+
+
+class EspnLiveSource(LiveSource):
+    """Real game state from ESPN's public scoreboard.
+
+    No credentials: this is the same feed espn.com itself renders, so it needs
+    no cookie and is safe to call from the credential-free API. It is behind
+    Akamai and will start returning 403 if hammered - the cache here is not an
+    optimisation, it is the thing that keeps the feed working.
+
+    Game state is the honest part. Per-player scoring is not in this payload;
+    it lives behind a per-game summary call, and asking for sixteen of those on
+    every poll is exactly how you get blocked. So this reports what the
+    scoreboard actually knows - which games are running and how far through
+    they are - and leaves each player's points at whatever the caller already
+    had. That is enough to drive the phase and the clock, which is what the
+    board needs before kickoff and between plays.
+    """
+
+    def __init__(self, players: list[dict], ttl: float = 20.0, http=None):
+        self.players = [{"id": str(p["player_id"]), "team": p.get("team") or "FA",
+                         "projected": float(p.get("projected") or 0.0)}
+                        for p in players]
+        self.ttl = ttl
+        self._http = http
+        self._cache: dict | None = None
+        self._at = 0.0
+        self._fail_until = 0.0
+
+    def _fetch(self, q: str = "") -> dict:
+        if self._http is not None:                 # injected for tests
+            return self._http(SCOREBOARD.format(q=q))
+        # A captured payload stands in for the live endpoint. ESPN's edge will
+        # rate-limit an address that polls too eagerly, and being able to point
+        # at a real recorded slate is the difference between developing against
+        # the truth and developing against a simulator.
+        path = os.environ.get("FANTASYEDGE_SCOREBOARD_FILE")
+        if path:
+            return json.loads(pathlib.Path(path).read_text())
+        return _get_json(SCOREBOARD.format(q=q))
+
+    def scoreboard(self) -> dict:
+        """The raw slate, cached. A 403 backs off rather than retrying hot."""
+        now = time.time()
+        if self._cache is not None and now - self._at < self.ttl:
+            return self._cache
+        if now < self._fail_until:
+            return self._cache or {"events": []}
+        try:
+            data = self._fetch()
+            self._cache, self._at, self._fail_until = data, now, 0.0
+        except Exception:
+            # Back off hard: the edge blocks an IP that keeps knocking.
+            self._fail_until = now + 120.0
+            if self._cache is None:
+                self._cache, self._at = {"events": []}, now
+        return self._cache
+
+    def games(self) -> dict:
+        """Per club: how far through its game it is, and what to call that."""
+        out: dict[str, dict] = {}
+        for ev in (self.scoreboard().get("events") or []):
+            comp = (ev.get("competitions") or [{}])[0]
+            status = comp.get("status") or {}
+            st = (status.get("type") or {})
+            state = st.get("state") or "pre"
+            period = int(status.get("period") or 0)
+            clock = float(status.get("clock") or 0.0)
+            if state == "post":
+                played, label = 1.0, "FINAL"
+            elif state == "in":
+                # elapsed = whole quarters done, plus the part of this one gone
+                done = max(0, period - 1) * 15.0
+                played = min(0.99, (done + (15.0 - clock / 60.0)) / GAME_LENGTH_MIN)
+                label = st.get("shortDetail") or f"Q{period}"
+            else:
+                played, label = 0.0, "PRE"
+            for c in (comp.get("competitors") or []):
+                ab = ((c.get("team") or {}).get("abbreviation") or "").upper()
+                if ab:
+                    out[ab] = {"played": round(played, 4), "state": state,
+                               "label": label[:18],
+                               "kickoff": (ev.get("date") or "")[:16],
+                               "score": c.get("score")}
+        return out
+
+    def snapshot(self, at: float | None = None) -> dict:
+        g = self.games()
+        # No slate means the feed is unreachable, not that the league is on bye.
+        # Saying "BYE" would be a definite claim the data does not support, so
+        # an unavailable feed degrades to "not started" and says so out loud.
+        ok = bool(g)
+        players = {}
+        for p in self.players:
+            info = g.get(p["team"]) if ok else None
+            if not ok:
+                players[p["id"]] = {"s": 0.0, "r": 1.0, "g": "PRE"}
+            elif info is None:                     # club genuinely has no game
+                players[p["id"]] = {"s": 0.0, "r": 0.0, "g": "BYE"}
+            else:
+                players[p["id"]] = {"s": 0.0,
+                                    "r": round(1.0 - info["played"], 4),
+                                    "g": info["label"]}
+        sb = self.scoreboard()
+        payload = {
+            "asOf": 0.0,
+            "window": (sb.get("week") or {}).get("number", 0),
+            "source": "espn" if ok else "espn-unavailable",
+            "games": g,
+            "players": players,
+        }
+        payload["version"] = hashlib.sha1(
+            json.dumps(players, sort_keys=True,
                        separators=(",", ":")).encode()).hexdigest()[:16]
         return payload
 

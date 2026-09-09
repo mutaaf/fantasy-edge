@@ -83,6 +83,7 @@ class Mosaic:
     margin: float
     sigma: float
     intensity: float
+    phase: str
     your_score: float
     opp_score: float
     your_projected: float
@@ -93,6 +94,7 @@ class Mosaic:
         return {
             "winProb": round(self.win_prob, 4),
             "intensity": round(self.intensity, 4),
+            "phase": self.phase,
             "margin": round(self.margin, 2),
             "sigma": round(self.sigma, 2),
             "yourScore": round(self.your_score, 2),
@@ -117,16 +119,24 @@ def sigma_for(pos: str, remaining: float) -> float:
     return full * math.sqrt(max(0.0, min(1.0, remaining)))
 
 
-def band_for(share: float, previous: str = "", hysteresis: float = 0.15) -> tuple[str, int]:
-    """Quantise a leverage share to a tile size.
+def band_for(share: float, previous: str = "", hysteresis: float = 0.15,
+             even: float = 1 / 18) -> tuple[str, int]:
+    """Quantise a share of the board to a tile size.
 
-    Hysteresis is not a nicety. Leverage is recomputed every few seconds, and a
+    Cuts are multiples of an even split rather than absolute numbers, because
+    the metric behind `share` changes with the phase of the week. One player
+    can carry most of the leverage in a close game, but nobody carries 18% of
+    the projected points in an eighteen-cell line-up - absolute cuts made every
+    pre-game tile identical. Measuring against `1/n` asks the question that
+    actually matters: how far above its fair share is this cell?
+
+    Hysteresis is not a nicety. Shares are recomputed every few seconds, and a
     cell sitting exactly on a boundary would flip size on every tick - which on
     a television reads as a broken screen, and worse, moves the focused tile out
     from under the remote. A cell must beat the next threshold by a margin
     before it is allowed to grow or shrink.
     """
-    cuts = [("xl", 0.18), ("lg", 0.10), ("md", 0.045), ("sm", 0.0)]
+    cuts = [("xl", even * 3.0), ("lg", even * 1.9), ("md", even * 1.05), ("sm", 0.0)]
     target = next(name for name, cut in cuts if share >= cut)
     if previous and previous in BAND_ORDER and previous != target:
         # Only move if the change is decisive; otherwise hold the old size.
@@ -181,10 +191,36 @@ def evaluate(cells: list[Cell], previous: dict[str, str] | None = None) -> Mosai
     for c in cells:
         c.leverage = (sensitivity * c.sigma) if c.side in ("you", "opp") else 0.0
 
+    # Which question the board can actually answer right now.
+    #
+    # Before kickoff every player carries identical uncertainty, so leverage is
+    # uniform and sizing by it says nothing - eighteen tiles of exactly the
+    # same size. Once the week is over there is no uncertainty left at all. In
+    # both cases leverage is the wrong metric, not a broken one, so the board
+    # falls back to the metric that does carry information: what is expected
+    # beforehand, what was actually scored afterwards.
+    # Read the clock, not the scoreboard: points already scored do not make a
+    # week live, and an early kickoff does not make it over.
+    if all(c.remaining >= 1.0 for c in cells):
+        phase = "pre"
+    elif all(c.remaining <= 0.0 for c in cells):
+        phase = "final"
+    else:
+        phase = "live"
+
     total = sum(c.leverage for c in cells)
+    if phase == "pre":
+        basis = {c.id: max(0.0, c.projected) for c in cells}
+    elif phase == "final":
+        basis = {c.id: max(0.0, c.scored) for c in cells}
+    else:
+        basis = {c.id: c.leverage for c in cells}
+    btot = sum(basis.values())
+
+    even = 1.0 / max(1, len(cells))
     for c in cells:
-        c.share = (c.leverage / total) if total > 1e-12 else 0.0
-        c.band, c.weight = band_for(c.share, previous.get(c.id, ""))
+        c.share = (basis[c.id] / btot) if btot > 1e-12 else 0.0
+        c.band, c.weight = band_for(c.share, previous.get(c.id, ""), even=even)
 
     # `share` is normalised, so it says who matters most *within* this matchup
     # but says nothing about whether the matchup itself is still alive. A 40
@@ -195,8 +231,9 @@ def evaluate(cells: list[Cell], previous: dict[str, str] | None = None) -> Mosai
     # accent runs, so a dead week calms down and yields space to the league.
     intensity = 2.0 * min(win_prob, 1.0 - win_prob)
 
-    cells.sort(key=lambda c: (-c.leverage, c.id))
+    cells.sort(key=lambda c: (-c.share, -c.leverage, c.id))
     return Mosaic(win_prob=win_prob, margin=margin, sigma=s, intensity=intensity,
+                  phase=phase,
                   your_score=ys, opp_score=os_,
                   your_projected=ys + yr, opp_projected=os_ + orr,
                   cells=cells)
