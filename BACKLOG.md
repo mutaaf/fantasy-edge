@@ -7,6 +7,19 @@ an item without that is a wish.
 
 ## Now
 
+### 0. Projections from more than one network
+`projections seed` records ESPN's (already on every roster row we pull) and
+`projections load` takes a CSV from anyone else, joined on normalised name plus
+position. `projection_accuracy` then scores each source on mean error, bias and
+top-12 hit rate. **What is missing is the fetching**: NFL.com, CBS and
+FantasyPros each have their own terms and their own auth, and FantasyPros needs
+an API key. A scraper that works today and lies quietly in October is worse
+than an honest CSV, so none was written.
+
+**Done when:** at least two networks are loaded for the same weeks and the
+accuracy table has something to compare. Until then it reports on ESPN alone,
+which is real but not yet a comparison.
+
 ### 1. Real live feed behind `LiveSource`
 `live.py` ships `SimulatedSource`, a deterministic Sunday. The whole point of
 the ABC is that the real feed is one subclass and nothing above it moves.

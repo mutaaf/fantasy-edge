@@ -683,3 +683,120 @@ class TestApiSurfaces(unittest.TestCase):
         self.assertNotIn(b"__DATA__", page)
         self.assertIn(b"<!doctype html>", page)
         self.assertIn(b"leverage", page.lower())
+
+
+class TestProjections(unittest.TestCase):
+    """Several sources in one table is the whole point: it turns 'who projects
+    best' from an opinion into a query."""
+
+    def setUp(self):
+        from fantasyedge import projections as pj
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.store = Store(pathlib.Path(self.tmp.name) / "p.db")
+        bundle, _ = load_fixture_bundle()
+        self.store.save(bundle)
+        self.pj = pj
+
+    def tearDown(self):
+        self.store.close()
+        self.tmp.cleanup()
+
+    def test_espn_projections_are_lifted_from_rows_already_pulled(self):
+        out = self.pj.seed_espn(self.store)
+        self.assertGreater(out["rows"], 0)
+        self.assertEqual(self.pj.sources(self.store), ["espn"])
+
+    def test_seeding_twice_does_not_duplicate(self):
+        first = self.pj.seed_espn(self.store)["rows"]
+        self.pj.seed_espn(self.store)
+        n = self.store.q("SELECT COUNT(*) c FROM projection")[0]["c"]
+        self.assertEqual(n, first)
+
+    def test_csv_joins_on_normalised_name_and_position(self):
+        """Ids are not shared between networks, so the join is name plus
+        position - and it has to survive accents, punctuation and suffixes."""
+        who = self.store.q(
+            "SELECT name, pos FROM player WHERE provider='espn' AND pos='RB' LIMIT 2")
+        self.assertTrue(who)
+        csv_path = pathlib.Path(self.tmp.name) / "rival_2025_w1.csv"
+        lines = ["player,pos,points"]
+        for r in who:
+            lines.append(f"{r['name'].upper()} Jr.,{r['pos']},15.5")
+        lines.append("Nobody At All,RB,9.9")
+        csv_path.write_text("\n".join(lines))
+
+        out = self.pj.load_csv(self.store, str(csv_path), "rival", 2025, 1)
+        self.assertEqual(out["rows"], len(who))
+        self.assertEqual(out["unmatched_count"], 1)
+        self.assertIn("Nobody At All", out["unmatched"])
+        self.assertIn("rival", self.pj.sources(self.store))
+
+    def test_norm_name_handles_accents_case_and_suffixes(self):
+        n = self.pj.norm_name
+        self.assertEqual(n("Ja'Marr Chase"), n("JAMARR CHASE"))
+        self.assertEqual(n("Michael Pittman Jr."), n("michael pittman"))
+        self.assertEqual(n("Amon-Ra St. Brown"), n("Amon Ra St Brown"))
+        self.assertEqual(n("Ja'Marr Chase"), "jamarrchase")
+
+    def test_the_two_join_keys_cannot_drift_apart(self):
+        """ADP and projections both join on name plus position. If these two
+        implementations ever disagree, one of the joins quietly loses players."""
+        for name in ("Ja'Marr Chase", "Amon-Ra St. Brown", "Michael Pittman Jr.",
+                     "Kenneth Walker III", "D'Andre Swift", "Travis Etienne Jr."):
+            self.assertEqual(self.pj.norm_name(name), normalise(name), name)
+
+    def test_load_dir_reads_source_season_week_from_the_filename(self):
+        d = pathlib.Path(self.tmp.name) / "proj"
+        d.mkdir()
+        name = self.store.q("SELECT name, pos FROM player WHERE provider='espn' LIMIT 1")[0]
+        (d / "cbs_2025_w3.csv").write_text(
+            f"player,pos,points\n{name['name']},{name['pos']},12.0\n")
+        (d / "not-a-projection.csv").write_text("x,y\n1,2\n")
+        out = self.pj.load_dir(self.store, str(d))
+        self.assertEqual(len(out), 1)
+        self.assertEqual((out[0]["source"], out[0]["season"], out[0]["week"]),
+                         ("cbs", 2025, 3))
+
+
+class TestProjectionAccuracy(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from fantasyedge import projections as pj
+
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.store = Store(pathlib.Path(cls.tmp.name) / "acc.db")
+        bundle, _ = load_fixture_bundle()
+        cls.store.save(bundle)
+        pj.seed_espn(cls.store)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.store.close()
+        cls.tmp.cleanup()
+
+    def test_scores_a_source_against_what_actually_happened(self):
+        r = analytics.projection_accuracy(self.store, "espn", "99")
+        self.assertFalse(r.empty)
+        self.assertEqual(r.columns[0], "Source")
+        row = r.rows[0]
+        self.assertEqual(row[0], "espn")
+        self.assertGreater(row[3], 0)          # mean absolute error is real
+        self.assertTrue(r.headline)
+
+    def test_it_is_registered_and_carries_a_caveat(self):
+        self.assertIn("projection_accuracy", analytics.ANALYSES)
+        r = analytics.projection_accuracy(self.store, "espn", "99")
+        self.assertTrue(r.caveat)
+
+    def test_says_so_plainly_when_nothing_is_loaded(self):
+        tmp = tempfile.TemporaryDirectory()
+        store = Store(pathlib.Path(tmp.name) / "empty.db")
+        bundle, _ = load_fixture_bundle()
+        store.save(bundle)
+        try:
+            r = analytics.projection_accuracy(store, "espn", "99")
+            self.assertTrue(r.empty)
+            self.assertIn("projection", r.caveat.lower())
+        finally:
+            store.close(); tmp.cleanup()

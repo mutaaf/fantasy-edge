@@ -16,7 +16,7 @@ from contextlib import contextmanager
 
 from .models import SeasonBundle
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
@@ -74,6 +74,13 @@ CREATE TABLE IF NOT EXISTS adp (
   PRIMARY KEY (season, provider, player_id, source)
 );
 
+CREATE TABLE IF NOT EXISTS projection (
+  season INTEGER, week INTEGER, source TEXT, provider TEXT, player_id TEXT,
+  points REAL,
+  PRIMARY KEY (season, week, source, provider, player_id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_proj_src ON projection(source, season, week);
 CREATE INDEX IF NOT EXISTS ix_roster_week ON roster_slot(provider, league_id, season, week);
 CREATE INDEX IF NOT EXISTS ix_draft_team  ON draft_pick(provider, league_id, season, team_id);
 CREATE INDEX IF NOT EXISTS ix_txn_team    ON txn(provider, league_id, season, team_id);

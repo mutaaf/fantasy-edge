@@ -413,6 +413,96 @@ def cmd_api(args, cfg) -> None:
     apisrv.run(db=args.db, host=args.host, port=args.port)
 
 
+def cmd_projections(args, cfg) -> None:
+    """Record projections so they can be scored against what happened."""
+    from . import projections as pj
+
+    store = Store(args.db)
+    try:
+        if args.action == "seed":
+            out = pj.seed_espn(store, args.season)
+            human = f"Recorded {out['rows']} ESPN projections."
+        elif args.action == "sources":
+            out = {"sources": pj.sources(store)}
+            human = "Sources loaded: " + (", ".join(out["sources"]) or "none")
+        elif args.action == "load-dir":
+            if not args.dir:
+                sys.exit("Pass --dir with a folder of <source>_<season>_w<week>.csv")
+            loaded = pj.load_dir(store, args.dir)
+            out = {"loaded": loaded}
+            human = "\n".join(
+                f"  {d['source']} {d['season']} w{d['week']}: {d['rows']} rows"
+                + (f", {d['unmatched_count']} unmatched" if d["unmatched_count"] else "")
+                for d in loaded) or "  nothing matched <source>_<season>_w<week>.csv"
+        else:                                    # load
+            for flag, val in (("--csv", args.csv), ("--source", args.source),
+                              ("--season", args.season), ("--week", args.week)):
+                if not val:
+                    sys.exit(f"{flag} is required for `projections load`")
+            out = pj.load_csv(store, args.csv, args.source, args.season, args.week)
+            human = (f"Loaded {out['rows']} projections for {out['source']} "
+                     f"{out['season']} week {out['week']}."
+                     + (f" {out['unmatched_count']} unmatched: "
+                        f"{', '.join(out['unmatched'][:5])}"
+                        if out["unmatched_count"] else ""))
+    finally:
+        store.close()
+    emit(args, out, human)
+
+
+def cmd_daily(args, cfg) -> None:
+    """One cron-able pass: refresh the week, record projections, score them.
+
+    Built to be run on a timer and read by a machine. Every step reports
+    whether it ran, so a partial failure is visible rather than silent.
+    """
+    from . import projections as pj
+
+    steps, ok = [], True
+    if not args.no_pull:
+        try:
+            pull_args = argparse.Namespace(**vars(args))
+            pull_args.seasons = args.seasons or str(args.season or 2026)
+            pull_args.json = True
+            import io
+            import contextlib
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                cmd_pull(pull_args, cfg)
+            steps.append({"step": "pull", "ok": True})
+        except SystemExit as exc:
+            ok = False
+            steps.append({"step": "pull", "ok": False, "detail": str(exc)})
+        except Exception as exc:
+            ok = False
+            steps.append({"step": "pull", "ok": False, "detail": str(exc)})
+
+    store = Store(args.db)
+    try:
+        seeded = pj.seed_espn(store, args.season)
+        steps.append({"step": "seed_projections", "ok": True, "rows": seeded["rows"]})
+        provider, league = _scope(store, cfg, args)
+        res = analytics.ANALYSES["projection_accuracy"](store, provider, league)
+        steps.append({"step": "score", "ok": not res.empty,
+                      "sources": len(res.rows)})
+    finally:
+        store.close()
+
+    payload = {"ok": ok, "steps": steps, "provider": provider, "league_id": league,
+               "accuracy": {"key": res.key, "title": res.title,
+                            "headline": res.headline, "columns": res.columns,
+                            "rows": res.rows, "caveat": res.caveat,
+                            "empty": res.empty}}
+    human = "\n".join(
+        [f"  {s['step']}: {'ok' if s['ok'] else 'FAILED'}"
+         + (f" ({s.get('rows', s.get('sources'))})"
+            if s.get("rows") is not None or s.get("sources") is not None else "")
+         for s in steps]
+        + ["", "  " + (res.headline or "No projection sources scored yet."),
+           "  " + res.caveat])
+    emit(args, payload, human)
+
+
 def cmd_leagues(args, cfg) -> None:
     """The leagues this install follows. Stored outside the repo, so it lasts."""
     from . import leagues as lg
@@ -578,6 +668,21 @@ def build_parser() -> argparse.ArgumentParser:
                     help="0.0.0.0 to let other devices on your network read it")
     ap.add_argument("--port", type=int, default=8770)
     jsonify(ap); ap.set_defaults(fn=cmd_api)
+
+    pj = common(sub.add_parser("projections",
+                               help="record projections so they can be scored"))
+    pj.add_argument("action", choices=["seed", "load", "load-dir", "sources"])
+    pj.add_argument("--csv"); pj.add_argument("--dir")
+    pj.add_argument("--source", help="espn, nfl, cbs, fantasypros, ...")
+    pj.add_argument("--season", type=int); pj.add_argument("--week", type=int)
+    pj.set_defaults(fn=cmd_projections)
+
+    dy = common(sub.add_parser("daily",
+                               help="cron-able: refresh, record projections, score them"))
+    dy.add_argument("--season", type=int, default=2026)
+    dy.add_argument("--seasons", help="override the range passed to pull")
+    dy.add_argument("--no-pull", action="store_true", help="skip the network step")
+    dy.set_defaults(fn=cmd_daily)
 
     lgp = sub.add_parser("leagues", help="list or change the leagues you follow")
     lgp.add_argument("--add", help="provider:league_id")

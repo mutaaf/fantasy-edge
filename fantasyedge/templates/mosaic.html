@@ -119,6 +119,11 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
 .tile.rz{border-color:var(--hot);box-shadow:0 0 0 1px var(--hot),
   0 0 40px rgba(255,214,10,.20),0 10px 30px rgba(0,0,0,.4)}
 .tile.done{opacity:.38}
+/* a slight lean toward the pointer - present on the web surface only, where
+   there is a pointer to lean toward */
+body:not(.tv):not(.xr) .tile:hover{transform:translateY(-3px) scale(1.008);
+  border-color:var(--hair-2);
+  box-shadow:0 1px 0 rgba(255,255,255,.1) inset,0 22px 50px rgba(0,0,0,.6)}
 .tile:focus-visible{outline:3px solid var(--you);outline-offset:3px}
 .shot{position:absolute;right:-4%;bottom:0;height:118%;width:auto;z-index:1;
   object-fit:contain;object-position:bottom right;
@@ -350,6 +355,57 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
 .pc-hint{font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:7px}
 @media (prefers-reduced-motion:reduce){.pcard,.veil{animation:none}}
 
+/* ── the HUD layer ─────────────────────────────────────────
+   The read is ESPN's identity on Apple's materials, lit like a heads-up
+   display. The rule that keeps it from becoming costume: every glowing thing
+   is bound to a number. Bracket brightness is leverage. The constellation
+   behind the board draws a real edge between two players only when they are
+   in the same NFL game. The sweep runs once a tick, when the data does. */
+canvas#neural{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.85}
+.hud-bracket{position:absolute;width:15px;height:15px;pointer-events:none;z-index:5;
+  border:1.5px solid var(--sidecol,var(--you));opacity:var(--hud,0);
+  transition:opacity .6s var(--ease);filter:drop-shadow(0 0 5px var(--sidecol,var(--you)))}
+.hud-bracket.tl{top:7px;left:7px;border-right:0;border-bottom:0;border-radius:5px 0 0 0}
+.hud-bracket.br{bottom:7px;right:7px;border-left:0;border-top:0;border-radius:0 0 5px 0}
+/* a cell that matters is lit from inside, not merely outlined */
+.tile[data-hot="1"]{box-shadow:0 0 0 1px color-mix(in srgb,var(--sidecol) 55%,transparent),
+  0 0 44px color-mix(in srgb,var(--sidecol) 26%,transparent),
+  0 1px 0 rgba(255,255,255,.09) inset,0 12px 34px rgba(0,0,0,.5)}
+/* the sweep: one pass of light per update, so motion always means new data */
+@keyframes sweep{from{transform:translateX(-102%)}to{transform:translateX(102%)}}
+.sweep{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:6;
+  border-radius:inherit}
+.sweep i{position:absolute;inset:-40% auto;width:36%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.10) 46%,transparent);
+  animation:sweep 1.5s var(--ease)}
+.odds{position:relative}
+.odds svg{position:absolute;left:50%;top:calc(50% - 7px);transform:translate(-50%,-50%);
+  width:112px;height:112px;pointer-events:none;overflow:visible}
+.odds svg circle{fill:none;stroke-linecap:round}
+.odds .ring-bg{stroke:rgba(255,255,255,.10);stroke-width:3}
+.odds .ring-fg{stroke:var(--you);stroke-width:3;
+  filter:drop-shadow(0 0 6px var(--you));transition:stroke-dashoffset .8s var(--ease)}
+.odds .pct,.odds .cap{position:relative;z-index:2}
+.hudline{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-faint)}
+
+/* ── ambience ──────────────────────────────────────────────
+   A ground that reacts. The environment takes its hue from whatever the board
+   currently cares about most, so the room changes colour as the afternoon
+   does. Fixed and behind everything, painted with transforms only so it never
+   costs a layout. */
+.ambient{position:fixed;inset:-18%;z-index:-2;pointer-events:none;
+  transition:background 1.6s var(--ease);
+  background:
+    radial-gradient(48% 42% at calc(50% + var(--ax,0px)) calc(34% + var(--ay,0px)),
+      color-mix(in srgb,var(--amb,#0A84FF) 30%,transparent),transparent 70%),
+    radial-gradient(56% 50% at calc(18% - var(--ax,0px)) calc(88% - var(--ay,0px)),
+      color-mix(in srgb,var(--amb2,#D50A0A) 20%,transparent),transparent 72%);
+  filter:blur(28px) saturate(1.25)}
+.ambient::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(60% 55% at 50% 46%,transparent 30%,rgba(0,0,0,.62) 100%)}
+body.xr .ambient{filter:blur(52px) saturate(1.5);inset:-28%}
+
 /* ── ten-foot surface ──────────────────────────────────── */
 body.tv .wrap{max-width:none;padding:52px 66px}
 body.tv .grid{grid-template-columns:repeat(6,1fr);grid-auto-rows:158px;gap:20px}
@@ -366,21 +422,68 @@ body.tv .odds .pct{font-size:58px}body.tv .t-state{font-size:15px}body.tv .pos{f
 body.tv .lcell{grid-column:span 6}body.tv .lc-name{font-size:32px}
 body.tv .lc-pts{font-size:56px}body.tv .face{width:58px;height:58px}
 body.tv .face.lead{width:74px;height:74px}body.tv .lc-lead{font-size:16px}
+/* Apple TV's poster parallax: the artwork inside a focused card drifts
+   against the card itself, which is what makes focus feel physical rather
+   than merely outlined. */
 body.tv [data-focus="1"]{border-color:rgba(255,255,255,.5);
-  box-shadow:0 0 0 4px rgba(255,255,255,.92),0 30px 70px rgba(0,0,0,.85);
-  transform:scale(1.05);z-index:5}
+  box-shadow:0 0 0 4px rgba(255,255,255,.92),0 34px 80px rgba(0,0,0,.88);
+  transform:scale(1.06) translateY(-6px);z-index:5}
+body.tv [data-focus="1"] .shot{transform:translate(var(--pxx,0px),var(--pyy,0px))
+  scale(1.09);transition:transform .5s cubic-bezier(.22,1,.36,1)}
+body.tv [data-focus="1"] .logo{transform:translate(-50%,-50%)
+  translate(calc(var(--pxx,0px) * -.5),calc(var(--pyy,0px) * -.5));opacity:.2}
+body.tv [data-focus="1"] .t-name,body.tv [data-focus="1"] .t-pts{
+  text-shadow:0 4px 22px rgba(0,0,0,1)}
+body.tv .tile,body.tv .lcell{transition:transform .42s cubic-bezier(.22,1,.36,1),
+  box-shadow .42s var(--ease),border-color .42s var(--ease)}
+body.tv [data-focus="0"]{opacity:.72;transform:scale(.985)}
 
 /* ── spatial surface ───────────────────────────────────── */
-body.xr .grid{transform-style:preserve-3d}
+/* ── spatial surface ───────────────────────────────────────
+   The other two surfaces are rectangles. This one is a room. Cells sit on a
+   cylinder around the viewer rather than on a plane, so the edges of the board
+   turn to face you; leverage pushes a cell forward or lets it fall back; and
+   the scene leans with the pointer, which is the flat-screen stand-in for
+   turning your head. Depth of field does the rest - a cell that has receded is
+   genuinely out of focus, so the eye lands on what still matters without being
+   told. */
+body.xr{background:#000;background-image:none}
+body.xr .wrap{filter:none;max-width:none;padding:30px 7vw 48px;
+  perspective:1700px;perspective-origin:50% 46%}
+body.xr .grid,body.xr .lgrid{transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.22,1,.36,1)}
+body.xr .grid{gap:30px;grid-auto-rows:76px}
+body.xr .lgrid{gap:26px}
 body.xr .tile,body.xr .lcell{transform-style:preserve-3d;
-  backdrop-filter:blur(44px) saturate(1.9);-webkit-backdrop-filter:blur(44px) saturate(1.9);
-  background:rgba(255,255,255,.09);border-radius:28px;
-  border:1px solid rgba(255,255,255,.22);
-  box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 30px 80px rgba(0,0,0,.6)}
-body.xr .wrap{filter:none}
-body.xr{background-image:radial-gradient(1200px 800px at 50% 42%,
-  rgba(10,132,255,.16),transparent 70%),
-  radial-gradient(900px 600px at 80% 90%,rgba(213,10,10,.12),transparent 70%)}
+  /* visionOS glass: far more transparent than a dark card, with a lit rim */
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(52px) saturate(2);-webkit-backdrop-filter:blur(52px) saturate(2);
+  border-radius:30px;border:1px solid rgba(255,255,255,.26);
+  box-shadow:0 1px 0 rgba(255,255,255,.42) inset,
+             0 0 0 .5px rgba(255,255,255,.12),
+             0 40px 90px rgba(0,0,0,.66),
+             0 8px 26px rgba(0,0,0,.5);
+  transition:transform .6s cubic-bezier(.22,1,.36,1),filter .6s var(--ease),
+             opacity .6s var(--ease),box-shadow .4s var(--ease)}
+/* light spills through the top edge of a pane the way it does on real glass */
+body.xr .tile::before,body.xr .lcell::before{border-radius:0 3px 3px 0}
+body.xr .tile>*,body.xr .lcell>*{transform:translateZ(14px)}
+body.xr .t-name,body.xr .lc-name{transform:translateZ(24px)}
+body.xr .t-pts,body.xr .lc-pts{transform:translateZ(30px)}
+body.xr .shot{transform:translateZ(18px) scale(1.04)}
+body.xr .tile.rz{box-shadow:0 1px 0 rgba(255,255,255,.5) inset,
+  0 0 0 1.5px var(--hot),0 0 70px rgba(255,214,10,.45),0 40px 90px rgba(0,0,0,.66)}
+body.xr .pcard{background:rgba(255,255,255,.10);
+  backdrop-filter:blur(60px) saturate(2.1);-webkit-backdrop-filter:blur(60px) saturate(2.1);
+  border:1px solid rgba(255,255,255,.3);border-radius:34px}
+body.xr .veil{background:rgba(0,0,0,.5)}
+body.xr .rtable{background:rgba(255,255,255,.06);border-radius:26px;
+  backdrop-filter:blur(52px) saturate(2);border-color:rgba(255,255,255,.22)}
+body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
+  backdrop-filter:blur(30px) saturate(1.8);border-color:rgba(255,255,255,.22)}
+@media (prefers-reduced-motion:reduce){
+  body.xr .grid,body.xr .lgrid{transform:none}
+  body.xr .tile,body.xr .lcell{transform:none!important;filter:none!important}}
 
 .legend{display:flex;gap:22px;flex-wrap:wrap;align-items:center;margin-top:26px;
   padding-top:18px;border-top:1px solid var(--hair);font-family:var(--cond);
@@ -402,6 +505,8 @@ body.xr{background-image:radial-gradient(1200px 800px at 50% 42%,
 }
 </style>
 
+<div class="ambient" id="ambient" aria-hidden="true"></div>
+<canvas id="neural" aria-hidden="true"></canvas>
 <div class="wrap">
   <div class="top">
     <div class="brandwrap">
@@ -426,7 +531,14 @@ body.xr{background-image:radial-gradient(1200px 800px at 50% 42%,
   <div class="score" id="score" hidden>
     <div class="team a"><div class="nm" id="youname">You</div>
       <div class="pts" id="youpts">0.0</div><div class="proj" id="youproj">proj 0.0</div></div>
-    <div class="odds"><div class="pct" id="odds">50%</div>
+    <div class="odds">
+      <svg viewBox="0 0 112 112" aria-hidden="true">
+        <circle class="ring-bg" cx="56" cy="56" r="50"></circle>
+        <circle class="ring-fg" id="ring" cx="56" cy="56" r="50"
+                transform="rotate(-90 56 56)" stroke-dasharray="314.16"
+                stroke-dashoffset="157"></circle>
+      </svg>
+      <div class="pct" id="odds">50%</div>
       <div class="cap">win probability</div></div>
     <div class="team b"><div class="nm" id="oppname">Opponent</div>
       <div class="pts" id="opppts">0.0</div><div class="proj" id="oppproj">proj 0.0</div></div>
@@ -437,6 +549,11 @@ body.xr{background-image:radial-gradient(1200px 800px at 50% 42%,
   </div>
 
   <div class="lgrid" id="lgrid"></div>
+  <div class="rfilters" id="mmodes" hidden>
+    <button class="chip" data-m="matchup" aria-pressed="true">Matchup</button>
+    <button class="chip" data-m="myteam" aria-pressed="false">My team</button>
+    <button class="chip" data-m="top" aria-pressed="false">League top</button>
+  </div>
   <div class="grid" id="grid" hidden></div>
   <div class="rank" id="rank" hidden>
     <div class="rfilters" id="rfilters">
@@ -666,9 +783,16 @@ function renderLeagues(minute){
     if(ld.dataset.k!==key){ld.dataset.k=key;
       ld.innerHTML=`Most at stake · <b>${lead.name}</b> · ${lead.team} ${lead.pos} · `+
         `${(lead.share*100).toFixed(1)}% of leverage · ${lead.state}`;}
+    el.dataset.lev=(m.intensity*0.2).toFixed(5);   // a live league sits forward
+    if(surface!=="xr"){el.style.transform="";el.style.filter="";el.style.opacity="";}
     lgrid.appendChild(el);                 // reorders, never recreates
   });
+  applySpatial(lgrid);
+  nodes=[];                       // the parent board is cards, not a constellation
   const hot=evals[0];
+  if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
+    const b=hot.m.cells.find(x=>x.side!==a.side)||a;
+    setAmbience(a.color||"#0A84FF",b.color||"#D50A0A");}
   setText($("intensity"),hot?`hottest: ${hot.L.league} @ ${Math.round(hot.m.intensity*100)}%`:"");
   setText($("clock"),minute<=0?"pre-game":`sunday +${Math.round(minute)}m`);
   document.querySelector(".wrap").style.setProperty("--sat",
@@ -694,6 +818,8 @@ function makeTile(c){
     im.onerror=()=>{el.classList.add("noshot");im.remove();};
     el.insertBefore(im,el.firstChild);
   } else el.classList.add("noshot");
+  el.insertAdjacentHTML("beforeend",
+    '<span class="hud-bracket tl"></span><span class="hud-bracket br"></span>');
   el.querySelector(".t-name").textContent=c.name;
   return el;}
 
@@ -712,8 +838,12 @@ function renderLeague(minute,statsOnly){
   const before=new Map();
   for(const el of grid.children)before.set(el.dataset.id,el.getBoundingClientRect());
   const m=evaluate(L.cells.slice(),bands);
-  bands=Object.fromEntries(m.cells.map(c=>[c.id,c.band]));
-  const shown=surface==="tv"?m.cells.slice(0,8):m.cells;
+  const pool=mosaicCells(L,m);
+  if(mosaicMode!=="matchup"){          // re-band the alternative sets
+    for(const c of pool)c.band=bandFor(c.share,bands[c.id]);
+    pool.sort((a,b)=>b.share-a.share||(a.id<b.id?-1:1));}
+  bands=Object.fromEntries(pool.map(c=>[c.id,c.band]));
+  const shown=surface==="tv"?pool.slice(0,8):pool;
   const keep=new Set(shown.map(c=>c.id));
   for(const el of [...grid.children]) if(!keep.has(el.dataset.id)) el.remove();
   shown.forEach((c,i)=>{
@@ -726,17 +856,20 @@ function renderLeague(minute,statsOnly){
       (c.remaining<=0?" done":"")+(el.classList.contains("noshot")?" noshot":"");
     el.style.setProperty("--lev",Math.min(100,c.share*260)+"%");
     if(surface==="tv")el.dataset.focus=i===focusIdx?"1":"0";else delete el.dataset.focus;
-    if(surface==="xr"){
-      const z=-260*(1-Math.min(1,c.share*5));
-      el.style.transform=`translateZ(${z}px)`;
-      el.style.filter=`blur(${Math.max(0,(-z/260)*1.6).toFixed(2)}px)`;
-      el.style.opacity=(1-(-z/260)*.42).toFixed(2);
-    } else {el.style.transform="";el.style.filter="";el.style.opacity="";}
+    el.dataset.lev=c.share.toFixed(5);        // applySpatial reads this back
+    if(surface!=="xr"){el.style.transform="";el.style.filter="";el.style.opacity="";}
     setText(el.querySelector(".t-pts"),nf(c.scored));
     setText(el.querySelector(".t-state"),c.state);
-    setText(el.querySelector(".t-sub"),
-      `${c.team} · proj ${nf(c.projected)} · lev ${(c.share*100).toFixed(1)}%`);
+    setText(el.querySelector(".t-sub"),subLine(c));
+    // brackets brighten with leverage; nothing here glows for its own sake
+    el.style.setProperty("--hud",Math.min(1,c.share*7).toFixed(2));
+    el.dataset.hot=c.share>0.075?"1":"0";
     grid.appendChild(el);});
+  applySpatial(grid);
+  captureNodes(grid,shown);sweep(grid);
+  // the room glows in the colours of the two cells that matter most
+  {const lead=shown[0]||{},foil=shown.find(x=>x.side!==lead.side)||shown[1]||lead;
+   setAmbience(lead.color||"#0A84FF",(foil&&foil.color)||"#D50A0A");}
 
   if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
     for(const el of grid.children){
@@ -748,12 +881,15 @@ function renderLeague(minute,statsOnly){
       el.animate([{transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},
                   {transform:el.style.transform||"none"}],
                  {duration:520,easing:"cubic-bezier(.2,0,.2,1)"});}}
+  if(surface==="xr")applySpatial(grid);   // the spatial pass owns transform
 
   setText($("youpts"),nf(m.yourScore));setText($("opppts"),nf(m.oppScore));
   setText($("youproj"),"proj "+nf(m.yourProjected));
   setText($("oppproj"),"proj "+nf(m.oppProjected));
   setText($("odds"),Math.round(m.winProb*100)+"%");
   $("pb").style.width=(m.winProb*100)+"%";
+  const ring=$("ring");
+  if(ring)ring.setAttribute("stroke-dashoffset",(314.16*(1-m.winProb)).toFixed(1));
   setText($("intensity"),"intensity "+Math.round(m.intensity*100)+"%");
   setText($("clock"),minute<=0?"pre-game":`sunday +${Math.round(minute)}m`);
   document.querySelector(".wrap").style.setProperty("--sat",(.25+m.intensity*.75).toFixed(2));}
@@ -839,6 +975,77 @@ pcard.addEventListener("pointermove",e=>{
   pcard.style.setProperty("--mx",(x*100).toFixed(1)+"%");
   pcard.style.setProperty("--my",(y*100).toFixed(1)+"%");});
 pcard.addEventListener("pointerleave",()=>{pcard.style.transform="";});
+
+/* ── immersion ─────────────────────────────────────────────────────────
+   Three surfaces, three ideas of depth, one set of inputs.
+
+   Spatial arranges cells on a cylinder around the viewer and leans the whole
+   scene with the pointer, which on a flat screen is the honest stand-in for
+   turning your head. Leverage decides how far forward a cell sits, and depth
+   of field means a receded cell is genuinely out of focus - the eye finds
+   what matters without being told.
+
+   TV borrows Apple TV's poster parallax: the art inside the focused card
+   drifts against the card itself. Web gets a lean on hover and nothing more.
+
+   All of it is transform and filter only, batched into one measure pass and
+   one write pass, so none of it costs a layout. */
+let px=0,py=0,rafPending=false;
+
+function applySpatial(host){
+  if(surface!=="xr")return;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const kids=[...host.children].filter(el=>!el.classList.contains("head"));
+  if(!kids.length)return;
+  const hr=host.getBoundingClientRect(),hcx=hr.left+hr.width/2;
+  // measure everything first, then write - never interleave the two
+  const geo=kids.map(el=>{
+    const r=el.getBoundingClientRect();
+    return {el,cx:(r.left+r.width/2-hcx)/Math.max(1,hr.width/2)};});
+  for(const {el,cx} of geo){
+    const lev=parseFloat(el.dataset.lev||"0");
+    const fwd=Math.min(1,lev*5);              // leverage brings a cell forward
+    const depth=-215*(1-fwd);                 // ...and lets the rest fall back
+    const arc=-Math.abs(cx)*52;               // the wall curves around you
+    el.style.transform=
+      `translate3d(0,0,${(depth+arc).toFixed(1)}px) rotateY(${(-cx*8.5).toFixed(2)}deg)`;
+    const far=Math.min(1,(-depth)/215);
+    el.style.filter=`blur(${(far*2.1).toFixed(2)}px)`;      // depth of field
+    el.style.opacity=(1-far*.38).toFixed(2);}}
+
+function sceneLean(){
+  rafPending=false;
+  const amb=$("ambient");
+  if(amb){amb.style.setProperty("--ax",(px*70).toFixed(1)+"px");
+          amb.style.setProperty("--ay",(py*46).toFixed(1)+"px");}
+  if(surface==="xr"&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const ry=(px*-9).toFixed(2),rx=(py*6).toFixed(2);
+    for(const host of [grid,lgrid])
+      host.style.transform=`rotateY(${ry}deg) rotateX(${rx}deg)`;}
+  else{for(const host of [grid,lgrid])host.style.transform="";}
+  if(surface==="tv"){                    // poster parallax on the focused cell
+    const f=(openLeague?grid:lgrid).querySelector('[data-focus="1"]');
+    if(f){f.style.setProperty("--pxx",(px*14).toFixed(1)+"px");
+          f.style.setProperty("--pyy",(py*10).toFixed(1)+"px");}}}
+
+addEventListener("pointermove",e=>{
+  px=(e.clientX/innerWidth-.5)*2;py=(e.clientY/innerHeight-.5)*2;
+  if(!rafPending){rafPending=true;requestAnimationFrame(sceneLean);}},{passive:true});
+
+// A device with a real gyroscope should answer to the device, not the mouse.
+if(window.DeviceOrientationEvent&&navigator.maxTouchPoints>0){
+  addEventListener("deviceorientation",e=>{
+    if(e.gamma==null||e.beta==null)return;
+    px=Math.max(-1,Math.min(1,e.gamma/32));
+    py=Math.max(-1,Math.min(1,(e.beta-45)/38));
+    if(!rafPending){rafPending=true;requestAnimationFrame(sceneLean);}},{passive:true});}
+
+// The room takes its colour from whatever the board currently cares about.
+let ambKey="";
+function setAmbience(a,b){
+  const k=a+"|"+b;if(k===ambKey)return;ambKey=k;
+  const el=$("ambient");if(!el)return;
+  el.style.setProperty("--amb",a);el.style.setProperty("--amb2",b);}
 
 /* ── rankings ──────────────────────────────────────────────────────────
    The board answers "who matters in my matchup". This answers the
@@ -939,17 +1146,137 @@ function showView(){
   // the parent level from ever being half-dressed in a league's chrome.
   if(!openLeague){
     $("viewseg").hidden=true;$("rank").hidden=true;grid.hidden=true;
+    $("mmodes").hidden=true;
     $("score").hidden=true;$("pbwrap").hidden=true;lgrid.hidden=false;
     draw(clockMinute());return;}
   const board=view==="board";
-  grid.hidden=!board;$("rank").hidden=board;
+  grid.hidden=!board;$("rank").hidden=board;$("mmodes").hidden=!board;
   $("score").hidden=false;$("pbwrap").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
   draw(clockMinute());}
 
+/* ── the constellation ─────────────────────────────────────────────────
+   A neural-network read that is not decoration: a node per visible cell, and
+   an edge only between two players who are in the same real NFL game. Edge
+   brightness is the pair's combined leverage, so the lines that light up are
+   the ones where one play moves two of your cells at once. Same-side pairs
+   get a fainter tie so the two line-ups still read as two constellations.
+
+   Drawn on a canvas behind the glass at device resolution, from positions
+   measured once per update - it never reads layout inside its own frame. */
+const neural=$("neural"),nctx=neural?neural.getContext("2d"):null;
+let nodes=[],npulse=0;
+
+function sizeNeural(){
+  if(!neural)return;
+  const d=Math.min(2,devicePixelRatio||1);
+  neural.width=innerWidth*d;neural.height=innerHeight*d;
+  neural.style.width=innerWidth+"px";neural.style.height=innerHeight+"px";
+  if(nctx)nctx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",sizeNeural);sizeNeural();
+
+function captureNodes(host,cells){
+  if(!nctx)return;
+  const byId=new Map(cells.map(c=>[c.id,c]));
+  nodes=[...host.children].map(el=>{
+    const c=byId.get(el.dataset.id);if(!c)return null;
+    const r=el.getBoundingClientRect();
+    return {x:r.left+r.width/2,y:r.top+r.height/2,
+            share:c.share||0,side:c.side,team:c.team,color:c.color||"#0A84FF"};
+  }).filter(Boolean);}
+
+function drawNeural(t){
+  if(!nctx)return;
+  nctx.clearRect(0,0,innerWidth,innerHeight);
+  if(!nodes.length||document.hidden){requestAnimationFrame(drawNeural);return;}
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  npulse=reduce?0:t/1000;
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];
+      const sameGame=a.team===b.team&&a.team!=="FA";
+      const sameSide=a.side===b.side;
+      if(!sameGame&&!sameSide)continue;
+      const w=(a.share+b.share)/2;
+      // a shared game is the meaningful tie; a shared line-up is a whisper
+      const alpha=sameGame?Math.min(.7,w*9+.22):Math.min(.16,w*3+.03);
+      if(alpha<=.012)continue;
+      nctx.beginPath();nctx.moveTo(a.x,a.y);nctx.lineTo(b.x,b.y);
+      nctx.strokeStyle=sameGame?a.color:"rgba(160,190,220,1)";
+      nctx.globalAlpha=alpha*(sameGame?(.75+.25*Math.sin(npulse*1.7+i)):1);
+      nctx.lineWidth=sameGame?1.7:.7;nctx.stroke();}}
+  for(const n of nodes){
+    const r=2.4+Math.min(9,n.share*46);
+    const pulse=.6+.4*Math.sin(npulse*2.1+n.x*.01);
+    nctx.globalAlpha=Math.min(.95,.34+n.share*5)*pulse;
+    nctx.beginPath();nctx.arc(n.x,n.y,r,0,Math.PI*2);
+    nctx.fillStyle=n.color;nctx.fill();
+    nctx.globalAlpha=Math.min(.42,.12+n.share*2.4)*pulse;
+    nctx.beginPath();nctx.arc(n.x,n.y,r*3.1,0,Math.PI*2);
+    nctx.fillStyle=n.color;nctx.fill();}
+  nctx.globalAlpha=1;
+  requestAnimationFrame(drawNeural);}
+requestAnimationFrame(drawNeural);
+
+// one pass of light per update, so motion always means the data moved
+let lastSweep=0;
+function sweep(host){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const now=performance.now();if(now-lastSweep<2600)return;lastSweep=now;
+  const el=host.children[0];if(!el)return;
+  const s=document.createElement("span");
+  s.className="sweep";s.innerHTML="<i></i>";
+  el.appendChild(s);setTimeout(()=>s.remove(),1600);}
+
+/* ── what the mosaic is *of* ───────────────────────────────────────────
+   Tiling by area is a way of showing any ranked set of players, not only a
+   matchup. The model that ranks them changes with the mode; the layout, the
+   hysteresis and the card do not.
+
+     matchup  both starting line-ups, sized by leverage
+     myteam   your whole roster, bench included - a benched player carries no
+              leverage by definition, and shrinking to nothing is the honest
+              way to say so
+     top      the league's top scorers, sized by production rather than by
+              what is still in doubt */
+let mosaicMode="matchup";
+
+function mosaicCells(L,m){
+  if(mosaicMode==="myteam"){
+    const lev=Object.fromEntries(m.cells.map(c=>[c.id,c.share]));
+    const pool=L.roster.filter(r=>r.teamId===L.you.teamId)
+      .map(r=>({...r,side:"you",share:lev[r.id]||0}));
+    const tot=pool.reduce((a,c)=>a+c.share,0);
+    if(tot>1e-9)for(const c of pool)c.share/=tot;
+    return pool;}
+  if(mosaicMode==="top"){
+    const pool=L.roster.slice()
+      .sort((a,b)=>(b.scored||0)-(a.scored||0)).slice(0,24)
+      .map(r=>({...r,side:r.teamId===L.you.teamId?"you":"opp"}));
+    const tot=pool.reduce((a,c)=>a+(c.scored||0),0);
+    for(const c of pool)c.share=tot>1e-9?(c.scored||0)/tot:0;
+    return pool;}
+  return m.cells;}
+
+function subLine(c){
+  if(mosaicMode==="top")
+    return `${c.team} · ${c.owner||""} · ${nf(c.projected)} proj`;
+  if(mosaicMode==="myteam")
+    return `${c.team} · ${c.started?"starting":"bench"} · proj ${nf(c.projected)}`;
+  return `${c.team} · proj ${nf(c.projected)} · lev ${(c.share*100).toFixed(1)}%`;}
+
+$("mmodes").addEventListener("click",e=>{
+  const b=e.target.closest(".chip");if(!b||!openLeague)return;
+  mosaicMode=b.dataset.m;
+  $("mmodes").querySelectorAll(".chip").forEach(o=>
+    o.setAttribute("aria-pressed",String(o===b)));
+  bands={};tnodes.clear();grid.replaceChildren();
+  draw(clockMinute());});
+
 const cellById=id=>{
   const L=leagues.find(x=>x.id===openLeague);
-  return L?L.cells.find(c=>c.id===id):null;};
+  if(!L)return null;
+  return L.cells.find(c=>c.id===id)||L.roster.find(c=>c.id===id)||null;};
 
 function draw(minute){
   if(!openLeague){renderLeagues(minute);}
@@ -973,7 +1300,7 @@ function backToLeagues(){
   openLeague=null;focusIdx=0;
   $("title").textContent="All leagues";$("wk").textContent="";
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
-  $("viewseg").hidden=true;$("rank").hidden=true;
+  $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
   lgrid.hidden=false;grid.hidden=true;
   draw(clockMinute());}
 
@@ -983,7 +1310,12 @@ document.querySelectorAll(".seg [data-s]").forEach(b=>b.addEventListener("click"
   document.querySelectorAll(".seg [data-s]").forEach(o=>
     o.setAttribute("aria-pressed",String(o===b)));
   document.body.className=(surface==="web"?"":surface)+(showImg?"":" noimg");
-  bands={};tnodes.clear();grid.replaceChildren();draw(clockMinute());}));
+  bands={};tnodes.clear();grid.replaceChildren();
+  for(const host of [grid,lgrid]){
+    host.style.transform="";
+    for(const el of host.children){
+      el.style.transform="";el.style.filter="";el.style.opacity="";}}
+  draw(clockMinute());sceneLean();}));
 $("imgtog").addEventListener("click",()=>{
   showImg=!showImg;
   $("imgtog").setAttribute("aria-pressed",String(showImg));

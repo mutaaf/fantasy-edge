@@ -775,6 +775,101 @@ def manager_dossier(store: Store, provider: str, league: str,
     return dossier
 
 
+def projection_accuracy(store: Store, provider: str, league: str) -> Result:
+    """Score every projection source against what actually happened.
+
+    Nobody publishes how their own numbers did, so this does it for them. For
+    each source: how far off it was on average, whether it leans high or low,
+    and - the one that matters for setting a line-up - how many of the players
+    it called top twelve at a position actually finished top twelve.
+
+    Actuals come from `roster_slot`, deduplicated across leagues so a player
+    rostered in three of your leagues counts once.
+    """
+    r = Result(key="projection_accuracy", title="Projection accuracy by source")
+    r.caveat = (
+        "Only scores players who were rostered somewhere in your leagues that "
+        "week, which is a filtered, above-replacement sample - error against "
+        "the full player pool would be larger. A source loaded for fewer weeks "
+        "than another is not directly comparable to it, so read the week count "
+        "before the ranking. Hit rate uses the top 12 at each position, which "
+        "is a starter-shaped question rather than a measure of overall skill.")
+
+    actual = {}
+    for row in store.q(
+            """SELECT season, week, player_id, MAX(points) AS pts
+               FROM roster_slot
+               WHERE provider=? AND points IS NOT NULL
+               GROUP BY season, week, player_id""", (provider,)):
+        actual[(row["season"], row["week"], row["player_id"])] = row["pts"]
+    if not actual:
+        r.caveat = "No scored weeks loaded yet. Run `pull` first."
+        return r
+
+    pos = {row["player_id"]: (row["pos"] or "").upper()
+           for row in store.q("SELECT player_id, pos FROM player WHERE provider=?",
+                              (provider,))}
+
+    rows = store.q("SELECT source, season, week, player_id, points FROM projection")
+    if not rows:
+        r.caveat = ("No projections loaded. `projections seed` records ESPN's, "
+                    "and `projections load` takes a CSV from anyone else.")
+        return r
+
+    by_source: dict[str, list] = {}
+    for row in rows:
+        key = (row["season"], row["week"], row["player_id"])
+        if key in actual:
+            by_source.setdefault(row["source"], []).append(
+                (row["season"], row["week"], row["player_id"], row["points"],
+                 actual[key]))
+
+    out = []
+    for src, recs in by_source.items():
+        n = len(recs)
+        if n < 20:
+            continue
+        err = [p - a for _, _, _, p, a in recs]
+        mae = sum(abs(e) for e in err) / n
+        bias = sum(err) / n
+        weeks = len({(s, w) for s, w, _, _, _ in recs})
+
+        # Of the twelve it called highest at a position, how many finished there?
+        hits = tot = 0
+        by_week: dict[tuple, list] = {}
+        for s_, w_, pid, proj, act in recs:
+            by_week.setdefault((s_, w_, pos.get(pid, "?")), []).append((proj, act, pid))
+        for (s_, w_, pp), group in by_week.items():
+            if pp not in ("QB", "RB", "WR", "TE") or len(group) < 12:
+                continue
+            top_proj = {g[2] for g in sorted(group, key=lambda g: -g[0])[:12]}
+            top_act = {g[2] for g in sorted(group, key=lambda g: -g[1])[:12]}
+            hits += len(top_proj & top_act)
+            tot += 12
+        hit = round(100 * hits / tot, 1) if tot else None
+
+        out.append([src, weeks, n, round(mae, 2), round(bias, 2), hit])
+
+    if not out:
+        r.caveat = ("Projections are loaded but none line up with a scored week. "
+                    "Check the season and week they were loaded under.")
+        return r
+
+    out.sort(key=lambda x: x[3])
+    r.columns = ["Source", "Weeks", "Players scored", "Mean abs error",
+                 "Bias (proj - actual)", "Top-12 hit %"]
+    r.rows = out
+    best = out[0]
+    lean = "high" if best[4] > 0 else "low"
+    r.headline = (
+        f"{best[0]} is the most accurate source loaded: {best[3]} points of "
+        f"average error across {best[1]} weeks, leaning {lean} by {abs(best[4])}.")
+    if len(out) > 1:
+        r.note = (f"Spread between best and worst: "
+                  f"{round(out[-1][3] - best[3], 2)} points of mean error.")
+    return r
+
+
 ANALYSES: dict[str, Callable[..., Result]] = {
     "draft_roi": draft_roi_by_round,
     "allocation": allocation_vs_finish,
@@ -785,6 +880,7 @@ ANALYSES: dict[str, Callable[..., Result]] = {
     "phase": phase_split,
     "profile": manager_profile,
     "storylines": draft_storylines,
+    "projection_accuracy": projection_accuracy,
 }
 
 
