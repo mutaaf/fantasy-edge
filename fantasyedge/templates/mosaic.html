@@ -860,6 +860,32 @@ function faceNode(c,lead){
   f.appendChild(i);
   return f;}
 
+/* Reordering a list means re-appending its nodes, and moving a node closes an
+   open <select> inside it. With a feed tick every couple of seconds that made
+   the team picker impossible to use: it shut before a click could land. So the
+   DOM is only ever touched when it actually has to move, and never while the
+   viewer is busy inside it. */
+function busyIn(host){
+  const a=document.activeElement;
+  if(a&&a!==document.body&&host.contains(a))return true;
+  // a native select popup does not always keep focus, so honour an explicit hold
+  return host.dataset.hold==="1";}
+
+function reorder(host,ordered){
+  if(busyIn(host))return;
+  const cur=[...host.children];
+  const same=cur.length===ordered.length&&ordered.every((el,i)=>cur[i]===el);
+  if(same)return;                       // already in the right order: touch nothing
+  for(const el of ordered)host.appendChild(el);}
+
+function holdWhileOpen(host,el){
+  // a select is open from pointerdown until it changes or loses focus
+  el.addEventListener("pointerdown",()=>{host.dataset.hold="1";});
+  const release=()=>{host.dataset.hold="0";};
+  el.addEventListener("change",release);
+  el.addEventListener("blur",release);
+  el.addEventListener("keyup",e=>{if(e.key==="Escape")release();});}
+
 function renderDaybar(evals){
   const box=$("daybar");
   if(!evals.length){box.hidden=true;return;}
@@ -917,6 +943,8 @@ function makeLeagueCell(L){
     `<div class="lc-lead"></div>`;
   const sel=el.querySelector(".lc-pick select");
   sel.addEventListener("click",ev=>ev.stopPropagation());   // do not open the league
+  sel.addEventListener("pointerdown",ev=>ev.stopPropagation());
+  holdWhileOpen(lgrid,sel);
   sel.addEventListener("change",ev=>{
     ev.stopPropagation();
     L.chosen=true;setTeam(L,ev.target.value);
@@ -931,6 +959,7 @@ function makeLeagueCell(L){
 function renderLeagues(minute){
   const evals=leagues.map(L=>({L,m:evaluate(L.cells.slice(),{})}));
   evals.sort((a,b)=>b.m.intensity-a.m.intensity);
+  const ordered=[];
   evals.forEach(({L,m},i)=>{
     let el=lnodes.get(L.id);
     if(!el){el=makeLeagueCell(L);lnodes.set(L.id,el);}
@@ -963,8 +992,9 @@ function renderLeagues(minute){
         `${(lead.share*100).toFixed(1)}% of leverage · ${lead.state}`;}
     el.dataset.lev=(m.intensity*0.2).toFixed(5);   // a live league sits forward
     if(surface!=="xr"){el.style.transform="";el.style.filter="";el.style.opacity="";}
-    lgrid.appendChild(el);                 // reorders, never recreates
+    ordered.push(el);
   });
+  reorder(lgrid,ordered);                // only if the order actually changed
   applySpatial(lgrid);
   renderDaybar(evals);
   const hot=evals[0];
@@ -1025,6 +1055,7 @@ function renderLeague(minute,statsOnly){
   const shown=surface==="tv"?pool.slice(0,8):pool;
   const keep=new Set(shown.map(c=>c.id));
   for(const el of [...grid.children]) if(!keep.has(el.dataset.id)) el.remove();
+  const ordered=[];
   shown.forEach((c,i)=>{
     let el=tnodes.get(c.id);
     if(!el){el=makeTile(c);tnodes.set(c.id,el);
@@ -1040,10 +1071,12 @@ function renderLeague(minute,statsOnly){
     setText(el.querySelector(".t-pts"),nf(c.scored));
     setText(el.querySelector(".t-state"),c.state);
     setText(el.querySelector(".t-sub"),subLine(c,m.phase));
+    ordered.push(el);
     // brackets brighten with leverage; nothing here glows for its own sake
     el.style.setProperty("--hud",Math.min(1,c.share*7).toFixed(2));
     el.dataset.hot=c.share>0.075?"1":"0";
-    grid.appendChild(el);});
+    if(!el.isConnected)grid.appendChild(el);});
+  reorder(grid,ordered);
   applySpatial(grid);
   renderPicker(L);renderPregame(L,m);
   // the room glows in the colours of the two cells that matter most
@@ -1409,6 +1442,7 @@ function renderPicker(L){
       `<option value="${t.teamId}"${String(t.teamId)===String(L.myTeam)?" selected":""}>`+
       `${t.name}</option>`).join("");}
 }
+holdWhileOpen($("teampick"),$("tp-select"));
 $("tp-select").addEventListener("change",e=>{
   const L=leagues.find(x=>x.id===openLeague);if(!L)return;
   L.chosen=true;setTeam(L,e.target.value);
