@@ -168,3 +168,35 @@ def build(store, player_id: str, live_stats: dict | None = None) -> dict:
         "draft": draft_history(store, player_id),
         "formats": format_lines(live_stats) if live_stats else [],
     }
+
+
+def opportunity(player_id: str, season: int | None = None) -> dict:
+    """What this player is actually being given, from nflverse.
+
+    Fantasy points are an outcome; targets, carries and target share are the
+    opportunity behind them, and a card that shows only the outcome cannot say
+    whether a quiet week was bad luck or a bad role. nflverse publishes this
+    free and `advanced.py` already caches it - it was simply never served.
+
+    Returns {} when the player is not in the release, which is the honest
+    answer for a rookie or a player who has not taken a snap.
+    """
+    from . import advanced
+
+    try:
+        bridge = advanced.espn_bridge()
+        nid = bridge.get(str(player_id))
+        if not nid:
+            return {}
+        prof = advanced.season_profiles(season or 2025)
+        row = prof.get(str(nid))
+    except Exception:
+        return {}
+    if not row:
+        return {}
+    out = {"games": row.get("g"), "targets": row.get("tgt"),
+           "carries": row.get("car"), "targetShare": row.get("ts"),
+           "airYardsShare": row.get("ays"), "wopr": row.get("wopr"),
+           "adot": row.get("adot"), "yac": row.get("yac"),
+           "ppg": row.get("ppg")}
+    return {k: v for k, v in out.items() if v is not None}

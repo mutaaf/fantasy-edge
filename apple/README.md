@@ -104,6 +104,31 @@ Saving is loopback-only unless the server is started with
 works; a real Vision Pro on the house network is told plainly when the save
 was refused, rather than appearing to save and forgetting.
 
+## The command centre
+
+Three rails on one surface. The left is **standing** - every league, your
+record and place in each, and the cross-league totals that only exist once the
+leagues are collapsed. The middle is **happening** - this week's matchups, the
+live slate, your men ordered by what is at stake, and who is unrostered. The
+right is **one player in depth**, because the question a board raises is
+always about somebody in particular.
+
+### Which numbers are which
+
+The panels are deliberately unequal in how well founded they are, and say so:
+
+- **Reported** - scores, projections, records, the slate, ownership. Straight
+  from the read API.
+- **Derived, and labelled** - floor and ceiling are that player's own 20th and
+  80th percentile weeks across the games he actually played, not a model's
+  opinion. The card says this on the card.
+- **Opportunity** - targets, carries, target share, WOPR and aDOT from
+  nflverse. `advanced.py` had cached these for months; nothing served them.
+- **Absent** - pending waiver claims, trade offers and matchup grades have no
+  source in anything this reads. They are missing rather than filled, because
+  a dashboard that quietly invents a plausible number is worse than one with a
+  hole in it: you cannot tell which half to trust.
+
 ## Known gaps
 
 - **The widget is source, not a target.** WidgetKit needs its own extension

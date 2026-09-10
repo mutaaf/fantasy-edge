@@ -9,6 +9,10 @@
 		7E26EEE0820A17CD784B1348 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9BE3BAF33F3F87ED0E5C /* API.swift */; };
 		C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045DF9D9ED222051C529CB76 /* BoardView.swift */; };
 		D23C96A51FBF336FD667E92B /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3BAB1EC78AAE08765A5C6F /* CellView.swift */; };
+		C6CEC6DD16F84E49B060E283 /* CommandDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5029057AEA7EE4A6F399447 /* CommandDetail.swift */; };
+		B301F08A365BAC3258930E38 /* CommandPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D536F5DA0E279B27BE37C /* CommandPanels.swift */; };
+		28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9826E7D2E14B394647B8AFCD /* CommandRails.swift */; };
+		EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C24CFCAB3D18C778AE8490 /* CommandView.swift */; };
 		9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
@@ -22,6 +26,10 @@
 		8ADB9BE3BAF33F3F87ED0E5C /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		045DF9D9ED222051C529CB76 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		BE3BAB1EC78AAE08765A5C6F /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
+		F5029057AEA7EE4A6F399447 /* CommandDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandDetail.swift; sourceTree = "<group>"; };
+		F63D536F5DA0E279B27BE37C /* CommandPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPanels.swift; sourceTree = "<group>"; };
+		9826E7D2E14B394647B8AFCD /* CommandRails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRails.swift; sourceTree = "<group>"; };
+		42C24CFCAB3D18C778AE8490 /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
 		FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FantasyEdgeApp.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
@@ -54,6 +62,10 @@
 				8ADB9BE3BAF33F3F87ED0E5C /* API.swift */,
 				045DF9D9ED222051C529CB76 /* BoardView.swift */,
 				BE3BAB1EC78AAE08765A5C6F /* CellView.swift */,
+				F5029057AEA7EE4A6F399447 /* CommandDetail.swift */,
+				F63D536F5DA0E279B27BE37C /* CommandPanels.swift */,
+				9826E7D2E14B394647B8AFCD /* CommandRails.swift */,
+				42C24CFCAB3D18C778AE8490 /* CommandView.swift */,
 				FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
 				848B7422D9647143452C9753 /* Leverage.swift */,
@@ -132,6 +144,10 @@
 				7E26EEE0820A17CD784B1348 /* API.swift in Sources */,
 				C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */,
 				D23C96A51FBF336FD667E92B /* CellView.swift in Sources */,
+				C6CEC6DD16F84E49B060E283 /* CommandDetail.swift in Sources */,
+				B301F08A365BAC3258930E38 /* CommandPanels.swift in Sources */,
+				28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */,
+				EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */,
 				9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,

@@ -91,7 +91,83 @@ final class Board {
         }
     }
 
-    // MARK: - which team is yours
+    // MARK: - the other panels
+
+    var roster: [RosteredPlayer] = []
+    var ranked: [RankedPlayer] = []
+    var injuries: [InjuryItem] = []
+    /// Everything the command centre needs beyond the board itself. Fetched
+    /// once on open and refreshed on the slow clock: a season log and an
+    /// injury wire do not move at the pace a scoreline does.
+    @MainActor
+    func loadContext() async {
+        async let a: () = fetch("/api/players", into: PlayersPayload.self) {
+            self.roster = $0.players
+        }
+        async let b: () = fetch("/api/rankings", into: RankingsPayload.self) {
+            self.ranked = $0.players
+        }
+        async let c: () = fetch("/api/injuries", into: InjuriesPayload.self) {
+            self.injuries = $0.injuries
+        }
+        _ = await (a, b, c)
+    }
+
+    private func fetch<T: Decodable>(_ path: String, into: T.Type,
+                                     apply: @MainActor (T) -> Void) async {
+        guard let u = url(path) else { return }
+        guard let (d, _) = try? await URLSession.shared.data(from: u),
+              let v = try? JSONDecoder().decode(T.self, from: d) else { return }
+        await MainActor.run { apply(v) }
+    }
+
+    // MARK: - cross-league totals
+    //
+    // Computed here rather than asked for, because every input is already on
+    // this device: asking the server to re-derive them would be a round trip
+    // to add four numbers.
+
+    var totalProjected: Double {
+        leagues.reduce(0) { $0 + $1.you.starters.reduce(0) { $0 + ($1.projected ?? 0) } }
+    }
+    var edgeOverOpponents: Double {
+        leagues.reduce(0) { acc, L in
+            let you = L.you.starters.reduce(0) { $0 + ($1.projected ?? 0) }
+            let opp = (L.opp?.starters ?? []).reduce(0) { $0 + ($1.projected ?? 0) }
+            return acc + (you - opp)
+        }
+    }
+    /// Projected win-loss this week, one per league, by who is ahead on
+    /// projection. Not a forecast of the season - just this Sunday.
+    var projectedRecord: (Int, Int) {
+        var w = 0, l = 0
+        for L in leagues {
+            let you = L.you.starters.reduce(0) { $0 + ($1.projected ?? 0) }
+            let opp = (L.opp?.starters ?? []).reduce(0) { $0 + ($1.projected ?? 0) }
+            if you >= opp { w += 1 } else { l += 1 }
+        }
+        return (w, l)
+    }
+    var averageRank: Double? {
+        let ranks = leagues.compactMap { $0.record?.rank }
+        guard !ranks.isEmpty else { return nil }
+        return Double(ranks.reduce(0, +)) / Double(ranks.count)
+    }
+    /// Distinct men across every league.
+    var distinctPlayers: Int { roster.count }
+
+    /// The board for one league, so a league rail can show a win probability
+    /// per league rather than only for the one on screen.
+    func mosaic(for L: LeaguePayload) -> Mosaic {
+        let players = live?.players ?? [:]
+        var cells = L.you.starters.map { Cell.make($0, side: "you", live: players[$0.id]) }
+        cells += (L.opp?.starters ?? []).map {
+            Cell.make($0, side: "opp", live: players[$0.id])
+        }
+        return Leverage.evaluate(cells)
+    }
+
+        // MARK: - which team is yours
 
     /// Saved per league on the server, not on this device, because the choice
     /// has to be the same one the laptop and the television already see.

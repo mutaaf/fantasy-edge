@@ -567,12 +567,34 @@ class Api:
                         "starters": m["opp"]["starters"]},
                 "roster": m["roster"], "priors": m["priors"],
                 "matchups": m["matchups"], "teams": m["teams"],
+                "record": self._record(c["provider"], c["league_id"],
+                                       m["season"], m["you"]["teamId"]),
                 "accuracy": accuracy,
             })
         if not out:
             raise HttpError(404, "No league has both rosters and a matchup stored.",
                             "pull a season with rosters, then retry")
         return {"leagues": out}
+
+    def _record(self, provider: str, league: str, season: int,
+                team_id: str) -> dict:
+        """Your record and where it puts you, for the league rail.
+
+        Read here rather than asked for per league by each client: four
+        leagues on a headset is four extra round trips for two integers.
+        """
+        rows = self.store().q(
+            "SELECT team_id, rank, wins, losses, ties, points_for FROM standing "
+            "WHERE provider=? AND league_id=? AND season=?",
+            (provider, str(league), season))
+        if not rows:
+            return {}
+        mine = next((r for r in rows if str(r["team_id"]) == str(team_id)), None)
+        if mine is None:
+            return {"of": len(rows)}
+        return {"wins": mine["wins"] or 0, "losses": mine["losses"] or 0,
+                "ties": mine["ties"] or 0, "rank": mine["rank"],
+                "of": len(rows), "pointsFor": mine["points_for"] or 0.0}
 
     def headlines(self) -> dict:
         """Recent NFL news, tagged with whoever you actually roster.
@@ -655,6 +677,12 @@ class Api:
                             "ids come from /api/players or a board tile")
         out = dict(out)
         out["formats"] = prof.format_lines(live) if live else []
+        # Opportunity: what he is actually being given, rather than what it
+        # came to. Cached on its own key because it is a season-scale fact and
+        # does not move with the slate.
+        out["opportunity"] = self.cached(
+            ("opportunity", str(player_id)),
+            lambda: prof.opportunity(player_id))
         return out
 
     def rankings(self) -> dict:
