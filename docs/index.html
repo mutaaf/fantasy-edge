@@ -979,6 +979,11 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   body{padding-bottom:58px}
 }
 
+
+.lc-open{font-family:var(--cond);font-size:12px;font-weight:800;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--green);opacity:.85;transition:.2s var(--ease)}
+.lcell:hover .lc-open{opacity:1;letter-spacing:.16em}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -992,7 +997,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     <div class="ctrls">
       <!-- Where you are comes first and loudest; how it is drawn comes after. -->
       <div class="seg" id="homeseg" role="group" aria-label="Console view">
-        <button data-h="leagues" aria-pressed="true">Leagues</button>
+        <button data-h="board" aria-pressed="true">Board</button>
+        <button data-h="leagues" aria-pressed="false">Leagues</button>
         <button data-h="players" aria-pressed="false">My players</button>
         <button data-h="today" aria-pressed="false">Today</button>
         <button data-h="analysis" aria-pressed="false">Analysis</button>
@@ -1388,7 +1394,11 @@ function holdWhileOpen(host,el){
    that touches them. */
 const ALLP=(DATA.players&&DATA.players.players)||[];
 const NEWS=(DATA.headlines&&DATA.headlines.stories)||[];
-let home="leagues";
+/* The mosaic is what this thing is for, and it had been pushed two clicks down
+   behind an injury desk, a day bar and a row of league cards - present, but
+   effectively gone. It is the landing view again; the cards are still there,
+   one tab across, for choosing which league you are looking at. */
+let home="board";
 
 const faceHTML=p=>`<span class="r-face" style="--fc:${p.color||'#222'}">`+
   (src(p)?`<img alt="" src="${src(p)}" onerror="this.closest('.r-face').classList.add('noshot');this.remove()">`:"")+
@@ -1618,14 +1628,33 @@ let analysisLeague=null;
 function showHome(){
   const isL=home==="leagues";
   lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hurt").hidden=!isL||!HURT.length;
+  if(home!=="board"){openLeague=null;grid.hidden=true;$("mmodes").hidden=true;
+    $("score").hidden=true;$("pbwrap").hidden=true;$("teampick").hidden=true;
+    $("pregame").hidden=true;$("plays").hidden=true;$("viewseg").hidden=true;}
   $("whenfilters").hidden=!(home==="players"||home==="today");$("hidden").hidden=!isL||!hiddenIds().length;
   $("feedwrap").hidden=isL||home==="analysis";
   $("angrid").hidden=home!=="analysis";
+  if(home==="board"){openLeagueView(focusLeagueId(),true);return;}
   if(home==="players")renderPlayersFeed(true);
   else if(home==="today")renderToday();
   else if(home==="analysis"){renderAnalysis();}
   else if(home==="news")renderNewsFeed();
   else draw(clockMinute());}
+
+/* Which league the board opens on: whatever relevance says matters most right
+   now - somebody in the red zone, then somebody playing, then the next
+   kickoff - unless you have arranged your leagues yourself, in which case
+   yours wins. */
+function focusLeagueId(){
+  const vis=visibleLeagues();
+  if(!vis.length)return null;
+  if(readList(ORDKEY).length)return vis[0].id;
+  let best=null,bestScore=-1;
+  for(const L of vis){
+    const m=evaluate(L.cells.slice(),{});
+    const r=relevance(L,m);
+    if(r.score>bestScore){bestScore=r.score;best=L.id;}}
+  return best||vis[0].id;}
 
 $("homeseg").addEventListener("click",e=>{
   const b=e.target.closest("[data-h]");if(!b||openLeague)return;
@@ -1881,6 +1910,7 @@ function makeLeagueCell(L){
       `<div class="lc-odds"></div>`+
       `<div class="lc-side b"><div class="lc-team"></div><div class="lc-pts"></div></div></div>`+
     `<div class="lc-bar"><i></i></div><div class="faces"></div>`+
+    `<div class="lc-open">Open board →</div>`+
     `<div class="lc-pick"><span class="lc-pk">You</span>`+
     `<select aria-label="Your team in this league"></select></div>`+
     `<div class="lc-lead"></div>`;
@@ -2627,17 +2657,20 @@ function draw(minute){
   }
 }
 
-function openLeagueView(id){
+function openLeagueView(id,asHome){
   const L=leagues.find(x=>x.id===id);if(!L)return;
   openLeague=id;bands={};focusIdx=0;
+  if(asHome)home="board";
   $("title").textContent=L.league;
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
   $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
   $("hurt").hidden=true;
   $("whenfilters").hidden=true;$("angrid").hidden=true;
-  $("homeseg").hidden=true;
-  $("back").hidden=false;$("viewseg").hidden=false;
+  // As the landing board the console tabs stay put; as a drill-down from the
+  // league cards you get a way back instead.
+  $("homeseg").hidden=!asHome;
+  $("back").hidden=!!asHome;$("viewseg").hidden=false;
   lgrid.hidden=true;
   rnodes.clear();rtable.replaceChildren();
   showView();}
