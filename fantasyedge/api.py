@@ -50,6 +50,7 @@ ROUTES = [
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
+    ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
 ]
@@ -335,6 +336,29 @@ class Api:
             # Inlined so the page is whole on first paint and still whole when
             # published somewhere with no API behind it.
             data["prefs"] = self.prefs()
+            # Profiles for everyone you roster, inlined. A published page has no
+            # API behind it, and a card that can only go deep when a server
+            # happens to be running is a card with two personalities.
+            try:
+                from . import profile as prof
+
+                # The page is built once, so this is the moment to pay for the
+                # live line: it is the only thing that can be restated across
+                # scoring formats, and a card built without it silently drops
+                # a whole section.
+                raw = {}
+                try:
+                    src = self.live_source()
+                    if hasattr(src, "raw_stats"):
+                        raw = src.raw_stats()
+                except Exception:
+                    raw = {}
+                data["profiles"] = {
+                    str(pl["id"]): prof.build(self.store(), pl["id"],
+                                              raw.get(str(pl["id"])))
+                    for pl in (self.players().get("players") or [])}
+            except Exception:
+                data["profiles"] = {}
             for key, fn in (("players", self.players), ("headlines", self.headlines),
                             ("injuries", self.injuries)):
                 try:
@@ -528,6 +552,36 @@ class Api:
 
         return self.cached(("headlines",), build)
 
+    def profile(self, player_id: str) -> dict:
+        """One player in depth, for the card.
+
+        Live raw stats are passed through where the slate has them, because
+        they are the only line that can be restated across scoring formats -
+        a stored season keeps points, not the plays behind them.
+        """
+        from . import profile as prof
+
+        # Only borrow a live source that already exists. Opening a card should
+        # never be the thing that triggers a slate fetch - the board owns that
+        # clock, and a card that stampedes the feed to decorate itself is a bad
+        # trade for one extra line of type.
+        live = None
+        with self._lock:
+            src = getattr(self, "_live", None)
+        if src is not None and hasattr(src, "raw_stats"):
+            try:
+                live = src.raw_stats().get(str(player_id))
+            except Exception:
+                live = None
+        out = self.cached(("profile", str(player_id)),
+                          lambda: prof.build(self.store(), player_id))
+        if not out:
+            raise HttpError(404, f"No player {player_id} in the database.",
+                            "ids come from /api/players or a board tile")
+        out = dict(out)
+        out["formats"] = prof.format_lines(live) if live else []
+        return out
+
     def prefs(self) -> dict:
         from . import prefs as pf
         return pf.load()
@@ -605,6 +659,8 @@ class Api:
             return self.injuries(), DERIVED
         if rest == ["players"]:
             return self.players(), CONFIG
+        if len(rest) == 2 and rest[0] == "player":
+            return self.profile(rest[1]), DERIVED
         if rest == ["prefs"]:
             return self.prefs(), PRIVATE
         if rest == ["leagues"]:

@@ -744,6 +744,55 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 @media (max-width:900px){.hurt-item{grid-template-columns:44px minmax(0,1fr)}
   .hurt-cost{display:none}}
 
+
+/* ── the deep half of the card ─────────────────────────────
+   Dense on purpose - this is the part you read rather than glance at - but
+   ruled and aligned so density does not become noise. Numbers are tabular and
+   right-set so the eye can run down a column. */
+.pc-deep{margin-top:18px;border-top:1px solid rgba(255,255,255,.14);padding-top:16px}
+.pc-sec{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-faint);margin:16px 0 8px}
+.pc-sec:first-child{margin-top:0}
+.slog{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.slog th{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);text-align:right;padding:0 0 6px;
+  border-bottom:1px solid rgba(255,255,255,.12)}
+.slog th:first-child{text-align:left}
+.slog td{font-size:13.5px;padding:7px 0;text-align:right;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.slog td:first-child{text-align:left;font-weight:700}
+.slog tr:last-child td{border-bottom:0}
+.slog tr.now td{color:var(--ink-faint)}
+.rankpill{display:inline-block;font-family:var(--cond);font-size:11px;font-weight:800;
+  letter-spacing:.06em;padding:2px 8px;border-radius:var(--r-chip);
+  background:rgba(255,255,255,.12);color:var(--ink)}
+.rankpill.elite{background:var(--green);color:#06210a}
+.rankpill.good{background:rgba(91,194,54,.28);color:var(--green-lift)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:36px;margin-top:4px}
+.spark i{flex:1;min-width:2px;background:rgba(255,255,255,.22);border-radius:1px}
+.spark i.hi{background:var(--green)}
+.fmt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fmt div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;padding:9px 11px;text-align:center}
+.fmt .f-k{font-family:var(--cond);font-size:9.5px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.fmt .f-v{font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:2px;
+  font-variant-numeric:tabular-nums}
+.dhist{display:grid;gap:6px}
+.drow{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:10px;
+  align-items:baseline;font-size:12.5px;padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.drow:last-child{border-bottom:0}
+.drow .d-yr{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint)}
+.drow .d-lg{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-dim)}
+.drow .d-pk{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.drow .d-rc{font-family:var(--mono);font-size:11.5px;white-space:nowrap}
+.d-rc.early{color:var(--hot)}.d-rc.late{color:var(--green-lift)}
+.size-tag{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.1em;
+  background:rgba(255,255,255,.12);border-radius:var(--r-chip);padding:1px 6px;
+  margin-left:6px;color:var(--ink-dim)}
+.pc-none{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -869,6 +918,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
           <span class="pc-delta" id="pclevpct"></span></div>
         <div class="pc-levbar"><i id="pclevbar"></i></div>
       </div>
+      <div class="pc-deep" id="pcdeep"></div>
       <div class="pc-what">
         <div class="pc-whatrow">
           <span class="pc-k">What if he scores…</span>
@@ -1695,10 +1745,69 @@ function openCard(c){
   $("pcpts").style.color=c.side==="you"?"var(--you)":"var(--opp)";
   $("pcslider").value=0;
   veil.hidden=false;
+  renderDeep(c);
   refreshCard();
   $("pcclose").focus();
 }
 function closeCard(){veil.hidden=true;cardCell=null;}
+
+const PROFILES=DATA.profiles||{};
+
+/* ── the deep half ─────────────────────────────────────────────────────
+   Season by season, where he finished among his position, and where he
+   actually went in your rooms. Two things it deliberately will not do:
+   rank a season nobody has played yet, and restate a past season into
+   another scoring format - the database keeps points, not the plays behind
+   them, so only this week's line can honestly be shown three ways. */
+function rankClass(rank){
+  if(rank==null)return "";
+  return rank<=5?"elite":rank<=15?"good":"";}
+
+function renderDeep(c){
+  const box=$("pcdeep");
+  const p=PROFILES[String(c.id)];
+  if(!p){box.innerHTML=
+    '<div class="pc-none">No season history on file for this player.</div>';return;}
+  const played=(p.seasons||[]).filter(s=>s.started);
+  const latest=played[played.length-1];
+  let html="";
+
+  if(p.formats&&p.formats.length){
+    html+='<div class="pc-sec">This week, by scoring format</div><div class="fmt">'+
+      p.formats.map(f=>`<div><div class="f-k">${f.name}</div>`+
+        `<div class="f-v">${nf(f.points)}</div></div>`).join("")+"</div>";}
+
+  if(played.length){
+    html+='<div class="pc-sec">Season by season</div>'+
+      '<table class="slog"><thead><tr><th>Season</th><th>Finish</th><th>G</th>'+
+      '<th>PPG</th><th>Total</th><th>Best</th></tr></thead><tbody>'+
+      played.slice(-5).map(sn=>{
+        const pill=sn.rank
+          ? `<span class="rankpill ${rankClass(sn.rank)}">${c.pos}${sn.rank}</span>`
+          : '<span class="pc-none">—</span>';
+        return `<tr><td>${sn.season}</td><td>${pill}</td><td>${sn.weeks}</td>`+
+          `<td>${sn.ppg.toFixed(1)}</td><td>${nf(sn.total)}</td>`+
+          `<td>${nf(sn.best)}</td></tr>`;}).join("")+"</tbody></table>";
+    if(latest&&latest.weekly&&latest.weekly.length>1){
+      const mx=Math.max(...latest.weekly,1);
+      html+=`<div class="pc-sec">${latest.season} week by week</div><div class="spark">`+
+        latest.weekly.map(v=>`<i class="${v>=mx*0.8?"hi":""}" `+
+          `style="height:${Math.max(3,(v/mx)*100)}%" title="${v}"></i>`).join("")+"</div>";}
+  } else {
+    html+='<div class="pc-none">No scored season on file yet.</div>';}
+
+  if(p.draft&&p.draft.length){
+    html+='<div class="pc-sec">Where he actually went, in your leagues</div>'+
+      '<div class="dhist">'+p.draft.slice(0,6).map(d=>{
+        const rc=d.reach==null?'<span class="d-rc">—</span>'
+          :`<span class="d-rc ${d.reach>0?"early":"late"}">`+
+            `${d.reach>0?"+":""}${d.reach} vs ADP</span>`;
+        return `<div class="drow"><span class="d-yr">${d.season}</span>`+
+          `<span class="d-lg">${d.league||""}`+
+          `<span class="size-tag">${d.teams||"?"}TM</span></span>`+
+          `<span class="d-pk">R${d.round} P${d.overall}</span>${rc}</div>`;}).join("")+
+      "</div>";}
+  box.innerHTML=html;}
 
 function refreshCard(){
   const c=cardCell;if(!c)return;

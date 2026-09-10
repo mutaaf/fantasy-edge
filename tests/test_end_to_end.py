@@ -5,6 +5,7 @@ injected rather than imported at call sites."""
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -20,6 +21,14 @@ from fantasyedge.providers.manual import ManualProvider       # noqa: E402
 from fantasyedge.store import Store                           # noqa: E402
 
 FIX = pathlib.Path(__file__).parent / "fixtures"
+
+
+def setUpModule():
+    """No network, ever. The live source will happily reach ESPN now that it
+    works, and a suite that quietly takes ninety seconds and depends on an
+    outside service is not the suite this project promises."""
+    os.environ["FANTASYEDGE_SCOREBOARD_FILE"] = str(FIX / "espn_scoreboard.json")
+    os.environ["FANTASYEDGE_SUMMARY_FILE"] = str(FIX / "espn_summary.json")
 
 
 class StubHttp(Http):
@@ -463,11 +472,25 @@ class TestApi(unittest.TestCase):
         self.assertEqual(cm.exception.code, 400)
 
     def test_every_advertised_route_dispatches(self):
-        """`GET /api` is the client's discovery document; it must not lie."""
-        for _, template, _ in self.api.index()["routes"]:
+        """`GET /api` is the client's discovery document; it must not lie.
+
+        Routable is the claim, not found: a placeholder id resolves to a real
+        route that honestly reports no such player, and that is a pass. Only
+        "No route" means the document advertised something that does not
+        exist.
+        """
+        from fantasyedge.api import HttpError
+
+        for verb, template, _ in self.api.index()["routes"]:
+            if verb != "GET":
+                continue
             path = (template.replace("{provider}", "espn").replace("{id}", "99")
                             .replace("{key}", "luck"))
-            self.assertIsNotNone(self.api.dispatch(path, {}), path)
+            try:
+                self.assertIsNotNone(self.api.dispatch(path, {}), path)
+            except HttpError as exc:
+                self.assertNotIn("No route", exc.message, path)
+                self.assertTrue(exc.fix, f"{path} 404s without saying what to do")
 
     def test_unknown_route_is_404(self):
         from fantasyedge.api import HttpError
@@ -1202,3 +1225,66 @@ class TestRealFetchPathExists(unittest.TestCase):
                               http=boom).snapshot()
         self.assertEqual(snap["source"], "espn-unavailable")
         self.assertIn("kaboom", snap["error"])
+
+
+class TestPlayerProfile(unittest.TestCase):
+    """The card's data: what he has done, where he finished, where he went."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.store = Store(pathlib.Path(cls.tmp.name) / "prof.db")
+        bundle, _ = load_fixture_bundle()
+        cls.store.save(bundle)
+        row = cls.store.q("SELECT player_id FROM player WHERE pos='WR' LIMIT 1")
+        cls.pid = row[0]["player_id"]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.store.close()
+        cls.tmp.cleanup()
+
+    def test_a_season_log_is_built(self):
+        from fantasyedge import profile
+
+        out = profile.build(self.store, self.pid)
+        self.assertTrue(out["name"])
+        self.assertTrue(out["seasons"])
+        first = out["seasons"][0]
+        self.assertTrue({"season", "weeks", "total", "ppg", "rank",
+                         "field", "weekly"} <= set(first))
+
+    def test_an_unplayed_season_is_not_ranked(self):
+        """A season in progress has a row per week with nothing in it. Ranking
+        a field where everybody scored zero looks authoritative and means
+        nothing."""
+        from fantasyedge import profile
+
+        log = profile.season_log(self.store, self.pid, "WR")
+        for s in log:
+            if not s["started"]:
+                self.assertIsNone(s["rank"])
+
+    def test_draft_history_carries_league_size(self):
+        """Pick 21 is the back of round two in a ten-team league and the front
+        of it in a twelve. A single ADP number cannot say that."""
+        from fantasyedge import profile
+
+        rows = profile.draft_history(self.store, self.pid)
+        for r in rows:
+            self.assertIn("teams", r)
+            self.assertIn("overall", r)
+
+    def test_one_line_restated_across_formats(self):
+        from fantasyedge import profile
+
+        out = profile.format_lines(
+            {"receptions": 8, "receivingYards": 112, "receivingTouchdowns": 1})
+        by = {f["name"]: f["points"] for f in out}
+        self.assertEqual(by["PPR"] - by["Half PPR"], 4.0)     # 8 catches, half a point
+        self.assertEqual(by["Half PPR"] - by["Standard"], 4.0)
+
+    def test_an_unknown_player_yields_nothing(self):
+        from fantasyedge import profile
+
+        self.assertEqual(profile.build(self.store, "no-such-player"), {})

@@ -374,7 +374,8 @@ class EspnLiveSource(LiveSource):
         A finished game is fetched once and then held - its numbers cannot
         change again, so re-asking is pure waste.
         """
-        from .scoring import dst_points, parse_team_defence, score_boxscore
+        from .scoring import (dst_points, parse_boxscore, parse_team_defence,
+                              score_boxscore)
 
         now = time.time()
         points: dict[str, float] = {}
@@ -388,11 +389,12 @@ class EspnLiveSource(LiveSource):
                 try:
                     data = self._fetch(summary_url(event))
                     hit = (now, score_boxscore(data, self.scoring),
-                           parse_team_defence(data))
+                           parse_team_defence(data), parse_boxscore(data))
                 except Exception:
                     # keep whatever we had; a single bad game must not blank a board
-                    hit = hit or (now, {}, {})
-                    hit = (now, hit[1], hit[2] if len(hit) > 2 else {})
+                    hit = hit or (now, {}, {}, {})
+                    hit = (now, hit[1], hit[2] if len(hit) > 2 else {},
+                           hit[3] if len(hit) > 3 else {})
                 self._boxes[event] = hit
             points.update(hit[1])
 
@@ -409,6 +411,22 @@ class EspnLiveSource(LiveSource):
                     dst[ab] = dst_points(opp_score, allowed_yards,
                                          teams.get(ab) or {})
         return points, dst
+
+    def raw_stats(self) -> dict[str, dict]:
+        """Unscored box-score lines for games under way.
+
+        The board only needs points; a card wants the line itself, because that
+        is the only thing that can be restated in another scoring format. It
+        comes out of the same cached payload the points did - one parse, no
+        extra request - which is why boxscores() runs first rather than this
+        re-fetching behind its back.
+        """
+        self.boxscores()
+        out: dict[str, dict] = {}
+        for hit in self._boxes.values():
+            if len(hit) > 3:
+                out.update(hit[3])
+        return out
 
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
