@@ -207,6 +207,12 @@ touches exactly one file.
 
 ## Live demo
 
+**[mutaaf.github.io/fantasy-edge](https://mutaaf.github.io/fantasy-edge/)** — the
+board, built from real league history and anonymised: NFL players are public
+figures and stay, the people in the league become "Team 7".
+
+
+
 `make docs` renders a self-contained board into `docs/`, which GitHub Pages
 serves as-is. It runs a deterministic simulated Sunday so the page is alive
 without a server. **`--anon` is the default** in the Makefile: NFL players are

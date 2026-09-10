@@ -952,6 +952,33 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   white-space:nowrap}
 .pl-mine.opp{background:var(--opp);color:#fff}
 
+
+/* ── phone ─────────────────────────────────────────────────
+   Found by running it on the thing: five tabs do not fit across a phone, so
+   "Headlines" was simply cut off the edge with no way to reach it. The row
+   scrolls now. The injury desk also filled the whole first screen - it should
+   interrupt you, not bury the board - so on a narrow screen it states the case
+   and leaves the detail to the card. */
+@media (max-width:820px){
+  .ctrls{width:100%;gap:8px}
+  .seg#homeseg{order:-1;width:100%;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch}
+  .seg#homeseg::-webkit-scrollbar{display:none}
+  .seg#homeseg button{flex:0 0 auto}
+  .ctrl-sep{display:none}
+  h1{font-size:27px}
+  .hurt-item{grid-template-columns:44px minmax(0,1fr);gap:12px;padding:12px 14px}
+  .hurt-roast{font-size:12.5px;-webkit-line-clamp:3;display:-webkit-box;
+    -webkit-box-orient:vertical;overflow:hidden}
+  .hurt-head{font-size:12px}
+  .hurt-name{font-size:17px}
+  .daybar{grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:9px}
+  .db-v{font-size:22px}
+  .db-n{font-size:11px}
+  /* the ticker is fixed, so the page has to end above it */
+  body{padding-bottom:58px}
+}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
