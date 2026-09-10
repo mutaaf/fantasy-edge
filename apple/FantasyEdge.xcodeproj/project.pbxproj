@@ -1,0 +1,241 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7E26EEE0820A17CD784B1348 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9BE3BAF33F3F87ED0E5C /* API.swift */; };
+		C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045DF9D9ED222051C529CB76 /* BoardView.swift */; };
+		D23C96A51FBF336FD667E92B /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3BAB1EC78AAE08765A5C6F /* CellView.swift */; };
+		9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */; };
+		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
+		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
+		10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800C2342BB2F01CC074FBAF /* Models.swift */; };
+		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		85673086EF6CFD3A1F8591AF /* FantasyEdge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FantasyEdge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8ADB9BE3BAF33F3F87ED0E5C /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		045DF9D9ED222051C529CB76 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
+		BE3BAB1EC78AAE08765A5C6F /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
+		FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FantasyEdgeApp.swift; sourceTree = "<group>"; };
+		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
+		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
+		B800C2342BB2F01CC074FBAF /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CC931E1219AD275C20F3632C = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E50290A24C49A459B43487C5 = {
+			isa = PBXGroup;
+			children = (
+				958B6263A0B70C847CDA462B /* Sources */,
+				328EC33DF3954DC9B83FA285 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		958B6263A0B70C847CDA462B /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				8ADB9BE3BAF33F3F87ED0E5C /* API.swift */,
+				045DF9D9ED222051C529CB76 /* BoardView.swift */,
+				BE3BAB1EC78AAE08765A5C6F /* CellView.swift */,
+				FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */,
+				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
+				848B7422D9647143452C9753 /* Leverage.swift */,
+				B800C2342BB2F01CC074FBAF /* Models.swift */,
+				56C7B160441874DDB2DC3220 /* Theme.swift */,
+			);
+			path = FantasyEdge/Sources;
+			sourceTree = "<group>";
+		};
+		328EC33DF3954DC9B83FA285 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				85673086EF6CFD3A1F8591AF /* FantasyEdge.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0E8A3AD980EC179856012B7E /* FantasyEdge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4C54DBBEE4CD1F0693131A9;
+			buildPhases = (
+				E66CB3B8F89DAB928E81ABB5,
+				CC931E1219AD275C20F3632C,
+				59078AB1F481882BED053FC9,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = FantasyEdge;
+			productName = FantasyEdge;
+			productReference = 85673086EF6CFD3A1F8591AF /* FantasyEdge.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 3A3AA46345CA81460312FF60;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = E50290A24C49A459B43487C5;
+			productRefGroup = 328EC33DF3954DC9B83FA285 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E8A3AD980EC179856012B7E /* FantasyEdge */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		59078AB1F481882BED053FC9 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E66CB3B8F89DAB928E81ABB5 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7E26EEE0820A17CD784B1348 /* API.swift in Sources */,
+				C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */,
+				D23C96A51FBF336FD667E92B /* CellView.swift in Sources */,
+				9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */,
+				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
+				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,
+				10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */,
+				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		671D9E2E95809E27B85B6A20 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SDKROOT = xros;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Debug;
+		};
+		AC5D6E15C21DCFD954DE2D0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SDKROOT = xros;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+			};
+			name = Release;
+		};
+		5FD7CB20C3C0A7C4C28C16DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fantasy Edge";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Fantasy Edge reads your league board from the Mac on your network.";
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
+				PRODUCT_NAME = FantasyEdge;
+				SWIFT_VERSION = 5.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				TARGETED_DEVICE_FAMILY = 7;
+				SDKROOT = xros;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			};
+			name = Debug;
+		};
+		AF694ED35853F54DD12B6EE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fantasy Edge";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Fantasy Edge reads your league board from the Mac on your network.";
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
+				PRODUCT_NAME = FantasyEdge;
+				SWIFT_VERSION = 5.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				SUPPORTED_PLATFORMS = "xros xrsimulator";
+				TARGETED_DEVICE_FAMILY = 7;
+				SDKROOT = xros;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3A3AA46345CA81460312FF60 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				671D9E2E95809E27B85B6A20 /* Debug */,
+				AC5D6E15C21DCFD954DE2D0E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A4C54DBBEE4CD1F0693131A9 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5FD7CB20C3C0A7C4C28C16DB /* Debug */,
+				AF694ED35853F54DD12B6EE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0;
+}

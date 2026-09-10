@@ -9,3 +9,8 @@ __pycache__/
 /tmp/
 *.log
 .DS_Store
+
+# Xcode
+apple/build/
+*.xcuserdatad
+xcuserdata/
