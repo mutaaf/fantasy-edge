@@ -35,6 +35,12 @@ chat, use it in the shell and persist it nowhere in the working tree.
 
 **Never invent a league id, cookie, or season range.** Ask.
 
+**`~/.fantasy-edge/prefs.json` is the user's, not yours.** It holds which team
+is theirs in each league, the order they arranged, and what they hid. Deleting
+it to get a clean screenshot silently undoes work they did by hand, and it
+looks to them like the app forgot. Point `HOME` elsewhere if you need a blank
+slate.
+
 **Run `make test` before and after any change.** 56 tests, no network, under
 two seconds. A green suite is the definition of not-broken here.
 

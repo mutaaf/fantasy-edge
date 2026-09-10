@@ -51,6 +51,7 @@ ROUTES = [
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
     ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
+    ["GET", "/api/rankings", "today's slate ranked, the way a pre-game show would"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
 ]
@@ -360,7 +361,7 @@ class Api:
             except Exception:
                 data["profiles"] = {}
             for key, fn in (("players", self.players), ("headlines", self.headlines),
-                            ("injuries", self.injuries)):
+                            ("injuries", self.injuries), ("rankings", self.rankings)):
                 try:
                     data[key] = fn()
                 except Exception:
@@ -582,6 +583,67 @@ class Api:
         out["formats"] = prof.format_lines(live) if live else []
         return out
 
+    def rankings(self) -> dict:
+        """Today's slate, ranked - a companion to the shows that do this out loud.
+
+        Everyone with a game in the current window, ordered by projection,
+        annotated with what they did last season and whether you own them.
+        Deliberately not limited to your rosters: half the value of a pre-game
+        ranking is seeing the names you passed on.
+        """
+        from . import profile as prof
+
+        def build():
+            live = self.live()
+            games = live.get("games") or {}
+            today = {club for club, g in games.items()
+                     if g.get("state") in ("in", "post")} or {
+                     club for club, g in games.items() if g.get("state") == "pre"}
+
+            owned: dict[str, list] = {}
+            for L in self.mosaics()["leagues"]:
+                me = str(L["you"]["teamId"])
+                for r in L["roster"]:
+                    if str(r["teamId"]) == me:
+                        owned.setdefault(str(r["id"]), []).append(L["league"])
+
+            store = self.store()
+            rows = store.q(
+                """SELECT r.player_id, p.name, p.pos, p.nfl_team,
+                          MAX(COALESCE(r.projected, 0)) AS proj
+                   FROM roster_slot r
+                   JOIN player p ON p.provider=r.provider AND p.player_id=r.player_id
+                   WHERE r.season=2026 AND p.name IS NOT NULL
+                   GROUP BY r.player_id""")
+
+            from .live import team_abbr
+            out = []
+            for r in rows:
+                club = team_abbr(r["nfl_team"])
+                if today and club not in today:
+                    continue
+                pid = str(r["player_id"])
+                log = prof.season_log(store, pid, r["pos"] or "")
+                played = [s for s in log if s["started"] and s["rank"]]
+                last = played[-1] if played else None
+                out.append({
+                    "id": pid, "name": r["name"], "pos": r["pos"] or "",
+                    "team": club, "projected": round(float(r["proj"] or 0), 1),
+                    "scored": (live.get("players") or {}).get(pid, {}).get("s", 0.0),
+                    "state": (live.get("players") or {}).get(pid, {}).get("g", ""),
+                    "lastRank": last["rank"] if last else None,
+                    "lastSeason": last["season"] if last else None,
+                    "lastPpg": last["ppg"] if last else None,
+                    "owned": owned.get(pid, []),
+                })
+            out.sort(key=lambda x: -x["projected"])
+            for i, r in enumerate(out, start=1):
+                r["rank"] = i
+            return {"players": out[:120], "clubs": sorted(today),
+                    "count": len(out)}
+
+        return self.cached(("rankings",), build)
+
     def prefs(self) -> dict:
         from . import prefs as pf
         return pf.load()
@@ -661,6 +723,8 @@ class Api:
             return self.players(), CONFIG
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
+        if rest == ["rankings"]:
+            return self.rankings(), DERIVED
         if rest == ["prefs"]:
             return self.prefs(), PRIVATE
         if rest == ["leagues"]:
