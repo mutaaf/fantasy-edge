@@ -1,23 +1,32 @@
 <title>Leverage Mosaic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
-  /* ESPN's identity on Apple's materials: the red is the brand, the greys are
-     the glass it sits on. */
-  --espn:#D50A0A; --espn-lift:#FF2E2E;
-  --ground:#000000; --ground-2:#0b0c0f;
-  --card:rgba(255,255,255,.055); --card-2:rgba(255,255,255,.085);
-  --hair:rgba(255,255,255,.10); --hair-2:rgba(255,255,255,.16);
-  --ink:#f5f6f8; --ink-dim:rgba(245,246,248,.62); --ink-faint:rgba(245,246,248,.36);
-  --you:#0A84FF;            /* Apple system blue */
-  --opp:var(--espn);
-  --hot:#FFD60A;            /* Apple system yellow */
+  /* ESPN Fantasy's own identity: deep navy ground, grass green for anything
+     you can act on, white type. The navy is layered rather than flat - panels
+     sit a step lighter than the ground so the board reads as stacked cards
+     under one light, which is what the app does. */
+  --navy-900:#050f38; --navy-800:#0a1a5f; --navy-700:#0f2472;
+  --navy-600:#16307f; --navy-500:#1d3b93;
+  --green:#5bc236; --green-lift:#6fd84a; --green-deep:#3f9c25;
+  --espn:#d50a0a; --espn-lift:#ff3b3b;
+
+  --ground:var(--navy-800); --ground-2:var(--navy-900);
+  --card:rgba(255,255,255,.06); --card-2:rgba(255,255,255,.10);
+  --hair:rgba(255,255,255,.20); --hair-2:rgba(255,255,255,.36);
+  --ink:#ffffff; --ink-dim:rgba(255,255,255,.74); --ink-faint:rgba(255,255,255,.46);
+
+  --you:var(--green);              /* your side is the green one */
+  --opp:#ff4b4b;
+  --hot:#ffd400;                   /* ESPN's yellow, for the red zone */
+
   --ui:"Figtree",-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --display:"Anton",'Arial Narrow',sans-serif;
   --cond:"Barlow Condensed",'Helvetica Neue Condensed',sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,'SF Mono',Menlo,monospace;
-  --r-card:22px; --r-tile:16px; --r-chip:999px;
+  --r-card:18px; --r-tile:14px; --r-chip:999px;
   --ease:cubic-bezier(.2,0,.2,1);
   --gap:12px;
   /* ESPN fantasy position colours, straight from the app */
@@ -26,12 +35,16 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
-  font-size:15px;line-height:1.4;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;
+body{margin:0;background:var(--navy-800);color:var(--ink);font-family:var(--ui);
+  font-size:15px;line-height:1.4;letter-spacing:-.005em;-webkit-font-smoothing:antialiased;
   min-height:100vh;
   background-image:
-    radial-gradient(1200px 680px at 82% -14%,rgba(213,10,10,.16),transparent 66%),
-    radial-gradient(1000px 620px at 6% 108%,rgba(10,132,255,.13),transparent 66%);
+    /* the pinstripe, barely there but it stops the navy reading as flat ink */
+    repeating-linear-gradient(135deg,rgba(255,255,255,.028) 0 2px,
+                              transparent 2px 9px),
+    radial-gradient(1100px 620px at 80% -12%,rgba(91,194,54,.13),transparent 62%),
+    radial-gradient(900px 560px at 4% 106%,rgba(29,59,147,.55),transparent 66%),
+    linear-gradient(180deg,var(--navy-800) 0%,var(--navy-900) 100%);
   background-attachment:fixed;}
 .wrap{max-width:1600px;margin:0 auto;padding:26px 28px 40px;
   filter:saturate(var(--sat,1));transition:filter 1.2s var(--ease)}
@@ -40,14 +53,15 @@ body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);
 .top{display:flex;align-items:center;justify-content:space-between;gap:20px;
   flex-wrap:wrap;padding-bottom:20px}
 .brandwrap{display:flex;align-items:center;gap:15px;min-width:0}
-.back{font-family:var(--ui);font-size:14px;font-weight:600;letter-spacing:-.01em;
-  color:var(--ink);background:var(--card);border:1px solid var(--hair);
-  border-radius:var(--r-chip);padding:9px 17px;cursor:pointer;flex:none;
-  backdrop-filter:blur(24px) saturate(1.6);transition:.22s var(--ease)}
-.back:hover{background:var(--card-2);transform:scale(1.03)}
+.back{font-family:var(--ui);font-size:14px;font-weight:700;letter-spacing:-.005em;
+  color:var(--ink);background:transparent;border:1.5px solid rgba(255,255,255,.55);
+  border-radius:var(--r-chip);padding:9px 18px;cursor:pointer;flex:none;
+  transition:.22s var(--ease)}
+.back:hover{border-color:var(--green);color:var(--green-lift)}
 .back[hidden]{display:none!important}
-h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;margin:0;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+h1{font-family:var(--display);font-size:33px;font-weight:400;letter-spacing:.012em;
+  margin:0;text-transform:uppercase;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
 .wk{font-family:var(--cond);font-size:13px;font-weight:600;color:var(--ink-faint);
   letter-spacing:.14em;text-transform:uppercase;flex:none}
 /* Three controls sat side by side in identical pills, so nothing said which
@@ -62,14 +76,14 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
   padding:7px 16px;background:transparent;color:var(--ink-dim);border:0;
   border-radius:var(--r-chip);cursor:pointer;transition:.24s var(--ease);white-space:nowrap}
 .seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:rgba(255,255,255,.98);color:#000;
-  box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.seg button[aria-pressed="true"]{background:var(--green);color:#06210a;
+  font-weight:700;box-shadow:0 2px 10px rgba(91,194,54,.35)}
 .seg button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 /* secondary: the surface picker changes how it looks, not what you are on */
 .seg.quiet{background:transparent;border-color:rgba(255,255,255,.07);padding:2px}
 .seg.quiet button{font-size:12px;padding:5px 11px;letter-spacing:.04em;
   text-transform:uppercase;font-weight:700;color:var(--ink-faint)}
-.seg.quiet button[aria-pressed="true"]{background:rgba(255,255,255,.15);
+.seg.quiet button[aria-pressed="true"]{background:rgba(255,255,255,.18);
   color:var(--ink);box-shadow:none}
 /* tertiary: one switch, and it looks like a switch */
 .toggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--ui);
@@ -83,7 +97,7 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
 .toggle i::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;
   border-radius:50%;background:var(--ink-faint);transition:.24s var(--ease)}
 .toggle[aria-pressed="true"]{color:var(--ink)}
-.toggle[aria-pressed="true"] i{background:var(--you)}
+.toggle[aria-pressed="true"] i{background:var(--green)}
 .toggle[aria-pressed="true"] i::after{transform:translateX(11px);background:#fff}
 .toggle:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 
@@ -97,7 +111,7 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
   text-overflow:ellipsis}
 .team .pts{font-size:66px;font-weight:800;line-height:1;letter-spacing:-.035em;
   font-variant-numeric:tabular-nums;margin-top:2px}
-.team.a .pts{color:var(--you)}.team.b .pts{color:var(--opp)}
+.team.a .pts{color:var(--green)}.team.b .pts{color:var(--opp)}
 .team .proj{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-top:4px}
 .odds{text-align:center;min-width:132px}
 .odds .pct{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.03em;
@@ -107,7 +121,7 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
 .probbar{height:6px;background:var(--opp);overflow:hidden;display:flex;
   border-radius:var(--r-chip)}
 .probbar[hidden]{display:none!important}
-.probbar i{display:block;background:var(--you);height:100%;
+.probbar i{display:block;background:var(--green);height:100%;
   transition:width .8s var(--ease)}
 .meta{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);
   font-size:11px;color:var(--ink-faint);margin-top:10px;flex-wrap:wrap}
@@ -122,7 +136,7 @@ h1{font-family:var(--ui);font-size:31px;font-weight:800;letter-spacing:-.026em;m
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap);
   grid-auto-rows:68px;grid-auto-flow:row dense;margin-top:18px;perspective:1600px}
 .grid[hidden]{display:none!important}
-.tile{cursor:pointer;position:relative;background:var(--card);border:1px solid var(--hair);
+.tile{cursor:pointer;position:relative;background:var(--navy-700);border:1px solid var(--hair);
   border-radius:var(--r-tile);padding:13px 15px;overflow:hidden;display:flex;
   flex-direction:column;justify-content:space-between;
   backdrop-filter:blur(30px) saturate(1.7);-webkit-backdrop-filter:blur(30px) saturate(1.7);
@@ -197,8 +211,8 @@ body.noimg .mono,.tile.noshot .mono{display:block}
 /* ── parent board ──────────────────────────────────────── */
 .lgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:18px}
 .lgrid[hidden]{display:none!important}
-.lcell{grid-column:span 6;background:var(--card);border:1px solid var(--hair);
-  border-radius:var(--r-card);padding:22px 24px 20px;position:relative;overflow:hidden;
+.lcell{grid-column:span 6;background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:var(--r-card);padding:22px 24px 20px;position:relative;overflow:hidden;
   cursor:pointer;display:flex;flex-direction:column;gap:15px;text-align:left;color:inherit;
   font-family:inherit;backdrop-filter:blur(30px) saturate(1.7);
   -webkit-backdrop-filter:blur(30px) saturate(1.7);
@@ -213,7 +227,8 @@ body.noimg .mono,.tile.noshot .mono{display:block}
   box-shadow:0 1px 0 rgba(255,255,255,.09) inset,0 26px 60px rgba(0,0,0,.6)}
 .lcell:focus-visible{outline:3px solid var(--you);outline-offset:3px}
 .lc-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.lc-name{font-size:23px;font-weight:800;letter-spacing:-.028em;white-space:nowrap;
+.lc-name{font-family:var(--display);font-size:24px;font-weight:400;
+  letter-spacing:.014em;text-transform:uppercase;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .lc-wk{font-family:var(--cond);font-size:11.5px;font-weight:600;color:var(--ink-faint);
   letter-spacing:.14em;flex:none;text-transform:uppercase}
@@ -224,12 +239,12 @@ body.noimg .mono,.tile.noshot .mono{display:block}
   text-overflow:ellipsis}
 .lc-pts{font-size:40px;font-weight:800;line-height:1.02;letter-spacing:-.035em;
   font-variant-numeric:tabular-nums}
-.lc-side.a .lc-pts{color:var(--you)}.lc-side.b .lc-pts{color:var(--opp)}
+.lc-side.a .lc-pts{color:var(--green)}.lc-side.b .lc-pts{color:var(--opp)}
 .lc-odds{font-size:26px;font-weight:800;letter-spacing:-.03em;
   font-variant-numeric:tabular-nums;text-align:center;min-width:70px}
 .lc-bar{height:5px;background:var(--opp);display:flex;overflow:hidden;
   border-radius:var(--r-chip)}
-.lc-bar i{background:var(--you);height:100%;transition:width .8s var(--ease)}
+.lc-bar i{background:var(--green);height:100%;transition:width .8s var(--ease)}
 .faces{display:flex;gap:7px;align-items:center;overflow:hidden}
 .face{width:42px;height:42px;flex:none;border-radius:50%;overflow:hidden;position:relative;
   background:var(--fc,#222);border:2px solid rgba(255,255,255,.14);
@@ -244,9 +259,11 @@ body.noimg .face img{display:none}
 .face .ini{display:none}
 body.noimg .face .ini,.face.noshot .ini{display:flex}
 .lc-pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.lc-pick select{font-family:var(--ui);font-size:12.5px;font-weight:600;
-  background:rgba(255,255,255,.10);color:var(--ink);border:1px solid var(--hair-2);
-  border-radius:var(--r-chip);padding:5px 11px;cursor:pointer;max-width:220px}
+.lc-pick select{font-family:var(--ui);font-size:13px;font-weight:700;
+  background:transparent;color:var(--ink);border:1.5px solid rgba(255,255,255,.55);
+  border-radius:var(--r-chip);padding:7px 14px;cursor:pointer;max-width:230px;
+  transition:.2s var(--ease)}
+.lc-pick select:hover{border-color:var(--green);color:var(--green-lift)}
 .lc-pick .lc-pk{font-family:var(--cond);font-size:10.5px;font-weight:700;
   letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint)}
 .lcell.unset{border-color:var(--hot)}
@@ -265,7 +282,8 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
   background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-dim);
   transition:.2s var(--ease)}
 .chip:hover{color:var(--ink);background:rgba(255,255,255,.12)}
-.chip[aria-pressed="true"]{background:var(--ink);color:#000;border-color:transparent}
+.chip[aria-pressed="true"]{background:var(--green);color:#06210a;
+  border-color:transparent;font-weight:800}
 .chip:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .rspacer{flex:1}
 .rtable{border:1px solid var(--hair);border-radius:18px;overflow:hidden;
@@ -286,10 +304,10 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
 .rrow.head span{cursor:pointer}
 .rrow.head span[data-on="1"]{color:var(--ink)}
 /* your own players read at a glance, which is the point of the view */
-.rrow.mine{background:linear-gradient(90deg,rgba(10,132,255,.16),rgba(10,132,255,.03) 42%,
-  transparent);box-shadow:inset 3px 0 0 var(--you)}
-.rrow.mine:hover{background:linear-gradient(90deg,rgba(10,132,255,.24),
-  rgba(10,132,255,.06) 42%,transparent)}
+.rrow.mine{background:linear-gradient(90deg,rgba(91,194,54,.18),rgba(91,194,54,.04) 42%,
+  transparent);box-shadow:inset 3px 0 0 var(--green)}
+.rrow.mine:hover{background:linear-gradient(90deg,rgba(91,194,54,.26),
+  rgba(91,194,54,.07) 42%,transparent)}
 .rrow.bench{opacity:.5}
 .r-rk{font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
   font-variant-numeric:tabular-nums}
@@ -311,14 +329,14 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
 .r-own{font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:.06em;
   color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:flex;align-items:center;gap:7px}
-.youtag{background:var(--you);color:#000;font-size:9.5px;font-weight:800;
+.youtag{background:var(--green);color:#06210a;font-size:9.5px;font-weight:800;
   letter-spacing:.1em;padding:2px 6px;border-radius:var(--r-chip);flex:none}
 .r-num{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
   text-align:right}
 .r-num.dim{color:var(--ink-faint);font-weight:500}
 .r-bar{height:6px;border-radius:var(--r-chip);background:rgba(255,255,255,.09);
   overflow:hidden}
-.r-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--you),var(--hot));
+.r-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--hot));
   transition:width .5s var(--ease)}
 .rempty{padding:26px;text-align:center;color:var(--ink-faint)}
 @media (max-width:900px){
@@ -386,7 +404,7 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
 .pc-levbar{height:8px;border-radius:var(--r-chip);background:rgba(255,255,255,.1);
   overflow:hidden;margin-top:7px}
 .pc-levbar i{display:block;height:100%;background:linear-gradient(90deg,
-  var(--you),var(--hot));transition:width .6s var(--ease)}
+  var(--green),var(--hot));transition:width .6s var(--ease)}
 .pc-what{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
 .pc-whatrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .pc-delta{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -428,8 +446,9 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
   pointer-events:none;overflow:visible}
 .odds svg circle{fill:none;stroke-linecap:round}
 .odds .ring-bg{stroke:rgba(255,255,255,.10);stroke-width:3}
-.odds .ring-fg{stroke:var(--you);stroke-width:3;
-  filter:drop-shadow(0 0 6px var(--you));transition:stroke-dashoffset .8s var(--ease)}
+.odds .ring-fg{stroke:var(--green);stroke-width:4;
+  filter:drop-shadow(0 0 7px rgba(91,194,54,.7));
+  transition:stroke-dashoffset .8s var(--ease)}
 .odds .pct{position:relative;z-index:2;margin:0}
 .odds .cap{position:relative;z-index:2;margin:0}
 .hudline{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;
@@ -444,9 +463,9 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
   transition:background 1.6s var(--ease);
   background:
     radial-gradient(48% 42% at calc(50% + var(--ax,0px)) calc(34% + var(--ay,0px)),
-      color-mix(in srgb,var(--amb,#0A84FF) 30%,transparent),transparent 70%),
+      color-mix(in srgb,var(--amb,#5bc236) 30%,transparent),transparent 70%),
     radial-gradient(56% 50% at calc(18% - var(--ax,0px)) calc(88% - var(--ay,0px)),
-      color-mix(in srgb,var(--amb2,#D50A0A) 20%,transparent),transparent 72%);
+      color-mix(in srgb,var(--amb2,#1d3b93) 20%,transparent),transparent 72%);
   filter:blur(28px) saturate(1.25)}
 .ambient::after{content:"";position:absolute;inset:0;
   background:radial-gradient(60% 55% at 50% 46%,transparent 30%,rgba(0,0,0,.62) 100%)}
@@ -471,8 +490,8 @@ body.tv .face.lead{width:74px;height:74px}body.tv .lc-lead{font-size:16px}
 /* Apple TV's poster parallax: the artwork inside a focused card drifts
    against the card itself, which is what makes focus feel physical rather
    than merely outlined. */
-body.tv [data-focus="1"]{border-color:rgba(255,255,255,.5);
-  box-shadow:0 0 0 4px rgba(255,255,255,.92),0 34px 80px rgba(0,0,0,.88);
+body.tv [data-focus="1"]{border-color:var(--green);
+  box-shadow:0 0 0 4px var(--green),0 34px 80px rgba(0,0,0,.88);
   transform:scale(1.06) translateY(-6px);z-index:5}
 body.tv [data-focus="1"] .shot{transform:translate(var(--pxx,0px),var(--pyy,0px))
   scale(1.09);transition:transform .5s cubic-bezier(.22,1,.36,1)}
@@ -493,7 +512,10 @@ body.tv [data-focus="0"]{opacity:.72;transform:scale(.985)}
    turning your head. Depth of field does the rest - a cell that has receded is
    genuinely out of focus, so the eye lands on what still matters without being
    told. */
-body.xr{background:#000;background-image:none}
+body.xr{background:var(--navy-900);
+  background-image:radial-gradient(1200px 800px at 50% 40%,
+    rgba(91,194,54,.10),transparent 66%),
+    linear-gradient(180deg,var(--navy-800),var(--navy-900))}
 body.xr .wrap{filter:none;max-width:none;padding:30px 7vw 48px;
   perspective:1700px;perspective-origin:50% 46%}
 body.xr .grid,body.xr .lgrid{transform-style:preserve-3d;
@@ -501,8 +523,8 @@ body.xr .grid,body.xr .lgrid{transform-style:preserve-3d;
 body.xr .grid{gap:30px;grid-auto-rows:76px}
 body.xr .lgrid{gap:26px}
 body.xr .tile,body.xr .lcell{transform-style:preserve-3d;
-  /* visionOS glass: far more transparent than a dark card, with a lit rim */
-  background:rgba(255,255,255,.09);
+  /* visionOS glass, tinted navy so the surface stays on-brand in depth */
+  background:linear-gradient(180deg,rgba(22,48,127,.72),rgba(10,26,95,.58));
   backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);
   border-radius:30px;border:1px solid rgba(255,255,255,.26);
   box-shadow:0 1px 0 rgba(255,255,255,.42) inset,
@@ -562,7 +584,8 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
 .daybar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
   gap:12px;margin-top:4px}
 .daybar[hidden]{display:none!important}
-.db{background:var(--card);border:1px solid var(--hair);border-radius:16px;
+.db{background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:16px;
   padding:13px 15px;backdrop-filter:blur(30px) saturate(1.7);
   box-shadow:0 1px 0 rgba(255,255,255,.06) inset}
 .db-k{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.15em;
@@ -570,28 +593,32 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
 .db-v{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px;
   font-variant-numeric:tabular-nums;line-height:1.05}
 .db-n{font-size:11.5px;color:var(--ink-dim);margin-top:3px;line-height:1.35}
-.db.good .db-v{color:var(--you)}
+.db.good .db-v{color:var(--green)}
 .db.act{border-color:var(--hot)}
 .db.act .db-v{color:var(--hot)}
 .db.act .db-k{color:var(--hot)}
 body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-size:15px}
 
 .teampick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  background:var(--card);border:1px solid var(--hair);border-radius:16px;
+  background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:16px;
   padding:12px 16px;margin-top:16px;backdrop-filter:blur(30px) saturate(1.7)}
 .teampick[hidden]{display:none!important}
 .teampick .tp-k{font-family:var(--cond);font-size:11px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
-.teampick select{font-family:var(--ui);font-size:14px;font-weight:600;
-  background:rgba(255,255,255,.10);color:var(--ink);border:1px solid var(--hair-2);
-  border-radius:var(--r-chip);padding:8px 13px;cursor:pointer;max-width:min(60vw,320px)}
+.teampick select{font-family:var(--ui);font-size:14.5px;font-weight:700;
+  background:transparent;color:var(--ink);border:1.5px solid rgba(255,255,255,.55);
+  border-radius:var(--r-chip);padding:9px 16px;cursor:pointer;max-width:min(60vw,320px);
+  transition:.2s var(--ease)}
+.teampick select:hover{border-color:var(--green);color:var(--green-lift)}
 .teampick select:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .teampick.unset{border-color:var(--hot);box-shadow:0 0 30px rgba(255,214,10,.16)}
 .teampick.unset .tp-k{color:var(--hot)}
 .pregame{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
   gap:12px;margin-top:16px}
 .pregame[hidden]{display:none!important}
-.pg{background:var(--card);border:1px solid var(--hair);border-radius:16px;
+.pg{background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:16px;
   padding:14px 16px;backdrop-filter:blur(30px) saturate(1.7);
   box-shadow:0 1px 0 rgba(255,255,255,.06) inset}
 .pg-k{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.14em;
@@ -599,7 +626,7 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
 .pg-v{font-size:23px;font-weight:800;letter-spacing:-.028em;margin-top:5px;
   font-variant-numeric:tabular-nums}
 .pg-n{font-size:12px;color:var(--ink-dim);margin-top:4px;line-height:1.4}
-.pg.edge .pg-v{color:var(--you)}
+.pg.edge .pg-v{color:var(--green)}
 .pg.warn .pg-v{color:var(--hot)}
 
 
@@ -625,7 +652,7 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
 @keyframes tkrun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .tk-i{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-dim)}
 .tk-i b{color:var(--ink);font-weight:700}
-.tk-i .dot{width:5px;height:5px;border-radius:50%;background:var(--you);flex:none}
+.tk-i .dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}
 .tk-close{flex:none;background:transparent;border:0;color:var(--ink-faint);
   font-size:15px;cursor:pointer;padding:0 12px;height:100%}
 .tk-close:hover{color:var(--ink)}
@@ -648,8 +675,8 @@ body{padding-bottom:46px}
   text-transform:uppercase;color:var(--ink-faint);margin-top:3px}
 .st-m b{color:var(--ink);font-weight:700}
 .st-when{font-family:var(--mono);font-size:11px;color:var(--ink-faint);white-space:nowrap}
-.exposure{display:inline-flex;align-items:center;gap:5px;background:rgba(10,132,255,.18);
-  color:var(--you);font-family:var(--cond);font-size:11px;font-weight:700;
+.exposure{display:inline-flex;align-items:center;gap:5px;background:rgba(91,194,54,.2);
+  color:var(--green-lift);font-family:var(--cond);font-size:11px;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:var(--r-chip)}
 .exposure.hot{background:rgba(255,214,10,.2);color:var(--hot)}
 
@@ -668,14 +695,14 @@ body{padding-bottom:46px}
   text-transform:uppercase;color:var(--ink-faint)}
 
 /* ── insight ──────────────────────────────────────────────── */
-.insight{grid-column:1/-1;background:linear-gradient(120deg,rgba(10,132,255,.16),
-  rgba(213,10,10,.10));border:1px solid var(--hair-2);border-radius:16px;
+.insight{grid-column:1/-1;background:linear-gradient(120deg,rgba(91,194,54,.18),
+  rgba(29,59,147,.35));border:1px solid var(--hair-2);border-radius:16px;
   padding:14px 17px;display:flex;gap:13px;align-items:flex-start}
-.ins-b{flex:none;font-family:var(--cond);font-size:10.5px;font-weight:700;
-  letter-spacing:.15em;text-transform:uppercase;color:var(--you);
-  border:1px solid var(--you);border-radius:var(--r-chip);padding:3px 9px;margin-top:1px}
+.ins-b{flex:none;font-family:var(--cond);font-size:10.5px;font-weight:800;
+  letter-spacing:.15em;text-transform:uppercase;color:#06210a;background:var(--green);
+  border-radius:var(--r-chip);padding:4px 10px;margin-top:1px}
 .ins-t{font-size:14.5px;line-height:1.5;color:var(--ink)}
-.ins-t b{color:var(--you);font-weight:700}
+.ins-t b{color:var(--green-lift);font-weight:800}
 
 
 /* ── the injury desk ───────────────────────────────────────
@@ -1526,7 +1553,7 @@ function renderLeagues(minute){
   const hot=evals[0];
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
-    setAmbience(a.color||"#0A84FF",b.color||"#D50A0A");}
+    setAmbience(a.color||"#5bc236",b.color||"#1d3b93");}
   setText($("intensity"),hot?`focus: ${hot.L.league} — ${hot.rel.reason}`:"");
   setText($("clock"),minute<=0?"pre-game":`sunday +${Math.round(minute)}m`);
   document.querySelector(".wrap").style.setProperty("--sat",
@@ -1611,7 +1638,7 @@ function renderLeague(minute,statsOnly){
   renderPicker(L);renderPregame(L,m);
   // the room glows in the colours of the two cells that matter most
   {const lead=shown[0]||{},foil=shown.find(x=>x.side!==lead.side)||shown[1]||lead;
-   setAmbience(lead.color||"#0A84FF",(foil&&foil.color)||"#D50A0A");}
+   setAmbience(lead.color||"#5bc236",(foil&&foil.color)||"#1d3b93");}
 
   if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
     for(const el of grid.children){
