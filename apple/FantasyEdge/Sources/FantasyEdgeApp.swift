@@ -3,7 +3,6 @@ import SwiftUI
 @main
 struct FantasyEdgeApp: App {
     @State private var board = Board()
-    @State private var immersiveDetail: Cell?
 
     var body: some Scene {
         WindowGroup(id: "board") {
@@ -15,8 +14,9 @@ struct FantasyEdgeApp: App {
         .defaultSize(width: 1200, height: 780)
 
         ImmersiveSpace(id: "board-space") {
-            ImmersiveBoard { immersiveDetail = $0 }
-                .environment(board)
+            // The space owns its own detail panel now: a sheet cannot be
+            // presented into an immersive space, so the card is placed in it.
+            ImmersiveBoard().environment(board)
         }
         // Mixed keeps the room; progressive lets the wearer dial it up with the
         // crown. Full is available but a fantasy board has no business blacking

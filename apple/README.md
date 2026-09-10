@@ -67,6 +67,26 @@ went in each of your drafts against ADP, and this week restated across PPR,
 half and standard. A card that opens shallow and asks for another tap wastes
 the one gesture you gave it.
 
+## Watching the game inside the board
+
+The immersive space has two arrangements. Normally the cells sit on an arc in
+front of you. Put a game on and they open into a ring around the screen, so you
+are watching with your line-up around you rather than beside a list.
+
+**Nothing is bundled and nothing is guessed at.** Point it at a stream or file
+URL in the window's settings — anything `AVPlayer` can open — and it plays in
+the middle.
+
+## Reactions
+
+The feed carries totals, not events, so the app knows a jump happened but not
+that it was a touchdown. It says so honestly: a cell pulses and shows `+6.0`
+when points land, and the panel at the edge of vision calls it a **big play**,
+a **chunk**, or **moved** by size rather than claiming a play it cannot see.
+
+Reactions are a moment, not a state — they clear after eight seconds so the
+board settles.
+
 ## Known gaps
 
 - **The widget is source, not a target.** WidgetKit needs its own extension

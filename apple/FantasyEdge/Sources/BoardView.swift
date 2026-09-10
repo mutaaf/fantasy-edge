@@ -50,7 +50,8 @@ struct BoardView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), spacing: 18)],
                           spacing: 16) {
                     ForEach(m.cells) { cell in
-                        CellView(cell: cell, compact: true) { detail = cell }
+                        CellView(cell: cell, compact: true,
+                                 reaction: board.reactions[cell.id]) { detail = cell }
                     }
                 }
                 .padding(.horizontal, 26).padding(.bottom, 26)
@@ -141,6 +142,7 @@ struct HostSheet: View {
     @Environment(Board.self) private var board
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
+    @State private var watch = ""
 
     var body: some View {
         NavigationStack {
@@ -155,12 +157,24 @@ struct HostSheet: View {
                          + "holding the database, and put its address here. No "
                          + "credential ever leaves that Mac.")
                 }
+                Section {
+                    TextField("https://…/stream.m3u8", text: $watch)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                } header: {
+                    Text("Game video")
+                } footer: {
+                    Text("Played in the middle of the immersive board, with your "
+                         + "line-up opened into a ring around it. Any stream or "
+                         + "file URL AVPlayer can open. Nothing is bundled - "
+                         + "point it at whatever you are already watching.")
+                }
             }
             .navigationTitle("Where is the board?")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         if !draft.isEmpty { board.host = draft }
+                        board.watchURL = watch
                         Task { await board.load() }
                         dismiss()
                     }
@@ -171,6 +185,6 @@ struct HostSheet: View {
             }
         }
         .frame(minWidth: 520, minHeight: 300)
-        .onAppear { draft = board.host }
+        .onAppear { draft = board.host; watch = board.watchURL }
     }
 }

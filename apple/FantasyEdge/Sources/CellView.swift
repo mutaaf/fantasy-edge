@@ -11,6 +11,9 @@ import SwiftUI
 struct CellView: View {
     let cell: Cell
     var compact = false
+    /// Set for a few seconds after this player scores. A cell that only shows a
+    /// new total makes you diff it in your head.
+    var reaction: Board.Reaction?
     var action: () -> Void = {}
 
     private var accent: Color { Theme.side(cell.side) }
@@ -78,9 +81,33 @@ struct CellView: View {
                                         : accent.opacity(0.45),
                               lineWidth: isRedZone ? 2.5 : 1)
         }
+        .overlay(alignment: .topTrailing) { burst }
+        .scaleEffect(reaction != nil ? 1.06 : 1)
+        .shadow(color: reaction != nil ? accent.opacity(0.75) : .clear,
+                radius: reaction != nil ? 26 : 0)
         .opacity(isDone ? 0.75 : 1)
         .animation(.smooth(duration: 0.45), value: cell.band)
         .animation(.smooth(duration: 0.35), value: cell.scored)
+        .animation(.bouncy(duration: 0.55), value: reaction)
+    }
+
+    /// What just landed, said as a size rather than a claim: the feed carries
+    /// totals, not events, so this knows a jump happened but not that it was a
+    /// touchdown.
+    @ViewBuilder
+    private var burst: some View {
+        if let r = reaction {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.right").font(.system(size: 10, weight: .black))
+                Text("+\(r.delta, format: .number.precision(.fractionLength(1)))")
+                    .font(.system(size: 13, weight: .heavy)).monospacedDigit()
+            }
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(accent, in: Capsule())
+            .foregroundStyle(.black)
+            .offset(x: 10, y: -10)
+            .transition(.scale(scale: 0.4).combined(with: .opacity))
+        }
     }
 
     /// The share this cell holds, drawn. It is the only chart on the cell and
