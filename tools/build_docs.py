@@ -22,6 +22,7 @@ import argparse
 import base64
 import json
 import pathlib
+import re
 import sys
 import urllib.request
 
@@ -79,21 +80,24 @@ def anonymise(data: dict) -> dict:
         if L.get("league"):
             leagues[L["league"]] = f"League {i}"
 
+    # One alternation, longest first, applied in a single pass. Longest first
+    # so "Team Riaz" is not half-replaced by "Team". Single pass because
+    # replacing name by name rescans text it has already substituted: a real
+    # team called "Team 8" - ESPN's own placeholder for an unnamed team, and
+    # present in real data - would match the label "Team 8" generated for
+    # somebody else and rewrite it again, quietly merging two managers into
+    # one person. No leak, but the anonymised league would be wrong.
+    swaps = {**labels, **leagues}
+    pattern = re.compile("|".join(re.escape(k) for k in
+                                  sorted(swaps, key=len, reverse=True))) if swaps else None
+
     def scrub(value):
         if isinstance(value, dict):
             return {k: scrub(v) for k, v in value.items()}
         if isinstance(value, list):
             return [scrub(v) for v in value]
         if isinstance(value, str):
-            out = value
-            # longest first, so "Team Riaz" is not half-replaced by "Team"
-            for real in sorted(people, key=len, reverse=True):
-                if real and real in out:
-                    out = out.replace(real, labels[real])
-            for real, fake in leagues.items():
-                if real and real in out:
-                    out = out.replace(real, fake)
-            return out
+            return pattern.sub(lambda m: swaps[m.group(0)], value) if pattern else value
         return value
 
     scrubbed = scrub(data)

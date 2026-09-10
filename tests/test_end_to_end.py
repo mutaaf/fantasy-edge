@@ -1335,3 +1335,24 @@ class TestAnonymisation(unittest.TestCase):
 
         out = json.dumps(bd.anonymise(self.payload()))
         self.assertIn("Real Player", out)
+
+    def test_a_team_named_like_a_label_does_not_merge_two_people(self):
+        """ESPN names an unnamed team "Team 8", which is also the shape of the
+        labels this scrubber generates. Replacing name by name rescans text it
+        has already written, so that real name would match the label minted for
+        somebody else and rewrite it, collapsing two managers into one. No leak,
+        but a silently wrong league."""
+        import tools.build_docs as bd
+
+        data = self.payload()
+        L = data["leagues"][0]
+        # "Longhaul Legends" sorts eighth and so is minted as "Team 8"; the real
+        # "Team 8" is shorter, so a longest-first pass reaches it afterwards and
+        # rewrites that freshly minted label. Nine managers, eight labels.
+        L["teams"] = [{"teamId": str(i), "name": n} for i, n in enumerate(
+            ["Team 8", "Aaa", "Bbb", "Ccc", "Ddd", "Eee", "Fff", "Ggg",
+             "Longhaul Legends"], 1)]
+        out = bd.anonymise(data)
+        labels = [t["name"] for t in out["leagues"][0]["teams"]]
+        self.assertEqual(len(set(labels)), len(labels),
+                         f"two managers collapsed onto one label: {labels}")
