@@ -526,10 +526,31 @@ class Api:
         except Exception:
             accuracy = None
 
+        # Your saved team in each league, honoured here rather than left to
+        # each client. This endpoint used to ask for no particular team, so
+        # `mosaic` fell back to whoever ESPN_SWID named or, failing that, the
+        # alphabetically first manager - and the whole board, win probability
+        # included, was then about a stranger's roster. The web board papered
+        # over it by re-asking per league; the headset had no way to.
+        from . import prefs as pf
+        saved = pf.load()
+        picks = saved.get("teams") or {}
+        hidden = set(saved.get("hidden") or [])
+        order = saved.get("order") or []
+
+        entries = [c for c in self.leagues()["leagues"]
+                   if f'{c["provider"]}-{c["league_id"]}' not in hidden]
+        if order:
+            rank = {lid: i for i, lid in enumerate(order)}
+            entries.sort(key=lambda c: rank.get(
+                f'{c["provider"]}-{c["league_id"]}', len(rank)))
+
         out = []
-        for c in self.leagues()["leagues"]:
+        for c in entries:
+            lid = f'{c["provider"]}-{c["league_id"]}'
+            qs = {"team": [picks[lid]]} if picks.get(lid) else {}
             try:
-                m = self.mosaic(c["provider"], c["league_id"], {})
+                m = self.mosaic(c["provider"], c["league_id"], qs)
             except HttpError:
                 continue                    # a league with nothing pulled yet
             if not m.get("opp"):

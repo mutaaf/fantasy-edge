@@ -43,8 +43,14 @@ struct PlayerHologram: View {
         }
     }
 
+    /// Most recent season first.
+    ///
+    /// `suffix(5)` took the five newest but left them in the order the API
+    /// sends them, which is oldest first - so the top line of the card was a
+    /// season from five years ago and this year was at the bottom. What a
+    /// player did last week is the reason you opened the card.
     private func seasons(_ p: Profile) -> [SeasonRow] {
-        p.seasons.filter(\.started).suffix(5)
+        Array(p.seasons.filter(\.started).sorted { $0.season > $1.season }.prefix(5))
     }
 
     /// The head itself: no plate, no frame, lit from the position colour so it
@@ -152,10 +158,13 @@ struct PlayerHologram: View {
         }
     }
 
-    private func draftHistory(_ rows: [DraftRow]) -> some View {
-        section("WHERE HE WENT, IN YOUR LEAGUES") {
+    private func draftHistory(_ all: [DraftRow]) -> some View {
+        // Newest draft first, for the same reason the season log is: the most
+        // recent time he went off the board is the one that informs anything.
+        let rows = Array(all.sorted { $0.season > $1.season }.prefix(5))
+        return section("WHERE HE WENT, IN YOUR LEAGUES") {
             VStack(spacing: 0) {
-                ForEach(rows.prefix(5)) { d in
+                ForEach(rows) { d in
                     HStack(spacing: 12) {
                         Text(String(d.season)).font(.system(size: 13))
                             .foregroundStyle(.secondary).frame(width: 46, alignment: .leading)
@@ -173,7 +182,7 @@ struct PlayerHologram: View {
                         }
                     }
                     .padding(.vertical, 9)
-                    if d.id != rows.prefix(5).last?.id { Divider().opacity(0.25) }
+                    if d.id != rows.last?.id { Divider().opacity(0.25) }
                 }
             }
         }

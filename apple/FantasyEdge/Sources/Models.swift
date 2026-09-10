@@ -8,10 +8,21 @@ struct Starter: Decodable {
     let color: String?, img: String?, logo: String?
 }
 struct Side: Decodable { let teamId: String; let name: String; let starters: [Starter] }
+
+/// One manager in a league, for the picker. The board has always carried these
+/// in its payload; nothing on this side could read them, so the headset had no
+/// way to say which team was yours.
+struct TeamRef: Decodable, Identifiable, Hashable {
+    let teamId: String, name: String
+    var id: String { teamId }
+    var display: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+}
+
 struct LeaguePayload: Decodable {
     let id: String, provider: String, leagueId: String, league: String
     let season: Int, week: Int
     let you: Side, opp: Side?
+    let teams: [TeamRef]?
 }
 struct MosaicsPayload: Decodable { let leagues: [LeaguePayload] }
 

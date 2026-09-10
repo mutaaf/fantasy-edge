@@ -87,6 +87,23 @@ a **chunk**, or **moved** by size rather than claiming a play it cannot see.
 Reactions are a moment, not a state — they clear after eight seconds so the
 board settles.
 
+## Whose board is this
+
+Which team is yours in each league is saved on the server, in
+`~/.fantasy-edge/prefs.json`, not on the device - so the choice you make in the
+headset is the one the laptop and the television already see. Pick it from
+**MY TEAM** in the ornament.
+
+The parent board used to ask for no particular team, so it fell back to
+whoever `ESPN_SWID` named or, failing that, the alphabetically first manager -
+and the whole board, win probability included, was quietly about a stranger's
+roster.
+
+Saving is loopback-only unless the server is started with
+`FANTASYEDGE_ALLOW_REMOTE_PREFS=1`. In the simulator that is loopback and just
+works; a real Vision Pro on the house network is told plainly when the save
+was refused, rather than appearing to save and forgetting.
+
 ## Known gaps
 
 - **The widget is source, not a target.** WidgetKit needs its own extension

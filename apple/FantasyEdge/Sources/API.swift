@@ -91,7 +91,46 @@ final class Board {
         }
     }
 
+    // MARK: - which team is yours
+
+    /// Saved per league on the server, not on this device, because the choice
+    /// has to be the same one the laptop and the television already see.
+    /// `POST /api/prefs` is loopback-only unless the server is told otherwise,
+    /// so a real headset on the house network is told plainly when it could
+    /// not save rather than appearing to and forgetting.
+    var teamPrefs: [String: String] = [:]
+    var prefsWritable = true
+
     @MainActor
+    func loadPrefs() async {
+        guard let u = url("/api/prefs") else { return }
+        struct P: Decodable { let teams: [String: String]? }
+        if let (d, _) = try? await URLSession.shared.data(from: u),
+           let p = try? JSONDecoder().decode(P.self, from: d) {
+            teamPrefs = p.teams ?? [:]
+        }
+    }
+
+    @MainActor
+    func pickTeam(_ teamId: String, in leagueId: String) async {
+        teamPrefs[leagueId] = teamId
+        guard let u = url("/api/prefs") else { return }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(
+            withJSONObject: ["teams": [leagueId: teamId]])
+        do {
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            prefsWritable = (200..<300).contains(code)
+        } catch {
+            prefsWritable = false
+        }
+        await load()          // the server re-sizes the board around your team
+    }
+
+        @MainActor
     func refreshLive() async {
         guard let u = url("/api/live") else { return }
         do {
