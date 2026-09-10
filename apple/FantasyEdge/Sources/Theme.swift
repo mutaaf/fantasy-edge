@@ -27,10 +27,10 @@ extension Band {
     /// a band becomes a size, and it is shared by the window and the volume.
     var span: (w: CGFloat, h: CGFloat) {
         switch self {
-        case .xl: return (300, 210)
-        case .lg: return (240, 165)
-        case .md: return (200, 130)
-        case .sm: return (150, 96)
+        case .xl: return (330, 215)
+        case .lg: return (270, 180)
+        case .md: return (240, 152)
+        case .sm: return (210, 128)
         }
     }
     /// In the immersive space, importance is depth: a cell that still matters

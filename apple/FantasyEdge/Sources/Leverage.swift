@@ -29,7 +29,7 @@ enum Band: String, CaseIterable {
     var order: Int { Band.allCases.firstIndex(of: self)! }
 }
 
-struct Cell: Identifiable, Equatable {
+struct Cell: Identifiable, Equatable, Hashable {
     let id: String
     var name: String
     var pos: String

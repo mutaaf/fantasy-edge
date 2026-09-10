@@ -1,44 +1,80 @@
 <h1 align="center">fantasy-edge</h1>
 
 <p align="center">
-  <em>Your league's entire history, normalized into SQLite — and a live board that
-  resizes itself around whatever can still change your week.</em>
+  <strong>The fantasy football command center — every league you play, on every
+  screen you own.</strong>
 </p>
 
 <p align="center">
-  <a href="#the-leverage-model"><strong>The model</strong></a> ·
-  <a href="#quickstart"><strong>Quickstart</strong></a> ·
-  <a href="#three-surfaces-one-api"><strong>Surfaces</strong></a> ·
-  <a href="AGENTS.md"><strong>For agents</strong></a> ·
-  <a href="BACKLOG.md"><strong>Backlog</strong></a>
+  <a href="https://mutaaf.github.io/fantasy-edge/">Live board</a> ·
+  <a href="#the-leverage-model">The model</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="apple/">visionOS app</a> ·
+  <a href="AGENTS.md">For agents</a> ·
+  <a href="BACKLOG.md">Backlog</a>
 </p>
 
 ---
 
-Every fantasy app shows you a scoreboard. None of them tell you **where to look.**
+## What this is for
 
-At 3:47pm you have nine players running across six games. Two of them still
-matter. The rest are either finished, buried in a blowout, or on a bench that
-cannot change anything. A scoreboard gives all of them the same row height.
+Fantasy apps are built one league at a time. If you play in four, you have four
+tabs, four sets of push notifications, and no way to answer the only question
+that actually matters on a Sunday afternoon: **out of everything happening right
+now, what should I be looking at?**
 
-This gives them different sizes.
+This answers that. One console, every league you play, ranked by what can still
+change your week — and the same console on a laptop, a television, a phone and a
+Vision Pro, because a fantasy Sunday does not happen on one device.
 
-```
-┌───────────────────────────────┬───────────────┐
-│                               │  Nico Collins │   tile area = how much
-│      BIJAN ROBINSON           │  6.2      Q4  │   this cell can still
-│      18.4              RZ     ├───────┬───────┤   change your week
-│                               │ K 7.1 │ D 4.0 │
-└───────────────────────────────┴───────┴───────┘
-```
+### The three things nobody else does
+
+**It sizes itself around what matters.** Every cell on the board is as big as its
+ability to still change your result. A running back in a tight game with a half
+to play fills the screen; a player in a blowout shrinks away on his own. That is
+one number, computed, not a layout somebody chose — see [the model](#the-leverage-model).
+
+**It collapses your leagues.** Who do you actually own, across all of them?
+Which one deserves your attention in the next ten minutes? Which of your teams
+is about to lose because a starter is on a bye? A per-league app cannot ask
+those questions, let alone answer them.
+
+**It knows your history and says what it means.** Seven seasons in SQLite means
+your opponent's bench habits, your own schedule luck, and how accurate the
+projections you are staring at have actually been — carried next to the number
+rather than left in a spreadsheet.
+
+### It runs everywhere the same way
+
+| Surface | What it is | State |
+|---|---|---|
+| **Web** | the full console — board, rankings, analysis, headlines | shipping |
+| **Phone** | the same console, laid out for a thumb | shipping |
+| **TV** | a ten-foot board driven by the focus engine | shipping |
+| **visionOS** | a native SwiftUI app; the board placed around you | [built](apple/) |
+| **Spatial (web)** | a preview of the above, in any browser | shipping |
+
+One model, one API, four front ends. The leverage maths is
+[~200 lines of pure arithmetic](fantasyedge/leverage.py), ported by hand into
+[Swift](apple/FantasyEdge/Sources/Leverage.swift) and JavaScript and checked
+against each other, so no screen ever waits on a server to be told how big to
+draw a cell.
+
+### From one league to ten
+
+A rookie with one team should see a board, not a dashboard about a board. A
+veteran in ten needs triage, not ten cards to scroll. *(This is the current
+frontier — see [BACKLOG.md](BACKLOG.md).)*
+
+---
 
 Zero third-party dependencies. Python 3.11+ and the standard library. No pip
 install, no virtualenv, no supply chain to rot.
 
 ```bash
-make test      # 56 tests, no network, under two seconds
+make test      # 104 tests, no network, under four seconds
 make doctor    # diagnoses the setup and prints the exact next command
-make board     # the live mosaic at http://127.0.0.1:8770
+make board     # the live console at http://127.0.0.1:8770
 ```
 
 ## The leverage model
