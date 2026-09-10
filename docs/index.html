@@ -915,6 +915,43 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .ex-warn{border-left:2px solid var(--hot);padding-left:11px}
 .ex-warn b{color:var(--hot)}
 
+
+/* ── what just happened ────────────────────────────────────
+   A scoreline says who is winning. This says why: the plays that actually put
+   points on it, newest first, with the fantasy points they were worth to the
+   people in this matchup, and a way out to ESPN for the rest. */
+.plays{margin-top:14px}
+.plays[hidden]{display:none!important}
+.pl-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  margin-bottom:9px}
+.pl-k{font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.pl-links{display:flex;gap:7px}
+.pl-links a{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-dim);text-decoration:none;
+  border:1px solid var(--hair);border-radius:var(--r-chip);padding:4px 11px;
+  transition:.18s var(--ease)}
+.pl-links a:hover{color:var(--ink);border-color:var(--green)}
+.pl-list{display:grid;gap:6px}
+.pl-row{display:grid;grid-template-columns:58px 34px minmax(0,1fr) auto;gap:11px;
+  align-items:center;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:9px 13px;
+  text-decoration:none;color:inherit;transition:.18s var(--ease)}
+.pl-row:hover{background:rgba(255,255,255,.09);border-color:var(--hair-2)}
+.pl-when{font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+  white-space:nowrap}
+.pl-kind{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.08em;
+  text-align:center;border-radius:var(--r-chip);padding:2px 0;
+  background:rgba(255,255,255,.14);color:var(--ink)}
+.pl-kind.TD{background:var(--green);color:#06210a}
+.pl-txt{font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;color:var(--ink-dim)}
+.pl-txt b{color:var(--ink);font-weight:700}
+.pl-mine{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.1em;
+  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:2px 8px;
+  white-space:nowrap}
+.pl-mine.opp{background:var(--opp);color:#fff}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -982,6 +1019,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     <select id="tp-select" aria-label="Which team is yours"></select>
   </div>
   <div class="pregame" id="pregame" hidden></div>
+  <div class="plays" id="plays" hidden></div>
   <div class="rfilters" id="mmodes" hidden>
     <button class="chip" data-m="matchup" aria-pressed="true">Matchup</button>
     <button class="chip" data-m="myteam" aria-pressed="false">My team</button>
@@ -1431,7 +1469,7 @@ function newsByStory(){
   const seen=new Map();
   for(const st of NEWS){
     const k=st.headline;
-    if(!seen.has(k))seen.set(k,{...st,players:[]});
+    if(!seen.has(k))seen.set(k,{...st,players:[]});   // keeps id/img/team
     if(!seen.get(k).players.includes(st.player))seen.get(k).players.push(st.player);}
   return [...seen.values()];}
 
@@ -1439,7 +1477,9 @@ function renderNewsFeed(){
   const box=$("feedwrap");
   const rows=newsByStory();
   box.innerHTML=rows.map(st=>{
-    const p=ALLP.find(x=>x.name===st.players[0])||{name:st.players[0],color:"#555"};
+    // The story carries the player's id and portrait, so a face no longer
+    // depends on that player happening to be on the roster you have selected.
+    const p=ALLP.find(x=>x.name===st.players[0])||st||{name:st.players[0]};
     const who=st.players.length>1
       ? `${st.players.slice(0,3).join(" · ")}`+
         (st.players.length>3?` +${st.players.length-3}`:"")
@@ -1664,7 +1704,31 @@ function relevance(L,m){
    far ahead of the market that was, how many of your line-ups he is in. A joke
    built on a real number lands; a generated one about a player nobody drafted
    is just a machine amusing itself. */
-const HURT=(DATA.injuries&&DATA.injuries.injuries)||[];
+/* ESPN publishes its own injury report per game - a status and a body part,
+   stated rather than inferred from the wording of a headline. Where a game has
+   actually been fetched that is used in preference; the wire reader stays for
+   everyone whose game has not started. */
+const HURT=(()=>{
+  const wire=(DATA.injuries&&DATA.injuries.injuries)||[];
+  const espn=((DATA.context&&DATA.context.injuries)||[])
+    .filter(i=>/out|doubtful|questionable/i.test(i.status||""))
+    .filter(i=>(DATA.profiles||{})[String(i.id)]);   // only people you can see
+  const byId=new Map(wire.map(h=>[String(h.id),h]));
+  for(const i of espn){
+    const prev=byId.get(String(i.id));
+    if(prev){prev.label=(i.status||prev.label).toUpperCase();
+             prev.headline=prev.headline||`${i.status} — ${i.detail}`;
+             prev.url=prev.url||i.link;continue;}
+    const p=(DATA.profiles||{})[String(i.id)]||{};
+    byId.set(String(i.id),{
+      id:String(i.id),name:i.name,pos:p.pos||"",team:i.club,
+      label:(i.status||"").toUpperCase(),severity:"hurt",
+      headline:`${i.status}${i.detail?" — "+i.detail:""}`,
+      url:i.link||"",lineups:0,projected:0,
+      roast:`${i.name} is ${String(i.status).toLowerCase()}`+
+            `${i.detail?" with a "+String(i.detail).toLowerCase():""}. `+
+            `ESPN's own report, not a guess from a headline.`});}
+  return [...byId.values()];})();
 const hurtIds=new Set(HURT.map(h=>String(h.id)));
 const hurtById=Object.fromEntries(HURT.map(h=>[String(h.id),h]));
 
@@ -1949,7 +2013,7 @@ function renderLeague(minute,statsOnly){
     if(!el.isConnected)grid.appendChild(el);});
   reorder(grid,ordered);
   applySpatial(grid);
-  renderPicker(L);renderPregame(L,m);
+  renderPicker(L);renderPregame(L,m);renderPlays(L);
   // the room glows in the colours of the two cells that matter most
   {const lead=shown[0]||{},foil=shown.find(x=>x.side!==lead.side)||shown[1]||lead;
    setAmbience(lead.color||"#5bc236",(foil&&foil.color)||"#1d3b93");}
@@ -2429,6 +2493,46 @@ $("tp-select").addEventListener("change",e=>{
   $("oppname").textContent=L.opp?L.opp.name:"—";
   draw(clockMinute());});
 
+const CTX=DATA.context||{plays:[],links:{},injuries:[]};
+
+/* ── the play strip ────────────────────────────────────────────────────
+   Only plays from games this matchup is actually in, newest first, with the
+   names of anyone in either line-up picked out - so you can see at a glance
+   whether the touchdown that just went up was yours or theirs. */
+function renderPlays(L){
+  const box=$("plays");
+  const clubs=new Set(L.cells.map(c=>c.team));
+  const rows=(CTX.plays||[]).filter(p=>clubs.has(p.club)).slice(0,6);
+  if(!rows.length){box.hidden=true;return;}
+  box.hidden=false;
+  const mine=new Map(L.cells.map(c=>[c.name,c.side]));
+  const links=(CTX.links||{})[[...clubs].find(c=>(CTX.links||{})[c])]||{};
+  const key=rows.map(r=>r.text).join("|");
+  if(box.dataset.k===key)return;
+  box.dataset.k=key;
+  const linkbar=["boxscore","pbp","recap"].filter(k=>links[k])
+    .map(k=>`<a href="${links[k]}" target="_blank" rel="noopener">`+
+      `${k==="pbp"?"Play by play":k==="boxscore"?"Box score":"Recap"}</a>`).join("");
+  box.innerHTML=
+    `<div class="pl-head"><span class="pl-k">What just happened</span>`+
+    `<span class="pl-links">${linkbar}</span></div><div class="pl-list">`+
+    rows.map(p=>{
+      // bold anybody in this matchup, and say whose it was
+      let txt=p.text,tag="";
+      for(const [name,side] of mine){
+        if(name&&txt.includes(name)){
+          txt=txt.split(name).join(`<b>${name}</b>`);
+          tag=`<span class="pl-mine ${side==="opp"?"opp":""}">`+
+              `${side==="opp"?"THEIRS":"YOURS"}</span>`;
+          break;}}
+      const href=p.link||links.pbp||links.summary||"";
+      const el=href?"a":"div";
+      return `<${el} class="pl-row"${href?` href="${href}" target="_blank" `+
+        `rel="noopener"`:""}>`+
+        `<span class="pl-when">Q${p.period} ${p.clock}</span>`+
+        `<span class="pl-kind ${p.kind}">${p.kind||"—"}</span>`+
+        `<span class="pl-txt">${txt}</span>${tag}</${el}>`;}).join("")+"</div>";}
+
 function renderPregame(L,m){
   const box=$("pregame");
   if(m.phase!=="pre"){box.hidden=true;return;}
@@ -2517,6 +2621,7 @@ function backToLeagues(){
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
   $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
   $("pregame").hidden=true;$("teampick").hidden=true;$("homeseg").hidden=false;
+  $("plays").hidden=true;
   lgrid.hidden=false;grid.hidden=true;
   home="leagues";
   $("homeseg").querySelectorAll("[data-h]").forEach(o=>

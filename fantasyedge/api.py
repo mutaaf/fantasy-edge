@@ -52,6 +52,7 @@ ROUTES = [
     ["GET", "/api/players", "every player you roster, across every league"],
     ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
     ["GET", "/api/rankings", "today's slate ranked, the way a pre-game show would"],
+    ["GET", "/api/context", "scoring plays, ESPN links, and ESPN's own injury report"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
 ]
@@ -337,6 +338,14 @@ class Api:
             # Inlined so the page is whole on first paint and still whole when
             # published somewhere with no API behind it.
             data["prefs"] = self.prefs()
+            for key, fn in (("players", self.players), ("headlines", self.headlines),
+                            ("injuries", self.injuries), ("rankings", self.rankings),
+                            ("context", self.context)):
+                try:
+                    data[key] = fn()
+                except Exception:
+                    data[key] = None
+
             # Profiles for everyone you roster, inlined. A published page has no
             # API behind it, and a card that can only go deep when a server
             # happens to be running is a card with two personalities.
@@ -354,10 +363,24 @@ class Api:
                         raw = src.raw_stats()
                 except Exception:
                     raw = {}
+                # Every player a card can be opened on: both starting line-ups
+                # in every league, today's ranked slate, anyone hurt, and your
+                # own bench. A card that goes deep for your players and shallow
+                # for the man across from you is half a feature.
+                want: set[str] = set()
+                for L in data["leagues"]:
+                    for side in ("you", "opp"):
+                        for pl in (L.get(side) or {}).get("starters") or []:
+                            want.add(str(pl["id"]))
+                for pl in (self.players().get("players") or []):
+                    want.add(str(pl["id"]))
+                for r in (data.get("rankings") or {}).get("players") or []:
+                    want.add(str(r["id"]))
+                for i in (data.get("injuries") or {}).get("injuries") or []:
+                    want.add(str(i["id"]))
                 data["profiles"] = {
-                    str(pl["id"]): prof.build(self.store(), pl["id"],
-                                              raw.get(str(pl["id"])))
-                    for pl in (self.players().get("players") or [])}
+                    pid: prof.build(self.store(), pid, raw.get(pid))
+                    for pid in sorted(want)}
             except Exception:
                 data["profiles"] = {}
             # The nine analyses, per league. They have existed since the first
@@ -369,12 +392,7 @@ class Api:
                     for L in data["leagues"]}
             except Exception:
                 data["analyses"] = {}
-            for key, fn in (("players", self.players), ("headlines", self.headlines),
-                            ("injuries", self.injuries), ("rankings", self.rankings)):
-                try:
-                    data[key] = fn()
-                except Exception:
-                    data[key] = None
+
         except Exception as exc:
             data = {"leagues": [], "error": str(exc)}
         page = (MOSAIC.read_text(encoding="utf-8")
@@ -551,12 +569,30 @@ class Api:
                 news, as_of, count = srv.fetch_news(sorted(mine.values()), pages=1)
             except Exception:
                 return {"stories": [], "asOf": "", "count": 0}
+            from .live import headshot_url, team_abbr
+
+            ident = {}
+            for r in self.store().q(
+                    "SELECT DISTINCT p.player_id, p.name, p.nfl_team, p.pos "
+                    "FROM player p WHERE p.name IS NOT NULL"):
+                ident[normalise(r["name"])] = r
+
             flat = []
             for name, items in news.items():
+                who = ident.get(normalise(name))
+                club = team_abbr(who["nfl_team"]) if who else ""
                 for it in items:
-                    flat.append({"player": name, "headline": it["h"],
-                                 "detail": it["d"][:200], "published": it["p"],
-                                 "url": it["u"]})
+                    flat.append({
+                        "player": name, "headline": it["h"],
+                        "detail": it["d"][:200], "published": it["p"],
+                        "url": it["u"],
+                        # carried so a story can draw a face without needing the
+                        # player to be on the roster currently selected
+                        "id": str(who["player_id"]) if who else "",
+                        "pos": (who["pos"] if who else "") or "",
+                        "team": club,
+                        "img": headshot_url(who["player_id"], club) if who else "",
+                    })
             flat.sort(key=lambda x: x["published"], reverse=True)
             return {"stories": flat[:60], "asOf": as_of, "count": count}
 
@@ -653,6 +689,17 @@ class Api:
 
         return self.cached(("rankings",), build)
 
+    def context(self) -> dict:
+        """What just happened in the games your players are in."""
+        def build():
+            try:
+                src = self.live_source()
+                return src.context() if hasattr(src, "context") else {
+                    "plays": [], "links": {}, "injuries": []}
+            except Exception:
+                return {"plays": [], "links": {}, "injuries": []}
+        return self.cached(("context",), build)
+
     def prefs(self) -> dict:
         from . import prefs as pf
         return pf.load()
@@ -732,6 +779,8 @@ class Api:
             return self.players(), CONFIG
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
+        if rest == ["context"]:
+            return self.context(), LIVE
         if rest == ["rankings"]:
             return self.rankings(), DERIVED
         if rest == ["prefs"]:

@@ -428,6 +428,61 @@ class EspnLiveSource(LiveSource):
                 out.update(hit[3])
         return out
 
+    def context(self) -> dict:
+        """What just happened, where to read more, and who is hurt.
+
+        All three come out of the summary already fetched for scoring, so this
+        costs nothing extra. The injury list here is ESPN's own - status and
+        body part, stated - which is strictly better than inferring an injury
+        from the wording of a headline, and it is used in preference to that
+        wherever a game has actually been fetched.
+        """
+        out = {"plays": [], "links": {}, "injuries": []}
+        for event, state, clubs in self._events():
+            if state == "pre":
+                continue
+            try:
+                data = self._fetch(summary_url(event))
+            except Exception:
+                continue
+            hdr = data.get("header") or {}
+            links = {}
+            for l in (hdr.get("links") or []):
+                rel = l.get("rel") or []
+                for want in ("boxscore", "pbp", "recap", "summary"):
+                    if want in rel and l.get("href"):
+                        links.setdefault(want, l["href"])
+            if links:
+                for ab, _score in clubs:
+                    out["links"][ab] = links
+
+            for sp in (data.get("scoringPlays") or []):
+                out["plays"].append({
+                    "event": event,
+                    "club": ((sp.get("team") or {}).get("abbreviation") or "").upper(),
+                    "period": (sp.get("period") or {}).get("number"),
+                    "clock": (sp.get("clock") or {}).get("displayValue", ""),
+                    "kind": (sp.get("type") or {}).get("abbreviation", ""),
+                    "text": sp.get("text") or "",
+                    "link": links.get("pbp") or links.get("summary", ""),
+                })
+
+            for team in (data.get("injuries") or []):
+                ab = ((team.get("team") or {}).get("abbreviation") or "").upper()
+                for inj in (team.get("injuries") or []):
+                    ath = inj.get("athlete") or {}
+                    if not ath.get("id"):
+                        continue
+                    out["injuries"].append({
+                        "id": str(ath["id"]), "name": ath.get("displayName", ""),
+                        "club": ab, "status": inj.get("status", ""),
+                        "detail": (inj.get("details") or {}).get("type", ""),
+                        "link": links.get("summary", ""),
+                    })
+        # newest first: later quarter, then less clock left in it
+        out["plays"].sort(key=lambda p: (-(p["period"] or 0), p["clock"]))
+        return out
+
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
         out: dict[str, dict] = {}
