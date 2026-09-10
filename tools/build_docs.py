@@ -36,20 +36,73 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/
 
 
 def anonymise(data: dict) -> dict:
-    """Scrub the people, keep the football."""
+    """Scrub the people, keep the football.
+
+    Done as a sweep over every string in the payload rather than by naming the
+    fields to clean. The field-by-field version missed `roster[].owner` and
+    `teams[].name` - eighty-four real names that would have gone public in a
+    build labelled anonymised, which is worse than not offering the flag at
+    all. A sweep cannot miss a field somebody adds later.
+    """
     labels: dict[str, str] = {}
 
     def label(name: str) -> str:
-        if name not in labels:
-            labels[name] = f"Team {len(labels) + 1}"
-        return labels[name]
+        key = (name or "").strip()
+        if not key:
+            return name
+        if key not in labels:
+            labels[key] = f"Team {len(labels) + 1}"
+        return labels[key]
 
-    for i, L in enumerate(data["leagues"], 1):
-        L["league"] = f"League {i}"
+    # Collect every manager and league name first, so the mapping is stable
+    # wherever the same person turns up.
+    people: set[str] = set()
+    for L in data.get("leagues") or []:
         for side in ("you", "opp"):
-            L[side]["name"] = label(L[side]["name"])
-        L["priors"] = {label(k): v for k, v in (L.get("priors") or {}).items()}
-    return data
+            n = ((L.get(side) or {}).get("name") or "").strip()
+            if n:
+                people.add(n)
+        for t in L.get("teams") or []:
+            if (t.get("name") or "").strip():
+                people.add(t["name"].strip())
+        for r in L.get("roster") or []:
+            if (r.get("owner") or "").strip():
+                people.add(r["owner"].strip())
+        for k in (L.get("priors") or {}):
+            if k.strip():
+                people.add(k.strip())
+    for n in sorted(people):
+        label(n)
+
+    leagues = {}
+    for i, L in enumerate(data.get("leagues") or [], start=1):
+        if L.get("league"):
+            leagues[L["league"]] = f"League {i}"
+
+    def scrub(value):
+        if isinstance(value, dict):
+            return {k: scrub(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [scrub(v) for v in value]
+        if isinstance(value, str):
+            out = value
+            # longest first, so "Team Riaz" is not half-replaced by "Team"
+            for real in sorted(people, key=len, reverse=True):
+                if real and real in out:
+                    out = out.replace(real, labels[real])
+            for real, fake in leagues.items():
+                if real and real in out:
+                    out = out.replace(real, fake)
+            return out
+        return value
+
+    scrubbed = scrub(data)
+    # priors are keyed by name, so rebuild the keys too
+    for L in scrubbed.get("leagues") or []:
+        if isinstance(L.get("priors"), dict):
+            L["priors"] = {labels.get(k.strip(), k): v
+                           for k, v in L["priors"].items()}
+    return scrubbed
 
 
 def fetch(url: str) -> bytes | None:

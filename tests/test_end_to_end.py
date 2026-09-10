@@ -12,6 +12,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
 
 from fantasyedge import analytics, report                    # noqa: E402
 from fantasyedge.providers.base import Http, get_provider     # noqa: E402
@@ -1288,3 +1289,49 @@ class TestPlayerProfile(unittest.TestCase):
         from fantasyedge import profile
 
         self.assertEqual(profile.build(self.store, "no-such-player"), {})
+
+
+class TestAnonymisation(unittest.TestCase):
+    """`--anon` is what makes a public Pages build safe. A field-by-field
+    version of this already missed roster owners and team names - eighty-four
+    real people in a build labelled anonymised - so it is asserted by sweeping
+    for the names rather than by trusting the scrubber's field list."""
+
+    def payload(self):
+        return {
+            "leagues": [{
+                "id": "espn-1", "league": "Sure Buds", "week": 1, "season": 2026,
+                "you": {"teamId": "1", "name": "Silky Johnson", "starters": []},
+                "opp": {"teamId": "2", "name": "Fault Nation", "starters": []},
+                "teams": [{"teamId": "1", "name": "Silky Johnson"},
+                          {"teamId": "2", "name": "Fault Nation"}],
+                "roster": [{"id": "9", "name": "Real Player", "teamId": "1",
+                            "owner": "Silky Johnson", "started": True}],
+                "priors": {"Silky Johnson": {"bench": 20.4}},
+            }],
+            "injuries": {"injuries": [
+                {"id": "9", "name": "Real Player",
+                 "roast": "Fault Nation took him in round 2 of Sure Buds."}]},
+        }
+
+    def test_no_real_name_survives_anywhere(self):
+        import tools.build_docs as bd
+
+        out = json.dumps(bd.anonymise(self.payload()))
+        for name in ("Silky Johnson", "Fault Nation", "Sure Buds"):
+            self.assertNotIn(name, out, f"{name} survived anonymisation")
+
+    def test_the_same_person_gets_the_same_label(self):
+        import tools.build_docs as bd
+
+        out = bd.anonymise(self.payload())
+        L = out["leagues"][0]
+        self.assertEqual(L["you"]["name"], L["roster"][0]["owner"])
+        self.assertEqual(L["you"]["name"], list(L["priors"])[0])
+
+    def test_players_are_public_facts_and_stay(self):
+        """NFL players are not the people being protected here."""
+        import tools.build_docs as bd
+
+        out = json.dumps(bd.anonymise(self.payload()))
+        self.assertIn("Real Player", out)
