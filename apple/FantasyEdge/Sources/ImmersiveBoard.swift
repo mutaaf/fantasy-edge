@@ -16,6 +16,8 @@ import SwiftUI
 /// a headset.
 struct ImmersiveBoard: View {
     @Environment(Board.self) private var board
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersive
+    @Environment(\.openWindow) private var openWindow
     var onSelect: (Cell) -> Void = { _ in }
 
     /// Comfort, not spectacle: far enough to focus on, low enough not to crane.
@@ -34,7 +36,10 @@ struct ImmersiveBoard: View {
         } update: { content, attachments in
             guard let root = content.entities.first(where: { $0.name == "root" })
             else { return }
-            root.children.forEach { $0.removeFromParent() }
+            // Reposition what is already there. The first version removed every
+            // entity and re-added it on each update - eighteen attachments torn
+            // down and rebuilt every time the feed ticked, which is what made
+            // the space seize up rather than move.
             place(board.mosaic.cells, into: root, attachments: attachments)
         } attachments: {
             ForEach(board.mosaic.cells) { cell in
@@ -44,13 +49,17 @@ struct ImmersiveBoard: View {
                 }
             }
             Attachment(id: "scoreline") { scoreline }
+            Attachment(id: "exit") { exitButton }
         }
     }
 
+    /// Idempotent: adds an entity the first time it is seen and only moves it
+    /// afterwards, so a feed tick costs a transform rather than a rebuild.
     private func place(_ cells: [Cell], into root: Entity,
                        attachments: RealityViewAttachments) {
         for (i, cell) in cells.enumerated() {
             guard let view = attachments.entity(for: cell.id) else { continue }
+            if view.parent !== root { root.addChild(view) }
             let col = Float(i % columns) - Float(columns - 1) / 2
             let row = Float(i / columns)
             let angle = col * columnAngle
@@ -63,12 +72,33 @@ struct ImmersiveBoard: View {
             )
             // turn each cell to face the wearer rather than show an oblique edge
             view.orientation = simd_quatf(angle: -angle, axis: SIMD3(0, 1, 0))
-            root.addChild(view)
         }
         if let head = attachments.entity(for: "scoreline") {
+            if head.parent !== root { root.addChild(head) }
             head.position = SIMD3(0, eyeHeight + 0.42, -radius + 0.1)
-            root.addChild(head)
         }
+        // Within reach and below the board, so there is always a way out of
+        // the space that does not require finding the Digital Crown.
+        if let exit = attachments.entity(for: "exit") {
+            if exit.parent !== root { root.addChild(exit) }
+            exit.position = SIMD3(0, eyeHeight - 0.92, -radius + 0.35)
+        }
+    }
+
+    private var exitButton: some View {
+        Button {
+            Task {
+                await dismissImmersive()
+                openWindow(id: "board")
+            }
+        } label: {
+            Label("Back to the window", systemImage: "rectangle.on.rectangle")
+                .font(.system(size: 17, weight: .medium))
+                .padding(.horizontal, 22).padding(.vertical, 14)
+        }
+        .buttonStyle(.plain)
+        .glassBackgroundEffect(in: .capsule)
+        .hoverEffect(.highlight)
     }
 
     private var scoreline: some View {

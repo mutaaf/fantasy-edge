@@ -33,6 +33,34 @@ extension Cell {
     static func make(_ s: Starter, side: String, live: LiveState?) -> Cell {
         Cell(id: s.id, name: s.name, pos: s.pos, team: s.team, side: side,
              scored: live?.s ?? 0, projected: s.projected ?? 0,
-             remaining: live?.r ?? 1, state: live?.g ?? "PRE")
+             remaining: live?.r ?? 1, state: live?.g ?? "PRE",
+             img: s.img ?? "")
     }
+}
+
+
+// MARK: - the deep profile behind a card
+
+struct SeasonRow: Decodable, Identifiable {
+    let season: Int, weeks: Int
+    let total: Double, ppg: Double, best: Double
+    let rank: Int?, field: Int
+    let started: Bool
+    var id: Int { season }
+}
+struct DraftRow: Decodable, Identifiable {
+    let season: Int, league: String?, teams: Int?, team: String?
+    let round: Int?, overall: Int?, adp: Double?, reach: Double?
+    var id: String { "\(season)-\(league ?? "")-\(overall ?? 0)" }
+}
+struct FormatRow: Decodable, Identifiable {
+    let name: String, points: Double
+    var id: String { name }
+}
+struct Profile: Decodable {
+    let id: String, name: String, pos: String, team: String
+    let img: String?, logo: String?
+    let seasons: [SeasonRow]
+    let draft: [DraftRow]
+    let formats: [FormatRow]
 }

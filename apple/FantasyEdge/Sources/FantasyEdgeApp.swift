@@ -6,7 +6,7 @@ struct FantasyEdgeApp: App {
     @State private var immersiveDetail: Cell?
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "board") {
             BoardView().environment(board)
         }
         // .plain would mean painting our own background, which is exactly what

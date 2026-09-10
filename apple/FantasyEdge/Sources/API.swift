@@ -71,6 +71,22 @@ final class Board {
     /// Polling rather than SSE: the shared snapshot is cached for a couple of
     /// seconds at the edge anyway, so a poll costs a revalidation and keeps the
     /// client simple. Cancelled when the scene goes away.
+    /// The deep profile behind a card. Cached, because opening the same player
+    /// twice should not cost two round trips.
+    private var profiles: [String: Profile] = [:]
+
+    @MainActor
+    func profile(_ id: String) async -> Profile? {
+        if let hit = profiles[id] { return hit }
+        guard let u = url("/api/player/\(id)") else { return nil }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: u)
+            let p = try JSONDecoder().decode(Profile.self, from: data)
+            profiles[id] = p
+            return p
+        } catch { return nil }
+    }
+
     func start() {
         poll?.cancel()
         poll = Task { [weak self] in

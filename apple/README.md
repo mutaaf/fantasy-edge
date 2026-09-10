@@ -55,6 +55,18 @@ and makes **importance depth** - a cell that can still change your week stands
 forward, a decided one falls back. On a flat screen that has to be faked with
 blur; here it is simply where the thing is.
 
+## The player card is a hologram, not a card
+
+ESPN's headshots are cut-out PNGs with a transparent surround, so on a headset
+there is no reason to put one inside a rectangle - the head floats in the room,
+lit from behind in the position colour, and the numbers sit around it. A border
+here would only be drawing a box around something that already has an edge.
+
+The detail is the default: season by season with positional finish, where he
+went in each of your drafts against ADP, and this week restated across PPR,
+half and standard. A card that opens shallow and asks for another tap wastes
+the one gesture you gave it.
+
 ## Known gaps
 
 - **The widget is source, not a target.** WidgetKit needs its own extension

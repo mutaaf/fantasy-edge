@@ -39,6 +39,8 @@ struct Cell: Identifiable, Equatable, Hashable {
     var projected: Double
     var remaining: Double      // fraction of his game still to play, 0...1
     var state: String
+    /// Carried so a card can draw the man rather than a coloured rectangle.
+    var img: String = ""
 
     // filled in by evaluate
     var sigma: Double = 0

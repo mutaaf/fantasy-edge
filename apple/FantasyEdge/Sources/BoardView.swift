@@ -10,6 +10,7 @@ struct BoardView: View {
     @Environment(Board.self) private var board
     @Environment(\.openImmersiveSpace) private var openImmersive
     @Environment(\.dismissImmersiveSpace) private var dismissImmersive
+    @Environment(\.dismissWindow) private var dismissWindow
     @State private var immersed = false
     @State private var showSettings = false
     @State private var detail: Cell?
@@ -25,7 +26,7 @@ struct BoardView: View {
             controls
         }
         .sheet(isPresented: $showSettings) { HostSheet() }
-        .sheet(item: $detail) { PlayerSheet(cell: $0) }
+        .sheet(item: $detail) { PlayerHologram(cell: $0) }
         .task { board.start() }
         .onDisappear { board.stop() }
     }
@@ -114,100 +115,25 @@ struct BoardView: View {
             }
             Divider().frame(height: 22)
             Button {
-                immersed.toggle()
                 Task {
-                    if immersed { _ = await openImmersive(id: "board-space") }
-                    else { await dismissImmersive() }
+                    // One mode at a time. Leaving the window open behind the
+                    // immersive board put you in both at once, with two boards
+                    // fighting for the same room.
+                    if await openImmersive(id: "board-space") == .opened {
+                        dismissWindow(id: "board")
+                    }
                 }
             } label: {
-                Label(immersed ? "Leave" : "Immersive",
-                      systemImage: immersed ? "rectangle.on.rectangle" : "visionpro")
+                Label("Immersive", systemImage: "visionpro")
             }
             .buttonStyle(.borderedProminent)
-            .tint(immersed ? Theme.red : Theme.green)
+            .tint(Theme.green)
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape").font(.system(size: 17))
             }
         }
         .padding(.horizontal, 18).padding(.vertical, 12)
         .glassBackgroundEffect(in: .capsule)
-    }
-}
-
-/// Tapping a cell opens the numbers behind it. It was the missing half of the
-/// board: cells that looked interactive and did nothing.
-struct PlayerSheet: View {
-    let cell: Cell
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(cell.name).font(.system(size: 32, weight: .bold))
-                    Text(cell.pos).font(.system(size: 12, weight: .heavy))
-                        .padding(.horizontal, 9).padding(.vertical, 3)
-                        .background(Theme.position(cell.pos), in: Capsule())
-                        .foregroundStyle(.black)
-                    Text(cell.team).font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
-                HStack(spacing: 0) {
-                    stat("Scored", cell.scored, .number.precision(.fractionLength(1)))
-                    stat("Projected", cell.projected, .number.precision(.fractionLength(1)))
-                    stat("Game left", cell.remaining, .percent.precision(.fractionLength(0)))
-                    stat("Leverage", cell.share, .percent.precision(.fractionLength(1)))
-                }
-                VStack(alignment: .leading, spacing: 7) {
-                    Text("WHY THIS SIZE").font(.system(size: 10, weight: .heavy))
-                        .kerning(1.2).foregroundStyle(.secondary)
-                    Text(explanation)
-                        .font(.system(size: 15)).foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer()
-            }
-            .padding(30)
-            .navigationTitle(cell.state)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-        .frame(minWidth: 560, minHeight: 380)
-    }
-
-    /// Built as a plain String: interpolating four format styles inline blew
-    /// past the type checker's budget, which is a real limit and not a style note.
-    private var explanation: String {
-        let share = (cell.share * 100).formatted(.number.precision(.fractionLength(1)))
-        let left = (cell.remaining * 100).formatted(.number.precision(.fractionLength(0)))
-        let sigma = cell.sigma.formatted(.number.precision(.fractionLength(1)))
-        return "This cell holds \(share)% of everything still in doubt in this "
-             + "matchup. Uncertainty \(sigma) points, with \(left)% of his game "
-             + "left to play."
-    }
-
-    private func stat(_ label: String, _ value: Double,
-                      _ fmt: FloatingPointFormatStyle<Double>.Percent) -> some View {
-        VStack(spacing: 3) {
-            Text(value, format: fmt).font(.system(size: 24, weight: .bold))
-                .monospacedDigit()
-            Text(label).font(.system(size: 10, weight: .heavy)).kerning(1)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-    private func stat(_ label: String, _ value: Double,
-                      _ fmt: FloatingPointFormatStyle<Double>) -> some View {
-        VStack(spacing: 3) {
-            Text(value, format: fmt).font(.system(size: 24, weight: .bold))
-                .monospacedDigit()
-            Text(label).font(.system(size: 10, weight: .heavy)).kerning(1)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
