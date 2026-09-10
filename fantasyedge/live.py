@@ -37,6 +37,8 @@ import random
 import time
 import urllib.parse
 import urllib.request
+
+from . import identity
 from abc import ABC, abstractmethod
 
 # A compressed Sunday: kickoff offsets and length, in simulated minutes.
@@ -283,9 +285,27 @@ class EspnLiveSource(LiveSource):
 
     def __init__(self, players: list[dict], ttl: float = 20.0, http=None,
                  scoring=None, box_ttl: float = 25.0):
-        self.players = [{"id": str(p["player_id"]), "team": p.get("team") or "FA",
-                         "projected": float(p.get("projected") or 0.0)}
-                        for p in players]
+        # `id` is whatever the caller reports under - a provider's own player
+        # id - and nothing here may assume what shape it has. How to find this
+        # player in a box score is carried separately: `espn_id` when the
+        # caller knows one, and `lookup`, a folded name and club, when it does
+        # not. Yahoo and Sleeper ids are not ESPN's, so the name is the bridge.
+        self.players = []
+        for p in players:
+            pid = str(p["player_id"])
+            club = p.get("team") or "FA"
+            name = p.get("name") or ""
+            pos = p.get("pos") or ""
+            self.players.append({
+                "id": pid, "team": club,
+                "projected": float(p.get("projected") or 0.0),
+                # A defence is a club, not a person, and is scored as one. ESPN
+                # encodes it as a negative id; the other providers do not, so
+                # the position is what settles it.
+                "is_def": identity.position(pos) == "DEF" or pid.startswith("-"),
+                "espn_id": pid if p.get("espn_ids", True) and not pid.startswith("-") else "",
+                "name": name,
+            })
         self.ttl = ttl
         self.box_ttl = box_ttl
         self._http = http
@@ -294,6 +314,9 @@ class EspnLiveSource(LiveSource):
         self._fail_until = 0.0
         self.last_error = ""
         self._boxes: dict[str, tuple[float, dict]] = {}
+        # athlete names per event, kept beside the scored lines so a roster
+        # whose ids are not ESPN's can still be joined to them.
+        self._namecache: dict[str, dict] = {}
         if scoring is None:
             from .scoring import Scoring
             scoring = Scoring()
@@ -374,8 +397,8 @@ class EspnLiveSource(LiveSource):
         A finished game is fetched once and then held - its numbers cannot
         change again, so re-asking is pure waste.
         """
-        from .scoring import (dst_points, parse_boxscore, parse_team_defence,
-                              score_boxscore)
+        from .scoring import (boxscore_names, dst_points, parse_boxscore,
+                              parse_team_defence, score_boxscore)
 
         now = time.time()
         points: dict[str, float] = {}
@@ -390,6 +413,7 @@ class EspnLiveSource(LiveSource):
                     data = self._fetch(summary_url(event))
                     hit = (now, score_boxscore(data, self.scoring),
                            parse_team_defence(data), parse_boxscore(data))
+                    self._namecache[event] = boxscore_names(data)
                 except Exception:
                     # keep whatever we had; a single bad game must not blank a board
                     hit = hit or (now, {}, {}, {})
@@ -411,6 +435,38 @@ class EspnLiveSource(LiveSource):
                     dst[ab] = dst_points(opp_score, allowed_yards,
                                          teams.get(ab) or {})
         return points, dst
+
+    def _points_for(self, p: dict, pts: dict) -> float:
+        """This player's points, by id where that is meaningful and by name
+        where it is not.
+
+        An ESPN fantasy id is also an ESPN site athlete id, so it hits `pts`
+        directly. A Sleeper or Yahoo id hits nothing, and falling through to
+        zero would quietly report every player on those rosters as scoreless -
+        a board that looks like it is working and is not. The folded name and
+        club resolve them against the same box score instead.
+        """
+        if p["espn_id"] and p["espn_id"] in pts:
+            return pts[p["espn_id"]]
+        if not p.get("name"):
+            return 0.0
+        aid, _ = self._aliases().resolve(p["name"], "", p["team"])
+        return pts.get(aid, 0.0) if aid else 0.0
+
+    def _aliases(self) -> identity.Resolver:
+        """The athletes in the games fetched, indexed for name resolution.
+
+        Built from the same cached summaries the points came from, so it costs
+        no extra request. A box score groups athletes by statistical category
+        rather than by position, so there is no position to index on - name
+        and club carry it, and `Resolver` refuses anything ambiguous.
+        """
+        r = identity.Resolver()
+        for names in self._namecache.values():
+            for aid, info in names.items():
+                if info.get("name"):
+                    r.add(aid, info["name"], "", info.get("team", ""))
+        return r
 
     def raw_stats(self) -> dict[str, dict]:
         """Unscored box-score lines for games under way.
@@ -535,12 +591,12 @@ class EspnLiveSource(LiveSource):
                 # hand-made one can, and "12.4 points, PRE" is incoherent on a
                 # board - it reads as a bug in the scoring, not in the feed.
                 live_now = info["state"] != "pre"
-                if p["id"].startswith("-"):
-                    # A fantasy defence is -16000 minus its club id, so it is
-                    # scored as a club rather than looked up as a person.
+                if p["is_def"]:
+                    # A defence is scored as a club rather than looked up as a
+                    # person - it has no line in a box score at all.
                     val = dst.get(p["team"], 0.0)
                 else:
-                    val = pts.get(p["id"], 0.0)
+                    val = self._points_for(p, pts)
                 players[p["id"]] = {
                     "s": float(val) if live_now else 0.0,
                     "r": round(1.0 - info["played"], 4),

@@ -1356,3 +1356,153 @@ class TestAnonymisation(unittest.TestCase):
         labels = [t["name"] for t in out["leagues"][0]["teams"]]
         self.assertEqual(len(set(labels)), len(labels),
                          f"two managers collapsed onto one label: {labels}")
+
+
+class TestPlayerIdentity(unittest.TestCase):
+    """One player, three providers, one key.
+
+    ESPN's fantasy player id doubles as its site athlete id, so a live box
+    score joined to an ESPN roster for free. That is a coincidence that holds
+    for one provider out of three; Yahoo and Sleeper ids match nothing. These
+    assert the derived key that replaces it.
+    """
+
+    def test_every_provider_spells_a_defence_differently(self):
+        from fantasyedge import identity as I
+
+        for spelling, club in [("Rams D/ST", "14"), ("LAR", ""),
+                               ("Los Angeles Rams", ""), ("St. Louis Rams", "")]:
+            self.assertEqual(I.key(spelling, "DEF", club), "def:lar", spelling)
+        self.assertEqual(I.key("49ers D/ST", "DEF"), "def:sf")
+        self.assertEqual(I.key("San Francisco 49ers", "DST"), "def:sf")
+
+    def test_a_club_that_moved_is_still_the_same_club(self):
+        from fantasyedge import identity as I
+
+        self.assertEqual(I.team("OAK"), "LV")
+        self.assertEqual(I.team("WSH"), "WAS")
+        self.assertEqual(I.team("JAC"), "JAX")
+
+    def test_folding_survives_suffixes_accents_and_apostrophes(self):
+        from fantasyedge import identity as I
+
+        self.assertEqual(I.fold("Marvin Harrison Jr."), I.fold("Marvin Harrison"))
+        self.assertEqual(I.fold("Kenneth Walker III"), I.fold("Kenneth Walker"))
+        self.assertEqual(I.fold("Ja'Marr Chase"), "jamarrchase")
+        self.assertEqual(I.fold("Amon-Ra St. Brown"), "amonrastbrown")
+
+    def test_one_owner_of_the_folding(self):
+        """`projections.norm_name` and `sleeper.normalise` were two copies kept
+        in step by a test. One implementation needs no such test."""
+        from fantasyedge import identity, projections
+        from fantasyedge.providers import sleeper
+
+        self.assertIs(projections.norm_name, identity.fold)
+        self.assertIs(sleeper.normalise, identity.fold)
+
+    def test_a_position_change_is_not_a_different_person(self):
+        """Travis Hunter is a WR to ESPN and a DB to Sleeper. Observed."""
+        from fantasyedge import identity as I
+
+        r = I.Resolver()
+        r.add("sleeper-1", "Travis Hunter", "DB", "JAX")
+        got, how = r.resolve("Travis Hunter", "WR", "JAX")
+        self.assertEqual(got, "sleeper-1")
+        self.assertEqual(how, "name")
+
+    def test_a_nickname_resolves_only_with_the_club_to_back_it(self):
+        """ESPN says "Hollywood Brown", Sleeper says "Marquise Brown"."""
+        from fantasyedge import identity as I
+
+        r = I.Resolver()
+        r.add("sleeper-2", "Marquise Brown", "WR", "KC")
+        got, how = r.resolve("Hollywood Brown", "WR", "KC")
+        self.assertEqual((got, how), ("sleeper-2", "surname+club"))
+        # The same surname at another club is not the same man.
+        self.assertEqual(r.resolve("Hollywood Brown", "WR", "SEA")[0], None)
+
+    def test_an_ambiguous_name_resolves_to_nobody(self):
+        """Four Mike Williamses; the club picks one, and without a club the
+        honest answer is none. A confident wrong line is worse than a blank."""
+        from fantasyedge import identity as I
+
+        r = I.Resolver()
+        r.add("a", "Mike Williams", "WR", "LAC")
+        r.add("b", "Mike Williams", "WR", "")
+        self.assertEqual(r.resolve("Mike Williams", "WR", "LAC")[0], "a")
+        self.assertEqual(r.resolve("Mike Williams", "WR", "")[0], None)
+
+    def test_frank_gore_and_frank_gore_jr_are_two_people(self):
+        """Folding the suffix is right for matching and wrong for telling them
+        apart, so the club has to do it."""
+        from fantasyedge import identity as I
+
+        r = I.Resolver()
+        r.add("snr", "Frank Gore", "RB", "NYJ")
+        r.add("jnr", "Frank Gore Jr.", "RB", "BUF")
+        self.assertEqual(r.resolve("Frank Gore", "RB", "NYJ")[0], "snr")
+        self.assertEqual(r.resolve("Frank Gore Jr.", "RB", "BUF")[0], "jnr")
+        self.assertEqual(r.resolve("Frank Gore", "RB", "")[0], None)
+
+
+class TestCrossProviderLiveScoring(unittest.TestCase):
+    """A Sleeper or Yahoo roster has to score off an ESPN box score.
+
+    This is the whole point of the identity layer, and the failure it guards
+    is a quiet one: ids that match nothing fall through to zero, so every
+    player on those rosters reads as scoreless and the board looks like it is
+    merely a slow afternoon. Asserting a non-zero total is the only way to
+    tell the two apart.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.summary = json.loads((FIX / "espn_summary.json").read_text())
+        # Every game in the stored slate is pre-kickoff, and a player whose
+        # game has not started scores nothing by design - so on the stored
+        # fixture these assertions would pass on zeros and prove nothing.
+        board = json.loads((FIX / "espn_scoreboard.json").read_text())
+        board["events"][0]["competitions"][0]["status"] = {
+            "period": 3, "clock": 420.0,
+            "type": {"state": "in", "shortDetail": "7:00 - 3rd"}}
+        cls.board = board
+
+    def source(self, players):
+        """An injected transport wins over the fixture files setUpModule pins,
+        so it has to answer both endpoints, not just the interesting one."""
+        from fantasyedge.live import EspnLiveSource
+
+        def http(url):
+            return self.summary if "summary?event=" in url else self.board
+        return EspnLiveSource(players, http=http)
+
+    def test_a_sleeper_id_still_finds_its_points(self):
+        """The live game is SEA; the summary lists the athletes. A Sleeper id
+        matches nothing in it, so only the name can carry the join."""
+        espn = self.source([{"player_id": "4258173", "team": "SEA",
+                             "name": "Nico Collins", "pos": "WR"}])
+        sleeper = self.source([{"player_id": "8112", "team": "SEA",
+                                "name": "Nico Collins", "pos": "WR",
+                                "espn_ids": False}])
+        mine = espn.snapshot()["players"]["4258173"]["s"]
+        theirs = sleeper.snapshot()["players"]["8112"]["s"]
+        self.assertGreater(mine, 0.0, "fixture should score this player")
+        self.assertEqual(theirs, mine,
+                         "a Sleeper id must resolve to the same box-score line")
+
+    def test_a_yahoo_defence_scores_as_a_club(self):
+        """Yahoo spells a defence "Seattle Seahawks" and gives it a positive
+        id, so neither ESPN's naming nor its negative-id trick applies."""
+        yahoo = self.source([{"player_id": "100014", "team": "SEA",
+                              "name": "Seattle Seahawks", "pos": "DEF",
+                              "espn_ids": False}])
+        espn = self.source([{"player_id": "-16026", "team": "SEA",
+                             "name": "Seahawks D/ST", "pos": "DEF"}])
+        self.assertEqual(yahoo.snapshot()["players"]["100014"]["s"],
+                         espn.snapshot()["players"]["-16026"]["s"])
+
+    def test_an_unmatchable_name_scores_zero_rather_than_somebody_else(self):
+        ghost = self.source([{"player_id": "z9", "team": "SEA",
+                              "name": "Nobody Atall", "pos": "WR",
+                              "espn_ids": False}])
+        self.assertEqual(ghost.snapshot()["players"]["z9"]["s"], 0.0)

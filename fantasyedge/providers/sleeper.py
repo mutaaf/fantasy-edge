@@ -25,6 +25,8 @@ import re
 import time
 import unicodedata
 
+from .. import identity
+
 from ..models import (
     DraftPick, LeagueRef, Manager, Matchup, Player, RosterSlot,
     SeasonBundle, Standing, Transaction, dedupe_players,
@@ -46,13 +48,9 @@ TEAM_CODE = {
     "Panthers": "CAR", "Cardinals": "ARI", "Titans": "TEN", "Saints": "NO",
     "Buccaneers": "TB", "Jets": "NYJ", "Colts": "IND", "Falcons": "ATL",
 }
-SUFFIX = re.compile(r"\b(jr|sr|ii|iii|iv|v)\b")
-
-
-def normalise(name: str) -> str:
-    """Fold a display name to a join key: no accents, case, punctuation or suffix."""
-    s = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z]", "", SUFFIX.sub("", s.lower()))
+#: See `identity.fold`. This name is kept because the provider and its tests
+#: use it; there is only one implementation now.
+normalise = identity.fold
 
 
 class PlayerBook:

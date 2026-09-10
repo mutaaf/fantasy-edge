@@ -129,6 +129,19 @@ Every one carries `playerId` -1. Both `fetch_season` and `draft_state` filter
 them; dropping that filter invents a 192-pick draft that never happened and
 silently poisons the draft log and every draft analysis.
 
+**A player id is only unique inside the provider that issued it.** ESPN,
+Yahoo and Sleeper all mint their own, and they collide as strings. Group or
+key on `(provider, player_id)`, never on the id alone. The one place this is
+tempting is the shared live tier, where it silently merges two different
+people the moment a second provider is followed.
+
+**ESPN's fantasy player id doubling as its site athlete id is a coincidence,
+not a design.** It is why a live box score joins to an ESPN roster for free,
+and it holds for exactly one of the three providers. Everything else joins
+through `identity.py`, which is the single owner of name folding - do not add
+a fourth copy of it. A roster whose ids resolve to nothing does not raise; it
+reports every player as scoreless, which looks like a quiet Sunday.
+
 **Do not add third-party dependencies.** Zero-dependency is a deliberate
 constraint: stdlib only, Python 3.11+. If something seems to need `requests`
 or `pandas`, it doesn't.

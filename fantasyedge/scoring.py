@@ -112,6 +112,25 @@ def parse_boxscore(summary: dict) -> dict[str, dict]:
     return out
 
 
+def boxscore_names(summary: dict) -> dict[str, dict]:
+    """Athlete id -> the name and club the box score used.
+
+    `parse_boxscore` throws these away because scoring never needs them. A
+    provider whose player ids are not ESPN's does need them: it is the only
+    bridge from a Sleeper or Yahoo roster row to a line in this box score.
+    """
+    out: dict[str, dict] = {}
+    for team in ((summary.get("boxscore") or {}).get("players") or []):
+        ab = ((team.get("team") or {}).get("abbreviation") or "").upper()
+        for cat in (team.get("statistics") or []):
+            for ath in (cat.get("athletes") or []):
+                a = ath.get("athlete") or {}
+                pid = str(a.get("id") or "")
+                if pid and pid not in out:
+                    out[pid] = {"name": a.get("displayName") or "", "team": ab}
+    return out
+
+
 def score_boxscore(summary: dict, scoring: Scoring | None = None) -> dict[str, float]:
     sc = scoring or Scoring()
     return {pid: sc.points(stat) for pid, stat in parse_boxscore(summary).items()}

@@ -31,20 +31,12 @@ import pathlib
 import re
 import unicodedata
 
-SUFFIX = re.compile(r"\b(jr|sr|ii|iii|iv|v)\.?$", re.I)
+from . import identity
 
-
-def norm_name(name: str) -> str:
-    """Fold a display name to a join key: no accents, case, punctuation or suffix.
-
-    Deliberately identical to `providers.sleeper.normalise`, which already
-    solved this for ADP. Spaces go too, so "Ja'Marr" and "JaMarr" land on the
-    same key - an earlier version turned the apostrophe into a space and
-    silently failed to match exactly the players anybody cares about. A test
-    asserts the two implementations still agree.
-    """
-    s = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z]", "", SUFFIX.sub("", s.lower()))
+#: Kept as a name because callers and tests use it; the implementation moved
+#: to `identity`, which is now the single owner of this folding. Two copies of
+#: it and a test asserting they agree was a worse arrangement than one copy.
+norm_name = identity.fold
 
 
 def seed_espn(store, season: int | None = None) -> dict:

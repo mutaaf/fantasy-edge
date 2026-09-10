@@ -288,16 +288,24 @@ class Api:
             from . import live as livemod
 
             store = self.store()
+            # Grouped by provider as well as id. A player id is only unique
+            # within the provider that issued it, so grouping on the id alone
+            # merges two different people the moment a second provider is
+            # followed - ESPN's 4262921 and a Sleeper id are unrelated numbers
+            # that collide as strings.
             rows = store.q(
-                """SELECT DISTINCT r.player_id, p.name, p.pos, p.nfl_team,
+                """SELECT r.provider, r.player_id, p.name, p.pos, p.nfl_team,
                           MAX(COALESCE(r.projected, r.points, 0)) AS proj
                    FROM roster_slot r
                    LEFT JOIN player p ON p.provider=r.provider
                                      AND p.player_id=r.player_id
                    WHERE p.name IS NOT NULL
-                   GROUP BY r.player_id""")
+                   GROUP BY r.provider, r.player_id""")
             players = [{"player_id": r["player_id"], "name": r["name"],
                         "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
+                        # Only ESPN's fantasy ids double as site athlete ids.
+                        # Everyone else joins to a box score by name.
+                        "espn_ids": r["provider"] == "espn",
                         "projected": r["proj"] or 0.0} for r in rows]
             # Real game state by default. It needs no credential - this is the
             # same public feed espn.com renders - so it belongs in this
