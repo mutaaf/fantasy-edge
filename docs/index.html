@@ -793,6 +793,128 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   margin-left:6px;color:var(--ink-dim)}
 .pc-none{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
 
+
+/* ── today's board ─────────────────────────────────────────
+   A ranking read out loud on a pre-game show: everybody with a game in this
+   window, in order, with what they did last year and whether you own them.
+   Dense and ruled, because it is scanned down a column rather than read. */
+.rank-row{display:grid;grid-template-columns:38px 44px minmax(0,1.9fr) 58px
+  minmax(0,1.1fr) 62px 62px;gap:12px;align-items:center;padding:8px 16px;
+  border-bottom:1px solid rgba(255,255,255,.07);width:100%;text-align:left;
+  background:transparent;border-left:0;border-right:0;border-top:0;color:inherit;
+  font-family:inherit;font-size:14px;cursor:pointer;transition:background .18s var(--ease)}
+.rank-row:last-child{border-bottom:0}
+.rank-row:hover{background:rgba(255,255,255,.07)}
+.rank-row.owned{background:linear-gradient(90deg,rgba(91,194,54,.16),
+  rgba(91,194,54,.03) 44%,transparent);box-shadow:inset 3px 0 0 var(--green)}
+.rank-row.head{cursor:default;background:rgba(255,255,255,.06);
+  font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);padding:10px 16px}
+.rank-row.head:hover{background:rgba(255,255,255,.06)}
+.rk-n{font-family:var(--display);font-size:17px;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums}
+.rank-row.owned .rk-n{color:var(--green)}
+.rk-nm{font-weight:700;letter-spacing:-.015em;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.rk-last{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-dim);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.rk-num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.rk-num.dim{color:var(--ink-faint);font-weight:500}
+.rk-own{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.1em;
+  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:1px 7px;
+  margin-left:6px}
+.rk-window{font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px 2px}
+@media (max-width:900px){
+  .rank-row{grid-template-columns:30px 38px minmax(0,1fr) 52px 56px}
+  .rank-row>.rk-last,.rank-row>.rk-act{display:none}}
+
+
+/* ── charts ────────────────────────────────────────────────
+   The diverging pair is teal/orange, not green/red. Green against red is the
+   classic red-green collision: measured at deltaE 3.5 under deuteranopia on
+   this surface, which is below even the floor that direct labels would
+   excuse. Teal against orange measures 12.9, and every bar is labelled
+   anyway, so identity never rests on colour alone. */
+:root{ --pos:#2f9c89; --neg:#c9661a; --barbg:rgba(255,255,255,.10); }
+.an-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+  margin-top:16px}
+.an-grid[hidden]{display:none!important}
+.an-card{background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:var(--r-card);padding:17px 19px 15px}
+.an-h{font-family:var(--display);font-size:16px;letter-spacing:.02em;
+  text-transform:uppercase}
+.an-sub{font-size:12.5px;color:var(--ink-dim);margin-top:5px;line-height:1.45}
+.an-rows{margin-top:13px;display:grid;gap:7px}
+.an-row{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:10px;
+  align-items:center;cursor:default}
+.an-lab{font-size:12.5px;color:var(--ink-dim);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.an-row.me .an-lab{color:var(--ink);font-weight:700}
+.an-val{text-align:right;font-size:12.5px;font-weight:700;
+  font-variant-numeric:tabular-nums}
+.an-track{grid-column:1/-1;height:9px;background:var(--barbg);border-radius:5px;
+  position:relative;overflow:hidden}
+.an-fill{position:absolute;top:0;bottom:0;border-radius:0 5px 5px 0;
+  background:var(--pos);transition:width .6s var(--ease),left .6s var(--ease)}
+.an-fill.neg{background:var(--neg);border-radius:5px 0 0 5px}
+.an-zero{position:absolute;top:-2px;bottom:-2px;width:1px;
+  background:rgba(255,255,255,.34)}
+.an-row.me .an-fill{box-shadow:0 0 0 1.5px var(--green)}
+.an-cav{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.10);
+  font-size:11.5px;color:var(--ink-faint);line-height:1.5}
+.an-key{display:flex;gap:14px;margin-top:9px;font-family:var(--cond);font-size:11px;
+  font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.an-key i{width:10px;height:10px;border-radius:3px;display:inline-block;
+  margin-right:5px;vertical-align:-1px}
+
+/* ── the week-by-week bar, made interactive ───────────────── */
+.spark{display:flex;align-items:flex-end;gap:2px;height:52px;margin-top:6px}
+.spark button{flex:1;min-width:3px;background:rgba(255,255,255,.22);border:0;
+  border-radius:2px 2px 0 0;padding:0;cursor:pointer;position:relative;
+  transition:background .15s var(--ease)}
+.spark button.hi{background:var(--green)}
+.spark button:hover,.spark button:focus-visible{background:#fff;outline:none}
+.spark button.sel{background:var(--hot)}
+.spark-read{display:flex;align-items:baseline;gap:9px;margin-top:8px;min-height:20px;
+  font-family:var(--mono);font-size:12px;color:var(--ink-dim)}
+.spark-read b{font-family:var(--ui);font-size:17px;font-weight:800;color:var(--ink);
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.spark-read .sr-ctx{color:var(--ink-faint)}
+
+
+/* ── explaining without a lecture ──────────────────────────
+   The honest version of this note is four sentences of statistics, which is
+   the right content and the wrong shape for the first thing under a board.
+   The plain sentence leads; the maths and the two things the model gets wrong
+   are one click away for anyone who wants them, and nothing is dropped. */
+.explain{margin-top:14px;max-width:74ch}
+.ex-lead{font-size:14.5px;line-height:1.6;color:var(--ink-dim);margin:0}
+.ex-lead b{color:var(--ink);font-weight:800}
+.ex-more{margin-top:10px}
+.ex-more summary{display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);list-style:none;
+  border:1px solid var(--hair);border-radius:var(--r-chip);padding:6px 14px;
+  transition:.2s var(--ease)}
+.ex-more summary::-webkit-details-marker{display:none}
+.ex-more summary::after{content:"+";font-family:var(--ui);font-size:14px;
+  font-weight:700;line-height:1}
+.ex-more[open] summary::after{content:"–"}
+.ex-more summary:hover{color:var(--ink);border-color:var(--hair-2)}
+.ex-body{margin-top:12px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  font-size:13.5px;line-height:1.6;color:var(--ink-dim)}
+.ex-body p{margin:0 0 10px}
+.ex-body p:last-child{margin-bottom:0}
+.ex-body b{color:var(--ink)}
+.ex-math{font-family:var(--mono);font-size:13px;color:var(--ink);
+  background:rgba(255,255,255,.07);border-radius:8px;padding:9px 12px;
+  text-align:center;letter-spacing:.02em}
+.ex-warn{border-left:2px solid var(--hot);padding-left:11px}
+.ex-warn b{color:var(--hot)}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -808,6 +930,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
       <div class="seg" id="homeseg" role="group" aria-label="Console view">
         <button data-h="leagues" aria-pressed="true">Leagues</button>
         <button data-h="players" aria-pressed="false">My players</button>
+        <button data-h="today" aria-pressed="false">Today</button>
+        <button data-h="analysis" aria-pressed="false">Analysis</button>
         <button data-h="news" aria-pressed="false">Headlines</button>
       </div>
       <div class="seg" id="viewseg" hidden role="group" aria-label="View">
@@ -852,6 +976,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   <div class="lgrid" id="lgrid"></div>
   <div class="rfilters" id="whenfilters" hidden></div>
   <div class="feedwrap" id="feedwrap" hidden></div>
+  <div class="an-grid" id="angrid" hidden></div>
   <div class="teampick" id="teampick" hidden>
     <span class="tp-k" id="tp-label">Your team</span>
     <select id="tp-select" aria-label="Which team is yours"></select>
@@ -889,13 +1014,30 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     <span class="key">cell area = leverage share</span>
     <span class="key">left spine = that share, drawn</span>
   </div>
-  <p class="caveat"><b>Caveat.</b> Leverage is
-  <span style="font-family:var(--mono)">φ(m/s)·σᵢ/s</span> — the sensitivity of win
-  probability to one player's remaining uncertainty. The same model sizes a league on
-  the parent board and a player inside it. It assumes per-player outcomes are
-  independent and normally distributed, which a QB and his own WR1 plainly are not, so
-  a stacked pair is overweighted. Position variances are league-average, not
-  player-specific. Read cell size as where to look, not as a projection.</p>
+  <div class="explain">
+    <p class="ex-lead"><b>Bigger cell, bigger swing.</b> A player still has room on
+    this board while he can move your week — plenty of game left, in a matchup that
+    is still close. Blowouts and finished games shrink away on their own.</p>
+    <details class="ex-more">
+      <summary>How the sizing is worked out</summary>
+      <div class="ex-body">
+        <p>Each cell is scored on how much your win probability would move if that
+        player's afternoon went differently — his remaining uncertainty, weighted by
+        how close the matchup still is.</p>
+        <p class="ex-math">leverage = φ(m ÷ s) × σᵢ ÷ s</p>
+        <p>where <b>m</b> is your expected final margin, <b>s</b> is how uncertain
+        that margin is, and <b>σᵢ</b> is how much is still unknown about this player.
+        The same model sizes a whole league on the front board.</p>
+        <p class="ex-warn"><b>Two things it gets wrong.</b> It treats players as
+        independent, so a quarterback and his own top receiver are counted twice over
+        — a stack looks more important than it is. And it uses an average spread for
+        each position rather than each player's own, so a steady runner and a
+        boom-or-bust one are treated alike.</p>
+        <p class="ex-warn">Read cell size as <b>where to look</b>, never as a
+        prediction.</p>
+      </div>
+    </details>
+  </div>
 </div>
 
 <div class="veil" id="veil" hidden>
@@ -1043,9 +1185,25 @@ function pushPrefs(patch){
 }
 
 (function seedFromMirror(){
-  if(Object.keys(PREFS.teams).length||PREFS.hidden.length||PREFS.order.length)return;
-  try{const m=JSON.parse(localStorage.getItem("fe.prefs")||"null");
-      if(m)Object.assign(PREFS,m);}catch(_){}
+  // The server is the source of truth, but a published page has no server and
+  // a fresh install has no file. Where the server has nothing and the browser
+  // remembers something, adopt it - and push it back, so the two converge
+  // instead of the mirror silently carrying the whole thing forever.
+  let mirror=null;
+  try{mirror=JSON.parse(localStorage.getItem("fe.prefs")||"null");}catch(_){}
+  if(!mirror)return;
+  const serverHasNothing=!Object.keys(PREFS.teams).length
+    &&!PREFS.hidden.length&&!PREFS.order.length;
+  if(serverHasNothing){
+    Object.assign(PREFS,mirror);
+    if(location.protocol.startsWith("http"))
+      fetch("/api/prefs",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(PREFS)}).catch(()=>{});
+    return;}
+  // Otherwise fill only the gaps: a team chosen on another device should not
+  // be wiped by a browser that never heard about it.
+  for(const [k,v] of Object.entries(mirror.teams||{}))
+    if(!PREFS.teams[k])PREFS.teams[k]=v;
 })();
 
 function savedTeam(L){
@@ -1091,7 +1249,7 @@ const uniq=new Map();
 for(const c of allPlayers) if(!uniq.has(c.id)) uniq.set(c.id,c);
 const sim=buildSim([...uniq.values()]);
 let bands={},focusIdx=0,surface="web",openLeague=null,showImg=true;
-const nf=n=>n.toFixed(1);
+const nf=n=>(Number.isFinite(+n)?+n:0).toFixed(1);
 const initials=n=>(n||"").split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
 const src=p=>IMAGES["p_"+p.id]||p.img||"";
 const logoSrc=p=>IMAGES["t_"+p.team]||p.logo||"";
@@ -1217,12 +1375,19 @@ function renderWhenFilters(rows){
 
 $("whenfilters").addEventListener("click",e=>{
   const b=e.target.closest("[data-when]");if(!b||b.disabled)return;
-  whenFilter=b.dataset.when;renderPlayersFeed();});
+  whenFilter=b.dataset.when;renderPlayersFeed(true);});
 
-function renderPlayersFeed(){
+let feedKey="";
+function renderPlayersFeed(force){
   const box=$("feedwrap");
   const all=playerRows();
   const eff=renderWhenFilters(all);
+  // Rebuilding an untouched list every tick is how a row stops being
+  // clickable: the node under the pointer is replaced mid-press.
+  const sig=eff+"|"+whenFilter+"|"+all.map(p=>
+    p.id+":"+p.scored+":"+p.state).join(",");
+  if(!force&&sig===feedKey)return;
+  feedKey=sig;
   let rows=eff==="now"?all.filter(p=>p.live||p.rz)
          :eff==="today"?all.filter(p=>p.today):all;
   rows.sort((a,b)=>a.rank-b.rank
@@ -1255,10 +1420,10 @@ $("feedwrap").addEventListener("click",e=>{
   // the card wants a league for its what-if; use one this player actually starts in
   const lg=leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid&&r.started))
         || leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid));
-  if(lg){openLeague=lg.id;
-    const cell=(lg.cells||[]).find(c=>String(c.id)===pid)
-          ||(lg.roster||[]).find(c=>String(c.id)===pid);
-    if(cell){openCard(cell);openLeague=null;return;}}
+  if(!lg)return;
+  const cell=(lg.cells||[]).find(c=>String(c.id)===pid)
+        ||(lg.roster||[]).find(c=>String(c.id)===pid);
+  if(cell)openCard(cell,lg.id);
 });
 
 function newsByStory(){
@@ -1286,12 +1451,112 @@ function renderNewsFeed(){
       `<div class="st-when">${AGO(st.published)}</div></a>`;}).join("")
     || '<div class="rempty">No stories today name a player you roster.</div>';}
 
+const RANKS=(DATA.rankings&&DATA.rankings.players)||[];
+const RANK_CLUBS=(DATA.rankings&&DATA.rankings.clubs)||[];
+let todayPos="ALL";
+
+function renderToday(){
+  const box=$("feedwrap");
+  const rows=RANKS.filter(p=>todayPos==="ALL"||p.pos===todayPos);
+  const chips=["ALL","QB","RB","WR","TE","K","DEF"].map(k=>
+    `<button class="chip" data-tp="${k}" aria-pressed="${k===todayPos}">`+
+    `${k==="DEF"?"D/ST":k}</button>`).join("");
+  $("whenfilters").hidden=false;
+  $("whenfilters").innerHTML=chips;
+  box.innerHTML=
+    `<div class="rk-window">${RANK_CLUBS.join(" · ")||"no games in this window"}`+
+    ` — ${rows.length} ranked</div>`+
+    '<div class="rtable">'+
+    '<div class="rank-row head"><span>#</span><span></span><span>Player</span>'+
+    '<span>Team</span><span>Last season</span><span class="rk-num">Proj</span>'+
+    '<span class="rk-num">Actual</span></div>'+
+    rows.map(p=>{
+      const last=p.lastRank?`${p.pos}${p.lastRank} · ${nf(p.lastPpg)} ppg`:"—";
+      const own=p.owned.length?`<span class="rk-own">MINE</span>`:"";
+      return `<button class="rank-row ${p.owned.length?"owned":""}" data-pid="${p.id}">`+
+        `<span class="rk-n">${p.rank}</span>`+
+        `<span>${faceHTML(p)}</span>`+
+        `<span class="rk-nm">${p.name}${own}</span>`+
+        `<span class="rk-last">${p.pos} · ${p.team}</span>`+
+        `<span class="rk-last">${last}</span>`+
+        `<span class="rk-num dim">${nf(p.projected)}</span>`+
+        `<span class="rk-num rk-act">${nf(p.scored)}</span></button>`;}).join("")+
+    "</div>";}
+
+$("whenfilters").addEventListener("click",e=>{
+  const b=e.target.closest("[data-tp]");if(!b)return;
+  todayPos=b.dataset.tp;renderToday();});
+
+const ANALYSES=DATA.analyses||{};
+
+/* ── the analyses, drawn ───────────────────────────────────────────────
+   Four of the nine are magnitudes or polarities and belong in bars; the rest
+   are prose or tables and stay that way rather than being forced into a shape
+   that flatters them. Every bar carries its number, so nothing rests on
+   colour alone - which matters here because the obvious green/red pairing is
+   not colourblind-safe, and the pair actually used is teal against orange. */
+const AN_SPECS=[
+  {key:"bench",   label:"Points left on the bench", unit:"%", diverging:false,
+   col:-1, hint:"Higher is worse: the share of available points that stayed on the bench."},
+  {key:"luck",    label:"Schedule luck", unit:"", diverging:true,
+   col:-1, hint:"Points of win rate above or below an all-play record."},
+  {key:"waiver",  label:"Waiver and free-agent ROI", unit:"%", diverging:false,
+   col:-1, hint:"Share of started points from players they did not draft."},
+  {key:"phase",   label:"Championship weeks vs regular season", unit:"", diverging:true,
+   col:-1, hint:"Points per week more (or fewer) in weeks 15 and later."},
+];
+
+function myTeamNames(){
+  const out=new Set();
+  for(const L of leagues) if(L.you&&L.you.name)out.add(L.you.name.trim());
+  return out;}
+
+function renderAnalysis(){
+  const box=$("angrid");
+  const L=leagues.find(x=>x.id===(analysisLeague||leagues[0]&&leagues[0].id));
+  if(!L){box.innerHTML='<div class="pc-none">No league loaded.</div>';return;}
+  const set=ANALYSES[L.id]||[];
+  const mine=myTeamNames();
+  const cards=AN_SPECS.map(spec=>{
+    const a=set.find(x=>x.key===spec.key);
+    if(!a||a.empty)return "";
+    const rows=a.rows.map(r=>({name:String(r[0]),
+      value:Number(r[r.length+spec.col])||0}));
+    const mx=Math.max(...rows.map(r=>Math.abs(r.value)),1);
+    const body=rows.slice(0,12).map(r=>{
+      const me=mine.has(r.name.trim());
+      const pct=(Math.abs(r.value)/mx)*100;
+      const neg=r.value<0;
+      const fill=spec.diverging
+        ? `<span class="an-fill ${neg?"neg":""}" style="`+
+          `left:${neg?50-pct/2:50}%;width:${pct/2}%"></span>`+
+          '<span class="an-zero" style="left:50%"></span>'
+        : `<span class="an-fill" style="left:0;width:${pct}%"></span>`;
+      return `<div class="an-row ${me?"me":""}" title="${r.name}: `+
+        `${r.value}${spec.unit}">`+
+        `<span class="an-lab">${r.name}</span>`+
+        `<span class="an-val">${r.value}${spec.unit}</span>`+
+        `<span class="an-track">${fill}</span></div>`;}).join("");
+    const key=spec.diverging
+      ? '<div class="an-key"><span><i style="background:var(--pos)"></i>above</span>'+
+        '<span><i style="background:var(--neg)"></i>below</span></div>' : "";
+    return `<div class="an-card"><div class="an-h">${spec.label}</div>`+
+      `<div class="an-sub">${a.headline||spec.hint}</div>`+
+      `<div class="an-rows">${body}</div>${key}`+
+      `<div class="an-cav">${a.caveat}</div></div>`;}).join("");
+  box.innerHTML=cards||'<div class="pc-none">Nothing to analyse yet.</div>';}
+
+let analysisLeague=null;
+
 function showHome(){
   const isL=home==="leagues";
   lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hurt").hidden=!isL||!HURT.length;
-  $("whenfilters").hidden=home!=="players";$("hidden").hidden=!isL||!hiddenIds().length;
-  $("feedwrap").hidden=isL;
-  if(home==="players")renderPlayersFeed();
+  $("whenfilters").hidden=!(home==="players"||home==="today");$("hidden").hidden=!isL||!hiddenIds().length;
+  $("feedwrap").hidden=isL||home==="analysis";
+  $("angrid").hidden=home!=="analysis";
+  if(home==="players")renderPlayersFeed(true);
+  else if(home==="today")renderToday();
+  else if(home==="analysis"){renderAnalysis();}
   else if(home==="news")renderNewsFeed();
   else draw(clockMinute());}
 
@@ -1432,15 +1697,14 @@ $("hurt").addEventListener("click",e=>{
   const lg=leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid&&r.started))
         || leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid));
   if(!lg)return;
-  openLeague=lg.id;
   const cell=(lg.cells||[]).find(c=>String(c.id)===pid)
         ||(lg.roster||[]).find(c=>String(c.id)===pid);
-  if(cell){openCard(cell);openLeague=null;}
+  if(cell)openCard(cell,lg.id);
 });
 
 function renderDaybar(evals){
   const box=$("daybar");
-  if(!evals.length){box.hidden=true;$("hurt").hidden=true;return;}
+  if(!evals.length||home!=="leagues"){box.hidden=true;$("hurt").hidden=true;return;}
   box.hidden=false;
   let ahead=0,proj=0,toPlay=0,playing=0,done=0,unset=0,byes=0;
   let nextKick=null;
@@ -1694,8 +1958,10 @@ function renderLeague(minute,statsOnly){
     for(const el of grid.children){
       const old=before.get(el.dataset.id);if(!old)continue;
       const now=el.getBoundingClientRect();
+      if(!now.width||!now.height||!old.width||!old.height)continue;  // hidden: no FLIP
       const dx=old.left-now.left,dy=old.top-now.top;
       const sx=old.width/now.width,sy=old.height/now.height;
+      if(![dx,dy,sx,sy].every(Number.isFinite))continue;
       if(Math.abs(dx)<1&&Math.abs(dy)<1&&Math.abs(sx-1)<.01&&Math.abs(sy-1)<.01)continue;
       el.animate([{transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},
                   {transform:el.style.transform||"none"}],
@@ -1723,11 +1989,24 @@ function renderLeague(minute,statsOnly){
    client: it re-runs the same evaluate() against a hypothetical stat line
    and reports the real win probability, with no server involved. */
 let cardCell=null;
+/* The card needs to know which league it is reasoning about, and that is not
+   always the league you are looking at - a row in "My players" belongs to
+   whichever of your leagues actually starts him. Borrowing `openLeague` for
+   this and setting it back to null a line later left the card unable to find
+   its own league, and started the board redrawing behind an open card. */
+let cardLeague=null;
 const veil=$("veil"),pcard=$("pcard");
 
-function openCard(c){
+function openCard(c,leagueId){
+  if(!c)return;
+  cardLeague=leagueId||openLeague||null;
+  // Rows in the players feed, the injury desk and the profile index are not
+  // the same objects the board holds, and some never went through applyLive.
+  // Fill the live fields before anything tries to format them.
+  for(const [k,v] of [["scored",0],["projected",0],["remaining",1],["state","PRE"]])
+    if(c[k]===undefined||c[k]===null)c[k]=v;
   cardCell=c;
-  const L=leagues.find(x=>x.id===openLeague);if(!L)return;
+  const L=leagues.find(x=>x.id===cardLeague);if(!L)return;
   pcard.style.setProperty("--tc",c.color||"#666");
   pcard.classList.toggle("rz",c.state==="RZ");
   const shot=$("pcshot"),logo=$("pclogo"),u=src(c),lg=logoSrc(c);
@@ -1749,7 +2028,7 @@ function openCard(c){
   refreshCard();
   $("pcclose").focus();
 }
-function closeCard(){veil.hidden=true;cardCell=null;}
+function closeCard(){veil.hidden=true;cardCell=null;cardLeague=null;}
 
 const PROFILES=DATA.profiles||{};
 
@@ -1790,9 +2069,16 @@ function renderDeep(c){
           `<td>${nf(sn.best)}</td></tr>`;}).join("")+"</tbody></table>";
     if(latest&&latest.weekly&&latest.weekly.length>1){
       const mx=Math.max(...latest.weekly,1);
-      html+=`<div class="pc-sec">${latest.season} week by week</div><div class="spark">`+
-        latest.weekly.map(v=>`<i class="${v>=mx*0.8?"hi":""}" `+
-          `style="height:${Math.max(3,(v/mx)*100)}%" title="${v}"></i>`).join("")+"</div>";}
+      const avg=latest.weekly.reduce((a,b)=>a+b,0)/latest.weekly.length;
+      html+=`<div class="pc-sec">${latest.season} week by week — tap a week</div>`+
+        '<div class="spark" id="pcspark">'+
+        latest.weekly.map((v,i)=>
+          `<button class="${v>=mx*0.8?"hi":""}" data-wk="${i+1}" data-v="${v}" `+
+          `data-avg="${avg.toFixed(1)}" style="height:${Math.max(4,(v/mx)*100)}%" `+
+          `aria-label="Week ${i+1}: ${v} points"></button>`).join("")+"</div>"+
+        `<div class="spark-read" id="pcsparkread">`+
+        `<b>${nf(avg)}</b><span>avg</span>`+
+        `<span class="sr-ctx">${latest.weekly.length} weeks · best ${nf(mx)}</span></div>`;}
   } else {
     html+='<div class="pc-none">No scored season on file yet.</div>';}
 
@@ -1807,11 +2093,36 @@ function renderDeep(c){
           `<span class="size-tag">${d.teams||"?"}TM</span></span>`+
           `<span class="d-pk">R${d.round} P${d.overall}</span>${rc}</div>`;}).join("")+
       "</div>";}
-  box.innerHTML=html;}
+  box.innerHTML=html;
+  // Tap, click, arrow or focus - the bar reports the exact week rather than
+  // hiding it in a native tooltip nobody can reach on a touchscreen.
+  const spark=$("pcspark"),read=$("pcsparkread");
+  if(spark&&read){
+    const show=b=>{
+      spark.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+      b.classList.add("sel");
+      const v=+b.dataset.v,avg=+b.dataset.avg;
+      const d=v-avg, sign=d>=0?"+":"";
+      read.innerHTML=`<b>${nf(v)}</b><span>pts · week ${b.dataset.wk}</span>`+
+        `<span class="sr-ctx">${sign}${nf(d)} vs his ${nf(avg)} average</span>`;};
+    const reset=()=>{
+      spark.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+      const n=spark.children.length,avg=spark.children[0].dataset.avg;
+      const mx=Math.max(...[...spark.children].map(x=>+x.dataset.v));
+      read.innerHTML=`<b>${nf(avg)}</b><span>avg</span>`+
+        `<span class="sr-ctx">${n} weeks · best ${nf(mx)}</span>`;};
+    spark.addEventListener("pointerdown",e=>{
+      const b=e.target.closest("button");if(b)show(b);});
+    spark.addEventListener("pointerover",e=>{
+      const b=e.target.closest("button");if(b)show(b);});
+    spark.addEventListener("focusin",e=>{
+      const b=e.target.closest("button");if(b)show(b);});
+    spark.addEventListener("pointerleave",reset);
+  }}
 
 function refreshCard(){
   const c=cardCell;if(!c)return;
-  const L=leagues.find(x=>x.id===openLeague);if(!L)return;
+  const L=leagues.find(x=>x.id===cardLeague);if(!L)return;
   setText($("pcpts"),nf(c.scored));
   setText($("pcstate"),c.state==="RZ"?"Red zone":c.state);
   const left=Math.max(0,c.projected-c.scored)*c.remaining;
@@ -2165,11 +2476,24 @@ const cellById=id=>{
   return L.cells.find(c=>c.id===id)||L.roster.find(c=>c.id===id)||null;};
 
 function draw(minute){
-  if(!openLeague){renderLeagues(minute);}
+  if(!openLeague){
+    // Only the tab you are actually on gets drawn. This used to render the
+    // leagues board on every tick no matter where you were, which quietly
+    // un-hid the day bar, the insight strip and the injury desk on top of the
+    // players feed - and rebuilt the DOM under your cursor twice a second,
+    // which is what made clicks feel dead.
+    if(home==="leagues")renderLeagues(minute);
+    else if(home==="players")renderPlayersFeed();
+    // headlines are static; nothing to redraw
+  }
   else if(view==="rank"){renderLeague(minute,true);renderPicker(
     leagues.find(x=>x.id===openLeague));renderRank();}
   else{renderLeague(minute);}
-  if(!veil.hidden)refreshCard();       // the card is live too
+  if(!veil.hidden){
+    // A card that cannot render is a broken card; it is not a reason to stop
+    // updating the board behind it.
+    try{refreshCard();}catch(err){console.error("card refresh failed",err);}
+  }
 }
 
 function openLeagueView(id){
@@ -2180,7 +2504,7 @@ function openLeagueView(id){
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
   $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
   $("hurt").hidden=true;
-  $("whenfilters").hidden=true;
+  $("whenfilters").hidden=true;$("angrid").hidden=true;
   $("homeseg").hidden=true;
   $("back").hidden=false;$("viewseg").hidden=false;
   lgrid.hidden=true;
@@ -2197,7 +2521,7 @@ function backToLeagues(){
   home="leagues";
   $("homeseg").querySelectorAll("[data-h]").forEach(o=>
     o.setAttribute("aria-pressed",String(o.dataset.h==="leagues")));
-  $("feedwrap").hidden=true;$("whenfilters").hidden=true;
+  $("feedwrap").hidden=true;$("whenfilters").hidden=true;$("angrid").hidden=true;
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);

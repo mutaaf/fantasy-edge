@@ -360,6 +360,15 @@ class Api:
                     for pl in (self.players().get("players") or [])}
             except Exception:
                 data["profiles"] = {}
+            # The nine analyses, per league. They have existed since the first
+            # commit and the console has never shown them, which is the widest
+            # gap between what this project knows and what it says out loud.
+            try:
+                data["analyses"] = {
+                    L["id"]: self.analyses(L["provider"], L["leagueId"])["analyses"]
+                    for L in data["leagues"]}
+            except Exception:
+                data["analyses"] = {}
             for key, fn in (("players", self.players), ("headlines", self.headlines),
                             ("injuries", self.injuries), ("rankings", self.rankings)):
                 try:
