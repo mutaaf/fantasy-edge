@@ -918,7 +918,7 @@ class TestEspnLiveSource(unittest.TestCase):
         stay that way or the payload stops being cacheable for everyone."""
         snap = self.source().snapshot()
         self.assertEqual(set(snap), {"asOf", "window", "source", "games",
-                                     "players", "version", "scored"})
+                                     "players", "version", "scored", "error"})
         for v in snap["players"].values():
             self.assertEqual(set(v), {"s", "r", "g"})
 
@@ -1155,3 +1155,50 @@ class TestDefensiveStatSources(unittest.TestCase):
         out = scoring.parse_team_defence(summary)
         self.assertEqual(out["KC"]["interceptions"], 1.0,
                          "only the pick the defence actually caught")
+
+
+class TestRealFetchPathExists(unittest.TestCase):
+    """`_get_json` was called but never defined in live.py, and the broad
+    except around it turned that NameError into "espn-unavailable" - a typo
+    wearing the costume of a blocked endpoint for a whole day. These assert the
+    network path is at least wired, without touching the network."""
+
+    def test_the_fetch_helper_exists_and_is_callable(self):
+        from fantasyedge import live
+
+        self.assertTrue(callable(getattr(live, "_get_json", None)))
+        self.assertTrue(callable(getattr(live, "scoreboard_url", None)))
+        self.assertTrue(callable(getattr(live, "summary_url", None)))
+
+    def test_urls_point_at_the_unblocked_host(self):
+        from fantasyedge import live
+
+        self.assertIn("site.web.api.espn.com", live.scoreboard_url())
+        self.assertIn("summary?event=99", live.summary_url("99"))
+
+    def test_an_api_key_is_appended_with_the_right_separator(self):
+        import os
+
+        from fantasyedge import live
+
+        old = os.environ.get("ESPN_API_KEY")
+        os.environ["ESPN_API_KEY"] = "k e y"
+        try:
+            self.assertTrue(live.with_key("https://x/a").endswith("/a?apikey=k%20e%20y"))
+            self.assertTrue(live.with_key("https://x/a?b=1").endswith("&apikey=k%20e%20y"))
+        finally:
+            if old is None:
+                del os.environ["ESPN_API_KEY"]
+            else:
+                os.environ["ESPN_API_KEY"] = old
+
+    def test_a_failure_reason_is_reported_not_swallowed(self):
+        from fantasyedge.live import EspnLiveSource
+
+        def boom(url):
+            raise RuntimeError("kaboom")
+
+        snap = EspnLiveSource([{"player_id": "1", "team": "KC"}],
+                              http=boom).snapshot()
+        self.assertEqual(snap["source"], "espn-unavailable")
+        self.assertIn("kaboom", snap["error"])

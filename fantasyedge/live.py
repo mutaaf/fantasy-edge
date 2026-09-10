@@ -35,6 +35,8 @@ import os
 import pathlib
 import random
 import time
+import urllib.parse
+import urllib.request
 from abc import ABC, abstractmethod
 
 # A compressed Sunday: kickoff offsets and length, in simulated minutes.
@@ -87,6 +89,41 @@ def headshot_url(player_id: str, team: str = "") -> str:
 def logo_url(team: str) -> str:
     ab = (team or "").lower()
     return f"https://a.espncdn.com/i/teamlogos/nfl/500/{ab}.png" if ab and ab != "fa" else ""
+
+
+UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/140.0 Safari/537.36")
+
+
+def _get_json(url: str, timeout: int = 20) -> dict:
+    """Fetch and decode. Sends the headers a browser would, because the edge
+    in front of these endpoints is choosier about a bare urllib request than
+    about one that looks like espn.com asking."""
+    req = urllib.request.Request(url, headers={
+        "User-Agent": UA,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.espn.com/",
+    })
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+
+def with_key(url: str) -> str:
+    """Append ESPN_API_KEY as `apikey` if one is in the environment.
+
+    The public endpoints answer without a key right up until Akamai decides an
+    address is a robot, at which point everything from that IP is 403 regardless
+    of what it asks for. A key identifies the caller instead of leaving it to be
+    guessed at.
+
+    It is read from the environment and never written down, for the same reason
+    ESPN_S2 is not: it is a credential, and this repository does not keep those.
+    """
+    key = os.environ.get("ESPN_API_KEY")
+    if not key:
+        return url
+    return url + ("&" if "?" in url else "?") + "apikey=" + urllib.parse.quote(key, safe="")
 
 
 def _num_score(raw) -> float:
@@ -207,10 +244,23 @@ class SimulatedSource(LiveSource):
         return payload
 
 
-SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl"
-              "/scoreboard{q}")
-SUMMARY = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl"
-           "/summary?event={event}")
+# site.web.api serves the identical API to site.api, and is not behind the same
+# Akamai bot rules - site.api started returning 403 to this address after a
+# handful of unauthenticated polls and never relented. Same paths, same shapes,
+# so this is a host swap rather than a rewrite. ESPN_API_HOST overrides it if
+# the block ever moves.
+API_HOST = os.environ.get("ESPN_API_HOST", "site.web.api.espn.com")
+BASE = "https://{host}/apis/site/v2/sports/football/nfl"
+SCOREBOARD = BASE + "/scoreboard{q}"
+SUMMARY = BASE + "/summary?event={event}"
+
+
+def scoreboard_url(q: str = "") -> str:
+    return SCOREBOARD.format(host=API_HOST, q=q)
+
+
+def summary_url(event: str) -> str:
+    return SUMMARY.format(host=API_HOST, event=event)
 GAME_LENGTH_MIN = 60.0          # four quarters of game clock
 
 
@@ -242,6 +292,7 @@ class EspnLiveSource(LiveSource):
         self._cache: dict | None = None
         self._at = 0.0
         self._fail_until = 0.0
+        self.last_error = ""
         self._boxes: dict[str, tuple[float, dict]] = {}
         if scoring is None:
             from .scoring import Scoring
@@ -273,7 +324,7 @@ class EspnLiveSource(LiveSource):
             path = os.environ.get("FANTASYEDGE_SCOREBOARD_FILE")
             if path:
                 return json.loads(pathlib.Path(path).read_text())
-        return _get_json(url)
+        return _get_json(with_key(url))
 
     def scoreboard(self) -> dict:
         """The raw slate, cached. A 403 backs off rather than retrying hot."""
@@ -283,10 +334,14 @@ class EspnLiveSource(LiveSource):
         if now < self._fail_until:
             return self._cache or {"events": []}
         try:
-            data = self._fetch(SCOREBOARD.format(q=""))
+            data = self._fetch(scoreboard_url())
             self._cache, self._at, self._fail_until = data, now, 0.0
-        except Exception:
-            # Back off hard: the edge blocks an IP that keeps knocking.
+        except Exception as exc:
+            # Back off hard: the edge blocks an IP that keeps knocking. Record
+            # *why* - a swallowed NameError in this module read as "ESPN is
+            # blocking us" for a whole day, which is a very expensive way to
+            # hide a typo.
+            self.last_error = f"{type(exc).__name__}: {exc}"
             self._fail_until = now + 120.0
             if self._cache is None:
                 self._cache, self._at = {"events": []}, now
@@ -331,7 +386,7 @@ class EspnLiveSource(LiveSource):
             fresh = hit and (state == "post" or now - hit[0] < self.box_ttl)
             if not fresh:
                 try:
-                    data = self._fetch(SUMMARY.format(event=event))
+                    data = self._fetch(summary_url(event))
                     hit = (now, score_boxscore(data, self.scoring),
                            parse_team_defence(data))
                 except Exception:
@@ -422,6 +477,7 @@ class EspnLiveSource(LiveSource):
             "asOf": 0.0,
             "window": (sb.get("week") or {}).get("number", 0),
             "source": "espn" if ok else "espn-unavailable",
+            "error": self.last_error,
             "scored": len(pts) + len(dst),
             "games": g,
             "players": players,

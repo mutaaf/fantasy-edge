@@ -48,6 +48,7 @@ ROUTES = [
     ["GET", "/api/mosaic/{provider}/{id}", "static half of one league's board"],
     ["GET", "/api/live", "shared game state - identical for every user"],
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
+    ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
@@ -334,7 +335,8 @@ class Api:
             # Inlined so the page is whole on first paint and still whole when
             # published somewhere with no API behind it.
             data["prefs"] = self.prefs()
-            for key, fn in (("players", self.players), ("headlines", self.headlines)):
+            for key, fn in (("players", self.players), ("headlines", self.headlines),
+                            ("injuries", self.injuries)):
                 try:
                     data[key] = fn()
                 except Exception:
@@ -534,6 +536,23 @@ class Api:
         from . import prefs as pf
         return pf.save(pf.merge(pf.load(), patch))
 
+    def injuries(self) -> dict:
+        """Injuries to players in one of your starting line-ups.
+
+        Built on the same tagged wire the headlines view uses, so it costs no
+        extra fetch: the expensive part is matching names, and that has already
+        happened by the time this runs.
+        """
+        from . import injuries as inj
+
+        def build():
+            stories = self.headlines().get("stories") or []
+            hurt = inj.detect(self.store(), stories)
+            return {"injuries": hurt, "count": len(hurt),
+                    "worst": hurt[0]["label"] if hurt else None}
+
+        return self.cached(("injuries",), build)
+
     def players(self) -> dict:
         """Every player you roster, across every league you follow.
 
@@ -582,6 +601,8 @@ class Api:
             return self.live(), LIVE
         if rest == ["headlines"]:
             return self.headlines(), DERIVED
+        if rest == ["injuries"]:
+            return self.injuries(), DERIVED
         if rest == ["players"]:
             return self.players(), CONFIG
         if rest == ["prefs"]:

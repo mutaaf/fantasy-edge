@@ -677,6 +677,46 @@ body{padding-bottom:46px}
 .ins-t{font-size:14.5px;line-height:1.5;color:var(--ink)}
 .ins-t b{color:var(--you);font-weight:700}
 
+
+/* ── the injury desk ───────────────────────────────────────
+   The one thing on this console that should be able to interrupt you. It gets
+   the red, the top of the page, and the only animation that plays on its own. */
+.hurt{grid-column:1/-1;display:grid;gap:10px;margin-top:2px}
+.hurt[hidden]{display:none!important}
+.hurt-item{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:16px;
+  align-items:center;background:linear-gradient(100deg,rgba(213,10,10,.24),
+    rgba(213,10,10,.07) 46%,transparent);
+  border:1px solid rgba(255,60,60,.45);border-radius:18px;padding:14px 18px;
+  box-shadow:0 0 34px rgba(213,10,10,.18),0 1px 0 rgba(255,255,255,.06) inset;
+  width:100%;text-align:left;font-family:inherit;color:inherit;cursor:pointer;
+  transition:.22s var(--ease)}
+.hurt-item:hover{border-color:rgba(255,80,80,.75);transform:translateY(-2px)}
+.hurt-item .r-face{width:56px;height:56px;border-color:rgba(255,80,80,.6)}
+.hurt-badge{font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;background:var(--espn);color:#fff;padding:3px 10px;
+  border-radius:var(--r-chip);flex:none;
+  animation:hurtpulse 2.4s var(--ease) infinite}
+@keyframes hurtpulse{0%,100%{opacity:1}50%{opacity:.55}}
+.hurt-who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hurt-name{font-size:19px;font-weight:800;letter-spacing:-.024em}
+.hurt-head{font-size:13.5px;color:var(--ink-dim);margin-top:5px;line-height:1.4}
+.hurt-roast{font-size:13.5px;color:var(--ink);margin-top:7px;line-height:1.5;
+  border-left:2px solid var(--espn);padding-left:11px}
+.hurt-cost{text-align:right;flex:none}
+.hurt-cost .c-v{font-size:26px;font-weight:800;letter-spacing:-.03em;
+  color:var(--espn);font-variant-numeric:tabular-nums}
+.hurt-cost .c-k{font-family:var(--cond);font-size:10px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+/* the same red wherever that player turns up */
+.tile.hurt-tile{border-color:rgba(255,60,60,.6);
+  box-shadow:0 0 0 1px rgba(255,60,60,.4),0 0 34px rgba(213,10,10,.22)}
+.st-hurt{background:var(--espn);color:#fff;font-family:var(--cond);font-size:10px;
+  font-weight:800;letter-spacing:.12em;padding:2px 7px;border-radius:var(--r-chip);
+  margin-left:7px}
+body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
+@media (max-width:900px){.hurt-item{grid-template-columns:44px minmax(0,1fr)}
+  .hurt-cost{display:none}}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -730,6 +770,7 @@ body{padding-bottom:46px}
     <span id="clock">pre-game</span><span id="intensity"></span><span id="src">simulated feed</span>
   </div>
 
+  <div class="hurt" id="hurt" hidden></div>
   <div class="daybar" id="daybar" hidden></div>
   <div class="hidden-leagues" id="hidden" hidden></div>
   <div class="lgrid" id="lgrid"></div>
@@ -1118,7 +1159,10 @@ function renderPlayersFeed(){
       :p.final?"FINAL":(p.kickoff?KICK(p.kickoff):"—");
     return `<button class="story${p.rz?" rz":""}" data-pid="${p.id}">`+
       `<div>${faceHTML(p)}</div>`+
-      `<div><div class="st-h">${p.name}</div>`+
+      `<div><div class="st-h">${p.name}`+
+      (hurtIds.has(String(p.id))
+        ? `<span class="st-hurt">${hurtById[String(p.id)].label}</span>` : "")+
+      `</div>`+
       `<div class="st-m">${p.pos} · ${p.team} · ${when} · `+
       `<b>${nf(p.scored)}</b> of ${nf(p.projected)} proj`+
       ` · starting in ${p.starting} of ${n}</div></div>`+
@@ -1167,7 +1211,7 @@ function renderNewsFeed(){
 
 function showHome(){
   const isL=home==="leagues";
-  lgrid.hidden=!isL;$("daybar").hidden=!isL;
+  lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hurt").hidden=!isL||!HURT.length;
   $("whenfilters").hidden=home!=="players";$("hidden").hidden=!isL||!hiddenIds().length;
   $("feedwrap").hidden=isL;
   if(home==="players")renderPlayersFeed();
@@ -1187,9 +1231,12 @@ function renderTicker(){
   if(!NEWS.length){$("ticker").hidden=true;return;}
   try{if(localStorage.getItem("fe.ticker")==="0"){$("ticker").hidden=true;return;}}catch(_){}
   $("ticker").hidden=false;
-  const items=newsByStory().slice(0,18).map(st=>
+  const hurtItems=HURT.map(h=>
+    `<span class="tk-i"><span class="dot" style="background:var(--espn)"></span>`+
+    `<b>${h.label} · ${h.name}</b> ${h.headline}</span>`);
+  const items=hurtItems.concat(newsByStory().slice(0,18).map(st=>
     `<span class="tk-i"><span class="dot"></span>`+
-    `<b>${st.players.slice(0,2).join(" · ")}</b> ${st.headline}</span>`);
+    `<b>${st.players.slice(0,2).join(" · ")}</b> ${st.headline}</span>`));
   // duplicated so the -50% loop is seamless
   run.innerHTML=items.join("")+items.join("");
   run.style.setProperty("--tkdur",Math.max(40,items.length*7)+"s");}
@@ -1270,9 +1317,53 @@ function relevance(L,m){
     +m.intensity;
   return {score,reason,live,rz,soonest,done};}
 
+/* ── the injury desk ───────────────────────────────────────────────────
+   Everything in the roast is a number from the database - where he went, how
+   far ahead of the market that was, how many of your line-ups he is in. A joke
+   built on a real number lands; a generated one about a player nobody drafted
+   is just a machine amusing itself. */
+const HURT=(DATA.injuries&&DATA.injuries.injuries)||[];
+const hurtIds=new Set(HURT.map(h=>String(h.id)));
+const hurtById=Object.fromEntries(HURT.map(h=>[String(h.id),h]));
+
+function renderHurt(){
+  const box=$("hurt");
+  if(!HURT.length||home!=="leagues"){box.hidden=true;return;}
+  box.hidden=false;
+  const key=HURT.map(h=>h.id+h.severity).join("|");
+  if(box.dataset.k===key)return;
+  box.dataset.k=key;
+  box.innerHTML=HURT.map(h=>{
+    // the payload carries his portrait, because he is often not on the team
+    // currently selected and so not in the cross-league roster
+    const p=ALLP.find(x=>String(x.id)===String(h.id))||h;
+    return `<button class="hurt-item" data-pid="${h.id}">`+
+      `<div>${faceHTML(p)}</div>`+
+      `<div><div class="hurt-who"><span class="hurt-badge">${h.label}</span>`+
+        `<span class="hurt-name">${h.name}</span>`+
+        `<span class="st-m" style="margin:0">${h.pos}</span></div>`+
+        `<div class="hurt-head">${h.headline}</div>`+
+        `<div class="hurt-roast">${h.roast}</div></div>`+
+      `<div class="hurt-cost"><div class="c-v">-${nf(h.projected||0)}</div>`+
+        `<div class="c-k">projected, gone</div>`+
+        `<div class="c-k" style="margin-top:6px">${h.lineups} line-up`+
+        `${h.lineups===1?"":"s"}</div></div></button>`;}).join("");}
+
+$("hurt").addEventListener("click",e=>{
+  const row=e.target.closest("[data-pid]");if(!row)return;
+  const pid=row.dataset.pid;
+  const lg=leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid&&r.started))
+        || leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid));
+  if(!lg)return;
+  openLeague=lg.id;
+  const cell=(lg.cells||[]).find(c=>String(c.id)===pid)
+        ||(lg.roster||[]).find(c=>String(c.id)===pid);
+  if(cell){openCard(cell);openLeague=null;}
+});
+
 function renderDaybar(evals){
   const box=$("daybar");
-  if(!evals.length){box.hidden=true;return;}
+  if(!evals.length){box.hidden=true;$("hurt").hidden=true;return;}
   box.hidden=false;
   let ahead=0,proj=0,toPlay=0,playing=0,done=0,unset=0,byes=0;
   let nextKick=null;
@@ -1431,7 +1522,7 @@ function renderLeagues(minute){
   });
   reorder(lgrid,ordered);                // only if the order actually changed
   applySpatial(lgrid);
-  renderDaybar(evals);renderHidden();
+  renderDaybar(evals);renderHidden();renderHurt();
   const hot=evals[0];
   if(hot&&hot.m.cells.length){const a=hot.m.cells[0];
     const b=hot.m.cells.find(x=>x.side!==a.side)||a;
@@ -1513,6 +1604,7 @@ function renderLeague(minute,statsOnly){
     // brackets brighten with leverage; nothing here glows for its own sake
     el.style.setProperty("--hud",Math.min(1,c.share*7).toFixed(2));
     el.dataset.hot=c.share>0.075?"1":"0";
+    el.classList.toggle("hurt-tile",hurtIds.has(String(c.id)));
     if(!el.isConnected)grid.appendChild(el);});
   reorder(grid,ordered);
   applySpatial(grid);
@@ -1951,6 +2043,7 @@ function openLeagueView(id){
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
   $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
   $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
+  $("hurt").hidden=true;
   $("whenfilters").hidden=true;
   $("homeseg").hidden=true;
   $("back").hidden=false;$("viewseg").hidden=false;
