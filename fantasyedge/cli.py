@@ -141,6 +141,23 @@ def cmd_auth(args, cfg) -> None:
     if not auth.client_id:
         sys.exit(doc.EXIT_AUTH)
 
+    # --local runs the RFC 8252 loopback flow: bind 127.0.0.1 on a kernel-chosen
+    # port, open the browser, catch the redirect. It is opt-in rather than the
+    # default because it only works if the loopback URI is what is registered
+    # with the provider, and Yahoo's app form currently insists on https - so
+    # the copy-the-code path stays exactly as it was for everybody else.
+    if getattr(args, "local", False):
+        from . import oauth as oa
+        from . import tokens as tk
+
+        cfg_p = oa.get_provider_config("yahoo")
+        creds = oa.credentials_from_env(cfg_p)
+        tokens = oa.run_loopback_flow(cfg_p, creds)
+        path = tk.save_cli_tokens(tokens, "yahoo")
+        emit(args, {"saved": str(path), "scope": tokens.scope},
+             f"Saved to {path} (mode 600). Refresh is automatic from here.")
+        return
+
     # --url prints the authorize URL and exits. --code completes the exchange.
     # Neither blocks on stdin, so an agent can drive both halves and hand the
     # URL to a human in between. Interactive input is the fallback, not the path.
@@ -641,6 +658,9 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--provider", default="yahoo", choices=pbase.known_providers())
     a.add_argument("--url", action="store_true", help="print authorize URL and exit")
     a.add_argument("--code", help="authorization code, completes the exchange")
+    a.add_argument("--local", action="store_true",
+                   help="open a browser and catch the code on 127.0.0.1 "
+                        "(needs a loopback redirect URI registered with the provider)")
     jsonify(a); a.set_defaults(fn=cmd_auth)
 
     d = common(sub.add_parser("discover", help="list leagues and seasons"))
