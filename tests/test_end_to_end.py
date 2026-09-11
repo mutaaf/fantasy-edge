@@ -1883,3 +1883,96 @@ class TestAFinishedGameIsRefetchedOnce(unittest.TestCase):
         self.assertEqual(self.fetches, 2,
                          "a finished game was refetched; its numbers cannot "
                          "change again and re-asking is pure waste")
+
+
+class TestAWholeGameThroughTheStack(unittest.TestCase):
+    """Walk a real game minute by minute and assert what must never happen.
+
+    Every other test here pins one behaviour at one instant. This one replays
+    an actual game through the real live tier, the real scoring and the real
+    leverage model, and checks the properties that hold at every instant. It
+    is the test that would have caught the frozen-final-summary bug, and it is
+    the shape of test that finds the next one.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.board = json.loads((FIX / "replay_scoreboard.json").read_text())
+        cls.summary = json.loads((FIX / "replay_summary.json").read_text())
+
+    def players(self):
+        from fantasyedge.scoring import boxscore_names
+
+        men = [{"player_id": pid, "team": i["team"], "name": i["name"], "pos": "WR"}
+               for pid, i in boxscore_names(self.summary).items()]
+        # Both defences, because a defence is scored as a club rather than
+        # looked up as a person and takes an entirely different path.
+        men += [{"player_id": "-16026", "team": "SEA", "name": "Seahawks D/ST", "pos": "DEF"},
+                {"player_id": "-16017", "team": "NE", "name": "Patriots D/ST", "pos": "DEF"}]
+        return men
+
+    def walk(self):
+        """Yield a snapshot every hundred game seconds."""
+        from fantasyedge import replay
+        from fantasyedge.live import EspnLiveSource
+
+        men = self.players()
+        for t in range(0, 1600, 100):
+            b, s = replay.frame(self.board, self.summary, t)
+            src = EspnLiveSource(
+                men, http=lambda u, b=b, s=s: s if "summary?event=" in u else b)
+            yield t, src.snapshot()
+
+    def test_nothing_is_ever_nonsense(self):
+        import math
+
+        for t, snap in self.walk():
+            for pid, st in snap["players"].items():
+                self.assertIsNotNone(st["s"], f"t={t} {pid} scored None")
+                self.assertFalse(math.isnan(st["s"]), f"t={t} {pid} scored NaN")
+                self.assertGreaterEqual(st["r"], 0.0, f"t={t} {pid} remaining < 0")
+                self.assertLessEqual(st["r"], 1.0, f"t={t} {pid} remaining > 1")
+
+    def test_a_players_points_never_go_backwards(self):
+        """True of a person and deliberately not asserted of a defence.
+
+        A defence's score legitimately falls: it is paid for a shutout and
+        charged for what it concedes, so conceding is a real subtraction.
+        Asserting monotonicity over a D/ST would be asserting that football
+        does not work the way it does.
+        """
+        seen = {}
+        for t, snap in self.walk():
+            for pid, st in snap["players"].items():
+                if pid.startswith("-"):
+                    continue
+                if pid in seen and st["g"] != "PRE":
+                    self.assertGreaterEqual(
+                        st["s"] + 1e-9, seen[pid],
+                        f"t={t} {pid} lost points: {seen[pid]} -> {st['s']}")
+                seen[pid] = st["s"]
+
+    def test_the_clock_only_runs_forwards(self):
+        last = -1.0
+        for t, snap in self.walk():
+            played = max((g.get("played") or 0.0) for g in snap["games"].values())
+            self.assertGreaterEqual(played + 1e-9, last,
+                                    f"t={t} the game clock went backwards")
+            last = played
+
+    def test_the_model_stays_inside_its_own_definitions(self):
+        import math
+
+        from fantasyedge.leverage import Cell, evaluate
+
+        for t, snap in self.walk():
+            cells = [Cell(id=k, label=k, projected=10.0, scored=v["s"],
+                          remaining=v["r"], side="you" if i % 2 else "opp")
+                     for i, (k, v) in enumerate(snap["players"].items())]
+            m = evaluate(cells)
+            self.assertFalse(math.isnan(m.win_prob), f"t={t} win probability NaN")
+            self.assertGreaterEqual(m.win_prob, 0.0)
+            self.assertLessEqual(m.win_prob, 1.0)
+            self.assertIn(m.phase, ("pre", "live", "final"))
+            self.assertAlmostEqual(sum(c.share for c in m.cells), 1.0, places=6,
+                                   msg=f"t={t} tile shares do not fill the board")
