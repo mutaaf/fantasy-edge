@@ -241,6 +241,63 @@ never imports a provider — it reads normalized tables, which is why the same
 nine analyses work across every source, and why swapping in an official API
 touches exactly one file.
 
+## Replaying a real Sunday
+
+Every NFL game is either finished or has not kicked off. So possession, ball
+position, drives, play-by-play, win probability and a ramping scoreline — every
+part of the live tier worth looking at — are unexercisable on any ordinary day,
+and no amount of care in the parsers can be checked against anything.
+
+`replay` fixes that by rewinding one real game. It downloads a finished event
+once, then rewrites the two files `live.py` already reads — `FANTASYEDGE_
+SCOREBOARD_FILE` and `FANTASYEDGE_SUMMARY_DIR/{event}.json` — to show that game
+as of a moving point in its own clock. Nothing in the live tier changes and
+nothing is mocked at the API boundary, so a replay drives the real scoring, the
+real D/ST pairing, the real gamecast shaping and the real possession logic
+against ESPN's own payload shapes.
+
+```bash
+# Capture once and replay at 60x: a full game in a minute.
+python3 -m fantasyedge replay --game 401872656 --out data/replay --speed 60
+
+# In another shell, point any reader at the frames it is writing.
+FANTASYEDGE_SCOREBOARD_FILE=data/replay/scoreboard.json \
+FANTASYEDGE_SUMMARY_DIR=data/replay \
+python3 -m fantasyedge api --host 0.0.0.0
+```
+
+`--at 1800` writes a single frozen frame instead — halftime, every time, which
+is what a screenshot or a test wants. `--capture` re-downloads.
+
+`frame(scoreboard, summary, game_seconds)` is a pure function and is where the
+work happens: it cuts the plays at that instant, rebuilds the drive list with
+the one in progress as `current`, recomputes the status, score, line score and
+`situation` from the last play that had actually been snapped, and truncates
+win probability and scoring plays to match. Anything that had not happened is
+gone — including `winner`, which a finished competitor carries and which would
+otherwise draw a trophy on a game tied in the first quarter.
+
+### What a replay cannot do honestly
+
+**Player stats do not ramp.** The summary's `boxscore` is final-state only:
+ESPN publishes no per-play player stat line on that endpoint, so there is no
+truthful answer to "what did this receiver have after eleven minutes", and
+scaling the final line by elapsed fraction would invent numbers that look
+exactly like data. The box score is therefore served **as captured — final —
+from the first snap**, every frame carries a `replay` block saying so, and the
+CLI prints it on startup.
+
+Game state, score, drives, possession, red zone and win probability *are*
+time-correct. Per-player fantasy points are not.
+
+A per-play source does exist and is real: ESPN's core API serves
+`.../events/{e}/competitions/{e}/plays/{p}` with a `participants[]` list, and
+each participant has a `statistics` reference carrying that athlete's line
+*for that play*. Accumulating it would ramp the box score truthfully. It is not
+used here because it is roughly 800 requests per game to assemble — a separate
+feature with a separate rate-limit risk — and because the values are per-play
+rather than cumulative, so the summing would be ours rather than ESPN's.
+
 ## Live demo
 
 **[mutaaf.github.io/fantasy-edge](https://mutaaf.github.io/fantasy-edge/)** — the

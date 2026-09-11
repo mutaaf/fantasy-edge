@@ -413,6 +413,34 @@ def cmd_api(args, cfg) -> None:
     apisrv.run(db=args.db, host=args.host, port=args.port)
 
 
+def cmd_replay(args, cfg) -> None:
+    """Replay a finished game through the real live tier.
+
+    Writes the two files `live.EspnLiveSource._fetch` already reads, so the
+    board and the API see a game in progress without a line of the live tier
+    changing. Nothing here talks to a league, so it needs no credential and no
+    database.
+    """
+    from . import replay as rp
+
+    out = pathlib.Path(args.out)
+    quiet = getattr(args, "json", False)
+    if not quiet:
+        # Printed before the loop, not after it. A replay at 60x runs for a
+        # minute and a daemon runs until the game ends, so a notice that only
+        # appears on exit is a notice nobody reads while deciding whether to
+        # trust the numbers on their screen.
+        print(f"Replaying event {args.game} into {out}")
+        print(f"\nBOX SCORE: {rp.BOXSCORE_NOTE}")
+        print(f"\nPoint a reader at it with:\n  {rp.run_hint(out)}\n")
+    info = rp.run(args.game, out, speed=args.speed, at=args.at,
+                  do_capture=args.capture, start=args.start,
+                  interval=args.interval,
+                  log=(lambda *a: None) if quiet else print)
+    emit(args, info, f"\n{info['length']}s of game clock, "
+                     f"{info['frames']} frame(s) written to {info['out']}")
+
+
 def cmd_projections(args, cfg) -> None:
     """Record projections so they can be scored against what happened."""
     from . import projections as pj
@@ -668,6 +696,21 @@ def build_parser() -> argparse.ArgumentParser:
                     help="0.0.0.0 to let other devices on your network read it")
     ap.add_argument("--port", type=int, default=8770)
     jsonify(ap); ap.set_defaults(fn=cmd_api)
+
+    rpl = sub.add_parser("replay", help="replay a finished NFL game as if it were live")
+    rpl.add_argument("--game", required=True, help="ESPN event id, e.g. 401872656")
+    rpl.add_argument("--out", default="data/replay",
+                     help="directory the frames are written to")
+    rpl.add_argument("--speed", type=float, default=60.0,
+                     help="game seconds per wall second (default 60: a game in a minute)")
+    rpl.add_argument("--at", type=int,
+                     help="write one frozen frame at this many game seconds, then exit")
+    rpl.add_argument("--start", type=int, default=0, help="game second to start from")
+    rpl.add_argument("--interval", type=float, default=1.0,
+                     help="wall seconds between frames")
+    rpl.add_argument("--capture", action="store_true",
+                     help="re-download the game from ESPN before replaying")
+    jsonify(rpl); rpl.set_defaults(fn=cmd_replay)
 
     pj = common(sub.add_parser("projections",
                                help="record projections so they can be scored"))

@@ -408,12 +408,21 @@ class EspnLiveSource(LiveSource):
             if state == "pre":
                 continue                       # nothing to score yet
             hit = self._boxes.get(event)
-            fresh = hit and (state == "post" or now - hit[0] < self.box_ttl)
+            # The state this cache entry was *fetched under*, which is not the
+            # same question as the state now. Holding a finished game forever
+            # is right - its numbers cannot change again - but only once it has
+            # been read while finished. Held on the old rule, the thing kept
+            # was whatever happened to be fetched with two minutes left, so the
+            # final box score never arrived and a game-winning touchdown was
+            # never scored. Found by replaying a real game.
+            was = hit[4] if hit and len(hit) > 4 else None
+            fresh = (hit and was == state
+                     and (state == "post" or now - hit[0] < self.box_ttl))
             if not fresh:
                 try:
                     data = self._fetch(summary_url(event))
                     hit = (now, score_boxscore(data, self.scoring),
-                           parse_team_defence(data), parse_boxscore(data))
+                           parse_team_defence(data), parse_boxscore(data), state)
                     self._namecache[event] = boxscore_names(data)
                     # Kept whole for the gamecast. It is already paid for -
                     # re-fetching a summary to animate the same play the
@@ -421,10 +430,13 @@ class EspnLiveSource(LiveSource):
                     # this source makes.
                     self._summaries[event] = data
                 except Exception:
-                    # keep whatever we had; a single bad game must not blank a board
-                    hit = hit or (now, {}, {}, {})
+                    # Keep whatever we had; a single bad game must not blank a
+                    # board. The state is deliberately carried over as None so
+                    # a failed fetch is retried rather than being mistaken for
+                    # a successful read of this state.
+                    hit = hit or (now, {}, {}, {}, None)
                     hit = (now, hit[1], hit[2] if len(hit) > 2 else {},
-                           hit[3] if len(hit) > 3 else {})
+                           hit[3] if len(hit) > 3 else {}, None)
                 self._boxes[event] = hit
             points.update(hit[1])
 

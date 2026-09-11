@@ -14,9 +14,14 @@
 		28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9826E7D2E14B394647B8AFCD /* CommandRails.swift */; };
 		EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C24CFCAB3D18C778AE8490 /* CommandView.swift */; };
 		9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */; };
+		8223D051ECED5B40D4CD9D2C /* Field.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB4D7F136F5DDBC7144CC /* Field.swift */; };
+		B03E4A9891D492752E873555 /* GameFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */; };
+		D008569B94DFD109A002453A /* Gamecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D260E8769E75220D2DCB99F6 /* Gamecast.swift */; };
+		C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F54AC836EC2489FF7E7976 /* Gridiron.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
 		779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99CF54DD670773756DCE373 /* LeagueView.swift */; };
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
+		5576CAB7A3B67872A2D150AB /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6B97E969AB9606C0E94195 /* LiveView.swift */; };
 		10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800C2342BB2F01CC074FBAF /* Models.swift */; };
 		DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */; };
 		DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEBA4BC9684357AC9155984 /* PlayersView.swift */; };
@@ -33,9 +38,14 @@
 		9826E7D2E14B394647B8AFCD /* CommandRails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRails.swift; sourceTree = "<group>"; };
 		42C24CFCAB3D18C778AE8490 /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
 		FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FantasyEdgeApp.swift; sourceTree = "<group>"; };
+		40DBB4D7F136F5DDBC7144CC /* Field.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Field.swift; sourceTree = "<group>"; };
+		0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFieldView.swift; sourceTree = "<group>"; };
+		D260E8769E75220D2DCB99F6 /* Gamecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gamecast.swift; sourceTree = "<group>"; };
+		92F54AC836EC2489FF7E7976 /* Gridiron.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gridiron.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
 		A99CF54DD670773756DCE373 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
+		9D6B97E969AB9606C0E94195 /* LiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveView.swift; sourceTree = "<group>"; };
 		B800C2342BB2F01CC074FBAF /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHologram.swift; sourceTree = "<group>"; };
 		4FEBA4BC9684357AC9155984 /* PlayersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersView.swift; sourceTree = "<group>"; };
@@ -71,9 +81,14 @@
 				9826E7D2E14B394647B8AFCD /* CommandRails.swift */,
 				42C24CFCAB3D18C778AE8490 /* CommandView.swift */,
 				FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */,
+				40DBB4D7F136F5DDBC7144CC /* Field.swift */,
+				0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */,
+				D260E8769E75220D2DCB99F6 /* Gamecast.swift */,
+				92F54AC836EC2489FF7E7976 /* Gridiron.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
 				A99CF54DD670773756DCE373 /* LeagueView.swift */,
 				848B7422D9647143452C9753 /* Leverage.swift */,
+				9D6B97E969AB9606C0E94195 /* LiveView.swift */,
 				B800C2342BB2F01CC074FBAF /* Models.swift */,
 				C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */,
 				4FEBA4BC9684357AC9155984 /* PlayersView.swift */,
@@ -155,9 +170,14 @@
 				28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */,
 				EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */,
 				9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */,
+				8223D051ECED5B40D4CD9D2C /* Field.swift in Sources */,
+				B03E4A9891D492752E873555 /* GameFieldView.swift in Sources */,
+				D008569B94DFD109A002453A /* Gamecast.swift in Sources */,
+				C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
 				779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */,
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,
+				5576CAB7A3B67872A2D150AB /* LiveView.swift in Sources */,
 				10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */,
 				DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */,
 				DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */,

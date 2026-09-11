@@ -1,0 +1,161 @@
+{
+ "events": [
+  {
+   "competitions": [
+    {
+     "attendance": 68744,
+     "broadcast": "NBC",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "26",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "order": 0,
+       "score": "13",
+       "team": {
+        "abbreviation": "SEA",
+        "alternateColor": "69be28",
+        "color": "002a5c",
+        "displayName": "Seattle Seahawks",
+        "id": "26",
+        "location": "Seattle",
+        "name": "Seahawks",
+        "shortDisplayName": "Seahawks",
+        "uid": "s:20~l:28~t:26"
+       },
+       "type": "team",
+       "uid": "s:20~l:28~t:26",
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "17",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "order": 1,
+       "score": "10",
+       "team": {
+        "abbreviation": "NE",
+        "alternateColor": "c60c30",
+        "color": "002a5c",
+        "displayName": "New England Patriots",
+        "id": "17",
+        "location": "New England",
+        "name": "Patriots",
+        "shortDisplayName": "Patriots",
+        "uid": "s:20~l:28~t:17"
+       },
+       "type": "team",
+       "uid": "s:20~l:28~t:17",
+       "winner": false
+      }
+     ],
+     "conferenceCompetition": false,
+     "date": "2026-09-10T00:20Z",
+     "id": "401872656",
+     "neutralSite": false,
+     "playByPlayAvailable": true,
+     "recent": false,
+     "startDate": "2026-09-10T00:20Z",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     },
+     "timeValid": true,
+     "type": {
+      "abbreviation": "STD",
+      "id": "1"
+     },
+     "uid": "s:20~l:28~e:401872656~c:401872656"
+    }
+   ],
+   "date": "2026-09-10T00:20Z",
+   "id": "401872656",
+   "name": "New England Patriots at Seattle Seahawks",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NE @ SEA",
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0:00",
+    "period": 4,
+    "type": {
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "shortDetail": "Final",
+     "state": "post"
+    }
+   },
+   "uid": "s:20~l:28~e:401872656",
+   "week": {
+    "number": 1
+   }
+  }
+ ],
+ "leagues": [],
+ "season": {
+  "type": 2,
+  "year": 2026
+ },
+ "week": {
+  "number": 1
+ }
+}

@@ -214,6 +214,46 @@ final class Board {
         standings[L.id] = p.standings
     }
 
+        // MARK: - one game, on a field
+
+    var gamecasts: [String: Gamecast] = [:]
+    /// What the server said when it had no play data. Kept rather than
+    /// swallowed: "this game has not kicked off" is an answer, and a field
+    /// that shows it is telling the truth about why it is empty.
+    var gamecastMissing: [String: String] = [:]
+    @ObservationIgnored private var gamecastStamp: [String: String] = [:]
+    @ObservationIgnored private var gamecastInFlight: Set<String> = []
+
+    /// One gamecast per game, and a finished game exactly once.
+    ///
+    /// Every club in a game carries the same `event`, so a field that opened
+    /// one per club would fetch the same drives twice; the caller passes an
+    /// event, never a club. A finished game is stamped "post" and never asked
+    /// for again, because its drives cannot change. A running one re-fetches
+    /// only when the shared live payload's content hash moved, so a field left
+    /// open costs a request when something happened rather than every poll.
+    @MainActor
+    func loadGamecast(_ event: String, finished: Bool) async {
+        let stamp = finished ? "post" : (live?.version ?? "-")
+        if gamecastStamp[event] == stamp || gamecastInFlight.contains(event) { return }
+        gamecastInFlight.insert(event)
+        defer { gamecastInFlight.remove(event) }
+        guard let u = url("/api/gamecast/\(event)") else { return }
+        do {
+            let (d, resp) = try await URLSession.shared.data(from: u)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+                struct Failure: Decodable { let error: String?; let fix: String? }
+                let f = try? JSONDecoder().decode(Failure.self, from: d)
+                gamecastMissing[event] = f?.error ?? "No play data for this game."
+                gamecastStamp[event] = stamp
+                return
+            }
+            gamecasts[event] = try JSONDecoder().decode(Gamecast.self, from: d)
+            gamecastMissing[event] = nil
+            gamecastStamp[event] = stamp
+        } catch { lastError = error.localizedDescription }
+    }
+
         // MARK: - memoised derivations
     //
     // `@ObservationIgnored` is load-bearing, not an optimisation. These are
@@ -224,6 +264,9 @@ final class Board {
     @ObservationIgnored private var mosaicCache: [String: (key: String, value: Mosaic)] = [:]
     @ObservationIgnored private var opponentCache: (key: String, value: [String: Fixture])?
     @ObservationIgnored private var totalsCache: [String: (key: String, value: [String: Double])] = [:]
+    @ObservationIgnored private var lineupCache: (key: String, value: [FieldMan])?
+    @ObservationIgnored private var slateCache: (key: String, value: [SlateGame])?
+    @ObservationIgnored private var winProbCache: (key: String, value: WinProbSeries)?
 
     /// What every cached derivation is keyed on.
     ///
@@ -282,6 +325,125 @@ final class Board {
             out[r.teamId ?? "", default: 0] += r.projected ?? 0
         }
         totalsCache[L.id] = (stamp(L), out)
+        return out
+    }
+
+    /// The win-probability series a chart draws, walked out of the gamecast
+    /// once rather than on every body pass. Keyed on the point count, which
+    /// is the only thing that changes about it: the feed appends a point per
+    /// play and never rewrites the ones behind it.
+    func winProb(_ gc: Gamecast) -> WinProbSeries {
+        let key = "\(gc.event)|\(gc.winProbability.count)"
+        if let hit = winProbCache, hit.key == key { return hit.value }
+        var scored: Set<String> = []
+        for d in gc.drives { for p in d.plays where p.scoring { scored.insert(p.id) } }
+        let points = gc.winProbability.filter { $0.home != nil }
+        let out = WinProbSeries(
+            home: points.map { $0.home ?? 0.5 },
+            plays: points.map(\.play),
+            scoring: points.indices.filter { scored.contains(points[$0].play) })
+        winProbCache = (key, out)
+        return out
+    }
+
+    /// One game, out of the two club entries the live tier reports it as.
+    struct SlateGame: Identifiable, Hashable {
+        let event: String
+        let home: String, away: String
+        let homeScore: String, awayScore: String
+        let state: String, label: String, kickoff: String
+        /// The club with the ball, empty when nobody has it.
+        let possession: String
+        let down: Int?, distance: Int?, toEndzone: Int?, redZone: Bool
+        var id: String { event }
+        var live: Bool { state == "in" }
+        var finished: Bool { state == "post" }
+        var line: String { "\(away) @ \(home)" }
+    }
+
+    /// The slate, paired back up by event id.
+    ///
+    /// The old pairing keyed on kickoff time, which is fine until two games
+    /// start in the same minute - which on a Sunday is most of them. Every
+    /// club now carries the event it is in, so this groups on that and is
+    /// right by construction. Memoised: it is asked for by a picker that
+    /// rebuilds on every body pass.
+    var slate: [SlateGame] {
+        let key = live?.version ?? "-"
+        if let hit = slateCache, hit.key == key { return hit.value }
+        var byEvent: [String: [(String, GameState)]] = [:]
+        for (ab, g) in live?.games ?? [:] {
+            guard let ev = g.event, !ev.isEmpty else { continue }
+            byEvent[ev, default: []].append((ab, g))
+        }
+        let out = byEvent.compactMap { ev, sides -> SlateGame? in
+            guard sides.count == 2 else { return nil }
+            let h = sides.first { $0.1.home == true } ?? sides[0]
+            let a = sides.first { $0.0 != h.0 } ?? sides[1]
+            return SlateGame(
+                event: ev, home: h.0, away: a.0,
+                homeScore: h.1.score ?? "0", awayScore: a.1.score ?? "0",
+                state: h.1.state ?? "pre", label: h.1.label ?? "",
+                kickoff: h.1.kickoff ?? "",
+                possession: h.1.possession ?? "",
+                down: h.1.down, distance: h.1.distance,
+                toEndzone: h.1.toEndzone, redZone: h.1.redZone ?? false)
+        }
+        // Running games first, then the ones already in the books, then what
+        // has not kicked off. That is the order a field can actually use: a
+        // game with no plays in it yet has nothing to draw, so it should not
+        // be the first thing a picker offers.
+        .sorted {
+            let rank = { (g: SlateGame) in g.live ? 0 : (g.finished ? 1 : 2) }
+            return rank($0) == rank($1)
+                ? ($0.kickoff, $0.away) < ($1.kickoff, $1.away)
+                : rank($0) < rank($1)
+        }
+        slateCache = (key, out)
+        return out
+    }
+
+    /// Every man you are starting anywhere, placed on one field by what is
+    /// happening in his own game.
+    ///
+    /// Memoised on the live version for the same reason everything else here
+    /// is: the arrangement can only change when the live payload does, and a
+    /// body that re-derives twenty placements on every SwiftUI pass is doing
+    /// it a dozen times a second for a field that moved once a minute. The
+    /// roster count is in the key because a league loading late adds men.
+    func lineup() -> [FieldMan] {
+        let key = "\(live?.version ?? "-")|\(roster.count)|\(leagues.count)"
+        if let hit = lineupCache, hit.key == key { return hit.value }
+        let games = live?.games ?? [:]
+        let scored = live?.players ?? [:]
+        // Sorted before lanes are handed out, so a man keeps the same lane
+        // from one poll to the next instead of swapping with whoever happened
+        // to sort beside him and sliding across the field for no reason.
+        let men = roster.filter { $0.startedIn > 0 }
+            .sorted { ($0.pos, $0.name, $0.id) < ($1.pos, $1.name, $1.id) }
+        var taken: [String: Int] = [:]
+        var out: [FieldMan] = []
+        for p in men {
+            let g = games[p.team]
+            let lane = taken[p.pos.uppercased(), default: 0]
+            taken[p.pos.uppercased()] = lane + 1
+            let spot = Gridiron.place(
+                .init(pos: p.pos, state: g?.state ?? "pre",
+                      attacking: g?.attacking, toEndzone: g?.toEndzone),
+                index: lane)
+            out.append(FieldMan(
+                id: p.id, name: p.name, pos: p.pos, team: p.team,
+                img: p.img, logo: p.logo, spot: spot,
+                opp: g?.opp ?? "", home: g?.home ?? true, event: g?.event ?? "",
+                state: g?.state ?? "pre", label: g?.label ?? "",
+                kickoff: g?.kickoff ?? "",
+                score: g?.score ?? "", oppScore: games[g?.opp ?? ""]?.score ?? "",
+                attacking: g?.attacking,
+                down: g?.down, distance: g?.distance, toEndzone: g?.toEndzone,
+                redZone: g?.redZone ?? false,
+                points: scored[p.id]?.s ?? 0, lineups: p.startedIn))
+        }
+        lineupCache = (key, out)
         return out
     }
 

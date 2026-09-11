@@ -68,6 +68,9 @@ struct CommandView: View {
                 // which defeats the laziness entirely - every row builds at
                 // once and each fires its own image requests.
                 case .players: PlayersView(focus: $focus)
+                // Same reason as above: the live tab scrolls its own play
+                // feed and its own lanes, both with a ceiling on them.
+                case .live:    LiveView(focus: $focus)
                 default:       centre
                 }
             }

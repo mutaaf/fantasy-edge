@@ -1589,3 +1589,280 @@ class TestGamecast(unittest.TestCase):
         the honest answer is nothing rather than an empty field."""
         src = self.source()
         self.assertEqual(src.summary("not-an-event"), {})
+
+
+class TestReplay(unittest.TestCase):
+    """`frame()`: a finished game as it looked at one instant of its own clock.
+
+    The fixture is eight real drives of event 401872656 (NE 10 @ SEA 13), cut
+    down by `tools/make_replay_fixture.py` - ESPN's shapes, not an imitation of
+    them, because the point of a replay is to exercise the parsers against the
+    payload they will actually be handed.
+
+    Every assertion below is against a fact of that game rather than a round
+    number, which is what makes them fail loudly if the filtering slips by a
+    play: the first snap is at 0:00 elapsed, the second at 0:05, New England's
+    opening drive does not begin until 3:18, and their first touchdown lands at
+    20:49 - 1249 seconds.
+    """
+
+    KICKOFF, SECOND_PLAY = 0, 5
+    NE_FIRST_DRIVE, FIRST_TD = 198, 1249
+
+    @classmethod
+    def setUpClass(cls):
+        # Parsed once. `frame()` promises not to mutate its inputs - there is a
+        # test below for exactly that - so every case can share one copy, and
+        # re-parsing 150KB of play-by-play per assertion is pure waste.
+        cls.SB = json.loads((FIX / "replay_scoreboard.json").read_text())
+        cls.SM = json.loads((FIX / "replay_summary.json").read_text())
+
+    def payloads(self):
+        return self.SB, self.SM
+
+    def frame(self, seconds):
+        from fantasyedge.replay import frame
+
+        sb, sm = self.payloads()
+        return frame(sb, sm, seconds)
+
+    def plays(self, summary):
+        return [p for d in ((summary.get("drives") or {}).get("previous") or [])
+                + ([summary["drives"]["current"]] if (summary.get("drives") or {}).get("current") else [])
+                for p in (d.get("plays") or [])]
+
+    # ── the cut ──
+
+    def test_a_play_is_included_at_its_own_second_and_not_before(self):
+        """The boundary is inclusive, which is what makes a replay reach the
+        final play at all: the last snap of this game is at exactly 3600."""
+        before = self.plays(self.frame(self.SECOND_PLAY - 1)[1])
+        at = self.plays(self.frame(self.SECOND_PLAY)[1])
+        self.assertEqual(len(before), 1)
+        self.assertEqual(len(at), 2)
+        self.assertEqual(at[1]["text"][:20], "J.Price right tackle")
+
+    def test_the_future_never_leaks_into_a_frame(self):
+        _, sm = self.frame(600)
+        self.assertTrue(all(
+            (p.get("period") or {}).get("number", 1) <= 1 or True
+            for p in self.plays(sm)))
+        from fantasyedge.replay import play_seconds
+        self.assertLessEqual(max(play_seconds(p) for p in self.plays(sm)), 600)
+
+    def test_a_drive_with_no_included_plays_is_dropped(self):
+        """An empty drive is not a drive that has not happened yet - it renders
+        as a real possession that gained nothing, on every client."""
+        _, sm = self.frame(self.NE_FIRST_DRIVE - 1)
+        drives = sm["drives"]
+        self.assertEqual(drives["previous"], [],
+                         "Seattle's opening drive is still in progress here")
+        self.assertIn("current", drives)
+        self.assertEqual(drives["current"]["team"]["abbreviation"], "SEA")
+        self.assertTrue(all(d.get("plays") for d in drives["previous"]))
+
+        _, later = self.frame(self.NE_FIRST_DRIVE)
+        self.assertEqual(len(later["drives"]["previous"]), 1)
+        self.assertEqual(later["drives"]["current"]["team"]["abbreviation"], "NE")
+
+    def test_a_drive_in_progress_states_no_outcome(self):
+        """The captured drive knows it ends in a punt. Carrying that through
+        would tell a client how the possession finishes while it is being
+        played, which is a worse lie than a simulator tells."""
+        _, sm = self.frame(100)
+        current = sm["drives"]["current"]
+        for key in ("result", "displayResult", "shortDisplayResult",
+                    "description", "yards", "offensivePlays"):
+            self.assertNotIn(key, current)
+        self.assertFalse(current["isScore"])
+
+    # ── the clock ──
+
+    def test_the_clock_and_period_come_from_the_instant_asked_for(self):
+        _, sm = self.frame(1000)
+        status = sm["header"]["competitions"][0]["status"]
+        self.assertEqual(status["type"]["state"], "in")
+        self.assertEqual(status["period"], 2)
+        self.assertEqual(status["displayClock"], "13:20")
+        self.assertEqual(status["clock"], 800.0)
+        self.assertEqual(status["type"]["shortDetail"], "13:20 - 2nd")
+
+    def test_the_scoreboard_says_the_same_thing_as_the_summary(self):
+        """`live.games()` reads the scoreboard and the gamecast reads the
+        summary. Framing one and not the other produces a game that is live on
+        the board and final in its own header."""
+        sb, sm = self.frame(1000)
+        ev = sb["events"][0]
+        want = sm["header"]["competitions"][0]["status"]
+        self.assertEqual(ev["competitions"][0]["status"], want)
+        self.assertEqual(ev["status"], want)
+
+    def test_a_frame_past_the_last_play_is_the_finished_game(self):
+        sb, sm = self.frame(10_000)
+        self.assertEqual(sm["header"]["competitions"][0]["status"]["type"]["state"],
+                         "post")
+        self.assertNotIn("current", sm["drives"])
+        self.assertNotIn("situation", sm["header"]["competitions"][0])
+
+    # ── the score ──
+
+    def test_the_score_is_the_last_play_that_had_happened(self):
+        for second, away in ((self.FIRST_TD - 1, 0), (self.FIRST_TD, 7)):
+            _, sm = self.frame(second)
+            sides = {c["homeAway"]: c
+                     for c in sm["header"]["competitions"][0]["competitors"]}
+            self.assertEqual(sides["away"]["score"], str(away), f"at {second}s")
+            self.assertEqual(sides["home"]["score"], "0", f"at {second}s")
+
+    def test_the_winner_flag_does_not_survive_a_frame(self):
+        """A finished competitor carries `winner: true`. A client that reads it
+        draws the trophy on a game that is tied in the first quarter."""
+        _, sm = self.frame(600)
+        for c in sm["header"]["competitions"][0]["competitors"]:
+            self.assertNotIn("winner", c)
+
+    def test_the_line_score_is_recomputed_rather_than_carried(self):
+        _, sm = self.frame(1000)
+        sides = {c["homeAway"]: c
+                 for c in sm["header"]["competitions"][0]["competitors"]}
+        self.assertEqual([q["displayValue"] for q in sides["away"]["linescores"]],
+                         ["0", "0"], "two quarters reached, neither scored in yet")
+        self.assertEqual(len(sides["home"]["linescores"]), 2)
+
+    def test_win_probability_and_scoring_plays_are_truncated(self):
+        _, before = self.frame(self.FIRST_TD - 1)
+        _, after = self.frame(self.FIRST_TD)
+        self.assertEqual(before["scoringPlays"], [])
+        self.assertEqual(len(after["scoringPlays"]), 1)
+        self.assertLess(len(before["winprobability"]),
+                        len(after["winprobability"]))
+        # The leading point names the opening drive rather than a play, so a
+        # membership filter would silently drop it.
+        self.assertEqual(before["winprobability"][0]["playId"],
+                         self.SM["winprobability"][0]["playId"])
+
+    # ── possession ──
+
+    def test_possession_is_derived_from_the_end_of_the_last_play(self):
+        sb, sm = self.frame(600)
+        last = self.plays(sm)[-1]
+        holder = last["end"]["team"]["id"]
+        comp = sm["header"]["competitions"][0]
+        self.assertEqual(comp["situation"]["possession"], holder)
+        self.assertEqual(comp["situation"]["down"], last["end"]["down"])
+        self.assertEqual(comp["situation"]["distance"], last["end"]["distance"])
+        self.assertEqual(comp["situation"]["yardsToEndzone"],
+                         last["end"]["yardsToEndzone"])
+        self.assertEqual(sb["events"][0]["competitions"][0]["situation"]["possession"],
+                         holder)
+        flags = {c["team"]["id"]: c["possession"] for c in comp["competitors"]}
+        self.assertTrue(flags[holder])
+        self.assertEqual(sum(1 for v in flags.values() if v), 1)
+
+    def test_the_red_zone_is_stated_not_guessed(self):
+        for second in range(0, 1700, 137):
+            _, sm = self.frame(second)
+            sit = sm["header"]["competitions"][0].get("situation")
+            if not sit or sit["yardsToEndzone"] is None:
+                continue
+            self.assertEqual(sit["isRedZone"], sit["yardsToEndzone"] <= 20)
+
+    # ── the honest limitation ──
+
+    def test_the_box_score_is_served_as_captured_and_says_so(self):
+        """ESPN publishes no per-play player stat line, so the box score cannot
+        be ramped truthfully. It is passed through untouched, and the frame
+        carries a note saying so - scaling it by elapsed fraction would invent
+        numbers that look exactly like data."""
+        _, sm = self.frame(600)
+        self.assertEqual(sm["boxscore"], self.SM["boxscore"])
+        self.assertIn("FINAL", sm["replay"]["boxscore"])
+        self.assertEqual(sm["replay"]["playsTotal"], 62)
+        self.assertEqual(sm["replay"]["state"], "in")
+
+    def test_frame_does_not_mutate_what_it_was_given(self):
+        from fantasyedge.replay import frame
+
+        sb, sm = self.payloads()
+        keep = json.dumps(sm, sort_keys=True), json.dumps(sb, sort_keys=True)
+        frame(sb, sm, 900)
+        self.assertEqual((json.dumps(sm, sort_keys=True),
+                          json.dumps(sb, sort_keys=True)), keep)
+
+    # ── the daemon ──
+
+    def test_a_frozen_frame_writes_the_two_files_the_live_tier_reads(self):
+        """`--at` has to land exactly where `live._fetch` looks, or the harness
+        drives nothing: the scoreboard by file, the summary by event id."""
+        from fantasyedge import replay as rp
+
+        sb, sm = self.payloads()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = pathlib.Path(tmp)
+            source = out / "source"
+            source.mkdir()
+            (source / "scoreboard.json").write_text(json.dumps(sb))
+            (source / "401872656.json").write_text(json.dumps(sm))
+            info = rp.run("401872656", out, at=1000)
+            self.assertEqual(info["state"], "in")
+            self.assertEqual(info["clock"], "13:20")
+            written = json.loads((out / "401872656.json").read_text())
+            self.assertEqual(written["replay"]["gameSeconds"], 1000)
+            self.assertTrue((out / "scoreboard.json").exists())
+            self.assertIn("FANTASYEDGE_SUMMARY_DIR", info["run"])
+
+
+class TestAFinishedGameIsRefetchedOnce(unittest.TestCase):
+    """A summary cached during play must not be kept as the final word.
+
+    Found by replaying a real game: once the scoreboard flipped to `post` the
+    cached summary was held forever, but the thing being held was whatever was
+    last fetched *while the game was still running*. The board therefore froze
+    up to half a minute before the whistle - a game-winning touchdown could
+    simply never be scored.
+    """
+
+    def setUp(self):
+        self.board = json.loads((FIX / "espn_scoreboard.json").read_text())
+        self.summary = json.loads((FIX / "espn_summary.json").read_text())
+        self.state = "in"
+        self.fetches = 0
+
+    def source(self):
+        import copy as _copy
+
+        from fantasyedge.live import EspnLiveSource
+
+        def http(url):
+            if "summary?event=" in url:
+                self.fetches += 1
+                return self.summary
+            b = _copy.deepcopy(self.board)
+            b["events"][0]["competitions"][0]["status"] = {
+                "period": 4, "clock": 0.0,
+                "type": {"state": self.state,
+                         "shortDetail": "FINAL" if self.state == "post" else "2:00 - 4th"}}
+            return b
+        return EspnLiveSource([{"player_id": "1", "team": "SEA", "name": "", "pos": "WR"}],
+                              http=http)
+
+    def test_the_whistle_forces_one_more_fetch(self):
+        src = self.source()
+        src.boxscores()
+        self.assertEqual(self.fetches, 1)
+
+        src.boxscores()                       # still live, inside the TTL
+        self.assertEqual(self.fetches, 1, "a live game refetched inside its TTL")
+
+        self.state = "post"                   # the whistle
+        src._cache = None                     # let the slate be re-read
+        src.boxscores()
+        self.assertEqual(self.fetches, 2,
+                         "the final summary was never fetched, so the board "
+                         "keeps whatever it happened to hold before the whistle")
+
+        src._cache = None
+        src.boxscores()
+        self.assertEqual(self.fetches, 2,
+                         "a finished game was refetched; its numbers cannot "
+                         "change again and re-asking is pure waste")

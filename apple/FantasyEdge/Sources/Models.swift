@@ -46,6 +46,19 @@ struct GameState: Decodable {
     /// wrong as soon as two games start at once, which on a Sunday is most
     /// of them.
     let opp: String?; let home: Bool?
+    /// Which game this club is in, so a field can be opened without pairing
+    /// clubs up by kickoff time and guessing wrong when two start together.
+    let event: String?
+    /// True when this club has the ball, false when its opponent does, nil
+    /// when nobody does. The live tier sends no situation before a kickoff or
+    /// after the whistle, which is the honest shape: "nobody has the ball" is
+    /// true of a game that has not started.
+    let attacking: Bool?
+    let possession: String?
+    let down: Int?; let distance: Int?
+    /// Yards from the ball to the end zone the attacking club is driving on.
+    let toEndzone: Int?
+    let redZone: Bool?
 }
 struct LivePayload: Decodable {
     let source: String?
