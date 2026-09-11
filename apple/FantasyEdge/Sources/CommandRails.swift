@@ -299,37 +299,38 @@ extension CommandView {
                 // question "how bad is this for me" needs.
                 ForEach(board.injuries.prefix(5)) { inj in
                     Button { focus = inj.id } label: {
-                    HStack(spacing: 10) {
-                        ZStack {
-                            Circle().fill(severityTint(inj.severity).opacity(0.22))
-                            Image(systemName: "cross.case.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(severityTint(inj.severity))
-                        }
-                        .frame(width: 30, height: 30)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack(spacing: 6) {
-                                Text(inj.name).font(.system(size: 12, weight: .semibold))
-                                    .lineLimit(1)
-                                if let lab = inj.label {
-                                    Text(lab).font(.system(size: 8, weight: .heavy))
-                                        .padding(.horizontal, 5).padding(.vertical, 1)
-                                        .background(severityTint(inj.severity).opacity(0.25),
-                                                    in: .capsule)
-                                        .foregroundStyle(severityTint(inj.severity))
-                                }
+                        HStack(spacing: 10) {
+                            ZStack {
+                                Circle().fill(severityTint(inj.severity).opacity(0.22))
+                                Image(systemName: "cross.case.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(severityTint(inj.severity))
                             }
-                            Text(inj.headline ?? "")
-                                .font(.system(size: 10)).foregroundStyle(.tertiary)
-                                .lineLimit(2)
+                            .frame(width: 30, height: 30)
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text(inj.name)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .lineLimit(1)
+                                    if let lab = inj.label {
+                                        Text(lab).font(.system(size: 8, weight: .heavy))
+                                            .padding(.horizontal, 5).padding(.vertical, 1)
+                                            .background(severityTint(inj.severity)
+                                                .opacity(0.25), in: .capsule)
+                                            .foregroundStyle(severityTint(inj.severity))
+                                    }
+                                }
+                                Text(inj.headline ?? "")
+                                    .font(.system(size: 10)).foregroundStyle(.tertiary)
+                                    .lineLimit(2)
+                            }
+                            Spacer(minLength: 0)
                         }
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.vertical, 6).padding(.horizontal, 9)
-                    .background(RoundedRectangle(cornerRadius: 12)
-                        .fill(focus == inj.id ? Theme.green.opacity(0.14)
-                                              : .white.opacity(0.05)))
-                    .contentShape(.rect)
+                        .padding(.vertical, 6).padding(.horizontal, 9)
+                        .background(RoundedRectangle(cornerRadius: 12)
+                            .fill(focus == inj.id ? Theme.green.opacity(0.14)
+                                                  : .white.opacity(0.05)))
+                        .contentShape(.rect)
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
                 }
