@@ -1,3 +1,10 @@
+// Reference only - NOT the config Vercel reads.
+//
+// Vercel reads a vercel.json at the repository root and nowhere else, so this
+// file has never deployed anything; a copy at the root does. This one is kept
+// as the shape to move to once an origin exists to proxy to, because its
+// rewrites point /api and /oauth at a container that does not exist yet and
+// its placeholder host would fail DNS if it were live.
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
