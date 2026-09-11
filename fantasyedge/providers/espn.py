@@ -153,7 +153,9 @@ class EspnProvider(Provider):
                 filter(None, [t.get("location"), t.get("nickname")])
             ).strip()
             owners = t.get("owners") or []
-            bundle.managers.append(Manager(tid, name or f"Team {tid}", str(owners[0]) if owners else ""))
+            bundle.managers.append(Manager(
+                tid, name or f"Team {tid}", str(owners[0]) if owners else "",
+                logo=str(t.get("logo") or "")))
             rec = ((t.get("record") or {}).get("overall") or {})
             bundle.standings.append(Standing(
                 team_id=tid,

@@ -63,6 +63,11 @@ struct CommandView: View {
                 switch tab {
                 case .leagues: ScrollView { LeagueView(focus: $focus) }
                         .scrollIndicators(.hidden)
+                // Not wrapped in a ScrollView: this one scrolls its own
+                // table. Nesting gives the inner LazyVStack unbounded height,
+                // which defeats the laziness entirely - every row builds at
+                // once and each fires its own image requests.
+                case .players: PlayersView(focus: $focus)
                 default:       centre
                 }
             }

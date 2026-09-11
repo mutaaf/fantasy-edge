@@ -129,3 +129,56 @@ struct NoSource: View {
         .padding(.vertical, 6)
     }
 }
+
+
+/// A fantasy team's badge.
+///
+/// ESPN gives most teams an SVG, which no plain image view will rasterise, so
+/// the server marks which badges are actually drawable. For the rest this
+/// draws a monogram on a colour derived from the team's own name - stable, so
+/// the same team is the same colour everywhere, and legible at the size a
+/// standings row gives it, which a shrunken cartoon would not be.
+struct TeamBadge: View {
+    let name: String
+    let logo: String?
+    var size: CGFloat = 30
+
+    var body: some View {
+        ZStack {
+            Circle().fill(tint.opacity(0.30))
+            if let l = logo, let u = URL(string: l) {
+                AsyncImage(url: u) { $0.resizable().scaledToFill() }
+                    placeholder: { monogram }
+            } else {
+                monogram
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(.circle)
+        .overlay(Circle().stroke(tint.opacity(0.55), lineWidth: 1))
+    }
+
+    private var monogram: some View {
+        Text(initials)
+            .font(.system(size: size * 0.40, weight: .heavy))
+            .foregroundStyle(.white.opacity(0.9))
+            .minimumScaleFactor(0.5).lineLimit(1)
+    }
+
+    /// Up to two initials from the words that carry meaning.
+    private var initials: String {
+        let words = name.split(whereSeparator: { $0 == " " || $0 == "-" })
+            .filter { !["the", "of", "and", "a"].contains($0.lowercased()) }
+        let letters = words.compactMap { $0.first(where: \.isLetter) }
+        if letters.isEmpty { return String(name.prefix(2)).uppercased() }
+        return String(letters.prefix(2)).uppercased()
+    }
+
+    /// Hashed from the name so a team keeps its colour across every surface
+    /// and every launch. Not random: the same string always lands here.
+    private var tint: Color {
+        var h: UInt64 = 5381
+        for b in name.utf8 { h = (h &* 33) &+ UInt64(b) }
+        return Color(hue: Double(h % 360) / 360.0, saturation: 0.55, brightness: 0.85)
+    }
+}

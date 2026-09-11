@@ -156,7 +156,45 @@ final class Board {
     /// Distinct men across every league.
     var distinctPlayers: Int { roster.count }
 
-    // MARK: - standings
+    // MARK: - the player universe
+
+    var universe: UniversePayload?
+    var universeLoading = false
+    @ObservationIgnored private var universeKey = ""
+
+    /// Every player, filtered by the server.
+    ///
+    /// The predicate runs there rather than here so a headset, a television
+    /// and a browser do not each ship their own copy of it and drift. The
+    /// result is keyed on the query, so flipping back to a filter you have
+    /// already seen is free.
+    @ObservationIgnored private var universeCache: [String: UniversePayload] = [:]
+
+    @MainActor
+    func loadUniverse(pos: String = "", scope: String = "", q: String = "") async {
+        var parts: [String] = []
+        if !pos.isEmpty { parts.append("pos=\(pos)") }
+        if !scope.isEmpty { parts.append("scope=\(scope)") }
+        if !q.isEmpty,
+           let e = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            parts.append("q=\(e)")
+        }
+        let key = parts.joined(separator: "&")
+        universeKey = key
+        if let hit = universeCache[key] { universe = hit; return }
+        universeLoading = true
+        defer { universeLoading = false }
+        guard let u = url("/api/universe" + (key.isEmpty ? "" : "?" + key)),
+              let (d, _) = try? await URLSession.shared.data(from: u),
+              let p = try? JSONDecoder().decode(UniversePayload.self, from: d)
+        else { return }
+        universeCache[key] = p
+        // A slower request that finished after the user moved on must not
+        // replace what they are looking at now.
+        if universeKey == key { universe = p }
+    }
+
+        // MARK: - standings
 
     @ObservationIgnored private var standingsInFlight: Set<String> = []
     var standings: [String: [StandingRow]] = [:]

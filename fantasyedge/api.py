@@ -50,12 +50,35 @@ ROUTES = [
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
+    ["GET", "/api/universe", "every player known, filterable (?pos=&scope=&q=)"],
     ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
     ["GET", "/api/rankings", "today's slate ranked, the way a pre-game show would"],
     ["GET", "/api/context", "scoring plays, ESPN links, and ESPN's own injury report"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
 ]
+
+RASTER = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic")
+
+
+def raster(url: str) -> bool:
+    """Whether a plain image view can draw this without an SVG renderer.
+
+    Thirty of thirty-two fantasy team badges in this install are SVG, which
+    neither SwiftUI's AsyncImage nor an <img> used as a CSS background will
+    rasterise reliably. Saying so here means every surface makes the same
+    decision from the same fact, rather than each one discovering it by
+    rendering nothing.
+    """
+    u = (url or "").lower().split("?")[0]
+    if not u:
+        return False
+    if u.endswith(".svg"):
+        return False
+    # A path with no extension is usually a content-addressed upload, which
+    # ESPN serves as a raster.
+    return u.endswith(RASTER) or "." not in u.rsplit("/", 1)[-1]
+
 
 COUNTED = ("league", "manager", "player", "draft_pick", "roster_slot",
            "matchup", "txn", "standing", "adp")
@@ -252,7 +275,7 @@ class Api:
     def standings(self, provider: str, league: str, qs: dict) -> dict:
         season = self._season_arg(provider, league, qs)
         rows = self.store().q(
-            """SELECT s.rank, s.team_id, m.name AS team, m.owner,
+            """SELECT s.rank, s.team_id, m.name AS team, m.owner, m.logo,
                       s.wins, s.losses, s.ties, s.points_for, s.points_against
                FROM standing s
                LEFT JOIN manager m ON m.provider=s.provider AND m.league_id=s.league_id
@@ -260,8 +283,14 @@ class Api:
                WHERE s.provider=? AND s.league_id=? AND s.season=?
                ORDER BY s.rank""",
             (provider, str(league), season))
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["logo"] = d.get("logo") or ""
+            d["logoRaster"] = raster(d["logo"])
+            out.append(d)
         return {"provider": provider, "league_id": str(league), "season": season,
-                "standings": [dict(r) for r in rows]}
+                "standings": out}
 
     def draft(self, provider: str, league: str, qs: dict) -> dict:
         from . import leagues as lg
@@ -429,9 +458,11 @@ class Api:
                             "pull that season, then retry")
         week = rows[0]["week"]
 
-        names = {m["team_id"]: m["name"] for m in store.q(
-            "SELECT team_id, name FROM manager WHERE provider=? AND league_id=? "
-            "AND season=?", (provider, str(league), season))}
+        mgr_rows = store.q(
+            "SELECT team_id, name, logo FROM manager WHERE provider=? AND league_id=? "
+            "AND season=?", (provider, str(league), season))
+        names = {m["team_id"]: m["name"] for m in mgr_rows}
+        logos = {m["team_id"]: (m["logo"] or "") for m in mgr_rows}
 
         want = (qs.get("team") or [""])[0]
         if not want:
@@ -500,7 +531,10 @@ class Api:
                         "starters": side(want)},
                 "opp": ({"teamId": opp, "name": names.get(opp, opp),
                          "starters": side(opp)} if opp else None),
-                "teams": [{"teamId": t, "name": n} for t, n in sorted(names.items())],
+                "teams": [{"teamId": t, "name": n,
+                       "logo": logos.get(t, ""),
+                       "logoRaster": raster(logos.get(t, ""))}
+                      for t, n in sorted(names.items())],
                 "priors": priors}
 
     def mosaics(self) -> dict:
@@ -685,6 +719,97 @@ class Api:
             lambda: prof.opportunity(player_id))
         return out
 
+    def universe(self, qs: dict) -> dict:
+        """Every player this install knows, with what is true of him.
+
+        The board is organised around the men you already own. A players
+        browser is the opposite question - everyone, filtered down - and it
+        cannot be answered from the roster endpoints, which by construction
+        only contain people somebody rostered.
+
+        Ownership here is ownership *in your leagues*, counted from the same
+        roster rows the board uses. It is not a league-wide percentage: no
+        feed this reads publishes one, and a number labelled OWN% that quietly
+        meant something else would be worse than no column.
+        """
+        def build():
+            store = self.store()
+            season = max((r["season"] for r in store.q(
+                "SELECT DISTINCT season FROM roster_slot")), default=0)
+
+            # Latest projection and club per player, one pass.
+            rows = store.q(
+                """SELECT p.player_id AS id, p.name, p.pos, p.nfl_team
+                   FROM player p WHERE p.name IS NOT NULL""")
+
+            owned: dict[str, list] = {}
+            proj: dict[str, float] = {}
+            for L in self.mosaics()["leagues"]:
+                me = str(L["you"]["teamId"])
+                for r in L["roster"]:
+                    owned.setdefault(str(r["id"]), []).append({
+                        "league": L["league"], "id": L["id"],
+                        "team": r.get("owner") or "",
+                        "mine": str(r.get("teamId")) == me,
+                        "started": bool(r.get("started")),
+                        "slot": r.get("slot") or ""})
+                    if r.get("projected") is not None:
+                        proj[str(r["id"])] = max(proj.get(str(r["id"]), 0.0),
+                                                 float(r["projected"]))
+
+            from .live import headshot_url, logo_url, team_abbr
+            hurt = {}
+            try:
+                for i in (self.injuries().get("injuries") or []):
+                    hurt[str(i["id"])] = i.get("label") or i.get("severity") or ""
+            except Exception:
+                hurt = {}
+
+            out = []
+            for r in rows:
+                pid = str(r["id"])
+                ab = team_abbr(r["nfl_team"])
+                holders = owned.get(pid, [])
+                out.append({
+                    "id": pid, "name": r["name"], "pos": r["pos"] or "",
+                    "team": ab,
+                    "img": headshot_url(pid), "logo": logo_url(ab),
+                    "projected": proj.get(pid),
+                    "owned": len(holders), "mine": sum(1 for h in holders if h["mine"]),
+                    "leagues": holders,
+                    "status": hurt.get(pid, ""),
+                })
+            out.sort(key=lambda x: (-(x["projected"] or 0), x["name"]))
+            return {"players": out, "count": len(out), "season": season,
+                    "leagues": len(self.mosaics()["leagues"])}
+
+        data = self.cached(("universe",), build)
+        # Filtering is done here rather than on each client so a headset and a
+        # television do not each ship the same predicate.
+        pos = (qs.get("pos") or [""])[0].upper()
+        scope = (qs.get("scope") or [""])[0].lower()
+        q = (qs.get("q") or [""])[0].strip().lower()
+        men = data["players"]
+        if pos:
+            men = [m for m in men if m["pos"].upper() == pos]
+        if scope == "mine":
+            men = [m for m in men if m["mine"]]
+        elif scope == "free":
+            men = [m for m in men if not m["owned"]]
+        elif scope == "rostered":
+            men = [m for m in men if m["owned"]]
+        elif scope == "hurt":
+            men = [m for m in men if m["status"]]
+        if q:
+            men = [m for m in men if q in m["name"].lower()
+                   or q == m["team"].lower() or q == m["pos"].lower()]
+        counts: dict[str, int] = {}
+        for m in data["players"]:
+            counts[m["pos"].upper()] = counts.get(m["pos"].upper(), 0) + 1
+        return {"players": men, "count": len(men), "total": data["count"],
+                "byPosition": counts, "leagues": data["leagues"],
+                "season": data["season"]}
+
     def rankings(self) -> dict:
         """Today's slate, ranked - a companion to the shows that do this out loud.
 
@@ -834,6 +959,8 @@ class Api:
             return self.injuries(), DERIVED
         if rest == ["players"]:
             return self.players(), CONFIG
+        if rest == ["universe"]:
+            return self.universe(qs), DERIVED
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
         if rest == ["context"]:

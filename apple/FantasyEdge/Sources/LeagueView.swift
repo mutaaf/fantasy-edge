@@ -10,6 +10,9 @@ struct LeagueView: View {
     @Binding var focus: String?
     @State private var tab: Sub = .roster
     @State private var group: Group_ = .starters
+    /// A team other than yours, opened from the table or a matchup. Nil means
+    /// the roster tab is showing your own line-up.
+    @State private var viewing: TeamRef?
 
     enum Sub: String, CaseIterable, Identifiable {
         case overview = "Overview", roster = "Roster"
@@ -130,14 +133,16 @@ struct LeagueView: View {
     /// provider's own started flag rather than being inferred from the slot
     /// name, because a FLEX and a BN look alike to anything that guesses.
     private func rosterTable(_ L: LeaguePayload) -> some View {
-        let mine = (L.roster ?? []).filter { $0.teamId == L.you.teamId }
+        let who = viewing?.teamId ?? L.you.teamId
+        let mine = (L.roster ?? []).filter { $0.teamId == who }
         let rows: [RosterEntry]
         switch group {
         case .starters: rows = mine.filter { $0.started == true }
         case .bench:    rows = mine.filter { $0.started != true && !isIR($0) }
         case .ir:       rows = mine.filter(isIR)
         }
-        return Panel(title: "Line-up", trailing: AnyView(groupPicker)) {
+        let title = viewing.map { "\($0.display) · line-up" } ?? "Line-up"
+        return Panel(title: title, trailing: AnyView(rosterTrailing)) {
             if rows.isEmpty {
                 NoSource(what: group == .ir ? "Nobody on injured reserve."
                                             : "No players stored for this slot.")
@@ -164,6 +169,19 @@ struct LeagueView: View {
             let b = order[($1.slot ?? "").uppercased()] ?? 9
             if a != b { return a < b }
             return ($0.projected ?? 0) > ($1.projected ?? 0)
+        }
+    }
+
+    private var rosterTrailing: some View {
+        HStack(spacing: 8) {
+            if viewing != nil {
+                Button { viewing = nil } label: {
+                    Label("My team", systemImage: "arrow.uturn.backward")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .buttonStyle(.bordered).controlSize(.small)
+            }
+            groupPicker
         }
     }
 
@@ -313,6 +331,12 @@ struct LeagueView: View {
         let totals = board.teamTotals(L)
         let names = Dictionary(uniqueKeysWithValues:
             (L.teams ?? []).map { ($0.teamId, $0.display) })
+        // Only teams whose badge is actually drawable go in the map, so a
+        // lookup yields String? rather than String?? and the miss and the
+        // "present but not drawable" case collapse into one thing: no image.
+        let badges: [String: String] = (L.teams ?? []).reduce(into: [:]) {
+            if let d = $1.drawable { $0[$1.teamId] = d }
+        }
         var seen = Set<String>()
         var pairs: [(String, String)] = []
         for (a, b) in (L.matchups ?? [:]).sorted(by: { $0.key < $1.key })
@@ -327,11 +351,11 @@ struct LeagueView: View {
                     ForEach(pairs, id: \.0) { a, b in
                         let ta = totals[a] ?? 0, tb = totals[b] ?? 0
                         HStack(spacing: 10) {
-                            matchSide(names[a] ?? a, ta, ta >= tb,
-                                      mine: a == L.you.teamId, .trailing)
+                            matchSide(a, names[a] ?? a, badges[a], ta, ta >= tb,
+                                      mine: a == L.you.teamId, L, .trailing)
                             Text("–").font(.system(size: 11)).foregroundStyle(.quaternary)
-                            matchSide(names[b] ?? b, tb, tb > ta,
-                                      mine: b == L.you.teamId, .leading)
+                            matchSide(b, names[b] ?? b, badges[b], tb, tb > ta,
+                                      mine: b == L.you.teamId, L, .leading)
                         }
                         .padding(.vertical, 7).padding(.horizontal, 11)
                         .background(RoundedRectangle(cornerRadius: 12)
@@ -343,26 +367,34 @@ struct LeagueView: View {
         }
     }
 
-    private func matchSide(_ name: String, _ total: Double, _ ahead: Bool,
-                           mine: Bool, _ align: HorizontalAlignment) -> some View {
-        HStack(spacing: 8) {
-            if align == .leading {
-                Text(total, format: .number.precision(.fractionLength(1)))
-                    .font(.system(size: 13, weight: ahead ? .bold : .regular))
-                    .monospacedDigit()
+    private func matchSide(_ id: String, _ name: String, _ logo: String?,
+                           _ total: Double, _ ahead: Bool, mine: Bool,
+                           _ L: LeaguePayload,
+                           _ align: HorizontalAlignment) -> some View {
+        let score = Text(total, format: .number.precision(.fractionLength(1)))
+            .font(.system(size: 13, weight: ahead ? .bold : .regular))
+            .monospacedDigit()
+        return Button { open(id, in: L) } label: {
+            HStack(spacing: 8) {
+                if align == .leading { score; TeamBadge(name: name, logo: logo, size: 24) }
+                Text(name).font(.system(size: 11, weight: mine ? .semibold : .regular))
+                    .foregroundStyle(mine ? AnyShapeStyle(Theme.green) : AnyShapeStyle(.primary))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity,
+                           alignment: align == .leading ? .leading : .trailing)
+                if align == .trailing { TeamBadge(name: name, logo: logo, size: 24); score }
             }
-            Text(name).font(.system(size: 11, weight: mine ? .semibold : .regular))
-                .foregroundStyle(mine ? AnyShapeStyle(Theme.green) : AnyShapeStyle(.primary))
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity,
-                       alignment: align == .leading ? .leading : .trailing)
-            if align == .trailing {
-                Text(total, format: .number.precision(.fractionLength(1)))
-                    .font(.system(size: 13, weight: ahead ? .bold : .regular))
-                    .monospacedDigit()
-            }
+            .frame(maxWidth: .infinity).contentShape(.rect)
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain).hoverEffect(.highlight)
+    }
+
+    /// Open a team's line-up. Diving into a matchup or a standings row should
+    /// show you the men, which is the only reason to look at either.
+    private func open(_ teamId: String, in L: LeaguePayload) {
+        viewing = (L.teams ?? []).first { $0.teamId == teamId }
+        group = .starters
+        tab = .roster
     }
 
     private func standingsTable(_ L: LeaguePayload) -> some View {
@@ -384,10 +416,12 @@ struct LeagueView: View {
 
                     ForEach(rows.sorted { ($0.rank ?? 99) < ($1.rank ?? 99) }) { r in
                         let mine = r.teamId == L.you.teamId
+                        Button { open(r.teamId, in: L) } label: {
                         HStack(spacing: 10) {
                             Text("\(r.rank ?? 0)").font(.system(size: 11, weight: .bold))
                                 .frame(width: 26, alignment: .leading)
                                 .foregroundStyle(.secondary)
+                            TeamBadge(name: r.team ?? r.teamId, logo: r.drawable, size: 26)
                             Text(r.team ?? r.teamId)
                                 .font(.system(size: 12, weight: mine ? .semibold : .regular))
                                 .foregroundStyle(mine ? AnyShapeStyle(Theme.green)
@@ -405,11 +439,14 @@ struct LeagueView: View {
                                 .foregroundStyle(.tertiary)
                                 .frame(width: 62, alignment: .trailing)
                         }
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 6).padding(.horizontal, 6)
                         .background {
                             RoundedRectangle(cornerRadius: 9)
                                 .fill(mine ? Theme.green.opacity(0.10) : .clear)
                         }
+                        .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain).hoverEffect(.highlight)
                     }
                 }
             }

@@ -19,6 +19,7 @@
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
 		10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800C2342BB2F01CC074FBAF /* Models.swift */; };
 		DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */; };
+		DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEBA4BC9684357AC9155984 /* PlayersView.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
 		B800C2342BB2F01CC074FBAF /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHologram.swift; sourceTree = "<group>"; };
+		4FEBA4BC9684357AC9155984 /* PlayersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersView.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +76,7 @@
 				848B7422D9647143452C9753 /* Leverage.swift */,
 				B800C2342BB2F01CC074FBAF /* Models.swift */,
 				C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */,
+				4FEBA4BC9684357AC9155984 /* PlayersView.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
 			);
 			path = FantasyEdge/Sources;
@@ -157,6 +160,7 @@
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,
 				10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */,
 				DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */,
+				DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

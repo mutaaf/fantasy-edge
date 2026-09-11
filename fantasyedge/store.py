@@ -16,7 +16,7 @@ from contextlib import contextmanager
 
 from .models import SeasonBundle
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS league (
 
 CREATE TABLE IF NOT EXISTS manager (
   provider TEXT, league_id TEXT, season INTEGER,
-  team_id TEXT, name TEXT, owner TEXT,
+  team_id TEXT, name TEXT, owner TEXT, logo TEXT,
   PRIMARY KEY (provider, league_id, season, team_id)
 );
 
@@ -95,11 +95,42 @@ class Store:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys=ON")
         self.conn.executescript(SCHEMA)
+        self._migrate()
+        self._stamp_version()
+
+    def _stamp_version(self) -> None:
+        """Record the schema version, but only when it is actually new.
+
+        This used to be an unconditional INSERT OR REPLACE plus a commit, and
+        it ran in `__init__`. The API opens one connection per server thread,
+        so every request that landed on a fresh thread wrote to the database -
+        which moved its mtime, which is exactly what the API's cache keys hang
+        off. The effect was that the entire read cache silently did nothing:
+        a request that should have been free rebuilt every derived payload.
+        Reading first costs one indexed lookup and keeps the file untouched.
+        """
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key='schema_version'").fetchone()
+        if row is not None and row[0] == str(SCHEMA_VERSION):
+            return
         self.conn.execute(
             "INSERT OR REPLACE INTO meta(key,value) VALUES('schema_version',?)",
             (str(SCHEMA_VERSION),),
         )
         self.conn.commit()
+
+    def _migrate(self) -> None:
+        """Add columns an older database is missing.
+
+        `CREATE TABLE IF NOT EXISTS` does nothing to a table that already
+        exists, so a schema change is invisible to every database created
+        before it. Adding the column here means an existing install keeps its
+        data instead of being told to delete it and pull seven seasons again.
+        """
+        have = {r[1] for r in self.conn.execute("PRAGMA table_info(manager)")}
+        if "logo" not in have:
+            self.conn.execute("ALTER TABLE manager ADD COLUMN logo TEXT")
+            self.conn.commit()
 
     @contextmanager
     def tx(self):
@@ -137,8 +168,8 @@ class Store:
                 (*k, b.league_name, b.team_count, b.scoring),
             )
             c.executemany(
-                "INSERT INTO manager VALUES (?,?,?,?,?,?)",
-                [(*k, m.team_id, m.name, m.owner) for m in b.managers],
+                "INSERT INTO manager VALUES (?,?,?,?,?,?,?)",
+                [(*k, m.team_id, m.name, m.owner, m.logo) for m in b.managers],
             )
             c.executemany(
                 "INSERT OR REPLACE INTO player VALUES (?,?,?,?,?)",

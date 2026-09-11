@@ -14,8 +14,13 @@ struct Side: Decodable { let teamId: String; let name: String; let starters: [St
 /// way to say which team was yours.
 struct TeamRef: Decodable, Identifiable, Hashable {
     let teamId: String, name: String
+    /// The team's own badge, and whether anything here can actually draw it.
+    /// Most ESPN badges are SVG, which AsyncImage will not rasterise - the
+    /// server says which are raster so every surface decides the same way.
+    let logo: String?, logoRaster: Bool?
     var id: String { teamId }
     var display: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    var drawable: String? { (logoRaster == true) ? logo : nil }
 }
 
 struct LeaguePayload: Decodable {
@@ -185,10 +190,12 @@ struct StandingRow: Decodable, Identifiable, Hashable {
     let rank: Int?, teamId: String, team: String?
     let wins: Int?, losses: Int?, ties: Int?
     let pointsFor: Double?, pointsAgainst: Double?
+    let logo: String?, logoRaster: Bool?
     var id: String { teamId }
+    var drawable: String? { (logoRaster == true) ? logo : nil }
 
     enum CodingKeys: String, CodingKey {
-        case rank, team, wins, losses, ties
+        case rank, team, wins, losses, ties, logo, logoRaster
         case teamId = "team_id"
         case pointsFor = "points_for"
         case pointsAgainst = "points_against"
@@ -208,4 +215,25 @@ struct RosterEntry: Decodable, Identifiable, Hashable {
     let teamId: String?, owner: String?
     let started: Bool?
     let color: String?, img: String?, logo: String?
+}
+
+
+/// One player in the universe, with what is true of him across your leagues.
+struct UniversePlayer: Decodable, Identifiable, Hashable {
+    let id: String, name: String, pos: String, team: String
+    let img: String?, logo: String?
+    let projected: Double?
+    /// How many of your leagues roster him, and how many of those are yours.
+    /// Deliberately not a league-wide ownership percentage: no feed this
+    /// reads publishes one, and a column labelled OWN% that quietly meant
+    /// something else would be worse than no column.
+    let owned: Int, mine: Int
+    let leagues: [Ownership]?
+    let status: String?
+}
+struct UniversePayload: Decodable {
+    let players: [UniversePlayer]
+    let count: Int, total: Int
+    let byPosition: [String: Int]
+    let leagues: Int
 }

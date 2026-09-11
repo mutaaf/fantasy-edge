@@ -27,6 +27,7 @@ class Manager:
     team_id: str
     name: str          # team name, which people rename constantly
     owner: str = ""    # human, which is the stable key across seasons
+    logo: str = ""     # the team's own badge, where the provider has one
 
 
 @dataclass(frozen=True)

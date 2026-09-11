@@ -1506,3 +1506,45 @@ class TestCrossProviderLiveScoring(unittest.TestCase):
                               "name": "Nobody Atall", "pos": "WR",
                               "espn_ids": False}])
         self.assertEqual(ghost.snapshot()["players"]["z9"]["s"], 0.0)
+
+
+class TestOpeningTheStoreIsReadOnly(unittest.TestCase):
+    """The API keys every cached payload on the database's mtime, so anything
+    that writes on open silently turns the whole read cache off."""
+
+    def test_opening_a_store_does_not_touch_the_file(self):
+        import tempfile, pathlib as _p
+        from fantasyedge.store import Store
+
+        with tempfile.TemporaryDirectory() as d:
+            path = _p.Path(d) / "t.db"
+            Store(path).close()                 # create it
+            before = path.stat().st_mtime_ns
+            for _ in range(5):
+                Store(path).close()
+            self.assertEqual(path.stat().st_mtime_ns, before,
+                             "opening a Store rewrote the database, which "
+                             "invalidates every API cache keyed on its mtime")
+
+    def test_a_fresh_database_still_records_its_schema_version(self):
+        import tempfile, pathlib as _p
+        from fantasyedge.store import Store, SCHEMA_VERSION
+
+        with tempfile.TemporaryDirectory() as d:
+            st = Store(_p.Path(d) / "t.db")
+            row = st.q("SELECT value FROM meta WHERE key='schema_version'")
+            self.assertEqual(row[0]["value"], str(SCHEMA_VERSION))
+            st.close()
+
+
+class TestTeamBadges(unittest.TestCase):
+    """Most ESPN team badges are SVG, which no plain image view rasterises."""
+
+    def test_svg_is_not_offered_as_drawable(self):
+        from fantasyedge.api import raster
+
+        self.assertFalse(raster("https://g.espncdn.com/lm-static/x/Gene.svg"))
+        self.assertFalse(raster(""))
+        self.assertTrue(raster("https://x/y.png"))
+        self.assertTrue(raster("https://x/y.GIF"))
+        self.assertTrue(raster("https://mystique-api.fantasy.espn.com/apis/v1/images/048ec3"))
