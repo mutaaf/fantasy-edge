@@ -1976,3 +1976,144 @@ class TestAWholeGameThroughTheStack(unittest.TestCase):
             self.assertIn(m.phase, ("pre", "live", "final"))
             self.assertAlmostEqual(sum(c.share for c in m.cells), 1.0, places=6,
                                    msg=f"t={t} tile shares do not fill the board")
+
+
+class TestConnectPage(unittest.TestCase):
+    """The Pages entry page: what a visitor with no credentials can reach.
+
+    GitHub Pages serves files, so this page has no server behind it. That is
+    not a limitation to work around, it is the constraint that decides what
+    can honestly be offered: Sleeper's read API and ESPN's public endpoints
+    allow a cross-origin read, so those work from a stranger's browser; Yahoo
+    needs a secret, so it cannot. These assert the page keeps that bargain.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1] / "fantasyedge" /
+                    "templates" / "connect.html").read_text(encoding="utf-8")
+
+    def table(self, name):
+        """One mirrored table, lifted out of the page's JavaScript."""
+        import re
+        m = re.search(r"^const " + name + r" = (\{.*\}|\[.*\]);$",
+                      self.page, re.M)
+        self.assertIsNotNone(m, f"{name} is no longer a single-line literal in "
+                                "connect.html, so nothing can compare it to Python")
+        return json.loads(m.group(1))
+
+    def test_the_javascript_folding_tables_are_the_python_ones(self):
+        """identity.py is the single owner of how a name folds.
+
+        A Sleeper roster is joined to an ESPN box score by folded name, because
+        Sleeper's player ids are not ESPN's - `espn_id` is null for most of the
+        players anybody starts. The browser has to do that join itself, so the
+        tables exist twice. Two copies that drift are worse than one that is
+        awkward, and the drift would be silent: a stale alias does not throw,
+        it just reports a real player as scoreless.
+        """
+        from fantasyedge import identity as I
+        from fantasyedge.live import NFL_TEAM
+        from fantasyedge.providers.espn import BENCH_SLOTS, POS, SLOT
+
+        self.assertEqual(self.table("NICKNAME"), I.NICKNAME)
+        self.assertEqual(self.table("TEAM_ALIAS"), I.TEAM_ALIAS)
+        self.assertEqual(self.table("POS_ALIAS"), I.POS_ALIAS)
+        self.assertEqual(self.table("NFL_TEAM"),
+                         {str(k): v for k, v in NFL_TEAM.items()})
+        self.assertEqual(self.table("ESPN_POS"),
+                         {str(k): v for k, v in POS.items()})
+        self.assertEqual(self.table("ESPN_SLOT"),
+                         {str(k): v for k, v in SLOT.items()})
+        self.assertEqual(sorted(self.table("BENCH_SLOTS")), sorted(BENCH_SLOTS))
+
+    def test_the_page_never_asks_a_visitor_for_a_credential(self):
+        """The one rule this page cannot be allowed to break.
+
+        `espn_s2` and `SWID` are a whole ESPN account, not one league. A public
+        page with a box for them is indistinguishable from a page built to
+        harvest them, and it teaches the habit phishing depends on. So there is
+        no such input, and this asserts it by shape rather than by wording -
+        a future contributor renaming the field must still trip it.
+        """
+        import re
+
+        for field in re.findall(r"<input\b[^>]*>", self.page):
+            self.assertNotIn("type=\"password\"", field)
+            low = field.lower()
+            for banned in ("s2", "swid", "cookie", "password", "token", "secret"):
+                self.assertNotIn(banned, low,
+                                 f"an input mentions {banned!r}: {field}")
+
+    def test_both_refusals_are_explained_rather_than_hidden(self):
+        """A missing feature with no explanation reads as a bug.
+
+        Somebody with a private ESPN league or a Yahoo league needs to be told
+        why this page cannot help and what does, or they conclude the page is
+        broken and this project cannot read their league at all - which is the
+        opposite of true. Both refusals name the credential and offer the local
+        command that does work.
+        """
+        for phrase in ("espn_s2", "SWID", "python3 -m fantasyedge api"):
+            self.assertIn(phrase, self.page, f"the ESPN refusal no longer says {phrase!r}")
+        for phrase in ("Yahoo", "OAuth", "client secret",
+                       "python3 -m fantasyedge auth --provider yahoo --url"):
+            self.assertIn(phrase, self.page, f"the Yahoo refusal no longer says {phrase!r}")
+
+    def test_there_is_no_yahoo_button_that_could_not_work(self):
+        """Every provider card that is clickable must lead somewhere real."""
+        import re
+
+        gos = set(re.findall(r'data-go="([a-z]+)"', self.page))
+        self.assertIn("sleeper", gos)
+        self.assertIn("espn", gos)
+        self.assertNotIn("yahoo", gos,
+                         "a Yahoo entry point appeared; a static page cannot hold "
+                         "the client secret OAuth needs, so the button would lie")
+        self.assertRegex(self.page, r'class="prov dead"[^>]*disabled',
+                         "the Yahoo card must be disabled, not merely styled dead")
+
+    def test_the_page_talks_to_the_documented_hosts_and_nothing_else(self):
+        """An allowlist, because a new host is a new party to trust.
+
+        The footer promises a visitor exactly which hosts their browser will
+        contact. A stray CDN, analytics tag or font host added later would make
+        that promise false without anything failing, so the promise is asserted
+        against the file instead of maintained by hand.
+        """
+        import re
+
+        allowed = {
+            "api.sleeper.app", "site.web.api.espn.com",
+            "lm-api-reads.fantasy.espn.com", "fonts.googleapis.com",
+            "fonts.gstatic.com",
+            "github.com",              # links out, not fetched
+        }
+        hosts = {re.sub(r"[/?\"'].*$", "", u[8:])
+                 for u in re.findall(r"https://[^\s\"'<>)]+", self.page)}
+        self.assertTrue(hosts <= allowed,
+                        f"undocumented host(s) in connect.html: {sorted(hosts - allowed)}")
+
+    def test_the_demo_is_labelled_as_one_persons_season_and_links_back(self):
+        """The demo must not read as the visitor's own board.
+
+        It is one real league's real season with the managers scrubbed. A
+        visitor who lands on it cold reads it either as dummy data or as
+        theirs, and both readings are wrong, so the ribbon says which it is and
+        offers the way in. It is injected at build time rather than added to
+        mosaic.html because only the Pages copy of that board is a demo.
+        """
+        import tools.build_docs as bd
+
+        self.assertIn("DEMO BOARD", bd.RIBBON)
+        self.assertIn("Not your data", bd.RIBBON)
+        self.assertIn('href="index.html"', bd.RIBBON)
+
+        with tempfile.TemporaryDirectory() as d:
+            out = pathlib.Path(d) / "index.html"
+            bd.build_connect(out)
+            built = out.read_text(encoding="utf-8")
+        self.assertIn("<!doctype html>", built)
+        self.assertIn('href="demo.html"', built,
+                      "the entry page no longer offers the demo, so the demo is "
+                      "unreachable rather than merely moved")

@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://mutaaf.github.io/fantasy-edge/">Live board</a> ·
+  <a href="https://mutaaf.github.io/fantasy-edge/">Connect your leagues</a> ·
   <a href="#the-leverage-model">The model</a> ·
   <a href="#quickstart">Quickstart</a> ·
   <a href="apple/">visionOS app</a> ·
@@ -231,8 +231,8 @@ fantasyedge/
   live.py           the shared tier — game state, identical for every user
   api.py            credential-free read API + SSE delta stream
   serve.py          the draft board; holds the cookie, loopback only
-  templates/        board.html, draft_report.html, mosaic.html
-tools/build_docs.py static build for GitHub Pages
+  templates/        board.html, draft_report.html, mosaic.html, connect.html
+tools/build_docs.py static build for GitHub Pages: connect page + demo board
 tests/              56 tests, fixture-driven, no network
 ```
 
@@ -298,18 +298,42 @@ used here because it is roughly 800 requests per game to assemble — a separate
 feature with a separate rate-limit risk — and because the values are per-play
 rather than cumulative, so the summing would be ours rather than ESPN's.
 
-## Live demo
+## On the web: connect your own leagues
 
-**[mutaaf.github.io/fantasy-edge](https://mutaaf.github.io/fantasy-edge/)** — the
-board, built from real league history and anonymised: NFL players are public
-figures and stay, the people in the league become "Team 7".
+**[mutaaf.github.io/fantasy-edge](https://mutaaf.github.io/fantasy-edge/)** —
+GitHub Pages, so there is no server behind it and never will be. Which decides,
+exactly, what a visitor can be offered:
 
+| Provider | On the web | Why |
+|---|---|---|
+| **Sleeper** | Works. Type a username. | `api.sleeper.app` sends `access-control-allow-origin: *` and needs no auth at all. Username → user id → leagues → rosters, matchups and live per-player points. |
+| **ESPN, public league** | Works. Type a league id. | `lm-api-reads.fantasy.espn.com` reflects the `Origin` header, and only 401s when the league is private. |
+| **ESPN, private league** | **Refused, deliberately.** | It would need your `espn_s2` and `SWID`. Those are your whole ESPN account, not one league. A public page with a box for them is indistinguishable from a page built to harvest them. Run `python3 -m fantasyedge api` locally instead, where the cookie stays in your own environment. |
+| **Yahoo** | **Impossible here.** | OAuth needs a client secret, and a static page has nowhere to keep one. It would take a deployed backend. There is no button, because a button that could not work is a lie about what the page is. |
 
+Live NFL game state works for every visitor whatever their provider, because
+ESPN's public slate is CORS-open too. It is joined to a roster by folded name
+plus position — never by player id, since Sleeper's ids are not ESPN's and
+`espn_id` is null for most of the players anybody starts. The browser runs the
+same folding rules as [`identity.py`](fantasyedge/identity.py), and a test
+asserts the two tables have not drifted.
 
-`make docs` renders a self-contained board into `docs/`, which GitHub Pages
-serves as-is. It runs a deterministic simulated Sunday so the page is alive
-without a server. **`--anon` is the default** in the Makefile: NFL players are
-public facts and stay, but the people in your league become "Team 3".
+The connection lives in that browser's `localStorage` and is sent nowhere;
+there is nowhere to send it.
+
+### The demo board
+
+**[/demo.html](https://mutaaf.github.io/fantasy-edge/demo.html)** — one real
+league's real season with the people scrubbed out: NFL players are public
+figures and keep their names, the managers become "Team 7". It is labelled as
+a demo on the page itself, because a visitor landing on somebody else's
+anonymised season reads it as either dummy data or their own, and both
+readings are wrong.
+
+`make docs` builds both pages into `docs/`, which GitHub Pages serves as-is:
+the entry page needs no build input at all, and the demo runs a deterministic
+simulated Sunday so it is alive without a server. **`--anon` is the default**
+in the Makefile.
 
 ## Documentation
 

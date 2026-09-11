@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Render the mosaic as a standalone page for GitHub Pages.
+"""Build the GitHub Pages site: an entry page and a demo board.
 
-The board normally gets its static half injected by `fantasyedge api`. Pages
-has no server, so this bakes that payload straight into the HTML and drops the
-result in `docs/`, which GitHub serves as-is.
+Pages has no server, so both halves have to be files.
+
+    docs/index.html   connect.html - how a visitor reaches their *own* leagues
+    docs/demo.html    the mosaic with one real season baked into it
+
+The split exists because the demo alone was a dead end. A visitor landing on
+somebody else's anonymised season sees dummy data and no way in, which is a
+worse first impression than no page at all. So the front door is now the
+connect page, which needs no build input at all: it talks to Sleeper and to
+ESPN's public endpoints straight from the visitor's browser. The demo stays
+exactly where it was in substance, one click away, and is labelled as what it
+is rather than being passed off as anybody's live board.
 
     python3 tools/build_docs.py                # real leagues, images from the CDN
     python3 tools/build_docs.py --anon         # team and manager names scrubbed
@@ -32,7 +41,9 @@ from fantasyedge.api import Api                                   # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "fantasyedge" / "templates" / "mosaic.html"
+CONNECT = ROOT / "fantasyedge" / "templates" / "connect.html"
 OUT = ROOT / "docs" / "index.html"
+DEMO = "demo.html"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0"
 
 
@@ -136,6 +147,51 @@ def embed_images(data: dict) -> dict:
     return out
 
 
+#: Pinned over the demo board. The demo is one real person's real season with
+#: the people scrubbed out, and a visitor who arrives on it with no context
+#: reasonably reads it as either dummy data or as their own - both wrong. The
+#: ribbon is injected here rather than added to mosaic.html so the board stays
+#: one template whether it is served by `fantasyedge api` or baked for Pages;
+#: only the Pages copy is a demo.
+RIBBON = (
+    "<div style=\"position:fixed;left:12px;bottom:12px;z-index:2147483000;"
+    "max-width:330px;font:500 12px/1.5 -apple-system,BlinkMacSystemFont,"
+    "'Helvetica Neue',sans-serif;color:#fff;background:rgba(5,15,56,.94);"
+    "border:1px solid rgba(255,255,255,.28);border-radius:11px;padding:9px 12px;"
+    "box-shadow:0 8px 26px rgba(0,0,0,.5)\">"
+    "<b style=\"letter-spacing:.14em;font-size:10.5px;color:#6fd84a\">DEMO BOARD</b>"
+    "<div style=\"margin-top:3px;color:rgba(255,255,255,.8)\">One real season, "
+    "played by one real league, with every manager's name removed. Not your data. "
+    "<a href=\"index.html\" style=\"color:#6fd84a\">Connect your own &rarr;</a></div>"
+    "</div>")
+
+
+def wrap(body: str, description: str, title: str) -> str:
+    """The document skeleton both pages share."""
+    return ("<!doctype html><html lang=en><head><meta charset=utf-8>"
+            "<meta name=viewport content='width=device-width,initial-scale=1'>"
+            f"<title>{title}</title>"
+            f"<meta name=description content='{description}'>"
+            "</head><body>" + body + "</body></html>")
+
+
+def build_connect(out: pathlib.Path) -> int:
+    """The entry page. Takes no build input at all - by design.
+
+    Everything it shows, it fetches from the visitor's own browser, so there is
+    nothing here to bake in and nothing about it that could leak one league's
+    data into another visitor's page.
+    """
+    page = wrap(
+        CONNECT.read_text(encoding="utf-8"),
+        "Connect your own fantasy football leagues - Sleeper needs no "
+        "credentials, a public ESPN league needs none either, and nothing is "
+        "sent anywhere.",
+        "Connect your leagues - fantasy-edge")
+    out.write_text(page, encoding="utf-8")
+    return len(page)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -144,8 +200,19 @@ def main() -> None:
                     help="replace league and manager names with generic labels")
     ap.add_argument("--embed", action="store_true",
                     help="inline images as data URIs instead of using the CDN")
-    ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--out", default=str(OUT),
+                    help="the entry page; the demo board is written beside it")
     args = ap.parse_args()
+
+    out = pathlib.Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    (out.parent / ".nojekyll").write_text("")      # serve the files verbatim
+
+    # The entry page first, and unconditionally. It needs no database, so an
+    # empty or missing one must still leave visitors a working front door
+    # rather than a 404 where the site used to be.
+    size = build_connect(out)
+    print(f"  wrote {out.relative_to(ROOT)}  {size // 1024}KB  (connect)")
 
     api = Api(args.db)
     try:
@@ -160,17 +227,15 @@ def main() -> None:
     page = (TEMPLATE.read_text(encoding="utf-8")
             .replace("__DATA__", json.dumps(data, separators=(",", ":"), default=str))
             .replace("__IMAGES__", json.dumps(images, separators=(",", ":"))))
-    page = ("<!doctype html><html lang=en><head><meta charset=utf-8>"
-            "<meta name=viewport content='width=device-width,initial-scale=1'>"
-            "<meta name=description content='Leverage Mosaic - a fantasy football "
-            "board where every cell is sized by how much it can still change your "
-            "week.'></head><body>" + page + "</body></html>")
+    page = wrap(RIBBON + page,
+                "Leverage Mosaic - a fantasy football board where every cell is "
+                "sized by how much it can still change your week. A demo built "
+                "from one real, anonymised season.",
+                "Demo board - fantasy-edge")
 
-    out = pathlib.Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(page, encoding="utf-8")
-    (out.parent / ".nojekyll").write_text("")      # serve the files verbatim
-    print(f"  wrote {out.relative_to(ROOT)}  {len(page) // 1024}KB  "
+    demo = out.parent / DEMO
+    demo.write_text(page, encoding="utf-8")
+    print(f"  wrote {demo.relative_to(ROOT)}  {len(page) // 1024}KB  "
           f"{len(data['leagues'])} leagues{'  (anonymised)' if args.anon else ''}")
 
 
