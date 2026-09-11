@@ -89,11 +89,12 @@ struct LeagueView: View {
     private func statStrip(_ L: LeaguePayload) -> some View {
         let m = board.mosaic(for: L)
         return HStack(spacing: 10) {
-            strip(L.record?.line ?? "—", L.record?.place ?? "record")
+            strip(L.record?.line ?? "—", L.record?.place ?? "record",
+                  Explain.record)
             strip(m.yourProjected.formatted(.number.precision(.fractionLength(1))),
-                  "proj points")
+                  "proj points", Explain.projected)
             strip(m.oppProjected.formatted(.number.precision(.fractionLength(1))),
-                  "opponent proj")
+                  "opponent proj", Explain.opponentProjected)
             VStack(alignment: .leading, spacing: 5) {
                 Text(m.winProb, format: .percent.precision(.fractionLength(0)))
                     .font(.system(size: 22, weight: .bold)).monospacedDigit()
@@ -112,10 +113,15 @@ struct LeagueView: View {
             .padding(.horizontal, 14).padding(.vertical, 11)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.05)))
+            .explains(Explain.winProbability)
         }
     }
 
-    private func strip(_ value: String, _ label: String) -> some View {
+    /// One figure in the strip. The whole block is the target, including the
+    /// label under the number - a reader aiming at "PROJ POINTS" is aiming at
+    /// the same thing as one aiming at the digits.
+    private func strip(_ value: String, _ label: String,
+                       _ detail: StatDetail? = nil) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(value).font(.system(size: 22, weight: .bold)).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.6)
@@ -125,6 +131,7 @@ struct LeagueView: View {
         .padding(.horizontal, 14).padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.05)))
+        .explains(detail)
     }
 
     // MARK: - roster

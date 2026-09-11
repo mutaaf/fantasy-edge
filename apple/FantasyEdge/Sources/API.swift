@@ -74,6 +74,80 @@ final class Board {
 
     var mosaic: Mosaic { Leverage.evaluate(cells) }
 
+    // MARK: - the league that is selected
+    //
+    // These exist because choosing a league in the rail used to change one
+    // highlight and nothing else. The command centre's centre and right rails
+    // read `roster` and `ranked`, both of which are collapsed across every
+    // league you follow, so `selected` had no reader outside the Leagues tab
+    // and the tap looked broken. Everything below is a filter over payloads
+    // already on the device - no extra request, and nothing invented.
+
+    /// The league a rail row is really about.
+    ///
+    /// `Debug.resize` clones a real league under "<id>#2" so a three-league
+    /// install can be made to render ten. Every join that keys on a league -
+    /// which of your men are in it, who owns a free agent - has to go through
+    /// the original, or a clone renders as a league nobody is in and the
+    /// selection looks broken at exactly the scale it was written to test.
+    func origin(_ L: LeaguePayload) -> LeaguePayload {
+        guard let hash = L.id.firstIndex(of: "#") else { return L }
+        let base = String(L.id[L.id.startIndex..<hash])
+        return leagues.first { $0.id == base } ?? L
+    }
+
+    /// Your men in the selected league, with their cross-league facts intact.
+    ///
+    /// `/api/players` collapses a man across every league you follow and
+    /// carries the league ids he is rostered in, so this is a filter rather
+    /// than another request, and `exposure` on each row still counts all of
+    /// them - which is the point of a cross-league board.
+    var rosterHere: [RosteredPlayer] {
+        guard let L = league.map(origin) else { return roster }
+        let mine = roster.filter { p in
+            (p.leagues ?? []).contains { $0.id == L.id }
+        }
+        // A league whose ownership rows have not arrived yet would otherwise
+        // blank the centre rail. Falling back to everything is the honest
+        // failure: it is what the panel showed before, not an empty claim.
+        return mine.isEmpty ? roster : mine
+    }
+
+    /// Where one of your men sits in the selected league. A man can be a
+    /// starter in one league and on the bench in another, so "started" is
+    /// only true of a league, never of a man.
+    func here(_ p: RosteredPlayer) -> Ownership? {
+        guard let L = league.map(origin) else { return nil }
+        return (p.leagues ?? []).first { $0.id == L.id }
+    }
+
+    /// Men on today's slate that nobody in the selected league rosters.
+    ///
+    /// `/api/rankings` names the leagues each man is owned in, so this is a
+    /// fact about that league rather than a guess. The cross-league version -
+    /// free in *every* league - is `RankedPlayer.isFree`, and the two differ
+    /// the moment one league's waiver wire is deeper than another's.
+    var freeHere: [RankedPlayer] {
+        guard let name = league.map(origin)?.league else {
+            return ranked.filter(\.isFree)
+        }
+        return ranked.filter { !($0.owned ?? []).contains(name) }
+    }
+
+    /// Whoever in the selected league has the most at stake right now.
+    ///
+    /// Lives here rather than in the view so the right rail follows the
+    /// league you picked: it was `roster.max` across everything, which is the
+    /// same man whichever league is selected.
+    var defaultFocus: String? {
+        let scored = live?.players ?? [:]
+        return rosterHere.max {
+            let a = scored[$0.id]?.s ?? ($0.projected ?? 0)
+            let b = scored[$1.id]?.s ?? ($1.projected ?? 0)
+            return a < b
+        }?.id
+    }
+
     func url(_ path: String) -> URL? { URL(string: "http://\(host)\(path)") }
 
     @MainActor

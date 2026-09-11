@@ -48,14 +48,26 @@ extension CommandView {
                     VStack(spacing: 13) {
                         HStack(spacing: 13) {
                             ProbRing(value: m.winProb, size: 64)
+                                .explains(Explain.winProbability)
+                            // Your team, and the row is the way into its
+                            // line-up - which is what a manager's name in a
+                            // list is for. The record beside it is a separate
+                            // datum with its own note, so it takes its own
+                            // small target rather than swallowing the row.
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(f.league.you.name)
-                                    .font(.system(size: 15, weight: .bold))
-                                    .lineLimit(1).minimumScaleFactor(0.7)
+                                Button { tab = .leagues } label: {
+                                    Text(f.league.you.name)
+                                        .font(.system(size: 15, weight: .bold))
+                                        .lineLimit(1).minimumScaleFactor(0.7)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(.rect)
+                                }
+                                .buttonStyle(.plain).hoverEffect(.highlight)
                                 if let r = f.league.record, !r.line.isEmpty {
                                     Text("\(r.line) · \(r.place)")
                                         .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
+                                        .explains(Explain.record)
                                 }
                                 ReasonChip(reason: f.reason)
                             }
@@ -63,20 +75,27 @@ extension CommandView {
                         }
                         Divider().opacity(0.2)
                         HStack(spacing: 6) {
-                            StatTile(value: figure(m.yourProjected), label: "YOU")
+                            StatTile(value: figure(m.yourProjected), label: "YOU",
+                                     detail: Explain.projected)
                             StatTile(value: figure(m.oppProjected),
                                      label: (f.league.opp?.name ?? "OPPONENT")
-                                        .uppercased())
+                                        .uppercased(),
+                                     detail: Explain.opponentProjected)
                             StatTile(value: (m.margin >= 0 ? "+" : "") + figure(m.margin),
                                      label: "MARGIN",
-                                     tint: m.margin >= 0 ? Theme.green : Theme.red)
+                                     tint: m.margin >= 0 ? Theme.green : Theme.red,
+                                     detail: Explain.margin)
                         }
                         HStack(spacing: 6) {
                             StatTile(value: board.rankSummary.value,
-                                     label: board.rankSummary.label)
+                                     label: board.rankSummary.label,
+                                     detail: Explain.rank(board.rankSummary,
+                                                          leagues: board.leagues.count))
                             StatTile(value: f.league.record?.pointsFor
-                                        .map { figure($0) } ?? "—", label: "POINTS FOR")
-                            StatTile(value: "\(board.distinctPlayers)", label: "ROSTERED")
+                                        .map { figure($0) } ?? "—", label: "POINTS FOR",
+                                     detail: Explain.pointsFor)
+                            StatTile(value: "\(board.distinctPlayers)", label: "ROSTERED",
+                                     detail: Explain.rostered)
                         }
                     }
                 }
@@ -143,7 +162,11 @@ extension CommandView {
     /// One league in the rail. The same row at every scale, so a number does
     /// not change appearance depending on how many leagues sit beside it.
     func leagueRow(_ f: LeagueFocus) -> some View {
-        Button { board.selected = f.league.id } label: {
+        let here = f.league.id == board.league?.id
+        // One target for the whole row. Nothing inside it is a control of its
+        // own - not the ring, not the chip - because a second target inside a
+        // tappable row is how a pinch ends up doing nothing.
+        return Button { choose(f.league.id) } label: {
             HStack(spacing: 11) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(f.league.league).font(.system(size: 13, weight: .semibold))
@@ -166,12 +189,20 @@ extension CommandView {
                         .font(.system(size: 9)).foregroundStyle(.tertiary)
                         .monospacedDigit()
                 }
+                // Offered rather than discovered: once a league is selected
+                // the rails are already showing it, so the only thing left to
+                // ask for is its own page, and the chevron says a second tap
+                // is what asks.
+                if here {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.green)
+                }
             }
             .padding(.vertical, 8).padding(.horizontal, 10)
             .background {
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(f.league.id == board.league?.id
-                          ? Theme.green.opacity(0.14) : .white.opacity(0.05))
+                    .fill(here ? Theme.green.opacity(0.14) : .white.opacity(0.05))
             }
             .contentShape(.rect)
         }
@@ -220,24 +251,32 @@ extension CommandView {
             let (w, l) = board.projectedRecord
             VStack(spacing: 12) {
                 HStack(spacing: 6) {
-                    StatTile(value: "\(board.leagues.count)", label: "LEAGUES")
-                    StatTile(value: "\(board.distinctPlayers)", label: "PLAYERS")
+                    StatTile(value: "\(board.leagues.count)", label: "LEAGUES",
+                             detail: Explain.leaguesFollowed)
+                    StatTile(value: "\(board.distinctPlayers)", label: "PLAYERS",
+                             detail: Explain.rostered)
                     StatTile(value: "\(w) - \(l)", label: "PROJECTED",
-                             tint: w >= l ? Theme.green : Theme.red)
+                             tint: w >= l ? Theme.green : Theme.red,
+                             detail: Explain.projectedRecord)
                 }
                 Divider().opacity(0.2)
                 HStack(spacing: 6) {
-                    StatTile(value: figure(board.totalProjected), label: "PROJ POINTS")
+                    StatTile(value: figure(board.totalProjected), label: "PROJ POINTS",
+                             detail: Explain.totalProjected)
                     StatTile(value: (board.edgeOverOpponents >= 0 ? "+" : "")
                              + figure(board.edgeOverOpponents),
                              label: "VS OPPONENTS",
-                             tint: board.edgeOverOpponents >= 0 ? Theme.green : Theme.red)
+                             tint: board.edgeOverOpponents >= 0 ? Theme.green : Theme.red,
+                             detail: Explain.edge)
                     // Says "league rank" over one league and "avg rank" over
                     // several, and names how many reported one when they
                     // differ - a tile whose meaning drifts with the league
-                    // count is worse than no tile.
+                    // count is worse than no tile. The popover carries the
+                    // same warning, because the label has no room for it.
                     StatTile(value: board.rankSummary.value,
-                             label: board.rankSummary.label)
+                             label: board.rankSummary.label,
+                             detail: Explain.rank(board.rankSummary,
+                                                  leagues: board.leagues.count))
                 }
             }
         }
@@ -254,7 +293,12 @@ extension CommandView {
                              ? "Nobody in your line-up is on the injury wire."
                              : "Nobody in your line-ups is on the injury wire.")
                 }
+                // An injury row is about a player, so it opens the player -
+                // the card in the right rail already carries his week, his
+                // exposure and his opportunity, which is exactly what the
+                // question "how bad is this for me" needs.
                 ForEach(board.injuries.prefix(5)) { inj in
+                    Button { focus = inj.id } label: {
                     HStack(spacing: 10) {
                         ZStack {
                             Circle().fill(severityTint(inj.severity).opacity(0.22))
@@ -282,7 +326,12 @@ extension CommandView {
                         Spacer(minLength: 0)
                     }
                     .padding(.vertical, 6).padding(.horizontal, 9)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
+                    .background(RoundedRectangle(cornerRadius: 12)
+                        .fill(focus == inj.id ? Theme.green.opacity(0.14)
+                                              : .white.opacity(0.05)))
+                    .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain).hoverEffect(.highlight)
                 }
             }
         }
@@ -335,27 +384,35 @@ extension CommandView {
                 VStack(spacing: 12) {
                     HStack(alignment: .firstTextBaseline, spacing: 14) {
                         side(f.league.you.name, m.yourScore, m.yourProjected, lead: true)
+                            .explains(Explain.projected)
                         Text("vs").font(.system(size: 11, weight: .heavy))
                             .foregroundStyle(.tertiary)
                         side(f.league.opp?.name ?? "Opponent",
                              m.oppScore, m.oppProjected, lead: false)
+                            .explains(Explain.opponentProjected)
                     }
-                    GeometryReader { g in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(.white.opacity(0.14))
-                            Capsule().fill(m.winProb >= 0.5 ? Theme.green : Theme.red)
-                                .frame(width: max(4, g.size.width * m.winProb))
+                    // The bar and the percentage under it are one figure, so
+                    // they are one target: tapping the bar and tapping the
+                    // words should not be two different gestures.
+                    VStack(spacing: 8) {
+                        GeometryReader { g in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(.white.opacity(0.14))
+                                Capsule().fill(m.winProb >= 0.5 ? Theme.green : Theme.red)
+                                    .frame(width: max(4, g.size.width * m.winProb))
+                            }
+                        }
+                        .frame(height: 6)
+                        HStack {
+                            Text("\(Int(m.winProb * 100))% win probability")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(m.winProb >= 0.5 ? Theme.green : Theme.red)
+                            Spacer(minLength: 0)
+                            Text(phrase(m)).font(.system(size: 10))
+                                .foregroundStyle(.tertiary)
                         }
                     }
-                    .frame(height: 6)
-                    HStack {
-                        Text("\(Int(m.winProb * 100))% win probability")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(m.winProb >= 0.5 ? Theme.green : Theme.red)
-                        Spacer(minLength: 0)
-                        Text(phrase(m)).font(.system(size: 10))
-                            .foregroundStyle(.tertiary)
-                    }
+                    .explains(Explain.winProbability)
                 }
             } else {
                 NoSource(what: "No matchup loaded for this week yet.")
@@ -402,7 +459,7 @@ extension CommandView {
 
     private func weekCard(_ f: LeagueFocus) -> some View {
         let m = f.mosaic
-        return Button { board.selected = f.league.id } label: {
+        return Button { choose(f.league.id) } label: {
             VStack(alignment: .leading, spacing: 7) {
                 Text(f.league.league).font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary).lineLimit(1)
@@ -447,9 +504,12 @@ extension CommandView {
         let shut = ranked.filter(\.decided)
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                StatTile(value: "\(ahead)", label: "AHEAD", tint: Theme.green)
-                StatTile(value: "\(doubt)", label: "IN DOUBT", tint: Theme.gold)
-                StatTile(value: "\(behind)", label: "BEHIND", tint: Theme.red)
+                StatTile(value: "\(ahead)", label: "AHEAD", tint: Theme.green,
+                         detail: Explain.tally("Ahead"))
+                StatTile(value: "\(doubt)", label: "IN DOUBT", tint: Theme.gold,
+                         detail: Explain.tally("In doubt"))
+                StatTile(value: "\(behind)", label: "BEHIND", tint: Theme.red,
+                         detail: Explain.tally("Behind"))
             }
             if weekExpanded {
                 weekCards(ranked)
@@ -503,7 +563,7 @@ extension CommandView {
     private func decidedRow(_ f: LeagueFocus) -> some View {
         let m = f.mosaic
         let won = m.winProb >= 0.5
-        return Button { board.selected = f.league.id } label: {
+        return Button { choose(f.league.id) } label: {
             HStack(spacing: 9) {
                 Circle().fill(won ? Theme.green : Theme.red).frame(width: 6, height: 6)
                 Text(f.league.league).font(.system(size: 11))
@@ -526,58 +586,47 @@ extension CommandView {
     /// cacheable, and why it costs nothing to show all of it.
     var liveGames: some View {
         Panel(title: "Live Games") {
-            let games = (board.live?.games ?? [:])
-                .sorted { ($0.value.kickoff ?? "") < ($1.value.kickoff ?? "") }
+            // `board.slate` rather than a second pairing of the same clubs.
+            // The old one here grouped on kickoff time plus label, which is
+            // fine until two games start in the same minute - on a Sunday,
+            // most of them - and it had no event id, so a tile could not lead
+            // anywhere. The slate is keyed on the event the feed reports, so
+            // it is right by construction and every tile knows its own game.
+            let games = board.slate
             if games.isEmpty {
                 NoSource(what: "No slate reported yet.")
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
-                        ForEach(pairs(games), id: \.key) { g in
-                            HStack(spacing: 9) {
-                                ClubMark(abbr: g.home, size: 24)
-                                VStack(spacing: 1) {
-                                    Text(g.score).font(.system(size: 13, weight: .bold))
-                                        .monospacedDigit()
-                                    Text(g.label).font(.system(size: 8))
-                                        .foregroundStyle(g.live ? AnyShapeStyle(Theme.green) : AnyShapeStyle(.tertiary))
-                                        .lineLimit(1)
+                        ForEach(games) { g in
+                            Button { openGame(g.event) } label: {
+                                HStack(spacing: 9) {
+                                    ClubMark(abbr: g.away, size: 24)
+                                    VStack(spacing: 1) {
+                                        Text(g.state == "pre" ? "vs"
+                                             : "\(g.awayScore) – \(g.homeScore)")
+                                            .font(.system(size: 13, weight: .bold))
+                                            .monospacedDigit()
+                                        Text(g.label).font(.system(size: 8))
+                                            .foregroundStyle(g.live
+                                                ? AnyShapeStyle(Theme.green)
+                                                : AnyShapeStyle(.tertiary))
+                                            .lineLimit(1)
+                                    }
+                                    .frame(minWidth: 54)
+                                    ClubMark(abbr: g.home, size: 24)
                                 }
-                                .frame(minWidth: 54)
-                                ClubMark(abbr: g.away, size: 24)
+                                .padding(.horizontal, 11).padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 13)
+                                    .fill(.white.opacity(0.05)))
+                                .contentShape(.rect)
                             }
-                            .padding(.horizontal, 11).padding(.vertical, 8)
-                            .background(RoundedRectangle(cornerRadius: 13)
-                                .fill(.white.opacity(0.05)))
+                            .buttonStyle(.plain).hoverEffect(.highlight)
                         }
                     }
                 }
             }
         }
-    }
-
-    /// The live tier reports per club, so a game is two club entries that
-    /// share a kickoff and a label. Pairing them back up here keeps that
-    /// shape out of the payload, which other surfaces rely on.
-    struct GamePair: Hashable {
-        let key: String, home: String, away: String
-        let score: String, label: String, live: Bool
-    }
-    func pairs(_ games: [(key: String, value: GameState)]) -> [GamePair] {
-        var byKick: [String: [(String, GameState)]] = [:]
-        for (ab, g) in games {
-            byKick[(g.kickoff ?? "") + (g.label ?? ""), default: []].append((ab, g))
-        }
-        return byKick.compactMap { _, v -> GamePair? in
-            guard v.count == 2 else { return nil }
-            let a = v[0], b = v[1]
-            let sa = a.1.score ?? "0", sb = b.1.score ?? "0"
-            let state = a.1.state ?? "pre"
-            return GamePair(key: a.0 + b.0, home: a.0, away: b.0,
-                            score: state == "pre" ? "vs" : "\(sa) – \(sb)",
-                            label: a.1.label ?? "", live: state == "in")
-        }
-        .sorted { $0.key < $1.key }
     }
 
     /// Your men, across every league, ordered by what is at stake now.
@@ -588,10 +637,18 @@ extension CommandView {
     /// space are the men you are exposed to more than once, because those are
     /// the ones a single afternoon decides several weeks with.
     var playersInAction: some View {
-        Panel(title: "My Players in Action") {
+        // Scoped to the league that is selected, which is the whole of the
+        // bug the rail had: this read the cross-league roster, so picking a
+        // league in the rail changed a highlight and left the centre showing
+        // the same twelve men. `rosterHere` is a filter over the ownership
+        // rows `/api/players` already carries - no extra request - and each
+        // man keeps his exposure across every league, because that is the
+        // fact a cross-league board exists to show.
+        Panel(title: board.scale.single ? "My Players in Action"
+              : "In Action · \(board.league?.league ?? "")") {
             let live = board.live?.players ?? [:]
             let many = board.scale.many
-            let men = board.roster.sorted { a, b in
+            let men = board.rosterHere.sorted { a, b in
                 if many, a.startedIn != b.startedIn { return a.startedIn > b.startedIn }
                 let la = live[a.id]?.s ?? -1, lb = live[b.id]?.s ?? -1
                 if la != lb { return la > lb }
@@ -619,16 +676,25 @@ extension CommandView {
                                         .font(.system(size: 10, weight: .bold))
                                         .foregroundStyle(Theme.green).monospacedDigit()
                                 }
-                                // Exposure is only a fact worth the line when
-                                // there is more than one league to be exposed
-                                // to. "1 league" under every man is noise.
-                                if !board.scale.single {
-                                    Text(p.exposure == 1 ? "1 league"
-                                                         : "\(p.exposure) leagues")
-                                        .font(.system(size: 8, weight: .heavy))
-                                        .foregroundStyle(p.exposure > 1
-                                                         ? AnyShapeStyle(Theme.gold)
-                                                         : AnyShapeStyle(.tertiary))
+                                // Where he sits in *this* league, which is a
+                                // different fact from where he sits in the
+                                // others - and the one that changes when you
+                                // pick a different league in the rail.
+                                if !board.scale.single, let o = board.here(p) {
+                                    HStack(spacing: 5) {
+                                        Text((o.started == true) ? "START"
+                                                                 : (o.slot ?? "BENCH"))
+                                            .font(.system(size: 8, weight: .heavy))
+                                            .foregroundStyle((o.started == true)
+                                                             ? AnyShapeStyle(Theme.green)
+                                                             : AnyShapeStyle(.secondary))
+                                        Text(p.exposure == 1 ? "1 league"
+                                                             : "\(p.exposure) leagues")
+                                            .font(.system(size: 8, weight: .heavy))
+                                            .foregroundStyle(p.exposure > 1
+                                                             ? AnyShapeStyle(Theme.gold)
+                                                             : AnyShapeStyle(.tertiary))
+                                    }
                                 }
                             }
                             Spacer(minLength: 0)
@@ -657,12 +723,18 @@ extension CommandView {
     /// set of that.
     var opportunities: some View {
         Panel(title: "Today's Top Opportunities") {
-            let free = board.ranked.filter(\.isFree)
+            // Free in the league that is selected, not free in all of them.
+            // The rankings payload names the leagues each man is owned in, so
+            // this is a fact about that league; the cross-league version hid
+            // every man who happened to be rostered in one other league,
+            // which is not a reason he is unavailable to you here.
+            let free = board.freeHere
                 .sorted { ($0.projected ?? 0) > ($1.projected ?? 0) }
             if free.isEmpty {
                 NoSource(what: board.scale.single
                          ? "Everybody on today's slate is rostered in your league."
-                         : "Everybody on today's slate is rostered in your leagues.")
+                         : "Everybody on today's slate is rostered in "
+                           + (board.league?.league ?? "this league") + ".")
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 168), spacing: 10)],
                           spacing: 10) {
@@ -676,11 +748,16 @@ extension CommandView {
                                         .lineLimit(1).minimumScaleFactor(0.7)
                                     Text("\(p.pos) · \(p.team)")
                                         .font(.system(size: 9)).foregroundStyle(.tertiary)
-                                    // "free in all 1" is not a sentence.
-                                    Text(board.scale.single ? "free in your league"
-                                         : "free in all \(board.leagues.count)")
+                                    // Says which league he is free in, since
+                                    // that is now the claim being made. "Free
+                                    // in your league" is the same sentence
+                                    // when there is only one.
+                                    Text(board.scale.single
+                                         ? "free in your league"
+                                         : "free in \(board.league?.league ?? "")")
                                         .font(.system(size: 8, weight: .heavy))
                                         .foregroundStyle(.tertiary)
+                                        .lineLimit(1).minimumScaleFactor(0.7)
                                     Text("+\(figure(p.projected ?? 0)) proj")
                                         .font(.system(size: 10, weight: .bold))
                                         .foregroundStyle(Theme.green).monospacedDigit()

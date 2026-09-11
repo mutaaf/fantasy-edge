@@ -23,6 +23,11 @@ struct CommandView: View {
     /// folded away for them to unfold.
     @State var railExpanded = false
     @State var weekExpanded = false
+    /// Which game the Live tab has open. Held here rather than inside
+    /// `LiveView` so a scoreline anywhere on the surface can open the field
+    /// this app already draws, instead of each panel growing its own smaller
+    /// copy of one.
+    @State var liveEvent = ""
 
     enum Tab: String, CaseIterable, Identifiable {
         case command = "Command", leagues = "Leagues", players = "Players"
@@ -63,6 +68,17 @@ struct CommandView: View {
             await board.loadPrefs()
             await board.loadContext()
         }
+        // A man you opened stays open when he is in the league you just moved
+        // to - watching his slot change from START to BENCH league to league
+        // is the point of a cross-league card. When he is not in it the rail
+        // falls back to whoever has the most at stake here, because otherwise
+        // choosing a league leaves the right rail on somebody who is not in
+        // that league at all.
+        .onChange(of: board.selected) { _, _ in
+            if let f = focus, !board.rosterHere.contains(where: { $0.id == f }) {
+                focus = nil
+            }
+        }
         .onDisappear { board.stop() }
     }
 
@@ -83,7 +99,7 @@ struct CommandView: View {
                 case .players: PlayersView(focus: $focus)
                 // Same reason as above: the live tab scrolls its own play
                 // feed and its own lanes, both with a ceiling on them.
-                case .live:    LiveView(focus: $focus)
+                case .live:    LiveView(focus: $focus, event: $liveEvent)
                 default:       centre
                 }
             }
@@ -91,6 +107,33 @@ struct CommandView: View {
             rightRail.frame(width: 340)
         }
         .padding(.horizontal, 20).padding(.vertical, 14)
+    }
+
+    // MARK: - where a tap goes
+    //
+    // One place per kind of thing, so the same datum cannot lead somewhere
+    // different depending on which panel it was tapped in.
+
+    /// A league row, anywhere on the surface.
+    ///
+    /// The first tap selects, and selecting is what every other rail now
+    /// follows - that is the bug this fixes, because before it the rails read
+    /// the cross-league payloads and a tap changed one highlight and nothing
+    /// else. A second tap on the row that is already selected opens the
+    /// league's own page, since by then "show me this one" cannot mean
+    /// anything smaller. The selected row carries a chevron so the second tap
+    /// is offered rather than discovered.
+    func choose(_ id: String) {
+        if board.selected == id { tab = .leagues } else { board.selected = id }
+    }
+
+    /// A scoreline is a game, and this app draws a game in exactly one place.
+    /// Sending the slate tiles there beats growing a second, smaller field
+    /// inside the command centre.
+    func openGame(_ event: String) {
+        guard !event.isEmpty else { return }
+        liveEvent = event
+        tab = .live
     }
 
     // MARK: - chrome

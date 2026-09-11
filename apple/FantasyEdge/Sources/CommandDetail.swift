@@ -6,7 +6,12 @@ extension CommandView {
 
     var rightRail: some View {
         ScrollView {
-            if let id = focus ?? defaultFocus {
+            // `board.defaultFocus` is scoped to the selected league, so
+            // picking a league in the left rail moves this panel too. It used
+            // to be the best man across every league at once, which is the
+            // same man whichever league you chose - the right rail simply did
+            // not react to the tap.
+            if let id = focus ?? board.defaultFocus {
                 PlayerPanel(id: id)
                     .id(id)                       // rebuild when the man changes
             } else {
@@ -16,16 +21,6 @@ extension CommandView {
             }
         }
         .scrollIndicators(.hidden)
-    }
-
-    /// Whoever has the most at stake right now, so the rail is never empty.
-    var defaultFocus: String? {
-        let live = board.live?.players ?? [:]
-        return board.roster.max {
-            let a = live[$0.id]?.s ?? ($0.projected ?? 0)
-            let b = live[$1.id]?.s ?? ($1.projected ?? 0)
-            return a < b
-        }?.id
     }
 }
 
@@ -116,12 +111,23 @@ struct PlayerPanel: View {
                          label: "LIVE",
                          // Green means "he has done something". Before kickoff
                          // that is a lie told in colour.
-                         tint: (liveLine?.s ?? 0) > 0 ? Theme.green : .primary)
+                         tint: (liveLine?.s ?? 0) > 0 ? Theme.green : .primary,
+                         detail: Explain.livePoints)
                 StatTile(value: (owner?.projected ?? 0)
                             .formatted(.number.precision(.fractionLength(1))),
-                         label: "PROJECTED")
-                StatTile(value: pct(weeks, 0.2), label: "FLOOR")
-                StatTile(value: pct(weeks, 0.8), label: "CEILING")
+                         label: "PROJECTED",
+                         detail: Explain.playerProjection)
+                // Only explained when there is a distribution behind them. A
+                // man with no games played shows a dash, and a dash has
+                // nothing to open.
+                StatTile(value: pct(weeks, 0.2), label: "FLOOR",
+                         detail: weeks.isEmpty ? nil
+                            : Explain.floorCeiling("Floor", quantile: "20th",
+                                                   games: weeks.count))
+                StatTile(value: pct(weeks, 0.8), label: "CEILING",
+                         detail: weeks.isEmpty ? nil
+                            : Explain.floorCeiling("Ceiling", quantile: "80th",
+                                                   games: weeks.count))
             }
             if !weeks.isEmpty {
                 Text("Floor and ceiling are his own 20th and 80th percentile weeks "
@@ -157,19 +163,16 @@ struct PlayerPanel: View {
                     NoSource(what: "Not rostered in any league you follow.")
                 }
                 ForEach(Array((owner?.leagues ?? []).enumerated()), id: \.offset) { _, o in
-                    HStack(spacing: 8) {
-                        Text(o.league ?? "—").font(.system(size: 11))
-                            .lineLimit(1).minimumScaleFactor(0.7)
-                        Spacer(minLength: 4)
-                        Text((o.started == true) ? "START" : (o.slot ?? "BENCH"))
-                            .font(.system(size: 9, weight: .heavy))
-                            .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(((o.started == true) ? Theme.green : Color.secondary)
-                                .opacity(0.22), in: .capsule)
-                            .foregroundStyle((o.started == true) ? Theme.green : .secondary)
-                    }
-                    .padding(.vertical, 5).padding(.horizontal, 9)
-                    .background(RoundedRectangle(cornerRadius: 11).fill(.white.opacity(0.05)))
+                    // A row naming a league leads to that league. Tappable
+                    // only when the board is actually carrying it: a league
+                    // you have hidden still appears in his ownership, and a
+                    // tap that selected one the rails cannot show would take
+                    // you nowhere.
+                    let reachable = o.id.map { id in
+                        board.leagues.contains { $0.id == id }
+                    } ?? false
+                    LeagueLine(o: o, selected: o.id == board.league?.id,
+                               tap: reachable ? { board.selected = o.id } : nil)
                 }
             }
         }
@@ -222,5 +225,43 @@ struct PlayerPanel: View {
             Text(s).font(.system(size: 11)).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+/// One league a man is rostered in, on the player card.
+///
+/// Its own type only so the whole row can be one hit target with or without a
+/// tap: writing it inline meant either a Button around everything or nothing,
+/// and a hidden league has to render as a plain row rather than as a control
+/// that leads to a board the app is not carrying.
+private struct LeagueLine: View {
+    let o: Ownership
+    let selected: Bool
+    let tap: (() -> Void)?
+
+    var body: some View {
+        if let tap {
+            Button(action: tap) { face.contentShape(.rect) }
+                .buttonStyle(.plain).hoverEffect(.highlight)
+        } else {
+            face
+        }
+    }
+
+    private var face: some View {
+        HStack(spacing: 8) {
+            Text(o.league ?? "—").font(.system(size: 11))
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 4)
+            Text((o.started == true) ? "START" : (o.slot ?? "BENCH"))
+                .font(.system(size: 9, weight: .heavy))
+                .padding(.horizontal, 7).padding(.vertical, 2)
+                .background(((o.started == true) ? Theme.green : Color.secondary)
+                    .opacity(0.22), in: .capsule)
+                .foregroundStyle((o.started == true) ? Theme.green : .secondary)
+        }
+        .padding(.vertical, 5).padding(.horizontal, 9)
+        .background(RoundedRectangle(cornerRadius: 11)
+            .fill(selected ? Theme.green.opacity(0.14) : .white.opacity(0.05)))
     }
 }

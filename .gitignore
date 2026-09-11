@@ -18,3 +18,4 @@ xcuserdata/
 # replay captures: several hundred KB of ESPN payload per game, re-downloadable
 # with `replay --capture`. The trimmed fixture under tests/ is the committed one.
 data/replay/
+.vercel

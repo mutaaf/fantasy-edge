@@ -12,8 +12,10 @@ import SwiftUI
 struct LiveView: View {
     @Environment(Board.self) private var board
     @Binding var focus: String?
+    /// Owned by the command centre, because a scoreline tapped on another tab
+    /// has to be able to say which game it meant before this view exists.
+    @Binding var event: String
     @State private var mode: Mode = .mine
-    @State private var event = ""
 
     enum Mode: String, CaseIterable, Identifiable {
         case mine = "My Team", game = "Game"
@@ -30,6 +32,11 @@ struct LiveView: View {
             }
             Spacer(minLength: 0)
         }
+        // Arriving with a game already named means somebody tapped a
+        // scoreline to get here, so the field they asked for is what opens -
+        // landing on "My Team" would silently ignore the tap.
+        .onAppear { if !event.isEmpty { mode = .game } }
+        .onChange(of: event) { _, new in if !new.isEmpty { mode = .game } }
     }
 
     private var switcher: some View {
@@ -358,22 +365,34 @@ struct MyTeamField: View {
         let shown = open ? ranked : Array(ranked.prefix(lane))
         return VStack(alignment: .leading, spacing: 8) {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 196), spacing: 8)], spacing: 8) {
+                // The whole card opens the man, and the face inside it is not
+                // a control of its own - see the note on `FieldToken.tap`.
+                // Off the grass this is a row about a player, and a row about
+                // a player should be tappable everywhere on it, including the
+                // half that is words.
                 ForEach(shown) { m in
-                    HStack(spacing: 8) {
-                        FieldToken(man: m, selected: focus == m.id, size: 36, dimmed: dim) {
-                            focus = m.id
+                    Button { focus = m.id } label: {
+                        HStack(spacing: 8) {
+                            FieldToken(man: m, selected: focus == m.id,
+                                       size: 36, dimmed: dim)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("\(m.pos) · \(m.fixture)")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(Theme.position(m.pos))
+                                Text(note(m)).font(.system(size: 9))
+                                    .foregroundStyle(.tertiary)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer(minLength: 0)
                         }
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("\(m.pos) · \(m.fixture)")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(Theme.position(m.pos))
-                            Text(note(m)).font(.system(size: 9)).foregroundStyle(.tertiary)
-                                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                        }
-                        Spacer(minLength: 0)
+                        .padding(.vertical, 5).padding(.horizontal, 7)
+                        .background(RoundedRectangle(cornerRadius: 12)
+                            .fill(focus == m.id ? Theme.green.opacity(0.14)
+                                                : .white.opacity(0.05)))
+                        .contentShape(.rect)
                     }
-                    .padding(.vertical, 5).padding(.horizontal, 7)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
+                    .buttonStyle(.plain).hoverEffect(.highlight)
                 }
             }
             if ranked.count > lane {

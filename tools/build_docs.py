@@ -33,6 +33,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.parse
 import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
@@ -166,12 +167,44 @@ RIBBON = (
     "</div>")
 
 
+#: The tab icon, inline. It is written out here rather than shipped as a file
+#: because a linked icon is one more request to get wrong and a .ico is a
+#: binary blob in a repository that otherwise has none - this is text, and it
+#: is editable by hand.
+#:
+#: No plate behind it. The plated version lost most of its sixteen pixels to
+#: navy padding and read as a green smudge in a tab; the bare ball fills the
+#: square, and mid-green holds against both a white tab strip and a dark one,
+#: which is the whole of what "dark mode safe" has to mean for a favicon.
+FAVICON = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
+    "<g transform='rotate(-40 32 32)'>"
+    "<ellipse cx='32' cy='32' rx='31' ry='18.5' fill='#5bc236'/>"
+    "<g stroke='#050f38' stroke-linecap='round' fill='none'>"
+    "<path d='M20 32h24' stroke-width='6'/>"
+    "<path d='M26 26v12M33 26v12M40 26v12' stroke-width='4.5'/>"
+    "</g></g></svg>")
+
+
+def favicon_link() -> str:
+    """A data URI, so the icon adds no host to the page's allowlist.
+
+    Declared explicitly rather than left to the server: these pages are static
+    files under a path on somebody else's domain, and a bare /favicon.ico is a
+    request to the domain root that this deployment neither owns nor serves -
+    which is exactly the 404 that was being logged.
+    """
+    uri = "data:image/svg+xml," + urllib.parse.quote(FAVICON, safe="='/ ")
+    return f"<link rel=icon type='image/svg+xml' href=\"{uri}\">"
+
+
 def wrap(body: str, description: str, title: str) -> str:
     """The document skeleton both pages share."""
     return ("<!doctype html><html lang=en><head><meta charset=utf-8>"
             "<meta name=viewport content='width=device-width,initial-scale=1'>"
             f"<title>{title}</title>"
             f"<meta name=description content='{description}'>"
+            + favicon_link() +
             "</head><body>" + body + "</body></html>")
 
 

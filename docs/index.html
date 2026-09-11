@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Connect your leagues - fantasy-edge</title><meta name=description content='Connect your own fantasy football leagues - Sleeper needs no credentials, a public ESPN league needs none either, and nothing is sent anywhere.'></head><body><link rel="preconnect" href="https://fonts.googleapis.com">
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Connect your leagues - fantasy-edge</title><meta name=description content='Connect your own fantasy football leagues - Sleeper needs no credentials, a public ESPN league needs none either, and nothing is sent anywhere.'><link rel=icon type='image/svg+xml' href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg transform='rotate%28-40 32 32%29'%3E%3Cellipse cx='32' cy='32' rx='31' ry='18.5' fill='%235bc236'/%3E%3Cg stroke='%23050f38' stroke-linecap='round' fill='none'%3E%3Cpath d='M20 32h24' stroke-width='6'/%3E%3Cpath d='M26 26v12M33 26v12M40 26v12' stroke-width='4.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"></head><body><link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
@@ -14,8 +14,11 @@
     site.web.api.espn.com           access-control-allow-origin: *
     lm-api-reads.fantasy.espn.com   reflects Origin; 401 only when private
 
-  Everything on this page is built out of exactly those three, and the parts
-  that cannot be built out of them are refused in writing rather than faked.
+  Everything on this page is built out of exactly those three. What cannot be
+  built out of them - Yahoo, and a private ESPN league - is answered in the
+  questions at the foot of the page rather than faked: what it is waiting on,
+  what works today instead, and, in the one case that is not a schedule at all,
+  that no version of this page will ever ask a visitor for a session cookie.
   A button that cannot work is a lie about what this page is.
 -->
 
@@ -68,7 +71,7 @@ header.top{padding:58px 0 34px;position:relative}
 .kicker::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,
   rgba(91,194,54,.7),transparent)}
 h1{font-family:var(--display);font-weight:400;margin:16px 0 0;
-  font-size:clamp(46px,9.2vw,104px);line-height:.86;letter-spacing:-.01em;
+  font-size:clamp(46px,9.2vw,104px);line-height:.92;letter-spacing:-.01em;
   text-transform:uppercase}
 h1 em{font-style:normal;color:var(--green);
   text-shadow:0 0 44px rgba(91,194,54,.4)}
@@ -84,10 +87,15 @@ section{margin-top:46px}
 h2{font-family:var(--display);font-weight:400;margin:0;font-size:23px;
   letter-spacing:.015em;text-transform:uppercase}
 .sechead p{margin:0;color:var(--ink-faint);font-size:13px;flex:1}
+/* Below this the standfirst is sharing a flex row with a display-face heading
+   and gets a column four words wide. It has to drop under the heading. */
+@media(max-width:620px){
+  .sechead{flex-wrap:wrap}
+  .sechead p{flex:1 0 100%;margin-top:5px}
+}
 
 .card{background:linear-gradient(180deg,var(--card-2),var(--card));
   border:1px solid var(--hair);border-radius:var(--r);padding:22px 24px}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 
 label.f{display:block;font-family:var(--cond);font-size:12.5px;font-weight:700;
   letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);
@@ -132,15 +140,21 @@ a.btnlink:hover{filter:brightness(1.09)}
 .prov{text-align:left;padding:0;background:linear-gradient(180deg,var(--card-2),
   var(--card));border:1px solid var(--hair);border-radius:var(--r);
   overflow:hidden;position:relative;transition:border-color .2s,transform .2s var(--ease)}
-button.prov{letter-spacing:normal;text-transform:none;font-family:var(--ui)}
+button.prov{letter-spacing:normal;text-transform:none;font-family:var(--ui);
+  color:var(--ink)}
 .prov:not(.dead):hover{border-color:var(--green);transform:translateY(-3px)}
 .prov .bar{height:4px;background:var(--green)}
 .prov.espn .bar{background:#d50a0a}
-.prov.dead .bar{background:rgba(255,255,255,.22)}
+.prov.dead .bar{background:repeating-linear-gradient(90deg,
+  rgba(255,176,32,.9) 0 10px, rgba(255,176,32,.2) 10px 20px)}
 .prov .in{padding:19px 20px 20px}
 .prov h3{margin:0;font-family:var(--display);font-weight:400;font-size:21px;
   text-transform:uppercase;letter-spacing:.02em}
-.prov p{margin:9px 0 0;font-size:13.5px;line-height:1.55;color:var(--ink-dim)}
+/* Weight is reset because these paragraphs live inside a <button>, and the
+   button rule above sets 700 for the app's chrome. Card copy in bold read as
+   a warning rather than as an explanation. */
+.prov p{margin:9px 0 0;font-size:13.5px;line-height:1.55;color:var(--ink-dim);
+  font-weight:400}
 .tag{display:inline-block;font-family:var(--cond);font-size:11px;font-weight:700;
   letter-spacing:.15em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
   margin-bottom:11px}
@@ -148,8 +162,8 @@ button.prov{letter-spacing:normal;text-transform:none;font-family:var(--ui)}
   border:1px solid rgba(91,194,54,.42)}
 .tag.maybe{background:rgba(255,176,32,.15);color:var(--amber);
   border:1px solid rgba(255,176,32,.4)}
-.tag.no{background:rgba(255,255,255,.07);color:var(--ink-faint);
-  border:1px solid var(--hair)}
+.tag.soon{background:rgba(255,176,32,.16);color:var(--amber);
+  border:1px solid rgba(255,176,32,.42)}
 /* The Yahoo card is a real <button disabled>, because it must not be
    clickable and must not be reachable by keyboard either. A disabled button
    inherits the platform's greyed-out text colour, which on this ground made
@@ -160,17 +174,65 @@ button.prov{letter-spacing:normal;text-transform:none;font-family:var(--ui)}
 .prov.dead .in{opacity:1}
 button.prov[disabled]{opacity:.82;cursor:default}
 
-/* ── the refusals ─────────────────────────────────────────────────── */
-.refuse{border:1px solid rgba(255,176,32,.34);border-radius:var(--r);
-  background:linear-gradient(180deg,rgba(255,176,32,.075),rgba(255,176,32,.02));
-  padding:21px 23px}
-.refuse h3{margin:0 0 4px;font-family:var(--display);font-weight:400;font-size:18px;
-  text-transform:uppercase;letter-spacing:.02em;color:var(--amber)}
-.refuse p{margin:11px 0 0;font-size:14px;line-height:1.66;color:var(--ink-dim)}
-.refuse p:first-of-type{color:rgba(255,255,255,.86)}
-.refuse code{font-family:var(--mono);font-size:12.5px;background:rgba(0,0,0,.4);
+/* ── hero call to action ──────────────────────────────────────────── */
+/* The primary button repeats the Sleeper card below it rather than being the
+   only way in. A visitor who has already decided should not have to scroll
+   past three cards to act, and a visitor who has not still meets the chooser. */
+.cta{display:flex;flex-wrap:wrap;gap:13px;align-items:center;margin-top:28px}
+.cta .big{font-size:15px;padding:16px 27px}
+.cta .quiet{background:transparent;border:1px solid var(--hair-2);
+  color:var(--ink-dim)}
+.cta .quiet:hover{border-color:var(--ink);color:var(--ink);filter:none}
+.ctanote{font-size:13px;color:var(--ink-faint);line-height:1.5;max-width:34ch}
+
+/* ── the three claims ─────────────────────────────────────────────── */
+/* Rules above each claim rather than boxes around them: three more cards
+   directly above the three provider cards read as one grid of six and the
+   eye stopped telling the pitch from the chooser. */
+.why{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(258px,1fr))}
+.why > div{border-top:2px solid rgba(91,194,54,.6);padding-top:14px}
+.why h3{margin:0;font-family:var(--cond);font-size:15.5px;font-weight:700;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--green-lift)}
+.why p{margin:9px 0 0;font-size:14px;line-height:1.62;color:var(--ink-dim)}
+.why a{color:var(--ink-dim)}
+
+/* ── questions ─────────────────────────────────── */
+/* <details> and nothing else. The page has to work as a file with nothing
+   running behind it, and an accordion is the one interaction the platform
+   gives away for free. */
+.faq{display:grid;gap:10px}
+.faq details{background:linear-gradient(180deg,var(--card-2),var(--card));
+  border:1px solid var(--hair);border-radius:13px}
+.faq details[open]{border-color:var(--hair-2)}
+.faq summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;
+  align-items:baseline;gap:10px 12px;padding:15px 18px;font-size:15px;
+  font-weight:600;line-height:1.4;color:var(--ink);border-radius:13px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:hover{background:rgba(255,255,255,.04)}
+.faq summary .q{flex:1;min-width:min(100%,15ch)}
+.faq summary::after{content:"+";font-family:var(--mono);font-size:18px;
+  line-height:1;color:var(--ink-faint)}
+.faq details[open] summary::after{content:"\2212"}
+/* The blunt half of the answer, in the summary, so that scanning the list
+   answers "is this page going to ask me for a password" without a click. */
+.faq .short{font-family:var(--cond);font-size:12px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--green-lift)}
+.faq .a{padding:0 18px 18px;font-size:14px;line-height:1.68;color:var(--ink-dim)}
+.faq .a p{margin:0 0 11px}
+.faq .a p:last-child{margin:0}
+.faq .a b{color:#fff}
+.faq .a a{color:var(--green-lift)}
+.faq code{font-family:var(--mono);font-size:12.5px;background:rgba(0,0,0,.4);
   padding:2px 6px;border-radius:5px;color:#fff}
-.refuse a{color:var(--green-lift)}
+/* Two of these are refusals rather than instructions and are coloured as
+   such: a visitor worried about a phishing page should be able to find the
+   answer by colour before they have read a word of it. */
+.faq details.hot{border-color:rgba(255,75,75,.3);
+  background:linear-gradient(180deg,rgba(255,75,75,.085),rgba(255,75,75,.025))}
+.faq details.hot .short{color:#ff8f8f}
+.faq details.soonq{border-color:rgba(255,176,32,.3);
+  background:linear-gradient(180deg,rgba(255,176,32,.075),rgba(255,176,32,.02))}
+.faq details.soonq .short{color:var(--amber)}
 
 /* ── lists (leagues, teams) ───────────────────────────────────────── */
 .list{display:grid;gap:9px;margin-top:4px}
@@ -263,49 +325,95 @@ footer a{color:var(--green-lift)}
 
 <div class="wrap">
 
+<!-- ── hero ───────────────────────────────────────── -->
+<!--
+  One pitch line and one button, and nothing else above the fold. Everything
+  instructional and everything defensive is real and stays on the page, but it
+  used to sit between a visitor and the only action they came to take, which
+  made an honest page read as a manual.
+-->
 <header class="top rise">
-  <div class="kicker">fantasy-edge &middot; no server, no account, no cookie</div>
-  <h1>Connect<br><em>your own</em> leagues</h1>
-  <p class="lede">This page is a file on GitHub Pages. There is nothing running
-  behind it &mdash; <b>no backend, no database, no session</b>. Everything below is
-  fetched by your browser, directly from the provider, and kept in this browser
-  only. Which is why one provider works instantly, one works if your league is
-  public, and one cannot work here at all. All three are explained honestly
-  rather than papered over.</p>
+  <div class="kicker">fantasy-edge &middot; every league you play, on one board</div>
+  <h1>Every league<br>you play.<br>One <em>board</em>.</h1>
+  <div id="hero-pitch">
+  <p class="lede">One of your leagues is on Sleeper, one is on ESPN, and nothing
+  you own shows you both at once. <b>This does</b> &mdash; and it sizes every
+  matchup by how much it can still change your week.</p>
+  <div class="cta">
+    <button class="go big" data-go="sleeper">Connect Sleeper</button>
+    <a class="btnlink quiet" href="demo.html">See a real board first</a>
+    <span class="ctanote">Your Sleeper username is the whole sign-up. No login,
+    no password, no account to create.</span>
+  </div>
+  </div>
 </header>
 
-<!-- ── step 1: choose ─────────────────────────────────────────────── -->
-<section id="v-choose" class="rise" style="animation-delay:.08s">
-  <div class="sechead"><span class="secnum">01</span><h2>Pick your provider</h2></div>
+<!-- ── why ────────────────────────────────────────── -->
+<section id="v-why" class="rise" style="animation-delay:.06s">
+  <div class="sechead"><span class="secnum">&mdash;</span>
+    <h2>Three things it does</h2>
+    <p>None of them is &ldquo;more stats&rdquo;.</p></div>
+  <div class="why">
+    <div>
+      <h3>Every league on one screen</h3>
+      <p>A Sleeper league and an ESPN league are two apps that will never speak
+      to each other, so on a Sunday you tab between them and compare from
+      memory. Here they are rows on the same board &mdash; one place to answer the
+      only question that actually matters: out of everything happening right
+      now, what should I be watching?</p>
+    </div>
+    <div>
+      <h3>Sized by what is still in doubt</h3>
+      <p>Not by what is big. A back with a half still to play in a one-score
+      game fills the screen; a matchup already decided shrinks away on its own.
+      That is arithmetic, recomputed as the games move, not a layout somebody
+      chose &mdash; and it is a couple of hundred lines you can
+      <a href="https://github.com/mutaaf/fantasy-edge/blob/main/fantasyedge/leverage.py">read all of</a>.</p>
+    </div>
+    <div>
+      <h3>Where you actually watch football</h3>
+      <p>This browser. Your phone, laid out for a thumb. The television across
+      the room. And a native Vision Pro app that puts the game itself in the
+      middle of your line-up. One model, ported by hand to each surface and
+      checked against itself, so no screen waits on a server to be told how big
+      to draw a cell.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── step 1: choose ────────────────────────────────── -->
+<section id="v-choose" class="rise" style="animation-delay:.12s">
+  <div class="sechead"><span class="secnum">01</span><h2>Start with a league</h2>
+    <p>Sleeper takes about ten seconds.</p></div>
   <div class="pick">
     <button class="prov" data-go="sleeper">
       <div class="bar"></div>
       <div class="in">
-        <span class="tag ok">Works right now</span>
+        <span class="tag ok">Live now &middot; no account</span>
         <h3>Sleeper</h3>
-        <p>Needs nothing but your username. Sleeper's read API is public and
-        open to any origin, so your leagues, rosters and live scores load
-        straight into this page.</p>
+        <p>Your username and nothing else. Sleeper's read API is public and open
+        to any origin, so your leagues, rosters and live scores load straight
+        into this page &mdash; no login, no password, nothing to sign up for.</p>
       </div>
     </button>
     <button class="prov espn" data-go="espn">
       <div class="bar"></div>
       <div class="in">
-        <span class="tag maybe">Works if public</span>
+        <span class="tag maybe">Public leagues, no login</span>
         <h3>ESPN</h3>
-        <p>Needs a league id. If your league's visibility is public, ESPN
-        answers this page without any credential. If it is private, ESPN
-        returns 401 and no page can talk its way past that.</p>
+        <p>A league id and nothing else. If your league's visibility is public,
+        ESPN answers this page without any credential. Private leagues are
+        coming by a different route &mdash; the questions below say which.</p>
       </div>
     </button>
     <button class="prov dead" disabled>
       <div class="bar"></div>
       <div class="in">
-        <span class="tag no">Impossible here</span>
+        <span class="tag soon">Coming soon</span>
         <h3>Yahoo</h3>
-        <p>Requires OAuth, which requires a client secret, which a static page
-        has nowhere to keep. There is no button because there is no honest
-        button. Full explanation below.</p>
+        <p>Waiting on Yahoo's own Fantasy Sports API approval, which is a manual
+        review on their side. The card is not clickable yet because a button
+        that cannot work is a lie. The questions below have the detail.</p>
       </div>
     </button>
   </div>
@@ -390,51 +498,15 @@ footer a{color:var(--green-lift)}
   <div id="board"></div>
 </section>
 
-<!-- ── refusals ────────────────────────────────────────────────────── -->
-<section id="v-honesty">
-  <div class="sechead"><span class="secnum">&mdash;</span>
-    <h2>What this page will not do</h2>
-    <p>Two things, and the reasons are not technical shyness.</p></div>
-  <div class="grid">
-    <div class="refuse">
-      <h3>It will never ask for espn_s2 or SWID</h3>
-      <p>Those two cookies are your live ESPN session. Anyone holding them can
-      read and change your ESPN account &mdash; not just look at your league. There
-      is no input box for them on this page and there never will be.</p>
-      <p>A public web page that asks a stranger to paste a session cookie is
-      teaching exactly the habit that phishing depends on, and it would be
-      indistinguishable from a page built to steal one. This project's own rules
-      forbid a credential ever touching the repository, and a page served
-      <em>from</em> the repository is not an exception.</p>
-      <p><b>So a private ESPN league needs the app on your own machine</b>, where
-      the cookie stays in your own environment and never leaves it:
-      <code>python3 -m fantasyedge api</code>. See the
-      <a href="https://github.com/mutaaf/fantasy-edge#quickstart">quickstart</a>.
-      That is not a lesser option &mdash; it is the whole app, with history,
-      analytics and the draft board.</p>
-    </div>
-    <div class="refuse">
-      <h3>Yahoo cannot work here at all</h3>
-      <p>Not "not yet". Yahoo's fantasy API requires OAuth, OAuth requires a
-      client secret, and a static page has nowhere to keep a secret: every byte
-      shipped to your browser is readable by everyone who loads it. Publishing
-      the secret would let anyone impersonate this application, and Yahoo would
-      revoke it within the day.</p>
-      <p>Making Yahoo work would take a deployed backend that holds the secret,
-      performs the token exchange and stores a refresh token per user &mdash; a
-      server, an account system and a privacy policy. That is a different
-      product, not a missing feature.</p>
-      <p><b>So there is no Yahoo button.</b> Locally, where a secret can live in
-      your environment, Yahoo works today:
-      <code>python3 -m fantasyedge auth --provider yahoo --url</code>.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ── the demo ────────────────────────────────────────────────────── -->
+<!-- ── the demo ─────────────────────────────────────── -->
 <section id="v-demo">
-  <div class="sechead"><span class="secnum">&mdash;</span><h2>Or just look at one</h2></div>
+  <div class="sechead"><span class="secnum">&mdash;</span>
+    <h2>See one before you connect anything</h2>
+    <p>Nothing to type. One click, a whole season on the board.</p></div>
   <div class="card">
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:var(--ink-dim)">
+    The fastest way to understand what &ldquo;sized by what is still in
+    doubt&rdquo; means is to look at a board where it has already happened.</p>
     <p style="margin:0;font-size:15px;line-height:1.65;color:var(--ink-dim)">
     <b style="color:#fff">The demo board is one real person's real season</b>, with
     the people removed: NFL players are public figures and keep their names, but
@@ -446,17 +518,154 @@ footer a{color:var(--green-lift)}
   </div>
 </section>
 
+<!-- ── questions ───────────────────────────────────── -->
+<!--
+  Every instruction and every refusal the page used to spend its middle on,
+  moved here and shortened by nothing. Two of them are security answers, and
+  those carry their answer in the summary line - "Never", "Nowhere" - so a
+  visitor scanning for whether this page is going to ask them for a password
+  gets the answer without opening anything.
+-->
+<section id="v-faq">
+  <div class="sechead"><span class="secnum">&mdash;</span>
+    <h2>Questions</h2>
+    <p>Including the two nobody asks out loud.</p></div>
+  <div class="faq">
+
+    <details>
+      <summary><span class="q">How do I find my Sleeper username?</span>
+        <span class="short">It's public</span></summary>
+      <div class="a">
+        <p>It is the display name your leaguemates see &mdash; the one on your
+        avatar in the Sleeper app &mdash; not the email address you sign in with.
+        That name is all this page asks for, and it is all Sleeper's public read
+        API needs to list the leagues you are in.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="q">Where do I find my ESPN league id?</span>
+        <span class="short">In the URL</span></summary>
+      <div class="a">
+        <p>Open your league on ESPN and read the address bar. It contains
+        <code>leagueId=</code> followed by a run of digits, and those digits are
+        the whole of it.</p>
+        <p>Paste them here with the season and this page asks ESPN directly,
+        with no credential attached. If the league's visibility is public, ESPN
+        answers. If it is private it returns 401, and you get the next question
+        rather than an error code.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="q">Do I need an account, a login or a password?</span>
+        <span class="short">No</span></summary>
+      <div class="a">
+        <p>No, and there is nothing to sign up to. This page is a file on a
+        static host: <b>no backend, no database, no session</b>. Everything on it
+        is fetched by your browser, directly from the provider.</p>
+        <p>Sleeper needs your username. A public ESPN league needs a league id.
+        That is the entire list.</p>
+      </div>
+    </details>
+
+    <details class="hot">
+      <summary><span class="q">Will this page ever ask for my password,
+        espn_s2 or SWID?</span>
+        <span class="short">Never</span></summary>
+      <div class="a">
+        <p><b>No &mdash; not now, and not once the extension below ships.</b>
+        <code>espn_s2</code> and <code>SWID</code> are your live ESPN session:
+        anyone holding those two cookies can read and change your whole ESPN
+        account, not just look at your league.</p>
+        <p>A public web page that asks a stranger to paste a session cookie is
+        indistinguishable from a page built to steal one, and it teaches exactly
+        the habit phishing depends on. This project's own rules forbid a
+        credential ever touching the repository, and a page served <em>from</em>
+        the repository is not an exception.</p>
+        <p>So there is no input for one on this page, and there never will be.
+        If you ever meet a page wearing this one's name and asking for those two
+        cookies, it is not this one.</p>
+      </div>
+    </details>
+
+    <details class="soonq">
+      <summary><span class="q">My ESPN league is private. What now?</span>
+        <span class="short">Coming soon</span></summary>
+      <div class="a">
+        <p><b>Coming soon: a browser extension.</b> ESPN gives third parties no
+        way to sign you in &mdash; no OAuth, no read-only key, nothing to apply
+        for. The one legitimate route left is an extension that reads your own,
+        already-signed-in session on ESPN's own domain and never carries it
+        anywhere else. That is how FantasyPros reaches a private league, and it
+        is the route this is taking.</p>
+        <p><b>Today, a private league already works on your own machine</b>,
+        where the cookie stays in your own environment and never leaves it:
+        <code>python3 -m fantasyedge api</code>. See the
+        <a href="https://github.com/mutaaf/fantasy-edge#quickstart">quickstart</a>. That is not a lesser
+        option &mdash; it is the whole app, with history, analytics and the draft
+        board.</p>
+      </div>
+    </details>
+
+    <details class="soonq">
+      <summary><span class="q">Why is there no Yahoo button?</span>
+        <span class="short">Coming soon</span></summary>
+      <div class="a">
+        <p><b>Yahoo is coming; it is waiting on Yahoo.</b> Their Fantasy Sports
+        API now goes through a manual review before an application is approved,
+        and this one is in that queue. The OAuth client is written and covered
+        by tests; the review is the only thing left. No date is promised here,
+        because nobody has one to promise.</p>
+        <p>There is a second reason the card is not clickable yet. OAuth needs a
+        client secret, and a static page has nowhere to keep one: every byte
+        shipped to your browser is readable by everyone who loads it. Publishing
+        it would let anyone impersonate this application, and Yahoo would revoke
+        it inside a day. So when Yahoo does arrive here, it arrives with the
+        token exchange running somewhere a secret can actually live &mdash; not
+        with a secret baked into this file.</p>
+        <p><b>Already have Yahoo API credentials of your own?</b> The app on your
+        own machine can use them today, where a secret can live in your
+        environment:
+        <code>python3 -m fantasyedge auth --provider yahoo --url</code>.</p>
+      </div>
+    </details>
+
+    <details class="hot">
+      <summary><span class="q">Where does my data go?</span>
+        <span class="short">Nowhere</span></summary>
+      <div class="a">
+        <p><b>Nowhere, because there is nowhere to send it.</b> This page has no
+        server behind it. Your username, league id and team choice are written
+        to this browser's <code>localStorage</code> and read by nothing but this
+        page.</p>
+        <p>No analytics, no cookies, no account. Clearing your browser data, or
+        pressing <em>Forget this browser</em> on the board, erases the
+        connection completely.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="q">Which hosts does my browser contact?</span>
+        <span class="short">Five</span></summary>
+      <div class="a">
+        <p>These, and nothing else. A test in the repository asserts this list
+        against the page itself, so a stray CDN or tracker added later fails the
+        build rather than quietly appearing here.</p>
+        <p class="hosts">api.sleeper.app &mdash; your Sleeper leagues, rosters, live points<br>
+        site.web.api.espn.com &mdash; the public NFL slate, scores and box scores<br>
+        lm-api-reads.fantasy.espn.com &mdash; a public ESPN league, unauthenticated<br>
+        fonts.googleapis.com / fonts.gstatic.com &mdash; typefaces</p>
+      </div>
+    </details>
+
+  </div>
+</section>
+
 <footer>
-  <p style="margin:0"><b style="color:#fff">Where your data goes: nowhere.</b>
-  This page has no server to send it to. Your username, league id and team choice
-  live in this browser's <code>localStorage</code> and are read by nothing but
-  this page. Clearing your browser data, or pressing <em>Forget this browser</em>,
-  erases the connection completely. No analytics, no cookies, no account.</p>
-  <p class="hosts">Every host this page contacts, and nothing else:<br>
-  api.sleeper.app &mdash; your Sleeper leagues, rosters, live points<br>
-  site.web.api.espn.com &mdash; the public NFL slate, scores and box scores<br>
-  lm-api-reads.fantasy.espn.com &mdash; a public ESPN league, unauthenticated<br>
-  fonts.googleapis.com / fonts.gstatic.com &mdash; typefaces</p>
+  <p style="margin:0"><b style="color:#fff">No server, no account, no
+  analytics.</b> This page is a file, and the questions above say exactly what
+  it asks for, where that is kept and what it will never ask for at all.</p>
   <p style="margin-top:16px"><a href="https://github.com/mutaaf/fantasy-edge">Source</a>
   &middot; <a href="demo.html">Demo board</a>
   &middot; <a href="https://github.com/mutaaf/fantasy-edge/blob/main/AGENTS.md">For agents</a></p>
@@ -595,11 +804,16 @@ async function getJSON(url){
 function show(view){
   for (const id of ["choose", "sleeper", "espn", "board"])
     $("#v-" + id).hidden = (id !== view);
-  /* The refusals and the demo stay visible behind every step except the
+  /* The questions and the demo stay visible behind every step except the
      board: somebody who is about to type a league id is exactly the person
      who needs to read why nobody will ask them for a cookie. */
-  $("#v-honesty").hidden = (view === "board");
+  $("#v-faq").hidden = (view === "board");
   $("#v-demo").hidden = (view === "board");
+  /* The pitch is for a first visit only. A returning visitor boots straight to
+     their board, and leaving the sales copy stacked above it made their own
+     live score the second thing on the page. */
+  $("#hero-pitch").hidden = (view === "board");
+  $("#v-why").hidden = (view !== "choose");
   window.scrollTo({top: 0, behavior: "smooth"});
 }
 function fail(node, e){
@@ -727,8 +941,10 @@ async function sleeperBoard(conn){
 const PRIVATE_LEAGUE =
   "That league is private, so ESPN will not answer a page that has no session. " +
   "This page will not ask you for one — espn_s2 and SWID are your whole ESPN " +
-  "account, not just your league. Run the app on your own machine instead, where " +
-  "the cookie stays in your own environment: python3 -m fantasyedge api";
+  "account, not just your league. A browser extension is coming for exactly " +
+  "this case; the box for your cookie is not. Today, run the app on your own " +
+  "machine, where the cookie stays in your own environment: " +
+  "python3 -m fantasyedge api";
 
 async function espnLeague(leagueId, season, views){
   const q = views.map((v) => "view=" + v).join("&");

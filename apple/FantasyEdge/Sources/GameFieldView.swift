@@ -249,22 +249,30 @@ struct GameFieldView: View {
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    // One target per man, on the whole chip. The face was the
+                    // only tappable part before, which put a small control
+                    // inside a larger thing that looked like one.
                     ForEach(men) { m in
-                        HStack(spacing: 7) {
-                            FieldToken(man: m, selected: focus == m.id, size: 28,
-                                       named: false) { focus = m.id }
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text(m.name).font(.system(size: 10, weight: .semibold))
-                                    .lineLimit(1)
-                                Text("\(m.pos) · \(m.points, format: .number.precision(.fractionLength(1))) pts")
-                                    .font(.system(size: 9)).monospacedDigit()
-                                    .foregroundStyle(m.points > 0 ? AnyShapeStyle(Theme.green)
-                                                                  : AnyShapeStyle(.tertiary))
+                        Button { focus = m.id } label: {
+                            HStack(spacing: 7) {
+                                FieldToken(man: m, selected: focus == m.id,
+                                           size: 28, named: false)
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(m.name).font(.system(size: 10, weight: .semibold))
+                                        .lineLimit(1)
+                                    Text("\(m.pos) · \(m.points, format: .number.precision(.fractionLength(1))) pts")
+                                        .font(.system(size: 9)).monospacedDigit()
+                                        .foregroundStyle(m.points > 0 ? AnyShapeStyle(Theme.green)
+                                                                      : AnyShapeStyle(.tertiary))
+                                }
                             }
+                            .padding(.horizontal, 7).padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 11)
+                                .fill(focus == m.id ? Theme.green.opacity(0.14)
+                                                    : .white.opacity(0.05)))
+                            .contentShape(.rect)
                         }
-                        .padding(.horizontal, 7).padding(.vertical, 4)
-                        .background(RoundedRectangle(cornerRadius: 11)
-                            .fill(.white.opacity(0.05)))
+                        .buttonStyle(.plain).hoverEffect(.highlight)
                     }
                 }
             }

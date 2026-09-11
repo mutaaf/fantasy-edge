@@ -174,6 +174,35 @@ The panels are deliberately unequal in how well founded they are, and say so:
   a dashboard that quietly invents a plausible number is worse than one with a
   hole in it: you cannot tell which half to trust.
 
+### Where a tap goes
+
+The surface a datum opens is chosen by what the datum is, not by what is easy
+to build. A row, a tile and a card are each one hit target across their whole
+frame - never just the label, and never a second smaller target inside a
+larger one.
+
+- **A player** - a row anywhere, an injury on the wire, a man on the field or
+  in a lane - opens the card in the right rail.
+- **A team** opens that team's line-up, on the league view's Roster tab.
+- **A league** selects it. Everything else follows: the centre rail's line-up,
+  the free agents, the right rail's default man. A second tap on the league
+  that is already selected opens its own page, and the selected row carries a
+  chevron so the second tap is offered rather than discovered.
+- **A single statistic** - a projection, a win probability, a floor, a record,
+  an average rank - opens a popover saying what the figure is, how it was
+  arrived at, and what would make quoting it wrong. The strings live in one
+  place, `Explain` in `CommandPanels.swift`, so the same figure cannot come to
+  mean two things in two panels. A figure with nothing further to say is not
+  tappable at all: a control that opens an empty card is worse than none.
+- **A game** opens the Live tab's field for that game, which is the only place
+  this app draws one.
+
+**A headshot and a club badge are never their own target.** They are part of
+the row they sit in. Two overlapping targets means the gesture depends on
+where the gaze settled, so the same pinch sometimes works and sometimes does
+nothing - which is how the live lanes behaved before: the face opened the man
+and the words beside it did nothing.
+
 ## The league view
 
 The command centre answers "how am I doing everywhere". The Leagues tab

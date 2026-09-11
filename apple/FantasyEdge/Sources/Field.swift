@@ -125,7 +125,13 @@ struct FieldToken: View {
     /// The name capsule under the face. Off where the name is already beside
     /// the token, which is a row rather than a field.
     var named = true
-    let tap: () -> Void
+    /// Nil where the token is part of something larger that is already the
+    /// hit target. A face inside a tappable row must not be a second control:
+    /// the two targets overlap, and which one a pinch lands on depends on
+    /// where the gaze happened to settle - so the same gesture sometimes does
+    /// the right thing and sometimes nothing at all. On the grass the token
+    /// *is* the row, and there it takes the tap itself.
+    var tap: (() -> Void)? = nil
 
     private var tint: Color { Theme.position(man.pos) }
     private var surname: String {
@@ -136,7 +142,16 @@ struct FieldToken: View {
     }
 
     var body: some View {
-        Button(action: tap) {
+        if let tap {
+            Button(action: tap) { face }
+                .buttonStyle(.plain)
+                .hoverEffect(.highlight)
+        } else {
+            face
+        }
+    }
+
+    private var face: some View {
             VStack(spacing: 3) {
                 ZStack(alignment: .topTrailing) {
                     Headshot(url: man.img, name: man.name, tint: tint, size: size)
@@ -166,9 +181,6 @@ struct FieldToken: View {
             .frame(width: named ? size + 26 : size)
             .opacity(dimmed ? 0.45 : 1)
             .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .hoverEffect(.highlight)
     }
 }
 
