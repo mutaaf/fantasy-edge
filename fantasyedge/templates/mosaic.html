@@ -955,6 +955,165 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .pl-mine.opp{background:var(--opp);color:#fff}
 
 
+/* ── live: one game, on a field ─────────────────────────────
+   The board's other tabs read a week. This one reads a snap: where the ball
+   is, whose down it is, and which of your men are standing in that game right
+   now. Everything drawn here comes from /api/live and /api/gamecast and
+   nothing is modelled - the win probability is ESPN's own series, not one this
+   page fitted, because a curve we invented would look exactly like one we were
+   given. With no API behind the page there is no slate, and the whole view
+   says so rather than drawing an empty pitch with a ball on it. */
+.live{margin-top:12px;display:grid;gap:14px}
+.live[hidden]{display:none!important}
+
+/* the slate. Ordered live, then finished, then not yet kicked off - a game
+   with no drives cannot draw a field, so it should not be what the tab opens
+   on. */
+.sl{display:flex;gap:9px;overflow-x:auto;padding:2px 1px 8px;scrollbar-width:thin}
+.sl::-webkit-scrollbar{height:6px}
+.sl::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
+.sl-g{flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;padding:7px 11px;transition:.2s var(--ease);
+  font-family:var(--ui);color:inherit}
+.sl-g:hover{background:rgba(255,255,255,.10);border-color:var(--hair-2)}
+.sl-g[aria-pressed="true"]{background:rgba(91,194,54,.16);border-color:var(--green)}
+.sl-mid{display:grid;justify-items:center;gap:1px;min-width:56px}
+.sl-sc{font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:-.02em;
+  white-space:nowrap}
+.sl-st{font-family:var(--cond);font-size:9.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);white-space:nowrap}
+.sl-g.on .sl-st{color:var(--green)}
+
+/* a club, as a crest or the letters when there is no drawable crest - same
+   rule the team badges follow, for the same reason */
+.club{flex:none;width:26px;height:26px;border-radius:50%;display:grid;
+  place-items:center;overflow:hidden;background:rgba(255,255,255,.10)}
+.club img{width:100%;height:100%;object-fit:contain}
+.club span{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.02em}
+.club.lg{width:40px;height:40px}
+.club.lg span{font-size:13px}
+
+/* the panel every part of the game sits in */
+.gp{background:var(--card);border:1px solid rgba(255,255,255,.11);
+  border-radius:var(--r-card);padding:15px 17px 17px}
+.gp-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  margin-bottom:11px}
+.gp-k{font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.gp-note{font-family:var(--cond);font-size:10.5px;font-weight:600;letter-spacing:.06em;
+  color:var(--ink-faint)}
+.gp-note.live{color:var(--green)}
+
+.gsb{display:flex;align-items:center;gap:18px;margin-bottom:13px;flex-wrap:wrap}
+.gsb-s{display:flex;align-items:center;gap:10px}
+.gsb-n{display:grid;gap:0}
+.gsb-ab{font-size:12px;font-weight:800;letter-spacing:.02em;display:flex;
+  align-items:center;gap:5px}
+.gsb-ball{width:9px;height:6px;border-radius:50%/50%;background:var(--hot);
+  box-shadow:0 0 6px rgba(255,212,0,.6);flex:none}
+.gsb-pt{font-family:var(--display);font-size:30px;line-height:1;letter-spacing:.01em}
+.gsb-sep{font-size:17px;color:var(--ink-faint)}
+.gsb-cl{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--ink-dim)}
+
+/* the field. One SVG rather than a stack of divs: a pitch is about a hundred
+   and forty lines, ticks and numbers and none of them move - only the three
+   markers on top of them do, which is why those are separate nodes that get
+   an x moved rather than a redrawn turf. */
+.fw{position:relative;border-radius:16px;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 14px 34px rgba(0,0,0,.36)}
+.fw svg{display:block;width:100%;height:auto}
+.fmark{transition:transform .5s cubic-bezier(.2,0,.2,1)}
+
+.sit{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.sit-dd{font-family:var(--cond);font-size:13px;font-weight:800;letter-spacing:.06em;
+  background:var(--navy-600);border:1px solid var(--hair);border-radius:var(--r-chip);
+  padding:3px 12px}
+.sit-at{font-size:12px;color:var(--ink-dim)}
+.sit-y{font-family:var(--mono);font-size:11.5px;font-weight:600}
+.sit-y.up{color:var(--green)}
+.sit-y.down{color:var(--opp)}
+.sit-now{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--hot);border:1px solid rgba(255,212,0,.4);
+  border-radius:var(--r-chip);padding:2px 10px}
+.sit-dr{margin-left:auto;font-size:11px;color:var(--ink-faint);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46%}
+
+/* your men in this game. The point of a cross-league board is that a game only
+   matters through the people you own in it. */
+.mine{display:flex;gap:8px;overflow-x:auto;margin-top:13px;padding-bottom:6px;
+  scrollbar-width:thin}
+.mine::-webkit-scrollbar{height:6px}
+.mine::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
+.mn{flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  border-radius:13px;padding:6px 11px 6px 7px;transition:.2s var(--ease);
+  color:inherit;font-family:var(--ui);text-align:left}
+.mn:hover{background:rgba(255,255,255,.10);border-color:var(--hair-2)}
+.mn-f{width:30px;height:30px;border-radius:50%;flex:none;overflow:hidden;
+  display:grid;place-items:center;background:var(--fc,#222)}
+.mn-f img{width:100%;height:100%;object-fit:cover}
+.mn-f span{font-family:var(--cond);font-size:11px;font-weight:800}
+.mn-n{font-size:12px;font-weight:700;white-space:nowrap}
+.mn-s{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap}
+
+/* the two panels that read the game rather than show it */
+.gcols{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;
+  align-items:start}
+.wp-chart{width:100%;height:auto;display:block;border-radius:12px;
+  background:rgba(255,255,255,.04)}
+.wp-line{fill:none;stroke:rgba(255,255,255,.92);stroke-width:2;stroke-linejoin:round}
+.wp-row{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.wp-pct{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.wp-cav{font-size:10.5px;color:var(--ink-faint);margin-left:auto}
+
+.pbp{max-height:430px;overflow-y:auto;display:grid;gap:4px;padding-right:4px;
+  scrollbar-width:thin}
+.pbp::-webkit-scrollbar{width:7px}
+.pbp::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
+.dv{display:flex;align-items:center;gap:8px;padding:9px 6px 3px;position:sticky;
+  top:0;background:linear-gradient(180deg,var(--navy-700) 72%,transparent);
+  z-index:1}
+.dv-r{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-dim)}
+.dv-r.sc{color:var(--hot)}
+.dv-d{font-size:10.5px;color:var(--ink-faint);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.pp{display:grid;grid-template-columns:38px 62px minmax(0,1fr) auto;gap:9px;
+  align-items:start;border:1px solid transparent;border-radius:11px;
+  padding:6px 9px;cursor:pointer;background:none;color:inherit;
+  font-family:var(--ui);text-align:left;transition:.16s var(--ease)}
+.pp:hover{background:rgba(255,255,255,.07)}
+.pp[aria-pressed="true"]{background:rgba(91,194,54,.15);border-color:var(--green)}
+/* A score and a turnover are the two plays a reader is scanning for, so they
+   are the two that carry their own ground rather than a tag you have to read. */
+.pp.sc{background:rgba(255,212,0,.11);border-color:rgba(255,212,0,.34)}
+.pp.to{background:rgba(255,75,75,.11);border-color:rgba(255,75,75,.34)}
+.pp.sc[aria-pressed="true"],.pp.to[aria-pressed="true"]{border-color:var(--green)}
+.pp-t{display:grid;gap:0}
+.pp-q{font-family:var(--cond);font-size:9px;font-weight:800;letter-spacing:.1em;
+  color:var(--ink-faint)}
+.pp-c{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.pp-d{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.05em;
+  color:var(--ink-faint);padding-top:2px}
+.pp-x{font-size:12px;line-height:1.35;color:var(--ink-dim)}
+.pp-tag{font-family:var(--cond);font-size:9px;font-weight:800;letter-spacing:.1em;
+  border-radius:var(--r-chip);padding:2px 8px;white-space:nowrap}
+.pp-tag.sc{background:var(--hot);color:#231c00}
+.pp-tag.to{background:var(--opp);color:#fff}
+
+/* No source is a state, not an error, and it has to look different from an
+   empty panel or a reader assumes the page broke. */
+.nosrc{font-size:12.5px;color:var(--ink-faint);line-height:1.5;
+  border:1px dashed var(--hair);border-radius:12px;padding:13px 15px}
+.nosrc b{color:var(--ink-dim);font-weight:700}
+
+@media (max-width:980px){
+  .gcols{grid-template-columns:minmax(0,1fr)}
+  .pbp{max-height:320px}
+}
+
+
 /* ── phone ─────────────────────────────────────────────────
    Found by running it on the thing: five tabs do not fit across a phone, so
    "Headlines" was simply cut off the edge with no way to reach it. The row
@@ -1181,6 +1340,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
       <!-- Where you are comes first and loudest; how it is drawn comes after. -->
       <div class="seg" id="homeseg" role="group" aria-label="Console view">
         <button data-h="board" aria-pressed="true">Board</button>
+        <button data-h="live" aria-pressed="false">Live</button>
         <button data-h="leagues" aria-pressed="false">Leagues</button>
         <button data-h="players" aria-pressed="false">My players</button>
         <button data-h="universe" aria-pressed="false">All players</button>
@@ -1245,6 +1405,30 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
       <div class="lv-tbl" id="unitable"></div>
       <button class="uni-more" id="unimore" hidden>Show more</button>
       <div class="uni-foot" id="unifoot"></div>
+    </div>
+  </div>
+  <div class="live" id="live" hidden>
+    <div class="sl" id="slate" role="group" aria-label="Today's games"></div>
+    <div class="nosrc" id="livenone" hidden></div>
+    <div class="gp" id="gpanel" hidden>
+      <div class="gp-h"><span class="gp-k" id="gp-k">Game</span>
+        <span class="gp-note" id="gp-note"></span></div>
+      <div class="gsb" id="gsb"></div>
+      <div class="fw" id="fw"></div>
+      <div class="sit" id="sit"></div>
+      <div class="mine" id="mine"></div>
+    </div>
+    <div class="gcols" id="gcols" hidden>
+      <div class="gp">
+        <div class="gp-h"><span class="gp-k">Win probability</span>
+          <span class="gp-note">ESPN’s series</span></div>
+        <div id="wpbox"></div>
+      </div>
+      <div class="gp">
+        <div class="gp-h"><span class="gp-k">Play by play</span>
+          <span class="gp-note" id="pbp-note"></span></div>
+        <div class="pbp" id="pbp"></div>
+      </div>
     </div>
   </div>
   <div class="teampick" id="teampick" hidden>
@@ -1840,7 +2024,11 @@ function showHome(){
     $("score").hidden=true;$("pbwrap").hidden=true;$("teampick").hidden=true;
     $("pregame").hidden=true;$("plays").hidden=true;$("viewseg").hidden=true;}
   $("whenfilters").hidden=!(home==="players"||home==="today");$("hidden").hidden=!isL||!hiddenIds().length;
-  $("feedwrap").hidden=isL||home==="analysis"||home==="universe";
+  $("feedwrap").hidden=isL||home==="analysis"||home==="universe"||home==="live";
+  // Set before the board tab's early return below, because that return leaves
+  // the rest of this function unrun - the live view stayed on screen under an
+  // open league the first time it was wired up after it.
+  $("live").hidden=home!=="live";
   $("angrid").hidden=home!=="analysis";
   $("uni").hidden=home!=="universe";
   if(home!=="board")$("lgv").hidden=true;
@@ -1852,6 +2040,12 @@ function showHome(){
   if(home!=="leagues")setText($("intensity"),"");
   if(home==="universe"){uniLoad(uniScope,()=>renderUniverse(true));
     renderUniverse(true);return;}
+  if(home==="live"){
+    // Ask once on arrival rather than waiting up to the poll interval to draw
+    // anything - the tab would otherwise open empty for eight seconds.
+    liveFetch();
+    try{renderLive();}catch(err){console.error("live view failed",err);}
+    return;}
   if(home==="players")renderPlayersFeed(true);
   else if(home==="today")renderToday();
   else if(home==="analysis"){renderAnalysis();}
@@ -3498,6 +3692,606 @@ $("unitable").addEventListener("click",e=>{
                  ||(lg.roster||[]).find(c=>String(c.id)===pid));
   openCard(cell||{...p},lg?lg.id:null);});
 
+/* ── live: one game, on a field ────────────────────────────────────────
+   The rest of the console reads a week. This tab reads a snap - where the ball
+   is, whose down it is, and which of your men are standing in that game.
+
+   Two rules run through all of it. Nothing here is modelled: the win
+   probability is the series ESPN published, one point per play, because a
+   curve this page fitted itself would look exactly like one it was given and
+   the reader would have no way to tell. And every position on the field comes
+   from a play's `from`/`to`, which are yards to the *defending* end zone - the
+   one the club with the ball is attacking. A yard line will not do: "the 35"
+   is two different places depending on whose 35 it is, and the feed does not
+   say whose, which is exactly how a ball ends up drawn on the wrong half.
+
+   With no API behind the page there is no slate at all, and the view says so
+   rather than drawing an empty pitch with a ball somewhere plausible on it. */
+
+let liveGames={};        // club -> the live entry, straight from /api/live
+let liveVer="";          // /api/live's version hash
+let liveErr="";          // why the slate is empty, when we know
+let liveAsked=false;     // has /api/live answered once
+let liveEvent="";        // which game is on screen
+let livePlay=null;       // which play the field shows; null means the latest
+const casts=new Map();       // event -> gamecast payload
+const castState=new Map();   // event -> "loading" | "ok" | "err"
+const castMsg=new Map();     // event -> why it failed
+const castAt=new Map();      // event -> the liveVer we last asked at
+
+/* Crests. The slate comes out of /api/live, which carries no images, so the
+   clubs a player of yours plays for are known from the roster and the rest
+   arrive with their gamecast. A club with no crest gets its letters rather
+   than a guessed URL. */
+const CLUBIMG={};
+for(const p of allPlayers)
+  if(p.team&&!CLUBIMG[p.team]){const u=logoSrc(p);if(u)CLUBIMG[p.team]=u;}
+const clubHTML=(ab,cls)=>`<span class="club ${cls||""}">`+
+  (CLUBIMG[ab]?`<img src="${esc(CLUBIMG[ab])}" alt="" loading="lazy">`
+              :`<span>${esc(ab||"—")}</span>`)+"</span>";
+
+/* Coerce, never trust. `nf = n => n.toFixed(1)` threw on an undefined once and
+   the uncaught throw killed a whole tick of the board; every number the feed
+   hands this view goes through one of these two first. */
+const numOr=(v,d)=>Number.isFinite(+v)?+v:d;
+const intOr=(v,d)=>{const n=Math.round(numOr(v,NaN));return Number.isFinite(n)?n:d;};
+
+/* ── geometry ──────────────────────────────────────────────────────────
+   Every offence on this field attacks left to right, whichever way it is
+   actually facing in its stadium. So 100 yards-to-the-end-zone is its own goal
+   line at the left edge of the turf and 0 is the score at the right. Ten yards
+   of end zone at each end is why the playing surface is 1000 units of a
+   1200-unit box. */
+const FEZ=100,FPLAY=1000;
+const fx=tz=>FEZ+(100-Math.max(0,Math.min(100,numOr(tz,0))))*(FPLAY/100);
+
+/* "3rd & 7". Null when there is no down to report, which is a real state and
+   not missing data: kickoffs and extra points come through carrying down 0
+   or -1. */
+function ddText(down,dist,tz){
+  const d=intOr(down,0);if(d<=0)return null;
+  const NAME=["","1st","2nd","3rd","4th"];
+  const lab=d<NAME.length?NAME[d]:d+"th";
+  const y=intOr(dist,NaN);if(!Number.isFinite(y))return lab;
+  const t=intOr(tz,NaN);
+  if(Number.isFinite(t)&&t>0&&y>=t)return lab+" & Goal";
+  return y<=0?lab+" & inches":lab+" & "+y;}
+
+/* "SEA 45", the way a scoreboard says it. Yards-to-the-end-zone is the exact
+   number and nobody reads a game in it. */
+function spotText(tz,off,def){
+  const t=intOr(tz,NaN);if(!Number.isFinite(t))return "";
+  if(t===50)return "50";
+  return t>50?`${off} ${100-t}`:`${def} ${t}`;}
+
+/* ── the slate ─────────────────────────────────────────────────────────
+   /api/live states each club once, so a game is two entries that have to be
+   paired back up on their shared event id. Ordered live, then finished, then
+   not yet kicked off: a game that has not started has no drives, so a field
+   drawn for it would be a field with nothing on it. */
+function liveSlate(){
+  const by=new Map();
+  for(const club of Object.keys(liveGames||{})){
+    const g=liveGames[club];if(!g||!g.event)continue;
+    let e=by.get(g.event);
+    if(!e){e={event:String(g.event),state:g.state||"",label:g.label||"",
+              kickoff:g.kickoff||"",home:"",away:"",hs:null,as:null};
+           by.set(e.event,e);}
+    if(g.home){e.home=club;e.hs=g.score;}else{e.away=club;e.as=g.score;}}
+  const rank=s=>s==="in"?0:s==="post"?1:2;
+  return [...by.values()].sort((a,b)=>rank(a.state)-rank(b.state)
+    ||String(a.kickoff).localeCompare(String(b.kickoff))
+    ||a.event.localeCompare(b.event));}
+
+function liveFetch(){
+  if(!location.protocol.startsWith("http"))return;
+  fetch("/api/live")
+    .then(r=>r.ok?r.json():Promise.reject(new Error("HTTP "+r.status)))
+    .then(j=>{
+      liveAsked=true;
+      liveGames=(j&&j.games)||{};
+      liveVer=String((j&&j.version)||"");
+      liveErr=String((j&&j.error)||"");
+      // The board's own club lookups read this map too, so a tab that polls
+      // keeps the rest of the console current rather than only itself.
+      if(Object.keys(liveGames).length)gameInfo=liveGames;
+      if(home==="live")renderLive();})
+    .catch(e=>{liveAsked=true;liveErr=String(e&&e.message||e);
+               if(home==="live")renderLive();});}
+
+/* A finished game is fetched once and kept: its drives cannot change, and a
+   timer that re-asked every few seconds would be the most expensive thing on
+   the page for no new information at all. A running one is refetched only when
+   the shared live version moves, which is the only signal that a new play
+   exists. */
+function needCast(g){
+  if(!g||!g.event)return;
+  if(!location.protocol.startsWith("http"))return;
+  // A game that has not kicked off has no drives, and the endpoint answers 404
+  // rather than an empty one. Asking anyway spent a request and put a red line
+  // in the console for a state the slate had already told us.
+  if(g.state==="pre")return;
+  if(castState.get(g.event)==="loading")return;
+  const at=castAt.get(g.event);
+  if(at!==undefined&&(g.state!=="in"||at===liveVer))return;
+  castState.set(g.event,"loading");castAt.set(g.event,liveVer);
+  fetch("/api/gamecast/"+encodeURIComponent(g.event))
+    .then(r=>r.ok?r.json():Promise.reject(new Error("HTTP "+r.status)))
+    .then(j=>{
+      casts.set(g.event,j);castState.set(g.event,"ok");
+      for(const s of [j&&j.home,j&&j.away])
+        if(s&&s.abbr&&s.logo&&!CLUBIMG[s.abbr])CLUBIMG[s.abbr]=s.logo;
+      if(home==="live")renderLive();})
+    .catch(e=>{castState.set(g.event,"err");
+               castMsg.set(g.event,String(e&&e.message||e));
+               if(home==="live")renderLive();});}
+
+/* Newest first, and memoised on the payload itself. The feed is walked twice
+   per tick otherwise - once to find the play on the field and once to draw the
+   list - over a hundred and eighty plays. */
+function castPlays(gc){
+  if(gc._nf&&gc._nfn===(gc.drives||[]).length)return gc._nf;
+  const out=[];
+  const ds=gc.drives||[];
+  for(let i=ds.length-1;i>=0;i--){
+    const ps=ds[i].plays||[];
+    for(let j=ps.length-1;j>=0;j--)out.push({drive:ds[i],play:ps[j]});}
+  gc._nf=out;gc._nfn=ds.length;return out;}
+
+/* Latest until the reader picks one, so a running game keeps up with itself
+   and a finished one can be walked through. */
+function currentPlay(gc){
+  const all=castPlays(gc);
+  if(livePlay){const hit=all.find(x=>x.play&&x.play.id===livePlay);if(hit)return hit;}
+  return all[0]||null;}
+
+/* ── the slate strip ─────────────────────────────────────────────────────
+   Built once per set of games and updated in place afterwards. Rebuilding it
+   when a score moved would tear out and re-request thirty-two crests every
+   time somebody kicked a field goal. */
+let slKey="";
+const slNodes=new Map();
+function renderSlate(slate){
+  const key=slate.map(g=>g.event).join(",");
+  const host=$("slate");
+  if(key!==slKey){
+    slKey=key;slNodes.clear();
+    const frag=document.createDocumentFragment();
+    for(const g of slate){
+      const b=document.createElement("button");
+      b.className="sl-g";b.type="button";b.dataset.ev=g.event;
+      b.innerHTML=clubHTML(g.away)+
+        '<span class="sl-mid"><span class="sl-sc"></span>'+
+        '<span class="sl-st"></span></span>'+clubHTML(g.home);
+      frag.appendChild(b);slNodes.set(g.event,b);}
+    host.replaceChildren(frag);}
+  for(const g of slate){
+    const b=slNodes.get(g.event);if(!b)continue;
+    b.classList.toggle("on",g.state==="in");
+    b.setAttribute("aria-pressed",String(g.event===liveEvent));
+    setText(b.querySelector(".sl-sc"),
+      g.state==="pre"?`${g.away||"—"} @ ${g.home||"—"}`
+                     :`${intOr(g.as,0)}–${intOr(g.hs,0)}`);
+    setText(b.querySelector(".sl-st"),g.label||g.state||"");}}
+
+/* ── the field ─────────────────────────────────────────────────────────
+   One SVG rather than a stack of elements: a pitch is about a hundred and
+   forty lines, ticks and numbers, none of which move. Only the three markers
+   on top of them do, so those are separate nodes whose x is moved rather than
+   a turf that is redrawn. The turf itself is rebuilt only when the offence
+   flips, because that is what changes which end zone belongs to whom. */
+let turfKey="";
+function turfSVG(off,def,lt,rt){
+  const p=[];
+  p.push('<defs><linearGradient id="fturf" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0" stop-color="#0e3a20"/>'+
+    '<stop offset="1" stop-color="#04170d"/></linearGradient></defs>');
+  p.push('<rect width="1200" height="300" fill="url(#fturf)"/>');
+  // mowing stripes, ten yards each, the way a groundsman cuts them
+  for(let b=0;b<10;b+=2)
+    p.push(`<rect x="${FEZ+FPLAY*b/10}" y="0" width="${FPLAY/10}" height="300" `+
+           'fill="#fff" opacity=".035"/>');
+  p.push(`<rect x="0" y="0" width="${FEZ}" height="300" fill="${esc(lt)}" opacity=".6"/>`);
+  p.push(`<rect x="${1200-FEZ}" y="0" width="${FEZ}" height="300" fill="${esc(rt)}" opacity=".6"/>`);
+  for(let y=0;y<=100;y+=5){
+    const x=FEZ+FPLAY*y/100,goal=(y===0||y===100);
+    p.push(`<line x1="${x}" y1="0" x2="${x}" y2="300" stroke="#fff" `+
+      `stroke-width="${goal?3:1.4}" opacity="${goal?.8:(y%10===0?.38:.16)}"/>`);}
+  for(let y=1;y<100;y++){
+    if(y%5===0)continue;
+    const x=FEZ+FPLAY*y/100;
+    for(const row of [112,188])
+      p.push(`<line x1="${x}" y1="${row-6}" x2="${x}" y2="${row+6}" `+
+        'stroke="#fff" stroke-width="1.3" opacity=".18"/>');}
+  for(let y=10;y<=90;y+=10){
+    const x=FEZ+FPLAY*y/100,n=y<=50?y:100-y;
+    p.push(`<text x="${x}" y="72" text-anchor="middle" font-family="Anton,sans-serif" `+
+      `font-size="34" fill="#fff" opacity=".22">${n}</text>`);
+    p.push(`<text x="${x}" y="246" text-anchor="middle" font-family="Anton,sans-serif" `+
+      `font-size="34" fill="#fff" opacity=".22" `+
+      `transform="rotate(180 ${x} 235)">${n}</text>`);}
+  // Clubs read up the end zone, as they are painted on one. Left is the club
+  // with the ball - it defends that end - and right is the one it is
+  // attacking, which is also the convention that lets the reader tell the
+  // direction of a gain without being told.
+  p.push(`<text x="${FEZ/2}" y="150" text-anchor="middle" dominant-baseline="central" `+
+    `font-family="Anton,sans-serif" font-size="42" fill="#fff" opacity=".8" `+
+    `transform="rotate(-90 ${FEZ/2} 150)">${esc(off)}</text>`);
+  p.push(`<text x="${1200-FEZ/2}" y="150" text-anchor="middle" dominant-baseline="central" `+
+    `font-family="Anton,sans-serif" font-size="42" fill="#fff" opacity=".8" `+
+    `transform="rotate(90 ${1200-FEZ/2} 150)">${esc(def)}</text>`);
+  p.push(`<text x="${FEZ+16}" y="26" font-family="Barlow Condensed,sans-serif" `+
+    `font-size="19" font-weight="700" letter-spacing="2.4" fill="#fff" `+
+    `opacity=".5">${esc(off)} ATTACKING →</text>`);
+  // The markers. Order matters: the gain bar sits under both lines, and the
+  // ball sits over everything.
+  p.push('<rect class="fmark" id="f-gain" x="0" y="146" width="0" height="8" rx="4" '+
+         'fill="#5bc236" opacity=".55"/>');
+  // The two lines are drawn at x=0 and moved by transform rather than by
+  // their x1/x2: an attribute cannot be transitioned, and a line of scrimmage
+  // that teleports when you tap a play twenty rows back tells you nothing
+  // about where the ball went.
+  p.push('<line class="fmark" id="f-ltg" x1="0" y1="0" x2="0" y2="300" '+
+         'stroke="#ffd400" stroke-width="3.5" opacity="0"/>');
+  p.push('<line class="fmark" id="f-los" x1="0" y1="0" x2="0" y2="300" '+
+         'stroke="#fff" stroke-width="3.5" opacity="0"/>');
+  p.push('<g class="fmark" id="f-ball" opacity="0">'+
+         '<ellipse rx="15" ry="9.5" fill="#7a3b12" stroke="#fff" stroke-width="2"/>'+
+         '<line x1="-6" y1="0" x2="6" y2="0" stroke="#fff" stroke-width="2"/>'+
+         '</g>');
+  return p.join("");}
+
+function drawField(gc,now){
+  const off=(now&&now.drive&&now.drive.team)||(gc.home&&gc.home.abbr)||"";
+  const hm=(gc.home&&gc.home.abbr)||"",aw=(gc.away&&gc.away.abbr)||"";
+  const def=off===hm?aw:hm;
+  const tint=c=>{const s=String(c||"").trim();
+    return /^#?[0-9a-fA-F]{6}$/.test(s)?(s[0]==="#"?s:"#"+s):"#12213a";};
+  const ct={};ct[hm]=tint(gc.home&&gc.home.color);ct[aw]=tint(gc.away&&gc.away.color);
+  const key=`${gc.event}|${off}`;
+  const host=$("fw");
+  if(key!==turfKey||!host.firstChild){
+    turfKey=key;
+    host.innerHTML='<svg viewBox="0 0 1200 300" role="img" aria-label="'+
+      esc(`${off} attacking left to right against ${def}`)+'">'+
+      turfSVG(off,def,ct[off]||"#12213a",ct[def]||"#12213a")+"</svg>";}
+  const gain=host.querySelector("#f-gain"),ltg=host.querySelector("#f-ltg"),
+        los=host.querySelector("#f-los"),ball=host.querySelector("#f-ball");
+  if(!gain||!ltg||!los||!ball)return;
+  const p=now&&now.play;
+  const from=p?numOr(p.from,NaN):NaN,to=p?numOr(p.to,NaN):NaN;
+  if(!Number.isFinite(from)){
+    // No spot reported is a gap, and a gap is drawn as nothing. Parking the
+    // ball at a default would put a real-looking marker on a made-up yard.
+    for(const el of [gain,ltg,los,ball])el.setAttribute("opacity","0");
+    return;}
+  const xl=fx(from);
+  los.setAttribute("transform",`translate(${xl},0)`);los.setAttribute("opacity",".95");
+  const down=intOr(p.down,0),dist=intOr(p.distance,NaN);
+  if(down>0&&Number.isFinite(dist)){
+    const xg=fx(Math.max(0,from-dist));
+    ltg.setAttribute("transform",`translate(${xg},0)`);ltg.setAttribute("opacity",".9");}
+  else ltg.setAttribute("opacity","0");
+  if(Number.isFinite(to)){
+    const xb=fx(to);
+    gain.setAttribute("x",Math.min(xl,xb));
+    gain.setAttribute("width",Math.max(2,Math.abs(xb-xl)));
+    gain.setAttribute("fill",to<=from?"#5bc236":"#ff4b4b");
+    gain.setAttribute("opacity",".55");
+    ball.setAttribute("transform",`translate(${xb},150)`);
+    ball.setAttribute("opacity","1");}
+  else{gain.setAttribute("opacity","0");ball.setAttribute("opacity","0");}}
+
+/* ── the scoreline above the field ─────────────────────────────────────
+   The score shown is the score *after* the selected play, which is what the
+   feed carries on the play itself. Walking back through the list therefore
+   walks the scoreboard back with it, which is the whole point of being able to
+   walk back at all. Built once per game: the crests either side are images,
+   and rebuilding this on a timer re-requested both of them every tick. */
+let sbKey="";
+function drawScoreboard(gc,now){
+  const host=$("gsb");
+  if(sbKey!==gc.event){
+    sbKey=gc.event;
+    const s=side=>`<span class="gsb-s">${clubHTML((side&&side.abbr)||"—","lg")}`+
+      '<span class="gsb-n"><span class="gsb-ab"><b></b>'+
+      '<i class="gsb-ball" title="has the ball" hidden></i></span>'+
+      '<span class="gsb-pt"></span></span></span>';
+    host.innerHTML=s(gc.away)+'<span class="gsb-sep">–</span>'+s(gc.home)+
+      '<span class="gsb-cl"></span>';}
+  const p=now&&now.play;
+  const poss=String(gc.possession||"");
+  const sides=host.querySelectorAll(".gsb-s");
+  [[gc.away,"away"],[gc.home,"home"]].forEach(([sd,k],i)=>{
+    const el=sides[i];if(!el||!sd)return;
+    setText(el.querySelector(".gsb-ab b"),sd.abbr||"—");
+    setText(el.querySelector(".gsb-pt"),
+      String(intOr(p&&p[k],intOr(sd.score,0))));
+    const ball=el.querySelector(".gsb-ball");
+    if(ball)ball.hidden=!(poss&&String(sd.id||"")===poss);});
+  // The clock walks back with the score. Leaving the game clock up while the
+  // scoreboard shows a touchdown from six minutes ago dates the whole panel
+  // wrong - the reader reads "NE 7 at 8:00" and that pairing never happened.
+  // The latest play keeps the game clock, which on a running game is ahead of
+  // the last snap and is the more current of the two.
+  const src=livePlay&&p?p:gc;
+  const q=intOr(src.period,0);
+  const cl=[src.clock,q?(q>4?"OT":"Q"+q):""].filter(Boolean).join(" · ");
+  setText(host.querySelector(".gsb-cl"),cl||gc.label||"");}
+
+function drawSituation(gc,now){
+  const p=now&&now.play;
+  const off=(now&&now.drive&&now.drive.team)||"";
+  const hm=(gc.home&&gc.home.abbr)||"",aw=(gc.away&&gc.away.abbr)||"";
+  const def=off===hm?aw:hm;
+  const out=[];
+  const dd=p?ddText(p.down,p.distance,p.from):null;
+  if(dd)out.push(`<span class="sit-dd">${esc(dd)}</span>`);
+  if(p&&intOr(p.down,0)>0&&off){
+    const at=spotText(p.from,off,def);
+    if(at)out.push(`<span class="sit-at">at ${esc(at)}</span>`);}
+  if(p&&intOr(p.down,0)>0&&Number.isFinite(+p.yards)){
+    const y=+p.yards;
+    out.push(`<span class="sit-y ${y>=0?"up":"down"}">${y>=0?"+":""}${y} yds</span>`);}
+  // ESPN's own sentence for the *next* snap, and only when the reader is
+  // looking at the latest play of a running game - on any earlier play it
+  // would be a line about a different moment sitting next to this one.
+  const s=gc.situation||{};
+  if(gc.state==="in"&&!livePlay&&s.downDistanceText)
+    out.push(`<span class="sit-now">next: ${esc(s.downDistanceText)}</span>`);
+  const d=now&&now.drive;
+  if(d&&(d.description||d.result))
+    out.push(`<span class="sit-dr">${esc(d.team||"")} drive`+
+      (d.description?" · "+esc(d.description):"")+
+      (d.result?" · "+esc(d.result):"")+"</span>");
+  // Cheap enough to rebuild, but not cheap enough to rebuild when nothing in
+  // it moved - this runs on the same timer as everything else.
+  const html=out.join("");
+  if($("sit").innerHTML!==html)$("sit").innerHTML=html;}
+
+/* ── your men in this game ─────────────────────────────────────────────
+   A cross-league board only cares about a game through the people you own in
+   it. Starters only - a man on your bench cannot score for you whatever
+   happens on this field - and one row per man however many of your line-ups
+   he is in. */
+function myStarters(){
+  const seen=new Map();
+  for(const L of leagues){
+    for(const pl of (L.you&&L.you.starters)||[]){
+      const k=String(pl.id);
+      let e=seen.get(k);
+      if(!e){e={id:k,name:pl.name||"",pos:pl.pos||"",team:pl.team||"",
+                color:pl.color||"",img:src(pl),pts:0,n:0,state:""};
+             seen.set(k,e);}
+      e.n++;
+      e.pts=numOr(pl.scored,e.pts);
+      e.state=pl.state||e.state;}}
+  return [...seen.values()];}
+
+let mineKey="";
+const mnNodes=new Map();
+function drawMine(gc){
+  const hm=(gc.home&&gc.home.abbr)||"",aw=(gc.away&&gc.away.abbr)||"";
+  const men=myStarters().filter(m=>m.team===hm||m.team===aw)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  const host=$("mine");
+  const key=gc.event+"|"+men.map(m=>m.id).join(",");
+  if(key!==mineKey){
+    mineKey=key;mnNodes.clear();
+    if(!men.length){
+      host.innerHTML='<span class="nosrc">None of your starters are in '+
+        'this game.</span>';return;}
+    const frag=document.createDocumentFragment();
+    for(const m of men){
+      const b=document.createElement("button");
+      b.type="button";b.className="mn";b.dataset.pid=m.id;
+      b.innerHTML=`<span class="mn-f" style="--fc:${esc(m.color||"#222")}">`+
+        (m.img?`<img src="${esc(m.img)}" alt="" loading="lazy">`
+              :`<span>${esc(initials(m.name))}</span>`)+"</span>"+
+        `<span><span class="mn-n">${esc(m.name)}</span><br>`+
+        '<span class="mn-s"></span></span>';
+      frag.appendChild(b);mnNodes.set(m.id,b);}
+    host.replaceChildren(frag);}
+  // Only the number moves, so only the number is rewritten. A headshot pulled
+  // out of the DOM and put back is a headshot fetched again.
+  for(const m of men){
+    const b=mnNodes.get(m.id);if(!b)continue;
+    const s=b.querySelector(".mn-s");if(!s)continue;
+    const line=`${m.pos} · ${m.team} · ${nf(m.pts)} pts`+
+      (m.n>1?` · ${m.n} line-ups`:"");
+    setText(s,line);
+    s.style.color=m.pts>0?"var(--green)":"";}}
+
+/* ── win probability ───────────────────────────────────────────────────
+   Drawn, not modelled. The series is ESPN's, one point per play; the only
+   arithmetic here turns it into a path. */
+let wpKey="";
+function drawWinProb(gc,now){
+  const series=(gc.winProbability||[]).map(w=>({id:String(w&&w.play||""),
+    h:Math.max(0,Math.min(1,numOr(w&&w.home,NaN)))})).filter(w=>Number.isFinite(w.h));
+  const box=$("wpbox");
+  if(series.length<2){
+    if(wpKey!==gc.event+"|none"){wpKey=gc.event+"|none";
+      box.innerHTML='<div class="nosrc">The feed published no win probability '+
+        'for this game.</div>';}
+    return;}
+  const hm=(gc.home&&gc.home.abbr)||"HOME",aw=(gc.away&&gc.away.abbr)||"AWAY";
+  const key=`${gc.event}|${series.length}`;
+  const W=1000,H=140;
+  const px=i=>W*i/(series.length-1),py=i=>H*(1-series[i].h);
+  if(key!==wpKey){
+    wpKey=key;
+    // Which plays scored, so the ticks are facts rather than turning points
+    // somebody eyeballed off the curve.
+    const scored=new Set();
+    for(const d of gc.drives||[])for(const p of d.plays||[])
+      if(p&&p.scoring)scored.add(String(p.id));
+    let line="M"+px(0)+" "+py(0);
+    for(let i=1;i<series.length;i++)line+="L"+px(i)+" "+py(i);
+    const ticks=series.map((w,i)=>scored.has(w.id)
+      ?`<line x1="${px(i)}" y1="0" x2="${px(i)}" y2="${H}" stroke="#ffd400" `+
+       'stroke-width="2" opacity=".38"/>':"").join("");
+    box.innerHTML=
+      `<svg class="wp-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" `+
+      'role="img" aria-label="Home win probability, one point per play">'+
+      '<defs><linearGradient id="wpg" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0" stop-color="#5bc236" stop-opacity=".55"/>'+
+      '<stop offset="1" stop-color="#5bc236" stop-opacity=".08"/>'+
+      '</linearGradient></defs>'+
+      `<rect width="${W}" height="${H}" fill="#ff4b4b" opacity=".08"/>`+
+      `<path d="${line}L${W} ${H}L0 ${H}Z" fill="url(#wpg)"/>`+
+      ticks+
+      `<line x1="0" y1="${H/2}" x2="${W}" y2="${H/2}" stroke="#fff" opacity=".3" `+
+      'stroke-width="1.5" stroke-dasharray="6 6"/>'+
+      `<path class="wp-line" d="${line}"/>`+
+      `<line id="wp-cur" x1="0" y1="0" x2="0" y2="${H}" stroke="#ffd400" `+
+      'stroke-width="2.5" opacity="0"/>'+
+      '<circle id="wp-dot" r="6" fill="#ffd400" opacity="0"/>'+
+      "</svg>"+
+      '<div class="wp-row"><span class="wp-pct" id="wp-h"></span>'+
+      '<span class="wp-pct" id="wp-a"></span>'+
+      '<span class="wp-cav">ESPN’s series, one point per play. '+
+      'Gold ticks are scores.</span></div>';}
+  const cur=box.querySelector("#wp-cur"),dot=box.querySelector("#wp-dot");
+  const pid=now&&now.play?String(now.play.id):"";
+  let idx=pid?series.findIndex(w=>w.id===pid):-1;
+  if(idx<0)idx=series.length-1;
+  if(cur&&dot){
+    cur.setAttribute("x1",px(idx));cur.setAttribute("x2",px(idx));
+    cur.setAttribute("opacity",".95");
+    dot.setAttribute("cx",px(idx));dot.setAttribute("cy",py(idx));
+    dot.setAttribute("opacity","1");}
+  const h=series[idx].h;
+  setText(box.querySelector("#wp-h"),`${hm} ${Math.round(h*100)}%`);
+  setText(box.querySelector("#wp-a"),`${aw} ${Math.round((1-h)*100)}%`);}
+
+/* ── play by play ──────────────────────────────────────────────────────
+   Rebuilt only when a play actually arrives - the key counts plays and drives,
+   not ticks - and the selection is toggled in place the rest of the time. This
+   is a hundred and eighty rows, and draw() runs on a timer: rebuilding the
+   markup every tick would tear out the row under the reader's cursor twice a
+   second and lose the scroll position with it. */
+let pbpKey="";
+const ppNodes=new Map();
+function drawPBP(gc){
+  const host=$("pbp"),all=castPlays(gc);
+  const key=`${gc.event}|${all.length}|${(gc.drives||[]).length}`;
+  if(key!==pbpKey){
+    pbpKey=key;ppNodes.clear();
+    if(!all.length){
+      host.innerHTML='<div class="nosrc">No drives in this game yet.</div>';
+      setText($("pbp-note"),"");return;}
+    const frag=document.createDocumentFragment();
+    let seen=null;
+    for(const {drive,play} of all){
+      if(drive!==seen){
+        seen=drive;
+        const h=document.createElement("div");h.className="dv";
+        h.innerHTML=clubHTML(drive.team)+
+          `<span class="dv-r${drive.scored?" sc":""}">`+
+          esc(drive.result||"Drive")+"</span>"+
+          `<span class="dv-d">${esc(drive.description||"")}</span>`;
+        frag.appendChild(h);}
+      const b=document.createElement("button");
+      b.type="button";b.dataset.pid=String(play.id||"");
+      b.className="pp"+(play.scoring?" sc":play.turnover?" to":"");
+      const q=intOr(play.period,0);
+      const dd=ddText(play.down,play.distance,play.from);
+      b.innerHTML='<span class="pp-t">'+
+        `<span class="pp-q">${q?(q>4?"OT":"Q"+q):""}</span>`+
+        `<span class="pp-c">${esc(play.clock||"")}</span></span>`+
+        `<span class="pp-d">${esc(dd||"")}</span>`+
+        `<span class="pp-x">${esc(play.text||"")}</span>`+
+        (play.scoring?'<span class="pp-tag sc">Score</span>'
+         :play.turnover?'<span class="pp-tag to">Turnover</span>':"<span></span>");
+      frag.appendChild(b);ppNodes.set(String(play.id||""),b);}
+    host.replaceChildren(frag);}
+  const sel=livePlay||((all[0]&&all[0].play&&String(all[0].play.id))||"");
+  for(const [id,el] of ppNodes)
+    el.setAttribute("aria-pressed",String(id===sel));
+  setText($("pbp-note"),livePlay?"showing a play you picked":"following the latest");}
+
+/* ── the tab ───────────────────────────────────────────────────────────── */
+function renderLive(){
+  const slate=liveSlate();
+  renderSlate(slate);
+  const none=$("livenone");
+  if(!slate.length){
+    none.hidden=false;
+    none.innerHTML=!location.protocol.startsWith("http")
+      ? "<b>No live feed behind this page.</b> The board was built as a static "+
+        "file, so there is no slate to read and nothing here is drawn. Run the "+
+        "local API and the field, the play-by-play and the win probability all "+
+        "appear."
+      : !liveAsked ? "Reading the slate…"
+      : "<b>The feed reported no games.</b>"+
+        (liveErr?" It said: "+esc(liveErr):"");
+    $("gpanel").hidden=true;$("gcols").hidden=true;return;}
+  none.hidden=true;
+  if(!liveEvent||!slate.some(g=>g.event===liveEvent)){
+    liveEvent=slate[0].event;livePlay=null;}
+  const g=slate.find(x=>x.event===liveEvent);
+  needCast(g);
+  const gc=casts.get(liveEvent);
+  setText($("gp-k"),`${g.away||"—"} at ${g.home||"—"}`);
+  const note=$("gp-note");
+  note.className="gp-note"+(g.state==="in"?" live":"");
+  setText(note,g.label||g.state||"");
+  if(!gc){
+    $("gpanel").hidden=false;$("gcols").hidden=true;
+    $("gsb").innerHTML="";$("fw").innerHTML="";$("sit").innerHTML="";turfKey="";
+    const st=castState.get(liveEvent);
+    // Not-yet-kicked-off is checked first and on its own: it is a state, not a
+    // failure, and it is the answer even if an earlier tab visit left an error
+    // recorded against this event.
+    $("mine").innerHTML='<span class="nosrc">'+(
+      g.state==="pre"
+        ? "<b>Not kicked off.</b> Kickoff "+esc(KICK(g.kickoff)||g.kickoff||"—")+
+          ". Drives, a ball and a win probability appear once the game is "+
+          "under way."
+        : st==="err"
+        ? "<b>No play data for this game.</b> "+esc(castMsg.get(liveEvent)||"")
+        : "Loading the gamecast…")+"</span>";
+    return;}
+  $("gpanel").hidden=false;$("gcols").hidden=false;
+  const now=currentPlay(gc);
+  drawScoreboard(gc,now);
+  drawField(gc,now);
+  drawSituation(gc,now);
+  drawMine(gc);
+  drawWinProb(gc,now);
+  drawPBP(gc);}
+
+$("slate").addEventListener("click",e=>{
+  const b=e.target.closest("[data-ev]");if(!b)return;
+  if(b.dataset.ev===liveEvent)return;
+  // Every cache key here carries the event, so the field, the chart and the
+  // feed all rebuild themselves. The one thing that does not is the play the
+  // reader had walked to: carried over, it would leave a different game's
+  // play id selected and the field following the wrong ball.
+  liveEvent=b.dataset.ev;livePlay=null;
+  renderLive();});
+
+$("pbp").addEventListener("click",e=>{
+  const b=e.target.closest("[data-pid]");if(!b)return;
+  const all=castPlays(casts.get(liveEvent)||{});
+  // Tapping the latest play again is how you get back to following the game
+  // rather than a moment in it.
+  const latest=all[0]&&all[0].play?String(all[0].play.id):"";
+  livePlay=(b.dataset.pid===livePlay||b.dataset.pid===latest)?null:b.dataset.pid;
+  renderLive();});
+
+/* cellById() reads whichever league is *open*, and on this tab none is - the
+   same man can be a starter in three of them. So the card is opened against
+   the first league he starts in, which is the one whose leverage share the
+   card can honestly quote. */
+$("mine").addEventListener("click",e=>{
+  const b=e.target.closest("[data-pid]");if(!b)return;
+  for(const L of leagues){
+    const c=(L.cells||[]).find(x=>String(x.id)===String(b.dataset.pid));
+    if(c){openCard(c,L.id);return;}}});
+
+
 function setSubView(v){
   view=v;
   $("viewseg").querySelectorAll("[data-v]").forEach(o=>
@@ -3514,6 +4308,10 @@ function draw(minute){
     // which is what made clicks feel dead.
     if(home==="leagues")renderLeagues(minute);
     else if(home==="players")renderPlayersFeed();
+    // One bad record must not take the tick with it. nf() threw on an
+    // undefined here once and the uncaught throw killed the whole board.
+    else if(home==="live"){try{renderLive();}catch(err){
+      console.error("live view failed",err);}}
     // headlines, the analyses and the players browser are static between
     // clicks - the feed does not move any number on them, so a tick that
     // redrew them would be pure DOM churn under the cursor
@@ -3669,4 +4467,13 @@ if(location.protocol.startsWith("http")){
     es.onerror=()=>{es.close();usingFeed=false;$("src").textContent="simulated feed";};
   }catch(_){}
 }
+
+/* The delta stream sends only the players that moved, and the games block -
+   possession, down, distance, yards to the end zone - rides the first frame
+   and nothing after it. So the tab that actually reads those has to ask for
+   the shared payload itself. Only while it is on screen: this is the one view
+   that costs a request per interval, and it must not cost one when nobody is
+   looking at it. */
+if(location.protocol.startsWith("http"))
+  setInterval(()=>{if(home==="live")liveFetch();},8000);
 </script>
