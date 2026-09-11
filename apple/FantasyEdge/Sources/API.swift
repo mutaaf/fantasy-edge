@@ -156,15 +156,114 @@ final class Board {
     /// Distinct men across every league.
     var distinctPlayers: Int { roster.count }
 
-    /// The board for one league, so a league rail can show a win probability
-    /// per league rather than only for the one on screen.
+    // MARK: - standings
+
+    @ObservationIgnored private var standingsInFlight: Set<String> = []
+    var standings: [String: [StandingRow]] = [:]
+
+    /// Fetched once per league and kept. A standings table is a weekly fact;
+    /// re-asking on the live clock would be a request every two seconds for
+    /// a number that moves on Tuesdays.
+    @MainActor
+    func loadStandings(_ L: LeaguePayload) async {
+        guard standings[L.id] == nil, !standingsInFlight.contains(L.id) else { return }
+        standingsInFlight.insert(L.id)
+        defer { standingsInFlight.remove(L.id) }
+        guard let u = url("/api/leagues/\(L.provider)/\(L.leagueId)/standings"),
+              let (d, _) = try? await URLSession.shared.data(from: u),
+              let p = try? JSONDecoder().decode(StandingsPayload.self, from: d)
+        else { return }
+        standings[L.id] = p.standings
+    }
+
+        // MARK: - memoised derivations
+    //
+    // `@ObservationIgnored` is load-bearing, not an optimisation. These are
+    // caches written during a view's body evaluation; if the observation
+    // machinery tracked them, writing one would invalidate the view that just
+    // read it and the render would loop forever.
+
+    @ObservationIgnored private var mosaicCache: [String: (key: String, value: Mosaic)] = [:]
+    @ObservationIgnored private var opponentCache: (key: String, value: [String: Fixture])?
+    @ObservationIgnored private var totalsCache: [String: (key: String, value: [String: Double])] = [:]
+
+    /// What every cached derivation is keyed on.
+    ///
+    /// The live payload is content-addressed by the server - `version` is a
+    /// hash of the players block - so it changes exactly when a number
+    /// changed, and not on every poll that returned the same thing. Which
+    /// team is yours is in the key too, because picking a different team
+    /// rebuilds the board around a different roster.
+    private func stamp(_ L: LeaguePayload) -> String {
+        "\(live?.version ?? "-")|\(L.you.teamId)|\(L.opp?.teamId ?? "-")"
+    }
+
+    /// The board for one league, so the rail can show a win probability per
+    /// league rather than only for the one on screen.
+    ///
+    /// Memoised because it is not cheap and it is asked for constantly: the
+    /// league rail and the week header each want one per league, and SwiftUI
+    /// re-evaluates a body whenever anything observable moves. Without this,
+    /// three leagues cost six full evaluations of the leverage model on every
+    /// pass rather than three on the polls that actually changed something.
     func mosaic(for L: LeaguePayload) -> Mosaic {
+        let key = stamp(L)
+        if let hit = mosaicCache[L.id], hit.key == key { return hit.value }
         let players = live?.players ?? [:]
         var cells = L.you.starters.map { Cell.make($0, side: "you", live: players[$0.id]) }
         cells += (L.opp?.starters ?? []).map {
             Cell.make($0, side: "opp", live: players[$0.id])
         }
-        return Leverage.evaluate(cells)
+        let m = Leverage.evaluate(cells)
+        mosaicCache[L.id] = (key, m)
+        return m
+    }
+
+    /// One club's game: who they are playing, which end of it, and where it
+    /// has got to. Served by the live tier now rather than guessed at by
+    /// pairing clubs on kickoff time, which gets it wrong the moment two
+    /// games start together.
+    struct Fixture: Hashable {
+        let opp: String, home: Bool, state: String, label: String
+        let kickoff: String, score: String, oppScore: String
+        var away: Bool { !home }
+        /// "@ MIA" or "vs ATL" - the distinction a roster table needs.
+        var line: String { (home ? "vs " : "@ ") + opp }
+        var live: Bool { state == "in" }
+        var final: Bool { state == "post" }
+    }
+
+    /// Each team's projected total this week, from the starters on its own
+    /// roster rows. Memoised per league: a matchups tab asks for every team
+    /// at once, and recomputing that on each body pass would walk a
+    /// hundred-and-sixty-row array a dozen times a second.
+    func teamTotals(_ L: LeaguePayload) -> [String: Double] {
+        if let hit = totalsCache[L.id], hit.key == stamp(L) { return hit.value }
+        var out: [String: Double] = [:]
+        for r in L.roster ?? [] where r.started == true {
+            out[r.teamId ?? "", default: 0] += r.projected ?? 0
+        }
+        totalsCache[L.id] = (stamp(L), out)
+        return out
+    }
+
+    /// Every club's fixture, built once per distinct slate rather than per row
+    /// of a roster table.
+    var fixtures: [String: Fixture] {
+        let key = live?.version ?? "-"
+        if let hit = opponentCache, hit.key == key { return hit.value }
+        var out: [String: Fixture] = [:]
+        let games = live?.games ?? [:]
+        for (ab, g) in games {
+            let opp = g.opp ?? ""
+            out[ab] = Fixture(opp: opp, home: g.home ?? true,
+                              state: g.state ?? "pre", label: g.label ?? "",
+                              kickoff: g.kickoff ?? "",
+                              score: g.score ?? "",
+                              oppScore: opp.isEmpty ? "" : (games[opp]?.score ?? ""))
+        }
+        opponentCache = (key, out)
+        return out
     }
 
         // MARK: - which team is yours

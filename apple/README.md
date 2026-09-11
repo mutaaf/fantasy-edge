@@ -129,6 +129,41 @@ The panels are deliberately unequal in how well founded they are, and say so:
   a dashboard that quietly invents a plausible number is worse than one with a
   hole in it: you cannot tell which half to trust.
 
+## The league view
+
+The command centre answers "how am I doing everywhere". The Leagues tab
+answers "what is happening here", which needs the thing the other view
+deliberately hides: every slot, bench included.
+
+Four sub-tabs, each on data already in the payload - **Roster** (the line-up,
+with each man's fixture, projection, actual and kickoff), **Matchups** (every
+pairing in the league, totalled from the same roster rows, so no request per
+team), **Standings**, and **Overview**. Trade Block, History and Settings are
+absent: nothing this reads has them.
+
+Starters and bench come from the provider's own `started` flag, never inferred
+from the slot name - a FLEX and a BN look alike to anything that guesses.
+
+## How it stays fast
+
+Three caches, and one of them is load-bearing rather than an optimisation.
+
+`Leverage.evaluate` is not cheap and is wanted constantly: the league rail and
+the week header each want one per league, and SwiftUI re-runs a body whenever
+anything observable moves. It is memoised on the live payload's `version` -
+the server content-addresses that block, so it changes exactly when a number
+changed and not on every poll that returned the same thing - plus which team
+is yours, since picking a different team rebuilds the board.
+
+Team totals and club fixtures are memoised the same way. Standings are fetched
+once per league and kept: a standings table moves on Tuesdays, not on the
+two-second live clock.
+
+All three caches are `@ObservationIgnored`, and that is not a micro-
+optimisation. They are written during a view's body evaluation; if observation
+tracked them, writing one would invalidate the view that just read it and the
+render would loop forever.
+
 ## Known gaps
 
 - **The widget is source, not a target.** WidgetKit needs its own extension

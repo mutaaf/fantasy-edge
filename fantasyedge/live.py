@@ -558,13 +558,22 @@ class EspnLiveSource(LiveSource):
                 label = st.get("shortDetail") or f"Q{period}"
             else:
                 played, label = 0.0, "PRE"
+            # Who each club is playing, and which end of it they are at.
+            # Without this a roster table can only say a man has a game, not
+            # who against - and pairing clubs back up by kickoff time on the
+            # client guesses wrong the moment two games start together.
+            sides = []
             for c in (comp.get("competitors") or []):
                 ab = ((c.get("team") or {}).get("abbreviation") or "").upper()
                 if ab:
-                    out[ab] = {"played": round(played, 4), "state": state,
-                               "label": label[:18],
-                               "kickoff": (ev.get("date") or "")[:16],
-                               "score": c.get("score")}
+                    sides.append((ab, (c.get("homeAway") or "").lower(),
+                                  c.get("score")))
+            for i, (ab, ha, score) in enumerate(sides):
+                other = sides[1 - i][0] if len(sides) == 2 else ""
+                out[ab] = {"played": round(played, 4), "state": state,
+                           "label": label[:18],
+                           "kickoff": (ev.get("date") or "")[:16],
+                           "score": score, "opp": other, "home": ha == "home"}
         return out
 
     def snapshot(self, at: float | None = None) -> dict:

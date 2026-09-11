@@ -56,7 +56,17 @@ struct CommandView: View {
     private var rails: some View {
         HStack(alignment: .top, spacing: 16) {
             leftRail.frame(width: 300)
-            centre.frame(maxWidth: .infinity)
+            // The middle rail is whichever question the tab is asking. The
+            // rails either side do not change, because "where do I stand" and
+            // "who is this player" are true regardless.
+            Group {
+                switch tab {
+                case .leagues: ScrollView { LeagueView(focus: $focus) }
+                        .scrollIndicators(.hidden)
+                default:       centre
+                }
+            }
+            .frame(maxWidth: .infinity)
             rightRail.frame(width: 340)
         }
         .padding(.horizontal, 20).padding(.vertical, 14)
@@ -64,10 +74,16 @@ struct CommandView: View {
 
     // MARK: - chrome
 
+    /// Three pills rather than one bar.
+    ///
+    /// One bar made the tabs compete with the brand and the clock for the
+    /// same width, and the active tab's highlight swallowed its own label.
+    /// Separating them lets each be sized for what it is, and lets the tabs
+    /// sit centred - which is where the eye goes.
     private var topBar: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 14) {
             HStack(spacing: 11) {
-                Image(systemName: "football.fill").font(.system(size: 20))
+                Image(systemName: "football.fill").font(.system(size: 21))
                     .foregroundStyle(Theme.green)
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Fantasy Command").font(.system(size: 17, weight: .bold))
@@ -75,36 +91,47 @@ struct CommandView: View {
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                 }
             }
-            Divider().frame(height: 26)
-            HStack(spacing: 4) {
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .glassBackgroundEffect(in: .capsule)
+
+            HStack(spacing: 6) {
                 ForEach(Tab.allCases) { t in
                     Button { tab = t } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: t.icon).font(.system(size: 15))
-                            Text(t.rawValue).font(.system(size: 9, weight: .medium))
+                        VStack(spacing: 4) {
+                            Image(systemName: t.icon).font(.system(size: 17))
+                            Text(t.rawValue).font(.system(size: 10, weight: .medium))
                         }
-                        .frame(width: 62, height: 40)
-                        .foregroundStyle(tab == t ? Theme.green : .secondary)
+                        .frame(width: 72, height: 50)
+                        // The label rides on top of the highlight rather than
+                        // under it, so the selected tab can still be read.
+                        .foregroundStyle(tab == t ? AnyShapeStyle(Theme.green)
+                                                  : AnyShapeStyle(.secondary))
+                        .background {
+                            RoundedRectangle(cornerRadius: 13)
+                                .fill(tab == t ? Theme.green.opacity(0.18) : .clear)
+                        }
+                        .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .background {
-                        if tab == t {
-                            RoundedRectangle(cornerRadius: 11)
-                                .fill(Theme.green.opacity(0.16))
-                        }
-                    }
                     .hoverEffect(.highlight)
                 }
             }
-            Divider().frame(height: 26)
-            VStack(alignment: .trailing, spacing: 1) {
-                Text(Date.now, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
-                    .font(.system(size: 12, weight: .semibold))
-                Text(board.status).font(.system(size: 9)).foregroundStyle(.tertiary)
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .glassBackgroundEffect(in: .capsule)
+
+            HStack(spacing: 11) {
+                Circle().fill(board.lastError == nil ? Theme.green : Theme.red)
+                    .frame(width: 7, height: 7)
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(Date.now, format: .dateTime.weekday(.abbreviated)
+                            .month(.abbreviated).day())
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(board.status).font(.system(size: 9)).foregroundStyle(.tertiary)
+                }
             }
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .glassBackgroundEffect(in: .capsule)
         }
-        .padding(.horizontal, 20).padding(.vertical, 10)
-        .glassBackgroundEffect(in: .capsule)
     }
 
     private var bottomBar: some View {

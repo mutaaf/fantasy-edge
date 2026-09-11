@@ -24,6 +24,11 @@ struct LeaguePayload: Decodable {
     let you: Side, opp: Side?
     let teams: [TeamRef]?
     let record: Record?
+    /// Every team's players, not only yours - which is what lets the league
+    /// view total up an opponent without another request per team.
+    let roster: [RosterEntry]?
+    /// teamId -> opponent teamId for this week.
+    let matchups: [String: String]?
 }
 struct MosaicsPayload: Decodable { let leagues: [LeaguePayload] }
 
@@ -31,6 +36,11 @@ struct LiveState: Decodable { let s: Double; let r: Double; let g: String }
 struct GameState: Decodable {
     let played: Double?; let state: String?; let label: String?
     let kickoff: String?; let score: String?
+    /// Who this club is playing and which end of it they are at. Served
+    /// rather than inferred: pairing clubs by kickoff time on the client is
+    /// wrong as soon as two games start at once, which on a Sunday is most
+    /// of them.
+    let opp: String?; let home: Bool?
 }
 struct LivePayload: Decodable {
     let source: String?
@@ -166,4 +176,36 @@ struct RankRow: Decodable, Hashable {
 }
 struct Career: Decodable, Hashable {
     let seasons: Int?, best: Double?, totalWeeks: Int?
+}
+
+
+// MARK: - the league view
+
+struct StandingRow: Decodable, Identifiable, Hashable {
+    let rank: Int?, teamId: String, team: String?
+    let wins: Int?, losses: Int?, ties: Int?
+    let pointsFor: Double?, pointsAgainst: Double?
+    var id: String { teamId }
+
+    enum CodingKeys: String, CodingKey {
+        case rank, team, wins, losses, ties
+        case teamId = "team_id"
+        case pointsFor = "points_for"
+        case pointsAgainst = "points_against"
+    }
+    var record: String {
+        let t = (ties ?? 0) > 0 ? "-\(ties!)" : ""
+        return "\(wins ?? 0)-\(losses ?? 0)\(t)"
+    }
+}
+struct StandingsPayload: Decodable { let standings: [StandingRow] }
+
+/// One player as a roster table renders him: his slot, his fixture, what he
+/// is projected for and what he has actually scored.
+struct RosterEntry: Decodable, Identifiable, Hashable {
+    let id: String, name: String, pos: String, team: String
+    let slot: String?, projected: Double?
+    let teamId: String?, owner: String?
+    let started: Bool?
+    let color: String?, img: String?, logo: String?
 }

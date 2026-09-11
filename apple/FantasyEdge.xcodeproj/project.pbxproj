@@ -15,6 +15,7 @@
 		EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C24CFCAB3D18C778AE8490 /* CommandView.swift */; };
 		9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
+		779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99CF54DD670773756DCE373 /* LeagueView.swift */; };
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
 		10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B800C2342BB2F01CC074FBAF /* Models.swift */; };
 		DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */; };
@@ -32,6 +33,7 @@
 		42C24CFCAB3D18C778AE8490 /* CommandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandView.swift; sourceTree = "<group>"; };
 		FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FantasyEdgeApp.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
+		A99CF54DD670773756DCE373 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
 		B800C2342BB2F01CC074FBAF /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHologram.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 				42C24CFCAB3D18C778AE8490 /* CommandView.swift */,
 				FEA16B3A5CE32FF86A41A1D3 /* FantasyEdgeApp.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
+				A99CF54DD670773756DCE373 /* LeagueView.swift */,
 				848B7422D9647143452C9753 /* Leverage.swift */,
 				B800C2342BB2F01CC074FBAF /* Models.swift */,
 				C3A008AAFFECAB0057275C64 /* PlayerHologram.swift */,
@@ -150,6 +153,7 @@
 				EB3D8FCB9B6E0F2AD0922A49 /* CommandView.swift in Sources */,
 				9303227218404B59F9DC0FAA /* FantasyEdgeApp.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
+				779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */,
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,
 				10A6D3EEBBBA3F9FAAAF8F57 /* Models.swift in Sources */,
 				DE4026131B38F32EECE347BB /* PlayerHologram.swift in Sources */,
