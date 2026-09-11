@@ -65,6 +65,9 @@ struct LiveView: View {
 struct MyTeamField: View {
     @Environment(Board.self) private var board
     @Binding var focus: String?
+    /// Which lanes the reader has unfolded. Per lane rather than one flag, so
+    /// opening the finished list does not also unroll every kickoff window.
+    @State private var opened: Set<String> = []
 
     /// One game's ball, for as many games as have men on this field. Drawn
     /// per game rather than once, because four of your men can be attacking
@@ -80,19 +83,37 @@ struct MyTeamField: View {
         }
     }
 
+    /// How many tokens the grass can hold before it stops being a field.
+    ///
+    /// One league starts nine men and every one of them fits. Ten leagues
+    /// start sixty-odd, and `Gridiron.lanes` hands out three to five lanes per
+    /// position - past that they wrap onto each other and a field of faces is
+    /// not readable at any size. So the grass takes the men with the most of
+    /// your weeks riding on them and says in words how many it left off,
+    /// rather than drawing a crowd or silently dropping anybody.
+    private static let crowd = 18
+
     var body: some View {
         let men = board.lineup()
         let byStation = Dictionary(grouping: men, by: \.station)
-        let onField = byStation[.field] ?? []
+        // Exposure first, then what he has actually scored: with one league
+        // every man is in one line-up and this is just his points, which is
+        // the right order there too.
+        let onField = (byStation[.field] ?? [])
+            .sorted { ($0.lineups, $0.points) > ($1.lineups, $1.points) }
+        let drawn = Array(onField.prefix(Self.crowd))
 
         return VStack(spacing: 12) {
             Panel(title: "Your Men, Right Now", trailing: AnyView(counts(byStation))) {
                 if men.isEmpty {
-                    NoSource(what: "No line-ups loaded yet. The field fills from "
-                             + "whoever you are starting across your leagues.")
+                    NoSource(what: board.scale.single
+                             ? "No line-up loaded yet. The field fills from whoever "
+                               + "you are starting this week."
+                             : "No line-ups loaded yet. The field fills from "
+                               + "whoever you are starting across your leagues.")
                 } else {
-                    field(onField)
-                    legend(onField)
+                    field(drawn)
+                    legend(drawn, crowded: onField.count - drawn.count)
                 }
             }
             ScrollView {
@@ -106,6 +127,12 @@ struct MyTeamField: View {
             .scrollIndicators(.hidden)
         }
     }
+
+    /// How long a lane may run before it folds. Bounded at every scale, and
+    /// tighter once the roster is a portfolio: sixty rows under a field is a
+    /// list nobody reads to the end of, and the tallies at the top already
+    /// say how many there are.
+    private var lane: Int { board.scale.many ? 12 : 24 }
 
     // MARK: the grass
 
@@ -207,7 +234,7 @@ struct MyTeamField: View {
         return seen.values.sorted { $0.event < $1.event }
     }
 
-    private func legend(_ men: [FieldMan]) -> some View {
+    private func legend(_ men: [FieldMan], crowded: Int = 0) -> some View {
         let unplaced = men.filter { $0.spot.x == nil }
         return VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 12) {
@@ -216,6 +243,11 @@ struct MyTeamField: View {
                 Text("every offence attacks to the right")
                     .font(.system(size: 9)).foregroundStyle(.tertiary)
                 Spacer(minLength: 0)
+            }
+            if crowded > 0 {
+                Text("\(crowded) more of your men have the ball than the field "
+                     + "can hold. Drawn: the \(men.count) in most of your line-ups.")
+                    .font(.system(size: 9)).foregroundStyle(Theme.gold)
             }
             if !unplaced.isEmpty {
                 Text("On the field, spot not reported: "
@@ -258,7 +290,7 @@ struct MyTeamField: View {
                     Text("Their games are running, but they cannot score on the "
                          + "next snap.")
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
-                    grid(men)
+                    grid(men, lane: "bench")
                 }
             }
         }
@@ -286,7 +318,7 @@ struct MyTeamField: View {
                                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                                     Spacer(minLength: 0)
                                 }
-                                grid(group) { m in
+                                grid(group, lane: "kick-\(group.first?.kickoff ?? "")") { m in
                                     m.lineups == 1 ? "in 1 of your line-ups"
                                                    : "in \(m.lineups) of your line-ups"
                                 }
@@ -301,7 +333,9 @@ struct MyTeamField: View {
     private func finished(_ men: [FieldMan]) -> some View {
         Group {
             if !men.isEmpty {
-                Panel(title: "Done for the day · \(men.count)") { grid(men, dim: true) }
+                Panel(title: "Done for the day · \(men.count)") {
+                    grid(men, lane: "done", dim: true)
+                }
             }
         }
     }
@@ -309,25 +343,51 @@ struct MyTeamField: View {
     /// Bounded above by the scroll view this lives in, which is the point:
     /// a lazy grid handed unbounded height builds every row and fires every
     /// headshot request at once, which is exactly the bug this app had.
-    private func grid(_ men: [FieldMan], dim: Bool = false,
+    ///
+    /// Bounded again by `lane` once the roster is a portfolio. Sixty finished
+    /// men under a field is not a lane, it is a directory - and every one of
+    /// those rows is a headshot request. Ordered by how many of your line-ups
+    /// he is in before it folds, so what survives the fold is what matters
+    /// most rather than whatever sorted first.
+    private func grid(_ men: [FieldMan], lane key: String, dim: Bool = false,
                       note: @escaping (FieldMan) -> String = { $0.why }) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 196), spacing: 8)], spacing: 8) {
-            ForEach(men) { m in
-                HStack(spacing: 8) {
-                    FieldToken(man: m, selected: focus == m.id, size: 36, dimmed: dim) {
-                        focus = m.id
+        let ranked = board.scale.many
+            ? men.sorted { ($0.lineups, $0.points) > ($1.lineups, $1.points) }
+            : men
+        let open = opened.contains(key)
+        let shown = open ? ranked : Array(ranked.prefix(lane))
+        return VStack(alignment: .leading, spacing: 8) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 196), spacing: 8)], spacing: 8) {
+                ForEach(shown) { m in
+                    HStack(spacing: 8) {
+                        FieldToken(man: m, selected: focus == m.id, size: 36, dimmed: dim) {
+                            focus = m.id
+                        }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("\(m.pos) · \(m.fixture)")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(Theme.position(m.pos))
+                            Text(note(m)).font(.system(size: 9)).foregroundStyle(.tertiary)
+                                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
                     }
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("\(m.pos) · \(m.fixture)")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(Theme.position(m.pos))
-                        Text(note(m)).font(.system(size: 9)).foregroundStyle(.tertiary)
-                            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: 0)
+                    .padding(.vertical, 5).padding(.horizontal, 7)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
                 }
-                .padding(.vertical, 5).padding(.horizontal, 7)
-                .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.05)))
+            }
+            if ranked.count > lane {
+                Button {
+                    if open { opened.remove(key) } else { opened.insert(key) }
+                } label: {
+                    Text(open ? "Show fewer" : "\(ranked.count - lane) more")
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 11).padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 10)
+                            .fill(.white.opacity(0.06)))
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain).hoverEffect(.highlight)
             }
         }
     }

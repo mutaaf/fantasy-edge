@@ -37,6 +37,34 @@ struct LeaguePayload: Decodable {
 }
 struct MosaicsPayload: Decodable { let leagues: [LeaguePayload] }
 
+extension LeaguePayload {
+    /// The same league under another name. Only the debug resize in
+    /// `Attention.swift` uses this: it is how a three-league install can be
+    /// made to render ten without any of the ten being invented.
+    func relabelled(id: String, league: String) -> LeaguePayload {
+        LeaguePayload(id: id, provider: provider, leagueId: leagueId,
+                      league: league, season: season, week: week,
+                      you: you, opp: opp, teams: teams, record: record,
+                      roster: roster, matchups: matchups)
+    }
+}
+
+/// A league in the database, followed or not. The board stops sending a
+/// league the moment you hide it, so this is the only place its name survives
+/// - which is what lets the rail offer a hidden one back by name.
+struct LeagueRef: Decodable, Identifiable, Hashable {
+    let provider: String, name: String
+    let leagueId: String
+    let teams: Int?
+    var id: String { "\(provider)-\(leagueId)" }
+
+    enum CodingKeys: String, CodingKey {
+        case provider, name, teams
+        case leagueId = "league_id"
+    }
+}
+struct LeagueCatalogue: Decodable { let leagues: [LeagueRef] }
+
 struct LiveState: Decodable { let s: Double; let r: Double; let g: String }
 struct GameState: Decodable {
     let played: Double?; let state: String?; let label: String?

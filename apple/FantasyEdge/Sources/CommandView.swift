@@ -18,6 +18,11 @@ struct CommandView: View {
     @State private var showSettings = false
     @State var focus: String?
     @State var tab: Tab = .command
+    /// Whether the ranked rail and the week digest are showing everything.
+    /// Only reachable at five leagues and up; below that there is nothing
+    /// folded away for them to unfold.
+    @State var railExpanded = false
+    @State var weekExpanded = false
 
     enum Tab: String, CaseIterable, Identifiable {
         case command = "Command", leagues = "Leagues", players = "Players"
@@ -42,8 +47,16 @@ struct CommandView: View {
             if board.leagues.isEmpty { empty } else { rails }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .center) { topBar }
-        .ornament(attachmentAnchor: .scene(.bottom), contentAlignment: .center) { bottomBar }
+        // `contentAlignment` decides which part of the ornament lands on the
+        // anchor, and `.center` straddles it - half the pill outside the scene
+        // and half of it on top of the first panel of every rail. On a window
+        // with system glass that reads as a toolbar overlapping its own
+        // chrome; on `.plain`, which this app uses so the room shows through,
+        // there is no chrome to overlap and it simply sat on the content.
+        // Aligning the far edge to the anchor puts each bar wholly outside the
+        // scene, which is what an ornament is for.
+        .ornament(attachmentAnchor: .scene(.top), contentAlignment: .bottom) { topBar }
+        .ornament(attachmentAnchor: .scene(.bottom), contentAlignment: .top) { bottomBar }
         .sheet(isPresented: $showSettings) { HostSheet() }
         .task {
             board.start()
@@ -95,8 +108,15 @@ struct CommandView: View {
                     .foregroundStyle(Theme.green)
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Fantasy Command").font(.system(size: 17, weight: .bold))
-                    Text("One game. All your leagues.")
+                    // With one league the strapline was a claim about a
+                    // plural that did not exist, so it names the league
+                    // instead: the single league is the subject here, not a
+                    // member of a set.
+                    Text(board.scale.single
+                         ? (board.league?.league ?? "One league.")
+                         : "One game. All your leagues.")
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
             }
             .padding(.horizontal, 18).padding(.vertical, 10)
@@ -144,17 +164,24 @@ struct CommandView: View {
 
     private var bottomBar: some View {
         HStack(spacing: 14) {
-            chooser(icon: "trophy", label: "LEAGUE",
-                    value: board.league?.league ?? "—") {
-                ForEach(board.leagues, id: \.id) { L in
-                    Button { board.selected = L.id } label: {
-                        if L.id == board.league?.id {
-                            Label(L.league, systemImage: "checkmark")
-                        } else { Text(L.league) }
+            // Absent rather than disabled when there is one league. A greyed
+            // menu offering a choice you do not have is chrome that exists
+            // only to say the app was built for somebody else.
+            if !board.scale.single {
+                chooser(icon: "trophy", label: "LEAGUE",
+                        value: board.league?.league ?? "—") {
+                    // Ordered by what needs you once there are enough leagues
+                    // for the order to matter, so the menu agrees with the
+                    // rail rather than offering a second, different ranking.
+                    ForEach(leagueOptions, id: \.id) { L in
+                        Button { board.selected = L.id } label: {
+                            if L.id == board.league?.id {
+                                Label(L.league, systemImage: "checkmark")
+                            } else { Text(L.league) }
+                        }
                     }
                 }
             }
-            .disabled(board.leagues.count < 2)
 
             chooser(icon: "person.crop.circle", label: "MY TEAM",
                     value: board.league?.you.name ?? "—") {
@@ -193,6 +220,10 @@ struct CommandView: View {
 
     private var teamOptions: [TeamRef] {
         (board.league?.teams ?? []).sorted { $0.display < $1.display }
+    }
+
+    private var leagueOptions: [LeaguePayload] {
+        board.scale.many ? board.attention().map(\.league) : board.leagues
     }
 
     private func chooser<C: View>(icon: String, label: String, value: String,

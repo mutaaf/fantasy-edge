@@ -146,7 +146,12 @@ struct PlayerPanel: View {
     /// Where he sits in your leagues, and whether he is in the line-up. Real,
     /// and the reason a cross-league board is worth having.
     private func ownership(_ p: Profile) -> some View {
-        Panel(title: "Owned in \(owner?.exposure ?? 0) of \(board.leagues.count) leagues") {
+        // "Owned in 1 of 1 leagues" is a ratio doing the work of a yes. With
+        // one league the only question is whether he is yours.
+        let mine = owner?.exposure ?? 0
+        return Panel(title: board.scale.single
+                     ? (mine > 0 ? "On your roster" : "Not on your roster")
+                     : "Owned in \(mine) of \(board.leagues.count) leagues") {
             VStack(spacing: 7) {
                 if (owner?.leagues ?? []).isEmpty {
                     NoSource(what: "Not rostered in any league you follow.")

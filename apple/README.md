@@ -113,6 +113,51 @@ live slate, your men ordered by what is at stake, and who is unrostered. The
 right is **one player in depth**, because the question a board raises is
 always about somebody in particular.
 
+### One league, or ten
+
+The same three rails, arranged by how many leagues there actually are. This is
+read off the board rather than set anywhere - `LeagueScale` in
+`Sources/Attention.swift` - because the honest layout for one league is not the
+layout for ten with fewer rows in it.
+
+**One.** The league stops being a row in a list and becomes the subject. The
+left rail is that league: your seat, the margin, your place in the table. The
+cross-league panel is gone, because "3 leagues / 1-2 projected / avg rank" over
+one league is the same fact restated three times. The week header is one
+scoreboard rather than a grid with one cell. The league picker is absent, not
+greyed - a menu for a choice you do not have is chrome. The strapline names the
+league, "owned in 1 of 1 leagues" becomes "on your roster", and "free in all 1"
+becomes "free in your league".
+
+**Two to four.** Every league, in the order you arranged them, which is what
+was there before. At this size the whole list fits and ranking it would only
+make it move about.
+
+**Five and up.** The rail becomes **Needs You First**: ranked by a close
+matchup, a man on the injury wire, and a lead that has moved the wrong way
+since the last time a number changed - the leverage model, the injury wire and
+the win probability the app already had, weighed once. Four rows, then the
+quieter ones a tap down. The week header becomes ahead / in doubt / behind,
+then the six that still have a question in them, with decided matchups
+collapsed to one line each - collapsed, not hidden; they keep their scoreline.
+The My Team field caps the grass and folds each lane, both ranked by how many
+of your line-ups a man is in.
+
+Pin and hide live on the rail's context menu, and write the `order` and
+`hidden` the preferences file has always carried. Hidden leagues are listed
+back with a **Show**, because a hide with no undo is a bug: the board simply
+stops sending the league and nothing admits it exists.
+
+**A number never changes meaning with the count.** The rank tile reads
+`#4 of 12 / LEAGUE RANK` over one league and `#8.2 / AVG RANK` over several,
+and says `AVG RANK · 2 OF 10` when only two of them reported a rank. The week
+tally's three counts always sum to the league count - that is the condition a
+summary has to meet before it may replace a list.
+
+To see a count this install does not have, `FE_LEAGUE_COUNT` caps or repeats
+the decoded list in the client only. Debug builds, nothing written, and a
+repeat is the same real league again under a distinct id.
+
 ### Which numbers are which
 
 The panels are deliberately unequal in how well founded they are, and say so:

@@ -22,7 +22,9 @@ struct BoardView: View {
             if board.leagues.isEmpty { empty } else { board_ }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ornament(attachmentAnchor: .scene(.bottom), contentAlignment: .center) {
+        // Aligned so the whole bar sits below the scene rather than straddling
+        // its edge - see the note on the same two lines in `CommandView`.
+        .ornament(attachmentAnchor: .scene(.bottom), contentAlignment: .top) {
             controls
         }
         .sheet(isPresented: $showSettings) { HostSheet() }
@@ -179,16 +181,19 @@ struct BoardView: View {
     /// first-class here, and both say what they are.
     private var controls: some View {
         HStack(spacing: 14) {
-            chooser(icon: "trophy", label: "LEAGUE",
-                    value: board.league?.league ?? "—") {
-                ForEach(board.leagues, id: \.id) { L in
-                    Button { board.selected = L.id } label: {
-                        if L.id == board.league?.id { Label(L.league, systemImage: "checkmark") }
-                        else { Text(L.league) }
+            // Omitted rather than greyed with one league: a picker for a
+            // choice that does not exist is chrome, not an affordance.
+            if !board.scale.single {
+                chooser(icon: "trophy", label: "LEAGUE",
+                        value: board.league?.league ?? "—") {
+                    ForEach(board.leagues, id: \.id) { L in
+                        Button { board.selected = L.id } label: {
+                            if L.id == board.league?.id { Label(L.league, systemImage: "checkmark") }
+                            else { Text(L.league) }
+                        }
                     }
                 }
             }
-            .disabled(board.leagues.count < 2)
 
             chooser(icon: "person.crop.circle", label: "MY TEAM",
                     value: board.league?.you.name ?? "—") {

@@ -81,9 +81,15 @@ final class Board {
         do {
             guard let u = url("/api/mosaic") else { return }
             let (data, _) = try await URLSession.shared.data(from: u)
-            leagues = try JSONDecoder().decode(MosaicsPayload.self, from: data).leagues
-            if selected == nil { selected = leagues.first?.id }
-            status = "\(leagues.count) leagues"
+            leagues = Debug.resize(
+                try JSONDecoder().decode(MosaicsPayload.self, from: data).leagues)
+            // A league that went away - hidden, or gone from the database -
+            // must not stay selected, or every rail keeps rendering a board
+            // the server no longer sends.
+            if selected == nil || !leagues.contains(where: { $0.id == selected }) {
+                selected = leagues.first?.id
+            }
+            status = leagues.count == 1 ? "1 league" : "\(leagues.count) leagues"
             lastError = nil
         } catch {
             status = "Cannot reach \(host)"
@@ -148,10 +154,26 @@ final class Board {
         }
         return (w, l)
     }
-    var averageRank: Double? {
+    /// Where you are placed, said in whatever way is true of the number of
+    /// leagues there actually are.
+    ///
+    /// An average over one league is not an average, it is that league's rank,
+    /// and "#4.0 AVG RANK" over a single league reads as a derived statistic
+    /// when it is a plain fact. It is also an average over however many
+    /// leagues *reported* a rank, which is not always all of them, so the
+    /// label carries that count whenever the two differ - otherwise the tile
+    /// quietly changes meaning as leagues load.
+    var rankSummary: (value: String, label: String) {
         let ranks = leagues.compactMap { $0.record?.rank }
-        guard !ranks.isEmpty else { return nil }
-        return Double(ranks.reduce(0, +)) / Double(ranks.count)
+        guard !ranks.isEmpty else { return ("—", "RANK") }
+        if ranks.count == 1, let only = leagues.first(where: { $0.record?.rank != nil }) {
+            let of = only.record?.of
+            return ("#\(ranks[0])" + (of.map { " of \($0)" } ?? ""), "LEAGUE RANK")
+        }
+        let mean = Double(ranks.reduce(0, +)) / Double(ranks.count)
+        let label = ranks.count == leagues.count
+            ? "AVG RANK" : "AVG RANK · \(ranks.count) OF \(leagues.count)"
+        return ("#" + mean.formatted(.number.precision(.fractionLength(1))), label)
     }
     /// Distinct men across every league.
     var distinctPlayers: Int { roster.count }
@@ -267,6 +289,11 @@ final class Board {
     @ObservationIgnored private var lineupCache: (key: String, value: [FieldMan])?
     @ObservationIgnored private var slateCache: (key: String, value: [SlateGame])?
     @ObservationIgnored private var winProbCache: (key: String, value: WinProbSeries)?
+    /// The ranked rail, and the win probabilities it compares against. Stored
+    /// here rather than beside the code that fills them in `Attention.swift`
+    /// only because Swift will not let an extension add stored properties.
+    @ObservationIgnored var focusCache: (key: String, value: [LeagueFocus])?
+    @ObservationIgnored var winProbTrail: [String: Double] = [:]
 
     /// What every cached derivation is keyed on.
     ///
@@ -475,15 +502,83 @@ final class Board {
     /// not save rather than appearing to and forgetting.
     var teamPrefs: [String: String] = [:]
     var prefsWritable = true
+    /// The two other things the same file holds: which leagues you have put
+    /// away, and the order you arranged the rest in. `/api/mosaic` already
+    /// honours both; the app could not read them back, so it had no way to
+    /// show you what you had hidden or to let you undo it.
+    var hiddenLeagues: [String] = []
+    var leagueOrder: [String] = []
+    /// Every league in the database, hidden ones included - the only place a
+    /// hidden league's name can come from, since the board stops sending it.
+    var catalogue: [LeagueRef] = []
 
     @MainActor
     func loadPrefs() async {
         guard let u = url("/api/prefs") else { return }
-        struct P: Decodable { let teams: [String: String]? }
+        struct P: Decodable {
+            let teams: [String: String]?
+            let hidden: [String]?, order: [String]?
+        }
         if let (d, _) = try? await URLSession.shared.data(from: u),
            let p = try? JSONDecoder().decode(P.self, from: d) {
             teamPrefs = p.teams ?? [:]
+            hiddenLeagues = p.hidden ?? []
+            leagueOrder = p.order ?? []
         }
+        await fetch("/api/leagues", into: LeagueCatalogue.self) {
+            self.catalogue = $0.leagues
+        }
+    }
+
+    /// A hidden league by name, for the row that offers it back.
+    func name(ofHidden id: String) -> String {
+        catalogue.first { "\($0.provider)-\($0.leagueId)" == id }?.name ?? id
+    }
+
+    /// Put a league away, or bring every one of them back.
+    ///
+    /// A hide with no way out is a bug rather than a feature: the install this
+    /// was written against already had a league hidden by hand months earlier
+    /// and nothing on any surface admitted it existed. The whole list is sent
+    /// because the server replaces a key it is given rather than merging into
+    /// it - a patch of one id would drop everything else you had put away.
+    @MainActor
+    func hide(_ id: String) async {
+        guard !hiddenLeagues.contains(id) else { return }
+        await writePrefs(["hidden": hiddenLeagues + [id]])
+    }
+    @MainActor
+    func unhideAll() async {
+        guard !hiddenLeagues.isEmpty else { return }
+        await writePrefs(["hidden": []])
+    }
+    /// Move one league to the front of the arrangement. The rest keep their
+    /// relative order, and leagues the server has not sent yet are appended so
+    /// a pin made today survives a league loading tomorrow.
+    @MainActor
+    func pin(_ id: String) async {
+        let known = leagues.map(\.id)
+        let rest = (leagueOrder + known).reduce(into: [String]()) { acc, x in
+            if x != id, !acc.contains(x) { acc.append(x) }
+        }
+        await writePrefs(["order": [id] + rest])
+    }
+
+    @MainActor
+    private func writePrefs(_ patch: [String: Any]) async {
+        guard let u = url("/api/prefs") else { return }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(withJSONObject: patch)
+        do {
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            prefsWritable = (200..<300).contains(
+                (resp as? HTTPURLResponse)?.statusCode ?? 0)
+        } catch { prefsWritable = false }
+        guard prefsWritable else { return }
+        await loadPrefs()
+        await load()
     }
 
     @MainActor
