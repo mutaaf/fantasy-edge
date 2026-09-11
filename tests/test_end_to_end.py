@@ -516,9 +516,21 @@ class TestApi(unittest.TestCase):
         import urllib.request
         from http.server import ThreadingHTTPServer
 
-        from fantasyedge.api import make_handler
+        from fantasyedge.api import Api, make_handler
 
-        srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(self.api))
+        # Its own Api, not the class's. Each request is served on its own
+        # thread and the API keeps one sqlite connection per thread by design,
+        # so the only way to release them is to close the Api - and closing
+        # the shared one would pull the database out from under every test
+        # that runs after this in the class.
+        api = Api(str(self.db))
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(api))
+        # ThreadingHTTPServer runs handlers on daemon threads and does not
+        # join them, so `server_close()` can return while a handler is still
+        # inside dispatch - and a connection opened after `api.close()` is one
+        # nothing will ever release. Joining makes the teardown ordered.
+        srv.daemon_threads = False
+        srv.block_on_close = True
         port = srv.server_address[1]
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         try:
@@ -531,13 +543,18 @@ class TestApi(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError) as cm:
                 urllib.request.urlopen(req)   # urllib treats 304 as an error
             self.assertEqual(cm.exception.code, 304)
+            cm.exception.close()              # an HTTPError *is* a response
             with self.assertRaises(urllib.error.HTTPError) as cm:
                 urllib.request.urlopen(f"http://127.0.0.1:{port}/api/leagues/espn/404")
             self.assertEqual(cm.exception.code, 404)
             self.assertIn("fix", json.loads(cm.exception.read()))
+            cm.exception.close()
         finally:
             srv.shutdown()
             srv.server_close()
+            # A suite that cries wolf about resources is one where a real leak
+            # goes unread, so the threads' connections are released here.
+            api.close()
 
 
 class TestLeverage(unittest.TestCase):
