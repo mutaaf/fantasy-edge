@@ -605,7 +605,22 @@ def opportunity_insights(players: Iterable[dict],
         share = _num(o.get("targetShare"))
         touches = (_num(o.get("targets")) + _num(o.get("carries"))) / max(games, 1)
 
+        # The caveat below promises "the season named in the facts". It was not
+        # named in them, so the promise was unkeepable - and it matters most in
+        # exactly the case that makes it necessary, week one of a new year,
+        # where the only published usage is last season's and a reader has no
+        # way to tell from the sentence.
         facts = [Fact("Games", games, "", "nflverse via advanced.season_profiles")]
+        # `o["season"]` when the supplier says which release it answered from,
+        # and only then the season that was asked for. They differ in week one
+        # of a new year, when the current release is too thin to meet
+        # MIN_GAMES and the caller falls back - and a Season fact reporting
+        # the request rather than the data would be a wrong number with a
+        # source attached, which is worse than no fact at all.
+        yr = o.get("season") if o.get("season") is not None else season
+        if yr is not None:
+            facts.insert(0, Fact("Season", int(yr), "",
+                                 "nflverse via advanced.season_profiles"))
         for key, label, unit in (("targets", "Targets", ""),
                                  ("carries", "Carries", ""),
                                  ("targetShare", "Target share", "%"),

@@ -149,12 +149,73 @@ def main():
     (HERE / "sleeper_2025.json").write_text(
         json.dumps(sleeper_fixture(), indent=1))
 
+    (HERE / "sleeper_projections_2026_w1.json").write_text(
+        json.dumps(sleeper_projections_fixture(pool), indent=1))
+
     (HERE / "standings.txt").write_text("\n".join(
         f'{i + 1}. Team {t} ({wl[t][0]}-{wl[t][1]}) {tot[t]:.2f}'
         for i, t in enumerate(rank)))
 
     print(f"{len(picks)} picks, {len({p['playerId'] for p in picks})} distinct players, "
           f"{len(schedule)} matchups")
+
+
+def sleeper_projections_fixture(pool, n=24):
+    """A slice of Sleeper's real projections payload, in its real shape.
+
+    Recorded from `GET /projections/nfl/2026/1?season_type=regular&
+    position[]=...&order_by=pts_ppr`, trimmed to the fields the adapter reads
+    and re-populated from the ESPN pool so the name join can be asserted rather
+    than assumed.
+
+    Three properties of the live payload are reproduced deliberately, because
+    each is a way the adapter can go wrong:
+
+    1. **Most rows carry no projection at all.** In a real week 1 only 449 of
+       3,304 rows have `pts_ppr`; the rest are players in the file with an ADP
+       placeholder and nothing else. A loader that reads a missing key as 0.0
+       invents a hard zero for several thousand men.
+    2. **All three scoring formats ride on every row.** Loading `pts_ppr` into
+       a half-PPR league slanders the source by about a point a receiver, so
+       the fixture carries all three and a test asserts the right one is read.
+    3. **A defence is filed under its club code with a city-and-nickname
+       name**: player_id "PHI", name "Philadelphia Eagles". ESPN writes the
+       same team as "Eagles D/ST". Only `identity` reconciles those.
+    """
+    rows = []
+    for i, name in enumerate(pool[:n]):
+        pos = pos_of(i)
+        first, _, last = name.partition(" ")
+        ppr = round(21.0 - i * 0.6, 2)
+        stats = {"adp_dd_ppr": float(i + 1)}
+        # Every fourth man is in the file but unprojected - see property 1.
+        if i % 4 != 3:
+            stats.update({"pts_ppr": ppr,
+                          "pts_half_ppr": round(ppr - 1.1, 2),
+                          "pts_std": round(ppr - 2.2, 2),
+                          "gp": 1.0, "rec": 4.0, "rush_yd": 30.0})
+        rows.append({
+            "date": None, "category": "proj", "week": 1, "sport": "nfl",
+            "season_type": "regular", "season": "2026", "company": "rotowire",
+            "player_id": str(9000 + i), "team": "DET", "opponent": "CHI",
+            "game_id": "2026-w1-det-chi",
+            "stats": stats,
+            "player": {"first_name": first, "last_name": last,
+                       "position": pos, "fantasy_positions": [pos],
+                       "team": "DET", "team_abbr": None,
+                       "injury_status": None, "years_exp": 3},
+        })
+    rows.append({
+        "date": None, "category": "proj", "week": 1, "sport": "nfl",
+        "season_type": "regular", "season": "2026", "company": "rotowire",
+        "player_id": "PHI", "team": "PHI", "opponent": "DAL", "game_id": "x",
+        "stats": {"pts_ppr": 9.71, "pts_half_ppr": 9.71, "pts_std": 9.71,
+                  "adp_dd_ppr": 140.0},
+        "player": {"first_name": "Philadelphia", "last_name": "Eagles",
+                   "position": "DEF", "fantasy_positions": ["DEF"],
+                   "team": "PHI", "team_abbr": None, "years_exp": 0},
+    })
+    return rows
 
 
 def sleeper_fixture():

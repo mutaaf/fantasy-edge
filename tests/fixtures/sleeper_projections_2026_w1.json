@@ -1,0 +1,812 @@
+[
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9000",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 1.0,
+   "pts_ppr": 21.0,
+   "pts_half_ppr": 19.9,
+   "pts_std": 18.8,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Jahmyr",
+   "last_name": "Gibbs",
+   "position": "QB",
+   "fantasy_positions": [
+    "QB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9001",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 2.0,
+   "pts_ppr": 20.4,
+   "pts_half_ppr": 19.3,
+   "pts_std": 18.2,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Bijan",
+   "last_name": "Robinson",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9002",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 3.0,
+   "pts_ppr": 19.8,
+   "pts_half_ppr": 18.7,
+   "pts_std": 17.6,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Ja'Marr",
+   "last_name": "Chase",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9003",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 4.0
+  },
+  "player": {
+   "first_name": "Puka",
+   "last_name": "Nacua",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9004",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 5.0,
+   "pts_ppr": 18.6,
+   "pts_half_ppr": 17.5,
+   "pts_std": 16.4,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "CeeDee",
+   "last_name": "Lamb",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9005",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 6.0,
+   "pts_ppr": 18.0,
+   "pts_half_ppr": 16.9,
+   "pts_std": 15.8,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Josh",
+   "last_name": "Allen",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9006",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 7.0,
+   "pts_ppr": 17.4,
+   "pts_half_ppr": 16.3,
+   "pts_std": 15.2,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Lamar",
+   "last_name": "Jackson",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9007",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 8.0
+  },
+  "player": {
+   "first_name": "Trey",
+   "last_name": "McBride",
+   "position": "TE",
+   "fantasy_positions": [
+    "TE"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9008",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 9.0,
+   "pts_ppr": 16.2,
+   "pts_half_ppr": 15.1,
+   "pts_std": 14.0,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Brock",
+   "last_name": "Bowers",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9009",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 10.0,
+   "pts_ppr": 15.6,
+   "pts_half_ppr": 14.5,
+   "pts_std": 13.4,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Derrick",
+   "last_name": "Henry",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9010",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 11.0,
+   "pts_ppr": 15.0,
+   "pts_half_ppr": 13.9,
+   "pts_std": 12.8,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Breece",
+   "last_name": "Hall",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9011",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 12.0
+  },
+  "player": {
+   "first_name": "Nico",
+   "last_name": "Collins",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9012",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 13.0,
+   "pts_ppr": 13.8,
+   "pts_half_ppr": 12.7,
+   "pts_std": 11.6,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Malik",
+   "last_name": "Nabers",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9013",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 14.0,
+   "pts_ppr": 13.2,
+   "pts_half_ppr": 12.1,
+   "pts_std": 11.0,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Chase",
+   "last_name": "Brown",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9014",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 15.0,
+   "pts_ppr": 12.6,
+   "pts_half_ppr": 11.5,
+   "pts_std": 10.4,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Kyren",
+   "last_name": "Williams",
+   "position": "K",
+   "fantasy_positions": [
+    "K"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9015",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 16.0
+  },
+  "player": {
+   "first_name": "Zay",
+   "last_name": "Flowers",
+   "position": "QB",
+   "fantasy_positions": [
+    "QB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9016",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 17.0,
+   "pts_ppr": 11.4,
+   "pts_half_ppr": 10.3,
+   "pts_std": 9.2,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Tee",
+   "last_name": "Higgins",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9017",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 18.0,
+   "pts_ppr": 10.8,
+   "pts_half_ppr": 9.7,
+   "pts_std": 8.6,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Josh",
+   "last_name": "Jacobs",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9018",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 19.0,
+   "pts_ppr": 10.2,
+   "pts_half_ppr": 9.1,
+   "pts_std": 8.0,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Sam",
+   "last_name": "LaPorta",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9019",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 20.0
+  },
+  "player": {
+   "first_name": "George",
+   "last_name": "Kittle",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9020",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 21.0,
+   "pts_ppr": 9.0,
+   "pts_half_ppr": 7.9,
+   "pts_std": 6.8,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Justin",
+   "last_name": "Jefferson",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9021",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 22.0,
+   "pts_ppr": 8.4,
+   "pts_half_ppr": 7.3,
+   "pts_std": 6.2,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Saquon",
+   "last_name": "Barkley",
+   "position": "RB",
+   "fantasy_positions": [
+    "RB"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9022",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 23.0,
+   "pts_ppr": 7.8,
+   "pts_half_ppr": 6.7,
+   "pts_std": 5.6,
+   "gp": 1.0,
+   "rec": 4.0,
+   "rush_yd": 30.0
+  },
+  "player": {
+   "first_name": "Jonathan",
+   "last_name": "Taylor",
+   "position": "TE",
+   "fantasy_positions": [
+    "TE"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "9023",
+  "team": "DET",
+  "opponent": "CHI",
+  "game_id": "2026-w1-det-chi",
+  "stats": {
+   "adp_dd_ppr": 24.0
+  },
+  "player": {
+   "first_name": "De'Von",
+   "last_name": "Achane",
+   "position": "WR",
+   "fantasy_positions": [
+    "WR"
+   ],
+   "team": "DET",
+   "team_abbr": null,
+   "injury_status": null,
+   "years_exp": 3
+  }
+ },
+ {
+  "date": null,
+  "category": "proj",
+  "week": 1,
+  "sport": "nfl",
+  "season_type": "regular",
+  "season": "2026",
+  "company": "rotowire",
+  "player_id": "PHI",
+  "team": "PHI",
+  "opponent": "DAL",
+  "game_id": "x",
+  "stats": {
+   "pts_ppr": 9.71,
+   "pts_half_ppr": 9.71,
+   "pts_std": 9.71,
+   "adp_dd_ppr": 140.0
+  },
+  "player": {
+   "first_name": "Philadelphia",
+   "last_name": "Eagles",
+   "position": "DEF",
+   "fantasy_positions": [
+    "DEF"
+   ],
+   "team": "PHI",
+   "team_abbr": null,
+   "years_exp": 0
+  }
+ }
+]

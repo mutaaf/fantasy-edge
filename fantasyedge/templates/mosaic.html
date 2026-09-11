@@ -949,6 +949,105 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .an-key i{width:10px;height:10px;border-radius:3px;display:inline-block;
   margin-right:5px;vertical-align:-1px}
 
+/* ── Intel ─────────────────────────────────────────────────
+   Two kinds of claim on one page, and the layout has to make them
+   impossible to confuse. Computed findings are cards on the ground colour
+   with their provenance printed on them. Model prose is one panel, inset,
+   hatched down its left edge, and it never replaces a card - it sits above
+   the same facts it was written from, which stay visible underneath it.
+   Everything the model touches is amber; nothing computed ever is. */
+.intel{margin-top:16px;display:grid;gap:16px}
+.intel[hidden]{display:none!important}
+.it-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px}
+.it-head h2{font-family:var(--display);font-size:24px;letter-spacing:.02em;
+  text-transform:uppercase;margin:0}
+.it-count{font-family:var(--cond);font-size:12px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.it-note{grid-column:1/-1;font-size:12.5px;color:var(--ink-dim);line-height:1.55;
+  border-left:2px solid var(--hair-2);padding-left:11px}
+
+/* the model panel */
+.it-ai{border:1px solid rgba(255,196,64,.42);border-radius:var(--r-card);
+  background:linear-gradient(180deg,rgba(255,196,64,.10),rgba(255,196,64,.03));
+  padding:15px 18px 16px;position:relative;overflow:hidden}
+.it-ai::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:repeating-linear-gradient(135deg,#ffc440 0 4px,transparent 4px 8px)}
+.it-ai-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.it-tag{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:#ffc440;border:1px solid rgba(255,196,64,.5);
+  border-radius:var(--r-chip);padding:2px 9px}
+.it-tag.calm{color:var(--ink-faint);border-color:var(--hair)}
+.it-ai-prose{margin:11px 0 0;font-size:14.5px;line-height:1.62;color:var(--ink)}
+.it-ai-foot{margin-top:11px;padding-top:9px;border-top:1px solid rgba(255,196,64,.22);
+  font-size:11.5px;color:var(--ink-faint);line-height:1.55}
+.it-warn{margin-top:9px;border:1px solid rgba(255,75,75,.5);border-radius:10px;
+  background:rgba(255,75,75,.10);padding:9px 11px;font-size:12px;line-height:1.5;
+  color:var(--ink)}
+.it-btn{font-family:var(--cond);font-size:12.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--navy-900);background:#ffc440;border:0;
+  border-radius:var(--r-chip);padding:7px 15px;cursor:pointer;
+  transition:transform .12s var(--ease),filter .12s var(--ease)}
+.it-btn:hover{filter:brightness(1.1)}
+.it-btn:active{transform:translateY(1px)}
+.it-btn[disabled]{opacity:.45;cursor:default;filter:none;transform:none}
+.it-keys{font-size:11.5px;color:var(--ink-faint);line-height:1.55;margin:9px 0 0}
+.it-keys code{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim)}
+
+/* the computed cards */
+.it-grid{display:grid;gap:13px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.it-card{background:linear-gradient(180deg,var(--navy-700),var(--navy-800));
+  border:1px solid var(--hair);border-radius:var(--r-card);padding:15px 17px 13px;
+  display:flex;flex-direction:column}
+.it-card-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.it-kind{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--navy-900);background:var(--ink-dim);
+  border-radius:var(--r-chip);padding:2px 8px;flex:0 0 auto}
+.it-kind.k-fragility,.it-kind.k-injury{background:var(--opp);color:#fff}
+.it-kind.k-carrying,.it-kind.k-opportunity{background:var(--green);color:var(--navy-900)}
+.it-kind.k-conflict,.it-kind.k-exposure{background:var(--hot);color:var(--navy-900)}
+.it-lg{font-family:var(--cond);font-size:11.5px;letter-spacing:.06em;
+  color:var(--ink-faint);margin-left:auto;text-align:right}
+.it-title{font-family:var(--display);font-size:16.5px;letter-spacing:.02em;
+  text-transform:uppercase;margin:9px 0 0;line-height:1.2}
+.it-detail{font-size:13px;line-height:1.6;color:var(--ink-dim);margin:7px 0 0}
+.it-facts{margin:12px 0 0;display:grid;gap:4px}
+.it-fact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;
+  align-items:baseline;font-size:12px;padding:3px 0;
+  border-bottom:1px dotted rgba(255,255,255,.10)}
+.it-fact:last-child{border-bottom:0}
+.it-fk{color:var(--ink-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it-fv{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink)}
+.it-src{margin:10px 0 0;font-family:var(--cond);font-size:10.5px;letter-spacing:.06em;
+  color:var(--ink-faint);line-height:1.6}
+.it-src b{color:var(--ink-dim);font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;margin-right:6px}
+.it-cav{margin-top:auto;padding-top:10px;font-size:11.5px;color:var(--ink-faint);
+  line-height:1.5;border-top:1px solid rgba(255,255,255,.10)}
+.it-cav::before{content:"Caveat ";font-family:var(--cond);font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-dim)}
+
+/* what cannot be sourced, said out loud */
+.it-panel{border:1px dashed var(--hair);border-radius:var(--r-card);
+  padding:15px 18px 16px;background:rgba(0,0,0,.14)}
+.it-panel h3{font-family:var(--display);font-size:15px;letter-spacing:.02em;
+  text-transform:uppercase;margin:0 0 4px}
+.it-panel p{font-size:12.5px;color:var(--ink-dim);line-height:1.55;margin:0}
+.it-gone{margin:12px 0 0;display:grid;gap:9px}
+.it-gone li{list-style:none;display:grid;grid-template-columns:minmax(0,190px) 1fr;
+  gap:14px;font-size:12.5px;line-height:1.5;padding-bottom:9px;
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.it-gone li:last-child{border-bottom:0;padding-bottom:0}
+.it-gone b{font-weight:700;color:var(--ink)}
+.it-gone span{color:var(--ink-faint)}
+.it-have{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.it-have i{font-style:normal;font-family:var(--cond);font-size:11.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);
+  border:1px solid var(--hair);border-radius:var(--r-chip);padding:3px 10px}
+@media (max-width:620px){
+  .it-grid{grid-template-columns:1fr}
+  .it-gone li{grid-template-columns:1fr;gap:3px}
+}
+
 /* ── the week-by-week bar, made interactive ───────────────── */
 .spark{display:flex;align-items:flex-end;gap:2px;height:52px;margin-top:6px}
 .spark button{flex:1;min-width:3px;background:rgba(255,255,255,.22);border:0;
@@ -1424,6 +1523,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
         <button data-h="universe" aria-pressed="false">All players</button>
         <button data-h="today" aria-pressed="false">Today</button>
         <button data-h="analysis" aria-pressed="false">Analysis</button>
+        <button data-h="intel" aria-pressed="false">Intel</button>
         <button data-h="news" aria-pressed="false">Headlines</button>
       </div>
       <div class="seg" id="viewseg" hidden role="group" aria-label="View">
@@ -1492,6 +1592,24 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   <div class="rfilters" id="whenfilters" hidden></div>
   <div class="feedwrap" id="feedwrap" hidden></div>
   <div class="an-grid" id="angrid" hidden></div>
+  <div class="intel" id="intelv" hidden>
+    <div class="it-head">
+      <h2>Intel</h2>
+      <span class="it-count" id="itcount"></span>
+    </div>
+    <div id="itnotes"></div>
+    <!-- The model panel is above the cards but is never a substitute for one:
+         it renders from a different key of the payload, and the cards below
+         are the same findings it was written from. -->
+    <div id="itai"></div>
+    <div class="it-grid" id="itgrid"></div>
+    <div class="it-panel" id="itgone"></div>
+    <div class="it-panel" id="itsoon">
+      <h3>Ask it a question</h3>
+      <p>Coming soon. There is no conversational endpoint here yet, and the
+         brief above needs no model to be complete.</p>
+    </div>
+  </div>
   <div class="uni" id="uni" hidden>
     <div class="uni-rail" id="unirail"></div>
     <div class="uni-main">
@@ -2199,6 +2317,190 @@ function renderAnalysis(){
 
 let analysisLeague=null;
 
+/* ── Intel ───────────────────────────────────────────────────────────
+   The computed brief first and unaided; a model, if you ask for one, in its
+   own box above the same facts it was written from. The two never merge.
+
+   Nothing on this tab can spend money on its own. `intelLoad` polls
+   /api/intel, which is arithmetic over rows already in SQLite and reaches no
+   provider; only `intelNarrate`, behind a button, posts to the one route that
+   does. That split is the reason a board can be left open on this tab all
+   Sunday. */
+let INTEL=null,NARR=null,intelBusy=false,intelErr="";
+
+function intelLoad(){
+  // `no-cache` revalidates instead of reading the browser's own copy. This
+  // route is max-age=30, which is right for a proxy and wrong for the tab
+  // that just bought a narration: the poll ten seconds later was answered
+  // from the browser cache with a body written before the prose existed, and
+  // wiped it off the screen. Revalidation costs a 304 and no payload.
+  fetch("/api/intel",{cache:"no-cache"}).then(r=>r.json()).then(d=>{
+    if(!d||d.error){intelErr=(d&&d.error)||"no answer";}
+    else{intelErr="";INTEL=d;
+      // The server's copy is the authority when it has one: it re-runs the
+      // number check against the brief on screen right now, so a paragraph
+      // written when the numbers were different comes back with those
+      // figures flagged. An answer that has none only clears the panel if it
+      // is about a brief we are not already holding prose for - otherwise a
+      // reply that raced the narration would erase it.
+      const held=(d.narration&&d.narration.cached)||null;
+      if(held)NARR=held;
+      else if(!NARR||NARR.briefShape!==(d.narration&&d.narration.shape))NARR=null;}
+    renderIntel();})
+   .catch(e=>{intelErr=String(e);renderIntel();});}
+
+function intelNarrate(provider){
+  if(intelBusy)return;
+  intelBusy=true;renderIntel();
+  fetch("/api/intel/narrate",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({provider:provider})})
+   .then(r=>r.json()).then(d=>{
+     intelBusy=false;
+     if(d&&d.error&&!d.origin){NARR={error:{state:"failed",message:d.error,
+       remedy:d.fix||""},text:"",provider:provider,model:""};}
+     else NARR=d;
+     renderIntel();})
+   .catch(e=>{intelBusy=false;
+     NARR={error:{state:"unreachable",message:String(e),
+       remedy:"Is the API still running?"},text:"",provider:provider,model:""};
+     renderIntel();});}
+
+function itAge(n){
+  if(n==null)return "";
+  if(n<60)return n+"s old";
+  if(n<3600)return Math.round(n/60)+"m old";
+  return Math.round(n/3600)+"h old";}
+
+/* Where a key comes from, printed on the page rather than assumed.
+   There is deliberately no field here to type one into: a key pasted into a
+   browser lives in the DOM, in the form history and in any screenshot of this
+   page, and the loopback API can already read one from the environment - so
+   the safe version of this affordance is the absence of it. */
+const IT_KEYS='Keys are read by the server from the environment '+
+  '(<code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code>, '+
+  '<code>GOOGLE_API_KEY</code>) or <code>~/.fantasy-edge/ai.json</code> '+
+  '(mode 600), at the moment you press the button. This page never handles a '+
+  'key, never stores one, and offers no box to type one into.';
+
+function renderIntelAi(){
+  const box=$("itai");
+  const models=(INTEL&&INTEL.models)||[];
+  const ready=models.filter(m=>m.configured);
+  const n=NARR;
+
+  if(n&&n.text){
+    const bad=(n.unverified||[]).concat(n.flaggedMetrics||[]);
+    box.innerHTML='<div class="it-ai"><div class="it-ai-h">'+
+      '<span class="it-tag">Written by a model</span>'+
+      '<span class="it-count">'+esc(n.provider)+' &middot; '+esc(n.model)+'</span>'+
+      // Both are true of a paragraph five seconds old; "cached, 0s old" is
+      // the confusing one to read straight after pressing the button.
+      '<span class="it-count">'+((n.cached&&n.ageSeconds>5)
+        ?'cached, '+esc(itAge(n.ageSeconds)):'just written')+
+      '</span></div>'+
+      '<p class="it-ai-prose">'+esc(n.text)+'</p>'+
+      (bad.length?'<div class="it-warn"><b>Not backed by anything on this page:</b> '+
+        bad.map(esc).join(", ")+'. Those figures were not computed here. '+
+        'The cards below are.</div>':'')+
+      (n.factsChanged?'<div class="it-warn">The findings have moved since this '+
+        'was written. The cards below are current; this paragraph is not.</div>':'')+
+      '<div class="it-ai-foot">'+esc(n.label||"")+
+      (n.note?' '+esc(n.note):'')+'</div>'+
+      (ready.length?'<p style="margin:11px 0 0"><button class="it-btn" id="itgo"'+
+        (intelBusy?' disabled':'')+' data-p="'+esc(ready[0].provider)+'">'+
+        (intelBusy?'Writing&hellip;':'Write it again')+'</button></p>':'')+
+      '</div>';
+    return;}
+
+  if(n&&n.error){
+    box.innerHTML='<div class="it-ai"><div class="it-ai-h">'+
+      '<span class="it-tag calm">Model narration</span>'+
+      '<span class="it-count">'+esc(n.error.state)+'</span></div>'+
+      '<p class="it-ai-prose">'+esc(n.error.message)+'</p>'+
+      (n.error.remedy?'<div class="it-ai-foot">'+esc(n.error.remedy)+'</div>':'')+
+      '<p class="it-keys">'+IT_KEYS+'</p>'+
+      (ready.length?'<p style="margin:11px 0 0"><button class="it-btn" id="itgo"'+
+        (intelBusy?' disabled':'')+' data-p="'+esc(ready[0].provider)+'">'+
+        (intelBusy?'Writing&hellip;':'Try again')+'</button></p>':'')+
+      '</div>';
+    return;}
+
+  box.innerHTML='<div class="it-ai"><div class="it-ai-h">'+
+    '<span class="it-tag calm">Model narration &middot; optional</span></div>'+
+    '<p class="it-ai-prose" style="font-size:13px;color:var(--ink-dim)">'+
+    (ready.length
+      ? 'Everything below was computed without a model and is complete as it '+
+        'stands. A model can write it up in a paragraph; it is given only the '+
+        'findings, never your rosters, and every number it uses is checked '+
+        'against them. One request, then it is cached &mdash; leaving this '+
+        'page open never calls one.'
+      : 'No model key is set on this server, and nothing below needs one. '+
+        'Every finding on this page is arithmetic over rows in your league '+
+        'database.')+'</p>'+
+    '<p class="it-keys">'+IT_KEYS+'</p>'+
+    (ready.length?'<p style="margin:12px 0 0">'+ready.map(m=>
+      '<button class="it-btn" id="itgo" data-p="'+esc(m.provider)+'"'+
+      (intelBusy?' disabled':'')+' style="margin-right:8px">'+
+      (intelBusy?'Writing&hellip;':'Write it up with '+esc(m.label))+
+      '</button>').join("")+'</p>':'')+
+    '</div>';}
+
+function renderIntel(){
+  if(intelErr&&!INTEL){
+    $("itcount").textContent="";
+    $("itgrid").innerHTML='<div class="pc-none">Intel is unavailable: '+
+      esc(intelErr)+'</div>';
+    return;}
+  if(!INTEL){$("itgrid").innerHTML='<div class="pc-none">Loading&hellip;</div>';return;}
+
+  setText($("itcount"),
+    "Week "+INTEL.week+" · "+INTEL.season+" · "+
+    INTEL.counts.computed+" computed finding"+
+    (INTEL.counts.computed===1?"":"s"));
+
+  $("itnotes").innerHTML=(INTEL.notes||[]).map(t=>
+    '<div class="it-note">'+esc(t)+'</div>').join("");
+
+  renderIntelAi();
+
+  $("itgrid").innerHTML=(INTEL.insights||[]).map(i=>{
+    const facts=(i.facts||[]).map(f=>
+      '<div class="it-fact"><span class="it-fk" title="'+esc(f.source)+'">'+
+      esc(f.label)+'</span><span class="it-fv">'+esc(f.value)+
+      (f.unit?'&thinsp;'+esc(f.unit):'')+'</span></div>').join("");
+    return '<div class="it-card"><div class="it-card-h">'+
+      '<span class="it-kind k-'+esc(i.kind)+'">'+esc(i.kind)+'</span>'+
+      (i.league?'<span class="it-lg">'+esc(i.league)+'</span>':'')+
+      '</div><h3 class="it-title">'+esc(i.title)+'</h3>'+
+      '<p class="it-detail">'+esc(i.detail)+'</p>'+
+      '<div class="it-facts">'+facts+'</div>'+
+      '<div class="it-src"><b>Computed from</b>'+
+      (i.sources||[]).map(esc).join(" &middot; ")+'</div>'+
+      '<div class="it-cav">'+esc(i.caveat)+'</div></div>';}).join("")||
+    '<div class="pc-none">Nothing to report yet. Pull a season with rosters '+
+    'and a matchup.</div>';
+
+  // The five the design asks for that no feed within reach publishes. Shown
+  // with their reasons rather than omitted: a gap in a panel of metrics reads
+  // as "zero", and estimating YPRR from targets would put a number on screen
+  // that looks like the others and is not one.
+  const gone=(INTEL.unavailable||[]).map(u=>
+    '<li><b>'+esc(u.metric)+'</b><span>'+esc(u.reason)+'</span></li>').join("");
+  const have=(INTEL.available||[]).map(a=>
+    '<i>'+esc(a.label)+(a.unit?' ('+esc(a.unit)+')':'')+'</i>').join("");
+  $("itgone").innerHTML='<h3>Not sourceable here</h3>'+
+    '<p>Five metrics this view was modelled on that no feed within reach '+
+    'publishes. Named rather than left blank.</p>'+
+    '<ul class="it-gone">'+gone+'</ul>'+
+    '<p style="margin-top:14px">What nflverse does publish, and what the '+
+    'opportunity findings above are built from:</p>'+
+    '<div class="it-have">'+have+'</div>';}
+
+$("itai").addEventListener("click",e=>{
+  const b=e.target.closest("#itgo");if(!b)return;
+  intelNarrate(b.dataset.p);});
+
 function showHome(){
   const isL=home==="leagues";
   syncProjBar();
@@ -2207,12 +2509,14 @@ function showHome(){
     $("score").hidden=true;$("pbwrap").hidden=true;$("teampick").hidden=true;
     $("pregame").hidden=true;$("plays").hidden=true;$("viewseg").hidden=true;}
   $("whenfilters").hidden=!(home==="players"||home==="today");$("hidden").hidden=!isL||!hiddenIds().length;
-  $("feedwrap").hidden=isL||home==="analysis"||home==="universe"||home==="live";
+  $("feedwrap").hidden=isL||home==="analysis"||home==="universe"||home==="live"
+    ||home==="intel";
   // Set before the board tab's early return below, because that return leaves
   // the rest of this function unrun - the live view stayed on screen under an
   // open league the first time it was wired up after it.
   $("live").hidden=home!=="live";
   $("angrid").hidden=home!=="analysis";
+  $("intelv").hidden=home!=="intel";
   $("uni").hidden=home!=="universe";
   if(home!=="board")$("lgv").hidden=true;
   if(home==="board"){openLeagueView(focusLeagueId(),true);return;}
@@ -2229,6 +2533,10 @@ function showHome(){
     liveFetch();
     try{renderLive();}catch(err){console.error("live view failed",err);}
     return;}
+  if(home==="intel"){
+    // Draw whatever is already in hand, then refresh - the tab would
+    // otherwise open empty for as long as the brief takes to build.
+    renderIntel();intelLoad();return;}
   if(home==="players")renderPlayersFeed(true);
   else if(home==="today")renderToday();
   else if(home==="analysis"){renderAnalysis();}
@@ -2378,7 +2686,7 @@ function repaintAll(){
    draws a projection, and a control that changes nothing visible on the page
    it is sitting on is worse than no control. */
 function syncProjBar(){
-  const off=(home==="live"||home==="news"||home==="analysis")
+  const off=(home==="live"||home==="news"||home==="analysis"||home==="intel")
     ||(home==="board"&&openLeague&&view==="standings");
   $("pbar").hidden=off||!PROJCAT.length;
   $("pcmp").hidden=off||!projCompare;
@@ -4883,4 +5191,7 @@ if(location.protocol.startsWith("http")){
    looking at it. */
 if(location.protocol.startsWith("http"))
   setInterval(()=>{if(home==="live")liveFetch();},8000);
+  // Ten seconds against a route whose Cache-Control is thirty, so most of
+  // these never leave the browser - and not one of them can reach a model.
+  setInterval(()=>{if(home==="intel")intelLoad();},10000);
 </script>

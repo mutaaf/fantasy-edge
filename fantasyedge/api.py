@@ -59,6 +59,9 @@ ROUTES = [
     ["GET", "/api/context", "scoring plays, ESPN links, and ESPN's own injury report"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
+    ["GET", "/api/intel", "the computed brief: insights, caveats, provenance"],
+    ["GET", "/api/intel/models", "which model providers are configured"],
+    ["POST", "/api/intel/narrate", "narrate the brief - loopback only, costs money"],
 ]
 
 RASTER = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic")
@@ -100,6 +103,77 @@ CONFIG = "public, max-age=30, stale-while-revalidate=300"
 LIVE = "public, max-age=2, stale-while-revalidate=8"
 PRIVATE = "no-cache"
 
+# ── model spend ──────────────────────────────────────────────────────────────
+#
+# Everything above this line is arithmetic over rows that are already on disk,
+# so the only cost of a wrong cache decision is CPU. A narration is a paid API
+# call, and the failure mode is not a slow page - it is a bill. Three rules,
+# and the first is the one that matters:
+#
+#   1. No GET produces a narration. `/api/intel` returns the computed brief and
+#      whatever prose has already been paid for; it never reaches a provider.
+#      A board left open on a television polls this route for hours.
+#   2. A narration is cached against the *shape* of the brief rather than its
+#      exact numbers, so a point of win probability does not buy a new one.
+#   3. Even a shape change cannot spend faster than MIN_INTERVAL. Rule 2 makes
+#      the common case free; rule 3 is what bounds a client that got rule 1
+#      wrong and posts in a loop.
+NARRATION_TTL = 12 * 3600         # override with FANTASYEDGE_AI_TTL
+NARRATION_MIN_INTERVAL = 120      # override with FANTASYEDGE_AI_MIN_INTERVAL
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return max(0, int(os.environ.get(name) or default))
+    except ValueError:
+        return default
+
+
+def _bucket(value: float, unit: str) -> str:
+    """One numeric fact, coarsened to the granularity a sentence cares about.
+
+    This is the whole cost model in one function. `Win probability 61%` and
+    `Win probability 62%` are the same paragraph of English, so they must hash
+    the same or a live Sunday re-buys the identical prose every few seconds.
+    The step per unit is the smallest move that would actually change what a
+    narrator wrote:
+
+      %      10 points - the difference between "comfortable" and "a coin flip"
+      pts     5 points - roughly a touchdown; less than that is drift
+      counts  exact    - two line-ups and three line-ups are different claims,
+                         and these never wobble on their own
+    """
+    if unit == "%":
+        return str(int(round(value / 10.0)))
+    if unit == "pts":
+        return str(int(round(value / 5.0)))
+    return f"{value:g}"
+
+
+def narration_shape(brief) -> str:
+    """What a narration is keyed on: which findings fired, about whom, roughly.
+
+    Not `prompt_for(brief)`. That hash is exact, and exact is wrong here - it
+    moves on every scoring play, so a client that re-asks after each one pays
+    for a fresh paragraph that reads the same as the last. Not the insight keys
+    alone either, because those would hold a stale sentence through a genuine
+    collapse. So: the set of findings, the players they name, and every number
+    rounded to the step at which the English changes.
+    """
+    parts = [f"{brief.season}/{brief.week}"]
+    for i in brief.insights:
+        who = ",".join(sorted(str(p.get("id") or p.get("name") or "")
+                              for p in (i.players or [])))
+        facts = []
+        for f in i.facts:
+            v = f.value
+            if isinstance(v, bool) or not isinstance(v, (int, float)):
+                facts.append(f"{f.label}={v}")
+            else:
+                facts.append(f"{f.label}~{_bucket(float(v), f.unit)}")
+        parts.append(f"{i.key}|{i.kind}|{i.league_id}|{who}|{'&'.join(facts)}")
+    return hashlib.sha1("\n".join(parts).encode()).hexdigest()[:16]
+
 
 class HttpError(Exception):
     """A response the client should see as a status code, not a traceback."""
@@ -119,12 +193,27 @@ def _result(r: analytics.Result) -> dict:
 class Api:
     """Query layer. One Store per thread, one analysis cache per database."""
 
-    def __init__(self, db: str = "data/fantasy.db"):
+    def __init__(self, db: str = "data/fantasy.db", allow_ai: bool = True):
         self.db = db
+        self.allow_ai = allow_ai
         self._local = threading.local()
         self._lock = threading.Lock()
         self._cache: dict[tuple, tuple[float, object]] = {}
         self._stores: list[Store] = []
+        # The brief is memoised in one slot rather than through `cached()`.
+        # `cached()` keeps an entry per key forever, and this key contains the
+        # live payload's content hash, which changes on every scoring play - a
+        # Sunday would leave a few thousand whole briefs pinned in memory.
+        # There is exactly one user of this endpoint, so one slot is the right
+        # number.
+        self._brief: tuple[tuple, object] | None = None
+        # Narration state. Deliberately *not* the key: the key is read from the
+        # environment at call time and never lands on this object, so a LAN
+        # client reading the tier above can never be answered out of a
+        # credential this process is holding.
+        self._narrations: dict[str, dict] = {}
+        self._last_call = 0.0
+        self._calls = 0
 
     # ---------- plumbing ----------
 
@@ -1183,6 +1272,360 @@ class Api:
         return {"players": out, "count": len(out),
                 "exposed": sum(1 for p in out if len(p["leagues"]) > 1)}
 
+    # ---------- intel ----------
+
+    def _safe(self, fn):
+        """A payload the brief would like but can do without.
+
+        `intel.build` is written to take `None` for live and for injuries and
+        to say so in `notes`. A scoreboard that is briefly unreachable should
+        cost the reader the two matchup insights that need it, not the ten that
+        do not, so a failure here is a missing argument rather than a 500.
+        """
+        try:
+            return fn()
+        except Exception:
+            return None
+
+    def _prefs_sig(self) -> str:
+        """Which team is yours, in what order, minus what you hid.
+
+        In the brief's cache key because `mosaics()` honours all three and none
+        of them touches the database file, so the mtime stamp `cached()` runs
+        on cannot see them move. Picking a different team is the one edit most
+        likely to be followed immediately by a look at this view.
+        """
+        try:
+            from . import prefs as pf
+            return hashlib.sha1(json.dumps(pf.load(), sort_keys=True)
+                                .encode()).hexdigest()[:16]
+        except Exception:
+            return ""
+
+    def _live_probe(self):
+        """The live snapshot, re-read no more often than the tier promises.
+
+        The brief's cache key contains the live payload's content hash, so
+        validating the cache means producing that payload - and a snapshot
+        costs about four tenths of a second, which a board polling every three
+        seconds would pay forever just to be told nothing had changed. Two
+        seconds is not a number invented here: it is `LIVE`'s own max-age, the
+        staleness this project already tells every cache between here and the
+        screen to accept.
+        """
+        now = time.time()
+        with self._lock:
+            hit = getattr(self, "_probe", None)
+        if hit and now - hit[0] < 2.0:
+            return hit[1]
+        snap = self._safe(self.live)
+        with self._lock:
+            self._probe = (now, snap)
+        return snap
+
+    def _opportunity(self, season: int | None):
+        """nflverse usage for the most recent season that has any.
+
+        nflverse publishes weekly, so early in a new year the current season's
+        release is a handful of players with one game each and every
+        opportunity insight silently does not fire - the generator disappears
+        from the brief with no note, which is the gap `UNAVAILABLE` exists to
+        avoid leaving. Asking for last season instead is answerable and is
+        what the caveat already describes; the season it actually used travels
+        in the facts.
+
+        The test is `intel.MIN_GAMES` rather than "is the release empty",
+        because the 2026 release at week one is not empty: it is 47 players on
+        one game apiece, which passes an emptiness check and then fails the
+        generator's own floor a moment later.
+        """
+        from . import advanced, intel, profile
+
+        year = int(season or 0)
+        if year:
+            try:
+                rows = advanced.season_profiles(year)
+                usable = sum(1 for r in rows.values()
+                             if int(r.get("g") or 0) >= intel.MIN_GAMES)
+            except Exception:
+                usable = 0
+            if not usable:
+                year -= 1
+        def opportunity(pid, _requested=None):
+            # The season travels back with the row, so the Season fact names
+            # the release the numbers came out of rather than the one the
+            # brief happens to be about.
+            o = profile.opportunity(pid, year or None)
+            return dict(o, season=year) if o else o
+
+        return opportunity, year
+
+    def brief(self):
+        """The computed brief as an `intel.Brief`, rebuilt only when it moved.
+
+        Building one walks every followed league's mosaic, the live snapshot,
+        the injury wire and up to nine analyses per league - a second or more
+        of work that a board polling every few seconds would otherwise repeat
+        forever. The three things that can change it are all cheap to read:
+        the database mtime (already what `cached()` keys on, and what a `pull`
+        moves), the live payload's own content hash, and your saved team picks.
+        If none of them has moved, neither has the brief.
+        """
+        from . import intel
+
+        live = self._live_probe()
+        key = (self._stamp(), (live or {}).get("version") or "",
+               self._prefs_sig())
+        with self._lock:
+            hit = self._brief
+        if hit and hit[0] == key:
+            return hit[1]
+
+        mos = self._safe(self.mosaics) or {"leagues": []}
+        analyses = {}
+        for L in mos["leagues"]:
+            got = self._safe(lambda L=L: self.analyses(L["provider"], L["leagueId"]))
+            analyses[L["id"]] = (got or {}).get("analyses") or []
+        season = (mos["leagues"][0].get("season") if mos["leagues"] else None)
+        opp, used = self._opportunity(season)
+        built = intel.build(
+            mosaics=mos, live=live,
+            injuries=(self._safe(self.injuries) or {}).get("injuries"),
+            # `limit` is the brief's own, not the view's: this database
+            # produces two dozen findings and the default twelve dropped every
+            # history and opportunity insight behind ten roster conflicts.
+            # The client decides what to show; the server should not decide
+            # what exists.
+            analyses=analyses, opportunity=opp, limit=64)
+        if used and season and used != int(season):
+            built.notes.append(
+                f"nflverse has published no {season} usage yet, so opportunity "
+                f"is computed from {used}. The season is named in each "
+                f"insight's facts.")
+        with self._lock:
+            self._brief = (key, built)
+        return built
+
+    def _narration_block(self, brief) -> dict:
+        """The narration slot of `/api/intel`, which never calls a model.
+
+        It carries the prompt a client would send (so a Swift client running
+        Apple Intelligence on device builds it from the findings and not from
+        the raw payload), and any prose already paid for that still describes
+        this brief. There is no field here that could trigger a request.
+        """
+        from . import ai
+
+        shape = narration_shape(brief)
+        with self._lock:
+            entry = dict(self._narrations.get(shape) or {})
+        out = {
+            "prompt": {"system": ai.SYSTEM, "user": ai.prompt_for(brief)},
+            "endpoint": "POST /api/intel/narrate",
+            "shape": shape,
+            "cached": None,
+            "chat": {"available": False,
+                     "note": "Conversational AI is out of scope here. "
+                             "Coming soon."},
+        }
+        if entry and time.time() - entry["created"] <= _env_int(
+                "FANTASYEDGE_AI_TTL", NARRATION_TTL):
+            out["cached"] = self._served(entry, brief, cached=True)
+        return out
+
+    def _served(self, entry: dict, brief, cached: bool) -> dict:
+        """One stored narration, re-checked against the brief on screen now.
+
+        The verification is redone rather than replayed from the entry. A
+        cached paragraph is served against a brief whose numbers may have
+        drifted inside their bucket, and `trustworthy` has to be a statement
+        about the figures the reader can see beneath the prose - otherwise the
+        flag means "was true when written", which is not what the label says.
+        """
+        from . import ai, intel
+
+        text = entry["text"]
+        n = ai.Narration(
+            text=text, provider=entry["provider"], model=entry["model"],
+            grounded_in=[i.key for i in brief.insights],
+            unverified=ai.verify_numbers(text, intel.allowed_numbers(brief)),
+            flagged_metrics=intel.mentions_unavailable(text))
+        out = n.as_dict()
+        age = max(0, int(time.time() - entry["created"]))
+        with self._lock:
+            calls = self._calls
+        out.update({
+            "cached": cached, "ageSeconds": age, "createdAt": entry["created"],
+            "briefShape": entry["shape"],
+            # On every answer, not only a paid one, so a client can always
+            # show what this session has actually spent.
+            "calls": calls,
+            # True when the brief has moved enough to be worth re-narrating.
+            # Surfaced rather than acted on: spending is the client's call.
+            "factsChanged": entry["shape"] != narration_shape(brief),
+        })
+        return out
+
+    def intel_brief(self) -> dict:
+        """The whole Intel view: computed findings first, prose only if bought."""
+        brief = self.brief()
+        out = brief.as_dict()
+        out["narration"] = self._narration_block(brief)
+        out["models"] = self.intel_models()["providers"]
+        return out
+
+    def intel_models(self) -> dict:
+        """Which providers are configured. Booleans, never a key.
+
+        `ai.available()` has no field that could carry a key, a prefix or a
+        suffix, and this adds none. "Show me the key so I can check it" is how
+        a key ends up in a screenshot; the only answerable question is whether
+        one is present, and a wrong one answers itself on first use.
+        """
+        from . import ai
+
+        providers = ai.available()
+        if not self.allow_ai:
+            # --no-ai. Reported as an explicit reason rather than by quietly
+            # returning False everywhere, so a headset with nobody to type a
+            # key shows "turned off here" instead of "you forgot to set it up".
+            for p in providers:
+                p["configured"] = False
+                p["disabled"] = "This server was started with --no-ai."
+        with self._lock:
+            calls, last = self._calls, self._last_call
+        return {"providers": providers,
+                "narrate": "POST /api/intel/narrate",
+                "enabled": self.allow_ai,
+                # The number this whole design exists to keep at zero unless
+                # somebody pressed something.
+                "calls": calls,
+                "nextEligibleIn": max(0, int(
+                    _env_int("FANTASYEDGE_AI_MIN_INTERVAL",
+                             NARRATION_MIN_INTERVAL) - (time.time() - last)))
+                if last else 0,
+                "keys": "Read from the environment or ~/.fantasy-edge/ai.json "
+                        "at call time. Never stored by this process, never "
+                        "returned by any route.",
+                "chat": {"available": False, "note": "coming soon"}}
+
+    def narrate(self, body: dict) -> dict:
+        """Ask a model to write the brief up. The only paid call in this file.
+
+        Never called by a GET. Reads the key at call time from the environment
+        or `~/.fantasy-edge/ai.json` and lets it fall out of scope with the
+        client, so the credential-free read tier stays credential-free even
+        while this is running.
+        """
+        from . import ai
+
+        if not self.allow_ai:
+            raise HttpError(403, "This server was started with --no-ai.",
+                            "restart without the flag; the computed brief "
+                            "above needs no model and is already complete")
+        provider = str(body.get("provider") or "anthropic").lower()
+        supplied = str(body.get("text") or "")
+        # Checked before the cache, not after. The cache is keyed on the brief
+        # and not on the provider - prose about these findings is reusable
+        # whoever wrote it, and the payload records which model did - but that
+        # means an unrecognised name would otherwise be answered with somebody
+        # else's paragraph and a 200, which reads as success to a client that
+        # simply misspelled the provider.
+        if provider != "apple" and not supplied and provider not in ai.CLIENTS:
+            raise HttpError(404, f"No model provider named {provider!r}.",
+                            f"one of: {', '.join(sorted(ai.CLIENTS))}, apple, "
+                            f"or see GET /api/intel/models")
+        brief = self.brief()
+        shape = narration_shape(brief)
+        floor = _env_int("FANTASYEDGE_AI_MIN_INTERVAL", NARRATION_MIN_INTERVAL)
+        ttl = _env_int("FANTASYEDGE_AI_TTL", NARRATION_TTL)
+        now = time.time()
+
+        with self._lock:
+            entry = self._narrations.get(shape)
+            fresh = entry and now - entry["created"] <= ttl
+            recent = max(self._narrations.values(),
+                         key=lambda e: e["created"], default=None)
+            waited = now - self._last_call
+
+        # Text produced on somebody else's device costs this process nothing,
+        # so it skips both the cache and the floor: an Apple Intelligence run
+        # that already happened must not be thrown away to save a call that
+        # was never going to be made.
+        if provider == "apple" or supplied:
+            client = ai.SuppliedClient(supplied)
+            return self._store(ai.narrate(brief, client), brief, shape,
+                               paid=False)
+
+        if fresh and not body.get("refresh"):
+            return self._served(entry, brief, cached=True)
+
+        if self._last_call and waited < floor:
+            # The brief moved, or a refresh was asked for, but not enough time
+            # has passed to pay for it again.
+            left = int(floor - waited)
+            if recent and now - recent["created"] <= ttl:
+                # Serving the last paragraph beats both an error and a charge:
+                # it is still about these findings, and `factsChanged` tells
+                # the reader it has drifted.
+                out = self._served(recent, brief, cached=True)
+                out["throttled"] = left
+                out["note"] = (f"A new narration is available in {left}s. "
+                               f"This one was written {out['ageSeconds']}s ago.")
+                return out
+            # Nothing to serve, and the clock still says no. This is the path a
+            # failing provider takes: the call is what sets `_last_call`, and
+            # a failure stores no prose, so without this a client retrying a
+            # 500 in a loop would hit the provider every time and the floor
+            # would never engage at all.
+            n = ai.Narration("", provider, "", [i.key for i in brief.insights],
+                             error=ai.ModelError(
+                                 "throttled",
+                                 f"The last request was {int(waited)}s ago.",
+                                 f"Try again in {left}s. Everything below was "
+                                 f"computed without a model and has not "
+                                 f"changed.").as_dict())
+            return dict(n.as_dict(), cached=False, ageSeconds=0,
+                        briefShape=shape, factsChanged=False,
+                        throttled=left, calls=self._calls)
+
+        try:
+            client = ai.client_for(provider)
+        except ai.ModelError as exc:
+            n = ai.Narration("", provider, "", [i.key for i in brief.insights],
+                             error=exc.as_dict())
+            return dict(n.as_dict(), cached=False, ageSeconds=0,
+                        briefShape=shape, factsChanged=False)
+        with self._lock:
+            self._last_call = time.time()
+        result = ai.narrate(brief, client)
+        del client                      # the key goes out of scope with it
+        return self._store(result, brief, shape, paid=True)
+
+    def _store(self, narration, brief, shape: str, paid: bool) -> dict:
+        """Keep prose worth reusing; count what it cost."""
+        out = narration.as_dict()
+        out.update({"cached": False, "ageSeconds": 0, "briefShape": shape,
+                    "factsChanged": False, "createdAt": time.time()})
+        if paid:
+            with self._lock:
+                self._calls += 1
+        if narration.text and not narration.error:
+            with self._lock:
+                self._narrations[shape] = {
+                    "text": narration.text, "provider": narration.provider,
+                    "model": narration.model, "shape": shape,
+                    "created": out["createdAt"]}
+                # One shape per week is the realistic count; the cap is only
+                # here so a long live Sunday cannot grow this without bound.
+                if len(self._narrations) > 32:
+                    oldest = min(self._narrations,
+                                 key=lambda k: self._narrations[k]["created"])
+                    del self._narrations[oldest]
+        with self._lock:
+            out["calls"] = self._calls
+        return out
+
     # ---------- routing ----------
 
     def dispatch(self, path: str, qs: dict):
@@ -1230,6 +1673,17 @@ class Api:
             return self.projections(qs), DERIVED
         if rest == ["prefs"]:
             return self.prefs(), PRIVATE
+        if rest == ["intel", "models"]:
+            return self.intel_models(), CONFIG
+        if rest == ["intel"]:
+            # CONFIG, not LIVE, and the distinction is the whole cost model.
+            # This brief is built from `mosaics()`, which honours prefs.json,
+            # so it is a different payload per person by construction. The live
+            # tier's short max-age only works because every viewer gets
+            # identical bytes there (see live.py); putting a personal payload
+            # on it would hand one reader another reader's board out of a
+            # shared cache.
+            return self.intel_brief(), CONFIG
         if rest == ["leagues"]:
             return self.leagues(), CONFIG
         if rest == ["mosaic"]:
@@ -1368,8 +1822,21 @@ def make_handler(app: Api):
             except Exception as exc:                 # a client never sees a traceback
                 self._send({"error": str(exc), "fix": "check the server log"}, 500)
 
+        def _loopback(self) -> bool:
+            return (self.client_address or ["?"])[0] in (
+                "127.0.0.1", "::1", "localhost")
+
+        def _body(self, limit: int) -> dict:
+            n = int(self.headers.get("Content-Length") or 0)
+            if n > limit:
+                raise ValueError(f"payload over {limit} bytes")
+            patch = json.loads(self.rfile.read(n) or b"{}")
+            if not isinstance(patch, dict):
+                raise ValueError("expected an object")
+            return patch
+
         def do_POST(self):
-            """The only write in this process, and the only one there should be.
+            """The two writes in this process, and the only ones there should be.
 
             Everything else here is read-only on purpose, which is what makes
             it safe to bind to the LAN. Preferences are the exception because
@@ -1377,29 +1844,56 @@ def make_handler(app: Api):
             write is still a write, so it is refused from anywhere but this
             machine unless FANTASYEDGE_ALLOW_REMOTE_PREFS is set. No credential
             is ever readable or writable through this endpoint.
+
+            `/api/intel/narrate` carries the same loopback restriction for a
+            second reason on top of the first: it is the one route here that
+            reads an API key and spends money. Its escape hatch is a separate
+            variable from the prefs one, because letting a housemate reorder
+            your leagues from the television is not the same decision as
+            letting them run up your model bill.
             """
             path = self.path.split("?", 1)[0]
-            if path != "/api/prefs":
-                return self._send({"error": f"No route {path}.",
-                                   "fix": "POST /api/prefs is the only write"}, 404)
-            host = (self.client_address or ["?"])[0]
-            if host not in ("127.0.0.1", "::1", "localhost") and \
-                    os.environ.get("FANTASYEDGE_ALLOW_REMOTE_PREFS") != "1":
-                return self._send(
-                    {"error": "Preferences may only be changed from this machine.",
-                     "fix": "set FANTASYEDGE_ALLOW_REMOTE_PREFS=1 to allow it"}, 403)
-            try:
-                n = int(self.headers.get("Content-Length") or 0)
-                if n > 64_000:
-                    return self._send({"error": "Payload too large.",
-                                       "fix": "prefs are small"}, 413)
-                patch = json.loads(self.rfile.read(n) or b"{}")
-                if not isinstance(patch, dict):
-                    raise ValueError("expected an object")
-            except Exception as exc:
-                return self._send({"error": f"Bad JSON: {exc}",
-                                   "fix": "send {teams, order, hidden}"}, 400)
-            self._send(app.save_prefs(patch), 200)
+            if path == "/api/prefs":
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_PREFS") != "1":
+                    return self._send(
+                        {"error": "Preferences may only be changed from this machine.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_PREFS=1 to allow it"}, 403)
+                try:
+                    patch = self._body(64_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": "send {teams, order, hidden}"}, 400)
+                return self._send(app.save_prefs(patch), 200)
+
+            if path == "/api/intel/narrate":
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_AI") != "1":
+                    return self._send(
+                        {"error": "A narration may only be requested from this "
+                                  "machine - it reads an API key and costs money.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_AI=1 to allow it. "
+                                "The computed brief at GET /api/intel needs no "
+                                "key and is already complete."}, 403)
+                try:
+                    # Bigger than prefs because an Apple Intelligence client
+                    # posts finished prose here, and smaller than anything that
+                    # could be mistaken for a roster: this endpoint takes a
+                    # provider name and a paragraph, nothing else.
+                    body = self._body(32_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": 'send {"provider": "anthropic"} '
+                                              'or {"provider": "apple", "text": "..."}'}, 400)
+                try:
+                    return self._send(app.narrate(body), 200, PRIVATE)
+                except HttpError as exc:
+                    return self._send({"error": exc.message, "fix": exc.fix},
+                                      exc.code)
+
+            return self._send({"error": f"No route {path}.",
+                               "fix": "POST /api/prefs or POST /api/intel/narrate"},
+                              404)
 
         do_GET = do_HEAD = _handle
 
@@ -1411,8 +1905,9 @@ def make_handler(app: Api):
     return Handler
 
 
-def run(db: str = "data/fantasy.db", host: str = "127.0.0.1", port: int = 8770) -> None:
-    app = Api(db)
+def run(db: str = "data/fantasy.db", host: str = "127.0.0.1", port: int = 8770,
+        allow_ai: bool = True) -> None:
+    app = Api(db, allow_ai=allow_ai)
     health = app.health()
     httpd = None
     for candidate in range(port, port + 10):         # something else may own the port
@@ -1427,6 +1922,8 @@ def run(db: str = "data/fantasy.db", host: str = "127.0.0.1", port: int = 8770) 
 
     print(f"\n  fantasy-edge mosaic   ->  http://{host}:{port}/")
     print(f"  read API              ->  http://{host}:{port}/api")
+    print(f"  intel brief           ->  http://{host}:{port}/api/intel"
+          f"{'' if allow_ai else '   (--no-ai: computed only)'}")
     print(f"  {health['leagues']} league(s), {len(health['seasons'])} season(s), "
           f"{health['counts']['roster_slot']} roster rows")
     if not health["ok"]:

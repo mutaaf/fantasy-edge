@@ -375,7 +375,9 @@ class TestStrictMode(unittest.TestCase):
 
     def test_opportunity_reports_only_metrics_nflverse_publishes(self):
         allowed = {a["label"] for a in intel.AVAILABLE_OPPORTUNITY}
-        allowed |= {"Games", "Fantasy points a game"}
+        # "Games" and "Season" are the denominator and the release these are
+        # measured over, not claims about a metric nflverse does not publish.
+        allowed |= {"Games", "Season", "Fantasy points a game"}
         got = intel.opportunity_insights(
             self.league["you"]["starters"], _fake_opportunity, 2025)
         self.assertTrue(got, "the injected profile produced no insight")
@@ -383,6 +385,23 @@ class TestStrictMode(unittest.TestCase):
             for f in i.facts:
                 self.assertIn(f.label, allowed,
                               f"{f.label} is not a metric we can source")
+
+    def test_opportunity_names_the_season_the_numbers_came_from(self):
+        """The caveat promises "the season named in the facts", and in week one
+        of a new year the caller falls back to last season's release. A Season
+        fact reporting the request rather than the data would be a wrong
+        number with a source attached."""
+        def supplier(pid, _season=None):
+            o = _fake_opportunity(pid, 2025)
+            return dict(o, season=2025) if o else o
+
+        got = intel.opportunity_insights(
+            self.league["you"]["starters"], supplier, 2026)
+        self.assertTrue(got, "the injected profile produced no insight")
+        for i in got:
+            seasons = [f.value for f in i.facts if f.label == "Season"]
+            self.assertEqual(seasons, [2025],
+                             "the fact must name the release, not the request")
 
     def test_opportunity_is_silent_when_nflverse_is_unreachable(self):
         def boom(_pid, _season=None):
@@ -864,6 +883,435 @@ class TestKeyStorage(unittest.TestCase):
             text = path.read_text(encoding="utf-8", errors="replace")
             self.assertIsNone(shaped.search(text),
                               f"something key-shaped is committed in {path}")
+
+
+# ─────────────────────── the wiring into the read API ────────────────────────
+
+class _CountingClient(ai.Client):
+    """A provider that never leaves the process and counts what it was asked.
+
+    The counter is on the class because `client_for` builds a fresh instance
+    per call, which is itself the property under test: the key is read at call
+    time and goes out of scope with the client rather than living on the app.
+    """
+
+    provider = "stub"
+    calls = 0
+    text = "Your lead is real but thin, and the bench figure is an upper bound."
+
+    def __init__(self, key: str = "", model: str = "", base: str = "") -> None:
+        self.key, self.model, self.base = "", "stub-1", ""
+
+    def complete(self, system: str, user: str) -> str:
+        type(self).calls += 1
+        return type(self).text
+
+
+def brief_with(margin: float, win_prob: float) -> intel.Brief:
+    """One fragility insight with the two numbers a live Sunday moves."""
+    return intel.Brief(season=2025, week=3, insights=[intel.Insight(
+        key="fragile:espn-99", kind="fragility",
+        title="Your lead is not safe",
+        detail=f"You are {margin} ahead but the model gives you {win_prob}%.",
+        caveat="Win probability assumes independent, normally distributed "
+               "outcomes, which is an approximation.",
+        facts=[intel.Fact("Expected margin", margin, "pts", "leverage.evaluate"),
+               intel.Fact("Win probability", win_prob, "%", "leverage.evaluate")],
+        league="Fixture League", league_id="espn-99", weight=0.8)])
+
+
+class FakeBriefApi:
+    """`Api` with the compute half replaced, so the spend half can be tested.
+
+    Subclassed rather than mocked: every cache decision, the loopback guard and
+    the throttle are the real ones. Only `brief()` is swapped, because what a
+    narration costs must not depend on what the database happens to contain.
+    """
+
+    @staticmethod
+    def make(margin: float = 7.1, win_prob: float = 62.0):
+        from fantasyedge.api import Api
+
+        class Wired(Api):
+            fake = brief_with(margin, win_prob)
+
+            def brief(self):
+                return self.fake
+
+        return Wired(":memory:")
+
+
+class TestIntelRoutes(unittest.TestCase):
+    """The three routes, their policies, and what they may not carry."""
+
+    def setUp(self):
+        from fantasyedge import api as apimod
+
+        self.api = FakeBriefApi.make()
+        self.mod = apimod
+        _CountingClient.calls = 0
+        ai.CLIENTS["stub"] = _CountingClient
+        self.saved_key_file = ai.KEY_FILE
+        self.tmp = tempfile.TemporaryDirectory()
+        ai.KEY_FILE = pathlib.Path(self.tmp.name) / "ai.json"
+        self.saved_env = {k: os.environ.pop(k, None) for k in
+                          ("OPENAI_API_KEY", "ANTHROPIC_API_KEY",
+                           "GOOGLE_API_KEY", "GEMINI_API_KEY")}
+
+    def tearDown(self):
+        ai.CLIENTS.pop("stub", None)
+        ai.KEY_FILE = self.saved_key_file
+        for k, v in self.saved_env.items():
+            if v is not None:
+                os.environ[k] = v
+        self.tmp.cleanup()
+        self.api.close()
+
+    def test_every_intel_route_is_advertised(self):
+        advertised = {(r[0], r[1]) for r in self.mod.ROUTES}
+        for row in (("GET", "/api/intel"), ("GET", "/api/intel/models"),
+                    ("POST", "/api/intel/narrate")):
+            self.assertIn(row, advertised, f"{row} is not in ROUTES")
+
+    def test_the_brief_is_personal_and_so_is_not_on_the_live_tier(self):
+        """`/api/intel` is built from `mosaics()`, which honours prefs.json, so
+        it differs per person. The live tier's two-second max-age only works
+        because every viewer gets identical bytes there - see live.py."""
+        _, policy = self.api.dispatch("/api/intel", {})
+        self.assertEqual(policy, self.mod.CONFIG)
+        self.assertNotEqual(policy, self.mod.LIVE)
+
+    def test_models_route_is_config(self):
+        _, policy = self.api.dispatch("/api/intel/models", {})
+        self.assertEqual(policy, self.mod.CONFIG)
+
+    def test_models_answers_in_booleans_and_never_in_a_key(self):
+        ai.KEY_FILE.write_text(json.dumps({"openai": FAKE_KEY}))
+        payload = self.api.intel_models()
+        for p in payload["providers"]:
+            self.assertIsInstance(p["configured"], bool)
+        self.assertTrue(
+            next(p for p in payload["providers"]
+                 if p["provider"] == "openai")["configured"],
+            "a configured provider must still report True")
+        blob = json.dumps(payload)
+        self.assertNotIn(FAKE_KEY, blob)
+        # Not a prefix and not a suffix either: eight characters of a key is
+        # still eight characters of a key in a screenshot.
+        self.assertNotIn(FAKE_KEY[:8], blob)
+        self.assertNotIn(FAKE_KEY[-8:], blob)
+
+    def test_the_brief_carries_the_unsourceable_metrics_with_reasons(self):
+        """Five metrics the design asks for and no feed here can supply. They
+        ship in every brief so the view can say so, rather than leaving a gap
+        the reader fills in with an assumption."""
+        out = self.api.intel_brief()
+        self.assertEqual(len(out["unavailable"]), 5)
+        for u in out["unavailable"]:
+            self.assertTrue(u.get("reason", "").strip(),
+                            f"{u} is missing its reason")
+
+    def test_the_brief_offers_a_prompt_but_no_prose(self):
+        out = self.api.intel_brief()
+        self.assertIsNone(out["narration"]["cached"])
+        self.assertIn("system", out["narration"]["prompt"])
+        self.assertTrue(out["narration"]["prompt"]["user"])
+        self.assertFalse(out["narration"]["chat"]["available"],
+                         "AI chat is out of scope and must not advertise itself")
+
+
+class TestNarrationSpend(unittest.TestCase):
+    """The half of this that costs money, and what stops it."""
+
+    def setUp(self):
+        _CountingClient.calls = 0
+        ai.CLIENTS["stub"] = _CountingClient
+        self.saved = {k: os.environ.get(k) for k in
+                      ("FANTASYEDGE_AI_MIN_INTERVAL", "FANTASYEDGE_AI_TTL")}
+        os.environ["FANTASYEDGE_AI_MIN_INTERVAL"] = "0"
+
+    def tearDown(self):
+        ai.CLIENTS.pop("stub", None)
+        for k, v in self.saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    def test_a_poll_of_the_brief_never_reaches_a_provider(self):
+        """The rule the whole design exists for. A board left open on a
+        television polls this route for hours; not one of those requests may
+        produce a paid call."""
+        api = FakeBriefApi.make()
+        try:
+            for _ in range(40):
+                api.intel_brief()
+                api.intel_models()
+                api.dispatch("/api/intel", {})
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 0)
+
+    def test_many_explicit_requests_cost_one_call(self):
+        api = FakeBriefApi.make()
+        try:
+            first = api.narrate({"provider": "stub"})
+            self.assertFalse(first["cached"])
+            self.assertEqual(first["origin"], "model")
+            for _ in range(30):
+                again = api.narrate({"provider": "stub"})
+                self.assertTrue(again["cached"])
+                self.assertIsInstance(again["ageSeconds"], int)
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_drift_inside_a_bucket_does_not_buy_a_second_paragraph(self):
+        """A point of win probability is the same paragraph of English. Keying
+        on the exact brief would re-buy it on every scoring play."""
+        api = FakeBriefApi.make(margin=7.1, win_prob=62.0)
+        try:
+            api.narrate({"provider": "stub"})
+            api.fake = brief_with(margin=7.4, win_prob=64.0)
+            out = api.narrate({"provider": "stub"})
+            self.assertTrue(out["cached"])
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_a_real_change_in_the_facts_does_buy_one(self):
+        api = FakeBriefApi.make(margin=7.1, win_prob=62.0)
+        try:
+            api.narrate({"provider": "stub"})
+            api.fake = brief_with(margin=25.3, win_prob=84.0)
+            out = api.narrate({"provider": "stub"})
+            self.assertFalse(out["cached"])
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 2)
+
+    def test_the_floor_bounds_a_client_that_posts_in_a_loop(self):
+        """Rule two makes the common case free. This is what bounds the case
+        where the shape really is moving and the client really is looping."""
+        os.environ["FANTASYEDGE_AI_MIN_INTERVAL"] = "600"
+        api = FakeBriefApi.make(margin=7.1, win_prob=62.0)
+        try:
+            api.narrate({"provider": "stub"})
+            for i in range(20):
+                api.fake = brief_with(margin=7.1 + 6 * (i + 1), win_prob=62.0)
+                out = api.narrate({"provider": "stub"})
+                self.assertTrue(out["cached"])
+                self.assertGreater(out["throttled"], 0)
+                self.assertTrue(out["factsChanged"],
+                                "a throttled answer must admit it has drifted")
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_a_refresh_still_cannot_beat_the_floor(self):
+        os.environ["FANTASYEDGE_AI_MIN_INTERVAL"] = "600"
+        api = FakeBriefApi.make()
+        try:
+            api.narrate({"provider": "stub"})
+            for _ in range(10):
+                api.narrate({"provider": "stub", "refresh": True})
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_a_failing_provider_is_not_retried_in_a_loop(self):
+        """The call is what sets the clock and a failure stores no prose, so
+        without a floor on the empty case a client retrying a 500 would reach
+        the provider every single time."""
+        class Broken(_CountingClient):
+            def complete(self, system, user):
+                _CountingClient.calls += 1
+                raise ai.ModelError("unavailable", "The provider is down.", "")
+
+        ai.CLIENTS["stub"] = Broken
+        os.environ["FANTASYEDGE_AI_MIN_INTERVAL"] = "600"
+        api = FakeBriefApi.make()
+        try:
+            first = api.narrate({"provider": "stub"})
+            self.assertEqual(first["error"]["state"], "unavailable")
+            for _ in range(20):
+                again = api.narrate({"provider": "stub"})
+                self.assertEqual(again["error"]["state"], "throttled")
+                self.assertGreater(again["throttled"], 0)
+                self.assertTrue(again["error"]["remedy"])
+        finally:
+            api.close()
+            ai.CLIENTS["stub"] = _CountingClient
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_supplied_text_costs_no_call_and_is_kept(self):
+        """Apple Intelligence runs on the user's own device, so the text is
+        already paid for. Throwing it away to save a call that was never going
+        to be made would be the wrong economy."""
+        api = FakeBriefApi.make()
+        try:
+            out = api.narrate({"provider": "apple",
+                               "text": "Nothing here is settled."})
+            self.assertEqual(out["provider"], "apple")
+            self.assertEqual(out["origin"], "model")
+            held = api.intel_brief()["narration"]["cached"]
+            self.assertIsNotNone(held)
+            self.assertEqual(held["text"], "Nothing here is settled.")
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 0)
+
+    def test_a_cached_paragraph_is_re_checked_against_the_brief_on_screen(self):
+        """`trustworthy` has to describe the figures the reader can see now,
+        not the ones that were there when the prose was written."""
+        _CountingClient.text = "You are 41.5 points clear."
+        try:
+            api = FakeBriefApi.make(margin=41.5, win_prob=62.0)
+            out = api.narrate({"provider": "stub"})
+            self.assertEqual(out["unverified"], [])
+            # Same bucket, so no new call - but 41.5 is no longer a number
+            # anybody computed, and the served copy must say so.
+            api.fake = brief_with(margin=42.0, win_prob=62.0)
+            again = api.narrate({"provider": "stub"})
+            self.assertTrue(again["cached"])
+            self.assertIn("41.5", again["unverified"])
+            self.assertFalse(again["trustworthy"])
+            api.close()
+        finally:
+            _CountingClient.text = ("Your lead is real but thin, and the bench "
+                                    "figure is an upper bound.")
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_an_unknown_provider_is_an_error_not_somebody_elses_paragraph(self):
+        """The cache is keyed on the brief, not the provider, so a misspelled
+        name would otherwise be answered with a 200 and the last model's
+        prose."""
+        from fantasyedge.api import HttpError
+
+        api = FakeBriefApi.make()
+        try:
+            api.narrate({"provider": "stub"})
+            with self.assertRaises(HttpError) as caught:
+                api.narrate({"provider": "stbu"})
+            self.assertEqual(caught.exception.code, 404)
+            self.assertIn("stub", caught.exception.fix)
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_no_ai_refuses_and_says_why(self):
+        from fantasyedge.api import Api, HttpError
+
+        class Wired(Api):
+            fake = brief_with(7.1, 62.0)
+
+            def brief(self):
+                return self.fake
+
+        api = Wired(":memory:", allow_ai=False)
+        try:
+            with self.assertRaises(HttpError) as caught:
+                api.narrate({"provider": "stub"})
+            self.assertEqual(caught.exception.code, 403)
+            self.assertTrue(caught.exception.fix)
+            models = api.intel_models()
+            self.assertFalse(models["enabled"])
+            for p in models["providers"]:
+                self.assertFalse(p["configured"])
+                self.assertIn("--no-ai", p["disabled"])
+        finally:
+            api.close()
+        self.assertEqual(_CountingClient.calls, 0)
+
+
+class TestNarrationShape(unittest.TestCase):
+    """What the narration cache is keyed on, asserted directly."""
+
+    def test_a_point_of_win_probability_is_the_same_shape(self):
+        from fantasyedge.api import narration_shape
+
+        self.assertEqual(narration_shape(brief_with(7.1, 62.0)),
+                         narration_shape(brief_with(7.4, 64.0)))
+
+    def test_a_collapse_is_not(self):
+        from fantasyedge.api import narration_shape
+
+        self.assertNotEqual(narration_shape(brief_with(7.1, 62.0)),
+                            narration_shape(brief_with(-9.0, 31.0)))
+
+    def test_a_different_player_is_not(self):
+        """The insight key alone would hold a stale sentence about the wrong
+        man: `carry:espn-99` does not say who is carrying."""
+        from fantasyedge.api import narration_shape
+
+        a = brief_with(7.1, 62.0)
+        b = brief_with(7.1, 62.0)
+        a.insights[0].players = [{"id": "1", "name": "A"}]
+        b.insights[0].players = [{"id": "2", "name": "B"}]
+        self.assertNotEqual(narration_shape(a), narration_shape(b))
+
+    def test_a_finding_that_stops_firing_is_not(self):
+        from fantasyedge.api import narration_shape
+
+        empty = intel.Brief(season=2025, week=3, insights=[])
+        self.assertNotEqual(narration_shape(brief_with(7.1, 62.0)),
+                            narration_shape(empty))
+
+
+class TestNarrateIsLoopbackOnly(unittest.TestCase):
+    """The same restriction `POST /api/prefs` carries, for a second reason on
+    top of the first: this route reads a key and spends money."""
+
+    def _handler(self, host: str, body: dict):
+        from fantasyedge.api import make_handler
+
+        app = FakeBriefApi.make()
+        self.addCleanup(app.close)
+        raw = json.dumps(body).encode()
+        handler = object.__new__(make_handler(app))
+        handler.client_address = (host, 5000)
+        handler.path = "/api/intel/narrate"
+        handler.headers = {"Content-Length": str(len(raw))}
+        handler.rfile = io.BytesIO(raw)
+        sent = {}
+        handler._send = lambda payload, code=200, policy=None: sent.update(
+            payload=payload, code=code)
+        handler.do_POST()
+        return sent
+
+    def setUp(self):
+        _CountingClient.calls = 0
+        ai.CLIENTS["stub"] = _CountingClient
+        os.environ.pop("FANTASYEDGE_ALLOW_REMOTE_AI", None)
+        os.environ["FANTASYEDGE_AI_MIN_INTERVAL"] = "0"
+
+    def tearDown(self):
+        ai.CLIENTS.pop("stub", None)
+        os.environ.pop("FANTASYEDGE_AI_MIN_INTERVAL", None)
+
+    def test_a_remote_client_is_refused(self):
+        sent = self._handler("192.168.1.40", {"provider": "stub"})
+        self.assertEqual(sent["code"], 403)
+        self.assertTrue(sent["payload"]["fix"])
+        self.assertEqual(_CountingClient.calls, 0,
+                         "a refused request must not have spent anything")
+
+    def test_this_machine_is_allowed(self):
+        sent = self._handler("127.0.0.1", {"provider": "stub"})
+        self.assertEqual(sent["code"], 200)
+        self.assertEqual(sent["payload"]["origin"], "model")
+        self.assertEqual(_CountingClient.calls, 1)
+
+    def test_the_escape_hatch_is_not_the_prefs_one(self):
+        """Letting a housemate reorder your leagues from the television is not
+        the same decision as letting them run up your model bill."""
+        os.environ["FANTASYEDGE_ALLOW_REMOTE_PREFS"] = "1"
+        try:
+            sent = self._handler("192.168.1.40", {"provider": "stub"})
+            self.assertEqual(sent["code"], 403)
+        finally:
+            os.environ.pop("FANTASYEDGE_ALLOW_REMOTE_PREFS", None)
+
 
 
 if __name__ == "__main__":

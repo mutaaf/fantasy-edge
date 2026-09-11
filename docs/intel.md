@@ -230,57 +230,157 @@ comes from.
 
 ## Wiring into `api.py`
 
-Not done here: `api.py` is owned by another agent this session. Three routes,
-and the cache policies matter.
+Done. Three routes, and the cache policies are the point.
 
 ```python
 ["GET",  "/api/intel",         "the computed brief: insights, caveats, provenance"],
 ["GET",  "/api/intel/models",  "which model providers are configured"],
-["POST", "/api/intel/narrate", "narrate the brief - loopback only"],
+["POST", "/api/intel/narrate", "narrate the brief - loopback only, costs money"],
 ```
 
-```python
-def intel_brief(self) -> dict:
-    from . import intel, profile
-    mos = self.mosaics()
-    brief = intel.build(
-        mosaics=mos,
-        live=self._safe(self.live),
-        injuries=(self._safe(self.injuries) or {}).get("injuries"),
-        analyses={L["id"]: self.analyses(L["provider"], L["leagueId"])["analyses"]
-                  for L in mos["leagues"]},
-        opportunity=profile.opportunity,
-    )
-    out = brief.as_dict()
-    out["narration"] = {"prompt": {"system": ai.SYSTEM,
-                                   "user": ai.prompt_for(brief)}}
-    return out
-```
+`Api.brief()` returns the `intel.Brief`; `Api.intel_brief()` wraps it as the
+payload, with `narration` carrying the prompt block a Swift client needs plus
+any prose already paid for. `--no-ai` on `fantasyedge api` makes
+`client_for` unreachable and reports every provider as unconfigured with a
+reason, for the headset build where there is nobody to type a key.
 
-Cache policy:
+### `/api/intel` - `CONFIG`, and not `LIVE`
 
-- `/api/intel` is **personal**, not shared. It is built from `mosaics()`,
-  which already honours `prefs.json`, so it varies by user by construction.
-  Cache it on the `CONFIG` clock like `/api/mosaic`, never on `LIVE`. The rule
-  in `live.py`'s docstring — a `/api/live` response must not vary by viewer —
-  is not violated, because this is not that tier.
-- `/api/intel/models` is `CONFIG` and returns booleans only.
-- `/api/intel/narrate` is **not cached and must be loopback-only**, the same
-  restriction `POST /api/prefs` already carries. It is the one route in `api.py`
-  that touches a credential, and it must read the key from the environment or
-  `~/.fantasy-edge/ai.json` at call time and never store it on the app object.
-  Nothing else in `api.py` changes; the credential does not become an
-  attribute, and the LAN-safe read tier stays credential-free.
+It is built from `mosaics()`, which honours `prefs.json`, so it is a different
+payload per person by construction. The live tier's two-second `max-age` only
+works because every viewer gets identical bytes there; putting a personal
+payload on that tier would hand one reader another reader's board out of a
+shared cache. See `live.py`'s docstring. A test asserts the policy is `CONFIG`
+and is not `LIVE`.
 
-A `--no-ai` flag on `api` that makes `client_for` unreachable is worth having
-for the headset build, where there is no one to type a key.
+### The compute cache: what actually changes a brief
+
+Building one walks every followed league's mosaic, the live snapshot, the
+injury wire and up to nine analyses per league - about four seconds against
+the real database. Three things can change it, and all three are cheap to
+read, so the brief is memoised against the tuple of them:
+
+| Input | Key component | Moved by |
+|---|---|---|
+| stored rows | the database mtime, the same stamp `cached()` uses | `pull` |
+| live game state | the live payload's own `version` content hash | a scoring play |
+| whose board this is | a hash of `prefs.json` | changing your team pick |
+
+Two details worth naming because both were measured:
+
+- **One slot, not `cached()`.** `cached()` keeps an entry per key forever, and
+  this key contains a content hash that changes on every scoring play. A
+  Sunday would leave a few thousand whole briefs pinned in memory. There is
+  one user, so one slot is the right number.
+- **The live probe is itself rate-limited to two seconds.** Producing the key
+  means producing the live snapshot, which costs about four tenths of a
+  second - so validating the cache cost more than the cache saved, forever, on
+  every poll. Two seconds is `LIVE`'s own `max-age`: the staleness this
+  project already tells every cache between here and the screen to accept.
+  With it, a repeat request is about half a millisecond.
+
+### The model cache: what a narration is keyed on
+
+This is the half that costs money, and the rules are ordered by how much they
+matter.
+
+**1. No GET produces a narration.** `/api/intel` returns the computed brief and
+whatever prose has already been paid for. It reaches no provider, ever. A
+board left open on a television polls it for hours. Measured: sixty polls,
+zero calls.
+
+**2. The key is the brief's *shape*, not its numbers.** `api.narration_shape`
+hashes, per insight: its key, kind, league, the ids of the players it names,
+and every numeric fact **bucketed** - percentages to ten points, fantasy
+points to five, counts exactly. `Win probability 61%` and `62%` are the same
+paragraph of English, so they must hash the same or a live Sunday re-buys
+identical prose every few seconds. Hashing `prompt_for(brief)` instead would be
+exact and wrong for that reason; hashing the insight keys alone would be coarse
+and wrong the other way, holding a stale sentence through a genuine collapse.
+Player ids are in the key because `carry:espn-99` does not say who is carrying.
+
+**3. A shape change still cannot spend faster than the floor.**
+`FANTASYEDGE_AI_MIN_INTERVAL`, 120 seconds by default. Inside it, a moved brief
+is answered with the last paragraph, `cached: true`, `throttled` counting down
+and `factsChanged: true` telling the reader it has drifted. Rule 2 makes the
+common case free; rule 3 bounds a client that got rule 1 wrong.
+`{"refresh": true}` skips the cache but not the floor.
+
+Every narration response carries `cached`, `ageSeconds`, `createdAt`,
+`factsChanged`, `briefShape` and `calls` - the last being the count this
+process has actually spent, also on `/api/intel/models`, so a client can show
+it.
+
+**A cached paragraph is re-verified, not replayed.** `verify_numbers` and
+`mentions_unavailable` run again against the brief on screen *now*, because
+`trustworthy` has to describe the figures the reader can see beneath the prose.
+Replaying the stored flags would make it mean "was true when written", which is
+not what the label says.
+
+Supplied text - Apple Intelligence - skips both the cache and the floor. It
+was produced on the user's own device and costs this process nothing; throwing
+it away to save a call that was never going to be made is the wrong economy.
+
+### `/api/intel/narrate` - loopback only
+
+The same restriction `POST /api/prefs` carries, for a second reason on top of
+the first: it is the one route in `api.py` that reads an API key and spends
+money. Its escape hatch is `FANTASYEDGE_ALLOW_REMOTE_AI`, deliberately a
+different variable from the prefs one - letting a housemate reorder your
+leagues from the television is not the same decision as letting them run up
+your model bill. The key is read from the environment or
+`~/.fantasy-edge/ai.json` at call time and goes out of scope with the client;
+it never becomes an attribute of the app, so the LAN-safe read tier stays
+credential-free even while a narration is in flight.
+
+`/api/intel/models` is `CONFIG` and returns booleans. There is no field on it
+that could carry a key, a prefix or a suffix, and a test asserts none of the
+three appears in the payload.
+
+### The nflverse season, and why the brief says so
+
+`intel.build` asks `profile.opportunity` for the season the mosaic is about.
+In week one of a new year nflverse has published 47 players on one game
+apiece, which is not empty - it passes an emptiness check and then fails
+`MIN_GAMES` a moment later, so every opportunity insight silently does not
+fire and a whole generator vanishes from the brief with no note. `Api`
+resolves the season by `MIN_GAMES` instead and falls back to the last one that
+has any, and the brief carries a note saying so. The season the numbers came
+out of travels in each insight's facts, which is what the caveat had been
+promising all along without a fact to back it.
 
 **AI chat is out of scope.** There is no conversational endpoint and none
-should be added here; the UI should mark it coming soon.
+should be added here; `/api/intel/models` reports `chat.available: false` and
+the web view says "coming soon".
+
+### The Intel view in the web console
+
+`templates/mosaic.html`, a tab beside Analysis. Computed findings first and
+unaided: one card per insight, each showing its facts with the table or
+function each came from, the sources it was computed from, and its caveat.
+Model prose, if asked for, sits in a hatched amber panel above them - never
+instead of them - carrying `narration.label`, the provider and model, whether
+it is cached and how old, and a red block naming any figure that was not
+computed here. The five metrics in `intel.UNAVAILABLE` are printed with their
+reasons rather than omitted, beside what nflverse does publish.
+
+There is deliberately **no key field on the page**. A key pasted into a browser
+lives in the DOM, in the form history and in any screenshot; the loopback API
+can already read one from the environment, so the safe version of that
+affordance is its absence. The page says where a key is read from instead.
+
+One client-side trap worth recording: the tab polls `/api/intel`, whose
+`Cache-Control` is `max-age=30`. That is right for a proxy and wrong for the
+tab that just bought a narration - the poll ten seconds later was answered from
+the browser's own cache with a body written before the prose existed, and wiped
+it off the screen. The poll uses `cache: "no-cache"` to revalidate, which the
+handler answers with a 304 and no payload.
+
+---
 
 ## Tests
 
-`tests/test_intel.py`, 59 tests, no network and no real key.
+`tests/test_intel.py`, 82 tests, no network and no real key.
 
 The three cloud providers run against a local `http.server` speaking each
 one's real response shape, with a `mode` switch for success, 401, 429, 500, a
@@ -295,3 +395,15 @@ whose thresholds are statements about a specific margin are tested against
 hand-built line-ups instead, so the assertion is arithmetic rather than a
 coincidence of the recorded season. `profile.opportunity` is injected rather
 than patched, which is the test saying out loud that the engine does no I/O.
+
+The wiring half asserts the money. A counting stub is registered in
+`ai.CLIENTS` and the real `Api` is subclassed with only `brief()` swapped, so
+every cache decision, the loopback guard and the throttle under test are the
+shipped ones. It asserts that forty polls of `/api/intel` reach no provider;
+that thirty explicit requests cost one call; that a point of win probability
+does not buy a second paragraph and a collapse does; that twenty posts against
+a moving brief still cost one call under the floor, and that `refresh` cannot
+beat it; that supplied Apple text costs nothing and is kept; that a cached
+paragraph is re-verified against the brief on screen; and that a POST from a
+LAN address is refused without spending anything, under its own escape hatch
+rather than the prefs one.
