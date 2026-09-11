@@ -236,7 +236,9 @@ body.noimg .mono,.tile.noshot .mono{display:block}
 .lc-side{min-width:0}.lc-side.b{text-align:right}
 .lc-team{font-family:var(--cond);font-size:13.5px;font-weight:600;letter-spacing:.09em;
   text-transform:uppercase;color:var(--ink-dim);white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis}
+  text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.lc-side.b .lc-team{flex-direction:row-reverse}
+.lc-team span.nm{overflow:hidden;text-overflow:ellipsis}
 .lc-pts{font-size:40px;font-weight:800;line-height:1.02;letter-spacing:-.035em;
   font-variant-numeric:tabular-nums}
 .lc-side.a .lc-pts{color:var(--green)}.lc-side.b .lc-pts{color:var(--opp)}
@@ -984,6 +986,187 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   text-transform:uppercase;color:var(--green);opacity:.85;transition:.2s var(--ease)}
 .lcell:hover .lc-open{opacity:1;letter-spacing:.16em}
 
+/* ── team badges ───────────────────────────────────────────
+   Thirty of the thirty-two crests in a typical install are SVG, and an <img>
+   pointed at one of those draws nothing at all - a silent hole where a badge
+   should be, on every surface at once. The server already decided which ones a
+   plain image view can rasterise (`logoRaster`), so the monogram below is not a
+   fallback for a failed load, it is the first choice for anything that is not
+   drawable. Its colour is hashed from the team's own name, which is what makes
+   the same team the same colour on the rail, in the standings and in a matchup,
+   on this reload and the next one. */
+.tbadge{position:relative;flex:none;width:30px;height:30px;border-radius:9px;
+  background:var(--tb,#1d3b93);overflow:hidden;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.tbadge img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tb-ini{font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:.04em;
+  color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);line-height:1}
+.tbadge.sm{width:22px;height:22px;border-radius:7px}
+.tbadge.sm .tb-ini{font-size:10.5px}
+.tbadge.lg{width:44px;height:44px;border-radius:12px}
+.tbadge.lg .tb-ini{font-size:18px}
+
+/* ── the league's own page ─────────────────────────────────
+   Roster, matchups and standings are three readings of one league, so they
+   share a frame: the same head, the same row metrics, the same badge. Rows
+   that open somebody's line-up look like buttons because they are. */
+.lgv{margin-top:14px}
+.lv-head{display:flex;align-items:center;gap:13px;flex-wrap:wrap;
+  padding:0 4px 12px}
+.lv-who{display:flex;align-items:center;gap:11px;min-width:0}
+.lv-name{font-family:var(--display);font-size:23px;font-weight:400;
+  text-transform:uppercase;letter-spacing:.01em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.lv-rec{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
+  background:rgba(255,255,255,.08);border:1px solid var(--hair);
+  border-radius:var(--r-chip);padding:4px 11px;white-space:nowrap}
+.lv-rec b{color:var(--ink)}
+.lv-you{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.11em;
+  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:3px 9px}
+.lv-note{font-size:12.5px;color:var(--ink-faint);padding:2px 4px 10px;max-width:70ch}
+.lv-sec{font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-faint);padding:16px 4px 7px}
+.lv-tbl{display:flex;flex-direction:column;gap:3px}
+.lvrow{display:grid;grid-template-columns:56px minmax(0,1fr) 74px 62px 62px 152px;
+  gap:10px;align-items:center;width:100%;text-align:left;
+  background:var(--card);border:1px solid transparent;border-radius:12px;
+  padding:8px 12px;color:var(--ink);font-family:var(--ui);font-size:14px;
+  cursor:pointer;transition:.16s var(--ease)}
+.lvrow:hover{background:var(--card-2);border-color:var(--hair-2)}
+.lvrow.head{background:transparent;border:0;padding-bottom:2px;cursor:default;
+  font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.lvrow.head:hover{background:transparent}
+.lvrow.bench{opacity:.68}
+.lvrow.total{background:transparent;border-top:1px solid var(--hair);border-radius:0;
+  cursor:default;font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase;
+  font-size:12px;color:var(--ink-faint)}
+.lvrow.total:hover{background:transparent}
+.lv-slot{display:flex;align-items:center;gap:6px}
+.lv-who2{display:flex;align-items:center;gap:9px;min-width:0}
+.lv-pn{min-width:0;overflow:hidden}
+.lv-pn b{display:block;font-weight:600;font-size:14px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.lv-pn span{font-family:var(--cond);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-faint)}
+.lv-num{font-family:var(--mono);font-size:13.5px;text-align:right}
+.lv-num.dim{color:var(--ink-faint)}
+.lv-opp{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim)}
+.lv-st{font-size:12px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.lv-st.live{color:var(--hot);font-weight:600}
+.lv-st.final{color:var(--ink-faint)}
+.lv-flex{font-family:var(--cond);font-size:9.5px;font-weight:800;letter-spacing:.08em;
+  color:var(--ink-faint);border:1px solid var(--hair);border-radius:4px;padding:0 3px}
+/* matchups and standings share the roster's row, minus the player columns */
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 86px minmax(0,1fr);
+  gap:12px;align-items:stretch;background:var(--card);border:1px solid transparent;
+  border-radius:14px;padding:10px 12px;transition:.16s var(--ease)}
+.mrow.mine{border-color:rgba(91,194,54,.55);background:rgba(91,194,54,.09)}
+.mside{display:flex;align-items:center;gap:10px;min-width:0;background:transparent;
+  border:0;border-radius:10px;padding:6px 8px;color:var(--ink);cursor:pointer;
+  font-family:var(--ui);text-align:left;transition:.16s var(--ease)}
+.mside:hover{background:rgba(255,255,255,.10)}
+.mside.b{flex-direction:row-reverse;text-align:right}
+.ms-n{min-width:0;overflow:hidden}
+.ms-n b{display:block;font-weight:600;font-size:14px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.ms-n span{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint)}
+.ms-pts{font-family:var(--mono);font-size:19px;font-weight:500;align-self:center}
+.mvs{display:grid;place-items:center;font-family:var(--cond);font-size:11px;
+  font-weight:700;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase}
+.strow{display:grid;grid-template-columns:40px minmax(0,1fr) 96px 78px 78px;
+  gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);
+  border:1px solid transparent;border-radius:12px;padding:8px 12px;color:var(--ink);
+  font-family:var(--ui);font-size:14px;cursor:pointer;transition:.16s var(--ease)}
+.strow:hover{background:var(--card-2);border-color:var(--hair-2)}
+.strow.mine{border-color:rgba(91,194,54,.5)}
+.strow.head{background:transparent;border:0;cursor:default;font-family:var(--cond);
+  font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-faint)}
+.strow.head:hover{background:transparent}
+.st-rk{font-family:var(--display);font-size:19px;color:var(--ink-dim);text-align:center}
+.st-nm{display:flex;align-items:center;gap:10px;min-width:0}
+.st-nm b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── the players browser ───────────────────────────────────
+   Six hundred-odd people, so the table is paged rather than built whole: a
+   thousand rows nobody scrolled to is a thousand nodes the next tick has to
+   walk past. The rail counts are computed from the rows actually returned for
+   the scope on screen, never from the endpoint's whole-universe totals, which
+   would say "211 RB" next to a list of thirty-nine. */
+.uni{display:grid;grid-template-columns:212px minmax(0,1fr);gap:18px;margin-top:14px}
+.uni-rail{display:flex;flex-direction:column;gap:7px;align-self:start;
+  position:sticky;top:14px}
+.ur-k{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-faint);padding:10px 2px 2px}
+.ur-b{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--card);border:1px solid transparent;border-radius:10px;
+  padding:8px 12px;color:var(--ink-dim);font-family:var(--ui);font-size:13.5px;
+  font-weight:600;cursor:pointer;transition:.16s var(--ease);text-align:left}
+.ur-b:hover{background:var(--card-2);color:var(--ink)}
+.ur-b[aria-pressed="true"]{background:var(--green);color:#06210a;border-color:transparent}
+.ur-b i{font-family:var(--mono);font-style:normal;font-size:11.5px;opacity:.75}
+.uni-main{min-width:0}
+.uni-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:11px}
+.uni-search{flex:1;min-width:180px;background:rgba(255,255,255,.07);
+  border:1px solid var(--hair);border-radius:var(--r-chip);padding:9px 16px;
+  color:var(--ink);font-family:var(--ui);font-size:14px}
+.uni-search::placeholder{color:var(--ink-faint)}
+.uni-search:focus{outline:none;border-color:var(--green)}
+.uni-count{font-family:var(--mono);font-size:12px;color:var(--ink-faint);white-space:nowrap}
+.urow{display:grid;grid-template-columns:40px minmax(0,1fr) 58px 66px 78px minmax(0,1.1fr);
+  gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);
+  border:1px solid transparent;border-radius:12px;padding:7px 12px;color:var(--ink);
+  font-family:var(--ui);font-size:14px;cursor:pointer;transition:.16s var(--ease)}
+.urow:hover{background:var(--card-2);border-color:var(--hair-2)}
+.urow.head{background:transparent;border:0;cursor:default;font-family:var(--cond);
+  font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-faint)}
+.urow.head:hover{background:transparent}
+.urow.mine{border-left:3px solid var(--green);padding-left:9px}
+.u-own{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim)}
+.u-own b{color:var(--green)}
+.u-lg{font-size:11.5px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.u-hurt{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.08em;
+  background:var(--espn);color:#fff;border-radius:var(--r-chip);padding:2px 7px}
+.uni-more{margin:12px auto 0;display:block;background:transparent;
+  border:1.5px solid var(--hair-2);border-radius:var(--r-chip);color:var(--ink);
+  font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;padding:10px 26px;cursor:pointer;transition:.2s var(--ease)}
+.uni-more:hover{border-color:var(--green);color:var(--green-lift)}
+.uni-foot{font-size:12px;color:var(--ink-faint);padding:14px 4px 0;max-width:78ch}
+
+/* ── key insights ──────────────────────────────────────────
+   nflverse opportunity, stated as sentences rather than a wall of ratios. Each
+   line is one number the database actually holds; a metric that came back null
+   prints nothing at all rather than a zero that reads as "he got none". */
+.ki{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.ki li{list-style:none;display:flex;gap:9px;align-items:baseline;font-size:13px;
+  color:var(--ink-dim);line-height:1.35}
+.ki li::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;
+  background:var(--green);transform:translateY(-2px)}
+.ki li>span{min-width:0}
+.ki b{color:var(--ink);font-weight:700;font-family:var(--mono);font-size:12.5px}
+.ki-src{font-size:11px;color:var(--ink-faint);padding-top:7px}
+
+@media (max-width:820px){
+  .uni{grid-template-columns:minmax(0,1fr)}
+  .uni-rail{position:static;flex-direction:row;flex-wrap:wrap}
+  .ur-k{width:100%;padding:6px 2px 0}
+  .ur-b{flex:0 0 auto}
+  .lvrow{grid-template-columns:46px minmax(0,1fr) 56px 56px;row-gap:4px}
+  .lvrow .lv-opp,.lvrow .lv-st{display:none}
+  /* ownership is the whole point of this table, so the column that goes on a
+     phone is "whose", not "how many of yours" */
+  .urow{grid-template-columns:32px minmax(0,1fr) 48px 56px 46px}
+  .urow .u-lg{display:none}
+  .strow{grid-template-columns:34px minmax(0,1fr) 84px}
+  .strow .st-pf,.strow .st-pa{display:none}
+  .mrow{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr)}
+}
+
 </style>
 
 <div class="ambient" id="ambient" aria-hidden="true"></div>
@@ -1000,13 +1183,17 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
         <button data-h="board" aria-pressed="true">Board</button>
         <button data-h="leagues" aria-pressed="false">Leagues</button>
         <button data-h="players" aria-pressed="false">My players</button>
+        <button data-h="universe" aria-pressed="false">All players</button>
         <button data-h="today" aria-pressed="false">Today</button>
         <button data-h="analysis" aria-pressed="false">Analysis</button>
         <button data-h="news" aria-pressed="false">Headlines</button>
       </div>
       <div class="seg" id="viewseg" hidden role="group" aria-label="View">
         <button data-v="board" aria-pressed="true">Board</button>
-        <button data-v="rank" aria-pressed="false">Players</button>
+        <button data-v="roster" aria-pressed="false">Roster</button>
+        <button data-v="matchups" aria-pressed="false">Matchups</button>
+        <button data-v="standings" aria-pressed="false">Standings</button>
+        <button data-v="rank" aria-pressed="false">Scorers</button>
       </div>
       <span class="ctrl-sep" aria-hidden="true"></span>
       <div class="seg quiet" role="group" aria-label="Surface">
@@ -1047,6 +1234,19 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   <div class="rfilters" id="whenfilters" hidden></div>
   <div class="feedwrap" id="feedwrap" hidden></div>
   <div class="an-grid" id="angrid" hidden></div>
+  <div class="uni" id="uni" hidden>
+    <div class="uni-rail" id="unirail"></div>
+    <div class="uni-main">
+      <div class="uni-bar">
+        <input class="uni-search" id="unisearch" type="search" autocomplete="off"
+               placeholder="Search every player…" aria-label="Search players">
+        <span class="uni-count" id="unicount"></span>
+      </div>
+      <div class="lv-tbl" id="unitable"></div>
+      <button class="uni-more" id="unimore" hidden>Show more</button>
+      <div class="uni-foot" id="unifoot"></div>
+    </div>
+  </div>
   <div class="teampick" id="teampick" hidden>
     <span class="tp-k" id="tp-label">Your team</span>
     <select id="tp-select" aria-label="Which team is yours"></select>
@@ -1077,6 +1277,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     </div>
     <div class="rtable" id="rtable"></div>
   </div>
+  <div class="lgv" id="lgv" hidden></div>
 
   <div class="legend">
     <span class="key"><i class="sw" style="background:var(--you)"></i>your starter</span>
@@ -1306,6 +1507,11 @@ function rebuild(L){
 const leagues=(DATA.leagues||[]).map(L=>{
   const o={...L,roster:(L.roster||[]).map(p=>({...p})),
            teams:(L.teams||[]).map(t=>({...t,name:String(t.name).trim()}))};
+  // `record` is the record of whichever team the *server* resolved, so which
+  // team that was has to survive a switch here. Without this, picking another
+  // team relabels a stranger's wins as yours, which is a wrong number rather
+  // than a missing one.
+  o.recordTeam=String(L.you.teamId);
   o.myTeam=savedTeam(o)||String(L.you.teamId);
   o.chosen=!!savedTeam(o);
   return rebuild(o);});
@@ -1320,6 +1526,7 @@ const uniq=new Map();
 for(const c of allPlayers) if(!uniq.has(c.id)) uniq.set(c.id,c);
 const sim=buildSim([...uniq.values()]);
 let bands={},focusIdx=0,surface="web",openLeague=null,showImg=true;
+let liveSeq=0;                 // bumped by applyLive; see evalOf
 const nf=n=>(Number.isFinite(+n)?+n:0).toFixed(1);
 const initials=n=>(n||"").split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
 const src=p=>IMAGES["p_"+p.id]||p.img||"";
@@ -1329,7 +1536,8 @@ const grid=$("grid"),lgrid=$("lgrid");
 function applyLive(live){
   for(const c of allPlayers){
     const st=live[c.id]||{s:0,r:1,g:"PRE"};
-    c.scored=st.s;c.remaining=st.r;c.state=st.g;}}
+    c.scored=st.s;c.remaining=st.r;c.state=st.g;}
+  liveSeq++;}                  // new numbers: every memoised evaluation is stale
 
 /* ── rendering ─────────────────────────────────────────────────────────
    Nodes are built once and reused. Rebuilding innerHTML each tick would
@@ -1632,9 +1840,18 @@ function showHome(){
     $("score").hidden=true;$("pbwrap").hidden=true;$("teampick").hidden=true;
     $("pregame").hidden=true;$("plays").hidden=true;$("viewseg").hidden=true;}
   $("whenfilters").hidden=!(home==="players"||home==="today");$("hidden").hidden=!isL||!hiddenIds().length;
-  $("feedwrap").hidden=isL||home==="analysis";
+  $("feedwrap").hidden=isL||home==="analysis"||home==="universe";
   $("angrid").hidden=home!=="analysis";
+  $("uni").hidden=home!=="universe";
+  if(home!=="board")$("lgv").hidden=true;
   if(home==="board"){openLeagueView(focusLeagueId(),true);return;}
+  syncLegend();
+  // The meta line describes the mosaic ("sized by leverage · intensity 76%").
+  // Left standing on a tab that draws no mosaic it is a stale sentence about a
+  // view that is not on screen.
+  if(home!=="leagues")setText($("intensity"),"");
+  if(home==="universe"){uniLoad(uniScope,()=>renderUniverse(true));
+    renderUniverse(true);return;}
   if(home==="players")renderPlayersFeed(true);
   else if(home==="today")renderToday();
   else if(home==="analysis"){renderAnalysis();}
@@ -1651,13 +1868,18 @@ function focusLeagueId(){
   if(readList(ORDKEY).length)return vis[0].id;
   let best=null,bestScore=-1;
   for(const L of vis){
-    const m=evaluate(L.cells.slice(),{});
+    const m=evalOf(L);
     const r=relevance(L,m);
     if(r.score>bestScore){bestScore=r.score;best=L.id;}}
   return best||vis[0].id;}
 
 $("homeseg").addEventListener("click",e=>{
-  const b=e.target.closest("[data-h]");if(!b||openLeague)return;
+  // No `|| openLeague` guard here. It was meant to protect the drill-down,
+  // where a league is open and these tabs are not yours to press - but in that
+  // state the whole row is hidden, so all the guard actually did was kill every
+  // tab once the Board tab had opened a league. showHome() closes the league
+  // itself for any tab that is not the board.
+  const b=e.target.closest("[data-h]");if(!b)return;
   home=b.dataset.h;
   $("homeseg").querySelectorAll("[data-h]").forEach(o=>
     o.setAttribute("aria-pressed",String(o===b)));
@@ -1935,14 +2157,19 @@ function makeLeagueCell(L){
     lnodes.delete(L.id);lgrid.replaceChildren();
     draw(clockMinute());});
   el.querySelector(".lc-name").textContent=L.league;
-  el.querySelector(".lc-side.a .lc-team").textContent=L.you.name;
-  el.querySelector(".lc-side.b .lc-team").textContent=L.opp.name;
+  // The rail carries the crest too, so a league is recognisable before you
+  // have read either team name. Built once with the cell: changing your team
+  // drops the node entirely, so there is nothing here to keep in step.
+  for(const [sel,side] of [[".lc-side.a .lc-team",L.you],
+                           [".lc-side.b .lc-team",L.opp||{name:"—",teamId:""}]])
+    el.querySelector(sel).innerHTML=badgeHTML(teamOf(L,side.teamId),"sm")+
+      `<span class="nm">${esc(side.name)}</span>`;
   el.addEventListener("click",()=>openLeagueView(L.id));
   return el;}
 
 function renderLeagues(minute){
   const vis=visibleLeagues();
-  const evals=vis.map(L=>{const m=evaluate(L.cells.slice(),{});
+  const evals=vis.map(L=>{const m=evalOf(L);
                           return {L,m,rel:relevance(L,m)};});
   // An explicit order beats the automatic one: if you have arranged your
   // leagues, the board must not rearrange them behind you.
@@ -2127,7 +2354,15 @@ function openCard(c,leagueId){
   for(const [k,v] of [["scored",0],["projected",0],["remaining",1],["state","PRE"]])
     if(c[k]===undefined||c[k]===null)c[k]=v;
   cardCell=c;
-  const L=leagues.find(x=>x.id===cardLeague);if(!L)return;
+  // A free agent opened from the players browser belongs to no league of
+  // yours, and that used to close the card on the spot. He gets the same card
+  // minus the two sections that need a matchup - a leverage share and a win
+  // probability are undefined without one, and a zero in their place would be
+  // a claim rather than a blank.
+  const L=leagues.find(x=>x.id===cardLeague)||null;
+  const inMatchup=!!L&&!!c.side;
+  pcard.querySelector(".pc-lev").hidden=!inMatchup;
+  pcard.querySelector(".pc-what").hidden=!inMatchup;
   pcard.style.setProperty("--tc",c.color||"#666");
   pcard.classList.toggle("rz",c.state==="RZ");
   const shot=$("pcshot"),logo=$("pclogo"),u=src(c),lg=logoSrc(c);
@@ -2139,10 +2374,16 @@ function openCard(c,leagueId){
   else logo.style.display="none";
   setText($("pcini"),initials(c.name));
   setText($("pcname"),c.name);
-  setText($("pcclub"),`${c.team} · ${c.side==="you"?"Your starter":"Opponent"} · ${c.slot}`);
+  setText($("pcclub"),c.team+(inMatchup
+    ?` · ${c.side==="you"?"Your starter":"Opponent"} · ${c.slot}`
+    :(L?` · ${c.started?"starting":"bench"} · ${c.slot||c.pos}`
+       :" · not on a roster of yours")));
   const pos=$("pcpos");pos.textContent=c.pos;
   pos.style.setProperty("--pc",`var(--pos-${c.pos},#8E93A0)`);
-  $("pcpts").style.color=c.side==="you"?"var(--you)":"var(--opp)";
+  // Green is yours and red is theirs; a player in neither line-up is neither,
+  // and colouring him red said "opponent" about a free agent.
+  $("pcpts").style.color=!c.side?"var(--ink)"
+    :c.side==="you"?"var(--you)":"var(--opp)";
   $("pcslider").value=0;
   veil.hidden=false;
   renderDeep(c);
@@ -2163,14 +2404,77 @@ function rankClass(rank){
   if(rank==null)return "";
   return rank<=5?"elite":rank<=15?"good":"";}
 
+/* What he is actually being *given*, which is the half of a stat line that
+   carries forward - a target share survives a quiet week, eleven points do
+   not. Every line here is one number nflverse stored; a metric that came back
+   null prints nothing at all, because a zero in the aDOT row reads as "he is
+   thrown to at the line", which is a different claim from "we do not know". */
+function keyInsights(p,pos){
+  const o=p.opportunity||{},out=[];
+  const has=v=>v!=null&&v!=="" &&!Number.isNaN(+v);
+  const g=has(o.games)?` in ${o.games} game${o.games===1?"":"s"}`:"";
+  if(has(o.targets)||has(o.carries)){
+    const bits=[];
+    if(has(o.targets))bits.push(`<b>${o.targets}</b> targets`);
+    if(has(o.carries))bits.push(`<b>${o.carries}</b> carries`);
+    out.push(bits.join(" and ")+g+".");}
+  if(has(o.targetShare))
+    out.push(`<b>${nf(o.targetShare)}%</b> of his team's targets`+
+      (has(o.airYardsShare)?` and <b>${nf(o.airYardsShare)}%</b> of its air yards.`:"."));
+  if(has(o.wopr))
+    out.push(`WOPR <b>${o.wopr}</b> — targets and air yards combined into one `+
+      `share of the passing game.`);
+  if(has(o.adot))
+    out.push(`Targeted <b>${nf(o.adot)}</b> yards downfield on average`+
+      (has(o.yac)?`, with <b>${nf(o.yac)}</b> yards after the catch.`:"."));
+  if(has(o.ppg)&&!has(o.targets)&&!has(o.carries))
+    out.push(`<b>${nf(o.ppg)}</b> points per game${g}.`);
+  const ranks=(p.recentRanks||[]).filter(r=>r&&r.rank);
+  if(ranks.length)
+    out.push("Finished "+ranks.map(r=>
+      `<b>${r.label||(pos||"")+r.rank}</b> of ${r.field} in ${r.season}`)
+      .join(", ")+".");
+  if(!out.length)return "";
+  // The text goes in one span. Left as bare children of a flex <li>, every
+  // <b> became a flex item of its own and the sentence came apart into
+  // separately-spaced fragments the moment it wrapped.
+  return '<div class="pc-sec">Key insights</div><ul class="ki">'+
+    out.map(t=>`<li><span>${t}</span></li>`).join("")+"</ul>"+
+    (Object.keys(o).length?'<div class="ki-src">Opportunity from nflverse '+
+      'play-by-play, over his most recent stored season. Volume is what a '+
+      'projection is built on; it is not a projection.</div>':"");}
+
+/* Profiles for everybody you roster are inlined with the page, but they are
+   the *partial* profile: the page bakes in prof.build(), and the opportunity
+   metrics are attached by /api/player/{id} on top of it. So a fetch fills two
+   different holes - a player the page never heard of, and a player it has who
+   is missing his nflverse half - and both end up in the same index. One
+   request per player, ever; with no API behind the page there is simply no
+   opportunity section rather than an empty one. */
+const profileWanted=new Set();
+function fetchProfile(id,then){
+  const have=PROFILES[id];
+  if(have&&have.opportunity!==undefined)return;   // already the whole thing
+  if(profileWanted.has(id))return;
+  if(!location.protocol.startsWith("http"))return;
+  profileWanted.add(id);
+  fetch("/api/player/"+encodeURIComponent(id))
+    .then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{PROFILES[id]=j;then&&then();})
+    .catch(()=>{});}
+
 function renderDeep(c){
   const box=$("pcdeep");
   const p=PROFILES[String(c.id)];
-  if(!p){box.innerHTML=
-    '<div class="pc-none">No season history on file for this player.</div>';return;}
+  // Re-render only if the card is still showing the same man when it lands.
+  fetchProfile(String(c.id),()=>{
+    if(cardCell&&String(cardCell.id)===String(c.id))renderDeep(cardCell);});
+  if(!p){
+    box.innerHTML='<div class="pc-none">No season history on file yet.</div>';
+    return;}
   const played=(p.seasons||[]).filter(s=>s.started);
   const latest=played[played.length-1];
-  let html="";
+  let html=keyInsights(p,c.pos);
 
   if(p.formats&&p.formats.length){
     html+='<div class="pc-sec">This week, by scoring format</div><div class="fmt">'+
@@ -2243,27 +2547,41 @@ function renderDeep(c){
 
 function refreshCard(){
   const c=cardCell;if(!c)return;
-  const L=leagues.find(x=>x.id===cardLeague);if(!L)return;
+  const L=leagues.find(x=>x.id===cardLeague)||null;
   setText($("pcpts"),nf(c.scored));
   setText($("pcstate"),c.state==="RZ"?"Red zone":c.state);
   const left=Math.max(0,c.projected-c.scored)*c.remaining;
   const pace=c.projected>0?(c.scored/c.projected)*100:0;
-  const stats=[["Projected",nf(c.projected)],["Pts left",nf(left)],
+  // σ comes off the cell once evaluate() has run over it; a player who is in
+  // no matchup of yours never went through it, so it is computed from the same
+  // function rather than left undefined and printed as 0.0.
+  const sigma=c.sigma!=null?c.sigma:sigmaFor(c.pos,c.remaining);
+  // A free agent has no projection in the universe payload, and openCard fills
+  // the live fields with zeros so nothing throws. "0.0 projected" is a claim
+  // about him; "—" is the truth, which is that nobody projected him here.
+  const hasProj=!!c.projected;
+  const stats=[["Projected",hasProj?nf(c.projected):"—"],
+               ["Pts left",hasProj?nf(left):"—"],
                ["Game left",Math.round(c.remaining*100)+"%"],
-               ["Uncertainty","σ "+nf(c.sigma)],["Pace",Math.round(pace)+"%"],
-               ["Slot",c.slot]];
+               ["Uncertainty","σ "+nf(sigma)],["Pace",Math.round(pace)+"%"],
+               c.slot?["Slot",c.slot]:["Position",c.pos||"—"]];
   const box=$("pcstats");
   if(box.dataset.k!==stats.map(x=>x[1]).join("|")){
     box.dataset.k=stats.map(x=>x[1]).join("|");
     box.innerHTML=stats.map(([k,v])=>
       `<div class="pc-stat"><div class="pc-k">${k}</div><div class="pc-v">${v}</div></div>`
     ).join("");}
+  // Everything below is defined only against a matchup of yours. A free agent
+  // opened from the players browser has none, and openCard has already hidden
+  // both sections - running the model over a null league here threw, and the
+  // throw took the whole tick with it.
+  if(!L||!c.side)return;
   setText($("pclevpct"),(c.share*100).toFixed(1)+"%");
   $("pclevbar").style.width=Math.min(100,c.share*260)+"%";
 
   // Re-run the real model over a hypothetical line for this one player.
   const add=parseFloat($("pcslider").value)||0;
-  const base=evaluate(L.cells.map(x=>({...x})),{});
+  const base=evalOf(L);                     // memoised: identical every tick
   // Move the expected *final* total, not the banked total. Adding to `scored`
   // alone just converts points he was already expected to score into points
   // already scored, which leaves the margin exactly where it was - the slider
@@ -2405,7 +2723,7 @@ function renderRank(){
   const mine=L.you.teamId;
   // leverage is only defined against your own matchup, so borrow it where it exists
   const lev={};
-  for(const c of evaluate(L.cells.map(x=>({...x})),{}).cells) lev[c.id]=c.share;
+  for(const c of evalOf(L).cells) lev[c.id]=c.share;
   let rows=L.roster.filter(r=>rankPos==="ALL"||r.pos===rankPos);
   if(rankMineOnly)rows=rows.filter(r=>r.teamId===mine);
   rows=rows.slice().sort((a,b)=>
@@ -2464,19 +2782,45 @@ $("viewseg").addEventListener("click",e=>{
   showView();});
 
 function showView(){
-  // The board/players switch only exists inside a league. Guarding here keeps
-  // the parent level from ever being half-dressed in a league's chrome.
+  // The sub-tabs only exist inside a league. Guarding here keeps the parent
+  // level from ever being half-dressed in a league's chrome.
   if(!openLeague){
     $("viewseg").hidden=true;$("rank").hidden=true;grid.hidden=true;
     $("mmodes").hidden=true;$("pregame").hidden=true;$("teampick").hidden=true;
+    $("lgv").hidden=true;
     $("daybar").hidden=false;$("homeseg").hidden=false;
     $("score").hidden=true;$("pbwrap").hidden=true;lgrid.hidden=false;
     draw(clockMinute());return;}
   const board=view==="board";
-  grid.hidden=!board;$("rank").hidden=board;$("mmodes").hidden=!board;
+  const page=view==="roster"||view==="matchups"||view==="standings";
+  grid.hidden=!board;$("rank").hidden=view!=="rank";$("mmodes").hidden=!board;
+  $("plays").hidden=!board;$("pregame").hidden=!board;
+  $("lgv").hidden=!page;
+  // The scoreline is the one piece of chrome every sub-tab wants: whatever you
+  // are reading, it is still this week's matchup you are reading it against.
   $("score").hidden=false;$("pbwrap").hidden=false;$("viewseg").hidden=false;
-  lgrid.hidden=true;
+  $("uni").hidden=true;lgrid.hidden=true;
+  if(view==="standings"||view==="roster"){
+    const L=leagues.find(x=>x.id===openLeague);
+    // The roster header wants a record for whichever team is on screen, and
+    // the board payload only carries one - see recordLine. Same request, same
+    // cache, so asking here costs nothing the standings tab was not going to
+    // pay anyway.
+    if(L)loadStandings(L,()=>{
+      if(openLeague!==L.id)return;
+      if(view==="standings")renderStandings(L);
+      else if(view==="roster"){lvKey="";renderRoster(L);}});}
+  syncLegend();
   draw(clockMinute());}
+
+/* The legend and the note under it describe the tiling - "cell area = leverage
+   share" - so they belong to the view that tiles. They used to sit at the
+   bottom of every tab, explaining a grid that was not on the page. */
+function syncLegend(){
+  const on=!grid.hidden;
+  const l=document.querySelector(".legend"),x=document.querySelector(".explain");
+  if(l)l.hidden=!on;
+  if(x)x.hidden=!on;}
 
 /* ── what the mosaic is *of* ───────────────────────────────────────────
    Tiling by area is a way of showing any ranked set of players, not only a
@@ -2546,6 +2890,10 @@ $("tp-select").addEventListener("change",e=>{
   L.chosen=true;setTeam(L,e.target.value);
   bands={};tnodes.clear();grid.replaceChildren();
   rnodes.clear();rtable.replaceChildren();
+  // The picker answers "which team is mine", so the league page has to follow
+  // it. Left alone, the roster tab went on showing the previous team's line-up
+  // under the new team's name in the scoreline.
+  rosterTeam=String(L.myTeam);lvKey="";lvnodes.clear();$("lgv").replaceChildren();
   $("youname").textContent=L.you.name;
   $("oppname").textContent=L.opp?L.opp.name:"—";
   draw(clockMinute());});
@@ -2636,6 +2984,527 @@ const cellById=id=>{
   if(!L)return null;
   return L.cells.find(c=>c.id===id)||L.roster.find(c=>c.id===id)||null;};
 
+/* ── badges, and the arithmetic behind them ────────────────────────────
+   A team name is written by the manager, so it goes through esc() before it
+   ever reaches innerHTML: one league in this install is called "🙈" and
+   another could just as easily be called "<b>". */
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,
+  ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+/* Initials over code points, not over UTF-16 units. Splitting "🙈" at [0]
+   yields half a surrogate pair, which renders as a replacement box - the one
+   team in this install with an emoji name was also the one showing rubbish. */
+const monogram=n=>(String(n||"").trim().split(/\s+/).slice(0,2)
+  .map(w=>Array.from(w)[0]||"").join("").toUpperCase())||"?";
+/* FNV-1a over the name. Deterministic is the whole point: the hue has to be
+   the same on the rail, in the standings and after a reload, or the badge
+   stops being a way to recognise anybody. */
+const teamHue=name=>{let h=2166136261;
+  for(const ch of String(name||"")){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}
+  return (h>>>0)%360;};
+const teamTint=name=>`hsl(${teamHue(name)} 58% 44%)`;
+function badgeHTML(t,cls){
+  const name=(t&&t.name)||"";
+  // logoRaster, not "does the URL end in .svg" and not "wait for onerror":
+  // an <img> pointed at an SVG badge here draws nothing and fires no error, so
+  // the hole would be permanent and silent.
+  const drawable=t&&t.logo&&t.logoRaster&&showImg;
+  return `<span class="tbadge ${cls||""}" style="--tb:${teamTint(name)}">`+
+    (drawable?`<img alt="" src="${esc(t.logo)}" onerror="`+
+      `this.closest('.tbadge').classList.add('nologo');this.remove()">`:"")+
+    `<span class="tb-ini">${esc(monogram(name))}</span></span>`;}
+const teamOf=(L,tid)=>(L.teams||[]).find(t=>String(t.teamId)===String(tid))
+  ||{teamId:String(tid),name:"",logo:"",logoRaster:false};
+
+/* evaluate() is the model, and it is not free: the leagues board ran it once
+   per league per tick and focusLeagueId ran it again over every league on top
+   of that, so opening a tab re-derived the whole mosaic twice. Its inputs only
+   move when the feed does, so the result is cached against a sequence number
+   the feed bumps. Anything that redraws without new numbers - a tab switch, a
+   hover, the spatial pass - now costs a map lookup. */
+const evalCache=new Map();
+function evalOf(L){
+  const hit=evalCache.get(L.id);
+  if(hit&&hit.seq===liveSeq&&hit.team===L.myTeam&&hit.n===L.cells.length)return hit.m;
+  const m=evaluate(L.cells.slice(),{});
+  evalCache.set(L.id,{seq:liveSeq,team:L.myTeam,n:L.cells.length,m});
+  return m;}
+
+/* ── what the feed says about a club ───────────────────────────────────
+   Three questions a line-up asks of the live tier: who are they playing, has
+   it started, and what is the score. All three come from /api/live's games
+   block; with no feed behind the page they are honestly blank rather than
+   filled in with a kickoff somebody guessed. */
+function oppLabel(club,state){
+  const g=gameInfo[club];
+  if(!g)return state==="BYE"?"BYE":"—";
+  if(!g.opp)return "—";
+  return (g.home?"vs ":"@ ")+g.opp;}
+
+function gameStatus(club,state){
+  const g=gameInfo[club];
+  if(!g)return state==="BYE"?{t:"Bye week",c:"final"}:{t:"—",c:""};
+  if(g.state==="pre")return {t:KICK(g.kickoff)||"Not started",c:""};
+  // The other club's score lives in its own entry - the feed states each side
+  // once rather than repeating the pair, so a final reads 10–13 only when both
+  // halves are actually present.
+  const theirs=(gameInfo[g.opp]||{}).score;
+  const line=(g.score!=null&&theirs!=null)?`${g.score}–${theirs}`:"";
+  if(g.state==="post")return {t:"Final"+(line?" "+line:""),c:"final"};
+  return {t:(g.label||"Live")+(line?" · "+line:""),c:"live"};}
+
+/* ── the league's own page ─────────────────────────────────────────────
+   Roster, matchups and standings, sharing one frame. Two rules run through
+   all of it. Starters come from the provider's `started` flag and nothing
+   else: a FLEX and a BN are indistinguishable to anything that reads the slot
+   name, so guessing gets a real starter filed under bench roughly once a
+   line-up. And a team is only ever shown a record the database actually has -
+   the payload carries one, for the team the *server* resolved, so switching
+   teams here falls back to the standings rather than relabelling somebody
+   else's wins as yours. */
+let rosterTeam=null;
+const lvnodes=new Map();
+let lvKey="";                       // which league/team/view the nodes belong to
+
+const SLOTRANK={QB:0,RB:1,WR:2,TE:3,FLEX:4,"OP":5,K:6,DEF:7,"D/ST":7};
+const slotOrder=p=>(SLOTRANK[p.slot]!=null?SLOTRANK[p.slot]:5);
+
+function lvTable(rows){
+  const box=document.createElement("div");
+  box.className="lv-tbl";
+  box.append(...rows);
+  return box;}
+
+function rosterRow(p){
+  let el=lvnodes.get(p.id);
+  if(el)return el;
+  el=document.createElement("button");
+  el.className="lvrow";el.dataset.id=p.id;
+  el.innerHTML=
+    `<span class="lv-slot"><span class="pos" `+
+      `style="--pc:var(--pos-${esc(p.pos)},#8E93A0)">${esc(p.pos)}</span>`+
+      (p.started&&p.slot&&p.slot!==p.pos?`<span class="lv-flex">${esc(p.slot)}</span>`:"")+
+    `</span>`+
+    `<span class="lv-who2">${faceHTML(p)}<span class="lv-pn">`+
+      `<b>${esc(p.name)}</b><span>${esc(p.team)}</span></span></span>`+
+    `<span class="lv-opp"></span><span class="lv-num dim"></span>`+
+    `<span class="lv-num"></span><span class="lv-st"></span>`;
+  el.addEventListener("click",()=>{
+    const L=leagues.find(x=>x.id===openLeague);if(!L)return;
+    openCard(L.cells.find(c=>String(c.id)===String(p.id))||p,L.id);});
+  lvnodes.set(p.id,el);
+  return el;}
+
+function paintRosterRow(el,p){
+  el.className="lvrow"+(p.started?"":" bench");
+  setText(el.querySelector(".lv-opp"),oppLabel(p.team,p.state));
+  setText(el.querySelector(".lv-num.dim"),nf(p.projected));
+  // A zero before kickoff is not the same fact as a zero after one, and the
+  // feed reports both as 0.0. Points only appear once his game is live.
+  const played=p.state&&p.state!=="PRE"&&p.state!=="BYE";
+  setText(el.querySelector(".lv-num:not(.dim)"),played?nf(p.scored):"—");
+  const st=gameStatus(p.team,p.state);
+  const cell=el.querySelector(".lv-st");
+  setText(cell,st.t);
+  cell.className="lv-st"+(st.c?" "+st.c:"");}
+
+function renderRoster(L){
+  const box=$("lgv");
+  const tid=String(rosterTeam||L.myTeam);
+  const team=teamOf(L,tid);
+  const mine=tid===String(L.myTeam);
+  const key=`roster|${L.id}|${tid}`;
+  const rows=(L.roster||[]).filter(r=>String(r.teamId)===tid);
+  const starters=rows.filter(r=>r.started).sort((a,b)=>
+    slotOrder(a)-slotOrder(b)||(b.projected||0)-(a.projected||0));
+  const bench=rows.filter(r=>!r.started).sort((a,b)=>
+    (b.projected||0)-(a.projected||0)||(a.name<b.name?-1:1));
+  if(lvKey!==key){
+    lvKey=key;lvnodes.clear();
+    const rec=recordLine(L,tid);
+    box.replaceChildren();
+    const head=document.createElement("div");
+    head.className="lv-head";
+    head.innerHTML=`<span class="lv-who">${badgeHTML(team,"lg")}`+
+      `<span class="lv-name">${esc(team.name||"Team "+tid)}</span></span>`+
+      (mine?'<span class="lv-you">YOU</span>':"")+
+      (rec?`<span class="lv-rec">${rec}</span>`:"");
+    box.appendChild(head);
+    for(const [label,set] of [["Starters",starters],["Bench",bench]]){
+      if(!set.length)continue;
+      const h=document.createElement("div");
+      h.className="lv-sec";h.textContent=label;
+      box.appendChild(h);
+      const cols=document.createElement("div");
+      cols.className="lvrow head";
+      // The head carries the same classes as the cells it labels, because the
+      // narrow layout hides columns by class: labelled otherwise, a phone
+      // printed "Opp" and "Status" over the two columns it had just removed.
+      cols.innerHTML="<span>Pos</span><span>Player</span>"+
+        "<span class='lv-opp'>Opp</span>"+
+        "<span style='text-align:right'>Proj</span>"+
+        "<span style='text-align:right'>Actual</span>"+
+        "<span class='lv-st'>Status</span>";
+      const tbl=lvTable(set.map(rosterRow));
+      tbl.prepend(cols);
+      if(label==="Starters"){
+        const tot=document.createElement("div");
+        tot.className="lvrow total";tot.dataset.role="total";
+        tot.innerHTML="<span></span><span>Starters</span><span></span>"+
+          "<span class='lv-num dim'></span><span class='lv-num'></span><span></span>";
+        tbl.appendChild(tot);}
+      box.appendChild(tbl);}
+    if(!rows.length){
+      const e=document.createElement("div");
+      e.className="lv-note";
+      e.textContent="No roster rows stored for this team in this week.";
+      box.appendChild(e);}}
+  for(const p of rows){const el=lvnodes.get(p.id);if(el)paintRosterRow(el,p);}
+  const tot=box.querySelector(".lvrow.total");
+  if(tot){
+    const proj=starters.reduce((a,p)=>a+(+p.projected||0),0);
+    const live=starters.filter(p=>p.state&&p.state!=="PRE"&&p.state!=="BYE");
+    setText(tot.querySelector(".lv-num.dim"),nf(proj));
+    setText(tot.querySelector(".lv-num:not(.dim)"),
+      live.length?nf(live.reduce((a,p)=>a+(+p.scored||0),0)):"—");}}
+
+/* The record shown beside a team name. `L.record` belongs to the team the
+   server resolved, so it is only used for that team; anybody else's comes
+   from the standings, once those have been fetched, and otherwise is simply
+   not shown. Labelling one manager's wins with another's is worse than an
+   empty space. */
+function recordLine(L,tid){
+  const r=String(tid)===String(L.recordTeam)?(L.record||null)
+    :(standings.get(L.id)||{rows:[]}).rows
+      .filter(x=>String(x.team_id)===String(tid))
+      .map(x=>({wins:x.wins,losses:x.losses,ties:x.ties,rank:x.rank,
+                of:(standings.get(L.id)||{rows:[]}).rows.length,
+                pointsFor:x.points_for}))[0];
+  if(!r||r.wins==null)return "";
+  const wl=`<b>${r.wins}–${r.losses}${r.ties?"–"+r.ties:""}</b>`;
+  const rk=r.rank?` · ${r.rank}${r.of?" of "+r.of:""}`:"";
+  const pf=r.pointsFor?` · ${nf(r.pointsFor)} PF`:"";
+  return wl+rk+pf;}
+
+/* ── matchups ──────────────────────────────────────────────────────────
+   The week's pairings, with each side's total built from that team's own
+   started players - the same sum the scoreline uses for your matchup, so the
+   two cannot disagree. Both sides open that team's line-up, which is the only
+   navigation this view owes anybody. */
+function sideTotals(L,tid){
+  const set=(L.roster||[]).filter(r=>String(r.teamId)===String(tid)&&r.started);
+  const played=set.filter(p=>p.state&&p.state!=="PRE"&&p.state!=="BYE");
+  return {proj:set.reduce((a,p)=>a+(+p.projected||0),0),
+          pts:played.reduce((a,p)=>a+(+p.scored||0),0),
+          started:played.length};}
+
+function matchupPairs(L){
+  const seen=new Set(),out=[];
+  for(const [a,b] of Object.entries(L.matchups||{})){
+    const k=[String(a),String(b)].sort().join("|");
+    if(seen.has(k))continue;seen.add(k);
+    out.push([String(a),String(b)]);}
+  const me=String(L.myTeam);
+  out.sort((x,y)=>(y.includes(me)?1:0)-(x.includes(me)?1:0));
+  return out;}
+
+function renderMatchups(L){
+  const box=$("lgv");
+  const pairs=matchupPairs(L);
+  const key=`matchups|${L.id}|${L.myTeam}|${pairs.map(p=>p.join("-")).join(",")}`;
+  if(lvKey!==key){
+    lvKey=key;lvnodes.clear();box.replaceChildren();
+    const h=document.createElement("div");
+    h.className="lv-sec";h.textContent=`Week ${L.week} · ${pairs.length} matchups`;
+    box.appendChild(h);
+    const wrap=document.createElement("div");
+    wrap.className="lv-tbl";
+    for(const [a,b] of pairs){
+      const row=document.createElement("div");
+      row.className="mrow"+([a,b].includes(String(L.myTeam))?" mine":"");
+      row.dataset.k=a+"|"+b;
+      row.innerHTML=
+        `<button class="mside a" data-team="${esc(a)}">${badgeHTML(teamOf(L,a))}`+
+          `<span class="ms-n"><b>${esc(teamOf(L,a).name||"Team "+a)}</b>`+
+          `<span class="ms-proj"></span></span>`+
+          `<span class="ms-pts" style="margin-left:auto"></span></button>`+
+        `<span class="mvs">vs</span>`+
+        `<button class="mside b" data-team="${esc(b)}">${badgeHTML(teamOf(L,b))}`+
+          `<span class="ms-n"><b>${esc(teamOf(L,b).name||"Team "+b)}</b>`+
+          `<span class="ms-proj"></span></span>`+
+          `<span class="ms-pts" style="margin-right:auto"></span></button>`;
+      wrap.appendChild(row);}
+    box.appendChild(wrap);
+    if(!pairs.length){
+      const e=document.createElement("div");e.className="lv-note";
+      e.textContent="No matchup stored for this week.";box.appendChild(e);}}
+  // numbers only, every tick - the nodes above are never rebuilt under a click
+  for(const row of box.querySelectorAll(".mrow")){
+    const [a,b]=row.dataset.k.split("|");
+    for(const [tid,sel] of [[a,".mside.a"],[b,".mside.b"]]){
+      const t=sideTotals(L,tid),node=row.querySelector(sel);
+      setText(node.querySelector(".ms-pts"),t.started?nf(t.pts):"—");
+      setText(node.querySelector(".ms-proj"),"proj "+nf(t.proj));}}}
+
+/* ── standings ─────────────────────────────────────────────────────────
+   The one view here that needs a round trip: wins and points-against are per
+   team and the board payload only carries your own. Fetched once per league
+   and cached, because nothing in it changes inside a week. With no API behind
+   the page - the published build, for one - it says so and lists the teams it
+   does know, rather than drawing an empty table that looks like a 0-0 league. */
+const standings=new Map();          // league id -> {rows} | {error}
+function loadStandings(L,then){
+  if(standings.has(L.id))return then&&then();
+  if(!location.protocol.startsWith("http")){
+    standings.set(L.id,{rows:[],error:"offline"});return then&&then();}
+  standings.set(L.id,{rows:[],pending:true});
+  fetch(`/api/leagues/${encodeURIComponent(L.provider)}/`+
+        `${encodeURIComponent(L.leagueId)}/standings`)
+    .then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{standings.set(L.id,{rows:j.standings||[],season:j.season});
+              then&&then();})
+    .catch(()=>{standings.set(L.id,{rows:[],error:"unreachable"});then&&then();});}
+
+function renderStandings(L){
+  const box=$("lgv");
+  const got=standings.get(L.id);
+  if(!got||got.pending){
+    if(lvKey!=="standings|pending|"+L.id){
+      lvKey="standings|pending|"+L.id;box.replaceChildren();
+      const e=document.createElement("div");e.className="lv-note";
+      e.textContent="Loading standings…";box.appendChild(e);}
+    return;}
+  const rows=got.rows.slice().sort((a,b)=>(a.rank||99)-(b.rank||99));
+  const key=`standings|${L.id}|${L.myTeam}|${rows.length}|${got.error||""}`;
+  if(lvKey===key)return;              // nothing in here ticks; draw it once
+  lvKey=key;box.replaceChildren();
+  const frag=document.createDocumentFragment();
+  const headRow=()=>{
+    const h=document.createElement("div");
+    h.className="strow head";
+    h.innerHTML="<span style='text-align:center'>#</span><span>Team</span>"+
+      "<span style='text-align:right'>W-L-T</span>"+
+      "<span class='st-pf' style='text-align:right'>PF</span>"+
+      "<span class='st-pa' style='text-align:right'>PA</span>";
+    return h;};
+  if(!rows.length){
+    const e=document.createElement("div");e.className="lv-note";
+    e.textContent=got.error==="offline"
+      ? "Standings come from /api/leagues/…/standings, and this copy of the "+
+        "board was built without an API behind it. The teams below are the ones "+
+        "the payload carries; their records are not."
+      : "Standings could not be read from the API for this league.";
+    frag.appendChild(e);
+    const wrap=document.createElement("div");wrap.className="lv-tbl";
+    wrap.appendChild(headRow());
+    for(const t of (L.teams||[])){
+      const el=document.createElement("button");
+      el.className="strow"+(String(t.teamId)===String(L.myTeam)?" mine":"");
+      el.dataset.team=String(t.teamId);
+      el.innerHTML=`<span class="st-rk">—</span>`+
+        `<span class="st-nm">${badgeHTML(t)}<b>${esc(t.name)}</b></span>`+
+        `<span class="lv-num dim">—</span><span class="st-pf lv-num dim">—</span>`+
+        `<span class="st-pa lv-num dim">—</span>`;
+      wrap.appendChild(el);}
+    frag.appendChild(wrap);box.appendChild(frag);return;}
+  const wrap=document.createElement("div");wrap.className="lv-tbl";
+  wrap.appendChild(headRow());
+  for(const r of rows){
+    const el=document.createElement("button");
+    el.className="strow"+(String(r.team_id)===String(L.myTeam)?" mine":"");
+    el.dataset.team=String(r.team_id);
+    // The standings endpoint calls the team `team`, the board payload calls it
+    // `name`, and badgeHTML reads `name`: handed the row raw, every badge
+    // hashed the empty string and ten teams came out the same colour with the
+    // same "?" on them. Shape it here rather than teaching the badge two names.
+    el.innerHTML=`<span class="st-rk">${esc(r.rank||"—")}</span>`+
+      `<span class="st-nm">`+
+      badgeHTML({name:r.team,logo:r.logo,logoRaster:r.logoRaster},"sm")+
+      `<b>${esc(r.team)}</b>`+
+      (String(r.team_id)===String(L.myTeam)?'<span class="lv-you">YOU</span>':"")+
+      `</span>`+
+      `<span class="lv-num">${r.wins||0}-${r.losses||0}`+
+        `${r.ties?"-"+r.ties:""}</span>`+
+      `<span class="st-pf lv-num dim">${nf(r.points_for)}</span>`+
+      `<span class="st-pa lv-num dim">${nf(r.points_against)}</span>`;
+    wrap.appendChild(el);}
+  frag.appendChild(wrap);
+  const note=document.createElement("div");
+  note.className="uni-foot";
+  note.textContent=`Standings as stored for ${got.season||L.season}. `+
+    "Open a row to see that team's line-up.";
+  frag.appendChild(note);
+  box.appendChild(frag);}
+
+/* One listener for the whole league page: a row that opens a line-up is a
+   button, and both the standings and the matchup sides carry the team id. */
+$("lgv").addEventListener("click",e=>{
+  const b=e.target.closest("[data-team]");if(!b)return;
+  const L=leagues.find(x=>x.id===openLeague);if(!L)return;
+  rosterTeam=String(b.dataset.team);
+  setSubView("roster");});
+
+/* ── the players browser ───────────────────────────────────────────────
+   /api/universe knows everybody, not only the people you roster, and it
+   filters by scope and position server-side. It is fetched once per scope and
+   held: position counts and the search then come out of the copy in hand, so
+   typing costs nothing and the counts describe the rows actually on screen
+   rather than the whole universe behind them.
+
+   The ownership column is ownership *in your leagues* - "2/3" means two of
+   your three roster him. No feed on this page publishes a league-wide OWN%,
+   and a column with that heading quietly meaning something else would be
+   worse than no column. */
+const SCOPES=[["","Everyone"],["mine","My teams"],["rostered","Rostered"],
+              ["free","Free agents"],["hurt","Injured"]];
+const UPOS=["ALL","QB","RB","WR","TE","K","DEF"];
+const uniCache=new Map();
+let uniScope="",uniPos="ALL",uniQ="",uniShown=60,uniLeagues=0;
+
+function uniLoad(scope,then){
+  if(uniCache.has(scope))return then&&then();
+  if(!location.protocol.startsWith("http")){
+    uniCache.set(scope,{players:[],error:"offline"});return then&&then();}
+  uniCache.set(scope,{players:[],pending:true});
+  fetch("/api/universe"+(scope?"?scope="+encodeURIComponent(scope):""))
+    .then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>{uniCache.set(scope,{players:j.players||[],leagues:j.leagues||0,
+                                  total:j.total||0});
+              uniLeagues=j.leagues||uniLeagues;then&&then();})
+    .catch(()=>{uniCache.set(scope,{players:[],error:"unreachable"});
+                then&&then();});}
+
+const uniMatch=(p,q)=>!q||String(p.name||"").toLowerCase().includes(q)
+  ||String(p.team||"").toLowerCase().includes(q);
+
+function uniRows(){
+  const got=uniCache.get(uniScope)||{players:[]};
+  const q=uniQ.trim().toLowerCase();
+  return (got.players||[]).filter(p=>
+    (uniPos==="ALL"||p.pos===uniPos)&&uniMatch(p,q));}
+
+function renderUniRail(){
+  const rail=$("unirail");
+  const got=uniCache.get(uniScope)||{players:[]};
+  const pool=(got.players||[]);
+  // counts per position within the scope on screen. The endpoint's own
+  // byPosition is the whole universe regardless of scope, so using it here
+  // would print "RB 211" above a list of nine.
+  const counts={};for(const p of pool)counts[p.pos]=(counts[p.pos]||0)+1;
+  const q=uniQ.trim().toLowerCase();
+  // A short signature rather than the markup itself: the rail is rebuilt only
+  // when something it shows has moved, and parking two kilobytes of HTML in a
+  // data- attribute to find that out is a silly way to pay for it.
+  const sig=[uniScope,uniPos,q,SCOPES.map(([k])=>{
+    const c=uniCache.get(k);
+    return c&&!c.pending&&!c.error?c.players.length:"-";}).join(","),
+    UPOS.map(k=>counts[k]||0).join(",")].join("|");
+  if(rail.dataset.k===sig)return;      // never rebuild the rail under a click
+  rail.dataset.k=sig;
+  const html='<div class="ur-k">Scope</div>'+
+    SCOPES.map(([k,label])=>{
+      const c=uniCache.get(k);
+      const n=c&&!c.pending&&!c.error?c.players.length:null;
+      return `<button class="ur-b" data-scope="${k}" `+
+        `aria-pressed="${k===uniScope}">${esc(label)}`+
+        (n!=null?`<i>${n}</i>`:"")+`</button>`;}).join("")+
+    '<div class="ur-k">Position</div>'+
+    UPOS.map(k=>{
+      const n=k==="ALL"?pool.filter(p=>uniMatch(p,q)).length
+             :pool.filter(p=>p.pos===k&&uniMatch(p,q)).length;
+      return `<button class="ur-b" data-upos="${k}" aria-pressed="${k===uniPos}"`+
+        `${n?"":" disabled style='opacity:.42'"}>`+
+        `${k==="ALL"?"All":k==="DEF"?"D/ST":k}<i>${n}</i></button>`;}).join("");
+  rail.innerHTML=html;}
+
+function uniRowHTML(p,i){
+  const own=uniLeagues?`${p.owned||0}/${uniLeagues}`:String(p.owned||0);
+  const where=(p.leagues||[]).map(l=>
+    `<span${l.mine?' style="color:var(--green)"':""}>${esc(l.team)}</span>`)
+    .join(", ");
+  return `<button class="urow${p.mine?" mine":""}" data-pid="${esc(p.id)}">`+
+    `<span class="lv-num dim">${i+1}</span>`+
+    `<span class="lv-who2">${faceHTML(p)}<span class="lv-pn">`+
+      `<b>${esc(p.name)}</b><span>${esc(p.team)}</span></span></span>`+
+    `<span class="pos" style="--pc:var(--pos-${esc(p.pos)},#8E93A0)">${esc(p.pos)}</span>`+
+    `<span class="lv-num">${p.projected==null?"—":nf(p.projected)}</span>`+
+    `<span class="u-own">${p.owned?`<b>${own}</b>`:own}</span>`+
+    `<span class="u-lg">${p.status?`<span class="u-hurt">${esc(p.status)}</span> `:""}`+
+      `${where||"—"}</span></button>`;}
+
+function renderUniverse(force){
+  const got=uniCache.get(uniScope);
+  if(!got||got.pending){
+    renderUniRail();
+    $("unitable").innerHTML='<div class="lv-note">Loading players…</div>';
+    $("unimore").hidden=true;setText($("unicount"),"");
+    setText($("unifoot"),"");
+    return;}
+  renderUniRail();
+  const rows=uniRows().slice().sort((a,b)=>
+    (b.projected==null?-1:b.projected)-(a.projected==null?-1:a.projected)
+    ||(a.name<b.name?-1:1));
+  const shown=rows.slice(0,uniShown);
+  const sig=`${uniScope}|${uniPos}|${uniQ}|${uniShown}|${rows.length}`;
+  if(!force&&$("unitable").dataset.k===sig)return;
+  $("unitable").dataset.k=sig;
+  const head='<div class="urow head"><span style="text-align:right">#</span>'+
+    '<span>Player</span><span>Pos</span><span style="text-align:right">Proj</span>'+
+    '<span class="u-own">In your leagues</span>'+
+    '<span class="u-lg">Whose</span></div>';
+  $("unitable").innerHTML=got.error
+    ? '<div class="lv-note">The players browser reads /api/universe, which needs '+
+      'the local API running. This copy of the board was built without one, so '+
+      'there is nothing here to show rather than a list somebody made up.</div>'
+    : head+(shown.length?shown.map(uniRowHTML).join("")
+        :'<div class="lv-note">Nobody matches that.</div>');
+  $("unimore").hidden=shown.length>=rows.length;
+  $("unimore").textContent=`Show more · ${rows.length-shown.length} left`;
+  setText($("unicount"),rows.length
+    ?`${shown.length} of ${rows.length}`+(got.total?` · ${got.total} known`:""):"");
+  setText($("unifoot"),got.error?""
+    :"“In your leagues” counts how many of your own leagues roster him, "+
+     "out of "+(uniLeagues||"your")+". It is not a league-wide ownership "+
+     "percentage — no feed here publishes one.");}
+
+$("unirail").addEventListener("click",e=>{
+  const b=e.target.closest("[data-scope],[data-upos]");if(!b||b.disabled)return;
+  if(b.dataset.scope!==undefined){
+    uniScope=b.dataset.scope;uniShown=60;
+    uniLoad(uniScope,()=>renderUniverse(true));}
+  else{uniPos=b.dataset.upos;uniShown=60;}
+  renderUniverse(true);});
+
+$("unimore").addEventListener("click",()=>{uniShown+=80;renderUniverse(true);});
+
+let uniTimer=0;
+$("unisearch").addEventListener("input",e=>{
+  const v=e.target.value;
+  clearTimeout(uniTimer);
+  // debounced, and filtered from the copy already in hand: a fetch per
+  // keystroke would be six hundred rows over the wire to remove four of them
+  uniTimer=setTimeout(()=>{uniQ=v;uniShown=60;renderUniverse(true);},140);});
+
+$("unitable").addEventListener("click",e=>{
+  const row=e.target.closest("[data-pid]");if(!row)return;
+  const pid=String(row.dataset.pid);
+  const got=uniCache.get(uniScope)||{players:[]};
+  const p=(got.players||[]).find(x=>String(x.id)===pid);if(!p)return;
+  // If one of your leagues starts him, open the card against that league so
+  // the what-if slider has a matchup to reason about. A free agent has none,
+  // and the card says so rather than pretending to move a win probability.
+  const lg=leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid&&r.started))
+        ||leagues.find(L=>(L.roster||[]).some(r=>String(r.id)===pid));
+  const cell=lg&&((lg.cells||[]).find(c=>String(c.id)===pid)
+                 ||(lg.roster||[]).find(c=>String(c.id)===pid));
+  openCard(cell||{...p},lg?lg.id:null);});
+
+function setSubView(v){
+  view=v;
+  $("viewseg").querySelectorAll("[data-v]").forEach(o=>
+    o.setAttribute("aria-pressed",String(o.dataset.v===v)));
+  showView();}
+
+
 function draw(minute){
   if(!openLeague){
     // Only the tab you are actually on gets drawn. This used to render the
@@ -2645,10 +3514,24 @@ function draw(minute){
     // which is what made clicks feel dead.
     if(home==="leagues")renderLeagues(minute);
     else if(home==="players")renderPlayersFeed();
-    // headlines are static; nothing to redraw
+    // headlines, the analyses and the players browser are static between
+    // clicks - the feed does not move any number on them, so a tick that
+    // redrew them would be pure DOM churn under the cursor
   }
   else if(view==="rank"){renderLeague(minute,true);renderPicker(
     leagues.find(x=>x.id===openLeague));renderRank();}
+  else if(view==="roster"||view==="matchups"||view==="standings"){
+    const L=leagues.find(x=>x.id===openLeague);
+    if(L){
+      renderLeague(minute,true);          // the scoreline above still ticks
+      renderPicker(L);
+      // One bad record must not take the page with it - this file has form:
+      // nf() threw on an undefined and the uncaught throw killed a whole tick.
+      try{
+        if(view==="roster")renderRoster(L);
+        else if(view==="matchups")renderMatchups(L);
+        else renderStandings(L);
+      }catch(err){console.error("league view failed",err);}}}
   else{renderLeague(minute);}
   if(!veil.hidden){
     // A card that cannot render is a broken card; it is not a reason to stop
@@ -2660,10 +3543,16 @@ function draw(minute){
 function openLeagueView(id,asHome){
   const L=leagues.find(x=>x.id===id);if(!L)return;
   openLeague=id;bands={};focusIdx=0;
+  // A league page opens on your own line-up, whatever team the last one left
+  // selected - carrying a team id across leagues would show team 8's roster
+  // under a league where 8 is somebody else entirely.
+  rosterTeam=String(L.myTeam);lvKey="";lvnodes.clear();$("lgv").replaceChildren();
+  $("uni").hidden=true;
   if(asHome)home="board";
   $("title").textContent=L.league;
   $("wk").textContent=`Week ${L.week} · ${L.season}`;
-  $("youname").textContent=L.you.name;$("oppname").textContent=L.opp.name;
+  $("youname").textContent=L.you.name;
+  $("oppname").textContent=L.opp?L.opp.name:"—";
   $("daybar").hidden=true;$("feedwrap").hidden=true;$("hidden").hidden=true;
   $("hurt").hidden=true;
   $("whenfilters").hidden=true;$("angrid").hidden=true;
@@ -2681,12 +3570,13 @@ function backToLeagues(){
   $("back").hidden=true;$("score").hidden=true;$("pbwrap").hidden=true;
   $("viewseg").hidden=true;$("rank").hidden=true;$("mmodes").hidden=true;
   $("pregame").hidden=true;$("teampick").hidden=true;$("homeseg").hidden=false;
-  $("plays").hidden=true;
+  $("plays").hidden=true;$("lgv").hidden=true;$("uni").hidden=true;
   lgrid.hidden=false;grid.hidden=true;
   home="leagues";
   $("homeseg").querySelectorAll("[data-h]").forEach(o=>
     o.setAttribute("aria-pressed",String(o.dataset.h==="leagues")));
   $("feedwrap").hidden=true;$("whenfilters").hidden=true;$("angrid").hidden=true;
+  syncLegend();
   draw(clockMinute());}
 
 $("back").addEventListener("click",backToLeagues);
@@ -2728,7 +3618,13 @@ addEventListener("keydown",e=>{
   [...host.children].forEach((el,i)=>el.dataset.focus=i===focusIdx?"1":"0");});
 
 const T0=Date.now()-100000;                    // open mid-slate, see api.live_source
-const clockMinute=()=>((Date.now()-T0)/1000)*1.5;
+/* Only the simulator has a clock of its own. Off the simulator this counted
+   wall-clock seconds since the page opened and reported them as a position in
+   the afternoon, so a board with no games running announced "sunday +150m" the
+   moment you touched a tab - a made-up time next to honestly empty scores. The
+   real feed states where it is (`asOf`), and before it says anything the only
+   defensible answer is pre-game. */
+const clockMinute=()=>SIM?((Date.now()-T0)/1000)*1.5:0;
 
 /* A board with no feed shows the real pre-kickoff state - every player yet to
    play, which is the truth - rather than inventing a Sunday. The simulator is
@@ -2739,7 +3635,13 @@ let usingFeed=false;
 const idleState=()=>Object.fromEntries(
   allPlayers.map(c=>[c.id,{s:0,r:1,g:"PRE"}]));
 applyLive(SIM?simSnapshot(sim,clockMinute()):idleState());
-draw(SIM?clockMinute():0);
+/* Through showHome(), not straight into draw(). draw() paints whichever view
+   you are actually on and nothing else - deliberately - but the landing tab is
+   the mosaic, and the mosaic is a *league* view, so the first paint has to go
+   through the thing that opens one. Calling draw() here left the console
+   opening on an empty page with a legend at the top of it, and it stayed empty
+   until you clicked a tab. */
+showHome();
 renderTicker();
 if(SIM){
   $("src").textContent="simulated feed (?sim=1)";
