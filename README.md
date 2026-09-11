@@ -277,26 +277,107 @@ win probability and scoring plays to match. Anything that had not happened is
 gone — including `winner`, which a finished competitor carries and which would
 otherwise draw a trophy on a game tied in the first quarter.
 
-### What a replay cannot do honestly
+### The box score ramps too, and says how far it can be trusted
 
-**Player stats do not ramp.** The summary's `boxscore` is final-state only:
-ESPN publishes no per-play player stat line on that endpoint, so there is no
-truthful answer to "what did this receiver have after eleven minutes", and
-scaling the final line by elapsed fraction would invent numbers that look
-exactly like data. The box score is therefore served **as captured — final —
-from the first snap**, every frame carries a `replay` block saying so, and the
-CLI prints it on startup.
+The summary's `boxscore` is final-state only, and serving it was this
+harness's one dishonest number. Every player carried his end-of-game total
+from the opening kickoff: the Seahawks defence read **16.0 before anybody had
+touched the ball** — a shutout bonus, plus all the yards New England would
+eventually gain, plus three interceptions it had not yet caught. Which made
+the one thing the product is about, points arriving during a game, the one
+thing a replay could not show.
 
-Game state, score, drives, possession, red zone and win probability *are*
-time-correct. Per-player fantasy points are not.
+ESPN does publish per-play stat lines, at `.../plays/{p}/participants` on the
+core API. That is still not used, because it is roughly 800 requests to
+assemble one game. It does not need to be. `play.text` is a machine-written
+grammar and every statistic that scores a fantasy point is stated in it:
 
-A per-play source does exist and is real: ESPN's core API serves
-`.../events/{e}/competitions/{e}/plays/{p}` with a `participants[]` list, and
-each participant has a `statistics` reference carrying that athlete's line
-*for that play*. Accumulating it would ramp the box score truthfully. It is not
-used here because it is roughly 800 requests per game to assemble — a separate
-feature with a separate rate-limit risk — and because the values are per-play
-rather than cumulative, so the summing would be ours rather than ESPN's.
+```
+R.Stevenson up the middle to NE 11 for 3 yards (D.Lawrence; D.Thomas).
+D.Lock pass short left to J.Smith-Njigba for 45 yards, TOUCHDOWN. J.Myers extra point is GOOD, ...
+(Shotgun) S.Darnold sacked at SEA 49 for -5 yards (D.Jones).
+```
+
+So the box score is **rebuilt from the text**, in ESPN's own shape, and
+`scoring.parse_boxscore` and `scoring.parse_team_defence` consume a replay
+through exactly the path they consume a live Sunday through. There is no
+second scoring path. Names are resolved against the box score's own athlete
+list on surname plus first initial plus club; an ambiguous name is refused
+rather than guessed at, because guessing puts a touchdown on the wrong player
+and nothing downstream can tell.
+
+**The reconciliation.** ESPN's published final is ground truth, so the parser
+is run over the whole game and diffed against it cell by cell:
+
+| | NE at SEA (401872656) | SF at LAR (401872657) |
+|---|---|---|
+| Cells reconciled | **482 / 485 — 99.4%** | **520 / 531 — 97.9%** |
+| passing, rushing, receiving | 100 / 100 / 100% | 94 / 96 / 98% |
+| interceptions, fumbles, kicking | 100% | 100% |
+| kick / punt returns, punting | 87 / 100 / 100% | 100 / 100 / 100% |
+| defensive | 99.6% | 99.3% |
+| team totals | 100% | 88% |
+| Unresolved names | 0 | 0 |
+| Worst athlete, in fantasy points | **0.04** | **0.10** |
+
+Every one of the fourteen residual cells is ESPN's box score disagreeing with
+ESPN's own play data, not a misparse — all 223 scrimmage and return plays
+across both games agree exactly with ESPN's per-play `statYardage`, and where
+`statYardage` says Kaelon Black gained 66 rushing yards the published box score
+says 65.
+
+**What is not derived is absent, never backfilled.** Passer rating and QBR are
+not in the play text at any price, so they are emitted as `--`, which is
+ESPN's own marker for a value it is not stating. First downs, third-down
+efficiency, red-zone trips, penalties and time of possession need
+down-and-distance bookkeeping this parser does not do, so those team rows are
+dropped from a derived box score rather than carried over from the final.
+Substituting the final value for a column that is hard is the same bug as
+substituting it for all of them, in a smaller hat.
+
+Every frame says which it is serving:
+
+```json
+"replay": {"gameSeconds": 1320, "playsIncluded": 54, "playsTotal": 179,
+           "boxscore": {"mode": "derived", "source": "play-by-play text",
+                        "reconciled": true, "rate": 0.9938,
+                        "reconciledCells": 482, "totalCells": 485,
+                        "categories": {"passing": 1.0, "kickReturns": 0.8667, ...},
+                        "unreconciled": {"kickReturns": {...}},
+                        "excluded": ["passing.QBRating", "team.possessionTime", ...],
+                        "mismatches": ["NE kickReturns Lan Larison kickReturnYards: derived 50, ESPN 49"]}}
+```
+
+`mode` is `"captured"` only when the summary carries no athlete list to derive
+against, and `reconciled` is `false` when the capture stops before the end of
+the game — a seven-drive test fixture has no final to be diffed against, and
+publishing a rate there would measure the trim rather than the parser.
+
+So a defence now opens at the shutout floor and moves with the game, and a
+receiver climbs from nothing to what ESPN published:
+
+```
+   clock   Smith-Njigba   Stevenson   Maye   |  NE D/ST   SEA D/ST
+   15:00           0.00        0.00   0.00   |     10.0       10.0
+   10:00 Q1        2.30        0.50   1.00   |     11.0       10.0
+   15:00 Q2        4.10        1.20   2.04   |     11.0       10.0
+   15:00 Q3       10.30        3.30  10.24   |     10.0        6.0
+   10:00 Q4       24.10       12.50  10.68   |      7.0        7.0
+   FINAL          26.20       14.50   9.82   |      7.0       14.0
+```
+
+Drake Maye peaks at 11.24 and finishes at 9.82, because he throws three
+interceptions in the fourth quarter. That is football, and it is why the live
+tier's monotonicity assertion is now "points fall only when this player's own
+line records something that costs points" rather than "points never fall".
+
+Regenerate the fixtures — never edit one by hand:
+
+```bash
+python3 tools/make_replay_fixture.py --event 401872656            # frame() fixture
+python3 tools/make_replay_fixture.py --event 401872656 --pbp      # reconciliation fixture
+python3 tools/make_replay_fixture.py --event 401872657 --pbp
+```
 
 ## On the web: connect your own leagues
 
@@ -351,3 +432,93 @@ replace the unofficial one without touching anything above it.
 
 **No licence has been chosen yet** — see the backlog. Until one is, assume all
 rights reserved.
+
+## Deploying it: `fantasy.digitalcraftai.com`
+
+The table above says Yahoo on the web is impossible, and on GitHub Pages it is:
+OAuth needs a client secret and a static page has nowhere to keep one. This is
+the deployed backend that changes that answer, and everything in it is additive
+— the single-user CLI still keeps its token in `~/.fantasy-edge/yahoo.json` and
+still works exactly as it did.
+
+Three new pieces:
+
+| File | What it is |
+|---|---|
+| [`fantasyedge/oauth.py`](fantasyedge/oauth.py) | Authorization Code + PKCE, provider-agnostic. `state`, redirect allowlisting, refresh rotation, reuse detection, and an RFC 8252 loopback listener for the terminal. |
+| [`fantasyedge/tokens.py`](fantasyedge/tokens.py) | `TokenStore` with two backends: the home-directory file the CLI already uses, and Supabase over PostgREST with the refresh token sealed before it leaves the process. |
+| [`deploy/`](deploy/) | `Dockerfile`, `vercel.json`, `schema.sql`, and a README with the DNS, the env vars, the Yahoo redirect registration and the key-rotation procedure. |
+
+Supabase is reached over PostgREST, which is HTTPS, which means `urllib` is a
+sufficient database client. No psycopg, no supabase-py, no wheel that needs a
+compiler in an image that holds OAuth refresh tokens. The zero-dependency rule
+survives the move to a hosted database, and it stops being a slogan at exactly
+the point where a dependency would have to be trusted with a credential.
+
+### The four controls, and why each one is there
+
+**PKCE, S256 only.** A public callback URL means an authorization code can be
+intercepted. With PKCE, an intercepted code is not redeemable without the
+verifier, which never leaves the server. The weaker method is not a parameter
+anywhere in the module, so there is nothing to downgrade — a test greps for it.
+
+**`state`, single-use, ten-minute TTL, bound to the session.** Without it,
+anyone can hand a victim a callback URL carrying *their* authorization code and
+quietly graft their Yahoo account onto the victim's login. Reading a state
+consumes it, because that is how single-use is enforced rather than intended.
+
+**Exact redirect-URI matching against a server-side allowlist.** No wildcards
+and no prefix matching. Prefix matching is how open redirects happen, and an
+open redirect on the callback puts the code in somebody else's log. The CLI's
+loopback listener adds its own concrete `http://127.0.0.1:<port>/callback` to
+the allowlist at bind time, so a kernel-chosen port stays compatible with exact
+matching.
+
+**Refresh rotation with reuse detection.** This is the one everybody skips.
+Rotation alone means a stolen refresh token still works once, and the theft then
+looks like a bug: the real user's next refresh fails, they are asked to
+reconnect, and nobody investigates. So every retired token's fingerprint is
+kept, and presenting one revokes the whole family — both parties lose access and
+the user re-links. That is the intended blast radius. An attacker gets one
+cycle and a visible disconnection instead of silent permanent access.
+
+`invalid_grant` on refresh is treated as *disconnected, please re-link*, never
+as a server error. A 500 gets retried and paged; a revoked grant needs a button.
+
+### What protects the refresh token at rest, and what does not
+
+Sealed in the application before it reaches Supabase: `scrypt` for key
+derivation, an HMAC-SHA256 keystream in counter mode, encrypt-then-MAC with a
+second HMAC, fresh salt and nonce per record, and the row's own identity as
+associated data so a row moved to another user fails to open. The key comes from
+`TOKEN_ENCRYPTION_KEY` in the environment and is never sent to Supabase, so a
+database dump, a leaked backup or an over-broad RLS policy yields ciphertext.
+
+What it is not: AES-GCM. The standard library has no AES, and this composition —
+conventional as it is — has not been analysed by anyone. It does nothing against
+a compromised application server, since the key is in that process's
+environment. `pgcrypto` was considered and rejected on the ground that every
+read here arrives holding the service key, so a key living in the database would
+be reachable by the same credential that reads the rows, and the encryption
+would buy nothing against the only thing it is for. The module docstring in
+[`tokens.py`](fantasyedge/tokens.py) says all of this at length, on purpose.
+
+### Connecting from a terminal
+
+```bash
+python3 -m fantasyedge auth --provider yahoo --local   # browser + loopback catch
+python3 -m fantasyedge auth --provider yahoo --url     # print URL, copy the code
+python3 -m fantasyedge auth --provider yahoo --code '<CODE>'
+```
+
+`--local` opens a browser and catches the redirect on a random loopback port, so
+a live authorization code never goes onto a clipboard. It is opt-in because it
+only works where the provider permits a loopback redirect, and Yahoo's app form
+currently insists on https — for Yahoo, `--url` and `--code` remain the path.
+
+**Not verified end to end against Yahoo.** The app registration in question
+returns `additional_authorization_required`, which is a setting on the app and
+not something this code can work around. Every provider interaction in
+[`tests/test_oauth.py`](tests/test_oauth.py) runs against a local `http.server`
+that checks the PKCE verifier the way RFC 7636 says to — a stricter counterparty
+than the real one, but not the real one.

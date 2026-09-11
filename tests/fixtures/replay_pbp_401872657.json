@@ -1,0 +1,7847 @@
+{
+ "boxscore": {
+  "players": [
+   {
+    "statistics": [
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Brock Purdy",
+         "firstName": "Brock",
+         "guid": "d2e39a38-732d-5a24-f242-a4f9de87dabe",
+         "headshot": {
+          "alt": "Brock Purdy",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4361741.png"
+         },
+         "id": "4361741",
+         "jersey": "13",
+         "lastName": "Purdy",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4361741/brock-purdy",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4361741"
+        },
+        "stats": [
+         "25/34",
+         "205",
+         "6.0",
+         "3",
+         "1",
+         "0-0",
+         "81.5",
+         "105.6"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Completions/Attempts",
+       "Yards",
+       "Yards Per Pass Attempt",
+       "Touchdowns",
+       "Interceptions",
+       "Sacks",
+       "Adjusted QBR",
+       "Passer Rating"
+      ],
+      "keys": [
+       "completions/passingAttempts",
+       "passingYards",
+       "yardsPerPassAttempt",
+       "passingTouchdowns",
+       "interceptions",
+       "sacks-sackYardsLost",
+       "adjQBR",
+       "QBRating"
+      ],
+      "labels": [
+       "C/ATT",
+       "YDS",
+       "AVG",
+       "TD",
+       "INT",
+       "SACKS",
+       "QBR",
+       "RTG"
+      ],
+      "name": "passing",
+      "text": "San Francisco Passing",
+      "totals": [
+       "25/34",
+       "205",
+       "6.0",
+       "3",
+       "1",
+       "0-0",
+       "--",
+       "105.6"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Christian McCaffrey",
+         "firstName": "Christian",
+         "guid": "db08ac19-dbd9-a776-5885-de1fe6830bc2",
+         "headshot": {
+          "alt": "Christian McCaffrey",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3117251.png"
+         },
+         "id": "3117251",
+         "jersey": "23",
+         "lastName": "McCaffrey",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3117251/christian-mccaffrey",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3117251"
+        },
+        "stats": [
+         "10",
+         "68",
+         "6.8",
+         "0",
+         "16"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kaelon Black",
+         "firstName": "Kaelon",
+         "guid": "18da8955-6970-39eb-bc40-a716f476a1d3",
+         "headshot": {
+          "alt": "Kaelon Black",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4696044.png"
+         },
+         "id": "4696044",
+         "jersey": "26",
+         "lastName": "Black",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4696044/kaelon-black",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4696044"
+        },
+        "stats": [
+         "14",
+         "65",
+         "4.6",
+         "0",
+         "14"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Brock Purdy",
+         "firstName": "Brock",
+         "guid": "d2e39a38-732d-5a24-f242-a4f9de87dabe",
+         "headshot": {
+          "alt": "Brock Purdy",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4361741.png"
+         },
+         "id": "4361741",
+         "jersey": "13",
+         "lastName": "Purdy",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4361741/brock-purdy",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4361741"
+        },
+        "stats": [
+         "5",
+         "29",
+         "5.8",
+         "0",
+         "18"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Deebo Samuel Sr.",
+         "firstName": "Deebo",
+         "guid": "7f300cb7-f0a1-a43a-d0b0-f8a57bf04eb3",
+         "headshot": {
+          "alt": "Deebo Samuel Sr.",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3126486.png"
+         },
+         "id": "3126486",
+         "jersey": "19",
+         "lastName": "Samuel Sr.",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3126486/deebo-samuel-sr",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3126486"
+        },
+        "stats": [
+         "1",
+         "12",
+         "12.0",
+         "0",
+         "12"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Rushing Attempts",
+       "Yards",
+       "Yards Per Rushing Attempt",
+       "Touchdowns",
+       "Longest Run"
+      ],
+      "keys": [
+       "rushingAttempts",
+       "rushingYards",
+       "yardsPerRushAttempt",
+       "rushingTouchdowns",
+       "longRushing"
+      ],
+      "labels": [
+       "CAR",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG"
+      ],
+      "name": "rushing",
+      "text": "San Francisco Rushing",
+      "totals": [
+       "30",
+       "174",
+       "5.8",
+       "0",
+       "18"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Demarcus Robinson",
+         "firstName": "Demarcus",
+         "guid": "31f80c0b-02ca-cf2f-2fc3-669604f71430",
+         "headshot": {
+          "alt": "Demarcus Robinson",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3043116.png"
+         },
+         "id": "3043116",
+         "jersey": "11",
+         "lastName": "Robinson",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3043116/demarcus-robinson",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3043116"
+        },
+        "stats": [
+         "2",
+         "50",
+         "25.0",
+         "1",
+         "39",
+         "3"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Mike Evans",
+         "firstName": "Mike",
+         "guid": "5073fc58-91c1-4e3d-826d-af754f9f40c7",
+         "headshot": {
+          "alt": "Mike Evans",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/16737.png"
+         },
+         "id": "16737",
+         "jersey": "5",
+         "lastName": "Evans",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/16737/mike-evans",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:16737"
+        },
+        "stats": [
+         "6",
+         "49",
+         "8.2",
+         "1",
+         "13",
+         "7"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Deebo Samuel Sr.",
+         "firstName": "Deebo",
+         "guid": "7f300cb7-f0a1-a43a-d0b0-f8a57bf04eb3",
+         "headshot": {
+          "alt": "Deebo Samuel Sr.",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3126486.png"
+         },
+         "id": "3126486",
+         "jersey": "19",
+         "lastName": "Samuel Sr.",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3126486/deebo-samuel-sr",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3126486"
+        },
+        "stats": [
+         "6",
+         "48",
+         "8.0",
+         "1",
+         "15",
+         "7"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Christian McCaffrey",
+         "firstName": "Christian",
+         "guid": "db08ac19-dbd9-a776-5885-de1fe6830bc2",
+         "headshot": {
+          "alt": "Christian McCaffrey",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3117251.png"
+         },
+         "id": "3117251",
+         "jersey": "23",
+         "lastName": "McCaffrey",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3117251/christian-mccaffrey",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3117251"
+        },
+        "stats": [
+         "5",
+         "20",
+         "4.0",
+         "0",
+         "8",
+         "8"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Luke Farrell",
+         "firstName": "Luke",
+         "guid": "30ee7136-48b3-7d38-7622-bccfd809cacd",
+         "headshot": {
+          "alt": "Luke Farrell",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4040612.png"
+         },
+         "id": "4040612",
+         "jersey": "89",
+         "lastName": "Farrell",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4040612/luke-farrell",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4040612"
+        },
+        "stats": [
+         "2",
+         "19",
+         "9.5",
+         "0",
+         "14",
+         "2"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "George Kittle",
+         "firstName": "George",
+         "guid": "9c61fb91-fc5a-7cc3-8367-a8dbc589f97a",
+         "headshot": {
+          "alt": "George Kittle",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3040151.png"
+         },
+         "id": "3040151",
+         "jersey": "85",
+         "lastName": "Kittle",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3040151/george-kittle",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3040151"
+        },
+        "stats": [
+         "2",
+         "12",
+         "6.0",
+         "0",
+         "6",
+         "5"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kaelon Black",
+         "firstName": "Kaelon",
+         "guid": "18da8955-6970-39eb-bc40-a716f476a1d3",
+         "headshot": {
+          "alt": "Kaelon Black",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4696044.png"
+         },
+         "id": "4696044",
+         "jersey": "26",
+         "lastName": "Black",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4696044/kaelon-black",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4696044"
+        },
+        "stats": [
+         "1",
+         "5",
+         "5.0",
+         "0",
+         "5",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jake Brendel",
+         "firstName": "Jake",
+         "guid": "b241f27d-43ed-6abb-677a-32ffdbf46f2c",
+         "headshot": {
+          "alt": "Jake Brendel",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2577185.png"
+         },
+         "id": "2577185",
+         "jersey": "64",
+         "lastName": "Brendel",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/2577185/jake-brendel",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:2577185"
+        },
+        "stats": [
+         "1",
+         "2",
+         "2.0",
+         "0",
+         "2",
+         "1"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Receptions",
+       "Yards",
+       "Yards Per Reception",
+       "Touchdowns",
+       "Longest Reception",
+       "Receiving Targets"
+      ],
+      "keys": [
+       "receptions",
+       "receivingYards",
+       "yardsPerReception",
+       "receivingTouchdowns",
+       "longReception",
+       "receivingTargets"
+      ],
+      "labels": [
+       "REC",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG",
+       "TGTS"
+      ],
+      "name": "receiving",
+      "text": "San Francisco Receiving",
+      "totals": [
+       "25",
+       "205",
+       "8.2",
+       "3",
+       "39",
+       "34"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Keion White",
+         "firstName": "Keion",
+         "guid": "962c90b2-93d0-5d62-6fae-50044fed0c9e",
+         "headshot": {
+          "alt": "Keion White",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4243493.png"
+         },
+         "id": "4243493",
+         "jersey": "56",
+         "lastName": "White",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4243493/keion-white",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4243493"
+        },
+        "stats": [
+         "0",
+         "0",
+         "1"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Fumbles",
+       "Fumbles Lost",
+       "Fumbles Recovered"
+      ],
+      "keys": [
+       "fumbles",
+       "fumblesLost",
+       "fumblesRecovered"
+      ],
+      "labels": [
+       "FUM",
+       "LOST",
+       "REC"
+      ],
+      "name": "fumbles",
+      "text": "San Francisco Fumbles",
+      "totals": [
+       "0",
+       "0",
+       "1"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Fred Warner",
+         "firstName": "Fred",
+         "guid": "261c95f6-473e-c720-1e6c-a1c7d9b2195d",
+         "headshot": {
+          "alt": "Fred Warner",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3138826.png"
+         },
+         "id": "3138826",
+         "jersey": "54",
+         "lastName": "Warner",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3138826/fred-warner",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3138826"
+        },
+        "stats": [
+         "11",
+         "5",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Marques Sigle",
+         "firstName": "Marques",
+         "guid": "033c8b9e-5e44-3748-9bb1-975a273a7622",
+         "headshot": {
+          "alt": "Marques Sigle",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4693337.png"
+         },
+         "id": "4693337",
+         "jersey": "36",
+         "lastName": "Sigle",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4693337/marques-sigle",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4693337"
+        },
+        "stats": [
+         "9",
+         "4",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Deommodore Lenoir",
+         "firstName": "Deommodore",
+         "guid": "d7f3e9e8-9446-badf-6511-9d4332bb56b2",
+         "headshot": {
+          "alt": "Deommodore Lenoir",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4242488.png"
+         },
+         "id": "4242488",
+         "jersey": "2",
+         "lastName": "Lenoir",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4242488/deommodore-lenoir",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4242488"
+        },
+        "stats": [
+         "6",
+         "3",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Dre Greenlaw",
+         "firstName": "Dre",
+         "guid": "22bed4b5-a5ad-ccac-e96e-4ba5bd7d1173",
+         "headshot": {
+          "alt": "Dre Greenlaw",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3916903.png"
+         },
+         "id": "3916903",
+         "jersey": "57",
+         "lastName": "Greenlaw",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3916903/dre-greenlaw",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3916903"
+        },
+        "stats": [
+         "6",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jaden Dugger",
+         "firstName": "Jaden",
+         "guid": "8b3fad41-b8cf-3320-905b-dc7f1a1dc254",
+         "headshot": {
+          "alt": "Jaden Dugger",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/5086161.png"
+         },
+         "id": "5086161",
+         "jersey": "53",
+         "lastName": "Dugger",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/5086161/jaden-dugger",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:5086161"
+        },
+        "stats": [
+         "5",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Nick Bosa",
+         "firstName": "Nick",
+         "guid": "6a5ec871-ae65-1fde-4664-f513284ad1ba",
+         "headshot": {
+          "alt": "Nick Bosa",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4040605.png"
+         },
+         "id": "4040605",
+         "jersey": "97",
+         "lastName": "Bosa",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4040605/nick-bosa",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4040605"
+        },
+        "stats": [
+         "4",
+         "3",
+         "0",
+         "2",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ji'Ayir Brown",
+         "firstName": "Ji'Ayir",
+         "guid": "9a3291d4-cb41-3cc8-bdbd-1a3464a9f248",
+         "headshot": {
+          "alt": "Ji'Ayir Brown",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4693644.png"
+         },
+         "id": "4693644",
+         "jersey": "27",
+         "lastName": "Brown",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4693644/jiayir-brown",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4693644"
+        },
+        "stats": [
+         "4",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Renardo Green",
+         "firstName": "Renardo",
+         "guid": "dc0b6161-2d10-4854-751d-518fec9a08f5",
+         "headshot": {
+          "alt": "Renardo Green",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4427325.png"
+         },
+         "id": "4427325",
+         "jersey": "0",
+         "lastName": "Green",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4427325/renardo-green",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4427325"
+        },
+        "stats": [
+         "3",
+         "2",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Malik Mustapha",
+         "firstName": "Malik",
+         "guid": "502cee1e-5a38-32f1-a33c-f0eb49a8cd9f",
+         "headshot": {
+          "alt": "Malik Mustapha",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4696211.png"
+         },
+         "id": "4696211",
+         "jersey": "6",
+         "lastName": "Mustapha",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4696211/malik-mustapha",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4696211"
+        },
+        "stats": [
+         "3",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Garret Wallow",
+         "firstName": "Garret",
+         "guid": "422f52b2-b855-2040-aaae-cc12bc8ebe2a",
+         "headshot": {
+          "alt": "Garret Wallow",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4241807.png"
+         },
+         "id": "4241807",
+         "jersey": "49",
+         "lastName": "Wallow",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4241807/garret-wallow",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4241807"
+        },
+        "stats": [
+         "2",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Upton Stout",
+         "firstName": "Upton",
+         "guid": "ae80113a-905c-37f7-9a7d-040f343a68c6",
+         "headshot": {
+          "alt": "Upton Stout",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4565200.png"
+         },
+         "id": "4565200",
+         "jersey": "20",
+         "lastName": "Stout",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4565200/upton-stout",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4565200"
+        },
+        "stats": [
+         "2",
+         "2",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "KhaDarel Hodge",
+         "firstName": "KhaDarel",
+         "guid": "da675704-aeba-bd90-bbc6-03f72e44f6bd",
+         "headshot": {
+          "alt": "KhaDarel Hodge",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3047876.png"
+         },
+         "id": "3047876",
+         "jersey": "86",
+         "lastName": "Hodge",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3047876/khadarel-hodge",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3047876"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Osa Odighizuwa",
+         "firstName": "Osa",
+         "guid": "14dce701-e0e3-9693-9ff3-8f5e8df6ffc4",
+         "headshot": {
+          "alt": "Osa Odighizuwa",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4035840.png"
+         },
+         "id": "4035840",
+         "jersey": "92",
+         "lastName": "Odighizuwa",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4035840/osa-odighizuwa",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4035840"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "4",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Khalid Kareem",
+         "firstName": "Khalid",
+         "guid": "35d2f8c1-9a14-b5ee-0e22-3b7da442d126",
+         "headshot": {
+          "alt": "Khalid Kareem",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4039029.png"
+         },
+         "id": "4039029",
+         "jersey": "47",
+         "lastName": "Kareem",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4039029/khalid-kareem",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4039029"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "C.J. West",
+         "firstName": "C.J.",
+         "guid": "6ca608eb-11df-30a5-9e76-83a256cbbc15",
+         "headshot": {
+          "alt": "C.J. West",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4686308.png"
+         },
+         "id": "4686308",
+         "jersey": "99",
+         "lastName": "West",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4686308/cj-west",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4686308"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ashtyn Davis",
+         "firstName": "Ashtyn",
+         "guid": "8c13866c-abc2-d109-564c-6418871f5112",
+         "headshot": {
+          "alt": "Ashtyn Davis",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3858271.png"
+         },
+         "id": "3858271",
+         "jersey": "24",
+         "lastName": "Davis",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3858271/ashtyn-davis",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3858271"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "James Thompson Jr.",
+         "firstName": "James",
+         "guid": "a48b6309-08b8-3436-a564-d65919c4f21c",
+         "headshot": {
+          "alt": "James Thompson Jr.",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4693371.png"
+         },
+         "id": "4693371",
+         "jersey": "96",
+         "lastName": "Thompson Jr.",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4693371/james-thompson-jr",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4693371"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "George Kittle",
+         "firstName": "George",
+         "guid": "9c61fb91-fc5a-7cc3-8367-a8dbc589f97a",
+         "headshot": {
+          "alt": "George Kittle",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3040151.png"
+         },
+         "id": "3040151",
+         "jersey": "85",
+         "lastName": "Kittle",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3040151/george-kittle",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3040151"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Siran Neal",
+         "firstName": "Siran",
+         "guid": "4c4be385-852d-a7b0-5953-9363be58fd36",
+         "headshot": {
+          "alt": "Siran Neal",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3057524.png"
+         },
+         "id": "3057524",
+         "jersey": "33",
+         "lastName": "Neal",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3057524/siran-neal",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3057524"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ogbo Okoronkwo",
+         "firstName": "Ogbo",
+         "guid": "ab65231d-2d59-352c-7ad7-eb591f6f6907",
+         "headshot": {
+          "alt": "Ogbo Okoronkwo",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3052667.png"
+         },
+         "id": "3052667",
+         "jersey": "59",
+         "lastName": "Okoronkwo",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3052667/ogbo-okoronkwo",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3052667"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jack Jones",
+         "firstName": "Jack",
+         "guid": "80b3e85d-adaf-4852-11f5-9b73da743353",
+         "headshot": {
+          "alt": "Jack Jones",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4035686.png"
+         },
+         "id": "4035686",
+         "jersey": "25",
+         "lastName": "Jones",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4035686/jack-jones",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4035686"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0",
+         "0",
+         "2",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Tackles",
+       "Solo Tackles",
+       "Sacks",
+       "Tackles For Loss",
+       "Passes Defended",
+       "Quarterback Hits",
+       "Touchdowns"
+      ],
+      "keys": [
+       "totalTackles",
+       "soloTackles",
+       "sacks",
+       "tacklesForLoss",
+       "passesDefended",
+       "QBHits",
+       "defensiveTouchdowns"
+      ],
+      "labels": [
+       "TOT",
+       "SOLO",
+       "SACKS",
+       "TFL",
+       "PD",
+       "QB HTS",
+       "TD"
+      ],
+      "name": "defensive",
+      "text": "San Francisco Defense",
+      "totals": [
+       "69",
+       "33",
+       "0",
+       "2",
+       "4",
+       "8",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Renardo Green",
+         "firstName": "Renardo",
+         "guid": "dc0b6161-2d10-4854-751d-518fec9a08f5",
+         "headshot": {
+          "alt": "Renardo Green",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4427325.png"
+         },
+         "id": "4427325",
+         "jersey": "0",
+         "lastName": "Green",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4427325/renardo-green",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4427325"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Interceptions",
+       "Yards",
+       "Touchdowns"
+      ],
+      "keys": [
+       "interceptions",
+       "interceptionYards",
+       "interceptionTouchdowns"
+      ],
+      "labels": [
+       "INT",
+       "YDS",
+       "TD"
+      ],
+      "name": "interceptions",
+      "text": "San Francisco Interceptions",
+      "totals": [
+       "1",
+       "0",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Deebo Samuel Sr.",
+         "firstName": "Deebo",
+         "guid": "7f300cb7-f0a1-a43a-d0b0-f8a57bf04eb3",
+         "headshot": {
+          "alt": "Deebo Samuel Sr.",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3126486.png"
+         },
+         "id": "3126486",
+         "jersey": "19",
+         "lastName": "Samuel Sr.",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3126486/deebo-samuel-sr",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3126486"
+        },
+        "stats": [
+         "2",
+         "74",
+         "37.0",
+         "45",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Kick Returns",
+       "Yards",
+       "Yards Per Kick Return",
+       "Longest Kick Return",
+       "Touchdowns"
+      ],
+      "keys": [
+       "kickReturns",
+       "kickReturnYards",
+       "yardsPerKickReturn",
+       "longKickReturn",
+       "kickReturnTouchdowns"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "name": "kickReturns",
+      "text": "San Francisco Kick Returns",
+      "totals": [
+       "2",
+       "74",
+       "37.0",
+       "45",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Jacob Cowing",
+         "firstName": "Jacob",
+         "guid": "788f8622-3564-9d11-752d-1265e7c75c91",
+         "headshot": {
+          "alt": "Jacob Cowing",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4575665.png"
+         },
+         "id": "4575665",
+         "jersey": "4",
+         "lastName": "Cowing",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4575665/jacob-cowing",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4575665"
+        },
+        "stats": [
+         "2",
+         "17",
+         "8.5",
+         "13",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Punt Returns",
+       "Yards",
+       "Yards Per Punt Return",
+       "Longest Punt Return",
+       "Touchdowns"
+      ],
+      "keys": [
+       "puntReturns",
+       "puntReturnYards",
+       "yardsPerPuntReturn",
+       "longPuntReturn",
+       "puntReturnTouchdowns"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "name": "puntReturns",
+      "text": "San Francisco Punt Returns",
+      "totals": [
+       "2",
+       "17",
+       "8.5",
+       "13",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Eddy Pineiro",
+         "firstName": "Eddy",
+         "guid": "4b504ee0-cda2-d632-1bc0-2da4344d7bde",
+         "headshot": {
+          "alt": "Eddy Pineiro",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4034949.png"
+         },
+         "id": "4034949",
+         "jersey": "18",
+         "lastName": "Pineiro",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4034949/eddy-pineiro",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4034949"
+        },
+        "stats": [
+         "2/3",
+         "66.7",
+         "56",
+         "3/3",
+         "9"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Field Goals Made/Attempts",
+       "Field Goal Percentage",
+       "Longest Field Goal Made",
+       "Extra Points Made/Attempts",
+       "Kicking Points"
+      ],
+      "keys": [
+       "fieldGoalsMade/fieldGoalAttempts",
+       "fieldGoalPct",
+       "longFieldGoalMade",
+       "extraPointsMade/extraPointAttempts",
+       "totalKickingPoints"
+      ],
+      "labels": [
+       "FG",
+       "PCT",
+       "LONG",
+       "XP",
+       "PTS"
+      ],
+      "name": "kicking",
+      "text": "San Francisco Kicking",
+      "totals": [
+       "2/3",
+       "66.7",
+       "56",
+       "3/3",
+       "9"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Corliss Waitman",
+         "firstName": "Corliss",
+         "guid": "9c8628f4-913a-7dc3-4c2f-f1f3fee3463a",
+         "headshot": {
+          "alt": "Corliss Waitman",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/3125280.png"
+         },
+         "id": "3125280",
+         "jersey": "15",
+         "lastName": "Waitman",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/3125280/corliss-waitman",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:3125280"
+        },
+        "stats": [
+         "2",
+         "94",
+         "47.0",
+         "1",
+         "0",
+         "51"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Punts",
+       "Yards",
+       "Average Punt Yards",
+       "Touchbacks",
+       "Punts Inside 20",
+       "Longest Punt"
+      ],
+      "keys": [
+       "punts",
+       "puntYards",
+       "grossAvgPuntYards",
+       "touchbacks",
+       "puntsInside20",
+       "longPunt"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "TB",
+       "In 20",
+       "LONG"
+      ],
+      "name": "punting",
+      "text": "San Francisco Punting",
+      "totals": [
+       "2",
+       "94",
+       "47.0",
+       "1",
+       "0",
+       "51"
+      ]
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "alternateColor": "b3995d",
+     "color": "aa0000",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "location": "San Francisco",
+     "name": "49ers",
+     "shortDisplayName": "49ers",
+     "uid": "s:20~l:28~t:25"
+    }
+   },
+   {
+    "statistics": [
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Matthew Stafford",
+         "firstName": "Matthew",
+         "guid": "20c41c33-a33f-6dc2-7e1f-0771e39ce49a",
+         "headshot": {
+          "alt": "Matthew Stafford",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/12483.png"
+         },
+         "id": "12483",
+         "jersey": "9",
+         "lastName": "Stafford",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/12483/matthew-stafford",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:12483"
+        },
+        "stats": [
+         "15/25",
+         "155",
+         "6.2",
+         "0",
+         "1",
+         "0-0",
+         "30.7",
+         "61.2"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Stetson Bennett IV",
+         "firstName": "Stetson",
+         "guid": "ec40484b-683c-470f-ceb6-c25b13d4f1be",
+         "headshot": {
+          "alt": "Stetson Bennett IV",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4259553.png"
+         },
+         "id": "4259553",
+         "jersey": "13",
+         "lastName": "Bennett IV",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4259553/stetson-bennett-iv",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4259553"
+        },
+        "stats": [
+         "2/3",
+         "13",
+         "4.3",
+         "0",
+         "0",
+         "0-0",
+         "80.2",
+         "75.7"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Completions/Attempts",
+       "Yards",
+       "Yards Per Pass Attempt",
+       "Touchdowns",
+       "Interceptions",
+       "Sacks",
+       "Adjusted QBR",
+       "Passer Rating"
+      ],
+      "keys": [
+       "completions/passingAttempts",
+       "passingYards",
+       "yardsPerPassAttempt",
+       "passingTouchdowns",
+       "interceptions",
+       "sacks-sackYardsLost",
+       "adjQBR",
+       "QBRating"
+      ],
+      "labels": [
+       "C/ATT",
+       "YDS",
+       "AVG",
+       "TD",
+       "INT",
+       "SACKS",
+       "QBR",
+       "RTG"
+      ],
+      "name": "passing",
+      "text": "Los Angeles Passing",
+      "totals": [
+       "17/28",
+       "168",
+       "6.0",
+       "0",
+       "1",
+       "0-0",
+       "--",
+       "62.8"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Blake Corum",
+         "firstName": "Blake",
+         "guid": "cf0a37e4-de10-3077-b71b-0f06a27d0ff1",
+         "headshot": {
+          "alt": "Blake Corum",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4429096.png"
+         },
+         "id": "4429096",
+         "jersey": "24",
+         "lastName": "Corum",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4429096/blake-corum",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4429096"
+        },
+        "stats": [
+         "10",
+         "54",
+         "5.4",
+         "0",
+         "13"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kyren Williams",
+         "firstName": "Kyren",
+         "guid": "f22d9167-1359-d2cc-4c4d-b31ab83ad48d",
+         "headshot": {
+          "alt": "Kyren Williams",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4430737.png"
+         },
+         "id": "4430737",
+         "jersey": "23",
+         "lastName": "Williams",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4430737/kyren-williams",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4430737"
+        },
+        "stats": [
+         "11",
+         "41",
+         "3.7",
+         "1",
+         "8"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ronnie Rivers",
+         "firstName": "Ronnie",
+         "guid": "745c2c20-bbaa-fbb1-a09d-ae04b97eb372",
+         "headshot": {
+          "alt": "Ronnie Rivers",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4243003.png"
+         },
+         "id": "4243003",
+         "jersey": "20",
+         "lastName": "Rivers",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4243003/ronnie-rivers",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4243003"
+        },
+        "stats": [
+         "5",
+         "19",
+         "3.8",
+         "0",
+         "7"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Stetson Bennett IV",
+         "firstName": "Stetson",
+         "guid": "ec40484b-683c-470f-ceb6-c25b13d4f1be",
+         "headshot": {
+          "alt": "Stetson Bennett IV",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4259553.png"
+         },
+         "id": "4259553",
+         "jersey": "13",
+         "lastName": "Bennett IV",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4259553/stetson-bennett-iv",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4259553"
+        },
+        "stats": [
+         "1",
+         "9",
+         "9.0",
+         "0",
+         "9"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Matthew Stafford",
+         "firstName": "Matthew",
+         "guid": "20c41c33-a33f-6dc2-7e1f-0771e39ce49a",
+         "headshot": {
+          "alt": "Matthew Stafford",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/12483.png"
+         },
+         "id": "12483",
+         "jersey": "9",
+         "lastName": "Stafford",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/12483/matthew-stafford",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:12483"
+        },
+        "stats": [
+         "2",
+         "-1",
+         "-0.5",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Rushing Attempts",
+       "Yards",
+       "Yards Per Rushing Attempt",
+       "Touchdowns",
+       "Longest Run"
+      ],
+      "keys": [
+       "rushingAttempts",
+       "rushingYards",
+       "yardsPerRushAttempt",
+       "rushingTouchdowns",
+       "longRushing"
+      ],
+      "labels": [
+       "CAR",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG"
+      ],
+      "name": "rushing",
+      "text": "Los Angeles Rushing",
+      "totals": [
+       "29",
+       "122",
+       "4.2",
+       "1",
+       "13"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Puka Nacua",
+         "firstName": "Puka",
+         "guid": "05861488-1bb7-7c32-83eb-d0658a6e2b89",
+         "headshot": {
+          "alt": "Puka Nacua",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426515.png"
+         },
+         "id": "4426515",
+         "jersey": "12",
+         "lastName": "Nacua",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4426515/puka-nacua",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4426515"
+        },
+        "stats": [
+         "5",
+         "74",
+         "14.8",
+         "0",
+         "41",
+         "9"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Davante Adams",
+         "firstName": "Davante",
+         "guid": "d287bc03-47c2-c7f6-6160-e4280c80d2e2",
+         "headshot": {
+          "alt": "Davante Adams",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/16800.png"
+         },
+         "id": "16800",
+         "jersey": "17",
+         "lastName": "Adams",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/16800/davante-adams",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:16800"
+        },
+        "stats": [
+         "3",
+         "26",
+         "8.7",
+         "0",
+         "13",
+         "6"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kyren Williams",
+         "firstName": "Kyren",
+         "guid": "f22d9167-1359-d2cc-4c4d-b31ab83ad48d",
+         "headshot": {
+          "alt": "Kyren Williams",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4430737.png"
+         },
+         "id": "4430737",
+         "jersey": "23",
+         "lastName": "Williams",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4430737/kyren-williams",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4430737"
+        },
+        "stats": [
+         "3",
+         "24",
+         "8.0",
+         "0",
+         "16",
+         "3"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Davis Allen",
+         "firstName": "Davis",
+         "guid": "2fda5284-e123-8887-04c5-42972484b8b7",
+         "headshot": {
+          "alt": "Davis Allen",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426553.png"
+         },
+         "id": "4426553",
+         "jersey": "87",
+         "lastName": "Allen",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4426553/davis-allen",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4426553"
+        },
+        "stats": [
+         "1",
+         "13",
+         "13.0",
+         "0",
+         "13",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Tyler Higbee",
+         "firstName": "Tyler",
+         "guid": "93f414a4-0330-7851-b0e0-752bbd975157",
+         "headshot": {
+          "alt": "Tyler Higbee",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2573401.png"
+         },
+         "id": "2573401",
+         "jersey": "89",
+         "lastName": "Higbee",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/2573401/tyler-higbee",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:2573401"
+        },
+        "stats": [
+         "2",
+         "12",
+         "6.0",
+         "0",
+         "8",
+         "2"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jordan Whittington",
+         "firstName": "Jordan",
+         "guid": "ed0b3d40-0571-c964-25c1-ec0289161f76",
+         "headshot": {
+          "alt": "Jordan Whittington",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4569382.png"
+         },
+         "id": "4569382",
+         "jersey": "88",
+         "lastName": "Whittington",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4569382/jordan-whittington",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4569382"
+        },
+        "stats": [
+         "1",
+         "8",
+         "8.0",
+         "0",
+         "8",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Colby Parkinson",
+         "firstName": "Colby",
+         "guid": "7295e602-50fc-4503-0d41-e58d6d5637c9",
+         "headshot": {
+          "alt": "Colby Parkinson",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4242557.png"
+         },
+         "id": "4242557",
+         "jersey": "84",
+         "lastName": "Parkinson",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4242557/colby-parkinson",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4242557"
+        },
+        "stats": [
+         "1",
+         "6",
+         "6.0",
+         "0",
+         "6",
+         "2"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ronnie Rivers",
+         "firstName": "Ronnie",
+         "guid": "745c2c20-bbaa-fbb1-a09d-ae04b97eb372",
+         "headshot": {
+          "alt": "Ronnie Rivers",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4243003.png"
+         },
+         "id": "4243003",
+         "jersey": "20",
+         "lastName": "Rivers",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4243003/ronnie-rivers",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4243003"
+        },
+        "stats": [
+         "1",
+         "5",
+         "5.0",
+         "0",
+         "5",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Terrance Ferguson",
+         "firstName": "Terrance",
+         "guid": "897a7b37-1f13-3f52-b2ed-a45faef85eb1",
+         "headshot": {
+          "alt": "Terrance Ferguson",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4570037.png"
+         },
+         "id": "4570037",
+         "jersey": "18",
+         "lastName": "Ferguson",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4570037/terrance-ferguson",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4570037"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0.0",
+         "0",
+         "0",
+         "1"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Konata Mumpfield",
+         "firstName": "Konata",
+         "guid": "966d8149-53bf-31ca-a44d-b154073ede80",
+         "headshot": {
+          "alt": "Konata Mumpfield",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4710855.png"
+         },
+         "id": "4710855",
+         "jersey": "4",
+         "lastName": "Mumpfield",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4710855/konata-mumpfield",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4710855"
+        },
+        "stats": [
+         "0",
+         "0",
+         "0.0",
+         "0",
+         "0",
+         "1"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Receptions",
+       "Yards",
+       "Yards Per Reception",
+       "Touchdowns",
+       "Longest Reception",
+       "Receiving Targets"
+      ],
+      "keys": [
+       "receptions",
+       "receivingYards",
+       "yardsPerReception",
+       "receivingTouchdowns",
+       "longReception",
+       "receivingTargets"
+      ],
+      "labels": [
+       "REC",
+       "YDS",
+       "AVG",
+       "TD",
+       "LONG",
+       "TGTS"
+      ],
+      "name": "receiving",
+      "text": "Los Angeles Receiving",
+      "totals": [
+       "17",
+       "168",
+       "9.9",
+       "0",
+       "41",
+       "27"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Tyler Higbee",
+         "firstName": "Tyler",
+         "guid": "93f414a4-0330-7851-b0e0-752bbd975157",
+         "headshot": {
+          "alt": "Tyler Higbee",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/2573401.png"
+         },
+         "id": "2573401",
+         "jersey": "89",
+         "lastName": "Higbee",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/2573401/tyler-higbee",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:2573401"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jordan Whittington",
+         "firstName": "Jordan",
+         "guid": "ed0b3d40-0571-c964-25c1-ec0289161f76",
+         "headshot": {
+          "alt": "Jordan Whittington",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4569382.png"
+         },
+         "id": "4569382",
+         "jersey": "88",
+         "lastName": "Whittington",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4569382/jordan-whittington",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4569382"
+        },
+        "stats": [
+         "1",
+         "0",
+         "1"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Fumbles",
+       "Fumbles Lost",
+       "Fumbles Recovered"
+      ],
+      "keys": [
+       "fumbles",
+       "fumblesLost",
+       "fumblesRecovered"
+      ],
+      "labels": [
+       "FUM",
+       "LOST",
+       "REC"
+      ],
+      "name": "fumbles",
+      "text": "Los Angeles Fumbles",
+      "totals": [
+       "2",
+       "1",
+       "1"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Quentin Lake",
+         "firstName": "Quentin",
+         "guid": "6d91ef30-3fd3-85a7-7cb4-bfe18e411cf9",
+         "headshot": {
+          "alt": "Quentin Lake",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4249128.png"
+         },
+         "id": "4249128",
+         "jersey": "37",
+         "lastName": "Lake",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4249128/quentin-lake",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4249128"
+        },
+        "stats": [
+         "10",
+         "7",
+         "0",
+         "0",
+         "3",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kamren Kinchens",
+         "firstName": "Kamren",
+         "guid": "3f0c4c98-2d41-3a50-b9f7-c28e7e488413",
+         "headshot": {
+          "alt": "Kamren Kinchens",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4596363.png"
+         },
+         "id": "4596363",
+         "jersey": "5",
+         "lastName": "Kinchens",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4596363/kamren-kinchens",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4596363"
+        },
+        "stats": [
+         "9",
+         "3",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Nate Landman",
+         "firstName": "Nate",
+         "guid": "afdfa54c-8f92-8c9b-eeb8-b41dc2424e34",
+         "headshot": {
+          "alt": "Nate Landman",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4243181.png"
+         },
+         "id": "4243181",
+         "jersey": "53",
+         "lastName": "Landman",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4243181/nate-landman",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4243181"
+        },
+        "stats": [
+         "8",
+         "5",
+         "0",
+         "0",
+         "1",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kobie Turner",
+         "firstName": "Kobie",
+         "guid": "2770a0be-04c6-e6e9-d4e2-dd16c1915c36",
+         "headshot": {
+          "alt": "Kobie Turner",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4250621.png"
+         },
+         "id": "4250621",
+         "jersey": "91",
+         "lastName": "Turner",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4250621/kobie-turner",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4250621"
+        },
+        "stats": [
+         "7",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Tyler Davis",
+         "firstName": "Tyler",
+         "guid": "ca1aed62-f4f9-6761-bc21-0027ec5eb60c",
+         "headshot": {
+          "alt": "Tyler Davis",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4568217.png"
+         },
+         "id": "4568217",
+         "jersey": "90",
+         "lastName": "Davis",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4568217/tyler-davis",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4568217"
+        },
+        "stats": [
+         "7",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jaylen McCollough",
+         "firstName": "Jaylen",
+         "guid": "a6f7f3d8-71a1-34ee-6312-5ce722779082",
+         "headshot": {
+          "alt": "Jaylen McCollough",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4427120.png"
+         },
+         "id": "4427120",
+         "jersey": "2",
+         "lastName": "McCollough",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4427120/jaylen-mccollough",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4427120"
+        },
+        "stats": [
+         "6",
+         "3",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Shaun Dolac",
+         "firstName": "Shaun",
+         "guid": "df944d0b-0fe0-324f-828e-8c27429f7366",
+         "headshot": {
+          "alt": "Shaun Dolac",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4693848.png"
+         },
+         "id": "4693848",
+         "jersey": "56",
+         "lastName": "Dolac",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4693848/shaun-dolac",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4693848"
+        },
+        "stats": [
+         "6",
+         "3",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Josaiah Stewart",
+         "firstName": "Josaiah",
+         "guid": "dd08313d-2815-38e1-bd1d-b33db8a27f04",
+         "headshot": {
+          "alt": "Josaiah Stewart",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4682983.png"
+         },
+         "id": "4682983",
+         "jersey": "10",
+         "lastName": "Stewart",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4682983/josaiah-stewart",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4682983"
+        },
+        "stats": [
+         "6",
+         "2",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Trent McDuffie",
+         "firstName": "Trent",
+         "guid": "10d8ec6d-33ff-13b8-d189-180c3462083e",
+         "headshot": {
+          "alt": "Trent McDuffie",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426405.png"
+         },
+         "id": "4426405",
+         "jersey": "22",
+         "lastName": "McDuffie",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4426405/trent-mcduffie",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4426405"
+        },
+        "stats": [
+         "4",
+         "4",
+         "0",
+         "1",
+         "2",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Jaylen Watson",
+         "firstName": "Jaylen",
+         "guid": "2342d713-812b-3232-baed-89d44fad1367",
+         "headshot": {
+          "alt": "Jaylen Watson",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4697639.png"
+         },
+         "id": "4697639",
+         "jersey": "35",
+         "lastName": "Watson",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4697639/jaylen-watson",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4697639"
+        },
+        "stats": [
+         "4",
+         "2",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Kam Curl",
+         "firstName": "Kam",
+         "guid": "36bb95bc-92f5-ab57-9c54-ed72ef292618",
+         "headshot": {
+          "alt": "Kam Curl",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4242154.png"
+         },
+         "id": "4242154",
+         "jersey": "3",
+         "lastName": "Curl",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4242154/kam-curl",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4242154"
+        },
+        "stats": [
+         "3",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Braden Fiske",
+         "firstName": "Braden",
+         "guid": "fa2acb83-2235-a992-5f50-9cf7904d6c8c",
+         "headshot": {
+          "alt": "Braden Fiske",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4362245.png"
+         },
+         "id": "4362245",
+         "jersey": "55",
+         "lastName": "Fiske",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4362245/braden-fiske",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4362245"
+        },
+        "stats": [
+         "2",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Omar Speights",
+         "firstName": "Omar",
+         "guid": "6aa54d65-634a-8bba-7ba7-2325fd999fc5",
+         "headshot": {
+          "alt": "Omar Speights",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4428550.png"
+         },
+         "id": "4428550",
+         "jersey": "48",
+         "lastName": "Speights",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4428550/omar-speights",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4428550"
+        },
+        "stats": [
+         "2",
+         "0",
+         "0",
+         "0",
+         "1",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Puka Nacua",
+         "firstName": "Puka",
+         "guid": "05861488-1bb7-7c32-83eb-d0658a6e2b89",
+         "headshot": {
+          "alt": "Puka Nacua",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4426515.png"
+         },
+         "id": "4426515",
+         "jersey": "12",
+         "lastName": "Nacua",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4426515/puka-nacua",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4426515"
+        },
+        "stats": [
+         "1",
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Desjuan Johnson",
+         "firstName": "Desjuan",
+         "guid": "86705ca0-d45e-1b2a-dc4a-43a78eb87678",
+         "headshot": {
+          "alt": "Desjuan Johnson",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4362294.png"
+         },
+         "id": "4362294",
+         "jersey": "94",
+         "lastName": "Johnson",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4362294/desjuan-johnson",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4362294"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Ty Hamilton",
+         "firstName": "Ty",
+         "guid": "62457d84-94c3-3ce1-94cd-e56058d14890",
+         "headshot": {
+          "alt": "Ty Hamilton",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4431118.png"
+         },
+         "id": "4431118",
+         "jersey": "57",
+         "lastName": "Hamilton",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4431118/ty-hamilton",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4431118"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Byron Young",
+         "firstName": "Byron",
+         "guid": "c2adf56f-b9f5-3a4a-aac7-eb2d5a50b85e",
+         "headshot": {
+          "alt": "Byron Young",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4875196.png"
+         },
+         "id": "4875196",
+         "jersey": "0",
+         "lastName": "Young",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4875196/byron-young",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4875196"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Tackles",
+       "Solo Tackles",
+       "Sacks",
+       "Tackles For Loss",
+       "Passes Defended",
+       "Quarterback Hits",
+       "Touchdowns"
+      ],
+      "keys": [
+       "totalTackles",
+       "soloTackles",
+       "sacks",
+       "tacklesForLoss",
+       "passesDefended",
+       "QBHits",
+       "defensiveTouchdowns"
+      ],
+      "labels": [
+       "TOT",
+       "SOLO",
+       "SACKS",
+       "TFL",
+       "PD",
+       "QB HTS",
+       "TD"
+      ],
+      "name": "defensive",
+      "text": "Los Angeles Defense",
+      "totals": [
+       "78",
+       "36",
+       "0",
+       "1",
+       "7",
+       "2",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Quentin Lake",
+         "firstName": "Quentin",
+         "guid": "6d91ef30-3fd3-85a7-7cb4-bfe18e411cf9",
+         "headshot": {
+          "alt": "Quentin Lake",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4249128.png"
+         },
+         "id": "4249128",
+         "jersey": "37",
+         "lastName": "Lake",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4249128/quentin-lake",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4249128"
+        },
+        "stats": [
+         "1",
+         "0",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Interceptions",
+       "Yards",
+       "Touchdowns"
+      ],
+      "keys": [
+       "interceptions",
+       "interceptionYards",
+       "interceptionTouchdowns"
+      ],
+      "labels": [
+       "INT",
+       "YDS",
+       "TD"
+      ],
+      "name": "interceptions",
+      "text": "Los Angeles Interceptions",
+      "totals": [
+       "1",
+       "0",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Jordan Whittington",
+         "firstName": "Jordan",
+         "guid": "ed0b3d40-0571-c964-25c1-ec0289161f76",
+         "headshot": {
+          "alt": "Jordan Whittington",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4569382.png"
+         },
+         "id": "4569382",
+         "jersey": "88",
+         "lastName": "Whittington",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4569382/jordan-whittington",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4569382"
+        },
+        "stats": [
+         "4",
+         "94",
+         "23.5",
+         "31",
+         "0"
+        ]
+       },
+       {
+        "athlete": {
+         "displayName": "Xavier Smith",
+         "firstName": "Xavier",
+         "guid": "490317ca-ee46-fbc3-7ae0-6eded1e9c14e",
+         "headshot": {
+          "alt": "Xavier Smith",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4386544.png"
+         },
+         "id": "4386544",
+         "jersey": "19",
+         "lastName": "Smith",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4386544/xavier-smith",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4386544"
+        },
+        "stats": [
+         "1",
+         "25",
+         "25.0",
+         "25",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Kick Returns",
+       "Yards",
+       "Yards Per Kick Return",
+       "Longest Kick Return",
+       "Touchdowns"
+      ],
+      "keys": [
+       "kickReturns",
+       "kickReturnYards",
+       "yardsPerKickReturn",
+       "longKickReturn",
+       "kickReturnTouchdowns"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "name": "kickReturns",
+      "text": "Los Angeles Kick Returns",
+      "totals": [
+       "5",
+       "119",
+       "23.8",
+       "31",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Xavier Smith",
+         "firstName": "Xavier",
+         "guid": "490317ca-ee46-fbc3-7ae0-6eded1e9c14e",
+         "headshot": {
+          "alt": "Xavier Smith",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4386544.png"
+         },
+         "id": "4386544",
+         "jersey": "19",
+         "lastName": "Smith",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4386544/xavier-smith",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4386544"
+        },
+        "stats": [
+         "1",
+         "11",
+         "11.0",
+         "11",
+         "0"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Punt Returns",
+       "Yards",
+       "Yards Per Punt Return",
+       "Longest Punt Return",
+       "Touchdowns"
+      ],
+      "keys": [
+       "puntReturns",
+       "puntReturnYards",
+       "yardsPerPuntReturn",
+       "longPuntReturn",
+       "puntReturnTouchdowns"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "LONG",
+       "TD"
+      ],
+      "name": "puntReturns",
+      "text": "Los Angeles Punt Returns",
+      "totals": [
+       "1",
+       "11",
+       "11.0",
+       "11",
+       "0"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Harrison Mevis",
+         "firstName": "Harrison",
+         "guid": "a5865a71-d080-3609-bfa0-2743e9dff617",
+         "headshot": {
+          "alt": "Harrison Mevis",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/4574716.png"
+         },
+         "id": "4574716",
+         "jersey": "92",
+         "lastName": "Mevis",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/4574716/harrison-mevis",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:4574716"
+        },
+        "stats": [
+         "0/0",
+         "0.0",
+         "0",
+         "1/1",
+         "1"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Field Goals Made/Attempts",
+       "Field Goal Percentage",
+       "Longest Field Goal Made",
+       "Extra Points Made/Attempts",
+       "Kicking Points"
+      ],
+      "keys": [
+       "fieldGoalsMade/fieldGoalAttempts",
+       "fieldGoalPct",
+       "longFieldGoalMade",
+       "extraPointsMade/extraPointAttempts",
+       "totalKickingPoints"
+      ],
+      "labels": [
+       "FG",
+       "PCT",
+       "LONG",
+       "XP",
+       "PTS"
+      ],
+      "name": "kicking",
+      "text": "Los Angeles Kicking",
+      "totals": [
+       "0/0",
+       "0.0",
+       "0",
+       "1/1",
+       "1"
+      ]
+     },
+     {
+      "athletes": [
+       {
+        "athlete": {
+         "displayName": "Ethan Evans",
+         "firstName": "Ethan",
+         "guid": "2a019547-9581-33a1-9510-51f4b41d98ff",
+         "headshot": {
+          "alt": "Ethan Evans",
+          "href": "https://a.espncdn.com/i/headshots/nfl/players/full/5125875.png"
+         },
+         "id": "5125875",
+         "jersey": "42",
+         "lastName": "Evans",
+         "links": [
+          {
+           "href": "https://www.espn.com/nfl/player/_/id/5125875/ethan-evans",
+           "rel": [
+            "playercard",
+            "desktop",
+            "athlete"
+           ],
+           "text": "Player Card"
+          }
+         ],
+         "uid": "s:20~l:28~a:5125875"
+        },
+        "stats": [
+         "3",
+         "145",
+         "48.3",
+         "0",
+         "2",
+         "54"
+        ]
+       }
+      ],
+      "descriptions": [
+       "Punts",
+       "Yards",
+       "Average Punt Yards",
+       "Touchbacks",
+       "Punts Inside 20",
+       "Longest Punt"
+      ],
+      "keys": [
+       "punts",
+       "puntYards",
+       "grossAvgPuntYards",
+       "touchbacks",
+       "puntsInside20",
+       "longPunt"
+      ],
+      "labels": [
+       "NO",
+       "YDS",
+       "AVG",
+       "TB",
+       "In 20",
+       "LONG"
+      ],
+      "name": "punting",
+      "text": "Los Angeles Punting",
+      "totals": [
+       "3",
+       "145",
+       "48.3",
+       "0",
+       "2",
+       "54"
+      ]
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "alternateColor": "ffd100",
+     "color": "003594",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "location": "Los Angeles",
+     "name": "Rams",
+     "shortDisplayName": "Rams",
+     "uid": "s:20~l:28~t:14"
+    }
+   }
+  ],
+  "teams": [
+   {
+    "displayOrder": 1,
+    "homeAway": "away",
+    "statistics": [
+     {
+      "displayValue": "23",
+      "label": "1st Downs",
+      "name": "firstDowns",
+      "value": 23.0
+     },
+     {
+      "displayValue": "12",
+      "label": "Passing 1st downs",
+      "name": "firstDownsPassing",
+      "value": 12.0
+     },
+     {
+      "displayValue": "10",
+      "label": "Rushing 1st downs",
+      "name": "firstDownsRushing",
+      "value": 10.0
+     },
+     {
+      "displayValue": "1",
+      "label": "1st downs from penalties",
+      "name": "firstDownsPenalty",
+      "value": 1.0
+     },
+     {
+      "displayValue": "7-12",
+      "label": "3rd down efficiency",
+      "name": "thirdDownEff",
+      "value": 0.5833333333
+     },
+     {
+      "displayValue": "0-0",
+      "label": "4th down efficiency",
+      "name": "fourthDownEff",
+      "value": "-"
+     },
+     {
+      "displayValue": "64",
+      "label": "Total Plays",
+      "name": "totalOffensivePlays",
+      "value": 64.0
+     },
+     {
+      "displayValue": "379",
+      "label": "Total Yards",
+      "name": "totalYards",
+      "value": "-"
+     },
+     {
+      "displayValue": "5.9",
+      "label": "Yards per Play",
+      "name": "yardsPerPlay",
+      "value": 5.921875
+     },
+     {
+      "displayValue": "9",
+      "label": "Total Drives",
+      "name": "totalDrives",
+      "value": 9.0
+     },
+     {
+      "displayValue": "205",
+      "label": "Passing",
+      "name": "netPassingYards",
+      "value": 205.0
+     },
+     {
+      "displayValue": "25/34",
+      "label": "Comp/Att",
+      "name": "completionAttempts",
+      "value": "-"
+     },
+     {
+      "displayValue": "6.0",
+      "label": "Yards per pass",
+      "name": "yardsPerPass",
+      "value": 6.029411764705882
+     },
+     {
+      "displayValue": "1",
+      "label": "Interceptions thrown",
+      "name": "interceptions",
+      "value": 1.0
+     },
+     {
+      "displayValue": "0-0",
+      "label": "Sacks-Yards Lost",
+      "name": "sacksYardsLost",
+      "value": "-"
+     },
+     {
+      "displayValue": "174",
+      "label": "Rushing",
+      "name": "rushingYards",
+      "value": 174.0
+     },
+     {
+      "displayValue": "30",
+      "label": "Rushing Attempts",
+      "name": "rushingAttempts",
+      "value": 30.0
+     },
+     {
+      "displayValue": "5.8",
+      "label": "Yards per rush",
+      "name": "yardsPerRushAttempt",
+      "value": 5.8
+     },
+     {
+      "displayValue": "2-3",
+      "label": "Red Zone (Made-Att)",
+      "name": "redZoneAttempts",
+      "value": 0.6666666666666666
+     },
+     {
+      "displayValue": "2-21",
+      "label": "Penalties",
+      "name": "totalPenaltiesYards",
+      "value": "-"
+     },
+     {
+      "displayValue": "1",
+      "label": "Turnovers",
+      "name": "turnovers",
+      "value": "-"
+     },
+     {
+      "displayValue": "0",
+      "label": "Fumbles lost",
+      "name": "fumblesLost",
+      "value": 0.0
+     },
+     {
+      "displayValue": "1",
+      "label": "Interceptions thrown",
+      "name": "interceptions",
+      "value": 1.0
+     },
+     {
+      "displayValue": "0",
+      "label": "Defensive / Special Teams TDs",
+      "name": "defensiveTouchdowns",
+      "value": 0.0
+     },
+     {
+      "displayValue": "33:50",
+      "label": "Possession",
+      "name": "possessionTime",
+      "value": 2030
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "alternateColor": "b3995d",
+     "color": "aa0000",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "location": "San Francisco",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png",
+     "name": "49ers",
+     "shortDisplayName": "49ers",
+     "slug": "san-francisco-49ers",
+     "uid": "s:20~l:28~t:25"
+    }
+   },
+   {
+    "displayOrder": 2,
+    "homeAway": "home",
+    "statistics": [
+     {
+      "displayValue": "15",
+      "label": "1st Downs",
+      "name": "firstDowns",
+      "value": 15.0
+     },
+     {
+      "displayValue": "6",
+      "label": "Passing 1st downs",
+      "name": "firstDownsPassing",
+      "value": 6.0
+     },
+     {
+      "displayValue": "7",
+      "label": "Rushing 1st downs",
+      "name": "firstDownsRushing",
+      "value": 7.0
+     },
+     {
+      "displayValue": "2",
+      "label": "1st downs from penalties",
+      "name": "firstDownsPenalty",
+      "value": 2.0
+     },
+     {
+      "displayValue": "2-9",
+      "label": "3rd down efficiency",
+      "name": "thirdDownEff",
+      "value": 0.2222222222
+     },
+     {
+      "displayValue": "1-3",
+      "label": "4th down efficiency",
+      "name": "fourthDownEff",
+      "value": 0.3333333333
+     },
+     {
+      "displayValue": "57",
+      "label": "Total Plays",
+      "name": "totalOffensivePlays",
+      "value": 57.0
+     },
+     {
+      "displayValue": "290",
+      "label": "Total Yards",
+      "name": "totalYards",
+      "value": "-"
+     },
+     {
+      "displayValue": "5.1",
+      "label": "Yards per Play",
+      "name": "yardsPerPlay",
+      "value": 5.0877192982
+     },
+     {
+      "displayValue": "10",
+      "label": "Total Drives",
+      "name": "totalDrives",
+      "value": 10.0
+     },
+     {
+      "displayValue": "168",
+      "label": "Passing",
+      "name": "netPassingYards",
+      "value": 168.0
+     },
+     {
+      "displayValue": "17/28",
+      "label": "Comp/Att",
+      "name": "completionAttempts",
+      "value": "-"
+     },
+     {
+      "displayValue": "6.0",
+      "label": "Yards per pass",
+      "name": "yardsPerPass",
+      "value": 6.0
+     },
+     {
+      "displayValue": "1",
+      "label": "Interceptions thrown",
+      "name": "interceptions",
+      "value": 1.0
+     },
+     {
+      "displayValue": "0-0",
+      "label": "Sacks-Yards Lost",
+      "name": "sacksYardsLost",
+      "value": "-"
+     },
+     {
+      "displayValue": "122",
+      "label": "Rushing",
+      "name": "rushingYards",
+      "value": 122.0
+     },
+     {
+      "displayValue": "29",
+      "label": "Rushing Attempts",
+      "name": "rushingAttempts",
+      "value": 29.0
+     },
+     {
+      "displayValue": "4.2",
+      "label": "Yards per rush",
+      "name": "yardsPerRushAttempt",
+      "value": 4.207
+     },
+     {
+      "displayValue": "1-3",
+      "label": "Red Zone (Made-Att)",
+      "name": "redZoneAttempts",
+      "value": 0.3333333333333333
+     },
+     {
+      "displayValue": "4-43",
+      "label": "Penalties",
+      "name": "totalPenaltiesYards",
+      "value": "-"
+     },
+     {
+      "displayValue": "2",
+      "label": "Turnovers",
+      "name": "turnovers",
+      "value": "-"
+     },
+     {
+      "displayValue": "1",
+      "label": "Fumbles lost",
+      "name": "fumblesLost",
+      "value": 1.0
+     },
+     {
+      "displayValue": "1",
+      "label": "Interceptions thrown",
+      "name": "interceptions",
+      "value": 1.0
+     },
+     {
+      "displayValue": "0",
+      "label": "Defensive / Special Teams TDs",
+      "name": "defensiveTouchdowns",
+      "value": 0.0
+     },
+     {
+      "displayValue": "26:10",
+      "label": "Possession",
+      "name": "possessionTime",
+      "value": 1570
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "alternateColor": "ffd100",
+     "color": "003594",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "location": "Los Angeles",
+     "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png",
+     "name": "Rams",
+     "shortDisplayName": "Rams",
+     "slug": "los-angeles-rams",
+     "uid": "s:20~l:28~t:14"
+    }
+   }
+  ]
+ },
+ "drives": {
+  "previous": [
+   {
+    "plays": [
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "homeScore": 0,
+      "id": "40187265740",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 17,
+      "text": "E.Pineiro kicks 65 yards from SF 35 to LA 0. J.Whittington to LA 17 for 17 yards (M.Mustapha).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:54"
+      },
+      "homeScore": 0,
+      "id": "40187265763",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete short left to P.Nacua (F.Warner) [N.Bosa].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:50"
+      },
+      "homeScore": 0,
+      "id": "40187265786",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) K.Williams left guard to LA 22 for 5 yards (F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:17"
+      },
+      "homeScore": 0,
+      "id": "401872657108",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) M.Stafford pass short left to P.Nacua to LA 26 for 4 yards (D.Lenoir).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:38"
+      },
+      "homeScore": 0,
+      "id": "401872657133",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 13,
+      "text": "E.Evans punts 54 yards to SF 20, Center-J.Cardona. J.Cowing ran ob at SF 33 for 13 yards (K.Kinchens).",
+      "type": {
+       "text": "Punt"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:28"
+      },
+      "homeScore": 0,
+      "id": "401872657164",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 6,
+      "text": "C.McCaffrey up the middle to SF 39 for 6 yards (N.Landman).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:59"
+      },
+      "homeScore": 0,
+      "id": "401872657186",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to G.Kittle (Q.Lake).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:53"
+      },
+      "homeScore": 0,
+      "id": "401872657221",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 7,
+      "text": "(Shotgun) B.Purdy pass short left to M.Evans to SF 46 for 7 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:19"
+      },
+      "homeScore": 0,
+      "id": "401872657246",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 6,
+      "text": "(Shotgun) B.Purdy pass short left to G.Kittle to LA 48 for 6 yards (J.Watson).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:40"
+      },
+      "homeScore": 0,
+      "id": "401872657271",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 9,
+      "text": "B.Purdy pass short right to D.Samuel pushed ob at LA 39 for 9 yards (T.McDuffie).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:07"
+      },
+      "homeScore": 0,
+      "id": "401872657305",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 1,
+      "text": "K.Black left guard to LA 38 for 1 yard (K.Turner; O.Speights).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "10:30"
+      },
+      "homeScore": 0,
+      "id": "401872657327",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 5,
+      "text": "B.Purdy pass short left to K.Black to LA 33 for 5 yards (K.Curl; K.Kinchens) [J.Stewart].",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "9:48"
+      },
+      "homeScore": 0,
+      "id": "401872657352",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 7,
+      "text": "(Shotgun) B.Purdy pass short right to M.Evans to LA 26 for 7 yards (J.Watson; J.McCollough).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "9:07"
+      },
+      "homeScore": 0,
+      "id": "401872657377",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete deep right to G.Kittle (T.McDuffie).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "9:01"
+      },
+      "homeScore": 0,
+      "id": "401872657400",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 8,
+      "text": "B.Purdy pass short right to C.McCaffrey to LA 18 for 8 yards (K.Curl).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "8:19"
+      },
+      "homeScore": 0,
+      "id": "401872657425",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 8,
+      "text": "(Shotgun) B.Purdy pass short left to M.Evans to LA 10 for 8 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "7:44"
+      },
+      "homeScore": 0,
+      "id": "401872657450",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "B.Purdy pass short right to D.Samuel to LA 8 for 2 yards (T.McDuffie).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "7:04"
+      },
+      "homeScore": 0,
+      "id": "401872657475",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 6,
+      "text": "B.Purdy pass short right to G.Kittle to LA 2 for 6 yards (T.Davis; K.Kinchens).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "6:22"
+      },
+      "homeScore": 0,
+      "id": "401872657500",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short right to D.Robinson (T.McDuffie) [N.Landman].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:15"
+      },
+      "homeScore": 0,
+      "id": "401872657523",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 20,
+      "text": "E.Pineiro 20 yard field goal is GOOD, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Field Goal Good"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:15"
+      },
+      "homeScore": 0,
+      "id": "401872657533",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 06:15.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:15"
+      },
+      "homeScore": 0,
+      "id": "401872657543",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 25,
+      "text": "E.Pineiro kicks 65 yards from SF 35 to LA 0. X.Smith to LA 25 for 25 yards (A.Davis; K.Hodge).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:10"
+      },
+      "homeScore": 0,
+      "id": "401872657573",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 9,
+      "text": "B.Corum up the middle to LA 34 for 9 yards (M.Sigle).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:32"
+      },
+      "homeScore": 0,
+      "id": "401872657595",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -1,
+      "text": "B.Corum up the middle to LA 33 for -1 yards (N.Bosa).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "4:59"
+      },
+      "homeScore": 0,
+      "id": "401872657617",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 3,
+      "text": "K.Williams up the middle to LA 36 for 3 yards (F.Warner; O.Odighizuwa).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "4:18"
+      },
+      "homeScore": 0,
+      "id": "401872657640",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "M.Stafford pass incomplete deep left to P.Nacua [O.Odighizuwa].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "4:13"
+      },
+      "homeScore": 0,
+      "id": "401872657663",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) M.Stafford pass short left to K.Williams to LA 40 for 4 yards (D.Greenlaw) [C.West].",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:29"
+      },
+      "homeScore": 0,
+      "id": "401872657688",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete deep right to D.Adams [O.Odighizuwa].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:25"
+      },
+      "homeScore": 0,
+      "id": "401872657711",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "E.Evans punts 43 yards to SF 17, Center-J.Cardona, fair catch by J.Cowing.",
+      "type": {
+       "text": "Punt"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:18"
+      },
+      "homeScore": 0,
+      "id": "401872657721",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 03:18.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:18"
+      },
+      "homeScore": 0,
+      "id": "401872657731",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 5,
+      "text": "B.Purdy pass short left to L.Farrell to SF 22 for 5 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:47"
+      },
+      "homeScore": 0,
+      "id": "401872657763",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 3,
+      "text": "K.Black left guard to SF 25 for 3 yards (N.Landman).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:06"
+      },
+      "homeScore": 0,
+      "id": "401872657785",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to C.McCaffrey (O.Speights).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:01"
+      },
+      "homeScore": 0,
+      "id": "401872657808",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 11,
+      "text": " C.Waitman punts 43 yards to LA 32, Center-J.Weeks. X.Smith to LA 43 for 11 yards (J.Dugger; A.Davis).",
+      "type": {
+       "text": "Punt"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:52"
+      },
+      "homeScore": 0,
+      "id": "401872657821",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 01:52.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:52"
+      },
+      "homeScore": 0,
+      "id": "401872657834",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 8,
+      "text": "K.Williams up the middle to SF 49 for 8 yards (M.Sigle; J.Thompson).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:31"
+      },
+      "homeScore": 0,
+      "id": "401872657863",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 41,
+      "text": "(No Huddle, Shotgun) M.Stafford pass deep right to P.Nacua to SF 8 for 41 yards (M.Sigle; R.Green).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:41"
+      },
+      "homeScore": 0,
+      "id": "401872657888",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 3,
+      "text": "K.Williams up the middle to SF 5 for 3 yards (N.Bosa).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 0,
+      "id": "401872657910",
+      "period": {
+       "number": 1
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "END QUARTER 1",
+      "type": {
+       "text": "End Period"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:57"
+      },
+      "homeScore": 7,
+      "id": "401872657930",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "K.Williams up the middle for 5 yards, TOUCHDOWN. H.Mevis extra point is GOOD, Center-J.Cardona, Holder-E.Evans.",
+      "type": {
+       "text": "Rushing Touchdown"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:57"
+      },
+      "homeScore": 7,
+      "id": "401872657966",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 14:57.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:57"
+      },
+      "homeScore": 7,
+      "id": "401872657973",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 29,
+      "text": "H.Mevis kicks 63 yards from LA 35 to SF 2. D.Samuel to SF 31 for 29 yards (S.Dolac; J.Stewart).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:51"
+      },
+      "homeScore": 7,
+      "id": "4018726571003",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to D.Samuel. ** Injury Update: SF-D.Stribling has returned to the game.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:47"
+      },
+      "homeScore": 7,
+      "id": "4018726571026",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 12,
+      "text": "(Shotgun) B.Purdy pass short middle to M.Evans to SF 43 for 12 yards (J.Watson).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:14"
+      },
+      "homeScore": 7,
+      "id": "4018726571051",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 4,
+      "text": "C.McCaffrey right end to SF 47 for 4 yards (S.Dolac).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "13:37"
+      },
+      "homeScore": 7,
+      "id": "4018726571073",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 5,
+      "text": "B.Purdy pass short middle to C.McCaffrey to LA 48 for 5 yards (B.Young; K.Turner).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:46"
+      },
+      "homeScore": 7,
+      "id": "4018726571087",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by SF at 12:46.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:46"
+      },
+      "homeScore": 7,
+      "id": "4018726571101",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "B.Purdy up the middle to LA 46 for 2 yards (S.Dolac).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:09"
+      },
+      "homeScore": 7,
+      "id": "4018726571130",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "B.Purdy pass short right intended for G.Kittle INTERCEPTED by Q.Lake at LA 31. Q.Lake to LA 31 for no gain (G.Kittle).",
+      "type": {
+       "text": "Pass Interception Return"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:04"
+      },
+      "homeScore": 7,
+      "id": "4018726571144",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 12:04.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:04"
+      },
+      "homeScore": 7,
+      "id": "4018726571157",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "B.Corum right guard to LA 36 for 5 yards (M.Sigle; F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "11:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571186",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 10,
+      "text": "B.Corum left guard to LA 46 for 10 yards (M.Sigle).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "10:49"
+      },
+      "homeScore": 7,
+      "id": "4018726571208",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 6,
+      "text": "B.Corum left tackle to SF 48 for 6 yards (J.Dugger).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "10:11"
+      },
+      "homeScore": 7,
+      "id": "4018726571230",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 13,
+      "text": "B.Corum left tackle to SF 35 for 13 yards (M.Sigle).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:23"
+      },
+      "homeScore": 7,
+      "id": "4018726571252",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "K.Williams left guard to SF 35 for no gain (U.Stout).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:02"
+      },
+      "homeScore": 7,
+      "id": "4018726571274",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(No Huddle, Shotgun) M.Stafford pass incomplete short right [O.Odighizuwa].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "8:58"
+      },
+      "homeScore": 7,
+      "id": "4018726571297",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass deep right intended for P.Nacua INTERCEPTED by R.Green at SF 14. R.Green to SF 14 for no gain (P.Nacua).",
+      "type": {
+       "text": "Pass Interception Return"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "8:52"
+      },
+      "homeScore": 7,
+      "id": "4018726571316",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 08:52.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "8:52"
+      },
+      "homeScore": 7,
+      "id": "4018726571334",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) K.Black right tackle to SF 19 for 5 yards (T.Davis).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "8:14"
+      },
+      "homeScore": 7,
+      "id": "4018726571363",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 9,
+      "text": "K.Black left end to SF 28 for 9 yards (T.Davis; J.Watson).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:34"
+      },
+      "homeScore": 7,
+      "id": "4018726571385",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "(Shotgun) B.Purdy pass short middle to J.Brendel to SF 30 for 2 yards (N.Landman). SF-D.Stribling was injured during the play.",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:16"
+      },
+      "homeScore": 7,
+      "id": "4018726571399",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 07:16.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:01"
+      },
+      "homeScore": 7,
+      "id": "4018726571413",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to C.McCaffrey (N.Landman).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:55"
+      },
+      "homeScore": 7,
+      "id": "4018726571443",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 13,
+      "text": "(Shotgun) B.Purdy pass short left to M.Evans to SF 43 for 13 yards (T.McDuffie).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:16"
+      },
+      "homeScore": 7,
+      "id": "4018726571468",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 9,
+      "text": "K.Black left end pushed ob at LA 48 for 9 yards (J.McCollough).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:47"
+      },
+      "homeScore": 7,
+      "id": "4018726571495",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 5,
+      "text": "K.Black up the middle to LA 43 for 5 yards (N.Landman).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:10"
+      },
+      "homeScore": 7,
+      "id": "4018726571517",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 4,
+      "text": "K.Black up the middle to LA 39 for 4 yards (T.Hamilton; O.Speights).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571539",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 39,
+      "text": "B.Purdy pass deep middle to D.Robinson for 39 yards, TOUCHDOWN. E.Pineiro extra point is GOOD, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Passing Touchdown"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571574",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 04:28.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571582",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "E.Pineiro kicks 65 yards from SF 35 to end zone, Touchback to the LA 35.",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571606",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 16,
+      "text": "M.Stafford pass short left to K.Williams to SF 49 for 16 yards (F.Warner).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:48"
+      },
+      "homeScore": 7,
+      "id": "4018726571631",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 7,
+      "text": "K.Williams up the middle to SF 42 for 7 yards (F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:10"
+      },
+      "homeScore": 7,
+      "id": "4018726571653",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -10,
+      "text": "(Shotgun) M.Stafford pass incomplete short middle to P.Nacua.PENALTY on LA-W.McClendon, Offensive Holding, 10 yards, enforced at SF 42 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:05"
+      },
+      "homeScore": 7,
+      "id": "4018726571687",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete short right to C.Parkinson.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:59"
+      },
+      "homeScore": 7,
+      "id": "4018726571710",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete deep left to D.Adams (J.Jones) [U.Stout].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:54"
+      },
+      "homeScore": 7,
+      "id": "4018726571733",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": " E.Evans punts 48 yards to SF 4, Center-J.Cardona. J.Cowing to SF 8 for 4 yards (J.McCollough).",
+      "type": {
+       "text": "Punt"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:43"
+      },
+      "homeScore": 7,
+      "id": "4018726571759",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 12,
+      "text": "(Shotgun) D.Samuel right guard to SF 20 for 12 yards (Q.Lake; J.McCollough). SF-J.Tonges was injured during the play.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 7,
+      "id": "4018726571772",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Two-Minute Warning",
+      "type": {
+       "text": "Two-minute warning"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 7,
+      "id": "4018726571784",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 7,
+      "text": "(Shotgun) C.McCaffrey right guard to SF 27 for 7 yards (K.Kinchens; T.Davis).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:24"
+      },
+      "homeScore": 7,
+      "id": "4018726571813",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 15,
+      "text": "(Shotgun) B.Purdy pass incomplete short middle to D.Samuel.PENALTY on LA-T.Davis, Roughing the Passer, 15 yards, enforced at SF 27 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:19"
+      },
+      "homeScore": 7,
+      "id": "4018726571847",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": -1,
+      "text": "(Shotgun) B.Purdy pass short right to C.McCaffrey to SF 41 for -1 yards (T.McDuffie).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:39"
+      },
+      "homeScore": 7,
+      "id": "4018726571872",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 8,
+      "text": "B.Purdy pass short right to C.McCaffrey to SF 49 for 8 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:32"
+      },
+      "homeScore": 7,
+      "id": "4018726571885",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by SF at 00:32.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:32"
+      },
+      "homeScore": 7,
+      "id": "4018726571897",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to M.Evans.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:28"
+      },
+      "homeScore": 7,
+      "id": "4018726571927",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "C.Waitman punts 51 yards to end zone, Center-J.Weeks, Touchback.",
+      "type": {
+       "text": "Punt"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:20"
+      },
+      "homeScore": 7,
+      "id": "4018726571945",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -1,
+      "text": "M.Stafford kneels to LA 19 for -1 yards.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 7,
+      "id": "4018726571967",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "END QUARTER 2",
+      "type": {
+       "text": "End of Half"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "homeScore": 7,
+      "id": "4018726571987",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 45,
+      "text": "H.Mevis kicks 61 yards from LA 35 to SF 4. D.Samuel to SF 49 for 45 yards (K.Kinchens).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "14:53"
+      },
+      "homeScore": 7,
+      "id": "4018726572015",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 14,
+      "text": "C.McCaffrey right guard to LA 37 for 14 yards (K.Kinchens; J.McCollough).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "14:20"
+      },
+      "homeScore": 7,
+      "id": "4018726572042",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 16,
+      "text": "C.McCaffrey left guard to LA 21 for 16 yards (K.Kinchens; Q.Lake).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:42"
+      },
+      "homeScore": 7,
+      "id": "4018726572064",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 4,
+      "text": "K.Black up the middle to LA 17 for 4 yards (N.Landman).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "12:58"
+      },
+      "homeScore": 7,
+      "id": "4018726572086",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 11,
+      "text": "(Shotgun) B.Purdy pass short right to D.Robinson pushed ob at LA 6 for 11 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "12:21"
+      },
+      "homeScore": 7,
+      "id": "4018726572116",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 1,
+      "text": "C.McCaffrey right tackle to LA 5 for 1 yard (T.Davis).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:44"
+      },
+      "homeScore": 7,
+      "id": "4018726572127",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by SF at 11:44.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:44"
+      },
+      "homeScore": 7,
+      "id": "4018726572138",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 3,
+      "text": "(Shotgun) B.Purdy pass short left to D.Samuel to LA 2 for 3 yards (N.Landman; Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "homeScore": 7,
+      "id": "4018726572170",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "B.Purdy pass short left to M.Evans for 2 yards, TOUCHDOWN. E.Pineiro extra point is GOOD, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Passing Touchdown"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "homeScore": 7,
+      "id": "4018726572204",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 11:03.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "homeScore": 7,
+      "id": "4018726572211",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 24,
+      "text": "E.Pineiro kicks 62 yards from SF 35 to LA 3. J.Whittington to LA 27 for 24 yards (S.Neal). FUMBLES (S.Neal), and recovers at LA 27.",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "10:59"
+      },
+      "homeScore": 7,
+      "id": "4018726572241",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -1,
+      "text": "B.Corum right tackle to LA 26 for -1 yards (N.Bosa).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "10:24"
+      },
+      "homeScore": 7,
+      "id": "4018726572263",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "M.Stafford pass incomplete deep right to P.Nacua (D.Lenoir).PENALTY on SF-D.Lenoir, Illegal Contact, 5 yards, enforced at LA 26 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "10:17"
+      },
+      "homeScore": 7,
+      "id": "4018726572297",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 8,
+      "text": "B.Corum left end to LA 39 for 8 yards (D.Greenlaw; C.West).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "9:39"
+      },
+      "homeScore": 7,
+      "id": "4018726572319",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 1,
+      "text": "B.Corum left tackle to LA 40 for 1 yard (N.Bosa; F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "9:01"
+      },
+      "homeScore": 7,
+      "id": "4018726572341",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 13,
+      "text": "M.Stafford pass short right to D.Allen pushed ob at SF 47 for 13 yards (D.Greenlaw; J.Brown). LA-D.Allen was injured during the play.",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "8:29"
+      },
+      "homeScore": 7,
+      "id": "4018726572371",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "K.Williams up the middle to SF 42 for 5 yards (D.Greenlaw).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "7:53"
+      },
+      "homeScore": 7,
+      "id": "4018726572413",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 23,
+      "text": "M.Stafford pass deep middle to P.Nacua to SF 19 for 23 yards (D.Lenoir; M.Sigle).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "7:13"
+      },
+      "homeScore": 7,
+      "id": "4018726572438",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -5,
+      "text": "PENALTY on LA-K.Dotson, False Start, 5 yards, enforced at SF 19 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "6:56"
+      },
+      "homeScore": 7,
+      "id": "4018726572462",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 13,
+      "text": "M.Stafford pass short left to D.Adams to SF 11 for 13 yards (J.Brown).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "6:20"
+      },
+      "homeScore": 7,
+      "id": "4018726572487",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 2,
+      "text": "K.Williams up the middle to SF 9 for 2 yards (K.Kareem).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "5:37"
+      },
+      "homeScore": 7,
+      "id": "4018726572509",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 6,
+      "text": "M.Stafford pass short left to C.Parkinson pushed ob at SF 3 for 6 yards (D.Lenoir; D.Greenlaw).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "5:07"
+      },
+      "homeScore": 7,
+      "id": "4018726572539",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 1,
+      "text": "K.Williams right guard to SF 2 for 1 yard (J.Dugger; F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "4:26"
+      },
+      "homeScore": 7,
+      "id": "4018726572561",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 1,
+      "text": "(Shotgun) M.Stafford pass short left to P.Nacua to SF 1 for 1 yard (D.Lenoir).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "3:46"
+      },
+      "homeScore": 7,
+      "id": "4018726572586",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "M.Stafford right guard to SF 1 for no gain (O.Odighizuwa).The Replay Official reviewed the short of the goal line ruling, and the play was Upheld. The ruling on the field stands.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "3:41"
+      },
+      "homeScore": 7,
+      "id": "4018726572597",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 03:41.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "3:41"
+      },
+      "homeScore": 7,
+      "id": "4018726572608",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "B.Purdy up the middle to SF 1 for no gain (N.Landman; T.Davis).Penalty on SF-D.Robinson, Offensive Offside, declined.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "3:27"
+      },
+      "homeScore": 7,
+      "id": "4018726572676",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 14,
+      "text": "B.Purdy pass short left to L.Farrell to SF 15 for 14 yards (K.Kinchens).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "2:41"
+      },
+      "homeScore": 7,
+      "id": "4018726572711",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 9,
+      "text": "C.McCaffrey right end to SF 24 for 9 yards (S.Dolac).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "1:54"
+      },
+      "homeScore": 7,
+      "id": "4018726572733",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 13,
+      "text": "(Shotgun) B.Purdy pass short left to D.Samuel pushed ob at SF 37 for 13 yards (Q.Lake).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "1:23"
+      },
+      "homeScore": 7,
+      "id": "4018726572763",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 14,
+      "text": "K.Black right end pushed ob at LA 49 for 14 yards (Q.Lake).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "0:54"
+      },
+      "homeScore": 7,
+      "id": "4018726572790",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "K.Black left end to LA 49 for no gain (B.Fiske; K.Kinchens).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "0:10"
+      },
+      "homeScore": 7,
+      "id": "4018726572812",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 18,
+      "text": "(Shotgun) B.Purdy scrambles left end to LA 31 for 18 yards (J.McCollough).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 7,
+      "id": "4018726572834",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "END QUARTER 3",
+      "type": {
+       "text": "End Period"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "homeScore": 7,
+      "id": "4018726572854",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 6,
+      "text": "(Shotgun) B.Purdy pass short right to D.Samuel to LA 25 for 6 yards (T.Davis; J.Stewart).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "14:20"
+      },
+      "homeScore": 7,
+      "id": "4018726572879",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 8,
+      "text": "(Shotgun) B.Purdy scrambles left end ran ob at LA 17 for 8 yards (J.Stewart).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 17,
+      "clock": {
+       "displayValue": "13:45"
+      },
+      "homeScore": 7,
+      "id": "4018726572906",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "C.McCaffrey right guard to LA 15 for 2 yards (J.Stewart; K.Turner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:57"
+      },
+      "homeScore": 7,
+      "id": "4018726572928",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 15,
+      "text": "(Shotgun) B.Purdy pass short right to D.Samuel for 15 yards, TOUCHDOWN. E.Pineiro extra point is GOOD, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Passing Touchdown"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:57"
+      },
+      "homeScore": 7,
+      "id": "4018726572962",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 12:57.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:57"
+      },
+      "homeScore": 7,
+      "id": "4018726572969",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 22,
+      "text": "E.Pineiro kicks 64 yards from SF 35 to LA 1. J.Whittington to LA 23 for 22 yards (G.Wallow). ** Injury Update: LA-D.Allen has returned to the game.",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:53"
+      },
+      "homeScore": 7,
+      "id": "4018726573004",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 3,
+      "text": "(Shotgun) M.Stafford pass short left to D.Adams to LA 26 for 3 yards (U.Stout).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:30"
+      },
+      "homeScore": 7,
+      "id": "4018726573029",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": -13,
+      "text": "(No Huddle, Shotgun) M.Stafford pass short middle to C.Parkinson to LA 36 for 10 yards (F.Warner; D.Greenlaw).PENALTY on LA-A.Jackson, Chop Block, 13 yards, enforced at LA 26 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "12:05"
+      },
+      "homeScore": 7,
+      "id": "4018726573073",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 2,
+      "text": "(Shotgun) K.Williams up the middle to LA 15 for 2 yards (F.Warner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "11:45"
+      },
+      "homeScore": 7,
+      "id": "4018726573095",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 16,
+      "text": "(No Huddle, Shotgun) M.Stafford pass incomplete deep middle to P.Nacua (R.Green) [R.Height].PENALTY on SF-R.Green, Defensive Pass Interference, 16 yards, enforced at LA 15 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "11:40"
+      },
+      "homeScore": 7,
+      "id": "4018726573129",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 8,
+      "text": "(Shotgun) M.Stafford pass short right to T.Higbee to LA 39 for 8 yards (F.Warner).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "11:19"
+      },
+      "homeScore": 7,
+      "id": "4018726573154",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(No Huddle, Shotgun) M.Stafford pass short middle to T.Higbee to LA 44 for 5 yards (F.Warner; D.Greenlaw). FUMBLES (F.Warner), RECOVERED by SF-K.White at LA 43.",
+      "type": {
+       "text": "Fumble Recovery (Opponent)"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "11:08"
+      },
+      "homeScore": 7,
+      "id": "4018726573181",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 11:08.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "11:08"
+      },
+      "homeScore": 7,
+      "id": "4018726573207",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 4,
+      "text": "K.Black up the middle to LA 39 for 4 yards (K.Turner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "10:29"
+      },
+      "homeScore": 7,
+      "id": "4018726573236",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 1,
+      "text": "K.Black left tackle to LA 38 for 1 yard (J.Stewart; K.Turner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 24,
+      "clock": {
+       "displayValue": "9:52"
+      },
+      "homeScore": 7,
+      "id": "4018726573258",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass incomplete short left to C.McCaffrey (Q.Lake).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "9:43"
+      },
+      "homeScore": 7,
+      "id": "4018726573281",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 56,
+      "text": "E.Pineiro 56 yard field goal is GOOD, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Field Goal Good"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "9:43"
+      },
+      "homeScore": 7,
+      "id": "4018726573291",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 09:43.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "9:43"
+      },
+      "homeScore": 7,
+      "id": "4018726573301",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 31,
+      "text": "E.Pineiro kicks 64 yards from SF 35 to LA 1. J.Whittington to LA 32 for 31 yards (K.Hodge).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "9:38"
+      },
+      "homeScore": 7,
+      "id": "4018726573331",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) M.Stafford pass short right to K.Williams to LA 36 for 4 yards (D.Lenoir).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "9:08"
+      },
+      "homeScore": 7,
+      "id": "4018726573356",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 10,
+      "text": "(Shotgun) M.Stafford pass short left to D.Adams to LA 46 for 10 yards (R.Green).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "8:45"
+      },
+      "homeScore": 7,
+      "id": "4018726573381",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(No Huddle, Shotgun) M.Stafford pass incomplete short middle to P.Nacua (J.Jones).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "8:39"
+      },
+      "homeScore": 7,
+      "id": "4018726573404",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete deep right to D.Adams.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "8:34"
+      },
+      "homeScore": 7,
+      "id": "4018726573427",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) M.Stafford pass short right to P.Nacua to SF 49 for 5 yards (M.Sigle).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "7:58"
+      },
+      "homeScore": 7,
+      "id": "4018726573452",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) M.Stafford pass incomplete deep right to T.Ferguson [O.Odighizuwa].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "7:54"
+      },
+      "homeScore": 7,
+      "id": "4018726573464",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 07:54.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "7:54"
+      },
+      "homeScore": 7,
+      "id": "4018726573475",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 7,
+      "text": "C.McCaffrey left guard to LA 43 for 7 yards (D.Johnson; K.Curl).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "7:14"
+      },
+      "homeScore": 7,
+      "id": "4018726573504",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 2,
+      "text": "C.McCaffrey up the middle to LA 41 for 2 yards (S.Dolac; N.Landman).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "6:34"
+      },
+      "homeScore": 7,
+      "id": "4018726573526",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 1,
+      "text": "B.Purdy up the middle to LA 40 for 1 yard (B.Fiske).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "5:52"
+      },
+      "homeScore": 7,
+      "id": "4018726573548",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 3,
+      "text": "K.Black right guard to LA 38 for 3 yards (K.Turner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "5:08"
+      },
+      "homeScore": 7,
+      "id": "4018726573570",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 4,
+      "text": "K.Black left guard to LA 34 for 4 yards (S.Dolac; K.Turner).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "4:24"
+      },
+      "homeScore": 7,
+      "id": "4018726573592",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) B.Purdy pass short right to C.McCaffrey to LA 34 for no gain (J.Stewart). LA-N.Landman was injured during the play.",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "4:03"
+      },
+      "homeScore": 7,
+      "id": "4018726573606",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 04:03.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "3:34"
+      },
+      "homeScore": 7,
+      "id": "4018726573613",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by SF at 03:34.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "3:34"
+      },
+      "homeScore": 7,
+      "id": "4018726573620",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "25"
+       }
+      },
+      "statYardage": 52,
+      "text": "E.Pineiro 52 yard field goal is No Good, Hit Right Upright, Center-J.Weeks, Holder-C.Waitman.",
+      "type": {
+       "text": "Field Goal Missed"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SF",
+     "displayName": "San Francisco 49ers",
+     "id": "25",
+     "name": "49ers",
+     "shortDisplayName": "49ers"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "3:29"
+      },
+      "homeScore": 7,
+      "id": "4018726573655",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": "B.Corum up the middle to LA 46 for 4 yards (F.Warner; J.Brown).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "3:05"
+      },
+      "homeScore": 7,
+      "id": "4018726573677",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 9,
+      "text": "(No Huddle, Shotgun) S.Bennett scrambles up the middle to SF 45 for 9 yards (J.Brown).Penalty on SF, Defensive Too Many Men on Field, declined.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "2:46"
+      },
+      "homeScore": 7,
+      "id": "4018726573710",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 7,
+      "text": "(Shotgun) R.Rivers right guard to SF 38 for 7 yards (C.West).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "2:22"
+      },
+      "homeScore": 7,
+      "id": "4018726573732",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "(No Huddle, Shotgun) S.Bennett pass incomplete short middle to K.Mumpfield [O.Okoronkwo]. LA-K.Mumpfield was injured during the play.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "2:18"
+      },
+      "homeScore": 7,
+      "id": "4018726573758",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 1,
+      "text": "(Shotgun) R.Rivers right guard to SF 37 for 1 yard (G.Wallow).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 7,
+      "id": "4018726573769",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "Two-Minute Warning",
+      "type": {
+       "text": "Two-minute warning"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 7,
+      "id": "4018726573780",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "R.Rivers right tackle to SF 32 for 5 yards (D.Lenoir; M.Sigle). ** Injury Update: LA-K.Mumpfield has returned to the game.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "1:26"
+      },
+      "homeScore": 7,
+      "id": "4018726573809",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 8,
+      "text": "(Shotgun) S.Bennett pass short middle to J.Whittington to SF 24 for 8 yards (M.Mustapha).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "1:05"
+      },
+      "homeScore": 7,
+      "id": "4018726573837",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 5,
+      "text": "(No Huddle, Shotgun) S.Bennett pass short middle to R.Rivers to SF 19 for 5 yards (J.Dugger; M.Mustapha). LA-K.Dotson was injured during the play.",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "0:47"
+      },
+      "homeScore": 7,
+      "id": "4018726573850",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by LA at 00:47.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "0:47"
+      },
+      "homeScore": 7,
+      "id": "4018726573862",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 4,
+      "text": "R.Rivers right guard to SF 15 for 4 yards (K.Kareem; J.Dugger).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "0:14"
+      },
+      "homeScore": 7,
+      "id": "4018726573894",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 2,
+      "text": "R.Rivers left end to SF 13 for 2 yards (R.Green).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 27,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 7,
+      "id": "4018726573916",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "14"
+       }
+      },
+      "statYardage": 0,
+      "text": "END GAME",
+      "type": {
+       "text": "End of Game"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "LAR",
+     "displayName": "Los Angeles Rams",
+     "id": "14",
+     "name": "Rams",
+     "shortDisplayName": "Rams"
+    }
+   }
+  ]
+ },
+ "header": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "team": {
+       "abbreviation": "LAR",
+       "alternateColor": "ffd100",
+       "color": "003594",
+       "displayName": "Los Angeles Rams",
+       "id": "14",
+       "location": "Los Angeles",
+       "name": "Rams",
+       "uid": "s:20~l:28~t:14"
+      }
+     },
+     {
+      "homeAway": "away",
+      "team": {
+       "abbreviation": "SF",
+       "alternateColor": "b3995d",
+       "color": "aa0000",
+       "displayName": "San Francisco 49ers",
+       "id": "25",
+       "location": "San Francisco",
+       "name": "49ers",
+       "uid": "s:20~l:28~t:25"
+      }
+     }
+    ]
+   }
+  ],
+  "id": "401872657"
+ }
+}

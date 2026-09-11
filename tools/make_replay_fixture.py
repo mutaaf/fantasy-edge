@@ -1,6 +1,7 @@
 """Regenerate the replay test fixtures from a real ESPN game.
 
-    python3 tools/make_replay_fixture.py [--event 401872656] [--drives 8]
+    python3 tools/make_replay_fixture.py [--event 401872656] [--drives 7]
+    python3 tools/make_replay_fixture.py --event 401872656 --pbp
 
 Writes `tests/fixtures/replay_scoreboard.json` and
 `tests/fixtures/replay_summary.json`: the first few drives of one finished
@@ -99,18 +100,64 @@ def trim_summary(summary: dict, drives: int) -> dict:
     head["competitions"] = [comp]
     out["header"] = head
 
-    # The box score is kept deliberately, and kept whole for two athletes: the
-    # tests assert that a replay does NOT touch it, and an empty one would let
-    # that assertion pass for the wrong reason.
+    # The box score is kept whole, athlete list and all. It used to be cut to
+    # two athletes per category; that stopped working the day `frame()` began
+    # deriving the box score from the play text, because the derivation
+    # resolves a name in a play against the box score's own athlete list and a
+    # truncated list resolves nobody. It is also the ground truth the
+    # reconciliation test diffs against, so cutting it would be cutting the
+    # thing under test.
     box = summary.get("boxscore") or {}
-    players = []
-    for team in (box.get("players") or []):
-        cats = []
-        for cat in (team.get("statistics") or [])[:3]:
-            cats.append({**cat, "athletes": (cat.get("athletes") or [])[:2]})
-        players.append({"team": slim_team(team.get("team") or {}), "statistics": cats})
-    out["boxscore"] = {"players": players, "teams": box.get("teams") or []}
+    out["boxscore"] = {
+        "players": [{"team": slim_team(team.get("team") or {}),
+                     "statistics": team.get("statistics") or []}
+                    for team in (box.get("players") or [])],
+        "teams": box.get("teams") or [],
+    }
     return out
+
+
+# What the box-score derivation reads off a play, and nothing else. A whole
+# game of full play records is 600KB; this is the same 179 plays at a tenth of
+# that, which is what makes it reasonable to check in two of them.
+PBP_KEEP = ("id", "text", "statYardage", "scoringPlay", "awayScore", "homeScore")
+
+
+def trim_pbp(summary: dict) -> dict:
+    """A whole game, cut to the plays and the final box score.
+
+    The reconciliation fixture. `frame()` needs drives, win probability and a
+    scoreboard; this needs neither - it is the parser's acceptance test, and
+    the only two things it compares are what the text says and what ESPN
+    published.
+    """
+    drives = []
+    for d in rp._drives(summary):
+        plays = []
+        for p in (d.get("plays") or []):
+            keep = {k: p[k] for k in PBP_KEEP if k in p}
+            keep["type"] = {"text": (p.get("type") or {}).get("text")}
+            keep["period"] = {"number": (p.get("period") or {}).get("number")}
+            keep["clock"] = {"displayValue": (p.get("clock") or {}).get("displayValue")}
+            keep["start"] = {"team": {"id": str((((p.get("start") or {})
+                                                  .get("team")) or {}).get("id") or "")}}
+            plays.append(keep)
+        drives.append({"team": slim_team(d.get("team") or {}), "plays": plays})
+    box = summary.get("boxscore") or {}
+    return {
+        "header": {"id": (summary.get("header") or {}).get("id"),
+                   "competitions": [{"competitors": [
+                       {"homeAway": c.get("homeAway"),
+                        "team": slim_team(c.get("team") or {})}
+                       for c in (((summary.get("header") or {})
+                                  .get("competitions") or [{}])[0]
+                                 .get("competitors") or [])]}]},
+        "drives": {"previous": drives},
+        "boxscore": {"players": [{"team": slim_team(t.get("team") or {}),
+                                  "statistics": t.get("statistics") or []}
+                                 for t in (box.get("players") or [])],
+                     "teams": box.get("teams") or []},
+    }
 
 
 def trim_scoreboard(board: dict, event: str) -> dict:
@@ -136,13 +183,19 @@ def trim_scoreboard(board: dict, event: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--event", default="401872656")
-    ap.add_argument("--drives", type=int, default=8)
+    ap.add_argument("--drives", type=int, default=7)
+    ap.add_argument("--pbp", action="store_true",
+                    help="write the whole-game reconciliation fixture instead")
     ap.add_argument("--offline", action="store_true",
                     help="require a local capture rather than fetching")
     args = ap.parse_args()
 
     game = CAPTURE / f"{args.event}.json"
     board_file = CAPTURE / "scoreboard.json"
+    if not game.exists():
+        alt = pathlib.Path(f"/tmp/rp{args.event[-3:]}/source/{args.event}.json")
+        if alt.exists():
+            game, board_file = alt, alt.parent / "scoreboard.json"
     if game.exists() and board_file.exists():
         summary = json.loads(game.read_text())
         board = json.loads(board_file.read_text())
@@ -151,6 +204,15 @@ def main() -> None:
     else:
         summary = _get_json(with_key(summary_url(args.event)))
         board = _get_json(with_key(scoreboard_url()))
+
+    if args.pbp:
+        out = FIX / f"replay_pbp_{args.event}.json"
+        out.write_text(json.dumps(trim_pbp(summary), indent=1, sort_keys=True))
+        checked = rp.reconcile(summary)
+        print(f"event {args.event}: {len(rp._all_plays(summary))} plays, "
+              f"reconciles {checked['matched']}/{checked['cells']} cells "
+              f"({checked['rate']:.1%}) -> {out}")
+        return
 
     sm = trim_summary(summary, args.drives)
     sb = trim_scoreboard(board, args.event)

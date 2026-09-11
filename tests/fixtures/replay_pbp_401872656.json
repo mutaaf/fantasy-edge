@@ -3561,4194 +3561,4160 @@
  "drives": {
   "previous": [
    {
-    "description": "5 plays, 25 yards, 3:18",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "11:42"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "SEA 49",
-     "yardLine": 49
-    },
-    "id": "4018726561",
-    "isScore": false,
-    "offensivePlays": 5,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "15:00"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 24",
-       "possessionText": "SEA 24",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 24,
-       "yardsToEndzone": 76
-      },
       "homeScore": 0,
       "id": "40187265641",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "4100",
       "start": {
-       "distance": 0,
-       "down": 0,
        "team": {
         "id": "17"
-       },
-       "yardLine": 65,
-       "yardsToEndzone": 65
+       }
       },
       "statYardage": 22,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "A.Borregales kicks 63 yards from NE 35 to SEA 2. R.Shaheed to SEA 24 for 22 yards (N.Obiazor).",
       "type": {
-       "abbreviation": "K",
-       "id": "53",
        "text": "Kickoff"
-      },
-      "wallclock": "2026-09-10T00:23:21Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "14:55"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 37",
-       "possessionText": "SEA 37",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 37,
-       "yardsToEndzone": 63
-      },
       "homeScore": 0,
       "id": "40187265664",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "6400",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 24",
-       "possessionText": "SEA 24",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 24,
-       "yardsToEndzone": 76
+       }
       },
       "statYardage": 13,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "J.Price right tackle to SEA 37 for 13 yards (K.Byard; E.Ponder).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:24:07Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "14:17"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at 50",
-       "possessionText": "50",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 50,
-       "yardsToEndzone": 50
-      },
       "homeScore": 0,
       "id": "40187265686",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "8600",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 37",
-       "possessionText": "SEA 37",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 37,
-       "yardsToEndzone": 63
+       }
       },
       "statYardage": 13,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "S.Darnold pass short middle to J.Smith-Njigba to 50 for 13 yards (R.Spillane).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T00:24:45Z",
-      "yardsAfterCatch": 2
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "13:32"
       },
-      "end": {
-       "distance": 15,
-       "down": 1,
-       "downDistanceText": "1st & 15 at SEA 45",
-       "possessionText": "SEA 45",
-       "shortDownDistanceText": "1st & 15",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 45,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "401872656111",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "false-start",
-        "text": "False Start"
-       },
-       "yards": 5
-      },
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "11100",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at 50",
-       "possessionText": "50",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 50,
-       "yardsToEndzone": 50
+       }
       },
       "statYardage": -5,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "PENALTY on SEA-E.Saubert, False Start, 5 yards, enforced at 50 - No Play.",
       "type": {
-       "abbreviation": "PEN",
-       "id": "8",
        "text": "Penalty"
-      },
-      "wallclock": "2026-09-10T00:25:28Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "13:09"
       },
-      "end": {
-       "distance": 6,
-       "down": 2,
-       "downDistanceText": "2nd & 6 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "2nd & 6",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
-      },
       "homeScore": 0,
       "id": "401872656135",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "13500",
       "start": {
-       "distance": 15,
-       "down": 1,
-       "downDistanceText": "1st & 15 at SEA 45",
-       "possessionText": "SEA 45",
-       "shortDownDistanceText": "1st & 15",
        "team": {
         "id": "26"
-       },
-       "yardLine": 45,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": 9,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) G.Holani up the middle to NE 46 for 9 yards (C.Durden; R.Spillane).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:26:09Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "12:30"
       },
-      "end": {
-       "distance": 6,
-       "down": 3,
-       "downDistanceText": "3rd & 6 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "3rd & 6",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
-      },
       "homeScore": 0,
       "id": "401872656157",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "15700",
       "start": {
-       "distance": 6,
-       "down": 2,
-       "downDistanceText": "2nd & 6 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "2nd & 6",
        "team": {
         "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) S.Darnold pass incomplete short right to R.Shaheed.",
       "type": {
-       "id": "3",
        "text": "Pass Incompletion"
-      },
-      "wallclock": "2026-09-10T00:26:48Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "12:27"
       },
-      "end": {
-       "distance": 11,
-       "down": 4,
-       "downDistanceText": "4th & 11 at SEA 49",
-       "possessionText": "SEA 49",
-       "shortDownDistanceText": "4th & 11",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 49,
-       "yardsToEndzone": 51
-      },
       "homeScore": 0,
       "id": "401872656180",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "18000",
       "start": {
-       "distance": 6,
-       "down": 3,
-       "downDistanceText": "3rd & 6 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "3rd & 6",
        "team": {
         "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
+       }
       },
       "statYardage": -5,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) S.Darnold sacked at SEA 49 for -5 yards (D.Jones). SEA-S.Darnold was injured during the play.",
       "type": {
-       "id": "7",
        "text": "Sack"
-      },
-      "wallclock": "2026-09-10T00:27:28Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:49"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 92
-      },
       "homeScore": 0,
       "id": "401872656200",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "20000",
       "start": {
-       "distance": 11,
-       "down": 4,
-       "downDistanceText": "4th & 11 at SEA 49",
-       "possessionText": "SEA 49",
-       "shortDownDistanceText": "4th & 11",
        "team": {
         "id": "26"
-       },
-       "yardLine": 49,
-       "yardsToEndzone": 49
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Dickson punts 43 yards to NE 8, Center-C.Stoll, fair catch by M.Jones.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T00:28:06Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:42"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 92
-      },
       "homeScore": 0,
       "id": "401872656220",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "22000",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 11:42.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T00:28:35Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "15:00"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "SEA 24",
-     "yardLine": 24
-    },
     "team": {
      "abbreviation": "SEA",
      "displayName": "Seattle Seahawks",
      "id": "26",
      "name": "Seahawks",
      "shortDisplayName": "Seahawks"
-    },
-    "timeElapsed": {
-     "displayValue": "3:18"
-    },
-    "yards": 25
+    }
    },
    {
-    "description": "8 plays, 37 yards, 4:13",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "7:29"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "NE 45",
-     "yardLine": 55
-    },
-    "id": "4018726562",
-    "isScore": false,
-    "offensivePlays": 8,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:42"
       },
-      "end": {
-       "distance": 7,
-       "down": 2,
-       "downDistanceText": "2nd & 7 at NE 11",
-       "possessionText": "NE 11",
-       "shortDownDistanceText": "2nd & 7",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 89,
-       "yardsToEndzone": 89
-      },
       "homeScore": 0,
       "id": "401872656227",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "22700",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 92
+       }
       },
       "statYardage": 3,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "R.Stevenson up the middle to NE 11 for 3 yards (D.Lawrence; D.Thomas).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:31:11Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:07"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 21",
-       "possessionText": "NE 21",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 79,
-       "yardsToEndzone": 79
-      },
       "homeScore": 0,
       "id": "401872656249",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "24900",
       "start": {
-       "distance": 7,
-       "down": 2,
-       "downDistanceText": "2nd & 7 at NE 11",
-       "possessionText": "NE 11",
-       "shortDownDistanceText": "2nd & 7",
        "team": {
         "id": "17"
-       },
-       "yardLine": 89,
-       "yardsToEndzone": 89
+       }
       },
       "statYardage": 10,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Maye scrambles up the middle to NE 21 for 10 yards (E.Jones; D.Witherspoon).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:31:46Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "10:26"
       },
-      "end": {
-       "distance": 8,
-       "down": 2,
-       "downDistanceText": "2nd & 8 at NE 23",
-       "possessionText": "NE 23",
-       "shortDownDistanceText": "2nd & 8",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 77,
-       "yardsToEndzone": 77
-      },
       "homeScore": 0,
       "id": "401872656271",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "27100",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 21",
-       "possessionText": "NE 21",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 79,
-       "yardsToEndzone": 79
+       }
       },
       "statYardage": 2,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) R.Stevenson left end pushed ob at NE 23 for 2 yards (J.Love).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:32:28Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "9:53"
       },
-      "end": {
-       "distance": 5,
-       "down": 3,
-       "downDistanceText": "3rd & 5 at NE 26",
-       "possessionText": "NE 26",
-       "shortDownDistanceText": "3rd & 5",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 74,
-       "yardsToEndzone": 74
-      },
       "homeScore": 0,
       "id": "401872656298",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "29800",
       "start": {
-       "distance": 8,
-       "down": 2,
-       "downDistanceText": "2nd & 8 at NE 23",
-       "possessionText": "NE 23",
-       "shortDownDistanceText": "2nd & 8",
        "team": {
         "id": "17"
-       },
-       "yardLine": 77,
-       "yardsToEndzone": 77
+       }
       },
       "statYardage": 3,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "R.Stevenson up the middle to NE 26 for 3 yards (N.Pritchett).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:33:08Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "9:14"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 42",
-       "possessionText": "NE 42",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 58,
-       "yardsToEndzone": 58
-      },
       "homeScore": 0,
       "id": "401872656320",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "unnecessary-roughness",
-        "text": "Unnecessary Roughness"
-       },
-       "yards": 15
-      },
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "32000",
       "start": {
-       "distance": 5,
-       "down": 3,
-       "downDistanceText": "3rd & 5 at NE 26",
-       "possessionText": "NE 26",
-       "shortDownDistanceText": "3rd & 5",
        "team": {
         "id": "17"
-       },
-       "yardLine": 74,
-       "yardsToEndzone": 74
+       }
       },
       "statYardage": 1,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye scrambles right end pushed ob at NE 27 for 1 yard (B.Murphy).PENALTY on SEA-D.Hall, Unnecessary Roughness, 15 yards, enforced at NE 27.",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:33:47Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "8:58"
       },
-      "end": {
-       "distance": 4,
-       "down": 2,
-       "downDistanceText": "2nd & 4 at NE 48",
-       "possessionText": "NE 48",
-       "shortDownDistanceText": "2nd & 4",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 52,
-       "yardsToEndzone": 52
-      },
       "homeScore": 0,
       "id": "401872656358",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "35800",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 42",
-       "possessionText": "NE 42",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 58,
-       "yardsToEndzone": 58
+       }
       },
       "statYardage": 6,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "R.Stevenson left end pushed ob at NE 48 for 6 yards (E.Jones).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:35:12Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "8:25"
       },
-      "end": {
-       "distance": 7,
-       "down": 3,
-       "downDistanceText": "3rd & 7 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "3rd & 7",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "401872656385",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "38500",
       "start": {
-       "distance": 4,
-       "down": 2,
-       "downDistanceText": "2nd & 4 at NE 48",
-       "possessionText": "NE 48",
-       "shortDownDistanceText": "2nd & 4",
        "team": {
         "id": "17"
-       },
-       "yardLine": 52,
-       "yardsToEndzone": 52
+       }
       },
       "statYardage": -3,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) R.Stevenson left guard to NE 45 for -3 yards (U.Nwosu).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:35:52Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "7:41"
       },
-      "end": {
-       "distance": 7,
-       "down": 4,
-       "downDistanceText": "4th & 7 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "4th & 7",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "401872656407",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "40700",
       "start": {
-       "distance": 7,
-       "down": 3,
-       "downDistanceText": "3rd & 7 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "3rd & 7",
        "team": {
         "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass incomplete short right [D.Witherspoon].",
       "type": {
-       "id": "3",
        "text": "Pass Incompletion"
-      },
-      "wallclock": "2026-09-10T00:36:36Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "7:35"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 10",
-       "possessionText": "SEA 10",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 10,
-       "yardsToEndzone": 90
-      },
       "homeScore": 0,
       "id": "401872656430",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "43000",
       "start": {
-       "distance": 7,
-       "down": 4,
-       "downDistanceText": "4th & 7 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "4th & 7",
        "team": {
         "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Wishnowsky punts 45 yards to SEA 10, Center-J.Ashby, fair catch by R.Shaheed.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T00:37:23Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "7:29"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 10",
-       "possessionText": "SEA 10",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 10,
-       "yardsToEndzone": 90
-      },
       "homeScore": 0,
       "id": "401872656453",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "45300",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 10",
-       "possessionText": "SEA 10",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 10,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 07:29.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T00:37:52Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "11:42"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "NE 8",
-     "yardLine": 92
-    },
     "team": {
      "abbreviation": "NE",
      "displayName": "New England Patriots",
      "id": "17",
      "name": "Patriots",
      "shortDisplayName": "Patriots"
-    },
-    "timeElapsed": {
-     "displayValue": "4:13"
-    },
-    "yards": 37
+    }
    },
    {
-    "description": "5 plays, 20 yards, 2:54",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "4:35"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "SEA 30",
-     "yardLine": 30
-    },
-    "id": "4018726563",
-    "isScore": false,
-    "offensivePlays": 5,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "7:29"
       },
-      "end": {
-       "distance": 6,
-       "down": 2,
-       "downDistanceText": "2nd & 6 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "2nd & 6",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 86
-      },
       "homeScore": 0,
       "id": "401872656460",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "46000",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 10",
-       "possessionText": "SEA 10",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 10,
-       "yardsToEndzone": 90
+       }
       },
       "statYardage": 4,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) G.Holani left guard to SEA 14 for 4 yards (M.Jones).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:40:16Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "6:54"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 21",
-       "possessionText": "SEA 21",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 21,
-       "yardsToEndzone": 79
-      },
       "homeScore": 0,
       "id": "401872656482",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "48200",
       "start": {
-       "distance": 6,
-       "down": 2,
-       "downDistanceText": "2nd & 6 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "2nd & 6",
        "team": {
         "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 86
+       }
       },
       "statYardage": 7,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "J.Price left tackle to SEA 21 for 7 yards (C.Woodson).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:40:51Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "6:22"
       },
-      "end": {
-       "distance": 2,
-       "down": 2,
-       "downDistanceText": "2nd & 2 at SEA 29",
-       "possessionText": "SEA 29",
-       "shortDownDistanceText": "2nd & 2",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 29,
-       "yardsToEndzone": 71
-      },
       "homeScore": 0,
       "id": "401872656505",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "50500",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 21",
-       "possessionText": "SEA 21",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 21,
-       "yardsToEndzone": 79
+       }
       },
       "statYardage": 8,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Lock pass short right to J.Smith-Njigba pushed ob at SEA 29 for 8 yards (R.Spillane).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T00:41:24Z",
-      "yardsAfterCatch": 4
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "6:02"
       },
-      "end": {
-       "distance": 2,
-       "down": 3,
-       "downDistanceText": "3rd & 2 at SEA 29",
-       "possessionText": "SEA 29",
-       "shortDownDistanceText": "3rd & 2",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 29,
-       "yardsToEndzone": 71
-      },
       "homeScore": 0,
       "id": "401872656535",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "53500",
       "start": {
-       "distance": 2,
-       "down": 2,
-       "downDistanceText": "2nd & 2 at SEA 29",
-       "possessionText": "SEA 29",
-       "shortDownDistanceText": "2nd & 2",
        "team": {
         "id": "26"
-       },
-       "yardLine": 29,
-       "yardsToEndzone": 71
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(No Huddle) J.Price right end to SEA 29 for no gain (C.Davis; K.Byard). NE-C.Davis was injured during the play.",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:41:52Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "5:19"
       },
-      "end": {
-       "distance": 1,
-       "down": 4,
-       "downDistanceText": "4th & 1 at SEA 30",
-       "possessionText": "SEA 30",
-       "shortDownDistanceText": "4th & 1",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 30,
-       "yardsToEndzone": 70
-      },
       "homeScore": 0,
       "id": "401872656557",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "55700",
       "start": {
-       "distance": 2,
-       "down": 3,
-       "downDistanceText": "3rd & 2 at SEA 29",
-       "possessionText": "SEA 29",
-       "shortDownDistanceText": "3rd & 2",
        "team": {
         "id": "26"
-       },
-       "yardLine": 29,
-       "yardsToEndzone": 71
+       }
       },
       "statYardage": 1,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) G.Holani right guard to SEA 30 for 1 yard (R.Spillane).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:43:37Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "4:42"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 20",
-       "possessionText": "NE 20",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 80,
-       "yardsToEndzone": 80
-      },
       "homeScore": 0,
       "id": "401872656587",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "58700",
       "start": {
-       "distance": 1,
-       "down": 4,
-       "downDistanceText": "4th & 1 at SEA 30",
-       "possessionText": "SEA 30",
-       "shortDownDistanceText": "4th & 1",
        "team": {
         "id": "26"
-       },
-       "yardLine": 30,
-       "yardsToEndzone": 30
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Dickson punts 50 yards to NE 20, Center-C.Stoll, out of bounds.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T00:44:14Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "4:35"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 20",
-       "possessionText": "NE 20",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 80,
-       "yardsToEndzone": 80
-      },
       "homeScore": 0,
       "id": "401872656606",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "60600",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 20",
-       "possessionText": "NE 20",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 80,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 04:35.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T00:44:59Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "7:29"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "SEA 10",
-     "yardLine": 10
-    },
     "team": {
      "abbreviation": "SEA",
      "displayName": "Seattle Seahawks",
      "id": "26",
      "name": "Seahawks",
      "shortDisplayName": "Seahawks"
-    },
-    "timeElapsed": {
-     "displayValue": "2:54"
-    },
-    "yards": 20
+    }
    },
    {
-    "description": "5 plays, 20 yards, 3:13",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "1:22"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "NE 40",
-     "yardLine": 60
-    },
-    "id": "4018726564",
-    "isScore": false,
-    "offensivePlays": 5,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "4:35"
       },
-      "end": {
-       "distance": 1,
-       "down": 2,
-       "downDistanceText": "2nd & 1 at NE 29",
-       "possessionText": "NE 29",
-       "shortDownDistanceText": "2nd & 1",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 71,
-       "yardsToEndzone": 71
-      },
       "homeScore": 0,
       "id": "401872656613",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "61300",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 20",
-       "possessionText": "NE 20",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 80,
-       "yardsToEndzone": 80
+       }
       },
       "statYardage": 9,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass short right to M.Hollins to NE 29 for 9 yards (E.Jones).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T00:47:25Z",
-      "yardsAfterCatch": 0
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "4:00"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 32",
-       "possessionText": "NE 32",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 68,
-       "yardsToEndzone": 68
-      },
       "homeScore": 0,
       "id": "401872656638",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "63800",
       "start": {
-       "distance": 1,
-       "down": 2,
-       "downDistanceText": "2nd & 1 at NE 29",
-       "possessionText": "NE 29",
-       "shortDownDistanceText": "2nd & 1",
        "team": {
         "id": "17"
-       },
-       "yardLine": 71,
-       "yardsToEndzone": 71
+       }
       },
       "statYardage": 3,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Maye up the middle to NE 32 for 3 yards (L.Williams).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:48:00Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "3:24"
       },
-      "end": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at NE 39",
-       "possessionText": "NE 39",
-       "shortDownDistanceText": "2nd & 3",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 61,
-       "yardsToEndzone": 61
-      },
       "homeScore": 0,
       "id": "401872656660",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "66000",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 32",
-       "possessionText": "NE 32",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 68,
-       "yardsToEndzone": 68
+       }
       },
       "statYardage": 7,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass short left to A.Brown pushed ob at NE 39 for 7 yards (N.Pritchett).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T00:48:36Z",
-      "yardsAfterCatch": 7
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "2:48"
       },
-      "end": {
-       "distance": 1,
-       "down": 3,
-       "downDistanceText": "3rd & 1 at NE 41",
-       "possessionText": "NE 41",
-       "shortDownDistanceText": "3rd & 1",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 59,
-       "yardsToEndzone": 59
-      },
       "homeScore": 0,
       "id": "401872656690",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "69000",
       "start": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at NE 39",
-       "possessionText": "NE 39",
-       "shortDownDistanceText": "2nd & 3",
        "team": {
         "id": "17"
-       },
-       "yardLine": 61,
-       "yardsToEndzone": 61
+       }
       },
       "statYardage": 2,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "R.Stevenson right tackle to NE 41 for 2 yards (L.Williams).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:49:19Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "2:12"
       },
-      "end": {
-       "distance": 2,
-       "down": 4,
-       "downDistanceText": "4th & 2 at NE 40",
-       "possessionText": "NE 40",
-       "shortDownDistanceText": "4th & 2",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 60,
-       "yardsToEndzone": 60
-      },
       "homeScore": 0,
       "id": "401872656712",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "71200",
       "start": {
-       "distance": 1,
-       "down": 3,
-       "downDistanceText": "3rd & 1 at NE 41",
-       "possessionText": "NE 41",
-       "shortDownDistanceText": "3rd & 1",
        "team": {
         "id": "17"
-       },
-       "yardLine": 59,
-       "yardsToEndzone": 59
+       }
       },
       "statYardage": -1,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "R.Stevenson right guard to NE 40 for -1 yards (J.Love).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:49:55Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "1:28"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 86
-      },
       "homeScore": 0,
       "id": "401872656734",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "73400",
       "start": {
-       "distance": 2,
-       "down": 4,
-       "downDistanceText": "4th & 2 at NE 40",
-       "possessionText": "NE 40",
-       "shortDownDistanceText": "4th & 2",
        "team": {
         "id": "17"
-       },
-       "yardLine": 60,
-       "yardsToEndzone": 60
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Wishnowsky punts 46 yards to SEA 14, Center-J.Ashby, fair catch by R.Shaheed.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T00:50:38Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "1:22"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 86
-      },
       "homeScore": 0,
       "id": "401872656754",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "75400",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 01:22.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T00:51:01Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "4:35"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "NE 20",
-     "yardLine": 80
-    },
     "team": {
      "abbreviation": "NE",
      "displayName": "New England Patriots",
      "id": "17",
      "name": "Patriots",
      "shortDisplayName": "Patriots"
-    },
-    "timeElapsed": {
-     "displayValue": "3:13"
-    },
-    "yards": 20
+    }
    },
    {
-    "description": "4 plays, 17 yards, 1:34",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "14:48"
-     },
-     "period": {
-      "number": 2,
-      "type": "quarter"
-     },
-     "text": "SEA 31",
-     "yardLine": 31
-    },
-    "id": "4018726565",
-    "isScore": false,
-    "offensivePlays": 4,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "1:22"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 26",
-       "possessionText": "SEA 26",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 26,
-       "yardsToEndzone": 74
-      },
       "homeScore": 0,
       "id": "401872656761",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "76100",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 14",
-       "possessionText": "SEA 14",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 14,
-       "yardsToEndzone": 86
+       }
       },
       "statYardage": 12,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "J.Price right end pushed ob at SEA 26 for 12 yards (C.Gonzalez). ** Injury Update: NE-C.Davis has returned to the game.",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:53:39Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "0:49"
       },
-      "end": {
-       "distance": 8,
-       "down": 2,
-       "downDistanceText": "2nd & 8 at SEA 28",
-       "possessionText": "SEA 28",
-       "shortDownDistanceText": "2nd & 8",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 28,
-       "yardsToEndzone": 72
-      },
       "homeScore": 0,
       "id": "401872656788",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "78800",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 26",
-       "possessionText": "SEA 26",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 26,
-       "yardsToEndzone": 74
+       }
       },
       "statYardage": 2,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "J.Price right end to SEA 28 for 2 yards (C.Elliss; M.Williams).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:54:19Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "0:08"
       },
-      "end": {
-       "distance": 5,
-       "down": 3,
-       "downDistanceText": "3rd & 5 at SEA 31",
-       "possessionText": "SEA 31",
-       "shortDownDistanceText": "3rd & 5",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 69
-      },
       "homeScore": 0,
       "id": "401872656813",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "81300",
       "start": {
-       "distance": 8,
-       "down": 2,
-       "downDistanceText": "2nd & 8 at SEA 28",
-       "possessionText": "SEA 28",
-       "shortDownDistanceText": "2nd & 8",
        "team": {
         "id": "26"
-       },
-       "yardLine": 28,
-       "yardsToEndzone": 72
+       }
       },
       "statYardage": 3,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "E.Wilson left guard to SEA 31 for 3 yards (R.Spillane).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:55:00Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "0:00"
       },
-      "end": {
-       "distance": 5,
-       "down": 3,
-       "downDistanceText": "3rd & 5 at SEA 31",
-       "possessionText": "SEA 31",
-       "shortDownDistanceText": "3rd & 5",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 69
-      },
       "homeScore": 0,
       "id": "401872656835",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 1
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "83500",
       "start": {
-       "distance": 5,
-       "down": 3,
        "team": {
         "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 69
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "END QUARTER 1",
       "type": {
-       "abbreviation": "EP",
-       "id": "2",
        "text": "End Period"
-      },
-      "wallclock": "2026-09-10T00:55:00Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "15:00"
       },
-      "end": {
-       "distance": 5,
-       "down": 4,
-       "downDistanceText": "4th & 5 at SEA 31",
-       "possessionText": "SEA 31",
-       "shortDownDistanceText": "4th & 5",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 69
-      },
       "homeScore": 0,
       "id": "401872656855",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "85500",
       "start": {
-       "distance": 5,
-       "down": 3,
-       "downDistanceText": "3rd & 5 at SEA 31",
-       "possessionText": "SEA 31",
-       "shortDownDistanceText": "3rd & 5",
        "team": {
         "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 69
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Lock pass incomplete deep left to C.Kupp (C.Gonzalez).",
       "type": {
-       "id": "3",
        "text": "Pass Incompletion"
-      },
-      "wallclock": "2026-09-10T00:58:15Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "14:55"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 23",
-       "possessionText": "NE 23",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 77,
-       "yardsToEndzone": 77
-      },
       "homeScore": 0,
       "id": "401872656878",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "87800",
       "start": {
-       "distance": 5,
-       "down": 4,
-       "downDistanceText": "4th & 5 at SEA 31",
-       "possessionText": "SEA 31",
-       "shortDownDistanceText": "4th & 5",
        "team": {
         "id": "26"
-       },
-       "yardLine": 31,
-       "yardsToEndzone": 31
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Dickson punts 46 yards to NE 23, Center-C.Stoll, fair catch by M.Jones.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T00:59:00Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "1:22"
-     },
-     "period": {
-      "number": 1,
-      "type": "quarter"
-     },
-     "text": "SEA 14",
-     "yardLine": 14
-    },
     "team": {
      "abbreviation": "SEA",
      "displayName": "Seattle Seahawks",
      "id": "26",
      "name": "Seahawks",
      "shortDisplayName": "Seahawks"
-    },
-    "timeElapsed": {
-     "displayValue": "1:34"
-    },
-    "yards": 17
+    }
    },
    {
-    "description": "10 plays, 77 yards, 5:37",
-    "displayResult": "Touchdown",
-    "end": {
-     "clock": {
-      "displayValue": "9:11"
-     },
-     "period": {
-      "number": 2,
-      "type": "quarter"
-     },
-     "text": "SEA 0",
-     "yardLine": 0
-    },
-    "id": "4018726566",
-    "isScore": true,
-    "offensivePlays": 10,
     "plays": [
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "14:48"
       },
-      "end": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at NE 30",
-       "possessionText": "NE 30",
-       "shortDownDistanceText": "2nd & 3",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 70,
-       "yardsToEndzone": 70
-      },
       "homeScore": 0,
       "id": "401872656898",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "89800",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 23",
-       "possessionText": "NE 23",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 77,
-       "yardsToEndzone": 77
+       }
       },
       "statYardage": 7,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "C.Kiner right guard to NE 30 for 7 yards (R.Mills).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T00:59:47Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "14:09"
       },
-      "end": {
-       "distance": 4,
-       "down": 3,
-       "downDistanceText": "3rd & 4 at NE 29",
-       "possessionText": "NE 29",
-       "shortDownDistanceText": "3rd & 4",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 71,
-       "yardsToEndzone": 71
-      },
       "homeScore": 0,
       "id": "401872656920",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "92000",
       "start": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at NE 30",
-       "possessionText": "NE 30",
-       "shortDownDistanceText": "2nd & 3",
        "team": {
         "id": "17"
-       },
-       "yardLine": 70,
-       "yardsToEndzone": 70
+       }
       },
       "statYardage": -1,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "C.Kiner right guard to NE 29 for -1 yards (R.Mills).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T01:00:25Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "13:28"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 34",
-       "possessionText": "NE 34",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 66,
-       "yardsToEndzone": 66
-      },
       "homeScore": 0,
       "id": "401872656942",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "94200",
       "start": {
-       "distance": 4,
-       "down": 3,
-       "downDistanceText": "3rd & 4 at NE 29",
-       "possessionText": "NE 29",
-       "shortDownDistanceText": "3rd & 4",
        "team": {
         "id": "17"
-       },
-       "yardLine": 71,
-       "yardsToEndzone": 71
+       }
       },
       "statYardage": 5,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass short left to D.Douglas ran ob at NE 34 for 5 yards.",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:01:07Z",
-      "yardsAfterCatch": 0
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "13:00"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "401872656972",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "97200",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 34",
-       "possessionText": "NE 34",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 66,
-       "yardsToEndzone": 66
+       }
       },
       "statYardage": 11,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Maye pass short left to L.Larison to NE 45 for 11 yards (J.Jobe).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:01:42Z",
-      "yardsAfterCatch": 10
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "12:21"
       },
-      "end": {
-       "distance": 10,
-       "down": 2,
-       "downDistanceText": "2nd & 10 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "2nd & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "401872656997",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "99700",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "C.Kiner up the middle to NE 45 for no gain (U.Nwosu).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T01:02:21Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:47"
       },
-      "end": {
-       "distance": 4,
-       "down": 3,
-       "downDistanceText": "3rd & 4 at SEA 49",
-       "possessionText": "SEA 49",
-       "shortDownDistanceText": "3rd & 4",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 49,
-       "yardsToEndzone": 49
-      },
       "homeScore": 0,
       "id": "4018726561019",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "101900",
       "start": {
-       "distance": 10,
-       "down": 2,
-       "downDistanceText": "2nd & 10 at NE 45",
-       "possessionText": "NE 45",
-       "shortDownDistanceText": "2nd & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 55,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": 6,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye scrambles right end ran ob at SEA 49 for 6 yards (N.Pritchett).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T01:02:55Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "11:08"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 44",
-       "possessionText": "SEA 44",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 44,
-       "yardsToEndzone": 44
-      },
       "homeScore": 0,
       "id": "4018726561046",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "104600",
       "start": {
-       "distance": 4,
-       "down": 3,
-       "downDistanceText": "3rd & 4 at SEA 49",
-       "possessionText": "SEA 49",
-       "shortDownDistanceText": "3rd & 4",
        "team": {
         "id": "17"
-       },
-       "yardLine": 49,
-       "yardsToEndzone": 49
+       }
       },
       "statYardage": 5,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass short right to A.Brown to SEA 44 for 5 yards (J.Jobe).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:03:41Z",
-      "yardsAfterCatch": 0
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "10:31"
       },
-      "end": {
-       "distance": 7,
-       "down": 2,
-       "downDistanceText": "2nd & 7 at SEA 41",
-       "possessionText": "SEA 41",
-       "shortDownDistanceText": "2nd & 7",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 41,
-       "yardsToEndzone": 41
-      },
       "homeScore": 0,
       "id": "4018726561071",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "107100",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 44",
-       "possessionText": "SEA 44",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 44,
-       "yardsToEndzone": 44
+       }
       },
       "statYardage": 3,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "C.Kiner right tackle to SEA 41 for 3 yards (D.Lawrence; J.Love).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T01:04:18Z"
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "9:54"
       },
-      "end": {
-       "distance": 2,
-       "down": 3,
-       "downDistanceText": "3rd & 2 at SEA 36",
-       "possessionText": "SEA 36",
-       "shortDownDistanceText": "3rd & 2",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 36,
-       "yardsToEndzone": 36
-      },
       "homeScore": 0,
       "id": "4018726561093",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "109300",
       "start": {
-       "distance": 7,
-       "down": 2,
-       "downDistanceText": "2nd & 7 at SEA 41",
-       "possessionText": "SEA 41",
-       "shortDownDistanceText": "2nd & 7",
        "team": {
         "id": "17"
-       },
-       "yardLine": 41,
-       "yardsToEndzone": 41
+       }
       },
       "statYardage": 5,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Maye pass short left to D.Douglas to SEA 36 for 5 yards (E.Jones; N.Pritchett).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:04:55Z",
-      "yardsAfterCatch": 9
+      }
      },
      {
       "awayScore": 0,
       "clock": {
        "displayValue": "9:22"
       },
-      "end": {
-       "distance": 2,
-       "down": 1,
-       "downDistanceText": "1st & Goal at SEA 2",
-       "possessionText": "SEA 2",
-       "shortDownDistanceText": "1st & Goal",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 2,
-       "yardsToEndzone": 2
-      },
       "homeScore": 0,
       "id": "4018726561118",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "defensive-pass-interference",
-        "text": "Defensive Pass Interference"
-       },
-       "yards": 34
-      },
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "111800",
       "start": {
-       "distance": 2,
-       "down": 3,
-       "downDistanceText": "3rd & 2 at SEA 36",
-       "possessionText": "SEA 36",
-       "shortDownDistanceText": "3rd & 2",
        "team": {
         "id": "17"
-       },
-       "yardLine": 36,
-       "yardsToEndzone": 36
+       }
       },
       "statYardage": 34,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Maye pass incomplete deep left to A.Brown (J.Jobe).PENALTY on SEA-J.Jobe, Defensive Pass Interference, 34 yards, enforced at SEA 36 - No Play.",
       "type": {
-       "abbreviation": "PEN",
-       "id": "8",
        "text": "Penalty"
-      },
-      "wallclock": "2026-09-10T01:05:35Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "9:11"
-      },
-      "end": {
-       "distance": 10,
-       "down": -1,
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 0,
-       "yardsToEndzone": 0
       },
       "homeScore": 0,
       "id": "4018726561152",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "pointAfterAttempt": {
-       "abbreviation": "Extra Point Good",
-       "id": 61,
-       "text": "Extra Point Good",
-       "value": 1
-      },
-      "priority": false,
       "scoringPlay": true,
-      "scoringType": {
-       "abbreviation": "TD",
-       "displayName": "Touchdown",
-       "name": "touchdown"
-      },
-      "sequenceNumber": "115200",
       "start": {
-       "distance": 2,
-       "down": 1,
-       "downDistanceText": "1st & Goal at SEA 2",
-       "possessionText": "SEA 2",
-       "shortDownDistanceText": "1st & Goal",
        "team": {
         "id": "17"
-       },
-       "yardLine": 2,
-       "yardsToEndzone": 2
+       }
       },
       "statYardage": 2,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "G.Van Roten reported in as eligible.  D.Maye pass short left to E.Raridon for 2 yards, TOUCHDOWN. A.Borregales extra point is GOOD, Center-J.Ashby, Holder-M.Wishnowsky.",
       "type": {
-       "abbreviation": "TD",
-       "id": "67",
        "text": "Passing Touchdown"
-      },
-      "wallclock": "2026-09-10T01:06:34Z",
-      "yardsAfterCatch": 0
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "9:11"
       },
-      "end": {
-       "distance": 0,
-       "down": -1,
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 15,
-       "yardsToEndzone": 0
-      },
       "homeScore": 0,
       "id": "4018726561188",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "118800",
       "start": {
-       "distance": 0,
-       "down": -1,
-       "downDistanceText": " & Goal at SEA 15",
-       "possessionText": "SEA 15",
-       "shortDownDistanceText": " & Goal",
        "team": {
         "id": "17"
-       },
-       "yardLine": 15,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 09:11.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T01:07:52Z"
+      }
      }
     ],
-    "result": "TD",
-    "shortDisplayResult": "TD",
-    "start": {
-     "clock": {
-      "displayValue": "14:48"
-     },
-     "period": {
-      "number": 2,
-      "type": "quarter"
-     },
-     "text": "NE 23",
-     "yardLine": 77
-    },
     "team": {
      "abbreviation": "NE",
      "displayName": "New England Patriots",
      "id": "17",
      "name": "Patriots",
      "shortDisplayName": "Patriots"
-    },
-    "timeElapsed": {
-     "displayValue": "5:37"
-    },
-    "yards": 77
+    }
    },
    {
-    "description": "5 plays, 20 yards, 4:32",
-    "displayResult": "Punt",
-    "end": {
-     "clock": {
-      "displayValue": "4:39"
-     },
-     "period": {
-      "number": 2,
-      "type": "quarter"
-     },
-     "text": "50",
-     "yardLine": 50
-    },
-    "id": "4018726567",
-    "isScore": false,
-    "offensivePlays": 5,
     "plays": [
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "9:11"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 30",
-       "possessionText": "SEA 30",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 30,
-       "yardsToEndzone": 70
-      },
       "homeScore": 0,
       "id": "4018726561195",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "119500",
       "start": {
-       "distance": 0,
-       "down": 0,
        "team": {
         "id": "17"
-       },
-       "yardLine": 65,
-       "yardsToEndzone": 65
+       }
       },
       "statYardage": 28,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "A.Borregales kicks 63 yards from NE 35 to SEA 2. R.Shaheed to SEA 30 for 28 yards (C.Woods).",
       "type": {
-       "abbreviation": "K",
-       "id": "53",
        "text": "Kickoff"
-      },
-      "wallclock": "2026-09-10T01:10:28Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "9:06"
       },
-      "end": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at SEA 37",
-       "possessionText": "SEA 37",
-       "shortDownDistanceText": "2nd & 3",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 37,
-       "yardsToEndzone": 63
-      },
       "homeScore": 0,
       "id": "4018726561225",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "122500",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 30",
-       "possessionText": "SEA 30",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 30,
-       "yardsToEndzone": 70
+       }
       },
       "statYardage": 7,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Lock pass short left to B.Russell to SEA 37 for 7 yards (D.Pettus).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:11:10Z",
-      "yardsAfterCatch": 7
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "8:25"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 45",
-       "possessionText": "SEA 45",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 45,
-       "yardsToEndzone": 55
-      },
       "homeScore": 0,
       "id": "4018726561255",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "125500",
       "start": {
-       "distance": 3,
-       "down": 2,
-       "downDistanceText": "2nd & 3 at SEA 37",
-       "possessionText": "SEA 37",
-       "shortDownDistanceText": "2nd & 3",
        "team": {
         "id": "26"
-       },
-       "yardLine": 37,
-       "yardsToEndzone": 63
+       }
       },
       "statYardage": 8,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "J.Price right end to SEA 45 for 8 yards (K.Byard).",
       "type": {
-       "abbreviation": "RUSH",
-       "id": "5",
        "text": "Rush"
-      },
-      "wallclock": "2026-09-10T01:11:52Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "7:42"
       },
-      "end": {
-       "distance": 17,
-       "down": 2,
-       "downDistanceText": "2nd & 17 at SEA 38",
-       "possessionText": "SEA 38",
-       "shortDownDistanceText": "2nd & 17",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 38,
-       "yardsToEndzone": 62
-      },
       "homeScore": 0,
       "id": "4018726561277",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "127700",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at SEA 45",
-       "possessionText": "SEA 45",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "26"
-       },
-       "yardLine": 45,
-       "yardsToEndzone": 55
+       }
       },
       "statYardage": -7,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "D.Lock sacked at SEA 38 for -7 yards (G.Jacas).",
       "type": {
-       "id": "7",
        "text": "Sack"
-      },
-      "wallclock": "2026-09-10T01:12:34Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "6:54"
       },
-      "end": {
-       "distance": 22,
-       "down": 2,
-       "downDistanceText": "2nd & 22 at SEA 33",
-       "possessionText": "SEA 33",
-       "shortDownDistanceText": "2nd & 22",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 33,
-       "yardsToEndzone": 67
-      },
       "homeScore": 0,
       "id": "4018726561297",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "false-start",
-        "text": "False Start"
-       },
-       "yards": 5
-      },
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "129700",
       "start": {
-       "distance": 17,
-       "down": 2,
-       "downDistanceText": "2nd & 17 at SEA 38",
-       "possessionText": "SEA 38",
-       "shortDownDistanceText": "2nd & 17",
        "team": {
         "id": "26"
-       },
-       "yardLine": 38,
-       "yardsToEndzone": 62
+       }
       },
       "statYardage": -5,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) PENALTY on SEA-A.Lucas, False Start, 5 yards, enforced at SEA 38 - No Play.",
       "type": {
-       "abbreviation": "PEN",
-       "id": "8",
        "text": "Penalty"
-      },
-      "wallclock": "2026-09-10T01:13:20Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "6:45"
       },
-      "end": {
-       "distance": 17,
-       "down": 3,
-       "downDistanceText": "3rd & 17 at SEA 38",
-       "possessionText": "SEA 38",
-       "shortDownDistanceText": "3rd & 17",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 38,
-       "yardsToEndzone": 62
-      },
       "homeScore": 0,
       "id": "4018726561321",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "132100",
       "start": {
-       "distance": 22,
-       "down": 2,
-       "downDistanceText": "2nd & 22 at SEA 33",
-       "possessionText": "SEA 33",
-       "shortDownDistanceText": "2nd & 22",
        "team": {
         "id": "26"
-       },
-       "yardLine": 33,
-       "yardsToEndzone": 67
+       }
       },
       "statYardage": 5,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Lock pass short right to J.Smith-Njigba to SEA 38 for 5 yards (C.Durden; M.Jones).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:13:56Z",
-      "yardsAfterCatch": 8
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "6:02"
       },
-      "end": {
-       "distance": 22,
-       "down": 3,
-       "downDistanceText": "3rd & 22 at SEA 33",
-       "possessionText": "SEA 33",
-       "shortDownDistanceText": "3rd & 22",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 33,
-       "yardsToEndzone": 67
-      },
       "homeScore": 0,
       "id": "4018726561346",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "false-start",
-        "text": "False Start"
-       },
-       "yards": 5
-      },
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "134600",
       "start": {
-       "distance": 17,
-       "down": 3,
-       "downDistanceText": "3rd & 17 at SEA 38",
-       "possessionText": "SEA 38",
-       "shortDownDistanceText": "3rd & 17",
        "team": {
         "id": "26"
-       },
-       "yardLine": 38,
-       "yardsToEndzone": 62
+       }
       },
       "statYardage": -5,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) PENALTY on SEA-A.Barner, False Start, 5 yards, enforced at SEA 38 - No Play.",
       "type": {
-       "abbreviation": "PEN",
-       "id": "8",
        "text": "Penalty"
-      },
-      "wallclock": "2026-09-10T01:14:37Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "5:39"
       },
-      "end": {
-       "distance": 1,
-       "down": 4,
-       "downDistanceText": "4th & 1 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "4th & 1",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
-      },
       "homeScore": 0,
       "id": "4018726561370",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "137000",
       "start": {
-       "distance": 22,
-       "down": 3,
-       "downDistanceText": "3rd & 22 at SEA 33",
-       "possessionText": "SEA 33",
-       "shortDownDistanceText": "3rd & 22",
        "team": {
         "id": "26"
-       },
-       "yardLine": 33,
-       "yardsToEndzone": 67
+       }
       },
       "statYardage": 21,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "(Shotgun) D.Lock pass deep middle to J.Smith-Njigba to NE 46 for 21 yards (C.Woodson).",
       "type": {
-       "abbreviation": "REC",
-       "id": "24",
        "text": "Pass Reception"
-      },
-      "wallclock": "2026-09-10T01:15:40Z",
-      "yardsAfterCatch": 0
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "4:54"
       },
-      "end": {
-       "distance": 5,
-       "down": 4,
-       "downDistanceText": "4th & 5 at 50",
-       "possessionText": "50",
-       "shortDownDistanceText": "4th & 5",
-       "team": {
-        "id": "26"
-       },
-       "yardLine": 50,
-       "yardsToEndzone": 50
-      },
       "homeScore": 0,
       "id": "4018726561395",
-      "isPenalty": true,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
-      "penalty": {
-       "status": {
-        "slug": "accepted",
-        "text": "Accepted"
-       },
-       "type": {
-        "slug": "offensive-offside",
-        "text": "Offensive Offside"
-       },
-       "yards": 4
-      },
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "139500",
       "start": {
-       "distance": 1,
-       "down": 4,
-       "downDistanceText": "4th & 1 at NE 46",
-       "possessionText": "NE 46",
-       "shortDownDistanceText": "4th & 1",
        "team": {
         "id": "26"
-       },
-       "yardLine": 54,
-       "yardsToEndzone": 46
+       }
       },
       "statYardage": -4,
-      "teamParticipants": [
-       {
-        "id": "26",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "17",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Direct snap to A.Barner.  A.Barner up the middle to NE 45 for 1 yard (D.Jones; E.Ponder).PENALTY on SEA-A.Bradford, Offensive Offside, 4 yards, enforced at NE 46 - No Play.",
       "type": {
-       "abbreviation": "PEN",
-       "id": "8",
        "text": "Penalty"
-      },
-      "wallclock": "2026-09-10T01:16:25Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "4:45"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 92
-      },
       "homeScore": 0,
       "id": "4018726561430",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "143000",
       "start": {
-       "distance": 5,
-       "down": 4,
-       "downDistanceText": "4th & 5 at 50",
-       "possessionText": "50",
-       "shortDownDistanceText": "4th & 5",
        "team": {
         "id": "26"
-       },
-       "yardLine": 50,
-       "yardsToEndzone": 50
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "defense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "offense"
-       }
-      ],
       "text": "M.Dickson punts 42 yards to NE 8, Center-C.Stoll, out of bounds.",
       "type": {
-       "abbreviation": "PUNT",
-       "id": "52",
        "text": "Punt"
-      },
-      "wallclock": "2026-09-10T01:17:31Z"
+      }
      },
      {
       "awayScore": 7,
       "clock": {
        "displayValue": "4:39"
       },
-      "end": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
-       "team": {
-        "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 92
-      },
       "homeScore": 0,
       "id": "4018726561440",
-      "isPenalty": false,
-      "isTurnover": false,
-      "modified": "2026-09-10T04:06Z",
       "period": {
        "number": 2
       },
-      "priority": false,
       "scoringPlay": false,
-      "sequenceNumber": "144000",
       "start": {
-       "distance": 10,
-       "down": 1,
-       "downDistanceText": "1st & 10 at NE 8",
-       "possessionText": "NE 8",
-       "shortDownDistanceText": "1st & 10",
        "team": {
         "id": "17"
-       },
-       "yardLine": 92,
-       "yardsToEndzone": 0
+       }
       },
       "statYardage": 0,
-      "teamParticipants": [
-       {
-        "id": "17",
-        "order": 1,
-        "type": "offense"
-       },
-       {
-        "id": "26",
-        "order": 2,
-        "type": "defense"
-       }
-      ],
       "text": "Official Timeout at 04:39.",
       "type": {
-       "abbreviation": "Off TO",
-       "id": "74",
        "text": "Official Timeout"
-      },
-      "wallclock": "2026-09-10T01:18:05Z"
+      }
      }
     ],
-    "result": "PUNT",
-    "shortDisplayResult": "PUNT",
-    "start": {
-     "clock": {
-      "displayValue": "9:11"
-     },
-     "period": {
-      "number": 2,
-      "type": "quarter"
-     },
-     "text": "SEA 30",
-     "yardLine": 30
-    },
     "team": {
      "abbreviation": "SEA",
      "displayName": "Seattle Seahawks",
      "id": "26",
      "name": "Seahawks",
      "shortDisplayName": "Seahawks"
-    },
-    "timeElapsed": {
-     "displayValue": "4:32"
-    },
-    "yards": 20
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "4:39"
+      },
+      "homeScore": 0,
+      "id": "4018726561450",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 4,
+      "text": "R.Stevenson left tackle to NE 12 for 4 yards (U.Nwosu).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "4:02"
+      },
+      "homeScore": 0,
+      "id": "4018726561479",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 3,
+      "text": "(Shotgun) D.Maye pass short middle to H.Henry to NE 15 for 3 yards (U.Nwosu).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "3:18"
+      },
+      "homeScore": 0,
+      "id": "4018726561504",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 14,
+      "text": "(Shotgun) D.Maye pass short left to A.Brown to NE 29 for 14 yards (N.Pritchett).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "2:45"
+      },
+      "homeScore": 0,
+      "id": "4018726561529",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 1,
+      "text": "C.Kiner left tackle to NE 30 for 1 yard (E.Jones; D.Thomas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 0,
+      "id": "4018726561540",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Two-Minute Warning",
+      "type": {
+       "text": "Two-minute warning"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 0,
+      "id": "4018726561551",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 16,
+      "text": "(Shotgun) D.Maye scrambles left tackle ran ob at NE 46 for 16 yards (E.Jones).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "1:52"
+      },
+      "homeScore": 0,
+      "id": "4018726561585",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete deep right to D.Douglas [D.Thomas].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "1:46"
+      },
+      "homeScore": 0,
+      "id": "4018726561611",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) D.Maye pass short left to R.Stevenson to SEA 49 for 5 yards (D.Thomas; J.Jobe).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "1:03"
+      },
+      "homeScore": 0,
+      "id": "4018726561636",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 2,
+      "text": "(Shotgun) R.Stevenson left guard to SEA 47 for 2 yards (E.Jones; L.Williams).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:57"
+      },
+      "homeScore": 0,
+      "id": "4018726561658",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by SEA at 00:57.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:57"
+      },
+      "homeScore": 0,
+      "id": "4018726561665",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "M.Wishnowsky punts 40 yards to SEA 7, Center-J.Ashby, fair catch by R.Shaheed.",
+      "type": {
+       "text": "Punt"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:50"
+      },
+      "homeScore": 0,
+      "id": "4018726561675",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 00:50.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:50"
+      },
+      "homeScore": 0,
+      "id": "4018726561685",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) G.Holani right tackle to SEA 11 for 4 yards (C.Woodson).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:45"
+      },
+      "homeScore": 0,
+      "id": "4018726561700",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by NE at 00:45.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:45"
+      },
+      "homeScore": 0,
+      "id": "4018726561714",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 1,
+      "text": "G.Holani right end to SEA 12 for 1 yard (C.Davis).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:39"
+      },
+      "homeScore": 0,
+      "id": "4018726561748",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by NE at 00:39.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:39"
+      },
+      "homeScore": 0,
+      "id": "4018726561755",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 6,
+      "text": "(Shotgun) D.Lock pass short right to J.Smith-Njigba to SEA 18 for 6 yards (C.Elliss).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:33"
+      },
+      "homeScore": 0,
+      "id": "4018726561768",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by SEA at 00:33.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:33"
+      },
+      "homeScore": 0,
+      "id": "4018726561780",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) D.Lock pass short left to A.Barner to SEA 22 for 4 yards (C.Gonzalez).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:24"
+      },
+      "homeScore": 0,
+      "id": "4018726561796",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #3 by SEA at 00:24.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:24"
+      },
+      "homeScore": 0,
+      "id": "4018726561812",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Lock pass incomplete short right to G.Holani.  The penalty was assisted by replay.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:17"
+      },
+      "homeScore": 0,
+      "id": "4018726561859",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) G.Holani left guard to SEA 26 for 4 yards (C.Barmore).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 0,
+      "id": "4018726561881",
+      "period": {
+       "number": 2
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "END QUARTER 2",
+      "type": {
+       "text": "End of Half"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "homeScore": 0,
+      "id": "4018726561901",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 29,
+      "text": "J.Myers kicks 65 yards from SEA 35 to NE 0. K.Williams pushed ob at NE 29 for 29 yards (M.Foster).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "14:53"
+      },
+      "homeScore": 0,
+      "id": "4018726561934",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 13,
+      "text": "D.Maye pass short right to H.Henry to NE 42 for 13 yards (J.Love).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "14:18"
+      },
+      "homeScore": 0,
+      "id": "4018726561959",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete short right.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "14:11"
+      },
+      "homeScore": 0,
+      "id": "4018726561987",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 6,
+      "text": "(Shotgun) R.Stevenson up the middle to NE 48 for 6 yards (D.Witherspoon; D.Thomas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "13:30"
+      },
+      "homeScore": 0,
+      "id": "4018726562009",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete short left to A.Brown (N.Pritchett). NE-A.Brown was injured during the play.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "13:26"
+      },
+      "homeScore": 0,
+      "id": "4018726562021",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 13:26.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "13:26"
+      },
+      "homeScore": 0,
+      "id": "4018726562032",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "M.Wishnowsky punts 38 yards to SEA 14, Center-J.Ashby, fair catch by R.Shaheed.PENALTY on SEA-C.Surratt, Roughing the Kicker, 15 yards, enforced at NE 48 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "13:20"
+      },
+      "homeScore": 0,
+      "id": "4018726562073",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "R.Stevenson left end to SEA 37 for no gain (E.Jones).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "12:41"
+      },
+      "homeScore": 0,
+      "id": "4018726562095",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete short left to R.Stevenson (U.Nwosu).  The incomplete pass was assisted by replay.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "12:38"
+      },
+      "homeScore": 0,
+      "id": "4018726562120",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) D.Maye pass short right to R.Stevenson to SEA 32 for 5 yards (J.Love; D.Witherspoon).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:49"
+      },
+      "homeScore": 0,
+      "id": "4018726562163",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 50,
+      "text": "A.Borregales 50 yard field goal is GOOD, Center-J.Ashby, Holder-M.Wishnowsky.",
+      "type": {
+       "text": "Field Goal Good"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:49"
+      },
+      "homeScore": 0,
+      "id": "4018726562173",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 11:49.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:49"
+      },
+      "homeScore": 0,
+      "id": "4018726562183",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 30,
+      "text": "A.Borregales kicks 66 yards from NE 35 to SEA -1. R.Shaheed to SEA 29 for 30 yards (N.Obiazor).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:44"
+      },
+      "homeScore": 0,
+      "id": "4018726562213",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 13,
+      "text": "D.Lock pass short middle to B.Russell to SEA 42 for 13 yards (R.Spillane).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:02"
+      },
+      "homeScore": 0,
+      "id": "4018726562238",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -3,
+      "text": "J.Price left end to SEA 39 for -3 yards (G.Jacas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:21"
+      },
+      "homeScore": 0,
+      "id": "4018726562260",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Lock pass incomplete short middle to R.Shaheed.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:18"
+      },
+      "homeScore": 0,
+      "id": "4018726562283",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) PENALTY on NE-M.Williams, Encroachment, 5 yards, enforced at SEA 39 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:18"
+      },
+      "homeScore": 0,
+      "id": "4018726562307",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) D.Lock pass short middle to R.Shaheed to SEA 48 for 4 yards (R.Spillane) [D.Jones].",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:37"
+      },
+      "homeScore": 0,
+      "id": "4018726562332",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "M.Dickson punts 46 yards to NE 6, Center-C.Stoll, downed by SEA-V.Jones.",
+      "type": {
+       "text": "Punt"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:29"
+      },
+      "homeScore": 0,
+      "id": "4018726562352",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 09:29.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:29"
+      },
+      "homeScore": 0,
+      "id": "4018726562359",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -2,
+      "text": "R.Stevenson up the middle to NE 4 for -2 yards (J.Love).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "8:54"
+      },
+      "homeScore": 0,
+      "id": "4018726562381",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 1,
+      "text": "(Shotgun) D.Maye pass short right to D.Douglas to NE 5 for 1 yard (R.Thomas).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "8:11"
+      },
+      "homeScore": 0,
+      "id": "4018726562406",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 6,
+      "text": "(Shotgun) D.Maye pass short middle to R.Stevenson to NE 11 for 6 yards (E.Jones).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "7:23"
+      },
+      "homeScore": 0,
+      "id": "4018726562431",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -5,
+      "text": "(Punt formation) PENALTY on NE, Delay of Game, 5 yards, enforced at NE 11 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "7:05"
+      },
+      "homeScore": 0,
+      "id": "4018726562455",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 9,
+      "text": "M.Wishnowsky punts 46 yards to SEA 48, Center-J.Ashby. R.Shaheed to NE 43 for 9 yards (N.Obiazor; E.Ponder).",
+      "type": {
+       "text": "Punt"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:53"
+      },
+      "homeScore": 0,
+      "id": "4018726562481",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 06:53.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:53"
+      },
+      "homeScore": 0,
+      "id": "4018726562488",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) D.Lock pass short right to J.Price to NE 39 for 4 yards (C.Elliss).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:12"
+      },
+      "homeScore": 0,
+      "id": "4018726562501",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by SEA at 06:12.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:12"
+      },
+      "homeScore": 0,
+      "id": "4018726562513",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 2,
+      "text": "(Shotgun) D.Lock pass short left to J.Price pushed ob at NE 37 for 2 yards (R.Spillane).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:36"
+      },
+      "homeScore": 0,
+      "id": "4018726562550",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 24,
+      "text": "(Shotgun) D.Lock pass deep right to C.Kupp to NE 13 for 24 yards (M.Jones) [C.Barmore].",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:50"
+      },
+      "homeScore": 0,
+      "id": "4018726562575",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 2,
+      "text": "(Shotgun) G.Holani up the middle to NE 11 for 2 yards (M.Williams).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:12"
+      },
+      "homeScore": 0,
+      "id": "4018726562597",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "(Shotgun) G.Holani right end to NE 7 for 4 yards (G.Jacas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:25"
+      },
+      "homeScore": 0,
+      "id": "4018726562619",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -5,
+      "text": "(Shotgun) D.Lock pass short left to C.Kupp for 7 yards, TOUCHDOWN NULLIFIED by Penalty.PENALTY on SEA, Illegal Shift, 5 yards, enforced at NE 7 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:21"
+      },
+      "homeScore": 0,
+      "id": "4018726562656",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Lock pass incomplete short left to J.Smith-Njigba [D.Jones].",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:13"
+      },
+      "homeScore": 3,
+      "id": "4018726562679",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 30,
+      "text": "J.Myers 30 yard field goal is GOOD, Center-C.Stoll, Holder-M.Dickson.",
+      "type": {
+       "text": "Field Goal Good"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:13"
+      },
+      "homeScore": 3,
+      "id": "4018726562689",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 03:13.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:13"
+      },
+      "homeScore": 3,
+      "id": "4018726562699",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 29,
+      "text": "J.Myers kicks 62 yards from SEA 35 to NE 3. K.Williams to NE 32 for 29 yards (P.O'Connell; C.Surratt).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:06"
+      },
+      "homeScore": 3,
+      "id": "4018726562729",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -5,
+      "text": "PENALTY on NE-M.Moses, False Start, 5 yards, enforced at NE 32 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:06"
+      },
+      "homeScore": 3,
+      "id": "4018726562753",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 17,
+      "text": "D.Maye pass short left to R.Stevenson pushed ob at NE 44 for 17 yards (E.Jones).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:29"
+      },
+      "homeScore": 3,
+      "id": "4018726562783",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 1,
+      "text": "R.Stevenson right guard to NE 45 for 1 yard (D.Thomas; U.Nwosu).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:48"
+      },
+      "homeScore": 3,
+      "id": "4018726562805",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -10,
+      "text": "(Shotgun) R.Stevenson left end to NE 49 for 4 yards (D.Hall; R.Thomas).PENALTY on NE-W.Campbell, Illegal Block Above the Waist, 10 yards, enforced at NE 45 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:26"
+      },
+      "homeScore": 3,
+      "id": "4018726562838",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 11,
+      "text": "D.Maye pass short left to R.Stevenson to NE 46 for 11 yards (D.Thomas; E.Jones).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:43"
+      },
+      "homeScore": 3,
+      "id": "4018726562863",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 8,
+      "text": "(Shotgun) D.Maye pass short right to D.Douglas to SEA 46 for 8 yards (R.Thomas).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 3,
+      "id": "4018726562888",
+      "period": {
+       "number": 3
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "END QUARTER 3",
+      "type": {
+       "text": "End Period"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "homeScore": 3,
+      "id": "4018726562908",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 1,
+      "text": "C.Kiner right end pushed ob at SEA 45 for 1 yard (D.Lawrence).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "14:27"
+      },
+      "homeScore": 3,
+      "id": "4018726562945",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 30,
+      "text": "D.Maye pass deep left intended for R.Doubs INTERCEPTED by N.Pritchett (R.Thomas) at SEA 3. N.Pritchett to SEA 33 for 30 yards (J.Wilson).",
+      "type": {
+       "text": "Pass Interception Return"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "14:12"
+      },
+      "homeScore": 3,
+      "id": "4018726562972",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 13,
+      "text": "D.Lock pass short right to J.Smith-Njigba pushed ob at SEA 46 for 13 yards (K.Byard) [D.Jones].",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:41"
+      },
+      "homeScore": 3,
+      "id": "4018726563002",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 5,
+      "text": "J.Price left end to NE 49 for 5 yards (C.Woodson).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:04"
+      },
+      "homeScore": 3,
+      "id": "4018726563024",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "J.Price left tackle to NE 45 for 4 yards (D.Jones; K.Byard).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "12:20"
+      },
+      "homeScore": 3,
+      "id": "4018726563046",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "J.Jones reported in as eligible.  E.Wilson right guard to NE 45 for no gain (M.Williams).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:28"
+      },
+      "homeScore": 10,
+      "id": "4018726563070",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 45,
+      "text": "D.Lock pass short left to J.Smith-Njigba for 45 yards, TOUCHDOWN. J.Myers extra point is GOOD, Center-C.Stoll, Holder-M.Dickson.",
+      "type": {
+       "text": "Passing Touchdown"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:28"
+      },
+      "homeScore": 10,
+      "id": "4018726563104",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 11:28.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:28"
+      },
+      "homeScore": 10,
+      "id": "4018726563111",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -9,
+      "text": "J.Myers kicks 63 yards from SEA 35 to NE 2. L.Larison to NE 25 for 23 yards (C.Surratt).PENALTY on NE-G.Jacas, Illegal Block Above the Waist, 10 yards, enforced at NE 24.",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:23"
+      },
+      "homeScore": 10,
+      "id": "4018726563152",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 7,
+      "text": "R.Stevenson up the middle to NE 21 for 7 yards (J.Reed).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:49"
+      },
+      "homeScore": 10,
+      "id": "4018726563174",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 5,
+      "text": "R.Stevenson left tackle to NE 26 for 5 yards (D.Thomas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:11"
+      },
+      "homeScore": 10,
+      "id": "4018726563196",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -4,
+      "text": "R.Stevenson up the middle to NE 22 for -4 yards (B.Murphy).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:32"
+      },
+      "homeScore": 10,
+      "id": "4018726563218",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete deep right to R.Doubs.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:25"
+      },
+      "homeScore": 10,
+      "id": "4018726563241",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass deep middle intended for D.Douglas INTERCEPTED by J.Love at NE 47. J.Love to NE 47 for no gain (D.Douglas).",
+      "type": {
+       "text": "Pass Interception Return"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:20"
+      },
+      "homeScore": 10,
+      "id": "4018726563273",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 4,
+      "text": "J.Price right end to NE 43 for 4 yards (C.Woodson).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "8:37"
+      },
+      "homeScore": 10,
+      "id": "4018726563300",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 9,
+      "text": "D.Lock pass short right to A.Barner pushed ob at NE 34 for 9 yards (C.Elliss).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "8:11"
+      },
+      "homeScore": 10,
+      "id": "4018726563330",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 11,
+      "text": "D.Lock pass short left to J.Smith-Njigba pushed ob at NE 23 for 11 yards (D.Pettus).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "7:31"
+      },
+      "homeScore": 10,
+      "id": "4018726563360",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 11,
+      "text": "(Shotgun) D.Lock pass short right to C.Kupp to NE 12 for 11 yards (C.Davis).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:42"
+      },
+      "homeScore": 10,
+      "id": "4018726563385",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -5,
+      "text": "PENALTY on SEA-A.Bradford, False Start, 5 yards, enforced at NE 12 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "6:42"
+      },
+      "homeScore": 10,
+      "id": "4018726563409",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 14,
+      "text": "D.Lock scrambles left tackle pushed ob at NE 3 for 14 yards (M.Jones).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:59"
+      },
+      "homeScore": 10,
+      "id": "4018726563436",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -5,
+      "text": "PENALTY on SEA, Delay of Game, 5 yards, enforced at NE 3 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:59"
+      },
+      "homeScore": 10,
+      "id": "4018726563460",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Lock pass incomplete short right to J.Smith-Njigba (C.Gonzalez).",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:56"
+      },
+      "homeScore": 10,
+      "id": "4018726563483",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Lock pass incomplete short left to J.Smith-Njigba.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:50"
+      },
+      "homeScore": 13,
+      "id": "4018726563506",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": true,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 26,
+      "text": "J.Myers 26 yard field goal is GOOD, Center-C.Stoll, Holder-M.Dickson.",
+      "type": {
+       "text": "Field Goal Good"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:50"
+      },
+      "homeScore": 13,
+      "id": "4018726563516",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "Official Timeout at 05:50.",
+      "type": {
+       "text": "Official Timeout"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:50"
+      },
+      "homeScore": 13,
+      "id": "4018726563526",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 27,
+      "text": "J.Myers kicks 65 yards from SEA 35 to NE 0. L.Larison to NE 27 for 27 yards (C.O'Toole; B.Russell).",
+      "type": {
+       "text": "Kickoff"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:45"
+      },
+      "homeScore": 13,
+      "id": "4018726563556",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -10,
+      "text": "R.Stevenson left tackle to NE 33 for 6 yards (J.Love).PENALTY on NE-W.Campbell, Offensive Holding, 10 yards, enforced at NE 27 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "5:22"
+      },
+      "homeScore": 13,
+      "id": "4018726563589",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -1,
+      "text": "(Shotgun) D.Maye sacked at NE 16 for -1 yards (L.Williams).",
+      "type": {
+       "text": "Sack"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:41"
+      },
+      "homeScore": 13,
+      "id": "4018726563609",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 19,
+      "text": "(Shotgun) D.Maye pass deep middle to M.Hollins to NE 35 for 19 yards (R.Thomas).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:55"
+      },
+      "homeScore": 13,
+      "id": "4018726563634",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass incomplete short left to R.Doubs.",
+      "type": {
+       "text": "Pass Incompletion"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:49"
+      },
+      "homeScore": 13,
+      "id": "4018726563657",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 5,
+      "text": "(Shotgun) D.Maye scrambles right end ran ob at NE 40 for 5 yards (D.Thomas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:42"
+      },
+      "homeScore": 13,
+      "id": "4018726563684",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 12,
+      "text": "R.Stevenson right guard to SEA 48 for 12 yards (D.Witherspoon; R.Thomas).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:03"
+      },
+      "homeScore": 13,
+      "id": "4018726563706",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -5,
+      "text": "(Shotgun) D.Maye pass incomplete short right.PENALTY on NE-A.Vera-Tucker, Ineligible Downfield Pass, 5 yards, enforced at SEA 48 - No Play.",
+      "type": {
+       "text": "Penalty"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:59"
+      },
+      "homeScore": 13,
+      "id": "4018726563740",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -2,
+      "text": "(Shotgun) D.Maye pass short right to L.Larison to NE 45 for -2 yards (J.Jobe).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:16"
+      },
+      "homeScore": 13,
+      "id": "4018726563765",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -2,
+      "text": "(Shotgun) D.Maye sacked ob at NE 43 for -2 yards (D.Thomas).",
+      "type": {
+       "text": "Sack"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:10"
+      },
+      "homeScore": 13,
+      "id": "4018726563785",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 10,
+      "text": "(Shotgun) D.Maye pass short left to H.Henry to SEA 47 for 10 yards (E.Jones).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 13,
+      "id": "4018726563798",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Two-Minute Warning",
+      "type": {
+       "text": "Two-minute warning"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 13,
+      "id": "4018726563804",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by SEA at 02:00.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:00"
+      },
+      "homeScore": 13,
+      "id": "4018726563810",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 11,
+      "text": "(Shotgun) D.Maye pass short right to M.Hollins to SEA 36 for 11 yards (E.Jones).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:30"
+      },
+      "homeScore": 13,
+      "id": "4018726563854",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 8,
+      "text": "R.Stevenson up the middle to SEA 28 for 8 yards (D.Hall; D.Witherspoon).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:22"
+      },
+      "homeScore": 13,
+      "id": "4018726563876",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #3 by SEA at 01:22.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:22"
+      },
+      "homeScore": 13,
+      "id": "4018726563883",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 1,
+      "text": "D.Maye pass short left to D.Douglas to SEA 27 for 1 yard (N.Pritchett).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:44"
+      },
+      "homeScore": 13,
+      "id": "4018726563896",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #1 by NE at 00:44.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:44"
+      },
+      "homeScore": 13,
+      "id": "4018726563908",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 6,
+      "text": "G.Van Roten reported in as eligible.  D.Maye scrambles left end ran ob at SEA 21 for 6 yards (J.Jobe).",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:38"
+      },
+      "homeScore": 13,
+      "id": "4018726563944",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": -7,
+      "text": "(Shotgun) D.Maye sacked at SEA 28 for -7 yards (D.Hall).",
+      "type": {
+       "text": "Sack"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:32"
+      },
+      "homeScore": 13,
+      "id": "4018726563954",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "Timeout #2 by NE at 00:32.",
+      "type": {
+       "text": "Timeout"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:32"
+      },
+      "homeScore": 13,
+      "id": "4018726563964",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 12,
+      "text": "(Shotgun) D.Maye pass short right to M.Hollins pushed ob at SEA 16 for 12 yards (J.Jobe).",
+      "type": {
+       "text": "Pass Reception"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:26"
+      },
+      "homeScore": 13,
+      "id": "4018726564006",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "17"
+       }
+      },
+      "statYardage": 0,
+      "text": "(Shotgun) D.Maye pass deep right intended for M.Hollins INTERCEPTED by J.Jobe [D.Lawrence] at SEA -3. Touchback.",
+      "type": {
+       "text": "Pass Interception Return"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "NE",
+     "displayName": "New England Patriots",
+     "id": "17",
+     "name": "Patriots",
+     "shortDisplayName": "Patriots"
+    }
+   },
+   {
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:21"
+      },
+      "homeScore": 13,
+      "id": "4018726564034",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": -1,
+      "text": "D.Lock kneels to SEA 19 for -1 yards.",
+      "type": {
+       "text": "Rush"
+      }
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "homeScore": 13,
+      "id": "4018726564056",
+      "period": {
+       "number": 4
+      },
+      "scoringPlay": false,
+      "start": {
+       "team": {
+        "id": "26"
+       }
+      },
+      "statYardage": 0,
+      "text": "END GAME",
+      "type": {
+       "text": "End of Game"
+      }
+     }
+    ],
+    "team": {
+     "abbreviation": "SEA",
+     "displayName": "Seattle Seahawks",
+     "id": "26",
+     "name": "Seahawks",
+     "shortDisplayName": "Seahawks"
+    }
    }
   ]
  },
  "header": {
   "competitions": [
    {
-    "boxscoreAvailable": true,
-    "boxscoreMinutes": true,
-    "boxscoreSource": "full",
-    "commentaryAvailable": false,
     "competitors": [
      {
       "homeAway": "home",
-      "id": "26",
-      "linescores": [
-       {
-        "displayValue": "0"
-       },
-       {
-        "displayValue": "0"
-       },
-       {
-        "displayValue": "3"
-       },
-       {
-        "displayValue": "10"
-       }
-      ],
-      "order": 0,
-      "possession": false,
-      "score": "13",
       "team": {
        "abbreviation": "SEA",
        "alternateColor": "69be28",
@@ -7758,30 +7724,10 @@
        "location": "Seattle",
        "name": "Seahawks",
        "uid": "s:20~l:28~t:26"
-      },
-      "uid": "s:20~l:28~t:26",
-      "winner": true
+      }
      },
      {
       "homeAway": "away",
-      "id": "17",
-      "linescores": [
-       {
-        "displayValue": "0"
-       },
-       {
-        "displayValue": "7"
-       },
-       {
-        "displayValue": "3"
-       },
-       {
-        "displayValue": "0"
-       }
-      ],
-      "order": 1,
-      "possession": false,
-      "score": "10",
       "team": {
        "abbreviation": "NE",
        "alternateColor": "c60c30",
@@ -7791,597 +7737,11 @@
        "location": "New England",
        "name": "Patriots",
        "uid": "s:20~l:28~t:17"
-      },
-      "uid": "s:20~l:28~t:17",
-      "winner": false
+      }
      }
-    ],
-    "conferenceCompetition": false,
-    "date": "2026-09-10T00:20Z",
-    "id": "401872656",
-    "liveAvailable": false,
-    "neutralSite": false,
-    "onWatchESPN": false,
-    "playByPlaySource": "full",
-    "recent": false,
-    "status": {
-     "isTBDFlex": false,
-     "type": {
-      "completed": true,
-      "description": "Final",
-      "detail": "Final",
-      "id": "3",
-      "name": "STATUS_FINAL",
-      "shortDetail": "Final",
-      "state": "post"
-     }
-    },
-    "uid": "s:20~l:28~e:401872656~c:401872656",
-    "wallclockAvailable": true
+    ]
    }
   ],
-  "id": "401872656",
-  "league": {
-   "abbreviation": "NFL",
-   "id": "28",
-   "isTournament": false,
-   "links": [
-    {
-     "href": "https://www.espn.com/nfl/",
-     "rel": [
-      "index",
-      "desktop",
-      "league"
-     ],
-     "text": "Index"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28",
-     "rel": [
-      "index",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Index"
-    },
-    {
-     "href": "https://www.espn.com/nfl/schedule",
-     "rel": [
-      "schedule",
-      "desktop",
-      "league"
-     ],
-     "text": "Schedule"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
-     "rel": [
-      "schedule",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Schedule"
-    },
-    {
-     "href": "https://www.espn.com/nfl/standings",
-     "rel": [
-      "standings",
-      "desktop",
-      "league"
-     ],
-     "text": "Standings"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=standings",
-     "rel": [
-      "standings",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Standings"
-    },
-    {
-     "href": "https://www.espn.com/nfl/powerrankings",
-     "rel": [
-      "rankings",
-      "desktop",
-      "league"
-     ],
-     "text": "Power Rankings"
-    },
-    {
-     "href": "https://www.espn.com/nfl/scoreboard",
-     "rel": [
-      "scores",
-      "desktop",
-      "league"
-     ],
-     "text": "Scores"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
-     "rel": [
-      "scores",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Scores"
-    },
-    {
-     "href": "https://www.espn.com/nfl/stats",
-     "rel": [
-      "stats",
-      "desktop",
-      "league"
-     ],
-     "text": "Stats"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=stats",
-     "rel": [
-      "stats",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Stats"
-    },
-    {
-     "href": "https://www.espn.com/nfl/teams",
-     "rel": [
-      "teams",
-      "desktop",
-      "league"
-     ],
-     "text": "Teams"
-    },
-    {
-     "href": "https://www.espn.com/nfl/players",
-     "rel": [
-      "athletes",
-      "desktop",
-      "league"
-     ],
-     "text": "Players"
-    },
-    {
-     "href": "https://www.espn.com/nfl/injuries",
-     "rel": [
-      "injuries",
-      "desktop",
-      "league"
-     ],
-     "text": "Injuries"
-    },
-    {
-     "href": "https://www.espn.com/nfl/odds",
-     "rel": [
-      "odds",
-      "desktop",
-      "league"
-     ],
-     "text": "Odds"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=odds",
-     "rel": [
-      "odds",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Odds"
-    },
-    {
-     "href": "https://www.espn.com/nfl/playoff-bracket",
-     "rel": [
-      "playoff-bracket",
-      "desktop",
-      "league"
-     ],
-     "text": "Bracket"
-    },
-    {
-     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=bracket",
-     "rel": [
-      "playoff-bracket",
-      "sportscenter",
-      "app",
-      "league"
-     ],
-     "text": "Bracket"
-    },
-    {
-     "href": "https://insider.espn.com/nfl/freeagency/",
-     "rel": [
-      "freeagency",
-      "desktop",
-      "league"
-     ],
-     "text": "Freeagency"
-    }
-   ],
-   "logos": [
-    {
-     "href": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
-     "rel": [
-      "full",
-      "default"
-     ]
-    },
-    {
-     "href": "https://a.espncdn.com/i/teamlogos/leagues/500-dark/nfl.png",
-     "rel": [
-      "full",
-      "dark"
-     ]
-    }
-   ],
-   "name": "National Football League",
-   "shortName": "NFL",
-   "slug": "nfl",
-   "uid": "s:20~l:28"
-  },
-  "season": {
-   "current": true,
-   "type": 2,
-   "year": 2026
-  },
-  "timeValid": true,
-  "uid": "s:20~l:28~e:401872656",
-  "week": 1
- },
- "scoringPlays": [
-  {
-   "awayScore": 7,
-   "clock": {
-    "displayValue": "9:11",
-    "value": 551.0
-   },
-   "homeScore": 0,
-   "id": "4018726561152",
-   "period": {
-    "number": 2
-   },
-   "scoringType": {
-    "abbreviation": "TD",
-    "displayName": "Touchdown",
-    "name": "touchdown"
-   },
-   "team": {
-    "abbreviation": "NE",
-    "displayName": "New England Patriots",
-    "id": "17",
-    "uid": "s:20~l:28~t:17"
-   },
-   "text": "Eli Raridon 2 Yd pass from Drake Maye (Andy Borregales Kick)",
-   "type": {
-    "abbreviation": "TD",
-    "id": "67",
-    "text": "Passing Touchdown"
-   }
-  }
- ],
- "wallclockAvailable": true,
- "winprobability": [
-  {
-   "homeWinPercentage": 0.6127,
-   "playId": "4018726561",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6288,
-   "playId": "40187265641",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6436,
-   "playId": "40187265664",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6598,
-   "playId": "40187265686",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6289,
-   "playId": "401872656111",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6557,
-   "playId": "401872656135",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6397,
-   "playId": "401872656157",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6007,
-   "playId": "401872656180",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6124,
-   "playId": "401872656200",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6123,
-   "playId": "401872656220",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6214,
-   "playId": "401872656227",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5957,
-   "playId": "401872656249",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6072,
-   "playId": "401872656271",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6077,
-   "playId": "401872656298",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5668,
-   "playId": "401872656320",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5607,
-   "playId": "401872656358",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5888,
-   "playId": "401872656385",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6183,
-   "playId": "401872656407",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.605,
-   "playId": "401872656430",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6049,
-   "playId": "401872656453",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6006,
-   "playId": "401872656460",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6188,
-   "playId": "401872656482",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6332,
-   "playId": "401872656505",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6194,
-   "playId": "401872656535",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5764,
-   "playId": "401872656557",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5903,
-   "playId": "401872656587",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5902,
-   "playId": "401872656606",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5685,
-   "playId": "401872656613",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5735,
-   "playId": "401872656638",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5618,
-   "playId": "401872656660",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5616,
-   "playId": "401872656690",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6166,
-   "playId": "401872656712",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6036,
-   "playId": "401872656734",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6035,
-   "playId": "401872656754",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6198,
-   "playId": "401872656761",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6065,
-   "playId": "401872656788",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6048,
-   "playId": "401872656813",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.6047,
-   "playId": "401872656835",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5717,
-   "playId": "401872656855",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5814,
-   "playId": "401872656878",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.57,
-   "playId": "401872656898",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5898,
-   "playId": "401872656920",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5647,
-   "playId": "401872656942",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5484,
-   "playId": "401872656972",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5704,
-   "playId": "401872656997",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5567,
-   "playId": "4018726561019",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.529,
-   "playId": "4018726561046",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.539,
-   "playId": "4018726561071",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.5165,
-   "playId": "4018726561093",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.4326,
-   "playId": "4018726561118",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3979,
-   "playId": "4018726561152",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3953,
-   "playId": "4018726561188",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.4068,
-   "playId": "4018726561195",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.4215,
-   "playId": "4018726561225",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.4275,
-   "playId": "4018726561255",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3803,
-   "playId": "4018726561277",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3664,
-   "playId": "4018726561297",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3686,
-   "playId": "4018726561321",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3572,
-   "playId": "4018726561346",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3681,
-   "playId": "4018726561370",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3631,
-   "playId": "4018726561395",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3759,
-   "playId": "4018726561430",
-   "tiePercentage": 0.0
-  },
-  {
-   "homeWinPercentage": 0.3755,
-   "playId": "4018726561440",
-   "tiePercentage": 0.0
-  }
- ]
+  "id": "401872656"
+ }
 }

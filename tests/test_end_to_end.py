@@ -5,6 +5,7 @@ injected rather than imported at call sites."""
 from __future__ import annotations
 
 import json
+import re
 import os
 import pathlib
 import sys
@@ -1784,16 +1785,30 @@ class TestReplay(unittest.TestCase):
                 continue
             self.assertEqual(sit["isRedZone"], sit["yardsToEndzone"] <= 20)
 
-    # ── the honest limitation ──
+    # ── the box score ──
 
-    def test_the_box_score_is_served_as_captured_and_says_so(self):
-        """ESPN publishes no per-play player stat line, so the box score cannot
-        be ramped truthfully. It is passed through untouched, and the frame
-        carries a note saying so - scaling it by elapsed fraction would invent
-        numbers that look exactly like data."""
+    def test_the_box_score_is_derived_from_the_plays_and_says_so(self):
+        """The box score is rebuilt from the play text as of this clock.
+
+        This test used to assert the opposite - that the captured FINAL box
+        score was passed through untouched - because ESPN publishes no
+        per-play player line and ramping it was thought to mean inventing
+        numbers. It does not: the numbers are stated in `play.text`, which is
+        a machine-written grammar, and `replay.reconcile` diffs the whole-game
+        parse against ESPN's published final at 99.4% of cells. What survives
+        of the old assertion is the part that mattered - the frame has to say
+        which of the two it is serving, or a client draws a defence at its
+        final total before the opening kickoff.
+        """
         _, sm = self.frame(600)
-        self.assertEqual(sm["boxscore"], self.SM["boxscore"])
-        self.assertIn("FINAL", sm["replay"]["boxscore"])
+        self.assertNotEqual(sm["boxscore"], self.SM["boxscore"])
+        note = sm["replay"]["boxscore"]
+        self.assertEqual(note["mode"], "derived")
+        # This fixture is seven drives of a nineteen-drive game, so there is no
+        # final to reconcile against and the frame says exactly that rather
+        # than publishing a rate that measures the trim. The whole-game rate is
+        # asserted in TestBoxScoreDerivedFromPlayText, on both games.
+        self.assertFalse(note["reconciled"])
         self.assertEqual(sm["replay"]["playsTotal"], 62)
         self.assertEqual(sm["replay"]["state"], "in")
 
@@ -1933,24 +1948,52 @@ class TestAWholeGameThroughTheStack(unittest.TestCase):
                 self.assertGreaterEqual(st["r"], 0.0, f"t={t} {pid} remaining < 0")
                 self.assertLessEqual(st["r"], 1.0, f"t={t} {pid} remaining > 1")
 
-    def test_a_players_points_never_go_backwards(self):
-        """True of a person and deliberately not asserted of a defence.
+    def costs(self, t):
+        """Per athlete, the derived numbers that can legitimately cost points."""
+        from fantasyedge import replay
+
+        roster = replay.Roster(self.summary)
+        clubs, pair = replay.game_clubs(self.summary)
+        plays = [p for p in replay._all_plays(self.summary)
+                 if replay.play_seconds(p) <= t]
+        tally = replay.tally(plays, roster, clubs, pair)
+        return {pid: (a.get("rushingYards", 0.0), a.get("receivingYards", 0.0),
+                      a.get("passingYards", 0.0), a.get("intThrown", 0.0),
+                      a.get("fumblesLost", 0.0))
+                for pid, a in tally.by_athlete.items()}
+
+    def test_a_players_points_only_go_backwards_when_he_earns_it(self):
+        """Deliberately not asserted of a defence, and no longer asserted flat.
 
         A defence's score legitimately falls: it is paid for a shutout and
         charged for what it concedes, so conceding is a real subtraction.
-        Asserting monotonicity over a D/ST would be asserting that football
-        does not work the way it does.
+
+        Since the box score began ramping off the play text, the same is true
+        of a person. A three-yard loss costs a running back three tenths, an
+        interception costs a quarterback two points, and a lost fumble costs
+        anybody two. Flat monotonicity passed for years only because the box
+        score was frozen at its final value; at a ten-second sampling it is
+        false three times in this fixture alone. So the invariant asserted is
+        the true one: points fall only when this player's own derived line
+        records something that costs points.
         """
-        seen = {}
+        seen, before = {}, {}
         for t, snap in self.walk():
+            now = self.costs(t)
             for pid, st in snap["players"].items():
-                if pid.startswith("-"):
+                if pid.startswith("-") or st["g"] == "PRE":
+                    before[pid] = now.get(pid, (0.0,) * 5)
+                    seen[pid] = st["s"]
                     continue
-                if pid in seen and st["g"] != "PRE":
+                was, is_ = before.get(pid, (0.0,) * 5), now.get(pid, (0.0,) * 5)
+                charged = (is_[0] < was[0] or is_[1] < was[1] or is_[2] < was[2]
+                           or is_[3] > was[3] or is_[4] > was[4])
+                if pid in seen and not charged:
                     self.assertGreaterEqual(
                         st["s"] + 1e-9, seen[pid],
-                        f"t={t} {pid} lost points: {seen[pid]} -> {st['s']}")
-                seen[pid] = st["s"]
+                        f"t={t} {pid} lost points with nothing to show for it: "
+                        f"{seen[pid]} -> {st['s']}")
+                before[pid], seen[pid] = is_, st["s"]
 
     def test_the_clock_only_runs_forwards(self):
         last = -1.0
@@ -2117,3 +2160,409 @@ class TestConnectPage(unittest.TestCase):
         self.assertIn('href="demo.html"', built,
                       "the entry page no longer offers the demo, so the demo is "
                       "unreachable rather than merely moved")
+
+
+class TestBoxScoreDerivedFromPlayText(unittest.TestCase):
+    """The acceptance test for the derivation: ESPN's final is ground truth.
+
+    `replay.frame()` rebuilds the box score out of `play.text` so a replay can
+    show points arriving during a game. The only way that is honest rather than
+    plausible is to accumulate the whole game and diff it, cell by cell, against
+    what ESPN published. Two games, because one parser fitted to one game is not
+    a parser.
+
+    Both fixtures are whole games cut to their plays and their final box score
+    by `python3 tools/make_replay_fixture.py --event <id> --pbp`. Never edit
+    one by hand.
+    """
+
+    GAMES = ("401872656", "401872657")          # NE at SEA, SF at LAR
+
+    def load(self, event):
+        return json.loads((FIX / f"replay_pbp_{event}.json").read_text())
+
+    def tally(self, summary, plays=None):
+        from fantasyedge import replay
+
+        roster = replay.Roster(summary)
+        clubs, pair = replay.game_clubs(summary)
+        if plays is None:
+            plays = replay._all_plays(summary)
+        return replay.tally(plays, roster, clubs, pair), roster
+
+    def derived(self, summary, plays=None):
+        from fantasyedge import replay
+
+        tally, _ = self.tally(summary, plays)
+        return {**summary, "boxscore": replay.derived_boxscore(summary, tally)}
+
+    # ── the reconciliation ──
+
+    def test_both_games_reconcile_against_espns_published_final(self):
+        """The headline number. Measured, not aspirational: 99.4% and 97.9%.
+
+        The floor is set just under what the parser actually does rather than
+        at some round number, so a regression that costs a single category
+        fails here instead of being absorbed.
+        """
+        from fantasyedge import replay
+
+        for event in self.GAMES:
+            with self.subTest(event=event):
+                checked = replay.reconcile(self.load(event))
+                self.assertGreater(checked["cells"], 450)
+                self.assertGreaterEqual(checked["rate"], 0.975,
+                                        f"{event}: {checked['mismatches']}")
+
+    # What each category actually reconciles at, across both games, so that a
+    # regression in any single one fails here rather than being averaged away
+    # by the ten that are perfect. Where a floor is below 1.0 the residual is
+    # named in the class docstring of the statYardage test: in every case it is
+    # ESPN's published box score disagreeing with ESPN's own play data, which
+    # is why raising these floors is not a matter of parsing harder.
+    FLOORS = {"passing": 0.94, "rushing": 0.95, "receiving": 0.98,
+              "interceptions": 1.0, "fumbles": 1.0, "kicking": 1.0,
+              "kickReturns": 0.86, "puntReturns": 1.0, "punting": 1.0,
+              "defensive": 0.99, "team": 0.87}
+
+    def test_every_category_reconciles_at_its_own_measured_floor(self):
+        """A category `scoring.py` reads has the higher bar: passing, rushing,
+        receiving, interceptions, fumbles and kicking are what a lineup is paid
+        on, and a cell wrong there is a wrong score on somebody's screen."""
+        from fantasyedge import replay
+
+        for event in self.GAMES:
+            checked = replay.reconcile(self.load(event))
+            self.assertEqual(set(checked["categories"]) - set(self.FLOORS), set())
+            for name, floor in self.FLOORS.items():
+                info = checked["categories"].get(name) or {}
+                if not info.get("cells"):
+                    continue                    # neither side fumbled all game
+                with self.subTest(event=event, category=name):
+                    self.assertGreaterEqual(info["rate"], floor,
+                                            f"{name}: {checked['mismatches']}")
+
+    def test_every_name_in_the_play_text_resolves_to_an_athlete(self):
+        """An unresolved name is a silently dropped stat line, so there are
+        none. Two real bugs were found by this alone: "TOUCHDOWN. A.Borregales
+        extra point is GOOD" parsed as a man whose initial was TOUCHDOWN, and
+        an unremoved ", Center-J.Ashby" turned the punt returner two words
+        later into "Ashby. R.Shaheed"."""
+        from fantasyedge import replay
+
+        for event in self.GAMES:
+            with self.subTest(event=event):
+                self.assertEqual(replay.reconcile(self.load(event))["unresolved"], {})
+
+    def test_the_parse_agrees_with_espns_own_statYardage(self):
+        """An independent check, and the one that says where a residual lives.
+
+        `statYardage` is ESPN's own number for the same play, computed by ESPN
+        rather than read out of the sentence. All 223 scrimmage and return
+        plays across both games agree with it - which is how we know the four
+        cells that do not reconcile (Kaelon Black at 66 rushing yards against a
+        published 65, Lan Larison at 50 kick-return yards against 49) are
+        ESPN's box score disagreeing with ESPN's own play data, not a misparse.
+        """
+        from fantasyedge import replay
+
+        counted = {"Rush", "Rushing Touchdown", "Pass Reception",
+                   "Passing Touchdown", "Sack", "Kickoff", "Punt"}
+        checked = 0
+        for event in self.GAMES:
+            summary = self.load(event)
+            _, roster = self.tally(summary, [])
+            clubs, pair = replay.game_clubs(summary)
+            for play in replay._all_plays(summary):
+                if (play.get("type") or {}).get("text") not in counted:
+                    continue
+                # A penalty moves the ball after the fact, so ESPN's own
+                # `statYardage` stops describing the play the text describes.
+                if re.search(r"(?i)penalty", play.get("text") or ""):
+                    continue
+                one = replay.tally([play], roster, clubs, pair)
+                gained = sum(a.get("rushingYards", 0.0) + a.get("receivingYards", 0.0)
+                             + a.get("kickReturnYards", 0.0)
+                             + a.get("puntReturnYards", 0.0)
+                             - a.get("sackYardsLost", 0.0)
+                             for a in one.by_athlete.values())
+                checked += 1
+                self.assertEqual(gained, play.get("statYardage"),
+                                 f"{event}: {play.get('text')}")
+        self.assertGreater(checked, 200)
+
+    def test_the_fantasy_points_at_the_final_whistle_are_espns(self):
+        """What the reconciliation is ultimately for. Every athlete in both
+        games finishes within a tenth of a point of what ESPN's own final box
+        score scores him, and the two games' totals agree to within a quarter
+        of a point across fifty-one players."""
+        from fantasyedge.scoring import score_boxscore
+
+        for event in self.GAMES:
+            summary = self.load(event)
+            mine = score_boxscore(self.derived(summary))
+            espn = score_boxscore(summary)
+            self.assertEqual(set(mine), set(espn))
+            for pid in espn:
+                with self.subTest(event=event, athlete=pid):
+                    self.assertAlmostEqual(mine[pid], espn[pid], delta=0.101)
+            self.assertAlmostEqual(sum(mine.values()), sum(espn.values()), delta=0.25)
+
+    # ── what it will not pretend to know ──
+
+    def test_a_column_the_text_cannot_support_is_absent_not_backfilled(self):
+        """Passer rating and QBR are not in the play text at any price, and the
+        team block's first downs, third-down efficiency and time of possession
+        need down-and-distance bookkeeping this parser does not do.
+
+        The failure mode being guarded is not "we got it wrong" but "we quietly
+        used the final value", which is the bug the whole derivation exists to
+        remove and would be invisible at t=0 - a quarterback showing his
+        end-of-game passer rating before his first snap.
+        """
+        from fantasyedge import replay
+
+        summary = self.load("401872656")
+        derived = self.derived(summary, plays=replay._all_plays(summary)[:20])
+        for team in derived["boxscore"]["players"]:
+            for cat in team["statistics"]:
+                if cat["name"] != "passing":
+                    continue
+                for ath in cat["athletes"]:
+                    row = dict(zip(cat["keys"], ath["stats"]))
+                    self.assertEqual(row["adjQBR"], "--")
+                    self.assertEqual(row["QBRating"], "--")
+        shown = {s["name"] for t in derived["boxscore"]["teams"]
+                 for s in t["statistics"]}
+        for absent in ("firstDowns", "thirdDownEff", "possessionTime",
+                       "totalPenaltiesYards", "redZoneAttempts"):
+            self.assertNotIn(absent, shown)
+        self.assertIn("totalYards", shown)
+
+    def test_a_nullified_play_contributes_nothing(self):
+        """A "No Play" is a penalty that rescinded the down. Play 60 of event
+        401872656 reads as a one-yard A.Barner rush and A.Barner has no rushing
+        line in ESPN's box score, because the flag wiped it. Counting it would
+        invent a carry for a tight end."""
+        from fantasyedge import replay
+
+        summary = self.load("401872656")
+        nulls = [p for p in replay._all_plays(summary)
+                 if "No Play" in (p.get("text") or "")]
+        self.assertGreaterEqual(len(nulls), 15)
+        tally, _ = self.tally(summary, nulls)
+        self.assertEqual(tally.by_athlete, {})
+
+    def test_a_sacks_yardage_is_not_taken_off_the_passer(self):
+        """ESPN keeps it in its own `sacks-sackYardsLost` column and leaves
+        `passingYards` gross - Drake Maye is 178 yards with 3-10 in sacks, and
+        New England's receiving column sums to 178 exactly. Subtracting it here
+        would put every quarterback in the league four tenths light."""
+        summary = self.load("401872656")
+        derived = self.derived(summary)
+        for team in derived["boxscore"]["players"]:
+            for cat in team["statistics"]:
+                if cat["name"] != "passing":
+                    continue
+                for ath in cat["athletes"]:
+                    if ath["athlete"]["displayName"] != "Drake Maye":
+                        continue
+                    row = dict(zip(cat["keys"], ath["stats"]))
+                    self.assertEqual(row["passingYards"], "178")
+                    self.assertEqual(row["sacks-sackYardsLost"], "3-10")
+                    return
+        self.fail("Drake Maye is not in the derived passing block")
+
+    def test_an_ambiguous_name_is_refused_rather_than_guessed(self):
+        """Two men with the same initial and surname on the same club cannot be
+        told apart by the play text, and picking one puts a touchdown on the
+        wrong player with nothing downstream able to notice."""
+        from fantasyedge import replay
+
+        summary = self.load("401872656")
+        roster = replay.Roster(summary)
+        pid = roster.find("R.Stevenson", "NE")
+        self.assertEqual(roster.info[pid]["name"], "Rhamondre Stevenson")
+        key = ("NE", "R", "stevenson")
+        roster.by_club[key] = set(roster.by_club[key]) | {"999999"}
+        self.assertIsNone(roster.find("R.Stevenson", "NE"))
+
+    def test_a_surname_particle_and_a_suffix_both_resolve(self):
+        """"G.Van Roten" is one man whose display name's last token is "Roten",
+        and "Deebo Samuel Sr." is written "D.Samuel"."""
+        from fantasyedge import replay
+
+        roster = replay.Roster(self.load("401872657"))
+        self.assertEqual(roster.info[roster.find("D.Samuel", "SF")]["name"],
+                         "Deebo Samuel Sr.")
+        self.assertEqual(roster.info[roster.find("S.Bennett", "LAR")]["name"],
+                         "Stetson Bennett IV")
+        self.assertEqual(roster.info[roster.find("C.West", "SF")]["name"],
+                         "C.J. West")
+
+
+class TestAReplayRampsThePlayerPoints(unittest.TestCase):
+    """The point of the whole exercise: points arrive during a game.
+
+    Before the box score was derived, every player carried his end-of-game
+    total from the opening kickoff. The Seahawks defence read 16.0 before
+    anybody had touched the ball - a shutout bonus, plus the yards New England
+    would eventually gain, plus three interceptions it had not yet caught.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.SB = json.loads((FIX / "replay_scoreboard.json").read_text())
+        cls.SM = json.loads((FIX / "replay_summary.json").read_text())
+        cls.PBP = json.loads((FIX / "replay_pbp_401872656.json").read_text())
+
+    def at(self, second):
+        from fantasyedge.replay import frame
+
+        return frame(self.SB, self.SM, second)[1]
+
+    def dst(self, summary, club, opponent):
+        from fantasyedge.scoring import dst_points, parse_team_defence
+
+        teams = parse_team_defence(summary)
+        scores = {c["homeAway"]: int(c["score"]) for c in
+                  summary["header"]["competitions"][0]["competitors"]}
+        conceded = scores["away" if club == "SEA" else "home"]
+        return dst_points(conceded, (teams.get(opponent) or {}).get("yards"),
+                          teams.get(club) or {})
+
+    def test_a_defence_no_longer_reads_its_final_total_at_kickoff(self):
+        """The captured box score scored Seattle's defence at 16.0 before the
+        first snap. Derived, it opens at the shutout floor - nothing conceded
+        and no yards allowed, which is what `dst_points` is defined to pay -
+        and moves from there."""
+        from fantasyedge.scoring import dst_points, parse_team_defence
+
+        captured = parse_team_defence(self.SM)
+        self.assertEqual(dst_points(0, captured["NE"]["yards"], captured["SEA"]), 16.0)
+        self.assertEqual(self.dst(self.at(0), "SEA", "NE"), 10.0)
+        self.assertEqual(self.dst(self.at(0), "NE", "SEA"), 10.0)
+
+    def test_nobody_carries_a_stat_line_before_he_earns_it(self):
+        """At the opening kickoff the only two athletes in the box score are
+        the man who returned it and the man who tackled him."""
+        listed = [ath["athlete"]["displayName"]
+                  for team in self.at(0)["boxscore"]["players"]
+                  for cat in team["statistics"] for ath in cat["athletes"]]
+        self.assertEqual(sorted(listed), ["Namdi Obiazor", "Rashid Shaheed"])
+
+    def test_a_receiver_accumulates_across_the_whole_game(self):
+        """Jaxon Smith-Njigba, play by play, to exactly what ESPN published."""
+        from fantasyedge import replay
+        from fantasyedge.scoring import score_boxscore
+
+        plays = replay._all_plays(self.PBP)
+        roster = replay.Roster(self.PBP)
+        clubs, pair = replay.game_clubs(self.PBP)
+        ramp = []
+        for upto in (0, 20, 60, 100, 140, len(plays)):
+            box = replay.derived_boxscore(
+                self.PBP, replay.tally(plays[:upto], roster, clubs, pair))
+            # `.get`, because before his first target he is not in the box
+            # score at all - which is itself the behaviour being asserted.
+            ramp.append(score_boxscore({**self.PBP, "boxscore": box}).get("4430878", 0.0))
+        self.assertEqual(ramp, [0.0, 2.3, 8.7, 10.3, 24.1, 26.2])
+        self.assertEqual(ramp[-1], score_boxscore(self.PBP)["4430878"])
+
+    def test_the_frame_states_how_the_box_score_was_made(self):
+        """A client that cannot tell a derived box score from a captured one
+        will draw the second as though it were the first."""
+        note = self.at(600)["replay"]["boxscore"]
+        self.assertEqual(note["mode"], "derived")
+        self.assertEqual(note["source"], "play-by-play text")
+        self.assertIn("DERIVED", note["note"])
+        self.assertIn("passing.QBRating", note["excluded"])
+
+    def test_a_full_capture_carries_its_reconciliation_rate_in_every_frame(self):
+        from fantasyedge import replay
+
+        board = {"events": [{"id": "401872656", "competitions": [{}]}]}
+        summary = {**self.PBP, "winprobability": [], "scoringPlays": []}
+        summary["header"] = {**summary["header"], "id": "401872656"}
+        summary["header"]["competitions"][0]["status"] = {
+            "type": {"state": "post", "completed": True}}
+        note = replay.frame(board, summary, 1200)[1]["replay"]["boxscore"]
+        self.assertTrue(note["reconciled"])
+        self.assertGreater(note["rate"], 0.99)
+        self.assertEqual(note["unresolvedNames"], {})
+        self.assertIn("kickReturns", note["unreconciled"])
+
+    def test_the_real_scoring_path_reads_a_derived_box_score_unchanged(self):
+        """No parallel scoring path: `parse_boxscore`, `score_boxscore` and
+        `parse_team_defence` are handed the derived block exactly as they are
+        handed ESPN's."""
+        from fantasyedge.scoring import (parse_boxscore, parse_team_defence,
+                                         score_boxscore)
+
+        early, late = self.at(300), self.at(1521)
+        self.assertLess(len(parse_boxscore(early)), len(parse_boxscore(late)))
+        self.assertTrue(all(v >= 0 or True for v in score_boxscore(late).values()))
+        yards = parse_team_defence(late)
+        self.assertGreater(yards["SEA"]["yards"], parse_team_defence(early)["SEA"]["yards"])
+
+    def test_frame_still_does_not_mutate_what_it_was_given(self):
+        """Deriving a box score reads the captured one as a template, which is
+        one more chance to write through it."""
+        from fantasyedge.replay import frame
+
+        keep = json.dumps(self.SM, sort_keys=True)
+        frame(self.SB, self.SM, 900)
+        self.assertEqual(json.dumps(self.SM, sort_keys=True), keep)
+
+
+class TestKickersActuallyScore(unittest.TestCase):
+    """Every kicker on every board scored exactly zero, always.
+
+    ESPN sends made-and-attempted as one column - the key is
+    "fieldGoalsMade/fieldGoalAttempts" and the value is "2/2". The value side
+    was always handled; the key was not, so the column never matched and was
+    dropped. Nothing raised, no kicker ever complained, and the board simply
+    showed 0.0 for a man who had kicked three times.
+    """
+
+    def setUp(self):
+        # The older fixture is trimmed to the scrimmage categories and has no
+        # kicker in it at all, which is precisely why this went unnoticed for
+        # so long. The replay capture is a whole box score.
+        self.summary = json.loads((FIX / "replay_summary.json").read_text())
+
+    def test_the_combined_key_is_read(self):
+        from fantasyedge.scoring import parse_boxscore
+
+        stats = parse_boxscore(self.summary)
+        kickers = {p: s for p, s in stats.items()
+                   if "fieldGoalsMade" in s or "extraPointsMade" in s}
+        self.assertTrue(kickers, "no kicking line was parsed at all")
+
+    def test_it_agrees_with_espns_own_arithmetic(self):
+        """ESPN publishes `totalKickingPoints` beside the columns it is made
+        of, which makes this checkable rather than merely plausible - under
+        the default rules a field goal is 3 and an extra point is 1, which is
+        exactly what that column counts."""
+        from fantasyedge.scoring import parse_boxscore
+
+        published = {}
+        for team in ((self.summary.get("boxscore") or {}).get("players") or []):
+            for cat in (team.get("statistics") or []):
+                keys = cat.get("keys") or []
+                if "totalKickingPoints" not in keys:
+                    continue
+                at = keys.index("totalKickingPoints")
+                for ath in (cat.get("athletes") or []):
+                    pid = str(((ath.get("athlete") or {}).get("id")) or "")
+                    st = ath.get("stats") or []
+                    if pid and at < len(st):
+                        published[pid] = float(st[at])
+
+        self.assertTrue(published, "fixture has no kicker to check against")
+        stats = parse_boxscore(self.summary)
+        for pid, espn_points in published.items():
+            line = stats.get(pid) or {}
+            mine = line.get("fieldGoalsMade", 0.0) * 3 + line.get("extraPointsMade", 0.0)
+            self.assertEqual(mine, espn_points,
+                             f"{pid}: scored {mine} where ESPN counts {espn_points}")

@@ -34,6 +34,19 @@ DEFAULTS = {
 
 # Which box-score keys carry the numbers we care about. A key we do not know
 # is ignored rather than guessed at.
+#: ESPN reports some columns as a made-and-attempted pair under one key -
+#: "fieldGoalsMade/fieldGoalAttempts", whose value is "2/2". The value side was
+#: always handled (`_num` takes the part before the slash), but the *key* was
+#: not: nothing named `fieldGoalsMade` is ever sent, so the column was skipped
+#: and every kicker on every board scored exactly zero, always. Jason Myers
+#: kicked two field goals and an extra point in the game this was found in and
+#: read 0.0. Mapping the pair onto the name the scoring rules already use fixes
+#: it everywhere at once.
+ALIAS = {
+    "fieldGoalsMade/fieldGoalAttempts": "fieldGoalsMade",
+    "extraPointsMade/extraPointAttempts": "extraPointsMade",
+}
+
 WANTED = {
     "passingYards", "passingTouchdowns", "interceptions",
     "rushingYards", "rushingTouchdowns",
@@ -97,7 +110,8 @@ def parse_boxscore(summary: dict) -> dict[str, dict]:
     for team in ((summary.get("boxscore") or {}).get("players") or []):
         for cat in (team.get("statistics") or []):
             keys = cat.get("keys") or []
-            idx = {k: i for i, k in enumerate(keys) if k in WANTED}
+            idx = {ALIAS.get(k, k): i for i, k in enumerate(keys)
+                   if ALIAS.get(k, k) in WANTED}
             if not idx:
                 continue
             for ath in (cat.get("athletes") or []):
