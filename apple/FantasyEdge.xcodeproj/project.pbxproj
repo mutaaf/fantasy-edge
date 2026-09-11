@@ -10,6 +10,7 @@
 		3FA4EC74D0A31C5C60D8C79E /* Attention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59CBF1E8CC41F06FC909C34E /* Attention.swift */; };
 		C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045DF9D9ED222051C529CB76 /* BoardView.swift */; };
 		D23C96A51FBF336FD667E92B /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3BAB1EC78AAE08765A5C6F /* CellView.swift */; };
+		90E665A6B84853169828DDB3 /* ComingSoon.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDE198B0714ED91A7399B39 /* ComingSoon.swift */; };
 		C6CEC6DD16F84E49B060E283 /* CommandDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5029057AEA7EE4A6F399447 /* CommandDetail.swift */; };
 		B301F08A365BAC3258930E38 /* CommandPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D536F5DA0E279B27BE37C /* CommandPanels.swift */; };
 		28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9826E7D2E14B394647B8AFCD /* CommandRails.swift */; };
@@ -20,6 +21,7 @@
 		D008569B94DFD109A002453A /* Gamecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D260E8769E75220D2DCB99F6 /* Gamecast.swift */; };
 		C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F54AC836EC2489FF7E7976 /* Gridiron.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
+		2F66FB74235D2E75CBBD3DC0 /* IntelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB57982F7DC43561D0E3FE9 /* IntelView.swift */; };
 		779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99CF54DD670773756DCE373 /* LeagueView.swift */; };
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
 		5576CAB7A3B67872A2D150AB /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6B97E969AB9606C0E94195 /* LiveView.swift */; };
@@ -35,6 +37,7 @@
 		59CBF1E8CC41F06FC909C34E /* Attention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attention.swift; sourceTree = "<group>"; };
 		045DF9D9ED222051C529CB76 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		BE3BAB1EC78AAE08765A5C6F /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
+		BDDE198B0714ED91A7399B39 /* ComingSoon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComingSoon.swift; sourceTree = "<group>"; };
 		F5029057AEA7EE4A6F399447 /* CommandDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandDetail.swift; sourceTree = "<group>"; };
 		F63D536F5DA0E279B27BE37C /* CommandPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPanels.swift; sourceTree = "<group>"; };
 		9826E7D2E14B394647B8AFCD /* CommandRails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRails.swift; sourceTree = "<group>"; };
@@ -45,6 +48,7 @@
 		D260E8769E75220D2DCB99F6 /* Gamecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gamecast.swift; sourceTree = "<group>"; };
 		92F54AC836EC2489FF7E7976 /* Gridiron.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gridiron.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
+		8AB57982F7DC43561D0E3FE9 /* IntelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelView.swift; sourceTree = "<group>"; };
 		A99CF54DD670773756DCE373 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
 		9D6B97E969AB9606C0E94195 /* LiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveView.swift; sourceTree = "<group>"; };
@@ -79,6 +83,7 @@
 				59CBF1E8CC41F06FC909C34E /* Attention.swift */,
 				045DF9D9ED222051C529CB76 /* BoardView.swift */,
 				BE3BAB1EC78AAE08765A5C6F /* CellView.swift */,
+				BDDE198B0714ED91A7399B39 /* ComingSoon.swift */,
 				F5029057AEA7EE4A6F399447 /* CommandDetail.swift */,
 				F63D536F5DA0E279B27BE37C /* CommandPanels.swift */,
 				9826E7D2E14B394647B8AFCD /* CommandRails.swift */,
@@ -89,6 +94,7 @@
 				D260E8769E75220D2DCB99F6 /* Gamecast.swift */,
 				92F54AC836EC2489FF7E7976 /* Gridiron.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
+				8AB57982F7DC43561D0E3FE9 /* IntelView.swift */,
 				A99CF54DD670773756DCE373 /* LeagueView.swift */,
 				848B7422D9647143452C9753 /* Leverage.swift */,
 				9D6B97E969AB9606C0E94195 /* LiveView.swift */,
@@ -169,6 +175,7 @@
 				3FA4EC74D0A31C5C60D8C79E /* Attention.swift in Sources */,
 				C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */,
 				D23C96A51FBF336FD667E92B /* CellView.swift in Sources */,
+				90E665A6B84853169828DDB3 /* ComingSoon.swift in Sources */,
 				C6CEC6DD16F84E49B060E283 /* CommandDetail.swift in Sources */,
 				B301F08A365BAC3258930E38 /* CommandPanels.swift in Sources */,
 				28D682A99E2E1FDE1D0EC03D /* CommandRails.swift in Sources */,
@@ -179,6 +186,7 @@
 				D008569B94DFD109A002453A /* Gamecast.swift in Sources */,
 				C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
+				2F66FB74235D2E75CBBD3DC0 /* IntelView.swift in Sources */,
 				779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */,
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,
 				5576CAB7A3B67872A2D150AB /* LiveView.swift in Sources */,

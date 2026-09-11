@@ -64,12 +64,10 @@ struct PlayersView: View {
                                 }
                             }
                             .padding(.vertical, 7).padding(.horizontal, 10)
-                            .background(RoundedRectangle(cornerRadius: 11)
-                                .fill(scope == key ? Theme.green.opacity(0.16)
-                                                   : .white.opacity(0.04)))
+                            .plate(11, scope == key ? Theme.green.opacity(0.16)
+                                                    : .white.opacity(0.04))
                             .foregroundStyle(scope == key ? AnyShapeStyle(Theme.green)
                                                           : AnyShapeStyle(.primary))
-                            .contentShape(.rect)
                         }
                         .buttonStyle(.plain).hoverEffect(.highlight)
                     }
@@ -105,11 +103,9 @@ struct PlayersView: View {
                 if let n { Text("\(n)").font(.system(size: 9)).foregroundStyle(.tertiary) }
             }
             .frame(maxWidth: .infinity).padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 10)
-                .fill(pos == key ? Theme.green.opacity(0.20) : .white.opacity(0.05)))
+            .plate(10, pos == key ? Theme.green.opacity(0.20) : .white.opacity(0.05))
             .foregroundStyle(pos == key ? AnyShapeStyle(Theme.green)
                                         : AnyShapeStyle(.primary))
-            .contentShape(.rect)
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
     }
@@ -257,12 +253,9 @@ struct PlayersView: View {
                     .frame(width: 74, alignment: .trailing)
             }
             .padding(.vertical, 5).padding(.horizontal, 5)
-            .background {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(focus == p.id ? Theme.green.opacity(0.12) : .clear)
-            }
-            .contentShape(.rect)
+            .plate(9, focus == p.id ? Theme.green.opacity(0.12) : .clear)
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
+        .revealsHologram(p.id)
     }
 }

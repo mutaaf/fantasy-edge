@@ -48,7 +48,8 @@ extension CommandView {
                     VStack(spacing: 13) {
                         HStack(spacing: 13) {
                             ProbRing(value: m.winProb, size: 64)
-                                .explains(Explain.winProbability)
+                                .explains(Explain.winProbability,
+                                          in: AnyShape(.circle))
                             // Your team, and the row is the way into its
                             // line-up - which is what a manager's name in a
                             // list is for. The record beside it is a separate
@@ -60,14 +61,20 @@ extension CommandView {
                                         .font(.system(size: 15, weight: .bold))
                                         .lineLimit(1).minimumScaleFactor(0.7)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(.rect)
+                                        // Nothing is drawn under this one, so
+                                        // the hover highlight is the only
+                                        // shape there is - and a square one
+                                        // in a rail of rounded cards reads as
+                                        // a mistake.
+                                        .contentShape(.rect(cornerRadius: 8))
                                 }
                                 .buttonStyle(.plain).hoverEffect(.highlight)
                                 if let r = f.league.record, !r.line.isEmpty {
                                     Text("\(r.line) · \(r.place)")
                                         .font(.system(size: 11))
                                         .foregroundStyle(.secondary)
-                                        .explains(Explain.record)
+                                        .explains(Explain.record,
+                                                  in: AnyShape(.rect(cornerRadius: 6)))
                                 }
                                 ReasonChip(reason: f.reason)
                             }
@@ -149,9 +156,7 @@ extension CommandView {
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 11)
-                            .fill(.white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(11, .white.opacity(0.05))
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
                 }
@@ -200,11 +205,7 @@ extension CommandView {
                 }
             }
             .padding(.vertical, 8).padding(.horizontal, 10)
-            .background {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(here ? Theme.green.opacity(0.14) : .white.opacity(0.05))
-            }
-            .contentShape(.rect)
+            .plate(14, here ? Theme.green.opacity(0.14) : .white.opacity(0.05))
         }
         .buttonStyle(.plain)
         .hoverEffect(.highlight)
@@ -327,12 +328,11 @@ extension CommandView {
                             Spacer(minLength: 0)
                         }
                         .padding(.vertical, 6).padding(.horizontal, 9)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(focus == inj.id ? Theme.green.opacity(0.14)
-                                                  : .white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(12, focus == inj.id ? Theme.green.opacity(0.14)
+                                                   : .white.opacity(0.05))
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
+                    .revealsHologram(inj.id)
                 }
             }
         }
@@ -484,10 +484,8 @@ extension CommandView {
                     .font(.system(size: 9)).foregroundStyle(.tertiary)
             }
             .padding(11)
-            .background(RoundedRectangle(cornerRadius: 15)
-                .fill(f.league.id == board.league?.id
-                      ? Theme.green.opacity(0.12) : .white.opacity(0.05)))
-            .contentShape(.rect)
+            .plate(15, f.league.id == board.league?.id
+                       ? Theme.green.opacity(0.12) : .white.opacity(0.05))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
     }
@@ -550,9 +548,7 @@ extension CommandView {
                     Text(weekExpanded ? "Summarise" : "Show all \(ranked.count) matchups")
                         .font(.system(size: 11, weight: .medium))
                         .frame(maxWidth: .infinity).padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 11)
-                            .fill(.white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(11, .white.opacity(0.05))
                 }
                 .buttonStyle(.plain).hoverEffect(.highlight)
             }
@@ -576,8 +572,7 @@ extension CommandView {
                     .foregroundStyle(.tertiary).frame(width: 74, alignment: .trailing)
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 10).fill(.white.opacity(0.04)))
-            .contentShape(.rect)
+            .plate(10, .white.opacity(0.04))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
     }
@@ -618,9 +613,7 @@ extension CommandView {
                                     ClubMark(abbr: g.home, size: 24)
                                 }
                                 .padding(.horizontal, 11).padding(.vertical, 8)
-                                .background(RoundedRectangle(cornerRadius: 13)
-                                    .fill(.white.opacity(0.05)))
-                                .contentShape(.rect)
+                                .plate(13, .white.opacity(0.05))
                             }
                             .buttonStyle(.plain).hoverEffect(.highlight)
                         }
@@ -701,12 +694,11 @@ extension CommandView {
                             Spacer(minLength: 0)
                         }
                         .padding(9)
-                        .background(RoundedRectangle(cornerRadius: 14)
-                            .fill(focus == p.id ? Theme.green.opacity(0.14)
-                                                : .white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(14, focus == p.id ? Theme.green.opacity(0.14)
+                                                 : .white.opacity(0.05))
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
+                    .revealsHologram(p.id)
                 }
             }
             if men.count > cap {
@@ -766,11 +758,10 @@ extension CommandView {
                                 Spacer(minLength: 0)
                             }
                             .padding(9)
-                            .background(RoundedRectangle(cornerRadius: 14)
-                                .fill(.white.opacity(0.05)))
-                            .contentShape(.rect)
+                            .plate(14, .white.opacity(0.05))
                         }
                         .buttonStyle(.plain).hoverEffect(.highlight)
+                        .revealsHologram(p.id)
                     }
                 }
             }

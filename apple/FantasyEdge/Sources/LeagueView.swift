@@ -113,7 +113,7 @@ struct LeagueView: View {
             .padding(.horizontal, 14).padding(.vertical, 11)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.05)))
-            .explains(Explain.winProbability)
+            .explains(Explain.winProbability, in: AnyShape(.rect(cornerRadius: 16)))
         }
     }
 
@@ -131,7 +131,7 @@ struct LeagueView: View {
         .padding(.horizontal, 14).padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 16).fill(.white.opacity(0.05)))
-        .explains(detail)
+        .explains(detail, in: AnyShape(.rect(cornerRadius: 16)))
     }
 
     // MARK: - roster
@@ -275,13 +275,10 @@ struct LeagueView: View {
                     .frame(width: 92, alignment: .trailing)
             }
             .padding(.vertical, 6).padding(.horizontal, 4)
-            .background {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(focus == r.id ? Theme.green.opacity(0.12) : .clear)
-            }
-            .contentShape(.rect)
+            .plate(10, focus == r.id ? Theme.green.opacity(0.12) : .clear)
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
+        .revealsHologram(r.id)
     }
 
     private func status(_ fx: Board.Fixture?) -> String {
@@ -391,7 +388,9 @@ struct LeagueView: View {
                            alignment: align == .leading ? .leading : .trailing)
                 if align == .trailing { TeamBadge(name: name, logo: logo, size: 24); score }
             }
-            .frame(maxWidth: .infinity).contentShape(.rect)
+            // No background under this row either, so the highlight is
+            // the shape - see the note on the manager's name in CommandRails.
+            .frame(maxWidth: .infinity).contentShape(.rect(cornerRadius: 10))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
     }
@@ -447,11 +446,7 @@ struct LeagueView: View {
                                 .frame(width: 62, alignment: .trailing)
                         }
                         .padding(.vertical, 6).padding(.horizontal, 6)
-                        .background {
-                            RoundedRectangle(cornerRadius: 9)
-                                .fill(mine ? Theme.green.opacity(0.10) : .clear)
-                        }
-                        .contentShape(.rect)
+                        .plate(9, mine ? Theme.green.opacity(0.10) : .clear)
                         }
                         .buttonStyle(.plain).hoverEffect(.highlight)
                     }

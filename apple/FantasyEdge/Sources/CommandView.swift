@@ -28,10 +28,20 @@ struct CommandView: View {
     /// this app already draws, instead of each panel growing its own smaller
     /// copy of one.
     @State var liveEvent = ""
+    /// The man whose hologram is up, if any. Held here rather than in each
+    /// panel because a long press on a player has to mean the same thing
+    /// whichever rail he was drawn in, and a sheet can only be presented from
+    /// one place on this surface.
+    @State private var hologram: HologramTarget?
 
+    /// Five, not six. Moves and Intel were both unbuilt and both about the
+    /// same question - what to do next - with waivers and trades sitting
+    /// inside intel rather than beside it. Two adjacent empty tabs read as
+    /// two missing features; one reads as one subject not finished yet, and
+    /// five tabs leave the bar room to breathe.
     enum Tab: String, CaseIterable, Identifiable {
         case command = "Command", leagues = "Leagues", players = "Players"
-        case live = "Live", moves = "Moves", intel = "Intel"
+        case live = "Live", intel = "Intel"
         var id: String { rawValue }
         var icon: String {
             switch self {
@@ -39,7 +49,6 @@ struct CommandView: View {
             case .leagues: return "trophy.fill"
             case .players: return "person.2.fill"
             case .live:    return "dot.radiowaves.left.and.right"
-            case .moves:   return "arrow.left.arrow.right"
             case .intel:   return "chart.bar.doc.horizontal"
             }
         }
@@ -52,6 +61,14 @@ struct CommandView: View {
             if board.leagues.isEmpty { empty } else { rails }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Long-pressing a player, anywhere on this surface, opens him in
+        // depth. Handed down as an environment action rather than as a
+        // closure threaded through eight views, none of which otherwise has
+        // any business knowing that a hologram exists.
+        .environment(\.revealHologram, HologramReveal { id in
+            hologram = HologramTarget(id: id)
+        })
+        .sheet(item: $hologram) { PlayerHologram(id: $0.id) }
         // `contentAlignment` decides which part of the ornament lands on the
         // anchor, and `.center` straddles it - half the pill outside the scene
         // and half of it on top of the first panel of every rail. On a window
@@ -100,6 +117,10 @@ struct CommandView: View {
                 // Same reason as above: the live tab scrolls its own play
                 // feed and its own lanes, both with a ceiling on them.
                 case .live:    LiveView(focus: $focus, event: $liveEvent)
+                // Not built yet, and it says so itself. The tab holds a view
+                // rather than a placeholder branch so the day the engine
+                // lands this line does not change.
+                case .intel:   IntelView()
                 default:       centre
                 }
             }
@@ -177,11 +198,7 @@ struct CommandView: View {
                         // under it, so the selected tab can still be read.
                         .foregroundStyle(tab == t ? AnyShapeStyle(Theme.green)
                                                   : AnyShapeStyle(.secondary))
-                        .background {
-                            RoundedRectangle(cornerRadius: 13)
-                                .fill(tab == t ? Theme.green.opacity(0.18) : .clear)
-                        }
-                        .contentShape(.rect)
+                        .plate(13, tab == t ? Theme.green.opacity(0.18) : .clear)
                     }
                     .buttonStyle(.plain)
                     .hoverEffect(.highlight)
@@ -283,7 +300,9 @@ struct CommandView: View {
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 9)).foregroundStyle(.tertiary)
             }
-            .frame(minWidth: 148, alignment: .leading).contentShape(.rect)
+            // `.bordered` draws a capsule around this label - see the same
+            // chooser in BoardView.
+            .frame(minWidth: 148, alignment: .leading).contentShape(.capsule)
         }
         .menuStyle(.button).buttonStyle(.bordered)
     }

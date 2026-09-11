@@ -36,6 +36,11 @@ struct PlayerPanel: View {
     @Environment(Board.self) private var board
     @State private var p: Profile?
     @State private var tab = 0
+    /// The way into the hologram that does not need a gesture to be
+    /// discovered. Long pressing a row is the easter egg; a card already open
+    /// on the man should not require you to guess it, so the same destination
+    /// gets one visible control here.
+    @Environment(\.revealHologram) private var reveal
 
     private var owner: RosteredPlayer? { board.roster.first { $0.id == id } }
     private var liveLine: LiveState? { board.live?.players[id] }
@@ -67,6 +72,18 @@ struct PlayerPanel: View {
                         .font(.system(size: 11)).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
+                if let reveal {
+                    Button { reveal.open(id) } label: {
+                        Image(systemName: "cube.transparent")
+                            .font(.system(size: 15))
+                            .foregroundStyle(Theme.green)
+                            .padding(7)
+                            .background(Circle().fill(Theme.green.opacity(0.14)))
+                            .contentShape(.circle)
+                    }
+                    .buttonStyle(.plain).hoverEffect(.lift)
+                    .help("Open him as a hologram")
+                }
             }
             .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 10)
 
@@ -103,7 +120,7 @@ struct PlayerPanel: View {
 
     /// Live, projected, and a floor and ceiling derived from his own weeks.
     private func figures(_ p: Profile) -> some View {
-        let weeks = playedWeeks(p)
+        let weeks = p.playedWeeks
         return Panel(title: "This Week") {
             HStack(spacing: 6) {
                 StatTile(value: (liveLine?.s ?? 0)
@@ -120,11 +137,11 @@ struct PlayerPanel: View {
                 // Only explained when there is a distribution behind them. A
                 // man with no games played shows a dash, and a dash has
                 // nothing to open.
-                StatTile(value: pct(weeks, 0.2), label: "FLOOR",
+                StatTile(value: pct(p, 0.2), label: "FLOOR",
                          detail: weeks.isEmpty ? nil
                             : Explain.floorCeiling("Floor", quantile: "20th",
                                                    games: weeks.count))
-                StatTile(value: pct(weeks, 0.8), label: "CEILING",
+                StatTile(value: pct(p, 0.8), label: "CEILING",
                          detail: weeks.isEmpty ? nil
                             : Explain.floorCeiling("Ceiling", quantile: "80th",
                                                    games: weeks.count))
@@ -137,16 +154,11 @@ struct PlayerPanel: View {
         }
     }
 
-    /// Every week he actually played. A zero in a season log is usually a week
-    /// he was not on the field, and averaging those in understates a player
-    /// who has been healthy.
-    private func playedWeeks(_ p: Profile) -> [Double] {
-        p.seasons.flatMap { $0.weekly ?? [] }.filter { $0 > 0 }.sorted()
-    }
-    private func pct(_ sorted: [Double], _ q: Double) -> String {
-        guard !sorted.isEmpty else { return "—" }
-        let i = max(0, min(sorted.count - 1, Int((Double(sorted.count - 1) * q).rounded())))
-        return sorted[i].formatted(.number.precision(.fractionLength(1)))
+    /// The distribution behind the floor and the ceiling lives on `Profile`
+    /// now, so this card and the hologram cannot come to disagree about what
+    /// a 20th percentile week is.
+    private func pct(_ p: Profile, _ q: Double) -> String {
+        p.percentileWeek(q)?.formatted(.number.precision(.fractionLength(1))) ?? "—"
     }
 
     /// Where he sits in your leagues, and whether he is in the line-up. Real,
@@ -241,7 +253,7 @@ private struct LeagueLine: View {
 
     var body: some View {
         if let tap {
-            Button(action: tap) { face.contentShape(.rect) }
+            Button(action: tap) { face }
                 .buttonStyle(.plain).hoverEffect(.highlight)
         } else {
             face
@@ -261,7 +273,9 @@ private struct LeagueLine: View {
                 .foregroundStyle((o.started == true) ? Theme.green : .secondary)
         }
         .padding(.vertical, 5).padding(.horizontal, 9)
-        .background(RoundedRectangle(cornerRadius: 11)
-            .fill(selected ? Theme.green.opacity(0.14) : .white.opacity(0.05)))
+        // The plate lives on `face` rather than on the button, so the
+        // tappable row and the plain one are the same shape - and so the
+        // hover highlight cannot be a different shape from the row it lights.
+        .plate(11, selected ? Theme.green.opacity(0.14) : .white.opacity(0.05))
     }
 }

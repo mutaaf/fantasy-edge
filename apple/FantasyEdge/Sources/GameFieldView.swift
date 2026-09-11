@@ -81,10 +81,8 @@ struct GameFieldView: View {
                             ClubMark(abbr: g.home, size: 18)
                         }
                         .padding(.horizontal, 9).padding(.vertical, 6)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(g.event == chosen ? Theme.green.opacity(0.16)
-                                                    : .white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(12, g.event == chosen ? Theme.green.opacity(0.16)
+                                                     : .white.opacity(0.05))
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
                 }
@@ -267,12 +265,11 @@ struct GameFieldView: View {
                                 }
                             }
                             .padding(.horizontal, 7).padding(.vertical, 4)
-                            .background(RoundedRectangle(cornerRadius: 11)
-                                .fill(focus == m.id ? Theme.green.opacity(0.14)
-                                                    : .white.opacity(0.05)))
-                            .contentShape(.rect)
+                            .plate(11, focus == m.id ? Theme.green.opacity(0.14)
+                                                     : .white.opacity(0.05))
                         }
                         .buttonStyle(.plain).hoverEffect(.highlight)
+                        .revealsHologram(m.id)
                     }
                 }
             }
@@ -379,10 +376,8 @@ struct GameFieldView: View {
                 }
             }
             .padding(.vertical, 5).padding(.horizontal, 7)
-            .background(RoundedRectangle(cornerRadius: 10)
-                .fill(playID == p.id ? Theme.green.opacity(0.16)
-                      : (p.scoring || p.turnover) ? tint.opacity(0.10) : .clear))
-            .contentShape(.rect)
+            .plate(10, playID == p.id ? Theme.green.opacity(0.16)
+                       : (p.scoring || p.turnover) ? tint.opacity(0.10) : .clear)
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
     }

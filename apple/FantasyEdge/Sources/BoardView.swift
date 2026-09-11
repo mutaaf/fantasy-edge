@@ -262,7 +262,9 @@ struct BoardView: View {
                     .font(.system(size: 9)).foregroundStyle(.tertiary)
             }
             .frame(minWidth: 150, alignment: .leading)
-            .contentShape(.rect)
+            // `.bordered` draws a capsule around this label, so a square hit
+            // shape inside it is both the wrong shape and the wrong frame.
+            .contentShape(.capsule)
         }
         .menuStyle(.button)
         .buttonStyle(.bordered)

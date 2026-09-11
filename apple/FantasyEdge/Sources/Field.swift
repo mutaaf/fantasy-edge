@@ -180,7 +180,11 @@ struct FieldToken: View {
             }
             .frame(width: named ? size + 26 : size)
             .opacity(dimmed ? 0.45 : 1)
-            .contentShape(.rect)
+            // A bare token is a headshot and nothing else, so a square hover
+            // highlight sat outside the circle on all four corners. Named, it
+            // is the circle plus the caption under it, and the smallest shape
+            // that honestly covers both is a rounded rectangle.
+            .contentShape(named ? AnyShape(.rect(cornerRadius: 12)) : AnyShape(.circle))
     }
 }
 

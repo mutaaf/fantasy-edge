@@ -2,6 +2,26 @@ import SwiftUI
 
 // MARK: - shared furniture
 
+extension View {
+    /// A control's rounded background and its hit shape, from one radius.
+    ///
+    /// These used to be two calls - a `RoundedRectangle` background and a
+    /// separate `.contentShape(.rect)` - and on visionOS the content shape is
+    /// also the *hover* shape. So every rounded row on this surface lit up
+    /// under a square highlight, and because the system inflates the highlight
+    /// slightly it overhung the corners of the card it was meant to be
+    /// lighting. Two calls will drift again; one cannot.
+    ///
+    /// The radius is still per element rather than a token. The rows on this
+    /// board are drawn at ten different radii, several a point apart, and
+    /// collapsing them would change shapes that have already been looked at
+    /// and approved - a different bug from the one this fixes.
+    func plate(_ radius: CGFloat, _ fill: Color) -> some View {
+        background(RoundedRectangle(cornerRadius: radius).fill(fill))
+            .contentShape(.rect(cornerRadius: radius))
+    }
+}
+
 /// One glass panel with a title. Every card on this surface is one of these,
 /// so they share edges, padding and type without each re-deciding.
 struct Panel<C: View>: View {
@@ -154,19 +174,28 @@ extension View {
     /// its label are one thing to a reader, and a tap that only lands on the
     /// glyphs is a tap that mostly misses. A nil detail leaves the view
     /// exactly as it was, with no control on it at all.
-    func explains(_ detail: StatDetail?) -> some View {
-        ExplainedFigure(detail: detail) { self }
+    /// `shape` is the figure's own outline. It has to be passed because the
+    /// things that explain themselves are not all the same shape: a stat tile
+    /// is a rounded block, a win probability is a ring, and a square hover
+    /// highlight around a ring is a highlight sitting outside the thing it is
+    /// lighting on all four corners.
+    func explains(_ detail: StatDetail?,
+                  in shape: AnyShape = AnyShape(.rect(cornerRadius: 12))) -> some View {
+        ExplainedFigure(detail: detail, shape: shape) { self }
     }
 }
 
 private struct ExplainedFigure<C: View>: View {
     let detail: StatDetail?
+    let shape: AnyShape
     @ViewBuilder let content: C
     @State private var open = false
 
     var body: some View {
         if let d = detail {
-            Button { open = true } label: { content.contentShape(.rect) }
+            Button { open = true } label: {
+                content.contentShape(shape)
+            }
                 .buttonStyle(.plain).hoverEffect(.highlight)
                 .popover(isPresented: $open) { StatPopover(detail: d) }
         } else {

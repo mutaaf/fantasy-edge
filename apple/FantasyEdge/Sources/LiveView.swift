@@ -46,11 +46,10 @@ struct LiveView: View {
                     Label(m.rawValue, systemImage: m.icon)
                         .font(.system(size: 12, weight: .semibold))
                         .padding(.horizontal, 14).padding(.vertical, 8)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(mode == m ? Theme.green.opacity(0.18) : .white.opacity(0.05)))
+                        .plate(12, mode == m ? Theme.green.opacity(0.18)
+                                             : .white.opacity(0.05))
                         .foregroundStyle(mode == m ? AnyShapeStyle(Theme.green)
                                                    : AnyShapeStyle(.secondary))
-                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain).hoverEffect(.highlight)
             }
@@ -156,6 +155,7 @@ struct MyTeamField: View {
 
                 ForEach(men.filter { $0.spot.x != nil }) { m in
                     FieldToken(man: m, selected: focus == m.id, size: 42) { focus = m.id }
+                        .revealsHologram(m.id)
                         .position(x: FieldGeometry.px(m.spot.x ?? 0.5, g.size.width),
                                   y: CGFloat(m.spot.y) * g.size.height)
                         // Spot is the whole placement, so a man slides when
@@ -387,12 +387,11 @@ struct MyTeamField: View {
                             Spacer(minLength: 0)
                         }
                         .padding(.vertical, 5).padding(.horizontal, 7)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(focus == m.id ? Theme.green.opacity(0.14)
-                                                : .white.opacity(0.05)))
-                        .contentShape(.rect)
+                        .plate(12, focus == m.id ? Theme.green.opacity(0.14)
+                                                 : .white.opacity(0.05))
                     }
                     .buttonStyle(.plain).hoverEffect(.highlight)
+                    .revealsHologram(m.id)
                 }
             }
             if ranked.count > lane {
@@ -402,9 +401,7 @@ struct MyTeamField: View {
                     Text(open ? "Show fewer" : "\(ranked.count - lane) more")
                         .font(.system(size: 10, weight: .medium))
                         .padding(.horizontal, 11).padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 10)
-                            .fill(.white.opacity(0.06)))
-                        .contentShape(.rect)
+                        .plate(10, .white.opacity(0.06))
                 }
                 .buttonStyle(.plain).hoverEffect(.highlight)
             }

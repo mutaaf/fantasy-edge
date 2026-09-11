@@ -139,6 +139,31 @@ struct Profile: Decodable {
     let opportunity: Opportunity?
 }
 
+extension Profile {
+    /// Every week he actually played, sorted. A zero in a season log is
+    /// almost always a week he was not on the field, and averaging those in
+    /// understates a man who has been healthy.
+    ///
+    /// Here rather than beside one card because two surfaces now quote a
+    /// floor and a ceiling off it - the right-rail panel and the hologram -
+    /// and the derivation is stated out loud on both. Two copies of this
+    /// arithmetic would eventually be two different floors under the same
+    /// sentence claiming to be one.
+    var playedWeeks: [Double] {
+        seasons.flatMap { $0.weekly ?? [] }.filter { $0 > 0 }.sorted()
+    }
+
+    /// A percentile of those weeks, nearest-rank. Not interpolated: with a
+    /// dozen games the gap between two neighbouring weeks is real data and
+    /// splitting it invents a score he never had.
+    func percentileWeek(_ q: Double) -> Double? {
+        let w = playedWeeks
+        guard !w.isEmpty else { return nil }
+        let i = max(0, min(w.count - 1, Int((Double(w.count - 1) * q).rounded())))
+        return w[i]
+    }
+}
+
 
 // MARK: - the command centre's other panels
 //
