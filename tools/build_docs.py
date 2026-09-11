@@ -176,13 +176,27 @@ RIBBON = (
 #: navy padding and read as a green smudge in a tab; the bare ball fills the
 #: square, and mid-green holds against both a white tab strip and a dark one,
 #: which is the whole of what "dark mode safe" has to mean for a favicon.
+# The same identity as the app icon, cut down until it survives 16 pixels.
+#
+# The app icon is turf, yard lines and a leather ball; a tab favicon cannot
+# carry all three - at 16px the stripes alias into noise and brown on green
+# goes muddy. So this keeps the two things that read at any size: the turf
+# green ground and the ball's silhouette with its lacing, in chalk. Same
+# palette, same object, less of it. A shrunken copy of the app icon would be
+# a smudge, which is the usual way an icon family loses its family.
 FAVICON = (
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>"
-    "<g transform='rotate(-40 32 32)'>"
-    "<ellipse cx='32' cy='32' rx='31' ry='18.5' fill='#5bc236'/>"
-    "<g stroke='#050f38' stroke-linecap='round' fill='none'>"
-    "<path d='M20 32h24' stroke-width='6'/>"
-    "<path d='M26 26v12M33 26v12M40 26v12' stroke-width='4.5'/>"
+    "<rect width='64' height='64' rx='14' fill='#1e5b2a'/>"
+    # One mown stripe either side, enough to say turf without becoming texture.
+    "<rect x='8' y='0' width='10' height='64' fill='#24642e'/>"
+    "<rect x='30' y='0' width='10' height='64' fill='#24642e'/>"
+    "<rect x='52' y='0' width='10' height='64' fill='#24642e'/>"
+    "<g transform='rotate(-32 32 32)'>"
+    "<ellipse cx='32' cy='32' rx='22' ry='13.5' fill='#7a3b1d'"
+    " stroke='#f2f6f0' stroke-width='2.5'/>"
+    "<g stroke='#f2f6f0' stroke-linecap='round' fill='none'>"
+    "<path d='M23 32h18' stroke-width='3.4'/>"
+    "<path d='M27 28.4v7.2M32 28.4v7.2M37 28.4v7.2' stroke-width='2.6'/>"
     "</g></g></svg>")
 
 
