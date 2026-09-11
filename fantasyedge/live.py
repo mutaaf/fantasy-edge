@@ -579,17 +579,37 @@ class EspnLiveSource(LiveSource):
             # who against - and pairing clubs back up by kickoff time on the
             # client guesses wrong the moment two games start together.
             sides = []
+            by_id = {}
             for c in (comp.get("competitors") or []):
-                ab = ((c.get("team") or {}).get("abbreviation") or "").upper()
+                t = c.get("team") or {}
+                ab = (t.get("abbreviation") or "").upper()
                 if ab:
+                    by_id[str(t.get("id"))] = ab
                     sides.append((ab, (c.get("homeAway") or "").lower(),
                                   c.get("score")))
+
+            # Who has the ball, and where it is. Present only while a game is
+            # actually running - ESPN sends no situation before kickoff or
+            # after the whistle - which is the honest shape: "nobody has the
+            # ball" is true of a game that has not started.
+            sit = comp.get("situation") or {}
+            holder = by_id.get(str(sit.get("possession") or ""), "")
+
             for i, (ab, ha, score) in enumerate(sides):
                 other = sides[1 - i][0] if len(sides) == 2 else ""
                 out[ab] = {"played": round(played, 4), "state": state,
                            "label": label[:18],
                            "kickoff": (ev.get("date") or "")[:16],
-                           "score": score, "opp": other, "home": ha == "home"}
+                           "score": score, "opp": other, "home": ha == "home",
+                           "event": str(ev.get("id") or ""),
+                           # True when this club has the ball, false when the
+                           # other one does, and null when nobody does.
+                           "attacking": (ab == holder) if holder else None,
+                           "possession": holder,
+                           "down": sit.get("down"),
+                           "distance": sit.get("distance"),
+                           "toEndzone": sit.get("yardsToEndzone"),
+                           "redZone": bool(sit.get("isRedZone"))}
         return out
 
     def snapshot(self, at: float | None = None) -> dict:
