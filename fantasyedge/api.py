@@ -54,6 +54,8 @@ ROUTES = [
     ["GET", "/api/gamecast/{event}", "one game: drives, plays, ball position, win prob"],
     ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
     ["GET", "/api/rankings", "today's slate ranked, the way a pre-game show would"],
+    ["GET", "/api/projections", "every source's number per player (?season=&week=&source=&pos=&q=&limit=)"],
+    ["GET", "/api/projections/sources", "which sources are loaded, and what the rest are waiting on"],
     ["GET", "/api/context", "scoring plays, ESPN links, and ESPN's own injury report"],
     ["GET", "/api/prefs", "your team in each league, their order, and what is hidden"],
     ["POST", "/api/prefs", "update those - loopback only, see the handler"],
@@ -378,7 +380,14 @@ class Api:
             data["prefs"] = self.prefs()
             for key, fn in (("players", self.players), ("headlines", self.headlines),
                             ("injuries", self.injuries), ("rankings", self.rankings),
-                            ("context", self.context)):
+                            ("context", self.context),
+                            # Inlined whole, per-source numbers and all, so the
+                            # source picker can switch the board's projections
+                            # without a round trip - and so a published page
+                            # with no API behind it still shows both sources
+                            # rather than falling back to whichever one was
+                            # baked into the roster rows.
+                            ("projections", lambda: self.projections({}))):
                 try:
                     data[key] = fn()
                 except Exception:
@@ -976,6 +985,141 @@ class Api:
 
         return self.cached(("rankings",), build)
 
+    # ---------- projections ----------
+
+    def _proj_scope(self, qs: dict) -> tuple[int, int]:
+        """Which season and week a projection question defaults to.
+
+        `projections.current_week` owns the rule; see it for why the obvious
+        `MAX(week)` is wrong twice over. Both the season and the week may be
+        overridden by query string, which is the only way to reach a week the
+        boards are not on.
+        """
+        store = self.store()
+        rows = store.q("SELECT MAX(season) AS s FROM projection")
+        season = int((rows[0]["s"] if rows else None) or 0)
+        raw = (qs.get("season") or [""])[0]
+        if raw:
+            try:
+                season = int(raw)
+            except ValueError:
+                raise HttpError(400, f"season must be a year, got {raw!r}")
+        from . import projections as pj
+        week = pj.current_week(store, season)
+        if not week:
+            rows = store.q("SELECT MIN(week) AS w FROM projection WHERE season=?",
+                           (season,))
+            week = int((rows[0]["w"] if rows else None) or 0)
+        raw = (qs.get("week") or [""])[0]
+        if raw:
+            try:
+                week = int(raw)
+            except ValueError:
+                raise HttpError(400, f"week must be a number, got {raw!r}")
+        return season, week
+
+    def projection_sources(self, qs: dict) -> dict:
+        """Which sources exist, which are loaded, and what the rest need.
+
+        Every surface builds its picker from this rather than from the distinct
+        values in the table. The difference matters: a picker built from what
+        is loaded silently drops CBS, FantasyPros and Yahoo, and a source that
+        is simply absent reads as one that returned nothing - which is a claim
+        about the players rather than about the licence.
+        """
+        from . import projections as pj
+
+        season, week = self._proj_scope(qs)
+        cat = self.cached(("projsrc", season, week),
+                          lambda: pj.catalog(self.store(), season, week))
+        live = [c for c in cat if c["loaded"]]
+        return {"season": season, "week": week, "sources": cat,
+                "loaded": [c["source"] for c in live],
+                "n": len(live),
+                "pending": [c["source"] for c in cat
+                            if c["status"] == "pending" and not c["loaded"]],
+                "route": pj.PENDING_ROUTE,
+                # Spelled out because every client would otherwise phrase it
+                # for itself, and one of them would phrase it as an average of
+                # five.
+                "consensus": ("mean of the " + str(len(live)) + " source(s) "
+                              "actually loaded" if live else
+                              "no source is loaded, so there is no consensus")}
+
+    def projections(self, qs: dict) -> dict:
+        """Every loaded source's number for each player, plus the consensus.
+
+        `?source=` picks which source ranks the list and fills `points`; the
+        per-source numbers travel with every row regardless, because the
+        disagreement is the interesting part and averaging it away is the one
+        thing this endpoint must not do.
+
+        A source that is not loaded never appears in `by` and never
+        contributes to `consensus`. It cannot produce a zero, an
+        interpolation, or a share of a mean - see `projections.SOURCES`.
+        """
+        from . import projections as pj
+
+        season, week = self._proj_scope(qs)
+        data = self.cached(("projections", season, week),
+                           lambda: pj.board(self.store(), season, week))
+        cat = self.cached(("projsrc", season, week),
+                          lambda: pj.catalog(self.store(), season, week))
+
+        want = (qs.get("source") or [""])[0].lower()
+        if want and want not in ("consensus",) and want not in data["sources"]:
+            known = ", ".join(data["sources"]) or "none"
+            meta = pj.SOURCES.get(want)
+            raise HttpError(
+                404, f"No projections loaded for source {want!r}.",
+                (f"{meta['label']} needs {meta['needs']}." if meta and meta["needs"]
+                 else f"loaded: {known}"))
+
+        def value(m):
+            if want and want != "consensus":
+                return m["by"].get(want)
+            return m["consensus"]
+
+        men = [m for m in data["players"] if value(m) is not None]
+        # Ranks are computed over the whole board before any filter, so a
+        # position filter narrows what is shown without renumbering what is
+        # ranked.
+        men.sort(key=lambda m: -(value(m) or 0))
+        pos_seen: dict[str, int] = {}
+        rows = []
+        for i, m in enumerate(men, start=1):
+            pos_seen[m["pos"]] = pos_seen.get(m["pos"], 0) + 1
+            rows.append({**m, "points": value(m), "rank": i,
+                         "posRank": f'{m["pos"]}{pos_seen[m["pos"]]}' if m["pos"] else ""})
+
+        pos = (qs.get("pos") or [""])[0].upper()
+        q = (qs.get("q") or [""])[0].strip().lower()
+        if pos and pos != "ALL":
+            rows = [m for m in rows if m["pos"] == pos]
+        if q:
+            rows = [m for m in rows if q in m["name"].lower()
+                    or q == m["team"].lower() or q == m["pos"].lower()]
+        try:
+            limit = int((qs.get("limit") or ["0"])[0])
+        except ValueError:
+            limit = 0
+        shown = rows[:limit] if limit > 0 else rows
+
+        disagree = sorted((m for m in data["players"] if m["spread"] is not None),
+                          key=lambda m: -m["spread"])[:20]
+        return {
+            "season": season, "week": week,
+            "source": want or "consensus",
+            "sources": data["sources"], "n": data["n"],
+            "catalog": cat,
+            "pending": [{"source": c["source"], "label": c["label"],
+                         "needs": c["needs"], "detail": c["detail"]}
+                        for c in cat if c["status"] == "pending" and not c["loaded"]],
+            "consensusOf": data["sources"],
+            "players": shown, "count": len(shown), "total": len(rows),
+            "disagreements": disagree,
+        }
+
     def context(self) -> dict:
         """What just happened in the games your players are in."""
         def build():
@@ -1074,6 +1218,16 @@ class Api:
             return self.context(), LIVE
         if rest == ["rankings"]:
             return self.rankings(), DERIVED
+        if rest == ["projections", "sources"]:
+            # The catalogue moves only when someone runs a loader, so it is
+            # config-shaped rather than derived - a client may hold it for the
+            # length of a session without ever showing a stale picker.
+            return self.projection_sources(qs), CONFIG
+        if rest == ["projections"]:
+            # A projection is derived: it is recomputed from stored rows, never
+            # polled from a provider, so it belongs on the DERIVED clock beside
+            # the analyses rather than on LIVE beside the scoreboard.
+            return self.projections(qs), DERIVED
         if rest == ["prefs"]:
             return self.prefs(), PRIVATE
         if rest == ["leagues"]:

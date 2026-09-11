@@ -44,6 +44,13 @@ your opponent's bench habits, your own schedule luck, and how accurate the
 projections you are staring at have actually been — carried next to the number
 rather than left in a spreadsheet.
 
+**It says whose number it is showing.** ESPN and Sleeper both project your
+week; pick either, or the consensus of the two, and the board re-sizes itself
+around the choice. Where they disagree, it shows you the gap rather than
+averaging it into silence — and the three sources it cannot reach yet say what
+they are waiting on instead of drawing an empty column. See
+[Projections](#projections-several-sources-and-honesty-about-the-rest).
+
 ### It runs everywhere the same way
 
 | Surface | What it is | State |
@@ -198,6 +205,103 @@ Cache policy is a property of what the data *is*, declared once in `api.py`:
 request in a two-second window into a single origin fetch. Ten million viewers
 cost the origin half a fetch per second. ETags are content-addressed, so a poll
 that changed nothing costs a header exchange rather than a payload.
+
+## Projections: several sources, and honesty about the rest
+
+Every network publishes a number before kickoff and nobody publishes how those
+numbers did afterwards. The database already holds what happened, so once
+several sources sit in one table keyed the same way, "who was right" stops
+being an opinion — that is what `projection_accuracy` scores.
+
+**Two sources are wired, because two sources genuinely exist for free:**
+
+| Source | How it arrives | Whose numbers |
+|---|---|---|
+| **ESPN** | Rides along on every roster row `pull` already fetches. `projections seed` copies it into the table. | ESPN's own weekly projection |
+| **Sleeper** | `projections sleeper` calls Sleeper's public projections endpoint. No key, no cookie, no account. | Rotowire, published through Sleeper |
+
+```bash
+python3 -m fantasyedge projections seed --season 2026
+python3 -m fantasyedge projections sleeper --season 2026 --week 1
+python3 -m fantasyedge projections sources --season 2026
+```
+
+```
+  ESPN          loaded   221 rows over 1 week(s)
+  Sleeper       loaded   313 rows over 1 week(s)
+  CBS           pending  needs an API key
+  FantasyPros   pending  needs a paid API key
+  Yahoo         pending  needs Yahoo's Fantasy Sports API approval
+```
+
+**Three sources are not wired, and the whole product says so out loud.** CBS
+and FantasyPros sell an API key this project does not hold; Yahoo's Fantasy
+Sports API is in the same manual review queue as the Yahoo button on the
+landing page. They appear in `projections.SOURCES` with `status: "pending"`
+and what each is waiting on, they appear in the console's picker as disabled
+chips carrying that reason, and there is no code path that can put a number
+under any of them. Scraping their sites instead would breach their terms and
+would break in September, which is worse than an honest gap.
+
+The extension point is already there. `projections load --source <name> --csv`
+takes any source name and joins on `identity`, so a licensed feed arriving
+later is a loader, not an architecture change:
+
+```bash
+python3 -m fantasyedge projections load --source fantasypros \
+  --csv fp_w1.csv --season 2026 --week 1
+```
+
+### The rule that matters
+
+> **A source the user has not supplied must never produce a number.** Not a
+> zero, not an interpolation, and not a share of something called a consensus.
+
+Which is why:
+
+- **A consensus states its `n`.** With ESPN and Sleeper loaded it is
+  `consensus of 2`, everywhere, on every row. It is not offered at all when
+  only one source is loaded — a mean of one is that source under a second
+  name, implying corroboration that does not exist.
+- **A player a source did not project shows `—`, never `0.0`.** Sleeper does
+  not project a man who is out; 0.0 is a forecast where silence is the truth.
+  Of a real week-1 payload, 2,855 of 3,304 rows carry an ADP placeholder and
+  no points at all — reading a missing key as zero would invent several
+  thousand forecasts.
+- **Disagreement is surfaced, not averaged away.** `Compare` in the console
+  puts every source's number side by side and sorts by the gap between them.
+  In week 1 of 2026, ESPN had Jalen McMillan at 8.2 and Sleeper at 1.3;
+  ESPN's QB2 was Josh Allen and Sleeper's was Jaxson Dart. That is the
+  interesting part.
+
+### Over the API
+
+```
+GET /api/projections/sources                which are loaded, what the rest need
+GET /api/projections?season=&week=&source=&pos=&q=&limit=
+```
+
+Both are cached as **derived**, not live: a projection is recomputed from rows
+already in SQLite and is never polled from a provider. `fantasyedge api` calls
+no provider at all — the Sleeper fetch lives in the CLI, and the API only ever
+reads what it wrote.
+
+Every row of `/api/projections` carries `by` (each loaded source's number),
+`consensus`, `n`, and `spread` — so a client can render one source, all of
+them, or the disagreement, without asking twice. `?source=` picks which one
+ranks the list; `?source=cbs` is a 404 whose `fix` names the blocker rather
+than listing what happens to be loaded.
+
+### The join
+
+Sleeper's ids are its own, so the join onto ESPN's is `identity.Resolver` —
+the same three-stage match the live box score uses: folded name plus position,
+then name alone (Travis Hunter is a WR to ESPN and a DB to Sleeper), then
+surname plus position plus club. Every hit is attributed to a stage and the
+loader prints the breakdown, because a loader that silently matched 60% of the
+board would produce a "consensus" that is really ESPN wherever the other
+source went missing. Against a real 676-player pool: 313 of 449 projected
+players matched, 312 of them exactly.
 
 ## The analyses
 

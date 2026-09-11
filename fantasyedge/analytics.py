@@ -793,7 +793,35 @@ def projection_accuracy(store: Store, provider: str, league: str) -> Result:
         "the full player pool would be larger. A source loaded for fewer weeks "
         "than another is not directly comparable to it, so read the week count "
         "before the ranking. Hit rate uses the top 12 at each position, which "
-        "is a starter-shaped question rather than a measure of overall skill.")
+        "is a starter-shaped question rather than a measure of overall skill. "
+        "Weeks still in progress or not yet played are excluded entirely: their "
+        "roster rows carry a stored zero rather than no score, so counting them "
+        "would read as every projection missing by its whole value.")
+
+    # A week nobody has played yet is not a week every projection missed.
+    # ESPN writes `points = 0.0` on a forward roster row rather than NULL, so
+    # filtering on `points IS NOT NULL` keeps every future week in the sample
+    # and scores each one as though the entire league was held scoreless -
+    # which made a source loaded for the rest of the season report an eleven
+    # point bias and a 98% hit rate off the same rows. A week is played when
+    # somebody in it scored; that is the only signal the data actually carries.
+    # A week counts once most of its starters have a score. The cut is not a
+    # guess: across the 101 completed weeks in this database the share of
+    # starters with points above zero has a median of 0.967 and never falls
+    # below 0.852, while a week in progress reads 0.114 and one not yet begun
+    # reads 0.000. Anywhere between those two clusters separates them, and 0.5
+    # sits far outside both, so a genuinely low-scoring Sunday is never mistaken
+    # for an unplayed one.
+    #
+    # Starters rather than all rows, because a bench player scoring nothing is
+    # ordinary in a completed week and would drag the share down for a reason
+    # that has nothing to do with whether the games were played.
+    played = {(row["season"], row["week"]) for row in store.q(
+        """SELECT season, week FROM roster_slot
+           WHERE provider=? AND points IS NOT NULL AND started=1
+           GROUP BY season, week
+           HAVING COUNT(*) > 0 AND SUM(points > 0) * 1.0 / COUNT(*) >= 0.5""",
+        (provider,))}
 
     actual = {}
     for row in store.q(
@@ -801,6 +829,8 @@ def projection_accuracy(store: Store, provider: str, league: str) -> Result:
                FROM roster_slot
                WHERE provider=? AND points IS NOT NULL
                GROUP BY season, week, player_id""", (provider,)):
+        if (row["season"], row["week"]) not in played:
+            continue
         actual[(row["season"], row["week"], row["player_id"])] = row["pts"]
     if not actual:
         r.caveat = "No scored weeks loaded yet. Run `pull` first."

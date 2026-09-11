@@ -275,6 +275,84 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
   text-overflow:ellipsis}
 .lc-lead b{color:var(--hot);font-weight:700}
 
+/* ── which source projects the board ───────────────────── */
+/* The bar is always on when the board is, because a projection with no source
+   attached is an opinion wearing the clothes of a fact. Chips rather than a
+   <select>: the three that cannot be chosen have to state *why* they cannot,
+   and an <option disabled> has nowhere to say it. */
+.pbar{display:flex;flex-direction:column;gap:7px;margin:2px 0 16px}
+.pbar[hidden]{display:none!important}
+.pb-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pb-k{font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-faint);flex:none}
+.pb-chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pb-chip{font-family:var(--cond);font-size:12.5px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;padding:6px 13px;border-radius:var(--r-chip);cursor:pointer;
+  background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-dim);
+  transition:.2s var(--ease);display:inline-flex;align-items:center;gap:7px}
+.pb-chip:hover:not([disabled]){color:var(--ink);background:rgba(255,255,255,.12)}
+.pb-chip[aria-pressed="true"]{background:var(--green);color:#06210a;
+  border-color:transparent;font-weight:800}
+.pb-chip:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.pb-chip .n{font-family:var(--mono);font-size:10.5px;letter-spacing:0;opacity:.72}
+/* A pending source is a real <button disabled>: not clickable, not reachable
+   by keyboard, and carrying the reason in its own title. The landing page
+   refuses Yahoo the same way, and for the same reason - a control that cannot
+   work is a lie about what this install has. */
+.pb-chip[disabled]{cursor:not-allowed;opacity:.78;
+  background:rgba(255,176,32,.10);border-color:rgba(255,176,32,.34);
+  color:rgba(255,205,120,.86)}
+.pb-chip .soon{font-family:var(--cond);font-size:9.5px;letter-spacing:.14em;
+  padding:1px 6px;border-radius:999px;background:rgba(255,176,32,.2);
+  color:#ffcf7a;border:1px solid rgba(255,176,32,.4)}
+.pb-note{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.55;
+  color:var(--ink-faint);max-width:96ch}
+.pb-note b{color:var(--ink-dim);font-weight:500}
+.pb-note .warn{color:#ffcf7a}
+
+/* ── source comparison ─────────────────────────────────── */
+.pcmp{margin:0 0 18px}
+.pcmp[hidden]{display:none!important}
+.pcmp-tbl{border:1px solid var(--hair);border-radius:18px;overflow:hidden;
+  background:var(--card);backdrop-filter:blur(30px) saturate(1.7);margin-bottom:9px}
+/* Fixed widths for the per-source columns rather than fractions: the count is
+   --nsrc and will grow the day a licence lands, and a fractional column set
+   re-centres every header the moment a fifth source appears. */
+.crow{display:grid;grid-template-columns:38px minmax(0,1fr) 52px 54px
+  repeat(var(--nsrc,2),86px) 96px 62px;gap:10px;align-items:center;
+  padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+.crow:last-child{border-bottom:0}
+.crow.head{font-family:var(--cond);font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-faint);background:rgba(0,0,0,.22)}
+.crow .num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.crow .dim{color:var(--ink-faint)}
+.crow .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+/* The high number is the interesting half of a disagreement: which source is
+   the optimistic one is the whole reason to put them side by side. */
+.crow .hi{color:var(--green-lift)}
+.crow .lo{color:var(--ink-dim)}
+.crow .gap{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  text-align:right;color:#ffcf7a}
+.crow .gap.small{color:var(--ink-faint)}
+.crow .lone{font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+  text-align:right}
+@media(max-width:900px){
+  .crow{grid-template-columns:30px minmax(0,1fr) repeat(var(--nsrc,2),58px) 52px;
+    gap:7px;font-size:13px}
+  .crow>.c-pos,.crow>.c-tm,.crow>.c-cons{display:none}}
+
+/* ── projections on the player card ────────────────────── */
+.pc-src{margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px}
+.pc-src[hidden]{display:none!important}
+.pc-srcrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-size:13px;padding:3px 0}
+.pc-srcrow .s{font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase;
+  font-size:11.5px;color:var(--ink-faint)}
+.pc-srcrow .v{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pc-srcrow.on .s{color:var(--green-lift)}
+.pc-srcrow.off .v{color:var(--ink-faint)}
+
 /* ── rankings ──────────────────────────────────────────── */
 .rank{margin-top:18px}
 .rank[hidden]{display:none!important}
@@ -1387,6 +1465,26 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     <span id="clock">pre-game</span><span id="intensity"></span><span id="src">simulated feed</span>
   </div>
 
+  <div class="pbar" id="pbar" hidden>
+    <div class="pb-line">
+      <span class="pb-k">Projections</span>
+      <div class="pb-chips" id="pbchips"></div>
+      <button class="pb-chip" id="pbcmp" aria-pressed="false">Compare</button>
+    </div>
+    <p class="pb-note" id="pbnote"></p>
+  </div>
+  <div class="pcmp" id="pcmp" hidden>
+    <div class="rfilters" id="pcmpf">
+      <button class="chip" data-psort="spread" aria-pressed="true">Most disagreement</button>
+      <button class="chip" data-psort="points" aria-pressed="false">Highest projected</button>
+      <span class="rspacer"></span>
+      <button class="chip" data-pscope="mine" aria-pressed="true">In your leagues</button>
+      <button class="chip" data-pscope="all" aria-pressed="false">Everyone projected</button>
+    </div>
+    <div class="pcmp-tbl" id="pcmptbl"></div>
+    <p class="pb-note" id="pcmpnote"></p>
+  </div>
+
   <div class="hurt" id="hurt" hidden></div>
   <div class="daybar" id="daybar" hidden></div>
   <div class="hidden-leagues" id="hidden" hidden></div>
@@ -1511,6 +1609,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
       <div class="pc-score"><span class="pc-pts" id="pcpts"></span>
         <span class="pc-state" id="pcstate"></span></div>
       <div class="pc-stats" id="pcstats"></div>
+      <div class="pc-src" id="pcsrc" hidden></div>
       <div class="pc-lev">
         <div class="pc-whatrow"><span class="pc-k">Leverage share</span>
           <span class="pc-delta" id="pclevpct"></span></div>
@@ -1723,6 +1822,89 @@ function applyLive(live){
     c.scored=st.s;c.remaining=st.r;c.state=st.g;}
   liveSeq++;}                  // new numbers: every memoised evaluation is stale
 
+/* ── which source projects the board ────────────────────────────────────
+   The board has always drawn ESPN's number, because ESPN's number rides along
+   on the roster row it pulls. It is now one of several, so which one is
+   showing has to be sayable - a projection with no source attached is an
+   opinion wearing the clothes of a fact.
+
+   Three rules the rest of this block exists to hold:
+
+   1. A source nobody has supplied never produces a number. The pending three
+      are drawn as disabled chips carrying what each is waiting on, and there
+      is no path in here that can put a value under them - `projValue` reads
+      `by`, and `by` only ever contains sources with rows in the database.
+   2. The consensus is the mean of what is actually loaded, and its `n` is
+      printed beside it every time. It is offered at all only when more than
+      one source is loaded: a mean of one is that source under a second name,
+      on the same screen, implying corroboration that does not exist.
+   3. A source that has no number for a player shows a dash, never a zero.
+      Sleeper does not project a man who is out, and 0.0 is a forecast where
+      silence is the truth. `null` is also exactly what `evaluate` wants:
+      Math.max(0, null - scored) is 0, so an unprojected player contributes
+      nothing but what he has already banked and shrinks to a floor tile -
+      which is what "this source does not expect him to play" means. */
+const PROJ=DATA.projections||{};
+const PROJCAT=PROJ.catalog||[];
+const PROJLOADED=PROJ.sources||[];
+const PROJBY=new Map();
+for(const m of (PROJ.players||[]))PROJBY.set(String(m.id),m);
+const projMeta=k=>PROJCAT.find(c=>c.source===k)||null;
+const projLabel=k=>k==="consensus"
+  ?"Consensus"+(PROJLOADED.length?" of "+PROJLOADED.length:"")
+  :((projMeta(k)||{}).label||k);
+const projChoices=()=>PROJLOADED.concat(PROJLOADED.length>1?["consensus"]:[]);
+let projSrc=(()=>{
+  const want=String(PREFS.projection||"");
+  // Fall back to the first loaded source rather than to "consensus": the
+  // board's numbers before this control existed were ESPN's, and a console
+  // that quietly changes every number on a reload has broken trust before it
+  // has shown anybody anything.
+  return projChoices().includes(want)?want:(PROJLOADED[0]||"espn");})();
+let projCompare=false,projCover={have:0,total:0};
+
+function projValue(id){
+  const m=PROJBY.get(String(id));
+  if(!m)return null;
+  if(projSrc==="consensus")return m.consensus==null?null:m.consensus;
+  const v=m.by[projSrc];
+  return v===undefined?null:v;}
+
+/* Every object on this page that carries a `projected`, rewritten from the
+   chosen source. They are separate objects on purpose - the board reuses DOM
+   nodes and each view holds its own rows - so this walks the live structures
+   rather than the `allPlayers` snapshot, which goes stale the moment a team
+   is switched and `rebuild` mints new cells. */
+function applyProjSource(){
+  const touch=p=>{
+    if(!p||p.id==null)return;
+    p.projected=projValue(String(p.id));};
+  // Coverage is counted over the men your leagues actually roster, and only
+  // those. Counting it over every object that carries a `projected` made the
+  // denominator jump from 203 to 676 the moment the players browser had been
+  // opened once, because that view holds the whole league's pool - and the
+  // sentence under the chips then reported two thirds of football as
+  // "unprojected on this page", which is true of nobody's page.
+  const seen=new Set();
+  let have=0;
+  for(const L of leagues){
+    for(const r of (L.roster||[])){
+      touch(r);
+      const id=String(r.id);
+      if(!seen.has(id)){seen.add(id);if(r.projected!=null)have++;}}
+    for(const c of (L.cells||[]))touch(c);}
+  for(const r of ((DATA.players||{}).players||[]))touch(r);
+  for(const r of ((DATA.rankings||{}).players||[]))touch(r);
+  for(const got of uniCache.values())
+    for(const r of (got.players||[]))touch(r);
+  projCover={have,total:seen.size};
+  liveSeq++;}                  // the model's inputs moved; drop every memo
+
+/* A projected number that may be absent. `nf` turns null into "0.0", which is
+   the single most misleading thing this page could print about a man no
+   source has projected. */
+const nfp=v=>(v==null?"\u2014":nf(v));
+
 /* ── rendering ─────────────────────────────────────────────────────────
    Nodes are built once and reused. Rebuilding innerHTML each tick would
    destroy and re-request every headshot every second - unwatchable on a
@@ -1873,7 +2055,7 @@ function renderPlayersFeed(force){
         ? `<span class="st-hurt">${hurtById[String(p.id)].label}</span>` : "")+
       `</div>`+
       `<div class="st-m">${p.pos} · ${p.team} · ${when} · `+
-      `<b>${nf(p.scored)}</b> of ${nf(p.projected)} proj`+
+      `<b>${nf(p.scored)}</b> of ${nfp(p.projected)} proj`+
       ` · starting in ${p.starting} of ${n}</div></div>`+
       `<div>${tag}</div></button>`;}).join("")
     || '<div class="rempty">Nobody you roster is in that window.</div>';}
@@ -1948,7 +2130,7 @@ function renderToday(){
         `<span class="rk-nm">${p.name}${own}</span>`+
         `<span class="rk-last">${p.pos} · ${p.team}</span>`+
         `<span class="rk-last">${last}</span>`+
-        `<span class="rk-num dim">${nf(p.projected)}</span>`+
+        `<span class="rk-num dim">${nfp(p.projected)}</span>`+
         `<span class="rk-num rk-act">${nf(p.scored)}</span></button>`;}).join("")+
     "</div>";}
 
@@ -2019,6 +2201,7 @@ let analysisLeague=null;
 
 function showHome(){
   const isL=home==="leagues";
+  syncProjBar();
   lgrid.hidden=!isL;$("daybar").hidden=!isL;$("hurt").hidden=!isL||!HURT.length;
   if(home!=="board"){openLeague=null;grid.hidden=true;$("mmodes").hidden=true;
     $("score").hidden=true;$("pbwrap").hidden=true;$("teampick").hidden=true;
@@ -2097,6 +2280,187 @@ function renderTicker(){
 $("tkclose").addEventListener("click",()=>{
   $("ticker").hidden=true;
   try{localStorage.setItem("fe.ticker","0");}catch(_){}});
+
+/* ── the projection source bar ──────────────────────────────────────── */
+/* Rendered from the server's catalogue rather than from a list kept here, so
+   the day a licence lands the chip becomes live without this file changing. */
+function renderProjBar(){
+  const host=$("pbchips");
+  const sig=projSrc+"|"+projCompare+"|"+PROJCAT.map(c=>c.source+c.loaded).join(",");
+  if(host.dataset.k!==sig){
+    host.dataset.k=sig;
+    const live=PROJCAT.filter(c=>c.loaded);
+    const pend=PROJCAT.filter(c=>!c.loaded&&c.status==="pending");
+    let html=live.map(c=>
+      `<button class="pb-chip" data-src="${esc(c.source)}" `+
+      `aria-pressed="${c.source===projSrc}" `+
+      `title="${esc(c.attribution||c.detail)} · ${c.rows} players this week">`+
+      `${esc(c.label)}</button>`).join("");
+    // Offered only when there are at least two to average. See projValue.
+    if(live.length>1)
+      html+=`<button class="pb-chip" data-src="consensus" `+
+        `aria-pressed="${projSrc==="consensus"}" `+
+        `title="Mean of the ${live.length} sources actually loaded: `+
+        `${esc(live.map(c=>c.label).join(", "))}">Consensus `+
+        `<span class="n">n=${live.length}</span></button>`;
+    // The pending three. Disabled buttons, each stating its own blocker - the
+    // landing page refuses Yahoo exactly this way. Showing them as choosable
+    // and then drawing an empty column would read as "nobody projects him".
+    html+=pend.map(c=>
+      `<button class="pb-chip" disabled data-src="${esc(c.source)}" `+
+      `title="${esc(c.detail)}">${esc(c.label)} `+
+      `<span class="soon">NEEDS ${esc((c.needs||"a feed").toUpperCase())}</span>`+
+      `</button>`).join("");
+    host.innerHTML=html;}
+  $("pbcmp").setAttribute("aria-pressed",String(projCompare));
+  $("pbcmp").textContent=projCompare?"Hide comparison":"Compare";
+  $("pbcmp").hidden=PROJLOADED.length<2;
+  renderProjNote();}
+
+/* The sentence under the chips. It says three things every time: which source
+   these numbers are, who actually made them, and how much of the board it
+   covers. The third is the one that stops a dash being read as a bug. */
+function renderProjNote(){
+  const el=$("pbnote");
+  if(!PROJLOADED.length){
+    el.innerHTML='No projection source is loaded, so the board is drawing '+
+      'whatever the roster pull carried. Run <b>projections seed</b> and '+
+      '<b>projections sleeper</b>.';
+    return;}
+  const wk=PROJ.week?` for week ${PROJ.week}`:"";
+  const miss=projCover.total-projCover.have;
+  const cover=miss>0
+    ? ` Covers <b>${projCover.have}</b> of the <b>${projCover.total}</b> players `+
+      `your leagues roster; the other ${miss} show <b>&mdash;</b>, which means `+
+      `this source did not project them &mdash; not that it projects them at zero.`
+    : ` Covers all <b>${projCover.total}</b> players your leagues roster.`;
+  let lead;
+  if(projSrc==="consensus"){
+    const names=PROJLOADED.map(projLabel).join(" and ");
+    lead=`<b>Consensus of ${PROJLOADED.length}</b> &mdash; the mean of ${names}`+
+      `${wk}. That is every source this install actually has, not a market `+
+      `consensus: <span class="warn">CBS, FantasyPros and Yahoo are not in `+
+      `it</span>, and neither is anyone else.`;
+  }else{
+    const m=projMeta(projSrc)||{};
+    lead=`<b>${esc(projLabel(projSrc))}</b>${wk}`+
+      (m.attribution?` &mdash; ${esc(m.attribution)}.`:".");
+  }
+  el.innerHTML=lead+cover;}
+
+function setProjSource(key){
+  if(!projChoices().includes(key)||key===projSrc)return;
+  projSrc=key;
+  PREFS.projection=key;
+  pushPrefs({projection:key});
+  applyProjSource();
+  renderProjBar();
+  repaintAll();}
+
+/* Every view that draws a projection, repainted. Cheaper than reloading and it
+   keeps whatever the viewer was reading on screen while the numbers change
+   underneath - which is the point of the control. */
+function repaintAll(){
+  bands={};
+  if(projCompare)renderCompare(true);
+  try{
+    if(home==="universe")renderUniverse(true);
+    else if(home==="players")renderPlayersFeed(true);
+    else if(home==="today")renderToday();
+    // draw() already dispatches to whichever league sub-view is open; clearing
+    // lvKey is what makes it rebuild rather than recognise its own nodes and
+    // leave the old numbers where they were.
+    else{lvKey="";draw(clockMinute());}
+  }catch(err){console.error("repaint after source switch failed",err);}
+  if(cardCell)refreshCard();}
+
+/* Where the bar belongs. Not on Live, Headlines or Analysis: none of them
+   draws a projection, and a control that changes nothing visible on the page
+   it is sitting on is worse than no control. */
+function syncProjBar(){
+  const off=(home==="live"||home==="news"||home==="analysis")
+    ||(home==="board"&&openLeague&&view==="standings");
+  $("pbar").hidden=off||!PROJCAT.length;
+  $("pcmp").hidden=off||!projCompare;
+  if(!$("pbar").hidden)renderProjBar();
+  if(!$("pcmp").hidden)renderCompare();}
+
+/* ── side by side ───────────────────────────────────────────────────── */
+let cmpSort="spread",cmpScope="mine";
+
+function cmpRows(){
+  const mine=new Set();
+  for(const L of leagues)for(const r of (L.roster||[]))mine.add(String(r.id));
+  let rows=(PROJ.players||[]);
+  if(cmpScope==="mine")rows=rows.filter(m=>mine.has(String(m.id)));
+  rows=rows.slice();
+  if(cmpSort==="spread")
+    // Players only one source spoke about sort last, not first: a null spread
+    // is an absence of disagreement to measure, not the largest one.
+    rows.sort((a,b)=>(b.spread==null?-1:b.spread)-(a.spread==null?-1:a.spread)
+      ||(b.consensus||0)-(a.consensus||0));
+  else rows.sort((a,b)=>(b.consensus||0)-(a.consensus||0));
+  return rows;}
+
+function renderCompare(force){
+  const tbl=$("pcmptbl");
+  const srcs=PROJLOADED;
+  const rows=cmpRows().slice(0,60);
+  const sig=[cmpSort,cmpScope,projSrc,srcs.join(","),rows.length].join("|");
+  if(!force&&tbl.dataset.k===sig)return;
+  tbl.dataset.k=sig;
+  tbl.style.setProperty("--nsrc",String(srcs.length));
+  const head='<div class="crow head"><span class="num">#</span><span>Player</span>'+
+    '<span class="c-pos">Pos</span><span class="c-tm">Team</span>'+
+    srcs.map(k=>`<span class="num">${esc(projLabel(k))}</span>`).join("")+
+    '<span class="num c-cons">Consensus</span><span class="num">Gap</span></div>';
+  const body=rows.map((m,i)=>{
+    const vals=srcs.map(k=>m.by[k]);
+    const got=vals.filter(v=>v!=null);
+    const hi=got.length>1?Math.max(...got):null,lo=got.length>1?Math.min(...got):null;
+    return `<div class="crow"><span class="num dim">${i+1}</span>`+
+      `<span class="nm">${esc(m.name)}</span>`+
+      `<span class="c-pos"><span class="pos" style="--pc:var(--pos-${esc(m.pos)},#8E93A0)">`+
+        `${esc(m.pos)}</span></span>`+
+      `<span class="c-tm dim">${esc(m.team)}</span>`+
+      srcs.map((k,j)=>{
+        const v=vals[j];
+        if(v==null)return '<span class="num dim">&mdash;</span>';
+        const cls=hi!=null&&v===hi?"hi":(lo!=null&&v===lo?"lo":"");
+        return `<span class="num ${cls}">${nf(v)}</span>`;}).join("")+
+      // n travels with the consensus on every single row. A mean of one that
+      // does not say so is the whole failure this feature exists to avoid.
+      `<span class="num c-cons">${m.consensus==null?"&mdash;":nf(m.consensus)}`+
+        `<span class="dim" style="font-size:10px"> n=${m.n}</span></span>`+
+      (m.spread==null
+        ? '<span class="lone">only 1</span>'
+        : `<span class="gap${m.spread<1?" small":""}">${nf(m.spread)}</span>`)+
+      `</div>`;}).join("");
+  tbl.innerHTML=head+(rows.length?body:
+    '<div class="crow"><span></span><span class="nm">Nobody projected here yet.</span></div>');
+  const many=cmpRows().length;
+  $("pcmpnote").innerHTML=
+    `Showing ${rows.length} of ${many}. <b>Gap</b> is the distance between the `+
+    `highest and lowest source for that player &mdash; the disagreement itself, `+
+    `left in rather than averaged away. A row marked <b>only 1</b> has one `+
+    `source's number and therefore no consensus worth the word.`;}
+
+$("pbchips").addEventListener("click",e=>{
+  const b=e.target.closest(".pb-chip");
+  if(!b||b.disabled)return;
+  setProjSource(b.dataset.src);});
+$("pbcmp").addEventListener("click",()=>{
+  projCompare=!projCompare;
+  renderProjBar();
+  $("pcmp").hidden=!projCompare;
+  if(projCompare)renderCompare(true);});
+$("pcmpf").addEventListener("click",e=>{
+  const b=e.target.closest(".chip");if(!b)return;
+  const group=b.dataset.psort!==undefined?"psort":"pscope";
+  $("pcmpf").querySelectorAll(`.chip[data-${group}]`).forEach(o=>
+    o.setAttribute("aria-pressed",String(o===b)));
+  if(group==="psort")cmpSort=b.dataset.psort;else cmpScope=b.dataset.pscope;
+  renderCompare(true);});
 
 /* ── which leagues, in what order ───────────────────────────────────── */
 const readList=k=>PREFS[k]||[];
@@ -2480,7 +2844,7 @@ function renderLeague(minute,statsOnly){
     if(surface!=="xr"){el.style.transform="";el.style.filter="";el.style.opacity="";}
     setText(el.querySelector(".t-pts"),nf(c.scored));
     // the projection sits beside the actual so the number has a yardstick
-    setText(el.querySelector(".t-proj"),"/ "+nf(c.projected));
+    setText(el.querySelector(".t-proj"),"/ "+nfp(c.projected));
     setText(el.querySelector(".t-state"),c.state);
     setText(el.querySelector(".t-sub"),subLine(c,m.phase));
     ordered.push(el);
@@ -2759,6 +3123,7 @@ function refreshCard(){
                ["Game left",Math.round(c.remaining*100)+"%"],
                ["Uncertainty","σ "+nf(sigma)],["Pace",Math.round(pace)+"%"],
                c.slot?["Slot",c.slot]:["Position",c.pos||"—"]];
+  renderCardSources(c);
   const box=$("pcstats");
   if(box.dataset.k!==stats.map(x=>x[1]).join("|")){
     box.dataset.k=stats.map(x=>x[1]).join("|");
@@ -2792,6 +3157,34 @@ function refreshCard(){
     `${d>=0?"+":""}${d.toFixed(1)} points of win probability versus now `+
     `(${Math.round(base.winProb*100)}%)`);
 }
+
+/* Every source's number for this one man, on the card that opens over him.
+   The board can only show one number at a time; this is where the others go,
+   and where "where did that come from" stops needing to be asked. A source
+   with nothing to say about him is listed saying nothing - the alternative is
+   leaving it off, which reads as agreement. */
+function renderCardSources(c){
+  const host=$("pcsrc");
+  const m=PROJBY.get(String(c.id));
+  if(!m||!PROJLOADED.length){host.hidden=true;return;}
+  host.hidden=false;
+  const sig=String(c.id)+"|"+projSrc;
+  if(host.dataset.k===sig)return;
+  host.dataset.k=sig;
+  const rows=PROJLOADED.map(k=>{
+    const v=m.by[k];
+    const on=k===projSrc;
+    return `<div class="pc-srcrow ${on?"on":"off"}">`+
+      `<span class="s">${esc(projLabel(k))}${on?" &middot; on the board":""}</span>`+
+      `<span class="v">${v==null?"&mdash;":nf(v)}</span></div>`;}).join("");
+  const cons=m.n>1
+    ? `<div class="pc-srcrow ${projSrc==="consensus"?"on":"off"}">`+
+      `<span class="s">Consensus of ${m.n}</span>`+
+      `<span class="v">${nf(m.consensus)} <span style="opacity:.6">`+
+      `&plusmn;${nf(m.spread/2)}</span></span></div>`
+    : `<div class="pc-srcrow off"><span class="s">Consensus</span>`+
+      `<span class="v" style="font-size:11px">only 1 source</span></div>`;
+  host.innerHTML=rows+cons;}
 
 $("pcslider").addEventListener("input",refreshCard);
 $("pcclose").addEventListener("click",closeCard);
@@ -2949,7 +3342,7 @@ function renderRank(){
     if(own.dataset.k!==pl.owner+tag){own.dataset.k=pl.owner+tag;
       own.innerHTML=tag+`<span>${pl.owner}</span>`;}
     setText(el.querySelector(".r-pts"),nf(pl.scored||0));
-    setText(el.querySelector(".r-proj"),nf(pl.projected||0));
+    setText(el.querySelector(".r-proj"),nfp(pl.projected));
     el.querySelector(".r-bar i").style.width=
       (lev[pl.id]!=null?Math.min(100,lev[pl.id]*260):((pl.scored||0)/top)*100)+"%";
     rtable.appendChild(el);});
@@ -2976,6 +3369,7 @@ $("viewseg").addEventListener("click",e=>{
   showView();});
 
 function showView(){
+  syncProjBar();
   // The sub-tabs only exist inside a league. Guarding here keeps the parent
   // level from ever being half-dressed in a league's chrome.
   if(!openLeague){
@@ -3059,11 +3453,11 @@ function subLine(c,phase){
     // Nothing has happened yet, so the useful facts are when it starts and
     // what is expected - not a leverage share that is identical for everyone.
     const when=g?KICK(g.kickoff):"";
-    return `${c.team} · proj ${nf(c.projected)}${when?" · "+when:""}`;}
+    return `${c.team} · proj ${nfp(c.projected)}${when?" · "+when:""}`;}
   if(mosaicMode==="top")
-    return `${c.team} · ${c.owner||""} · ${nf(c.projected)} proj`;
+    return `${c.team} · ${c.owner||""} · ${nfp(c.projected)} proj`;
   if(mosaicMode==="myteam")
-    return `${c.team} · ${c.started?"starting":"bench"} · proj ${nf(c.projected)}`;
+    return `${c.team} · ${c.started?"starting":"bench"} · proj ${nfp(c.projected)}`;
   return `${c.team} · proj ${nf(c.projected)} · lev ${(c.share*100).toFixed(1)}%`;}
 
 function renderPicker(L){
@@ -3293,7 +3687,7 @@ function rosterRow(p){
 function paintRosterRow(el,p){
   el.className="lvrow"+(p.started?"":" bench");
   setText(el.querySelector(".lv-opp"),oppLabel(p.team,p.state));
-  setText(el.querySelector(".lv-num.dim"),nf(p.projected));
+  setText(el.querySelector(".lv-num.dim"),nfp(p.projected));
   // A zero before kickoff is not the same fact as a zero after one, and the
   // feed reports both as 0.0. Points only appear once his game is live.
   const played=p.state&&p.state!=="PRE"&&p.state!=="BYE";
@@ -3565,7 +3959,12 @@ function uniLoad(scope,then){
     .then(r=>r.ok?r.json():Promise.reject(r.status))
     .then(j=>{uniCache.set(scope,{players:j.players||[],leagues:j.leagues||0,
                                   total:j.total||0});
-              uniLeagues=j.leagues||uniLeagues;then&&then();})
+              uniLeagues=j.leagues||uniLeagues;
+              // /api/universe carries whatever the roster pull did, which is
+              // ESPN's. Rows that arrive after a source switch have to adopt
+              // it or the browser silently disagrees with the board above it.
+              applyProjSource();
+              then&&then();})
     .catch(()=>{uniCache.set(scope,{players:[],error:"unreachable"});
                 then&&then();});}
 
@@ -4435,6 +4834,12 @@ let usingFeed=false;
 const idleState=()=>Object.fromEntries(
   allPlayers.map(c=>[c.id,{s:0,r:1,g:"PRE"}]));
 applyLive(SIM?simSnapshot(sim,clockMinute()):idleState());
+/* Before the first paint, so the board's opening numbers already come from the
+   chosen source. Applying it after showHome() would flash ESPN's number for a
+   frame on a console the viewer has set to Sleeper, which reads as the setting
+   not having taken. */
+applyProjSource();
+renderProjBar();
 /* Through showHome(), not straight into draw(). draw() paints whichever view
    you are actually on and nothing else - deliberately - but the landing tab is
    the mosaic, and the mosaic is a *league* view, so the first paint has to go

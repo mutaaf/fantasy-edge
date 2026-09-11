@@ -2566,3 +2566,519 @@ class TestKickersActuallyScore(unittest.TestCase):
             mine = line.get("fieldGoalsMade", 0.0) * 3 + line.get("extraPointsMade", 0.0)
             self.assertEqual(mine, espn_points,
                              f"{pid}: scored {mine} where ESPN counts {espn_points}")
+
+
+class StubProjHttp(Http):
+    """Serves the recorded Sleeper projections payload for any URL, and keeps
+    the URLs so a test can assert the query string the adapter actually built."""
+
+    def __init__(self, payload):
+        super().__init__()
+        self.payload = payload
+        self.calls: list[str] = []
+
+    def get_json(self, url, *, headers=None, cookies=None, params=None):
+        self.calls.append(url)
+        return self.payload
+
+
+class TestSleeperProjections(unittest.TestCase):
+    """The second source that genuinely exists, and the rules that keep it
+    honest about the three that do not."""
+
+    def setUp(self):
+        from fantasyedge import projections as pj
+
+        self.pj = pj
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cache = pathlib.Path(self.tmp.name) / "cache"
+        self.store = Store(pathlib.Path(self.tmp.name) / "sp.db")
+        bundle, _ = load_fixture_bundle()
+        self.store.save(bundle)
+        self.raw = json.loads((FIX / "sleeper_projections_2026_w1.json").read_text())
+        self.http = StubProjHttp(self.raw)
+
+    def tearDown(self):
+        self.store.close()
+        self.tmp.cleanup()
+
+    def load(self, **kw):
+        kw.setdefault("http", self.http)
+        kw.setdefault("cache_dir", str(self.cache))
+        return self.pj.load_sleeper(self.store, 2026, 1, **kw)
+
+    def test_positions_are_repeated_pairs_not_one_dict_key(self):
+        """Sleeper wants `position[]` once per position.
+
+        `Http.get_json(params=...)` takes a dict, and a dict cannot hold six
+        entries under one key - it would send the last one only, and the call
+        would return kickers alone with no error to notice. So the URL is built
+        by hand, and this is the assertion that keeps it that way.
+        """
+        url = self.pj.sleeper_url(2026, 1)
+        for pos in ("QB", "RB", "WR", "TE", "K", "DEF"):
+            self.assertIn(f"position%5B%5D={pos}", url)
+        self.assertEqual(url.count("position%5B%5D="), 6)
+        self.assertIn("/projections/nfl/2026/1", url)
+        # No week means Sleeper's season-long variant, which is a different
+        # question and must not silently answer the weekly one.
+        self.assertNotIn("/1?", self.pj.sleeper_url(2026))
+
+    def test_a_row_with_no_points_never_becomes_a_zero(self):
+        """Most of the payload is not a projection.
+
+        Of 3,304 rows in a real week 1, 2,855 carry an ADP placeholder and no
+        points. Reading a missing `pts_ppr` as 0.0 would put a hard zero beside
+        several thousand names - a forecast nobody made.
+        """
+        rows = self.pj.sleeper_rows(self.raw)
+        offered = sum(1 for r in self.raw if (r.get("stats") or {}).get("pts_ppr"))
+        self.assertEqual(len(rows), offered)
+        self.assertLess(len(rows), len(self.raw))
+        self.assertTrue(all(r["points"] for r in rows))
+
+    def test_the_scoring_format_follows_the_league_not_the_fetch(self):
+        ppr = {r["name"]: r["points"] for r in self.pj.sleeper_rows(self.raw, "ppr")}
+        half = {r["name"]: r["points"] for r in self.pj.sleeper_rows(self.raw, "half_ppr")}
+        std = {r["name"]: r["points"] for r in self.pj.sleeper_rows(self.raw, "std")}
+        who = next(n for n, v in ppr.items() if v and n != "Philadelphia Eagles")
+        self.assertGreater(ppr[who], half[who])
+        self.assertGreater(half[who], std[who])
+        self.assertEqual(self.pj.scoring_format({"scoring": {"reception": 1.0}}), "ppr")
+        self.assertEqual(self.pj.scoring_format({"scoring": {"reception": 0.5}}), "half_ppr")
+        self.assertEqual(self.pj.scoring_format({"scoring": {"reception": 0}}), "std")
+        self.assertEqual(self.pj.scoring_format(None), "ppr")
+
+    def test_it_joins_onto_espn_ids_and_says_by_which_rule(self):
+        out = self.load()
+        self.assertGreater(out["rows"], 0)
+        self.assertTrue(out["matched"])
+        # Every hit is attributed to a stage of identity.Resolver. A loader
+        # that matched 60% of the board silently would produce a "consensus"
+        # that is really ESPN wherever the other source went missing.
+        self.assertEqual(sum(out["matched"].values()), out["rows"])
+        self.assertLessEqual(set(out["matched"]), {"exact", "name", "surname+club"})
+        stored = self.store.q(
+            "SELECT COUNT(*) c FROM projection WHERE source='sleeper'")[0]["c"]
+        self.assertEqual(stored, out["rows"])
+
+    def test_what_it_could_not_match_is_reported_not_dropped(self):
+        """The ESPN fixture has no team defence in it, so Sleeper's Eagles have
+        nowhere to land - and an unmatched name has to come back rather than
+        quietly reduce the row count."""
+        out = self.load()
+        self.assertGreater(out["unmatched_count"], 0)
+        self.assertTrue(any("Eagles" in n for n in out["unmatched"]))
+        self.assertEqual(out["rows"] + out["unmatched_count"], out["offered"])
+
+    def test_a_defence_lands_on_espns_spelling_of_the_same_club(self):
+        """Sleeper files the Eagles as player_id "PHI", named "Philadelphia
+        Eagles"; ESPN writes "Eagles D/ST". No character is shared beyond the
+        nickname, and only `identity.club_of` reconciles them."""
+        with self.store.tx() as c:
+            c.execute("INSERT OR REPLACE INTO player VALUES (?,?,?,?,?)",
+                      ("espn", "-16021", "Eagles D/ST", "DEF", "21"))
+        out = self.load()
+        row = self.store.q(
+            "SELECT points FROM projection WHERE source='sleeper' AND player_id='-16021'")
+        self.assertTrue(row, "the Eagles defence did not join")
+        self.assertAlmostEqual(row[0]["points"], 9.71, places=2)
+
+    def test_loading_twice_does_not_duplicate(self):
+        first = self.load()["rows"]
+        self.load()
+        n = self.store.q(
+            "SELECT COUNT(*) c FROM projection WHERE source='sleeper'")[0]["c"]
+        self.assertEqual(n, first)
+
+    def test_the_slate_is_cached_rather_than_refetched(self):
+        """Two megabytes a week. The API never calls this at all - it reads the
+        rows - but the CLI loading fourteen weeks must not fetch each of them
+        twice."""
+        self.load()
+        n = len(self.http.calls)
+        self.load()
+        self.assertEqual(len(self.http.calls), n, "the second load refetched")
+        self.load(refresh=True)
+        self.assertEqual(len(self.http.calls), n + 1, "--refresh did not refetch")
+
+    def test_nothing_is_written_inside_the_repository(self):
+        """A cache under the working tree would be committed sooner or later.
+        It belongs beside the player file in ~/.fantasy-edge/, like everything
+        else this project keeps for itself."""
+        repo = pathlib.Path(__file__).resolve().parents[1]
+        self.assertFalse(str(self.pj.SLEEPER_CACHE).startswith(str(repo)))
+        self.load()
+        self.assertTrue(any(self.cache.iterdir()))
+
+
+class TestProjectionCatalogueIsHonest(unittest.TestCase):
+    """A source nobody has supplied must never produce a number - not a zero,
+    not an interpolation, and not a share of something called a consensus."""
+
+    def setUp(self):
+        from fantasyedge import projections as pj
+
+        self.pj = pj
+        self.tmp = tempfile.TemporaryDirectory()
+        self.store = Store(pathlib.Path(self.tmp.name) / "c.db")
+        bundle, _ = load_fixture_bundle()
+        self.store.save(bundle)
+        self.pj.seed_espn(self.store)
+        self.raw = json.loads((FIX / "sleeper_projections_2026_w1.json").read_text())
+
+    def tearDown(self):
+        self.store.close()
+        self.tmp.cleanup()
+
+    def test_the_pending_three_are_named_and_marked_unloaded(self):
+        cat = {c["source"]: c for c in self.pj.catalog(self.store)}
+        for key in ("cbs", "fantasypros", "yahoo"):
+            self.assertIn(key, cat, f"{key} is not even named")
+            self.assertEqual(cat[key]["status"], "pending")
+            self.assertFalse(cat[key]["loaded"])
+            self.assertEqual(cat[key]["rows"], 0)
+            # Each has to say what it is waiting on. "Absent, no reason given"
+            # is the state a user reads as broken.
+            self.assertTrue(cat[key]["needs"].strip())
+            self.assertTrue(cat[key]["detail"].strip())
+
+    def test_a_source_loaded_from_a_csv_still_appears(self):
+        """The extension point for a licensed feed. A picker built only from
+        the shortlist would hide a source the user has actually paid for."""
+        csv = pathlib.Path(self.tmp.name) / "x.csv"
+        name = self.store.q("SELECT name, pos FROM player LIMIT 1")[0]
+        csv.write_text(f"player,pos,points\n{name['name']},{name['pos']},14.5\n")
+        self.pj.load_csv(self.store, str(csv), "fantasypros", 2025, 1)
+        cat = {c["source"]: c for c in self.pj.catalog(self.store, 2025, 1)}
+        self.assertTrue(cat["fantasypros"]["loaded"])
+        self.assertEqual(cat["fantasypros"]["status"], "pending",
+                         "a licensed load must not silently rewrite the status "
+                         "of the other weeks, which still have nothing")
+
+    def test_a_consensus_of_one_says_so_and_has_no_spread(self):
+        week = self.store.q(
+            "SELECT MIN(week) w FROM projection WHERE source='espn'")[0]["w"]
+        b = self.pj.board(self.store, 2025, week)
+        self.assertEqual(b["sources"], ["espn"])
+        self.assertEqual(b["n"], 1)
+        self.assertTrue(b["players"])
+        for m in b["players"]:
+            self.assertEqual(m["n"], 1)
+            self.assertEqual(m["consensus"], m["by"]["espn"])
+            # One source cannot disagree with itself, and a printed 0.0 would
+            # read as "they agree exactly".
+            self.assertIsNone(m["spread"])
+            self.assertNotIn("cbs", m["by"])
+            self.assertNotIn("fantasypros", m["by"])
+            self.assertNotIn("yahoo", m["by"])
+
+    def test_a_consensus_of_two_is_the_mean_of_exactly_those_two(self):
+        week = self.store.q(
+            "SELECT MIN(week) w FROM projection WHERE source='espn'")[0]["w"]
+        pid = self.store.q(
+            "SELECT player_id, points FROM projection WHERE source='espn' "
+            "AND week=? LIMIT 1", (week,))[0]
+        with self.store.tx() as c:
+            c.execute("INSERT OR REPLACE INTO projection VALUES (?,?,?,?,?,?)",
+                      (2025, week, "sleeper", "espn", pid["player_id"],
+                       pid["points"] + 6.0))
+        b = self.pj.board(self.store, 2025, week)
+        m = next(x for x in b["players"] if x["id"] == str(pid["player_id"]))
+        self.assertEqual(m["n"], 2)
+        self.assertAlmostEqual(m["consensus"], round(pid["points"] + 3.0, 2), places=1)
+        self.assertAlmostEqual(m["spread"], 6.0, places=2)
+        # And the man nobody else spoke about is still n=1, in the same payload.
+        lone = next(x for x in b["players"] if x["n"] == 1)
+        self.assertIsNone(lone["spread"])
+
+    def test_the_current_week_is_the_commonest_not_the_maximum(self):
+        """One league pulled with fourteen weeks of forward, unplayed roster
+        rows must not drag the whole console onto week 14.
+
+        This is the real shape of the author's database: three ESPN leagues
+        hold week 1 only, and a fourth was pulled with ESPN's forward roster
+        view, which returns every remaining week with points of 0.0. The flat
+        maximum put the console on week 14 - a week only ESPN has projected -
+        and the honest "consensus of 1" that produced was indistinguishable
+        from the Sleeper loader having failed.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            store = Store(pathlib.Path(tmp) / "wk.db")
+            try:
+                with store.tx() as c:
+                    for lid, last in (("a", 1), ("b", 1), ("c", 1), ("forward", 14)):
+                        for week in range(1, last + 1):
+                            c.execute(
+                                "INSERT OR REPLACE INTO roster_slot VALUES "
+                                "(?,?,?,?,?,?,?,?,?,?)",
+                                ("espn", lid, 2026, week, "1", "9999", "BN",
+                                 0.0, 0.0, 0))
+                flat = store.q(
+                    "SELECT MAX(week) w FROM roster_slot WHERE season=2026")[0]["w"]
+                self.assertEqual(flat, 14, "the trap this rule exists for")
+                self.assertEqual(self.pj.current_week(store, 2026), 1)
+            finally:
+                store.close()
+
+
+class TestProjectionsOverTheApi(unittest.TestCase):
+    """What a visionOS or television client actually calls. It reads rows; it
+    never touches a provider - see the module docstring in api.py."""
+
+    @classmethod
+    def setUpClass(cls):
+        from fantasyedge import projections as pj
+        from fantasyedge.api import Api
+
+        cls.tmp = tempfile.TemporaryDirectory()
+        db = pathlib.Path(cls.tmp.name) / "a.db"
+        store = Store(db)
+        bundle, _ = load_fixture_bundle()
+        store.save(bundle)
+        pj.seed_espn(store)
+        cls.week = store.q(
+            "SELECT MIN(week) w FROM projection WHERE source='espn'")[0]["w"]
+        rows = store.q("SELECT player_id, points FROM projection WHERE week=?",
+                       (cls.week,))
+        with store.tx() as c:
+            # A second source on half the board, so both the agreeing case and
+            # the "only one source spoke" case are live in one payload.
+            c.executemany(
+                "INSERT OR REPLACE INTO projection VALUES (?,?,?,?,?,?)",
+                [(2025, cls.week, "sleeper", "espn", r["player_id"],
+                  r["points"] + 4.0) for r in rows[:len(rows) // 2]])
+        store.close()
+        cls.api = Api(str(db))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.api.close()
+        cls.tmp.cleanup()
+
+    def q(self, **kw):
+        return {k: [str(v)] for k, v in kw.items()}
+
+    def test_a_projection_is_derived_not_live(self):
+        """It is recomputed from stored rows and never polled from a provider,
+        so it caches beside the analyses rather than beside the scoreboard."""
+        from fantasyedge.api import CONFIG, DERIVED, LIVE
+
+        _, pol = self.api.dispatch("/api/projections", self.q(week=self.week))
+        self.assertEqual(pol, DERIVED)
+        self.assertNotEqual(pol, LIVE)
+        _, pol = self.api.dispatch("/api/projections/sources", {})
+        self.assertEqual(pol, CONFIG)
+
+    def test_every_advertised_projection_route_dispatches(self):
+        from fantasyedge.api import ROUTES
+
+        advertised = [r[1] for r in ROUTES if r[1].startswith("/api/projections")]
+        self.assertEqual(len(advertised), 2)
+        for path in advertised:
+            self.api.dispatch(path, {})          # must not raise
+
+    def test_n_travels_with_the_consensus_on_every_row(self):
+        b, _ = self.api.dispatch("/api/projections", self.q(week=self.week))
+        self.assertEqual(sorted(b["sources"]), ["espn", "sleeper"])
+        self.assertEqual(b["n"], 2)
+        self.assertTrue(b["players"])
+        for m in b["players"]:
+            self.assertIn("n", m)
+            self.assertEqual(m["n"], len(m["by"]))
+            self.assertEqual(m["consensus"],
+                             round(sum(m["by"].values()) / len(m["by"]), 2))
+        # Both cases present, so a client cannot be written against only one.
+        self.assertTrue(any(m["n"] == 2 for m in b["players"]))
+        self.assertTrue(any(m["n"] == 1 for m in b["players"]))
+
+    def test_an_unloaded_source_produces_no_number_anywhere(self):
+        b, _ = self.api.dispatch("/api/projections", self.q(week=self.week))
+        for m in b["players"]:
+            for key in ("cbs", "fantasypros", "yahoo"):
+                self.assertNotIn(key, m["by"])
+        self.assertEqual(sorted(x["source"] for x in b["pending"]),
+                         ["cbs", "fantasypros", "yahoo"])
+        for x in b["pending"]:
+            self.assertTrue(x["needs"].strip())
+
+    def test_asking_for_a_pending_source_is_a_404_that_says_why(self):
+        from fantasyedge.api import HttpError
+
+        with self.assertRaises(HttpError) as cm:
+            self.api.dispatch("/api/projections",
+                              {"source": ["cbs"], "week": [str(self.week)]})
+        self.assertEqual(cm.exception.code, 404)
+        # The fix line has to name the blocker, not list what happens to be
+        # loaded - otherwise the client shows "try espn" for a licence problem.
+        self.assertIn("API key", cm.exception.fix)
+
+    def test_choosing_a_source_reorders_the_board(self):
+        """The whole point of the picker: a different source is a different
+        ranking, not the same list with different labels."""
+        espn, _ = self.api.dispatch(
+            "/api/projections", {"source": ["espn"], "week": [str(self.week)]})
+        slp, _ = self.api.dispatch(
+            "/api/projections", {"source": ["sleeper"], "week": [str(self.week)]})
+        self.assertNotEqual([m["id"] for m in espn["players"]],
+                            [m["id"] for m in slp["players"]])
+        for m in slp["players"]:
+            self.assertEqual(m["points"], m["by"]["sleeper"])
+        self.assertEqual(slp["players"][0]["rank"], 1)
+        self.assertTrue(slp["players"][0]["posRank"])
+
+    def test_disagreement_is_surfaced_rather_than_averaged_away(self):
+        b, _ = self.api.dispatch("/api/projections", self.q(week=self.week))
+        self.assertTrue(b["disagreements"])
+        for m in b["disagreements"]:
+            self.assertIsNotNone(m["spread"])
+            self.assertGreaterEqual(m["spread"], 0)
+        spreads = [m["spread"] for m in b["disagreements"]]
+        self.assertEqual(spreads, sorted(spreads, reverse=True))
+
+    def test_the_page_ships_the_sources_so_a_switch_costs_no_round_trip(self):
+        page = self.api.mosaic_page().decode()
+        self.assertIn('"catalog"', page)
+        self.assertIn("fantasypros", page)
+        # And the picker is in the markup as a disabled control, not as an
+        # option that would draw an empty column.
+        self.assertIn("pb-chip", page)
+        self.assertIn("NEEDS ", page)
+
+
+class TestTheChosenSourcePersists(unittest.TestCase):
+    """It is a preference like the others, for the same reason: the console
+    runs on a laptop, a television and a headset, and they have to agree."""
+
+    def test_it_round_trips_without_touching_the_other_keys(self):
+        from fantasyedge import prefs as pf
+
+        before = {"teams": {"espn-1": "4"}, "order": ["espn-1"],
+                  "hidden": ["espn-2"]}
+        after = pf.merge(before, {"projection": "sleeper"})
+        self.assertEqual(after["projection"], "sleeper")
+        self.assertEqual(after["teams"], before["teams"])
+        self.assertEqual(after["hidden"], before["hidden"])
+        self.assertEqual(after["order"], before["order"])
+
+    def test_a_file_written_before_this_existed_still_loads(self):
+        from fantasyedge import prefs as pf
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "prefs.json"
+            path.write_text(json.dumps({"teams": {"espn-9": "3"},
+                                        "hidden": ["espn-8"]}))
+            old, pf.CONFIG = pf.CONFIG, path
+            try:
+                got = pf.load()
+            finally:
+                pf.CONFIG = old
+        self.assertEqual(got["teams"], {"espn-9": "3"})
+        self.assertEqual(got["hidden"], ["espn-8"])
+        self.assertEqual(got["projection"], "",
+                         "an unset source must be empty, not a guessed name")
+
+
+class TestTheConsoleNeverInventsAProjection(unittest.TestCase):
+    """Read against the template rather than the running page, because these
+    are properties of the code that has to hold on every surface it renders on
+    - including a published copy with no API behind it."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1]
+                    / "fantasyedge" / "templates" / "mosaic.html").read_text()
+
+    def test_a_missing_number_is_a_dash_and_never_a_zero(self):
+        """`nf` turns null into "0.0", which is the single most misleading
+        thing this page could print about a man no source has projected."""
+        self.assertIn("const nfp=", self.page)
+        self.assertIn('nfp(c.projected)', self.page)
+        self.assertIn('nfp(p.projected)', self.page)
+
+    def test_the_pending_sources_are_disabled_controls(self):
+        self.assertIn("disabled data-src=", self.page)
+        self.assertIn('.pb-chip[disabled]', self.page)
+        # and the click handler refuses them a second time, because CSS is not
+        # an access control
+        self.assertIn("if(!b||b.disabled)return", self.page)
+
+    def test_a_consensus_of_one_is_never_offered(self):
+        self.assertIn("PROJLOADED.length>1", self.page)
+
+    def test_the_javascript_leverage_port_was_not_altered(self):
+        """`leverage.py` and this port must agree - see AGENTS.md. A missing
+        projection reaches evaluate() as null, which Math.max already floors to
+        nothing; that is exactly "this source does not expect him to play", and
+        it needed no change here."""
+        self.assertIn("const rest=Math.max(0,c.projected-c.scored)*c.remaining;",
+                      self.page)
+        self.assertIn("const basis=c=>phase===\"pre\"?Math.max(0,c.projected)",
+                      self.page)
+
+
+class TestAnUnplayedWeekIsNotAMiss(unittest.TestCase):
+    """A projection is not wrong because the game has not kicked off.
+
+    ESPN writes `points = 0.0` on a forward roster row rather than leaving it
+    null, so a source loaded for the rest of the season was scored against a
+    league it claimed was held scoreless every week. It reported an eleven
+    point bias and a 98% hit rate off the same rows - numbers that look like
+    a finding and are an artefact of the calendar.
+    """
+
+    def setUp(self):
+        import tempfile
+        from fantasyedge.store import Store
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.store = Store(pathlib.Path(self.tmp.name) / "acc.db")
+        with self.store.tx() as c:
+            # Twenty-five starters, because the engine skips any source with
+            # fewer than twenty scored records - a sensible floor that a
+            # nine-man fixture would trip instead of testing anything.
+            for i in range(25):
+                c.execute("INSERT INTO roster_slot VALUES (?,?,?,?,?,?,?,?,?,?)",
+                          ("espn", "L", 2026, 1, "t1", f"p{i}", "WR",
+                           10.0 + i, 9.0 + i, 1))
+            # One week that has not happened: same men, stored zeros.
+            for i in range(25):
+                c.execute("INSERT INTO roster_slot VALUES (?,?,?,?,?,?,?,?,?,?)",
+                          ("espn", "L", 2026, 2, "t1", f"p{i}", "WR",
+                           0.0, 9.0 + i, 1))
+            for w in (1, 2):
+                for i in range(25):
+                    c.execute("INSERT INTO projection VALUES (?,?,?,?,?,?)",
+                              (2026, w, "src", "espn", f"p{i}", 9.0 + i))
+                    c.execute("INSERT OR REPLACE INTO player VALUES (?,?,?,?,?)",
+                              ("espn", f"p{i}", f"P{i}", "WR", "DET"))
+
+    def tearDown(self):
+        self.store.close()
+        self.tmp.cleanup()
+
+    def test_only_the_played_week_is_scored(self):
+        from fantasyedge.analytics import projection_accuracy
+
+        r = projection_accuracy(self.store, "espn", "L")
+        self.assertEqual(len(r.rows), 1, "expected one source")
+        weeks = r.rows[0][r.columns.index("Weeks")]
+        self.assertEqual(weeks, 1,
+                         "the unplayed week was scored; every projection in it "
+                         "counts as missing by its whole value")
+
+    def test_the_bias_is_not_the_calendar(self):
+        """Projections here are within a point of the truth in the week that
+        happened. Counting the week that did not would swing the bias by about
+        the size of a projection."""
+        from fantasyedge.analytics import projection_accuracy
+
+        r = projection_accuracy(self.store, "espn", "L")
+        bias = r.rows[0][r.columns.index("Bias (proj - actual)")]
+        self.assertLess(abs(bias), 2.0, f"bias {bias} looks like unplayed weeks")
+
+    def test_the_caveat_says_so(self):
+        from fantasyedge.analytics import projection_accuracy
+
+        r = projection_accuracy(self.store, "espn", "L")
+        self.assertIn("in progress", r.caveat.lower())

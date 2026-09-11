@@ -14,6 +14,13 @@ Three quirks this absorbs so nothing downstream has to care:
    active pool and null for most stars, so joining ADP by id does not work.
    Matching on a normalised name plus position resolves 98% of a top-300
    board; see `PlayerBook`.
+
+Sleeper's *projections* are not here. They are a different endpoint on a
+different host path, they answer for any league or none, and they are loaded
+into the same `projection` table every other source uses - so they live in
+`projections.load_sleeper` beside ESPN's and the CSV loader, rather than
+behind a `Provider` interface that is about league history. Nothing in this
+file is needed to fetch them.
 """
 
 from __future__ import annotations

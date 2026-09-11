@@ -250,6 +250,16 @@ def main() -> None:
     api = Api(args.db)
     try:
         data = api.mosaics()
+        # Baked in for the same reason the served page inlines it: the demo has
+        # no API behind it, and a source picker that cannot switch anything is
+        # worse than none. It carries player names and numbers only - no league
+        # and no manager - so it needs no scrubbing and gets none, which is
+        # also why it is added after mosaics() rather than folded into it.
+        try:
+            data["projections"] = api.projections({})
+        except Exception as exc:
+            print(f"  no projections baked in: {exc}")
+            data["projections"] = None
     finally:
         api.close()
 
