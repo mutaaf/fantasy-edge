@@ -160,3 +160,24 @@ key not living in the database.
   `oauth.begin` and `oauth.finish` are the two calls it needs, and the session
   id they take must be the server's own session cookie, not anything the client
   can choose.
+
+
+## Verified against a real project
+
+The token store was exercised end to end against a live Supabase project, not
+a stub, and the results are worth writing down because two of them are the
+whole point of the design:
+
+- **The plaintext refresh token is not in the row.** Read back with the
+  service key - the credential that bypasses row-level security and can see
+  everything - the column holds `fe1.<key id>.<salt>.<nonce>.<ciphertext>.<tag>`
+  and the token itself appears nowhere in the record.
+- **Reuse detection fires.** After a rotation, presenting the retired token's
+  fingerprint reports it spent, and revoking the family marks the connection
+  revoked rather than issuing anything further.
+- The anon key is refused on every table (`42501`, insufficient privilege),
+  while the service key reads. That is the intended posture: enforcement lives
+  in the server, and nothing reachable from a browser can read these tables.
+
+What that verification did **not** cover: any real Yahoo token. Everything
+above used deliberately fake values. Yahoo itself is still unproven end to end.
