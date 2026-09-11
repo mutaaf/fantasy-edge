@@ -171,7 +171,8 @@ def build(out: pathlib.Path) -> None:
     stack.mkdir(parents=True, exist_ok=True)
     (out / "Contents.json").write_text(contents())
     (stack / "Contents.json").write_text(contents(
-        layers=[{"filename": f"{n}.solidimagestacklayer"} for n in LAYERS]))
+        layers=[{"filename": f"{n}.solidimagestacklayer"}
+                for n in reversed(list(LAYERS))]))
     for name, draw in LAYERS.items():
         layer = stack / f"{name}.solidimagestacklayer"
         img = layer / "Content.imageset"

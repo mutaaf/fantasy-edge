@@ -1,0 +1,13 @@
+{
+  "info": {
+    "author": "fantasy-edge",
+    "version": 1
+  },
+  "images": [
+    {
+      "filename": "Front.png",
+      "idiom": "vision",
+      "scale": "2x"
+    }
+  ]
+}

@@ -34,7 +34,27 @@ def main() -> None:
     if not sources:
         raise SystemExit("no sources found")
 
+    # The asset catalog holds the app icon. Without it in a Resources phase
+    # the build still succeeds and the app still installs - it just wears the
+    # blank disc, which is exactly how this went unnoticed: nothing fails, the
+    # icon is simply absent. ASSETCATALOG_COMPILER_APPICON_NAME was already
+    # set, pointing at a catalog nobody had added to the target.
+    catalog = "Assets.xcassets" if (APP / "Assets.xcassets").is_dir() else ""
+
     file_refs, build_files, group_children, sources_phase = [], [], [], []
+    resources_phase: list[str] = []
+    if catalog:
+        cref, cbuild = oid("fref", catalog), oid("bfile", catalog)
+        file_refs.append(
+            f'\t\t{cref} /* {catalog} */ = {{isa = PBXFileReference; '
+            f'lastKnownFileType = folder.assetcatalog; '
+            f'path = FantasyEdge/{catalog}; sourceTree = SOURCE_ROOT; }};')
+        build_files.append(
+            f'\t\t{cbuild} /* {catalog} in Resources */ = {{isa = PBXBuildFile; '
+            f'fileRef = {cref} /* {catalog} */; }};')
+        group_children.append(f'\t\t\t\t{cref} /* {catalog} */,')
+        resources_phase.append(
+            f'\t\t\t\t{cbuild} /* {catalog} in Resources */,')
     for name in sources:
         fref, bfile = oid("fref", name), oid("bfile", name)
         file_refs.append(
@@ -170,7 +190,9 @@ def main() -> None:
 \t\t{ids['resourcesBuildPhase']} = {{
 \t\t\tisa = PBXResourcesBuildPhase;
 \t\t\tbuildActionMask = 2147483647;
-\t\t\tfiles = ();
+\t\t\tfiles = (
+{chr(10).join(resources_phase)}
+\t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
 /* End PBXResourcesBuildPhase section */
