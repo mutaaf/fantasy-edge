@@ -51,6 +51,7 @@ ROUTES = [
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
     ["GET", "/api/universe", "every player known, filterable (?pos=&scope=&q=)"],
+    ["GET", "/api/gamecast/{event}", "one game: drives, plays, ball position, win prob"],
     ["GET", "/api/player/{id}", "one player in depth: season log, ranks, draft history"],
     ["GET", "/api/rankings", "today's slate ranked, the way a pre-game show would"],
     ["GET", "/api/context", "scoring plays, ESPN links, and ESPN's own injury report"],
@@ -630,6 +631,110 @@ class Api:
                 "ties": mine["ties"] or 0, "rank": mine["rank"],
                 "of": len(rows), "pointsFor": mine["points_for"] or 0.0}
 
+    def gamecast(self, event: str) -> dict:
+        """One game, in the shape a field wants to draw.
+
+        Everything here comes from the summary the live tier has already
+        fetched for scoring, so opening a gamecast costs no extra request.
+        The shaping happens here rather than on each client because a field
+        is the same field on a television, a headset and a browser, and three
+        implementations of "where is the ball" would be three chances to put
+        it somewhere different.
+
+        Shared, not personal: this is the same payload for every reader, which
+        is what lets it cache like the rest of the live tier.
+        """
+        from .live import _num_score, logo_url
+
+        src = self.live_source()
+        if not hasattr(src, "summary"):
+            raise HttpError(404, "This live source has no play data.",
+                            "the simulated source cannot animate a real game")
+        data = src.summary(event)
+        if not data:
+            raise HttpError(404, f"No play data for event {event}.",
+                            "a game that has not kicked off is not fetched")
+
+        head = data.get("header") or {}
+        comp = ((head.get("competitions") or [{}])[0])
+        status = comp.get("status") or {}
+        sides = {}
+        for c in (comp.get("competitors") or []):
+            t = c.get("team") or {}
+            sides[(c.get("homeAway") or "").lower()] = {
+                "id": str(t.get("id") or ""),
+                "abbr": (t.get("abbreviation") or "").upper(),
+                "name": t.get("displayName") or t.get("name") or "",
+                "logo": ((t.get("logos") or [{}])[0].get("href", "")
+                         if t.get("logos") else logo_url(t.get("abbreviation") or "")),
+                "color": "#" + (t.get("color") or "444444"),
+                "score": _num_score(c.get("score")),
+            }
+
+        # Drives, flattened to the fields a field animation actually uses.
+        drives = []
+        raw = data.get("drives") or {}
+        for d in (raw.get("previous") or []) + ([raw["current"]] if raw.get("current") else []):
+            plays = []
+            for pl in (d.get("plays") or []):
+                st, en = pl.get("start") or {}, pl.get("end") or {}
+                plays.append({
+                    "id": str(pl.get("id") or ""),
+                    "text": pl.get("text") or "",
+                    "clock": (pl.get("clock") or {}).get("displayValue", ""),
+                    "period": (pl.get("period") or {}).get("number", 0),
+                    "down": st.get("down"), "distance": st.get("distance"),
+                    # Yards to the defending end zone: the one number a field
+                    # needs to place the ball, and it is given rather than
+                    # derived from a yard line whose direction is ambiguous.
+                    "from": st.get("yardsToEndzone"),
+                    "to": en.get("yardsToEndzone"),
+                    "yards": pl.get("statYardage"),
+                    "scoring": bool(pl.get("scoringPlay")),
+                    "turnover": bool(pl.get("isTurnover")),
+                    "penalty": bool(pl.get("isPenalty")),
+                    "home": _num_score(pl.get("homeScore")),
+                    "away": _num_score(pl.get("awayScore")),
+                })
+            team = (d.get("team") or {})
+            drives.append({
+                "id": str(d.get("id") or ""),
+                "team": (team.get("abbreviation") or "").upper(),
+                "description": d.get("description") or "",
+                "result": d.get("displayResult") or d.get("result") or "",
+                "scored": bool(d.get("isScore")),
+                "yards": d.get("yards"), "plays": plays,
+            })
+
+        # Win probability, already one point per play.
+        wp = [{"play": str(w.get("playId") or ""),
+               "home": w.get("homeWinPercentage")}
+              for w in (data.get("winprobability") or [])
+              if w.get("homeWinPercentage") is not None]
+
+        last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
+        return {
+            "event": str(event),
+            "state": (status.get("type") or {}).get("state", "pre"),
+            "label": (status.get("type") or {}).get("shortDetail", ""),
+            "clock": status.get("displayClock", ""),
+            "period": (status.get("period") or 0),
+            "home": sides.get("home", {}), "away": sides.get("away", {}),
+            "possession": (comp.get("situation") or {}).get("possession", ""),
+            "situation": comp.get("situation") or {},
+            "lastPlay": last,
+            "drives": drives,
+            "winProbability": wp,
+            "scoringPlays": [{
+                "text": sp.get("text") or "",
+                "clock": (sp.get("clock") or {}).get("displayValue", ""),
+                "period": (sp.get("period") or {}).get("number", 0),
+                "team": ((sp.get("team") or {}).get("abbreviation") or "").upper(),
+                "home": _num_score(sp.get("homeScore")),
+                "away": _num_score(sp.get("awayScore")),
+            } for sp in (data.get("scoringPlays") or [])],
+        }
+
     def headlines(self) -> dict:
         """Recent NFL news, tagged with whoever you actually roster.
 
@@ -961,6 +1066,8 @@ class Api:
             return self.players(), CONFIG
         if rest == ["universe"]:
             return self.universe(qs), DERIVED
+        if len(rest) == 2 and rest[0] == "gamecast":
+            return self.gamecast(rest[1]), LIVE
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
         if rest == ["context"]:

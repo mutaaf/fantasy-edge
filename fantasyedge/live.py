@@ -317,6 +317,7 @@ class EspnLiveSource(LiveSource):
         # athlete names per event, kept beside the scored lines so a roster
         # whose ids are not ESPN's can still be joined to them.
         self._namecache: dict[str, dict] = {}
+        self._summaries: dict[str, dict] = {}
         if scoring is None:
             from .scoring import Scoring
             scoring = Scoring()
@@ -414,6 +415,11 @@ class EspnLiveSource(LiveSource):
                     hit = (now, score_boxscore(data, self.scoring),
                            parse_team_defence(data), parse_boxscore(data))
                     self._namecache[event] = boxscore_names(data)
+                    # Kept whole for the gamecast. It is already paid for -
+                    # re-fetching a summary to animate the same play the
+                    # scoring just read would double the only expensive call
+                    # this source makes.
+                    self._summaries[event] = data
                 except Exception:
                     # keep whatever we had; a single bad game must not blank a board
                     hit = hit or (now, {}, {}, {})
@@ -483,6 +489,16 @@ class EspnLiveSource(LiveSource):
             if len(hit) > 3:
                 out.update(hit[3])
         return out
+
+    def summary(self, event: str) -> dict:
+        """The whole summary for one game, from the cache the scoring filled.
+
+        Returns {} when that game has not been fetched - which is every game
+        that has not kicked off, because this source deliberately does not ask
+        for those.
+        """
+        self.boxscores()
+        return self._summaries.get(str(event)) or {}
 
     def context(self) -> dict:
         """What just happened, where to read more, and who is hurt.

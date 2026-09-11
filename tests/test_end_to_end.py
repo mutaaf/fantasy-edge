@@ -1548,3 +1548,44 @@ class TestTeamBadges(unittest.TestCase):
         self.assertTrue(raster("https://x/y.png"))
         self.assertTrue(raster("https://x/y.GIF"))
         self.assertTrue(raster("https://mystique-api.fantasy.espn.com/apis/v1/images/048ec3"))
+
+
+class TestGamecast(unittest.TestCase):
+    """The shape a field animation draws from.
+
+    The important property is that it costs no extra request: the summary it
+    reads is the one the scoring already fetched. A gamecast that re-fetched
+    would double the only expensive call the live tier makes, per viewer.
+    """
+
+    def source(self):
+        from fantasyedge.live import EspnLiveSource
+
+        board = json.loads((FIX / "espn_scoreboard.json").read_text())
+        board["events"][0]["competitions"][0]["status"] = {
+            "period": 3, "clock": 420.0,
+            "type": {"state": "in", "shortDetail": "7:00 - 3rd"}}
+        summary = json.loads((FIX / "espn_summary.json").read_text())
+        self.calls = []
+
+        def http(url):
+            self.calls.append(url)
+            return summary if "summary?event=" in url else board
+        return EspnLiveSource([{"player_id": "1", "team": "SEA", "name": "", "pos": "WR"}],
+                              http=http)
+
+    def test_the_summary_is_not_fetched_twice(self):
+        src = self.source()
+        src.boxscores()
+        before = sum(1 for c in self.calls if "summary?event=" in c)
+        src.summary(src._events()[0][0])
+        after = sum(1 for c in self.calls if "summary?event=" in c)
+        self.assertEqual(before, after,
+                         "opening a gamecast re-fetched a summary the scoring "
+                         "had already paid for")
+
+    def test_a_game_that_has_not_started_has_no_play_data(self):
+        """The live tier deliberately does not fetch pre-game summaries, so
+        the honest answer is nothing rather than an empty field."""
+        src = self.source()
+        self.assertEqual(src.summary("not-an-event"), {})
