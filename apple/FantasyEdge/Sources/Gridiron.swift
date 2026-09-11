@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Where a man is standing on a field, and why.
@@ -120,6 +121,49 @@ enum Gridiron {
         (100.0 - Double(min(100, max(0, toEndzone)))) / 100.0
     }
 
+    /// Whether a play is a snap that moved the ball.
+    ///
+    /// It is not enough to test the down. In the SF-at-LAR feed a timeout
+    /// comes through as `down 3, distance 1, from 0, to 48` and the two-minute
+    /// warning as `down 1, distance 10, from 0, to 80`: the down is the one
+    /// that was about to be played, and `from` is zero because no ball was
+    /// snapped. END GAME is the same shape with `down 0, from 0, to 13`. Read
+    /// straight into geometry those put the line of scrimmage on the goal line
+    /// and draw a gain line most of the length of the field - which is the
+    /// stray red line on the screenshot this was written from.
+    ///
+    /// `from` is yards to the defending end zone, so a real snap is always at
+    /// least 1: a snap from the zero yard line is a play that has already
+    /// scored. Kickoffs carry `down 0` with a genuine `from`, and they are
+    /// excluded too - there is no line of scrimmage on a kickoff and no down
+    /// to report.
+    static func isSnap(down: Int?, from: Int?) -> Bool {
+        (down ?? 0) > 0 && (from ?? 0) > 0
+    }
+
+    /// The three marks a play puts on the field, in field coordinates.
+    ///
+    /// One function so the drawing and `verify_placement.swift` cannot get
+    /// different answers, which is the whole reason the arithmetic is out here
+    /// rather than inside a `GeometryReader`.
+    struct Marks: Hashable {
+        /// Where the ball was snapped from.
+        let los: Double
+        /// The line to gain. Nil on a play with no down to gain against.
+        let toGain: Double?
+        /// Where the whistle went. Equal to `los` when the feed gave no `to`.
+        let ball: Double
+    }
+
+    static func marks(from: Int, to: Int?, down: Int?, distance: Int?) -> Marks {
+        Marks(los: alongField(from),
+              // Clamped at the goal line: on 3rd and 12 from the eight, the
+              // line to gain is the end zone, not four yards behind it.
+              toGain: ((down ?? 0) > 0 && (distance ?? 0) > 0)
+                  ? alongField(max(0, from - (distance ?? 0))) : nil,
+              ball: alongField(to ?? from))
+    }
+
     /// "LAR 28", the way a scoreboard says it. Yards-to-the-end-zone is the
     /// exact number and nobody reads a game in it.
     static func spot(toEndzone: Int, offence: String, defence: String) -> String {
@@ -137,6 +181,36 @@ enum Gridiron {
         guard let dist = distance else { return label }
         if let tz = toEndzone, tz > 0, dist >= tz { return "\(label) & Goal" }
         return dist <= 0 ? "\(label) & inches" : "\(label) & \(dist)"
+    }
+}
+
+/// A hundred yards between two ten-yard end zones, which is why every
+/// conversion here divides by a hundred and twenty.
+///
+/// Here rather than beside the turf that draws it so the mapping can be
+/// checked without a renderer: `verify_placement.swift` asserts that a snap
+/// from the 63 with three to gain puts the line of scrimmage at 470, the line
+/// to gain at 500 and the ball at 550 in a twelve-hundred-unit box. Checking
+/// a field by eye is how a stray line survives a review.
+enum FieldGeometry {
+    static let endzone = 10.0 / 120.0
+
+    /// Field coordinate (0 at the attacking side's own goal line, 1 at the
+    /// end zone it is driving on) to a point across a view of this width.
+    static func px(_ x: Double, _ width: CGFloat) -> CGFloat {
+        CGFloat(endzone + max(0, min(1, x)) * (1 - 2 * endzone)) * width
+    }
+
+    /// The last twenty yards, stretched over the whole width.
+    ///
+    /// A rescale of the same coordinate rather than a second placement rule:
+    /// the red-zone field draws men `Gridiron.place` has already positioned,
+    /// so one arrangement is shown at two zooms instead of two arrangements
+    /// having to agree. Clamped at the bottom because a man lines up behind
+    /// the ball - a quarterback in shotgun on the eighteen is seven yards
+    /// further back than the ball is, and off the left edge of this view.
+    static func redZone(_ x: Double) -> Double {
+        min(1, max(0, (x - 0.80) / 0.20))
     }
 }
 
@@ -187,5 +261,25 @@ struct FieldMan: Identifiable, Hashable {
         f.timeZone = TimeZone(identifier: "UTC")
         guard let d = f.date(from: kickoff) else { return kickoff }
         return d.formatted(.dateTime.weekday(.abbreviated).hour().minute())
+    }
+}
+
+extension FieldMan {
+    /// The same man, stood somewhere else.
+    ///
+    /// The live board places everyone from the shared snapshot, which is the
+    /// only ball position it has. A single game knows more: the play on screen
+    /// carries its own line of scrimmage, and walking back through a finished
+    /// game means asking where a man stood *then* rather than where the feed
+    /// says he is now. Rebuilt rather than mutated because `spot` is the one
+    /// thing about him that is a derivation, and a var would invite a second
+    /// place that decides it.
+    func standing(_ spot: Gridiron.Spot) -> FieldMan {
+        FieldMan(id: id, name: name, pos: pos, team: team, img: img, logo: logo,
+                 spot: spot, opp: opp, home: home, event: event, state: state,
+                 label: label, kickoff: kickoff, score: score,
+                 oppScore: oppScore, attacking: attacking, down: down,
+                 distance: distance, toEndzone: toEndzone, redZone: redZone,
+                 points: points, lineups: lineups)
     }
 }

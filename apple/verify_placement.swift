@@ -132,6 +132,64 @@ struct VerifyPlacement {
     expect(Gridiron.down(1, 10, toEndzone: 6) == "1st & Goal", "goal to go")
     expect(Gridiron.down(0, 0, toEndzone: 65) == nil, "a kickoff has no down")
 
+    // ---- what is a snap, and where its three marks land ----
+    //
+    // Both halves of the bug this section was added for. The field drew the
+    // feed's last row straight into geometry, and in a finished game that row
+    // is END GAME with `down 0, distance 0, from 0, to 13`: a line of
+    // scrimmage on the goal line and a gain line most of the way down the
+    // field. Testing the down alone is not enough - a timeout in this same
+    // feed comes through as `down 3, distance 1, from 0, to 48` - so `from`
+    // has to be positive too, which it always is for a real snap because a
+    // play from the zero has already scored.
+    expect(!Gridiron.isSnap(down: 0, from: 0), "END GAME is not a snap")
+    expect(!Gridiron.isSnap(down: 3, from: 0), "a timeout is not a snap")
+    expect(!Gridiron.isSnap(down: 1, from: 0), "the two-minute warning is not a snap")
+    expect(!Gridiron.isSnap(down: 0, from: 65), "a kickoff is not a scrimmage snap")
+    expect(Gridiron.isSnap(down: 2, from: 6), "2nd and goal from the six is a snap")
+
+    // The mapping, checked numerically rather than by eye - which is how the
+    // stray marker survived a review in the first place. A twelve-hundred unit
+    // box puts the goal lines at 100 and 1100, so a field coordinate x lands
+    // at 100 + 1000x. From the 63 with three to gain, gaining eight:
+    let m = Gridiron.marks(from: 63, to: 55, down: 3, distance: 3)
+    let box: CGFloat = 1200
+    expect(abs(FieldGeometry.px(m.los, box) - 470) < 1e-9,
+           "line of scrimmage from the 63 should be 470, was \(FieldGeometry.px(m.los, box))")
+    expect(abs(FieldGeometry.px(m.toGain ?? -1, box) - 500) < 1e-9,
+           "line to gain with three to go should be 500, was "
+           + "\(FieldGeometry.px(m.toGain ?? -1, box))")
+    expect(abs(FieldGeometry.px(m.ball, box) - 550) < 1e-9,
+           "ball at the 55 should be 550, was \(FieldGeometry.px(m.ball, box))")
+
+    // Every one of them on the same mapping, so the ball cannot drift from the
+    // markers it is drawn between.
+    expect(FieldGeometry.px(Gridiron.alongField(0), box) == 1100, "the end zone is at 1100")
+    expect(FieldGeometry.px(Gridiron.alongField(100), box) == 100, "the own goal is at 100")
+    expect(FieldGeometry.px(Gridiron.alongField(50), box) == 600, "midfield is at 600")
+
+    // Goal to go: the line to gain is the end zone, not four yards past it.
+    let goal = Gridiron.marks(from: 8, to: 3, down: 3, distance: 12)
+    expect(goal.toGain == Gridiron.alongField(0),
+           "3rd and 12 from the eight should put the line to gain in the end zone")
+    // A row with no down has no line to gain to draw.
+    expect(Gridiron.marks(from: 20, to: 20, down: 0, distance: 0).toGain == nil,
+           "a play with no down should draw no line to gain")
+
+    // The red-zone zoom, which is the same coordinate at a different scale.
+    // A man on the twenty is at the left edge, the goal line at the right, and
+    // anybody further back than the twenty is pinned rather than drawn off it.
+    expect(FieldGeometry.redZone(Gridiron.alongField(20)) == 0,
+           "the twenty should be the left edge of the red-zone view")
+    // A tolerance rather than equality: (1.0 - 0.8) / 0.2 is 0.9999999999999998
+    // in binary floating point, and the drawing clamps to the view anyway.
+    expect(abs(FieldGeometry.redZone(Gridiron.alongField(0)) - 1) < 1e-12,
+           "the goal line should be the right edge of the red-zone view")
+    expect(abs(FieldGeometry.redZone(Gridiron.alongField(10)) - 0.5) < 1e-9,
+           "the ten should be halfway across the red-zone view")
+    expect(FieldGeometry.redZone(Gridiron.alongField(35)) == 0,
+           "a man behind the twenty should be pinned to the edge, not drawn off it")
+
     print("\(snaps) scrimmage snaps replayed, \(checks) assertions")
     if failures.isEmpty {
         print("OK")

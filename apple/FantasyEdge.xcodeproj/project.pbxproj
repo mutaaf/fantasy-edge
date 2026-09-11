@@ -7,6 +7,7 @@
 
 /* Begin PBXBuildFile section */
 		7E26EEE0820A17CD784B1348 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9BE3BAF33F3F87ED0E5C /* API.swift */; };
+		500B1F20DF1D0ED233B32497 /* AppleIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */; };
 		3FA4EC74D0A31C5C60D8C79E /* Attention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59CBF1E8CC41F06FC909C34E /* Attention.swift */; };
 		C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045DF9D9ED222051C529CB76 /* BoardView.swift */; };
 		D23C96A51FBF336FD667E92B /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3BAB1EC78AAE08765A5C6F /* CellView.swift */; };
@@ -21,6 +22,7 @@
 		D008569B94DFD109A002453A /* Gamecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D260E8769E75220D2DCB99F6 /* Gamecast.swift */; };
 		C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F54AC836EC2489FF7E7976 /* Gridiron.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
+		2B7B9AB5FD830CB3C8C366FC /* Intel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */; };
 		2F66FB74235D2E75CBBD3DC0 /* IntelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AB57982F7DC43561D0E3FE9 /* IntelView.swift */; };
 		779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99CF54DD670773756DCE373 /* LeagueView.swift */; };
 		2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848B7422D9647143452C9753 /* Leverage.swift */; };
@@ -34,6 +36,7 @@
 /* Begin PBXFileReference section */
 		85673086EF6CFD3A1F8591AF /* FantasyEdge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FantasyEdge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8ADB9BE3BAF33F3F87ED0E5C /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligence.swift; sourceTree = "<group>"; };
 		59CBF1E8CC41F06FC909C34E /* Attention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attention.swift; sourceTree = "<group>"; };
 		045DF9D9ED222051C529CB76 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		BE3BAB1EC78AAE08765A5C6F /* CellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CellView.swift; sourceTree = "<group>"; };
@@ -48,6 +51,7 @@
 		D260E8769E75220D2DCB99F6 /* Gamecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gamecast.swift; sourceTree = "<group>"; };
 		92F54AC836EC2489FF7E7976 /* Gridiron.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gridiron.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
+		8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel.swift; sourceTree = "<group>"; };
 		8AB57982F7DC43561D0E3FE9 /* IntelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelView.swift; sourceTree = "<group>"; };
 		A99CF54DD670773756DCE373 /* LeagueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeagueView.swift; sourceTree = "<group>"; };
 		848B7422D9647143452C9753 /* Leverage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leverage.swift; sourceTree = "<group>"; };
@@ -80,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				8ADB9BE3BAF33F3F87ED0E5C /* API.swift */,
+				5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */,
 				59CBF1E8CC41F06FC909C34E /* Attention.swift */,
 				045DF9D9ED222051C529CB76 /* BoardView.swift */,
 				BE3BAB1EC78AAE08765A5C6F /* CellView.swift */,
@@ -94,6 +99,7 @@
 				D260E8769E75220D2DCB99F6 /* Gamecast.swift */,
 				92F54AC836EC2489FF7E7976 /* Gridiron.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
+				8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */,
 				8AB57982F7DC43561D0E3FE9 /* IntelView.swift */,
 				A99CF54DD670773756DCE373 /* LeagueView.swift */,
 				848B7422D9647143452C9753 /* Leverage.swift */,
@@ -172,6 +178,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E26EEE0820A17CD784B1348 /* API.swift in Sources */,
+				500B1F20DF1D0ED233B32497 /* AppleIntelligence.swift in Sources */,
 				3FA4EC74D0A31C5C60D8C79E /* Attention.swift in Sources */,
 				C29F82FBB3C1FA1ABCA99266 /* BoardView.swift in Sources */,
 				D23C96A51FBF336FD667E92B /* CellView.swift in Sources */,
@@ -186,6 +193,7 @@
 				D008569B94DFD109A002453A /* Gamecast.swift in Sources */,
 				C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
+				2B7B9AB5FD830CB3C8C366FC /* Intel.swift in Sources */,
 				2F66FB74235D2E75CBBD3DC0 /* IntelView.swift in Sources */,
 				779FC619BA0A528F55C42A65 /* LeagueView.swift in Sources */,
 				2C070E01B6F0A5C41A589921 /* Leverage.swift in Sources */,

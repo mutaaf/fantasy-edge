@@ -522,12 +522,47 @@ def verify_numbers(text: str, allowed: set[str]) -> list[str]:
     return bad
 
 
-def prompt_for(brief: intel.Brief) -> str:
+#: How much prompt an on-device model can actually read. Apple's small model
+#: has a few thousand tokens for the input and the output together, and a real
+#: brief here is twenty-eight findings and twenty-two thousand characters -
+#: past the window, so the request fails and the headset shows an apology
+#: instead of a summary. A cloud model has room for all of it, so the cap is
+#: opt-in rather than the default: `budget=None` keeps the whole brief.
+ON_DEVICE_BUDGET = 8000
+
+
+def prompt_for(brief: intel.Brief, *, budget: int | None = None) -> str:
+    """The findings, as the only numbers a model is allowed to use.
+
+    With a budget, findings are taken in the order the brief ranked them until
+    the budget is spent, and the prompt says how many of how many it holds -
+    so a model that can only read the first eight does not write as though it
+    had seen all twenty-eight. Truncating silently would produce prose that
+    reads complete and is not, which is worse than saying so.
+    """
     facts = intel.as_prompt_facts(brief)
     if not facts:
         return ""
-    return ("Findings computed from the league database. Every number you may "
-            "use is in here.\n\n" + json.dumps(facts, indent=1))
+    head = ("Findings computed from the league database. Every number you may "
+            "use is in here.")
+    if budget is None:
+        return head + "\n\n" + json.dumps(facts, indent=1)
+
+    # Compact separators, because indentation is pure cost when the window is
+    # the constraint - it is about a fifth of the payload and carries nothing.
+    kept: list[dict] = []
+    for fact in facts:
+        trial = kept + [fact]
+        body = json.dumps(trial, separators=(",", ":"))
+        if kept and len(body) + len(head) > budget:
+            break
+        kept.append(fact)
+    note = ""
+    if len(kept) < len(facts):
+        note = (f"\n\nThese are the {len(kept)} most important of "
+                f"{len(facts)} findings; the rest are on screen beneath your "
+                "summary. Do not imply this is all of them.")
+    return head + note + "\n\n" + json.dumps(kept, separators=(",", ":"))
 
 
 def narrate(brief: intel.Brief, client: Client | Any) -> Narration:

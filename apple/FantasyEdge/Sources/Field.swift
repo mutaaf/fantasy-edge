@@ -4,17 +4,8 @@ import SwiftUI
 // series. Kept apart from the views that arrange them so both modes - one
 // game, or your men across several - draw the same field the same way.
 
-/// A hundred yards between two ten-yard end zones, which is why every
-/// conversion here divides by a hundred and twenty.
-enum FieldGeometry {
-    static let endzone = 10.0 / 120.0
-
-    /// Field coordinate (0 at the attacking side's own goal line, 1 at the
-    /// end zone it is driving on) to a point across a view of this width.
-    static func px(_ x: Double, _ width: CGFloat) -> CGFloat {
-        CGFloat(endzone + max(0, min(1, x)) * (1 - 2 * endzone)) * width
-    }
-}
+// `FieldGeometry` lives in `Gridiron.swift` with the rest of the arithmetic,
+// so the yards-to-pixels mapping can be asserted without a renderer.
 
 extension Color {
     /// A "#003594" out of the feed. Falls back rather than failing, because a
@@ -40,17 +31,26 @@ struct FieldTurf: View {
     var right = ""
     var leftTint = Color(white: 0.16)
     var rightTint = Color(white: 0.16)
+    /// How many yards lie between the two goal lines drawn here.
+    ///
+    /// A hundred everywhere except the red-zone view, which shows the last
+    /// twenty. Drawing a full hundred-yard field there and only rescaling the
+    /// men would put a token on grass numbered 40 when he is standing on the
+    /// eight - the field would be contradicting the panel it is inside, which
+    /// is a worse failure than not drawing it at all.
+    var yards = 100
 
     var body: some View {
         Canvas { ctx, size in
             let ez = size.width * CGFloat(FieldGeometry.endzone)
             let play = size.width - ez * 2
             let h = size.height
+            let span = CGFloat(max(10, yards))
 
             // Mowing stripes. Ten yards each, the way a groundsman cuts them.
-            for band in stride(from: 0, to: 10, by: 2) {
-                let r = CGRect(x: ez + play * CGFloat(band) / 10, y: 0,
-                               width: play / 10, height: h)
+            for band in stride(from: 0, to: yards / 10, by: 2) {
+                let r = CGRect(x: ez + play * CGFloat(band * 10) / span, y: 0,
+                               width: play * 10 / span, height: h)
                 ctx.fill(Path(r), with: .color(.white.opacity(0.04)))
             }
 
@@ -59,19 +59,19 @@ struct FieldTurf: View {
             ctx.fill(Path(CGRect(x: size.width - ez, y: 0, width: ez, height: h)),
                      with: .color(rightTint.opacity(0.65)))
 
-            for yard in stride(from: 0, through: 100, by: 5) {
-                let x = ez + play * CGFloat(yard) / 100
+            for yard in stride(from: 0, through: yards, by: 5) {
+                let x = ez + play * CGFloat(yard) / span
                 var p = Path()
                 p.move(to: CGPoint(x: x, y: 0))
                 p.addLine(to: CGPoint(x: x, y: h))
-                let goal = yard == 0 || yard == 100
+                let goal = yard == 0 || yard == yards
                 ctx.stroke(p, with: .color(.white.opacity(
                     goal ? 0.80 : (yard % 10 == 0 ? 0.38 : 0.16))),
                     lineWidth: goal ? 2 : 1)
             }
 
-            for yard in 1..<100 where yard % 5 != 0 {
-                let x = ez + play * CGFloat(yard) / 100
+            for yard in 1..<yards where yard % 5 != 0 {
+                let x = ez + play * CGFloat(yard) / span
                 for row in [h * 0.36, h * 0.64] {
                     var p = Path()
                     p.move(to: CGPoint(x: x, y: row - h * 0.018))
@@ -81,9 +81,13 @@ struct FieldTurf: View {
             }
 
             let fs = max(8, min(19, h * 0.105))
-            for yard in stride(from: 10, through: 90, by: 10) {
-                let n = yard <= 50 ? yard : 100 - yard
-                let x = ez + play * CGFloat(yard) / 100
+            for yard in stride(from: 10, through: max(10, yards - 10), by: 10) {
+                // A full field counts in from whichever goal line is nearer, as
+                // one is painted. A partial one counts down to the end zone on
+                // the right, because that is the only end it has.
+                let n = yards == 100 ? (yard <= 50 ? yard : 100 - yard)
+                                     : yards - yard
+                let x = ez + play * CGFloat(yard) / span
                 for row in [h * 0.165, h * 0.835] {
                     ctx.draw(Text("\(n)")
                         .font(.system(size: fs, weight: .heavy))

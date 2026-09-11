@@ -512,15 +512,30 @@ final class Board {
     /// body that re-derives twenty placements on every SwiftUI pass is doing
     /// it a dozen times a second for a field that moved once a minute. The
     /// roster count is in the key because a league loading late adds men.
+    /// Narrow every field on the Live tab to one league's starters. Empty is
+    /// all of them, which is what a cross-league board is for; naming a league
+    /// is what you want the moment one of them is the one you care about
+    /// today. In the memo key below because it changes who is on the field.
+    var lineupScope: String = ""
+
     func lineup() -> [FieldMan] {
-        let key = "\(live?.version ?? "-")|\(roster.count)|\(leagues.count)"
+        let key = "\(live?.version ?? "-")|\(roster.count)|\(leagues.count)|\(lineupScope)"
         if let hit = lineupCache, hit.key == key { return hit.value }
         let games = live?.games ?? [:]
         let scored = live?.players ?? [:]
         // Sorted before lanes are handed out, so a man keeps the same lane
         // from one poll to the next instead of swapping with whoever happened
         // to sort beside him and sliding across the field for no reason.
-        let men = roster.filter { $0.startedIn > 0 }
+        //
+        // "Started" is only ever true of a league, never of a man: scoping to
+        // one league asks whether he is in *that* line-up, not whether he is
+        // in any of them.
+        let men = roster.filter { p in
+            guard !lineupScope.isEmpty else { return p.startedIn > 0 }
+            return (p.leagues ?? []).contains {
+                $0.id == lineupScope && $0.started == true
+            }
+        }
             .sorted { ($0.pos, $0.name, $0.id) < ($1.pos, $1.name, $1.id) }
         var taken: [String: Int] = [:]
         var out: [FieldMan] = []
@@ -674,14 +689,29 @@ final class Board {
         await load()          // the server re-sizes the board around your team
     }
 
-        @MainActor
+    /// Whether a live fetch is in flight, for the refresh control to trace.
+    var liveRefreshing = false
+    /// Guards the timer and the button against each other. Two overlapping
+    /// requests for the same snapshot cost two round trips and can land out of
+    /// order, which shows as a scoreline going backwards.
+    @ObservationIgnored private var liveInFlight = false
+    var liveFetchedAt: Date?
+
+    @MainActor
     func refreshLive() async {
-        guard let u = url("/api/live") else { return }
+        guard !liveInFlight, let u = url("/api/live") else { return }
+        liveInFlight = true
+        liveRefreshing = true
+        defer { liveInFlight = false; liveRefreshing = false }
         do {
             let (data, _) = try await URLSession.shared.data(from: u)
             let fresh = try JSONDecoder().decode(LivePayload.self, from: data)
             noteChanges(fresh)
+            // Assigned only on success. A failed poll must not blank a board
+            // that already has a snapshot on it: the last known scoreline is
+            // stale, an empty one is wrong, and the error line says which.
             live = fresh
+            liveFetchedAt = .now
             lastError = nil
         } catch { lastError = error.localizedDescription }
     }
@@ -718,6 +748,18 @@ final class Board {
         }
     }
 
+    /// How long to wait before asking again.
+    ///
+    /// Thirty seconds with jitter, drawn fresh every cycle rather than once at
+    /// launch. A fixed interval is the problem: every client that opened
+    /// during the same commercial break stays in step for the rest of the
+    /// afternoon and arrives at the origin together, and one that seeded its
+    /// offset at launch keeps whatever phase it happened to start in. Drawing
+    /// per cycle is what actually spreads them, and re-drawing costs nothing.
+    private static func beat() -> Duration {
+        .seconds(Double.random(in: 25...35))
+    }
+
     /// Polling rather than SSE: the shared snapshot is cached for a couple of
     /// seconds at the edge anyway, so a poll costs a revalidation and keeps the
     /// client simple. Cancelled when the scene goes away.
@@ -737,13 +779,239 @@ final class Board {
         } catch { return nil }
     }
 
+    // MARK: - the intel brief
+    //
+    // Two things are cached here and they are cached for different reasons.
+    //
+    // The brief is expensive on the Mac and slow-moving: it is built from
+    // `mosaics()`, which honours `prefs.json`, so the server caches it on the
+    // config clock rather than the live one. Refetching it on the five-second
+    // poll would run nine analyses and an nflverse join against a payload that
+    // changes when a line-up changes, which is not on a Sunday-afternoon
+    // timescale. So it has a life, and a poll never touches it.
+    //
+    // The narration is expensive *here* - on-device inference is battery and
+    // thermals on a headset, and money on a hosted key. It is never run from a
+    // poll and never from a body evaluation; only from a button. What it is
+    // keyed on is the prompt the brief carried, which is a flattening of every
+    // finding and every caveat, so it survives a refetch that changed nothing
+    // and is dropped the moment a number underneath it moved.
+
+    var intel: IntelBrief?
+    /// Why there is no brief, in plain language. Kept rather than swallowed:
+    /// "this server has no intel route yet" is an answer, and a tab that says
+    /// it is telling the truth about why it is empty.
+    var intelNote: String?
+    var intelLoading = false
+    var aiProviders: [ModelProvider] = []
+
+    /// Bookkeeping written from tasks and read from bodies. `@ObservationIgnored`
+    /// for the same reason every memo above is - see the note on the memoised
+    /// derivations.
+    @ObservationIgnored private var intelAt: Date?
+    @ObservationIgnored private var intelInFlight = false
+    @ObservationIgnored private var modelsLoaded = false
+
+    /// How long a brief is treated as current. Two minutes rather than a
+    /// version stamp because this payload carries no content hash of its own:
+    /// the live tier is content-addressed, the config tier is not, and keying
+    /// a brief on `live.version` would refetch it every time a score moved,
+    /// which is the exact thing this must not do.
+    private static let briefLife: TimeInterval = 120
+
+    var briefWrittenAt: Date? { intelAt }
+
+    @MainActor
+    func loadIntel(force: Bool = false) async {
+        guard !intelInFlight else { return }
+        if !force, intel != nil, let at = intelAt,
+           Date.now.timeIntervalSince(at) < Self.briefLife { return }
+        guard let u = url("/api/intel") else { return }
+        intelInFlight = true
+        intelLoading = true
+        defer { intelInFlight = false; intelLoading = false }
+        do {
+            let (d, resp) = try await URLSession.shared.data(from: u)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            guard code == 200 else {
+                intelNote = code == 404
+                    ? "This server has no /api/intel route. The insight engine "
+                    + "runs on the Mac; update fantasy-edge there and it will "
+                    + "appear."
+                    : "The server answered \(code) for /api/intel."
+                return
+            }
+            let fresh = try JSONDecoder().decode(IntelBrief.self, from: d)
+            dropStaleNarration(against: fresh)
+            intel = fresh
+            // The brief folds the catalogue in, so the common case is one
+            // request rather than two. `loadModels` stays for a server that
+            // does not, and it is a no-op once this has run.
+            if !fresh.models.isEmpty {
+                aiProviders = fresh.models
+                modelsLoaded = true
+            }
+            intelAt = .now
+            intelNote = nil
+        } catch {
+            intelNote = "Cannot reach \(host). \(error.localizedDescription)"
+        }
+    }
+
+    /// Which providers the server holds a key for. Booleans; the route has no
+    /// field that could carry a key back out, and this app never asks for one
+    /// - a key typed into a headset would have to live somewhere, and the only
+    /// somewhere on this platform that is not a mistake is the Keychain. The
+    /// server already has the credential posture for this, so it keeps it.
+    @MainActor
+    func loadModels() async {
+        guard !modelsLoaded, let u = url("/api/intel/models") else { return }
+        modelsLoaded = true
+        guard let (d, resp) = try? await URLSession.shared.data(from: u),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let p = try? JSONDecoder().decode(ModelsPayload.self, from: d)
+        else { return }
+        aiProviders = p.providers
+    }
+
+    // MARK: the model-written half
+
+    var narration: IntelNarration?
+    /// The state of the narrator when there is no prose: unsupported, switched
+    /// off, still downloading, or a server that would not verify the text.
+    /// Plain language, never a dialog - the computed brief is complete.
+    var narrationNote: String?
+    var narrationRunning = false
+    /// Whether the prose on screen cost an inference just now, or is the one
+    /// already written for these same facts. The reader is entitled to know
+    /// which, because one of them spent their battery and the other did not.
+    var narrationFresh = false
+    var narrationAt: Date?
+    @ObservationIgnored private var narratedFrom = ""
+
+    /// True when asking again would reuse rather than run.
+    var narrationCurrent: Bool {
+        narration != nil && !narratedFrom.isEmpty
+            && narratedFrom == (intel?.narrationKey ?? "")
+    }
+
+    /// Entering the tab and finding prose already written is a reuse, whatever
+    /// it was when it was made. Called from the view's task, never from a body.
+    @MainActor
+    func noteNarrationSeen() { if narration != nil { narrationFresh = false } }
+
+    /// Prose written for facts that have since moved is dropped rather than
+    /// dimmed. Model sentences sitting above numbers they no longer describe
+    /// is the one failure this whole view is arranged to prevent, and there is
+    /// no styling that makes it safe.
+    @MainActor
+    private func dropStaleNarration(against fresh: IntelBrief) {
+        guard narration != nil, narratedFrom != fresh.narrationKey else { return }
+        narration = nil
+        narrationAt = nil
+        narratedFrom = ""
+        narrationNote = "The findings changed, so the summary written for the "
+            + "old ones was dropped. Ask again to have these written up."
+    }
+
+    /// Write the brief up on device, then hand the text to the server to check.
+    ///
+    /// Explicit only. Never called from `start()`, never from a body, and it
+    /// returns without touching the model when a narration for these exact
+    /// findings already exists.
+    @MainActor
+    func narrate(force: Bool = false) async {
+        guard !narrationRunning, let brief = intel else { return }
+        if !force, narrationCurrent {
+            narrationFresh = false             // reused: nothing was run
+            return
+        }
+        guard let prompt = brief.promptable else {
+            narrationNote = "The server sent no prompt block with this brief, "
+                + "so there is nothing a model is allowed to see. Building one "
+                + "here from the raw payload is the thing that must not happen."
+            return
+        }
+        let ready = AppleIntelligence.readiness
+        guard ready.usable else {
+            narration = nil
+            narrationNote = ready.line
+            return
+        }
+        narrationRunning = true
+        defer { narrationRunning = false }
+        let written: String
+        do {
+            written = try await AppleIntelligence.write(system: prompt.system,
+                                                        user: prompt.user)
+        } catch {
+            narrationNote = error.localizedDescription
+            return
+        }
+        await submit(written, for: brief)
+    }
+
+    /// Post the text to `/api/intel/narrate` and render what comes back.
+    ///
+    /// Deliberately not what was sent. Only the server's copy has been through
+    /// `verify_numbers` and `mentions_unavailable`, so only the server's copy
+    /// carries `unverified`, `flaggedMetrics` and `trustworthy`. Text this side
+    /// has checked nothing about is prose with no provenance, which is exactly
+    /// what the rest of this view exists to be distinguishable from - so when
+    /// the route is missing or refuses, nothing is shown and the reason is.
+    @MainActor
+    private func submit(_ text: String, for brief: IntelBrief) async {
+        guard let u = url("/api/intel/narrate") else { return }
+        var req = URLRequest(url: u)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try? JSONSerialization.data(
+            withJSONObject: ["provider": "apple", "text": text])
+        do {
+            let (d, resp) = try await URLSession.shared.data(for: req)
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            guard code == 200 else {
+                narrationNote = note(for: code)
+                return
+            }
+            narration = try JSONDecoder().decode(NarrateReply.self, from: d).narration
+            narratedFrom = brief.narrationKey
+            narrationAt = .now
+            narrationFresh = true
+            narrationNote = nil
+        } catch {
+            narrationNote = "The summary was written on this device but could "
+                + "not be sent to \(host) to be checked, so it is not shown. "
+                + error.localizedDescription
+        }
+    }
+
+    private func note(for code: Int) -> String {
+        switch code {
+        case 403:
+            return "The summary was written on this device, but "
+                 + "/api/intel/narrate only answers on loopback, so it could "
+                 + "not be checked and is not shown. Everything below is "
+                 + "computed and needs no model."
+        case 404:
+            return "The summary was written on this device, but this server "
+                 + "has no /api/intel/narrate route to check it against, so it "
+                 + "is not shown. Only the server's copy carries the "
+                 + "number-verification flags."
+        default:
+            return "The summary was written on this device, but the server "
+                 + "answered \(code) when asked to check it, so it is not "
+                 + "shown."
+        }
+    }
+
     func start() {
         poll?.cancel()
         poll = Task { [weak self] in
             await self?.load()
             while !Task.isCancelled {
                 await self?.refreshLive()
-                try? await Task.sleep(for: .seconds(5))
+                try? await Task.sleep(for: Board.beat())
             }
         }
     }

@@ -18,17 +18,25 @@ struct LiveView: View {
     @State private var mode: Mode = .mine
 
     enum Mode: String, CaseIterable, Identifiable {
-        case mine = "My Team", game = "Game"
+        case mine = "My Team", game = "Game", red = "Red Zone"
         var id: String { rawValue }
-        var icon: String { self == .mine ? "person.2.badge.gearshape" : "sportscourt" }
+        var icon: String {
+            switch self {
+            case .mine: return "person.2.badge.gearshape"
+            case .game: return "sportscourt"
+            case .red:  return "target"
+            }
+        }
     }
 
     var body: some View {
         VStack(spacing: 12) {
             switcher
+            scope
             switch mode {
             case .mine: MyTeamField(focus: $focus)
             case .game: GameFieldView(event: $event, focus: $focus)
+            case .red:  RedZoneField(focus: $focus)
             }
             Spacer(minLength: 0)
         }
@@ -56,7 +64,190 @@ struct LiveView: View {
             Spacer(minLength: 0)
             Text(board.live?.source.map { "source: \($0)" } ?? "")
                 .font(.system(size: 9)).foregroundStyle(.tertiary)
+            LiveRefresh()
         }
+    }
+
+    /// Which line-up these fields are about.
+    ///
+    /// Absent rather than disabled with one league, the same rule the bottom
+    /// bar follows: a picker offering a choice you do not have is chrome that
+    /// exists to say the app was built for somebody else. It writes
+    /// `board.lineupScope`, which is in the placement memo's key, so every
+    /// mode narrows together rather than each keeping its own idea.
+    @ViewBuilder
+    private var scope: some View {
+        if board.leagues.count > 1 {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 7) {
+                    chip("All my line-ups", "")
+                    ForEach(board.leagues, id: \.id) { L in chip(L.league, L.id) }
+                }
+            }
+        }
+    }
+
+    private func chip(_ label: String, _ id: String) -> some View {
+        let on = board.lineupScope == id
+        return Button { board.lineupScope = id } label: {
+            Text(label).font(.system(size: 10, weight: .semibold))
+                .lineLimit(1)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .plate(10, on ? Theme.green.opacity(0.18) : .white.opacity(0.05))
+                .foregroundStyle(on ? AnyShapeStyle(Theme.green)
+                                    : AnyShapeStyle(.secondary))
+        }
+        .buttonStyle(.plain).hoverEffect(.highlight)
+    }
+}
+
+
+// MARK: - asking again, by hand
+
+/// The manual refresh, and the only place on this tab that says a request is
+/// happening.
+///
+/// The traced lattice is borrowed from the coming-soon screen rather than a
+/// second loading language being invented for one button - that view's whole
+/// argument for the effect is that it is honest over something that has no
+/// figures of its own, and a control mid-request is exactly that. It is built
+/// only while a fetch is in flight, so there is no schedule left holding a
+/// frame callback the rest of the time, and it takes the same Reduce Motion
+/// path: `NeuralTrace` draws one composed still instead.
+struct LiveRefresh: View {
+    @Environment(Board.self) private var board
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Button {
+            // No stacking: `refreshLive` returns immediately when the timer
+            // already has one in the air, so a fast double tap is one request.
+            Task { await board.refreshLive() }
+        } label: {
+            HStack(spacing: 7) {
+                ZStack {
+                    if board.liveRefreshing {
+                        NeuralTrace(animating: !reduceMotion, tint: Theme.green)
+                            .frame(width: 34, height: 16)
+                    }
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 10, weight: .semibold))
+                        .opacity(board.liveRefreshing ? 0.25 : 1)
+                }
+                .frame(width: 34, height: 16)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(board.liveRefreshing ? "Reading" : "Refresh")
+                        .font(.system(size: 10, weight: .semibold))
+                    // What it is actually doing, not a spinner. The poll runs
+                    // itself on a jittered half-minute; this says when the
+                    // figures on screen were last true.
+                    Text(board.liveFetchedAt.map {
+                        $0.formatted(.dateTime.hour().minute().second())
+                    } ?? "not yet")
+                        .font(.system(size: 8)).foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+            }
+            .padding(.horizontal, 9).padding(.vertical, 5)
+            .plate(10, board.liveRefreshing ? Theme.green.opacity(0.12)
+                                            : .white.opacity(0.05))
+        }
+        .buttonStyle(.plain).hoverEffect(.highlight)
+        .disabled(board.liveRefreshing)
+    }
+}
+
+
+// MARK: - mode three: the twenty
+
+/// Only the men whose game is inside the twenty.
+///
+/// No new endpoint and no new arithmetic: `/api/live` already carries
+/// `redZone` per club, and `Gridiron.station` already knows whether a man can
+/// score on the next snap - which for a defence is the snaps his club is not
+/// attacking on, so a D/ST whose opponent is first and goal belongs here
+/// exactly as much as the running back does.
+struct RedZoneField: View {
+    @Environment(Board.self) private var board
+    @Binding var focus: String?
+
+    var body: some View {
+        let men = board.lineup().filter { $0.redZone }
+        let live = men.filter { $0.station == .field }
+        let waiting = men.filter { $0.station != .field }
+        return VStack(spacing: 12) {
+            Panel(title: "In the Twenty",
+                  trailing: AnyView(Text(live.count == 1 ? "1 can score now"
+                                         : "\(live.count) can score now")
+                    .font(.system(size: 10)).foregroundStyle(.tertiary))) {
+                if men.isEmpty {
+                    // Said plainly rather than drawn as an empty field. For
+                    // most of a Sunday this is the true answer, and a bare
+                    // patch of grass reads as a view that failed to load.
+                    NoSource(what: board.lineupScope.isEmpty
+                             ? "Nobody you are starting is in a red zone right "
+                               + "now. The feed reports one per game, so this "
+                               + "fills the moment a drive reaches the twenty."
+                             : "Nobody in this line-up is in a red zone right "
+                               + "now.")
+                } else {
+                    field(live)
+                }
+            }
+            if !waiting.isEmpty {
+                Panel(title: "In the twenty, cannot score on this snap · \(waiting.count)") {
+                    VStack(alignment: .leading, spacing: 7) {
+                        ForEach(waiting) { m in row(m) }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The last twenty yards, drawn at the size they deserve.
+    ///
+    /// `Gridiron.place` puts a man in the same 0-to-1 the full field uses, so
+    /// this rescales that range to the twenty rather than re-deriving a
+    /// position: one placement rule, two zooms.
+    private func field(_ men: [FieldMan]) -> some View {
+        GeometryReader { g in
+            ZStack(alignment: .topLeading) {
+                // Twenty yards, not a hundred rescaled: the numbers on the
+                // grass have to agree with where the men are standing.
+                FieldTurf(left: "THE 20", right: "END ZONE",
+                          leftTint: Color(white: 0.13), rightTint: Theme.red,
+                          yards: 20)
+                ForEach(men.filter { $0.spot.x != nil }) { m in
+                    FieldToken(man: m, selected: focus == m.id, size: 40) { focus = m.id }
+                        .revealsHologram(m.id)
+                        .position(x: FieldGeometry.px(
+                                    FieldGeometry.redZone(m.spot.x ?? 0.9), g.size.width),
+                                  y: CGFloat(m.spot.y) * g.size.height)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.85),
+                                   value: m.spot)
+                }
+            }
+        }
+        .frame(height: 190)
+    }
+
+    private func row(_ m: FieldMan) -> some View {
+        Button { focus = m.id } label: {
+            HStack(spacing: 8) {
+                FieldToken(man: m, selected: focus == m.id, size: 30, named: false)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("\(m.name) · \(m.pos) \(m.fixture)")
+                        .font(.system(size: 10, weight: .semibold)).lineLimit(1)
+                    Text(m.why).font(.system(size: 9)).foregroundStyle(.tertiary)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 5).padding(.horizontal, 8)
+            .plate(11, focus == m.id ? Theme.green.opacity(0.14) : .white.opacity(0.05))
+        }
+        .buttonStyle(.plain).hoverEffect(.highlight)
+        .revealsHologram(m.id)
     }
 }
 

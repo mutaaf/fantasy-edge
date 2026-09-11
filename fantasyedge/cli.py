@@ -427,7 +427,8 @@ def cmd_api(args, cfg) -> None:
     """
     from . import api as apisrv
 
-    apisrv.run(db=args.db, host=args.host, port=args.port)
+    apisrv.run(db=args.db, host=args.host, port=args.port,
+               allow_ai=not getattr(args, "no_ai", False))
 
 
 def cmd_replay(args, cfg) -> None:
@@ -458,6 +459,22 @@ def cmd_replay(args, cfg) -> None:
                      f"{info['frames']} frame(s) written to {info['out']}")
 
 
+def _week_range(args) -> list[int]:
+    """Which weeks `projections sleeper` should fetch.
+
+    A range rather than a single week because a source loaded for one week and
+    compared against a source loaded for seventeen is not a comparison, and
+    `projection_accuracy` says so in its own caveat.
+    """
+    if args.weeks:
+        lo, _, hi = args.weeks.partition("-")
+        try:
+            return list(range(int(lo), int(hi or lo) + 1))
+        except ValueError:
+            sys.exit(f"--weeks wants a range like 1-14, got {args.weeks!r}")
+    return [args.week or 1]
+
+
 def cmd_projections(args, cfg) -> None:
     """Record projections so they can be scored against what happened."""
     from . import projections as pj
@@ -467,9 +484,34 @@ def cmd_projections(args, cfg) -> None:
         if args.action == "seed":
             out = pj.seed_espn(store, args.season)
             human = f"Recorded {out['rows']} ESPN projections."
+        elif args.action == "sleeper":
+            # Sleeper's numbers are fetched here rather than by `api`, which
+            # calls no provider by design. The CLI writes rows; the API only
+            # ever reads them.
+            season = args.season or 2026
+            weeks = _week_range(args)
+            fmt = args.format or pj.scoring_format(cfg)
+            loaded = [pj.load_sleeper(store, season, w, fmt=fmt,
+                                      refresh=bool(args.refresh)) for w in weeks]
+            out = {"loaded": loaded}
+            human = "\n".join(
+                f"  sleeper {d['season']} w{d['week']} ({d.get('format', '')}): "
+                f"{d['rows']} of {d.get('offered', 0)} matched onto "
+                f"{d.get('pool', 0)} stored players "
+                f"[{', '.join(f'{k} {v}' for k, v in sorted((d.get('matched') or {}).items()))}]"
+                for d in loaded)
         elif args.action == "sources":
-            out = {"sources": pj.sources(store)}
-            human = "Sources loaded: " + (", ".join(out["sources"]) or "none")
+            # The catalogue, not just the loaded list: a source that is absent
+            # because nobody has a key for it is a different fact from a source
+            # that is absent because nobody ran the loader, and a bare list of
+            # strings cannot tell them apart.
+            cat = pj.catalog(store, args.season, args.week)
+            out = {"sources": cat}
+            human = "\n".join(
+                f"  {c['label']:<13} {'loaded' if c['loaded'] else c['status']:<8}"
+                + (f" {c['rows']} rows over {c['weeks']} week(s)" if c["loaded"]
+                   else (f" needs {c['needs']}" if c["needs"] else " nothing loaded"))
+                for c in cat)
         elif args.action == "load-dir":
             if not args.dir:
                 sys.exit("Pass --dir with a folder of <source>_<season>_w<week>.csv")
@@ -493,6 +535,17 @@ def cmd_projections(args, cfg) -> None:
     finally:
         store.close()
     emit(args, out, human)
+
+
+def _current_week(store, season: int | None) -> int:
+    """The week `daily` should fetch projections for.
+
+    Read from the database rather than from a calendar: `daily` may be catching
+    up on a Tuesday for a Sunday already pulled, and a clock would fetch a week
+    nothing is stored under. `projections.current_week` owns the rule.
+    """
+    from . import projections as pj
+    return pj.current_week(store, season or 2026) or 1
 
 
 def cmd_daily(args, cfg) -> None:
@@ -526,6 +579,19 @@ def cmd_daily(args, cfg) -> None:
     try:
         seeded = pj.seed_espn(store, args.season)
         steps.append({"step": "seed_projections", "ok": True, "rows": seeded["rows"]})
+        # Sleeper on the same timer as ESPN, because a second source loaded for
+        # fewer weeks than the first is not comparable to it - see the caveat
+        # on `projection_accuracy`. A failure here is recorded and does not
+        # stop the pass: one source going quiet must not cost the other.
+        try:
+            slp = pj.load_sleeper(store, args.season or 2026,
+                                  args.week or _current_week(store, args.season),
+                                  fmt=pj.scoring_format(cfg))
+            steps.append({"step": "sleeper_projections", "ok": True,
+                          "rows": slp["rows"], "matched": slp["matched"]})
+        except Exception as exc:
+            steps.append({"step": "sleeper_projections", "ok": False,
+                          "detail": str(exc)})
         provider, league = _scope(store, cfg, args)
         res = analytics.ANALYSES["projection_accuracy"](store, provider, league)
         steps.append({"step": "score", "ok": not res.empty,
@@ -715,6 +781,11 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--host", default="127.0.0.1",
                     help="0.0.0.0 to let other devices on your network read it")
     ap.add_argument("--port", type=int, default=8770)
+    ap.add_argument("--no-ai", action="store_true",
+                    help="refuse POST /api/intel/narrate and report every model "
+                         "provider as unconfigured. For the headset build, where "
+                         "there is nobody to type a key and the computed brief is "
+                         "the whole product anyway")
     jsonify(ap); ap.set_defaults(fn=cmd_api)
 
     rpl = sub.add_parser("replay", help="replay a finished NFL game as if it were live")
@@ -734,10 +805,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     pj = common(sub.add_parser("projections",
                                help="record projections so they can be scored"))
-    pj.add_argument("action", choices=["seed", "load", "load-dir", "sources"])
+    pj.add_argument("action",
+                    choices=["seed", "sleeper", "load", "load-dir", "sources"])
     pj.add_argument("--csv"); pj.add_argument("--dir")
     pj.add_argument("--source", help="espn, nfl, cbs, fantasypros, ...")
     pj.add_argument("--season", type=int); pj.add_argument("--week", type=int)
+    pj.add_argument("--weeks", help="a range for `sleeper`, e.g. 1-14")
+    pj.add_argument("--format", choices=["ppr", "half_ppr", "std"],
+                    help="which of Sleeper's three columns; default follows "
+                         "config/league.toml's reception value")
+    pj.add_argument("--refresh", action="store_true",
+                    help="ignore the on-disk cache and refetch")
     pj.set_defaults(fn=cmd_projections)
 
     dy = common(sub.add_parser("daily",
@@ -745,6 +823,9 @@ def build_parser() -> argparse.ArgumentParser:
     dy.add_argument("--season", type=int, default=2026)
     dy.add_argument("--seasons", help="override the range passed to pull")
     dy.add_argument("--no-pull", action="store_true", help="skip the network step")
+    dy.add_argument("--week", type=int,
+                    help="which week to fetch Sleeper for; default is the "
+                         "latest week the database has rosters for")
     dy.set_defaults(fn=cmd_daily)
 
     lgp = sub.add_parser("leagues", help="list or change the leagues you follow")

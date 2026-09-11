@@ -96,6 +96,8 @@ struct GameFieldView: View {
     @ViewBuilder
     private func cast(_ gc: Gamecast) -> some View {
         let now = current(gc)
+        let ball = snap(gc)
+        let men = placed(gc, ball)
         VStack(spacing: 12) {
             Panel(title: "\(gc.away.mark) at \(gc.home.mark)",
                   trailing: AnyView(Text(gc.clockLine)
@@ -103,10 +105,11 @@ struct GameFieldView: View {
                     .foregroundStyle(gc.state == "in" ? AnyShapeStyle(Theme.green)
                                                       : AnyShapeStyle(.secondary)))) {
                 scoreboard(gc, now?.play)
-                field(gc, now)
-                situation(gc, now)
-                mine(gc)
+                field(gc, ball, men.on)
+                situation(gc, ball)
+                showing(now, ball)
             }
+            mine(gc, men)
             HStack(alignment: .top, spacing: 12) {
                 winProbability(gc, now?.play)
                     .frame(maxWidth: .infinity)
@@ -115,12 +118,69 @@ struct GameFieldView: View {
         }
     }
 
+    /// Your men in this game, stood where the play on screen puts them.
+    ///
+    /// The placement rule is `Gridiron.place`, the same one the cross-league
+    /// field uses, rather than a second arrangement written for one game. What
+    /// a single game adds is a real line of scrimmage: the shared live payload
+    /// has one ball for the whole slate and this has the exact snap, so the
+    /// offence lines up against it and the defence six yards the other side.
+    ///
+    /// State is taken from the play rather than from the club's live entry on
+    /// purpose. Walking back through a finished game asks where a man stood
+    /// *then*; reading `state` off the feed would answer "post" for every play
+    /// and empty the field for the whole of a game that has been played.
+    private func placed(_ gc: Gamecast,
+                        _ ball: (drive: Drive, play: GamePlay)?) -> Squad {
+        let men = board.lineup().filter { $0.event == gc.event }
+        guard let ball, let from = ball.play.from else {
+            return Squad(on: [], off: men)
+        }
+        let offence = ball.drive.team
+        var taken: [String: Int] = [:]
+        var on: [FieldMan] = [], off: [FieldMan] = []
+        // Sorted before lanes are handed out, so a man keeps his lane from one
+        // play to the next instead of swapping with whoever sorted beside him.
+        for m in men.sorted(by: { ($0.pos, $0.name, $0.id) < ($1.pos, $1.name, $1.id) }) {
+            let lane = taken[m.pos.uppercased(), default: 0]
+            taken[m.pos.uppercased()] = lane + 1
+            let spot = Gridiron.place(
+                .init(pos: m.pos, state: "in",
+                      attacking: m.team == offence, toEndzone: from),
+                index: lane)
+            let stood = m.standing(spot)
+            if spot.station == .field { on.append(stood) } else { off.append(stood) }
+        }
+        return Squad(on: on, off: off)
+    }
+
+    struct Squad { let on: [FieldMan], off: [FieldMan] }
+
     /// The play on the field. Latest until the reader taps one, so a running
     /// game keeps up with itself and a finished one can be walked through.
+    ///
+    /// "Latest" means the latest *snap*, not the latest row. The feed's last
+    /// entry in a finished game is END GAME, which carries `down 0, from 0,
+    /// to 13`; timeouts and the two-minute warning come through the same
+    /// shape. Handing those to the geometry puts the line of scrimmage on the
+    /// goal line and stretches the gain line most of the way down the field,
+    /// which is exactly the stray marker this view was reported for. So the
+    /// ball falls back to the last row that was actually snapped, and
+    /// `showing` says so in words rather than pretending the two are the same.
     private func current(_ gc: Gamecast) -> (drive: Drive, play: GamePlay)? {
         let all = gc.playsNewestFirst
         if let id = playID, let hit = all.first(where: { $0.play.id == id }) { return hit }
         return all.first
+    }
+
+    /// The play the *ball* is drawn from: the one on screen if it was a snap,
+    /// else the most recent snap before it.
+    private func snap(_ gc: Gamecast) -> (drive: Drive, play: GamePlay)? {
+        let all = gc.playsNewestFirst
+        let start = playID.flatMap { id in all.firstIndex { $0.play.id == id } } ?? 0
+        return all[start...].first {
+            Gridiron.isSnap(down: $0.play.down, from: $0.play.from)
+        }
     }
 
     private func scoreboard(_ gc: Gamecast, _ p: GamePlay?) -> some View {
@@ -156,56 +216,108 @@ struct GameFieldView: View {
         }
     }
 
-    /// The field, with the ball where this play left it.
+    /// The field, with the ball where this play left it and your men on it.
     ///
     /// The drive's club always attacks to the right, so the end zones are
     /// labelled by who is going which way rather than by home and away - which
     /// is also what clubs actually do, they swap ends every quarter.
-    private func field(_ gc: Gamecast, _ now: (drive: Drive, play: GamePlay)?) -> some View {
-        let offence = now?.drive.team ?? gc.home.mark
+    ///
+    /// Three marks, all off one mapping in `Gridiron.marks`: the line of
+    /// scrimmage at `from`, the line to gain at `from - distance`, and the
+    /// ball at `to`. The arithmetic is out in `Gridiron` rather than in here
+    /// because `verify_placement.swift` asserts it numerically - a snap from
+    /// the 63 with three to gain lands at 470, 500 and 550 in a twelve-hundred
+    /// unit box - and a field checked by eye is how the stray marker that
+    /// prompted this got through in the first place.
+    private func field(_ gc: Gamecast, _ ball: (drive: Drive, play: GamePlay)?,
+                       _ men: [FieldMan]) -> some View {
+        let offence = ball?.drive.team ?? gc.home.mark
         let defence = offence == gc.home.mark ? gc.away.mark : gc.home.mark
         let tints = [gc.home.mark: Color(feed: gc.home.color),
                      gc.away.mark: Color(feed: gc.away.color)]
-        let p = now?.play
+        let p = ball?.play
+        // Nil rather than a guess when the feed has not reported a snap. A
+        // ball drawn on the fifty because there was nowhere else to put it is
+        // a drawing of a number nobody published.
+        let marks = p?.from.map {
+            Gridiron.marks(from: $0, to: p?.to, down: p?.down, distance: p?.distance)
+        }
         return GeometryReader { g in
             ZStack(alignment: .topLeading) {
                 FieldTurf(left: offence, right: defence,
                           leftTint: tints[offence] ?? Color(white: 0.15),
                           rightTint: tints[defence] ?? Color(white: 0.15))
 
-                if let from = p?.from {
-                    let los = FieldGeometry.px(Gridiron.alongField(from), g.size.width)
+                if let m = marks {
+                    let los = FieldGeometry.px(m.los, g.size.width)
+                    let end = FieldGeometry.px(m.ball, g.size.width)
                     FieldMarker(tint: .white, width: 2)
                         .frame(height: g.size.height)
                         .position(x: los, y: g.size.height / 2)
-                    if let dist = p?.distance, (p?.down ?? 0) > 0 {
+                    if let gain = m.toGain {
                         FieldMarker(tint: Theme.gold, width: 2, strength: 0.8)
                             .frame(height: g.size.height)
-                            .position(x: FieldGeometry.px(
-                                Gridiron.alongField(max(0, from - dist)), g.size.width),
+                            .position(x: FieldGeometry.px(gain, g.size.width),
                                       y: g.size.height / 2)
                     }
-                    if let to = p?.to {
-                        let end = FieldGeometry.px(Gridiron.alongField(to), g.size.width)
-                        Capsule()
-                            .fill((to <= from ? Theme.green : Theme.red).opacity(0.55))
-                            .frame(width: max(2, abs(end - los)), height: 3)
-                            .position(x: (end + los) / 2, y: g.size.height / 2)
-                        Image(systemName: "football.fill")
-                            .font(.system(size: 17))
-                            .foregroundStyle(Theme.gold)
-                            .shadow(color: .black.opacity(0.6), radius: 4, y: 2)
-                            .position(x: end, y: g.size.height / 2)
-                    }
+                    Capsule()
+                        .fill((m.ball >= m.los ? Theme.green : Theme.red).opacity(0.55))
+                        .frame(width: max(2, abs(end - los)), height: 3)
+                        .position(x: (end + los) / 2, y: g.size.height * 0.5)
+                    Image(systemName: "football.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(Theme.gold)
+                        .shadow(color: .black.opacity(0.6), radius: 4, y: 2)
+                        .position(x: end, y: g.size.height / 2)
+                }
+
+                // Your men, on the grass rather than in a strip underneath it.
+                // The strip was the whole of the original bug: it was the only
+                // FieldToken in this file, it sat below the turf, and the
+                // panel's height clipped it to a sliver.
+                ForEach(men.filter { $0.spot.x != nil }) { m in
+                    FieldToken(man: m, selected: focus == m.id, size: 38) { focus = m.id }
+                        .revealsHologram(m.id)
+                        .position(x: FieldGeometry.px(m.spot.x ?? 0.5, g.size.width),
+                                  y: CGFloat(m.spot.y) * g.size.height)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.85),
+                                   value: m.spot)
                 }
             }
             // One animation for the whole arrangement: tapping a play twenty
             // rows back walks the ball there rather than teleporting it.
             .animation(.spring(response: 0.55, dampingFraction: 0.85), value: p)
         }
-        .frame(height: 148)
+        // Taller than the 148 it was, because there are now men standing on
+        // it: five lanes of tokens at 38 points need the room, and a field
+        // that clips its own players is the bug this replaces.
+        .frame(height: 210)
     }
 
+    /// Which play the ball is drawn from, when that is not the row on screen.
+    ///
+    /// Said out loud rather than silently substituted. "END GAME" is a real
+    /// row a reader can tap, and a field that quietly showed the snap before
+    /// it while the feed row said something else would be a field disagreeing
+    /// with the list beside it.
+    @ViewBuilder
+    private func showing(_ now: (drive: Drive, play: GamePlay)?,
+                         _ ball: (drive: Drive, play: GamePlay)?) -> some View {
+        if ball == nil {
+            Text("No snap in this game yet, so there is no ball to place.")
+                .font(.system(size: 10)).foregroundStyle(.tertiary)
+        } else if let n = now, let b = ball, n.play.id != b.play.id {
+            HStack(spacing: 6) {
+                Image(systemName: "info.circle").font(.system(size: 9))
+                Text("“\(n.play.text.prefix(40))” is not a snap, so the ball is "
+                     + "where the last one left it.")
+                    .font(.system(size: 10))
+            }
+            .foregroundStyle(.tertiary)
+        }
+    }
+
+    /// Down, distance and spot, read off the snap the ball is drawn from.
     private func situation(_ gc: Gamecast,
                            _ now: (drive: Drive, play: GamePlay)?) -> some View {
         let p = now?.play
@@ -236,13 +348,27 @@ struct GameFieldView: View {
         }
     }
 
-    /// Whichever of your men are in this game. The point of a cross-league
-    /// board is that a game only matters through the men you own in it.
+    /// The men who are not on the grass, and why not.
+    ///
+    /// Its own panel rather than a strip inside the field's: the strip was
+    /// clipped to a sliver by the panel's height, which is what "cutting off
+    /// the onfield players" was. Everyone who can score on this snap is now
+    /// standing on the turf above; this is the rest of them, each carrying the
+    /// reason he is not.
     @ViewBuilder
-    private func mine(_ gc: Gamecast) -> some View {
-        let men = board.lineup().filter { $0.event == gc.event }
-        if men.isEmpty {
+    private func mine(_ gc: Gamecast, _ squad: Squad) -> some View {
+        let men = squad.off
+        Panel(title: squad.on.isEmpty
+              ? "Your Men in This Game"
+              : "Not on This Snap · \(men.count)",
+              trailing: AnyView(Text(squad.on.isEmpty ? ""
+                                     : "\(squad.on.count) on the field")
+                .font(.system(size: 9)).foregroundStyle(.tertiary))) {
+        if men.isEmpty && squad.on.isEmpty {
             Text("None of your starters are in this game.")
+                .font(.system(size: 10)).foregroundStyle(.tertiary)
+        } else if men.isEmpty {
+            Text("Every one of your men in this game can score on the next snap.")
                 .font(.system(size: 10)).foregroundStyle(.tertiary)
         } else {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -262,6 +388,14 @@ struct GameFieldView: View {
                                         .font(.system(size: 9)).monospacedDigit()
                                         .foregroundStyle(m.points > 0 ? AnyShapeStyle(Theme.green)
                                                                       : AnyShapeStyle(.tertiary))
+                                    // The reason, in words. A man off the
+                                    // grass is a claim about his game, and a
+                                    // claim the reader cannot see the grounds
+                                    // for is one they have to take on trust.
+                                    Text(m.defence ? "\(m.team) have the ball"
+                                                   : "\(m.opp) have the ball")
+                                        .font(.system(size: 8))
+                                        .foregroundStyle(.tertiary).lineLimit(1)
                                 }
                             }
                             .padding(.horizontal, 7).padding(.vertical, 4)
@@ -273,6 +407,11 @@ struct GameFieldView: View {
                     }
                 }
             }
+            // Room for a whole chip. Left to itself inside a panel that is
+            // also drawing a field, this row was given a sliver of height and
+            // the tokens were cut in half.
+            .frame(height: 46)
+        }
         }
     }
 

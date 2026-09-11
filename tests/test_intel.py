@@ -1316,3 +1316,73 @@ class TestNarrateIsLoopbackOnly(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestThePromptFitsTheModelItIsFor(unittest.TestCase):
+    """A brief this database actually produces does not fit on device.
+
+    Twenty-eight findings came to twenty-two thousand characters. Apple's
+    on-device model holds a few thousand tokens for the input and the output
+    together, so the request failed and the headset rendered an apology where
+    the summary should have been. The server trims, because a client trimming
+    its own prompt means nobody can say afterwards what the model was shown.
+    """
+
+    def brief(self, n: int):
+        from fantasyedge import intel
+
+        insights = []
+        for i in range(n):
+            insights.append(intel.Insight(
+                key=f"k{i}", kind="carrying", title=f"Finding {i}",
+                detail="A sentence of roughly the length these actually run to, "
+                       "because a budget measured against toy data is not a "
+                       "budget. " * 3,
+                facts=[intel.Fact(label="Scored", value=12.5, unit="pts",
+                                  source="live snapshot joined to roster_slot")],
+                caveat="Share of points already scored, not of the final total."))
+        return intel.Brief(insights=insights, season=2026, week=1)
+
+    def test_a_budget_actually_binds(self):
+        from fantasyedge import ai
+
+        b = self.brief(40)
+        full = ai.prompt_for(b)
+        capped = ai.prompt_for(b, budget=ai.ON_DEVICE_BUDGET)
+        self.assertGreater(len(full), ai.ON_DEVICE_BUDGET,
+                           "fixture too small to test a budget against")
+        self.assertLessEqual(len(capped), ai.ON_DEVICE_BUDGET + 200,
+                             "the budget did not bind")
+
+    def test_it_says_how_much_it_left_out(self):
+        """Silent truncation produces prose that reads complete and is not."""
+        from fantasyedge import ai
+
+        capped = ai.prompt_for(self.brief(40), budget=ai.ON_DEVICE_BUDGET)
+        self.assertIn("most important of", capped)
+        self.assertIn("Do not imply this is all of them", capped)
+
+    def test_a_small_brief_is_not_trimmed_or_annotated(self):
+        from fantasyedge import ai
+
+        capped = ai.prompt_for(self.brief(2), budget=ai.ON_DEVICE_BUDGET)
+        self.assertNotIn("most important of", capped,
+                         "a brief that fits was annotated as though it did not")
+
+    def test_no_budget_keeps_everything(self):
+        """A cloud model has the room; the cap is opt-in."""
+        from fantasyedge import ai
+
+        b = self.brief(40)
+        self.assertGreater(len(ai.prompt_for(b)),
+                           len(ai.prompt_for(b, budget=ai.ON_DEVICE_BUDGET)))
+
+    def test_at_least_one_finding_survives_an_absurd_budget(self):
+        from fantasyedge import ai
+
+        # A budget smaller than a single finding still yields one, because a
+        # prompt with no findings is not a cheaper prompt, it is a useless one.
+        capped = ai.prompt_for(self.brief(40), budget=10)
+        self.assertIn('"id":"k0"', capped,
+                      "a tiny budget produced a prompt with no findings at all")
+        self.assertIn("1 most important of 40", capped)

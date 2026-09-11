@@ -1419,8 +1419,20 @@ class Api:
         shape = narration_shape(brief)
         with self._lock:
             entry = dict(self._narrations.get(shape) or {})
+        # Budgeted, because the only client that builds its own request from
+        # this block is a headset running Apple's on-device model, and that
+        # model's window is smaller than a real brief. Twenty-eight findings
+        # came to twenty-two thousand characters, so the request failed and the
+        # view showed an apology instead of a summary. The server does the
+        # trimming - a client trimming its own prompt is the one thing
+        # docs/intel.md rules out, since then nobody knows what the model saw.
+        full = ai.prompt_for(brief)
+        capped = ai.prompt_for(brief, budget=ai.ON_DEVICE_BUDGET)
         out = {
-            "prompt": {"system": ai.SYSTEM, "user": ai.prompt_for(brief)},
+            "prompt": {"system": ai.SYSTEM, "user": capped,
+                       "budget": ai.ON_DEVICE_BUDGET,
+                       "trimmed": len(capped) < len(full),
+                       "fullLength": len(full)},
             "endpoint": "POST /api/intel/narrate",
             "shape": shape,
             "cached": None,

@@ -16,7 +16,13 @@ import json
 import pathlib
 
 CONFIG = pathlib.Path.home() / ".fantasy-edge" / "prefs.json"
-DEFAULT = {"teams": {}, "order": [], "hidden": []}
+#: `projection` is which source drives the numbers on the board. It belongs
+#: here with the rest for the same reason they do - the console runs on a
+#: laptop, a television and a headset, and a source chosen on one of them has
+#: to be the source the others show. An empty string means "not chosen", which
+#: each client resolves to the first source it actually has loaded rather than
+#: to a hardcoded name that may not be there.
+DEFAULT = {"teams": {}, "order": [], "hidden": [], "projection": ""}
 
 
 def load() -> dict:
@@ -30,6 +36,8 @@ def load() -> dict:
     for key in ("order", "hidden"):
         if isinstance(data.get(key), list):
             out[key] = [str(x) for x in data[key]]
+    if isinstance(data.get("projection"), str):
+        out["projection"] = data["projection"][:32]
     return out
 
 
@@ -40,6 +48,8 @@ def save(prefs: dict) -> dict:
     for key in ("order", "hidden"):
         if isinstance(prefs.get(key), list):
             clean[key] = [str(x)[:64] for x in prefs[key]][:64]
+    if isinstance(prefs.get("projection"), str):
+        clean["projection"] = prefs["projection"][:32]
     CONFIG.parent.mkdir(parents=True, exist_ok=True)
     CONFIG.write_text(json.dumps(clean, indent=2))
     return clean
@@ -50,10 +60,13 @@ def merge(prefs: dict, patch: dict) -> dict:
     changing different things do not overwrite each other."""
     out = {"teams": dict(prefs.get("teams") or {}),
            "order": list(prefs.get("order") or []),
-           "hidden": list(prefs.get("hidden") or [])}
+           "hidden": list(prefs.get("hidden") or []),
+           "projection": str(prefs.get("projection") or "")}
     if isinstance(patch.get("teams"), dict):
         out["teams"].update({str(k): str(v) for k, v in patch["teams"].items()})
     for key in ("order", "hidden"):
         if isinstance(patch.get(key), list):
             out[key] = [str(x) for x in patch[key]]
+    if isinstance(patch.get("projection"), str):
+        out["projection"] = patch["projection"]
     return out
