@@ -75,22 +75,44 @@ def team_color(abbr: str) -> str:
     return NFL_COLOR.get((abbr or "").upper(), NFL_COLOR["FA"])
 
 
-def headshot_url(player_id: str, team: str = "") -> str:
+#: What a portrait is asked for at when nobody says. The bare path serves a
+#: 600 pixel headshot and a 500 pixel club mark, which is fine in a browser and
+#: soft on a headset: Vision Pro resolves far more angular detail than a
+#: laptop, so an image displayed at any size is being upscaled. ESPN's combiner
+#: will serve the same picture larger - 1400 wide is real, not interpolated -
+#: and a client that knows its own display size should ask for two or three
+#: times it rather than taking the default and stretching.
+DEFAULT_IMAGE_WIDTH = 1200
+
+
+def headshot_url(player_id: str, team: str = "", *, width: int = 0) -> str:
     """A player's portrait, or their club's mark for a team defence.
 
     A negative ESPN id is a D/ST rather than a person - see the note in
     CLAUDE.md - and there is no headshot for a defence, so the club logo
     stands in.
+
+    `width` goes through ESPN's combiner, which resamples from a larger
+    original. Zero keeps the bare path, so nothing that was already correct
+    changes shape.
     """
     pid = str(player_id or "")
     if pid.startswith("-"):
-        return logo_url(team)
-    return f"https://a.espncdn.com/i/headshots/nfl/players/full/{pid}.png"
+        return logo_url(team, width=width)
+    if not width:
+        return f"https://a.espncdn.com/i/headshots/nfl/players/full/{pid}.png"
+    return (f"https://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/"
+            f"full/{pid}.png&w={int(width)}")
 
 
-def logo_url(team: str) -> str:
+def logo_url(team: str, *, width: int = 0) -> str:
     ab = (team or "").lower()
-    return f"https://a.espncdn.com/i/teamlogos/nfl/500/{ab}.png" if ab and ab != "fa" else ""
+    if not ab or ab == "fa":
+        return ""
+    if not width:
+        return f"https://a.espncdn.com/i/teamlogos/nfl/500/{ab}.png"
+    return (f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/"
+            f"{ab}.png&w={int(width)}")
 
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
