@@ -30,6 +30,11 @@
   --navy-600:#16307f; --navy-500:#1d3b93;
   --green:#5bc236; --green-lift:#6fd84a; --green-deep:#3f9c25;
   --amber:#ffb020; --red:#ff4b4b;
+  /* The same opaque chip fills the board and the headset use, so a visitor
+     who lands here and then opens the demo is looking at one product. Derived
+     by `apple/contrast_check.py`, not chosen here. */
+  --fill-green:#237904; --fill-gold:#8b7300; --fill-mute:#5e708f;
+  --chip-edge:rgba(255,255,255,.42);
 
   --ground:var(--navy-900); --card:rgba(255,255,255,.055);
   --card-2:rgba(255,255,255,.09);
@@ -155,15 +160,18 @@ button.prov{letter-spacing:normal;text-transform:none;font-family:var(--ui);
    a warning rather than as an explanation. */
 .prov p{margin:9px 0 0;font-size:13.5px;line-height:1.55;color:var(--ink-dim);
   font-weight:400}
-.tag{display:inline-block;font-family:var(--cond);font-size:11px;font-weight:700;
+.tag{display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--cond);font-size:11px;font-weight:700;
   letter-spacing:.15em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
-  margin-bottom:11px}
-.tag.ok{background:rgba(91,194,54,.17);color:var(--green-lift);
-  border:1px solid rgba(91,194,54,.42)}
-.tag.maybe{background:rgba(255,176,32,.15);color:var(--amber);
-  border:1px solid rgba(255,176,32,.4)}
-.tag.soon{background:rgba(255,176,32,.16);color:var(--amber);
-  border:1px solid rgba(255,176,32,.42)}
+  margin-bottom:11px;color:#fff;background:var(--fill-mute);
+  box-shadow:inset 0 0 0 1px var(--chip-edge)}
+.tag::before{font-weight:900;letter-spacing:0;font-size:10px}
+.tag.ok{background:var(--fill-green)}
+.tag.ok::before{content:"\2713"}          /* ready to use */
+.tag.maybe{background:var(--fill-gold)}
+.tag.maybe::before{content:"\0021"}       /* conditions apply */
+.tag.soon{background:var(--fill-mute)}
+.tag.soon::before{content:"\2026"}        /* not yet */
 /* The Yahoo card is a real <button disabled>, because it must not be
    clickable and must not be reachable by keyboard either. A disabled button
    inherits the platform's greyed-out text colour, which on this ground made

@@ -29,9 +29,40 @@
   --r-card:18px; --r-tile:14px; --r-chip:999px;
   --ease:cubic-bezier(.2,0,.2,1);
   --gap:12px;
-  /* ESPN fantasy position colours, straight from the app */
+  /* ESPN fantasy position colours, straight from the app. Shapes only: a
+     ring, a bar, a wash. Never the colour of a glyph - see the fills below. */
   --pos-QB:#F8296D; --pos-RB:#36CE3D; --pos-WR:#58A7FF;
   --pos-TE:#FFAE58; --pos-K:#BD66FF; --pos-DEF:#B0B7C3; --pos-FLEX:#8E93A0;
+
+  /* ── chip fills, shared verbatim with the visionOS app ──────────────
+     These are not picked here. They are the values `apple/contrast_check.py`
+     solved for, read straight out of `apple/FantasyEdge/Sources/Theme.swift`,
+     so the headset and the browser are one product rather than two
+     interpretations of one. On glass the solver had to satisfy a bright room
+     and a dark one at once, which pinned them to relative luminance
+     0.135-0.183; white text on them clears 4.5:1 and that carries over here
+     unchanged (measured 4.62-5.51:1 against this page).
+
+     What does NOT carry over is the chip's own edge. The band was chosen to
+     stay visible against a *light* room; this page is darker than either room
+     the solver considered - navy at L 0.007-0.037 against the band's 0.16 -
+     so a bare chip boundary measures only 2.20-4.02:1 here where WCAG wants
+     3:1. That is why `.mk`/`.pos` carry a hairline stroke: the fill is the
+     app's, and the edge is the browser's own problem, solved without
+     inventing a second palette. */
+  --fill-green:#237904;            /* ahead, live   - darkest of the three */
+  --fill-red:#df0b0b;              /* behind, hurt  - middle */
+  --fill-gold:#8b7300;             /* level, caution - lightest */
+  --posfill-QB:#de0049; --posfill-RB:#038208; --posfill-WR:#156ed1;
+  --posfill-TE:#a55d11; --posfill-K:#a026fd; --posfill-DEF:#5e708f;
+  --posfill-FLEX:#5e708f;
+  /* The slate above doubles as the neutral chip ground, exactly as
+     `Theme.positionFill("DEF")` does on the headset: an attribution should
+     read as a caption, not as a status. */
+  --fill-mute:#5e708f;
+  /* The stroke that gives a chip an edge on navy. Measured at 3.85:1 against
+     the lightest panel, which is the ground that was failing. */
+  --chip-edge:rgba(255,255,255,.42);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -48,6 +79,84 @@ body{margin:0;background:var(--navy-800);color:var(--ink);font-family:var(--ui);
   background-attachment:fixed;}
 .wrap{max-width:1600px;margin:0 auto;padding:26px 28px 40px;
   filter:saturate(var(--sat,1));transition:filter 1.2s var(--ease)}
+
+/* ── marks: state, said twice ──────────────────────────
+   The rule the headset arrived at and this page now follows: text wears text
+   ink, colour rides on an opaque chip beside it. A number tinted green and a
+   number tinted red are the same failure twice - on glass neither was legible,
+   and red against green is the pair a deuteranope cannot separate at all. An
+   arrow up and an arrow down are separable by anybody, so the glyph carries
+   the meaning and the colour only agrees with it.
+
+   Six states, and the glyph is what distinguishes them: ahead and live share
+   a fill, behind and hurt share a fill, level and caution share a fill. That
+   is deliberate, and it is only safe because no state is ever colour alone. */
+.mk{display:inline-flex;align-items:center;gap:3px;flex:none;
+  padding:2px 6px;border-radius:var(--r-chip);
+  background:var(--mk-fill,var(--fill-mute));color:#fff;
+  font-family:var(--ui);font-size:9px;font-weight:800;letter-spacing:.04em;
+  line-height:1.5;white-space:nowrap;text-transform:uppercase;
+  /* An inset ring rather than a border, so adding a mark to a flex row never
+     changes the row's height by two pixels. */
+  box-shadow:inset 0 0 0 1px var(--chip-edge)}
+.mk.glyphonly{padding:2px 4px}
+.mk i{font-style:normal;font-size:8px;font-weight:900;line-height:1}
+/* The one glyph that is a drawn shape rather than a character: a broadcast
+   dot reads at 8px where "◉" renders as a muddy blob in most UI faces. */
+.mk i.dot{width:6px;height:6px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 2px rgba(255,255,255,.42)}
+.mk.ahead{--mk-fill:var(--fill-green)}
+.mk.behind{--mk-fill:var(--fill-red)}
+.mk.level{--mk-fill:var(--fill-gold)}
+.mk.caution{--mk-fill:var(--fill-gold)}
+.mk.live{--mk-fill:var(--fill-green)}
+.mk.hurt{--mk-fill:var(--fill-red)}
+.mk.sm{font-size:8px;padding:1.5px 5px}
+.mk.sm i{font-size:7px}
+/* A figure and the state of that figure, stacked the way the headset stacks
+   them: the value in ink on top, the mark to the left of its label below.
+   Never the value itself in colour. */
+.figmark{display:flex;align-items:center;gap:4px;min-width:0}
+
+/* ── explaining one number ─────────────────────────────
+   Every figure on this board is a model output with an assumption inside it,
+   and the legend at the foot can only carry the one about cell sizing. The
+   rest were unexplained: a reader who wanted to know what "vs opponents"
+   meant, or why a floor is not a forecast, had nowhere to look.
+
+   The whole figure block is the hit target rather than a "?" beside it. A
+   number and its label are one thing to a reader, and a control that is only
+   the glyphs is a control that mostly misses - which matters more here than
+   on the headset, because this page gets used one-handed on a phone. Click,
+   not hover: hover does not exist on a touchscreen and this must not be the
+   affordance that is desktop-only. */
+.exq{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.exq::after{content:"";position:absolute;inset:-6px;border-radius:12px;
+  border:1px solid transparent;transition:.18s var(--ease);pointer-events:none}
+.exq:hover::after{border-color:var(--hair-2)}
+.exq:focus-visible{outline:none}
+.exq:focus-visible::after{border-color:var(--green);
+  box-shadow:0 0 0 2px rgba(91,194,54,.3)}
+.exq[aria-expanded="true"]::after{border-color:var(--hair-2);
+  background:rgba(255,255,255,.05)}
+.expop{position:fixed;z-index:2147482000;width:min(330px,calc(100vw - 24px));
+  background:rgba(8,18,58,.985);border:1px solid var(--hair-2);
+  border-radius:16px;padding:16px 17px;
+  box-shadow:0 18px 54px rgba(0,0,0,.62);
+  font-family:var(--ui);color:var(--ink);
+  animation:expop .16s var(--ease)}
+@keyframes expop{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+.expop[hidden]{display:none!important}
+.expop h4{margin:0 0 8px;font-size:15px;font-weight:700;letter-spacing:-.015em}
+.expop .what{font-size:12.5px;line-height:1.5;margin:0 0 10px}
+.expop .row{display:flex;align-items:flex-start;gap:8px;margin-top:9px}
+.expop .row .f{font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+  line-height:1.5;flex:none;width:11px;text-align:center}
+.expop .row p{margin:0;font-size:11.5px;line-height:1.5;color:var(--ink-dim)}
+.expop .row .mk{margin-top:1px}
+.expop .x{position:absolute;top:8px;right:9px;background:transparent;border:0;
+  color:var(--ink-faint);font-size:15px;line-height:1;cursor:pointer;padding:5px}
+.expop .x:hover{color:var(--ink)}
 
 /* ── masthead ─────────────────────────────────────────── */
 .top{display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -68,16 +177,36 @@ h1{font-family:var(--display);font-size:33px;font-weight:400;letter-spacing:.012
    one changed *what*. They are ranked now: navigation is the loud one, the
    surface picker is quieter, and the image switch is a single small toggle
    rather than a third group pretending to be a mode. */
-.ctrls{display:flex;gap:12px;align-items:center;flex:none;flex-wrap:wrap}
+/* Shrinkable, not fixed. `flex:none` here put the whole control cluster off
+   the right edge of a 1440px window - the commonest laptop there is - and a
+   horizontal scrollbar on the document is the tell for exactly that. It wraps
+   before it overflows now, and each strip inside it scrolls on its own. */
+.ctrls{display:flex;gap:12px;align-items:center;flex:1 1 auto;min-width:0;
+  flex-wrap:wrap;justify-content:flex-end}
 .ctrl-sep{width:1px;height:22px;background:var(--hair);flex:none}
+/* A tab strip scrolls rather than clipping, at every width. This is the bug
+   class that lost Headlines off the right of a phone: nine tabs do not fit
+   across 390px and the ninth simply was not reachable. Scrolling is checked
+   at six viewports rather than assumed. */
 .seg{display:flex;background:rgba(255,255,255,.07);border-radius:var(--r-chip);
-  padding:3px;backdrop-filter:blur(24px) saturate(1.6);border:1px solid var(--hair)}
+  padding:3px;backdrop-filter:blur(24px) saturate(1.6);border:1px solid var(--hair);
+  max-width:100%;overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:0 0 auto}
 .seg button{font-family:var(--ui);font-size:13.5px;font-weight:600;letter-spacing:-.005em;
   padding:7px 16px;background:transparent;color:var(--ink-dim);border:0;
   border-radius:var(--r-chip);cursor:pointer;transition:.24s var(--ease);white-space:nowrap}
 .seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--green);color:#06210a;
-  font-weight:700;box-shadow:0 2px 10px rgba(91,194,54,.35)}
+/* Selected controls wear the same opaque chip as every state on this page.
+   They were dark ink on the bright hue, which measures 7.26:1 in the good
+   case - but it is the fragile 7.26 in the product: the ink collapses to
+   2.1:1 the moment anything composites over the pill, and white on that same
+   bright green is 2.35:1, so there is no safe text colour for it. The dark
+   fill has a safe one in both directions and it is the fill the app uses. */
+.seg button[aria-pressed="true"]{background:var(--fill-green);color:#fff;
+  font-weight:700;
+  box-shadow:inset 0 0 0 1px var(--chip-edge),0 2px 10px rgba(91,194,54,.35)}
 .seg button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 /* secondary: the surface picker changes how it looks, not what you are on */
 .seg.quiet{background:transparent;border-color:rgba(255,255,255,.07);padding:2px}
@@ -111,7 +240,15 @@ h1{font-family:var(--display);font-size:33px;font-weight:400;letter-spacing:.012
   text-overflow:ellipsis}
 .team .pts{font-size:66px;font-weight:800;line-height:1;letter-spacing:-.035em;
   font-variant-numeric:tabular-nums;margin-top:2px}
-.team.a .pts{color:var(--green)}.team.b .pts{color:var(--opp)}
+/* Both totals are ink. They used to be a green one and a red one, which said
+   whose side you were looking at in the one channel a red-green colourblind
+   reader does not have - and said it in 66px, where a tint is at its most
+   confident and least readable. The mark beside the team's name says it now,
+   and the number is just the number. */
+.team .pts{color:var(--ink)}
+.team .nmrow{display:flex;align-items:center;gap:6px;min-width:0}
+.team.b .nmrow{justify-content:flex-end}
+.team .nmrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .team .proj{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-top:4px}
 .odds{text-align:center;min-width:132px}
 .odds .pct{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.03em;
@@ -125,7 +262,8 @@ h1{font-family:var(--display);font-size:33px;font-weight:400;letter-spacing:.012
   transition:width .8s var(--ease)}
 .meta{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);
   font-size:11px;color:var(--ink-faint);margin-top:10px;flex-wrap:wrap}
-.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--espn);
+.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--fill-green);
+  box-shadow:inset 0 0 0 1px var(--chip-edge);
   color:#fff;font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.15em;
   text-transform:uppercase;padding:3px 10px;border-radius:var(--r-chip)}
 .live-pill i{width:6px;height:6px;border-radius:50%;background:#fff;
@@ -180,10 +318,16 @@ body.noimg .mono,.tile.noshot .mono{display:block}
 .t-name{font-weight:700;letter-spacing:-.022em;line-height:1.1;
   text-shadow:0 2px 14px rgba(0,0,0,.9);overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
-/* ESPN's own position colours - the detail that says fantasy, not sport */
+/* ESPN's own position colours - the detail that says fantasy, not sport.
+   White on the opaque `--posfill-*` rather than black on the bright hue, which
+   is what the headset settled on and what makes the two surfaces one product.
+   A position chip carries its own letters, so the colour here is identity
+   rather than the thing being read: that is what makes it safe that RB green
+   and D/ST slate converge for a deuteranope. */
 .pos{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.11em;
   text-transform:uppercase;padding:2.5px 8px;border-radius:var(--r-chip);flex:none;
-  color:#000;background:var(--pc,#8E93A0)}
+  color:#fff;background:var(--pc,var(--fill-mute));
+  box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .t-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
 .t-pts{font-weight:800;font-variant-numeric:tabular-nums;line-height:.95;
   letter-spacing:-.038em;text-shadow:0 3px 16px rgba(0,0,0,.95)}
@@ -241,7 +385,11 @@ body.noimg .mono,.tile.noshot .mono{display:block}
 .lc-team span.nm{overflow:hidden;text-overflow:ellipsis}
 .lc-pts{font-size:40px;font-weight:800;line-height:1.02;letter-spacing:-.035em;
   font-variant-numeric:tabular-nums}
-.lc-side.a .lc-pts{color:var(--green)}.lc-side.b .lc-pts{color:var(--opp)}
+/* Ink, for the reason the big scoreline above is ink. The mark goes beside
+   the side's name in `renderLeagues`. */
+.lc-side .lc-pts{color:var(--ink)}
+.lc-ptsrow{display:flex;align-items:center;gap:6px}
+.lc-side.b .lc-ptsrow{justify-content:flex-end}
 .lc-odds{font-size:26px;font-weight:800;letter-spacing:-.03em;
   font-variant-numeric:tabular-nums;text-align:center;min-width:70px}
 .lc-bar{height:5px;background:var(--opp);display:flex;overflow:hidden;
@@ -291,8 +439,8 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
   background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-dim);
   transition:.2s var(--ease);display:inline-flex;align-items:center;gap:7px}
 .pb-chip:hover:not([disabled]){color:var(--ink);background:rgba(255,255,255,.12)}
-.pb-chip[aria-pressed="true"]{background:var(--green);color:#06210a;
-  border-color:transparent;font-weight:800}
+.pb-chip[aria-pressed="true"]{background:var(--fill-green);color:#fff;
+  border-color:transparent;font-weight:800;box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .pb-chip:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .pb-chip .n{font-family:var(--mono);font-size:10.5px;letter-spacing:0;opacity:.72}
 /* A pending source is a real <button disabled>: not clickable, not reachable
@@ -330,6 +478,10 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
   white-space:nowrap}
 /* The high number is the interesting half of a disagreement: which source is
    the optimistic one is the whole reason to put them side by side. */
+/* The rank each source gives him, under its own figure. Small and quiet: it
+   is the second thing you read on the row, not the first. */
+.crow .c-rk{display:block;font-family:var(--cond);font-size:10px;font-weight:700;
+  letter-spacing:.09em;color:var(--ink-faint);margin-top:1px}
 .crow .hi{color:var(--green-lift)}
 .crow .lo{color:var(--ink-dim)}
 .crow .gap{font-family:var(--mono);font-variant-numeric:tabular-nums;
@@ -362,8 +514,8 @@ body.noimg .face .ini,.face.noshot .ini{display:flex}
   background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-dim);
   transition:.2s var(--ease)}
 .chip:hover{color:var(--ink);background:rgba(255,255,255,.12)}
-.chip[aria-pressed="true"]{background:var(--green);color:#06210a;
-  border-color:transparent;font-weight:800}
+.chip[aria-pressed="true"]{background:var(--fill-green);color:#fff;
+  border-color:transparent;font-weight:800;box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .chip:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .rspacer{flex:1}
 .rtable{border:1px solid var(--hair);border-radius:18px;overflow:hidden;
@@ -409,7 +561,7 @@ body.noimg .r-face .ini,.r-face.noshot .ini{display:flex}
 .r-own{font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:.06em;
   color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   display:flex;align-items:center;gap:7px}
-.youtag{background:var(--green);color:#06210a;font-size:9.5px;font-weight:800;
+.youtag{background:var(--fill-green);color:#fff;font-size:9.5px;font-weight:800;
   letter-spacing:.1em;padding:2px 6px;border-radius:var(--r-chip);flex:none}
 .r-num{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
   text-align:right}
@@ -673,10 +825,9 @@ body.xr .seg,body.xr .back,body.xr .chip{background:rgba(255,255,255,.12);
 .db-v{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px;
   font-variant-numeric:tabular-nums;line-height:1.05}
 .db-n{font-size:11.5px;color:var(--ink-dim);margin-top:3px;line-height:1.35}
-.db.good .db-v{color:var(--green)}
+.db-v{color:var(--ink)}
 .db.act{border-color:var(--hot)}
-.db.act .db-v{color:var(--hot)}
-.db.act .db-k{color:var(--hot)}
+.db-krow{display:flex;align-items:center;gap:5px;min-width:0}
 body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-size:15px}
 
 .teampick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -706,8 +857,8 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
 .pg-v{font-size:23px;font-weight:800;letter-spacing:-.028em;margin-top:5px;
   font-variant-numeric:tabular-nums}
 .pg-n{font-size:12px;color:var(--ink-dim);margin-top:4px;line-height:1.4}
-.pg.edge .pg-v{color:var(--green)}
-.pg.warn .pg-v{color:var(--hot)}
+.pg-v{color:var(--ink)}
+.pg-krow{display:flex;align-items:center;gap:5px;min-width:0}
 
 
 /* ── the ticker ────────────────────────────────────────────
@@ -720,7 +871,7 @@ body.tv .db-v{font-size:36px}body.tv .db-k{font-size:13px}body.tv .db-n{font-siz
   backdrop-filter:blur(26px) saturate(1.6)}
 .ticker[hidden]{display:none!important}
 .tk-tag{flex:none;display:flex;align-items:center;gap:7px;padding:0 14px;height:100%;
-  background:var(--espn);color:#fff;font-family:var(--cond);font-weight:700;
+  background:var(--fill-red);color:#fff;font-family:var(--cond);font-weight:700;
   font-size:11.5px;letter-spacing:.17em;text-transform:uppercase}
 .tk-tag i{width:6px;height:6px;border-radius:50%;background:#fff;
   animation:pulse 2s var(--ease) infinite}
@@ -768,7 +919,7 @@ body{padding-bottom:46px}
   background:rgba(0,0,0,.5);color:var(--ink-dim);cursor:pointer;font-size:13px;
   line-height:1;display:grid;place-items:center;backdrop-filter:blur(10px)}
 .lc-ctl button:hover{background:rgba(255,255,255,.16);color:var(--ink)}
-.lc-ctl button.rm:hover{background:var(--espn);color:#fff;border-color:transparent}
+.lc-ctl button.rm:hover{background:var(--fill-red);color:#fff;border-color:transparent}
 .hidden-leagues{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .hidden-leagues[hidden]{display:none!important}
 .hl-k{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.14em;
@@ -799,11 +950,20 @@ body{padding-bottom:46px}
   transition:.22s var(--ease)}
 .hurt-item:hover{border-color:rgba(255,80,80,.75);transform:translateY(-2px)}
 .hurt-item .r-face{width:56px;height:56px;border-color:rgba(255,80,80,.6)}
+.hurt-badge::before,.st-hurt::before,.u-hurt::before{content:"\271A";
+  font-weight:900;margin-right:4px;letter-spacing:0}
 .hurt-badge{font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:.16em;
-  text-transform:uppercase;background:var(--espn);color:#fff;padding:3px 10px;
+  text-transform:uppercase;background:var(--fill-red);color:#fff;padding:3px 10px;
   border-radius:var(--r-chip);flex:none;
+  box-shadow:inset 0 0 0 1px var(--chip-edge);
   animation:hurtpulse 2.4s var(--ease) infinite}
-@keyframes hurtpulse{0%,100%{opacity:1}50%{opacity:.55}}
+/* The pulse used to run the badge down to 55% opacity, which took a chip that
+   clears 5:1 through everything below it twice a cycle. It breathes on the
+   ring now and the text never moves. */
+@keyframes hurtpulse{0%,100%{box-shadow:inset 0 0 0 1px var(--chip-edge),
+                                        0 0 0 0 rgba(223,11,11,.55)}
+                     50%{box-shadow:inset 0 0 0 1px var(--chip-edge),
+                                    0 0 0 5px rgba(223,11,11,0)}}
 .hurt-who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .hurt-name{font-size:19px;font-weight:800;letter-spacing:-.024em}
 .hurt-head{font-size:13.5px;color:var(--ink-dim);margin-top:5px;line-height:1.4}
@@ -811,13 +971,14 @@ body{padding-bottom:46px}
   border-left:2px solid var(--espn);padding-left:11px}
 .hurt-cost{text-align:right;flex:none}
 .hurt-cost .c-v{font-size:26px;font-weight:800;letter-spacing:-.03em;
-  color:var(--espn);font-variant-numeric:tabular-nums}
+  color:var(--ink);font-variant-numeric:tabular-nums}
 .hurt-cost .c-k{font-family:var(--cond);font-size:10px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
 /* the same red wherever that player turns up */
 .tile.hurt-tile{border-color:rgba(255,60,60,.6);
   box-shadow:0 0 0 1px rgba(255,60,60,.4),0 0 34px rgba(213,10,10,.22)}
-.st-hurt{background:var(--espn);color:#fff;font-family:var(--cond);font-size:10px;
+.st-hurt{background:var(--fill-red);color:#fff;
+  box-shadow:inset 0 0 0 1px var(--chip-edge);font-family:var(--cond);font-size:10px;
   font-weight:800;letter-spacing:.12em;padding:2px 7px;border-radius:var(--r-chip);
   margin-left:7px}
 body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
@@ -846,7 +1007,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .rankpill{display:inline-block;font-family:var(--cond);font-size:11px;font-weight:800;
   letter-spacing:.06em;padding:2px 8px;border-radius:var(--r-chip);
   background:rgba(255,255,255,.12);color:var(--ink)}
-.rankpill.elite{background:var(--green);color:#06210a}
+.rankpill.elite{background:var(--fill-green);color:#fff;box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .rankpill.good{background:rgba(91,194,54,.28);color:var(--green-lift)}
 .spark{display:flex;align-items:flex-end;gap:2px;height:36px;margin-top:4px}
 .spark i{flex:1;min-width:2px;background:rgba(255,255,255,.22);border-radius:1px}
@@ -902,7 +1063,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .rk-num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .rk-num.dim{color:var(--ink-faint);font-weight:500}
 .rk-own{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.1em;
-  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:1px 7px;
+  background:var(--fill-green);color:#fff;border-radius:var(--r-chip);padding:1px 7px;
   margin-left:6px}
 .rk-window{font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.13em;
   text-transform:uppercase;color:var(--ink-faint);margin:0 0 10px 2px}
@@ -1000,11 +1161,12 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   display:flex;flex-direction:column}
 .it-card-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .it-kind{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--navy-900);background:var(--ink-dim);
+  text-transform:uppercase;color:#fff;background:var(--fill-mute);
+  box-shadow:inset 0 0 0 1px var(--chip-edge);
   border-radius:var(--r-chip);padding:2px 8px;flex:0 0 auto}
-.it-kind.k-fragility,.it-kind.k-injury{background:var(--opp);color:#fff}
-.it-kind.k-carrying,.it-kind.k-opportunity{background:var(--green);color:var(--navy-900)}
-.it-kind.k-conflict,.it-kind.k-exposure{background:var(--hot);color:var(--navy-900)}
+.it-kind.k-fragility,.it-kind.k-injury{background:var(--fill-red)}
+.it-kind.k-carrying,.it-kind.k-opportunity{background:var(--fill-green)}
+.it-kind.k-conflict,.it-kind.k-exposure{background:var(--fill-gold)}
 .it-lg{font-family:var(--cond);font-size:11.5px;letter-spacing:.06em;
   color:var(--ink-faint);margin-left:auto;text-align:right}
 .it-title{font-family:var(--display);font-size:16.5px;letter-spacing:.02em;
@@ -1043,6 +1205,56 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .it-have i{font-style:normal;font-family:var(--cond);font-size:11.5px;font-weight:700;
   letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);
   border:1px solid var(--hair);border-radius:var(--r-chip);padding:3px 10px}
+/* ── the short viewport ─────────────────────────────────
+   A phone held sideways. Wide, and often under 400 CSS pixels tall, which is
+   the one shape where the page's own furniture is the problem: masthead, two
+   tab strips, a surface picker, a meta line and a fixed ticker between them
+   accounted for every pixel of a 390px-tall window, and the game you opened
+   the tab for started below the fold and ended underneath the ticker.
+
+   Keyed on height and orientation rather than width, because 844px wide is
+   desktop territory by any width-only rule and this is not a desktop.
+
+   The treatment is deliberate rather than a squeeze: the controls that change
+   *what you are looking at* stay, and the ones that change *how it looks* go,
+   since those are preferences you set once and can set in portrait. */
+@media (orientation:landscape) and (max-height:500px){
+  .wrap{padding:10px 14px 16px}
+  .top{padding-bottom:10px;gap:10px}
+  h1{font-size:19px}
+  .wk{display:none}
+  /* Preference controls, not navigation. */
+  .seg.quiet,.toggle,.ctrl-sep{display:none}
+  .seg button{padding:5px 12px;font-size:12.5px}
+  .score{padding:6px 0}
+  .team .pts{font-size:34px}
+  .odds .pct{font-size:24px}
+  .odds-ring{width:64px;height:64px}
+  .meta{font-size:10px;margin-top:6px}
+  /* The ticker is a broadcast lower-third. On a screen this short it is a
+     fixed bar over the content, plus 58px of body padding to clear itself -
+     about a third of the window spent on a nicety. */
+  #ticker{display:none!important}
+  body{padding-bottom:0}
+  /* The pitch keeps its 1200x300 geometry - it just stops being allowed to
+     take half the window. preserveAspectRatio does the rest, so the field is
+     still a field and not a squashed one. */
+  .fw{max-height:44vh}
+  .fw svg{max-height:44vh}
+  .pcard{max-height:94vh;overflow-y:auto}
+  .expop{max-height:88vh;overflow-y:auto}
+}
+
+/* On a narrow screen the scoreline's mark keeps its glyph and gives up its
+   word: "MASTER DEFLATORS" crushed to "M..." to make room for "AHEAD" is a
+   worse trade than an arrow on its own, and the arrow is the half that
+   carries the meaning. The label a screen reader gets is on the chip, so
+   nothing is lost there. */
+@media (max-width:620px){
+  .team .mk span{display:none}
+  .team .mk{padding:2px 4px}
+}
+
 @media (max-width:620px){
   .it-grid{grid-template-columns:1fr}
   .it-gone li{grid-template-columns:1fr;gap:3px}
@@ -1122,14 +1334,14 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .pl-kind{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.08em;
   text-align:center;border-radius:var(--r-chip);padding:2px 0;
   background:rgba(255,255,255,.14);color:var(--ink)}
-.pl-kind.TD{background:var(--green);color:#06210a}
+.pl-kind.TD{background:var(--fill-green);color:#fff;box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .pl-txt{font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;color:var(--ink-dim)}
 .pl-txt b{color:var(--ink);font-weight:700}
 .pl-mine{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.1em;
-  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:2px 8px;
+  background:var(--fill-green);color:#fff;border-radius:var(--r-chip);padding:2px 8px;
   white-space:nowrap}
-.pl-mine.opp{background:var(--opp);color:#fff}
+.pl-mine.opp{background:var(--fill-red);color:#fff}
 
 
 /* ── live: one game, on a field ─────────────────────────────
@@ -1160,7 +1372,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   white-space:nowrap}
 .sl-st{font-family:var(--cond);font-size:9.5px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-faint);white-space:nowrap}
-.sl-g.on .sl-st{color:var(--green)}
+.sl-g.on .sl-st{color:var(--ink)}
+.sl-st{display:inline-flex;align-items:center;gap:4px;justify-content:center}
 
 /* a club, as a crest or the letters when there is no drawable crest - same
    rule the team badges follow, for the same reason */
@@ -1180,7 +1393,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   text-transform:uppercase;color:var(--ink-faint)}
 .gp-note{font-family:var(--cond);font-size:10.5px;font-weight:600;letter-spacing:.06em;
   color:var(--ink-faint)}
-.gp-note.live{color:var(--green)}
+.gp-note.live{color:var(--ink)}
+.gp-note{display:inline-flex;align-items:center;gap:5px}
 
 .gsb{display:flex;align-items:center;gap:18px;margin-bottom:13px;flex-wrap:wrap}
 .gsb-s{display:flex;align-items:center;gap:10px}
@@ -1207,9 +1421,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   background:var(--navy-600);border:1px solid var(--hair);border-radius:var(--r-chip);
   padding:3px 12px}
 .sit-at{font-size:12px;color:var(--ink-dim)}
-.sit-y{font-family:var(--mono);font-size:11.5px;font-weight:600}
-.sit-y.up{color:var(--green)}
-.sit-y.down{color:var(--opp)}
+.sit-y{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);
+  display:inline-flex;align-items:center;gap:4px}
 .sit-now{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.08em;
   text-transform:uppercase;color:var(--hot);border:1px solid rgba(255,212,0,.4);
   border-radius:var(--r-chip);padding:2px 10px}
@@ -1276,8 +1489,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .pp-x{font-size:12px;line-height:1.35;color:var(--ink-dim)}
 .pp-tag{font-family:var(--cond);font-size:9px;font-weight:800;letter-spacing:.1em;
   border-radius:var(--r-chip);padding:2px 8px;white-space:nowrap}
-.pp-tag.sc{background:var(--hot);color:#231c00}
-.pp-tag.to{background:var(--opp);color:#fff}
+.pp-tag.sc{background:var(--fill-gold);color:#fff}
+.pp-tag.to{background:var(--fill-red);color:#fff}
 
 /* No source is a state, not an error, and it has to look different from an
    empty panel or a reader assumes the page broke. */
@@ -1358,7 +1571,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   border-radius:var(--r-chip);padding:4px 11px;white-space:nowrap}
 .lv-rec b{color:var(--ink)}
 .lv-you{font-family:var(--cond);font-size:10.5px;font-weight:800;letter-spacing:.11em;
-  background:var(--green);color:#06210a;border-radius:var(--r-chip);padding:3px 9px}
+  background:var(--fill-green);color:#fff;border-radius:var(--r-chip);padding:3px 9px}
 .lv-note{font-size:12.5px;color:var(--ink-faint);padding:2px 4px 10px;max-width:70ch}
 .lv-sec{font-family:var(--cond);font-size:11.5px;font-weight:700;letter-spacing:.16em;
   text-transform:uppercase;color:var(--ink-faint);padding:16px 4px 7px}
@@ -1390,7 +1603,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .lv-opp{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim)}
 .lv-st{font-size:12px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
-.lv-st.live{color:var(--hot);font-weight:600}
+.lv-st.live{color:var(--ink);font-weight:600}
+.lv-st{display:flex;align-items:center;gap:4px}
 .lv-st.final{color:var(--ink-faint)}
 .lv-flex{font-family:var(--cond);font-size:9.5px;font-weight:800;letter-spacing:.08em;
   color:var(--ink-faint);border:1px solid var(--hair);border-radius:4px;padding:0 3px}
@@ -1441,7 +1655,7 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   padding:8px 12px;color:var(--ink-dim);font-family:var(--ui);font-size:13.5px;
   font-weight:600;cursor:pointer;transition:.16s var(--ease);text-align:left}
 .ur-b:hover{background:var(--card-2);color:var(--ink)}
-.ur-b[aria-pressed="true"]{background:var(--green);color:#06210a;border-color:transparent}
+.ur-b[aria-pressed="true"]{background:var(--fill-green);color:#fff;border-color:transparent;box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .ur-b i{font-family:var(--mono);font-style:normal;font-size:11.5px;opacity:.75}
 .uni-main{min-width:0}
 .uni-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:11px}
@@ -1466,7 +1680,8 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .u-lg{font-size:11.5px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
 .u-hurt{font-family:var(--cond);font-size:10px;font-weight:800;letter-spacing:.08em;
-  background:var(--espn);color:#fff;border-radius:var(--r-chip);padding:2px 7px}
+  background:var(--fill-red);color:#fff;border-radius:var(--r-chip);padding:2px 7px;
+  box-shadow:inset 0 0 0 1px var(--chip-edge)}
 .uni-more{margin:12px auto 0;display:block;background:transparent;
   border:1.5px solid var(--hair-2);border-radius:var(--r-chip);color:var(--ink);
   font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:.13em;
@@ -1544,9 +1759,12 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
   </div>
 
   <div class="score" id="score" hidden>
-    <div class="team a"><div class="nm" id="youname">You</div>
+    <div class="team a exq" data-ex="projected" tabindex="0" role="button"
+         aria-expanded="false" aria-label="What this number is">
+      <div class="nmrow"><span class="nm" id="youname">You</span><span id="youmk"></span></div>
       <div class="pts" id="youpts">0.0</div><div class="proj" id="youproj">proj 0.0</div></div>
-    <div class="odds">
+    <div class="odds exq" data-ex="winprob" tabindex="0" role="button"
+         aria-expanded="false" aria-label="What this number is">
       <div class="odds-ring">
         <svg viewBox="0 0 112 112" aria-hidden="true">
           <circle class="ring-bg" cx="56" cy="56" r="50"></circle>
@@ -1557,7 +1775,9 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
         <div class="pct" id="odds">50%</div>
       </div>
       <div class="cap">win probability</div></div>
-    <div class="team b"><div class="nm" id="oppname">Opponent</div>
+    <div class="team b exq" data-ex="oppProjected" tabindex="0" role="button"
+         aria-expanded="false" aria-label="What this number is">
+      <div class="nmrow"><span id="oppmk"></span><span class="nm" id="oppname">Opponent</span></div>
       <div class="pts" id="opppts">0.0</div><div class="proj" id="oppproj">proj 0.0</div></div>
   </div>
   <div class="probbar" id="pbwrap" hidden><i id="pb" style="width:50%"></i></div>
@@ -1930,8 +2150,76 @@ let bands={},focusIdx=0,surface="web",openLeague=null,showImg=true;
 let liveSeq=0;                 // bumped by applyLive; see evalOf
 const nf=n=>(Number.isFinite(+n)?+n:0).toFixed(1);
 const initials=n=>(n||"").split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase();
-const src=p=>IMAGES["p_"+p.id]||p.img||"";
-const logoSrc=p=>IMAGES["t_"+p.team]||p.logo||"";
+/* ── marks ──────────────────────────────────────────────────────────────
+   The six states, their glyph, and the sentence a screen reader gets. Kept in
+   one table for the reason `Theme.Mark` is one enum on the headset: the same
+   state must not come to mean two things in two panels, and a glyph chosen at
+   the call site is a glyph that drifts. */
+const MARK={
+  ahead:  {g:"↑", say:"ahead"},
+  behind: {g:"↓", say:"behind"},
+  level:  {g:"=",      say:"level"},
+  caution:{g:"!",      say:"worth a look"},
+  live:   {g:"",       say:"live", dot:true},
+  hurt:   {g:"✚", say:"on the injury wire"},
+};
+/* Ahead or behind from a signed figure, so no call site decides it twice and
+   gets a zero pointing the wrong way. `band` is the deadzone: a margin of
+   0.02 points is level, not a lead. */
+const markOf=(v,band=0.05)=>Math.abs(v)<band?"level":(v>0?"ahead":"behind");
+/* The opaque ground for a position chip, as a CSS value. One helper rather
+   than six template literals: two of the six call sites were interpolating an
+   unescaped position straight into a style attribute, and a whitelist here
+   ends that whole category rather than adding a sixth esc(). */
+const POSF={QB:1,RB:1,WR:1,TE:1,K:1,DEF:1,FLEX:1};
+const posFill=pos=>`var(--posfill-${POSF[String(pos||"").toUpperCase()]
+  ?String(pos).toUpperCase():"FLEX"})`;
+function mk(kind,text,cls){
+  const m=MARK[kind];if(!m)return"";
+  const glyph=m.dot?'<i class="dot"></i>':`<i>${m.g}</i>`;
+  const word=text?`<span>${esc(text)}</span>`:"";
+  return `<span class="mk ${kind}${text?"":" glyphonly"}${cls?" "+cls:""}"`
+        +` role="img" aria-label="${esc(text?text+", "+m.say:m.say)}"`
+        +` title="${esc(m.say)}">${glyph}${word}</span>`;}
+
+/* ── portraits ──────────────────────────────────────────────────────────
+   The payload carries ESPN's bare path, which serves a 600px headshot and a
+   500px club mark. Every surface here draws smaller than that and a good half
+   of them draw very much smaller, so on a 1x display the browser is throwing
+   most of those pixels away and on a 2x display it is still upscaling the
+   ones it kept. `live.py` exposes the combiner; this asks it for a width that
+   suits the box the image actually lands in.
+
+   Deliberately a ladder rather than one number. The universe table draws a
+   38px avatar and can run to six hundred rows: asking for the 1200px original
+   there would be most of a megabyte a row for pixels no one can see. The
+   player card is one image at 267px and can afford the real thing. */
+const IMGW={
+  mine:64,      // .mn-f, 30px
+  badge:64,     // .tbadge 30 / .sm 22
+  badgeLg:96,   // .tbadge.lg 44
+  club:64,      // .club 26
+  clubLg:96,    // .club.lg 40
+  row:96,       // .r-face, bitmap box 45.6
+  face:112,     // .face 50.4, story 55.2
+  faceLead:144, // .face.lead 67.2, injury desk 67.2
+  tileSm:160,   // .b-sm .shot ~72
+  tileMd:360,   // .b-md/.b-lg .shot ~175 (TV ~186)
+  tileXl:560,   // .b-xl .shot ~269 (TV ~396)
+  card:560,     // .pc-shot ~267
+  watermark:480,// .logo, a greyscale wash at 11% - detail is wasted on it
+  cardLogo:800, // .pc-logo ~405
+};
+/* Rewrites a bare espncdn path into a combiner request. Anything else - a
+   data: URI from `--embed`, an empty string, a URL that already carries a
+   width - is handed back untouched, so a Pages build with images inlined and
+   a live board both keep working. */
+function atW(url,w){
+  if(!url||!w||url.startsWith("data:")||url.includes("combiner/i"))return url;
+  const m=/^https?:\/\/a\.espncdn\.com(\/i\/.+\.png)$/.exec(url);
+  return m?`https://a.espncdn.com/combiner/i?img=${m[1]}&w=${w}`:url;}
+const src=(p,w)=>atW(IMAGES["p_"+p.id]||p.img||"",w);
+const logoSrc=(p,w)=>atW(IMAGES["t_"+p.team]||p.logo||"",w);
 const $=id=>document.getElementById(id);
 const grid=$("grid"),lgrid=$("lgrid");
 function applyLive(live){
@@ -2031,15 +2319,30 @@ const nfp=v=>(v==null?"\u2014":nf(v));
    text and classes change. */
 const lnodes=new Map(),tnodes=new Map();
 const setText=(el,v)=>{if(el.textContent!==v)el.textContent=v;};
+/* Which side is ahead, as a mark rather than as the colour of the digits.
+   Driven by the projected margin, not by the score on the board: before
+   kickoff every score is 0.0 and a scoreline with no mark on it at all would
+   be the one moment the reader most wants one. */
+function scoreMarks(m){
+  const y=$("youmk"),o=$("oppmk");if(!y||!o)return;
+  const k=markOf(m.margin,0.05);
+  const flip={ahead:"behind",behind:"ahead",level:"level"}[k];
+  // The word as well as the glyph here. This is the headline state of the
+  // whole page and it sits beside a 66px figure; a bare 8px arrow next to
+  // that reads as a bullet rather than as the answer.
+  const say={ahead:"Ahead",behind:"Behind",level:"Level"};
+  const html=[mk(k,say[k]),mk(flip,say[flip])];
+  if(y.innerHTML!==html[0])y.innerHTML=html[0];
+  if(o.innerHTML!==html[1])o.innerHTML=html[1];}
 
 function faceNode(c,lead){
   const f=document.createElement("span");
   f.className="face"+(lead?" lead":"");
   f.style.setProperty("--fc",c.color||"#222");
-  const u=src(c);
+  const u=src(c,lead?IMGW.faceLead:IMGW.face);
   if(u){
     const im=document.createElement("img");
-    im.alt="";im.src=u;
+    im.alt="";im.src=u;im.loading="lazy";im.decoding="async";
     im.onerror=()=>{f.classList.add("noshot");im.remove();};
     f.appendChild(im);
   } else f.classList.add("noshot");
@@ -2092,9 +2395,12 @@ const NEWS=(DATA.headlines&&DATA.headlines.stories)||[];
    one tab across, for choosing which league you are looking at. */
 let home="board";
 
-const faceHTML=p=>`<span class="r-face" style="--fc:${p.color||'#222'}">`+
-  (src(p)?`<img alt="" src="${src(p)}" onerror="this.closest('.r-face').classList.add('noshot');this.remove()">`:"")+
-  `<span class="ini">${initials(p.name)}</span></span>`;
+const faceHTML=(p,w)=>{
+  const u=src(p,w||IMGW.row);
+  return `<span class="r-face" style="--fc:${p.color||'#222'}">`+
+    (u?`<img alt="" loading="lazy" decoding="async" src="${esc(u)}" `
+      +`onerror="this.closest('.r-face').classList.add('noshot');this.remove()">`:"")+
+    `<span class="ini">${initials(p.name)}</span></span>`;};
 const AGO=iso=>{
   if(!iso)return "";
   const d=new Date(iso.length<=10?iso+"T12:00:00Z":iso);
@@ -2167,7 +2473,7 @@ function renderPlayersFeed(force){
     const when=p.rz?"RED ZONE":p.live?p.state
       :p.final?"FINAL":(p.kickoff?KICK(p.kickoff):"—");
     return `<button class="story${p.rz?" rz":""}" data-pid="${p.id}">`+
-      `<div>${faceHTML(p)}</div>`+
+      `<div>${faceHTML(p,IMGW.face)}</div>`+
       `<div><div class="st-h">${p.name}`+
       (hurtIds.has(String(p.id))
         ? `<span class="st-hurt">${hurtById[String(p.id)].label}</span>` : "")+
@@ -2214,7 +2520,7 @@ function renderNewsFeed(){
         (st.players.length>3?` +${st.players.length-3}`:"")
       : st.players[0];
     return `<a class="story" href="${st.url||"#"}" target="_blank" rel="noopener">`+
-      `<div>${faceHTML(p)}</div>`+
+      `<div>${faceHTML(p,IMGW.face)}</div>`+
       `<div><div class="st-h">${st.headline}</div>`+
       `<div class="st-m">${who}</div></div>`+
       `<div class="st-when">${AGO(st.published)}</div></a>`;}).join("")
@@ -2693,8 +2999,257 @@ function syncProjBar(){
   if(!$("pbar").hidden)renderProjBar();
   if(!$("pcmp").hidden)renderCompare();}
 
+/* ── what a number is, and what is wrong with it ────────────────────────
+   Ported from `Explain` in the visionOS app, sentence for sentence, so the
+   same figure cannot come to mean two things on two surfaces: a reader who
+   opens "projected" on the headset and on the web should be told the same
+   thing twice, not two different things. Every sentence describes what the
+   code in leverage.js, the API or the store already does. None of it is a
+   new claim. */
+
+/* One sentence naming whose numbers a figure is made of, built from the
+   catalogue rather than written out per tile - which is how a figure with no
+   room for a label still says whose it is. */
+function whose(){
+  if(!PROJLOADED.length)
+    return "No projection source is loaded on the server, so this is the "+
+      "figure the league's own board shipped inline.";
+  if(projSrc==="consensus"){
+    const names=PROJLOADED.map(projLabel);
+    const list=names.length>1
+      ? names.slice(0,-1).join(", ")+" and "+names[names.length-1]
+      : names[0];
+    return `The projections are the consensus: the mean of the `+
+      `${PROJLOADED.length} sources loaded (${list}). A source that is not `+
+      `loaded contributes nothing to it — it cannot produce a zero or a `+
+      `share of a mean.`;}
+  const m=projMeta(projSrc);
+  const credit=m&&m.attribution?" — "+m.attribution:"";
+  return `The projections are ${projLabel(projSrc)}'s${credit}. Pick another `+
+    `source from the bar and every figure on this surface is rebuilt from it, `+
+    `not merely relabelled.`;}
+
+const EXPLAIN={
+  projected:()=>({title:"Projected total",
+    what:"Where this line-up is expected to finish the week.",
+    how:"Points already banked, plus what is left of each starter's "+
+        "projection scaled by how much of his game is still to play. "+whose(),
+    caveat:"Before kickoff it is entirely projection: the source's numbers, "+
+        "added up, with nothing yet decided."}),
+  oppProjected:()=>({title:"Opponent's projected total",
+    what:"The same arithmetic, run on the other side of your matchup.",
+    how:"Their banked points plus the unplayed remainder of each of their "+
+        "starters' projections. "+whose(),
+    caveat:"It assumes they leave the line-up they have set. A late swap for "+
+        "somebody on a bye moves this and nothing here will know until the "+
+        "feed does."}),
+  margin:()=>({title:"Margin",
+    what:"Your projected total minus your opponent's.",
+    how:"The two projections above, subtracted. "+whose(),
+    caveat:"Before kickoff this is a difference between two forecasts, not a "+
+        "lead — and a difference between two sources' forecasts changes "+
+        "when you change source."}),
+  winprob:()=>({title:"Win probability",
+    what:"The chance you finish this week ahead.",
+    how:"The projected margin divided by the combined standard deviation of "+
+        "every starter's remaining game, read off a normal curve. Each man's "+
+        "deviation is his position's full-game sigma times the square root of "+
+        "the fraction of his game left, so a finished player adds nothing to "+
+        "the uncertainty.",
+    caveat:"It treats players as independent and uses one sigma per position "+
+        "rather than one per man. It is a model, and it is the same model the "+
+        "headset and the Python both run."}),
+  intensity:()=>({title:"How close it is",
+    what:"How much of this matchup is still a question.",
+    how:"Twice the smaller of the two win probabilities, so a coin flip is 1 "+
+        "and a decided week is 0.",
+    caveat:"It says the week is close, not that it is worth watching — "+
+        "two bad teams can be very close."}),
+  leverage:()=>({title:"Leverage",
+    what:"How much this one player can still move your week.",
+    how:"The normal density at the current margin, times his remaining "+
+        "uncertainty, over the combined uncertainty of the matchup. It is "+
+        "what sizes every cell on the board.",
+    caveat:"It measures how much he can swing the result, not how well he is "+
+        "playing. A big cell in a blowout is a player who cannot rescue it."}),
+  leagues:()=>({title:"Leagues",
+    what:"The leagues this board is about.",
+    how:"Everything the server sends. A league you have put away is not "+
+        "counted, which is why hiding one changes this number.",caveat:""}),
+  rostered:()=>({title:"Distinct players",
+    what:"How many different men you roster.",
+    how:"Counted once each across every league you follow, so a man you own "+
+        "in three leagues is one player here.",caveat:""}),
+  projectedToday:()=>({title:"Projected points, everywhere",
+    what:"Every league's projected total for your team, added together.",
+    how:"The sum of the projection for your starters in each league. "+whose(),
+    caveat:"Leagues can score differently, so this is a total rather than a "+
+        "comparable figure."}),
+  aheadBehind:()=>({title:"Ahead and behind",
+    what:"How many of your matchups you are currently ahead in.",
+    how:"One win for each league where your starters out-project your "+
+        "opponent's, counted right now. "+whose(),
+    caveat:"This Sunday only. It is not a season forecast and it does not "+
+        "know your schedule. A matchup inside a point can flip on the source "+
+        "alone."}),
+  toPlay:()=>({title:"Yet to play",
+    what:"How many of your starters have not kicked off.",
+    how:"Counted off the live feed's per-club game state, across every "+
+        "league you follow.",
+    caveat:"A player on a bye is counted separately rather than as yet to "+
+        "play, because he is not going to play at all."}),
+  kickoff:()=>({title:"Next kickoff",
+    what:"The earliest game with a starter of yours in it.",
+    how:"The minimum kickoff time over the clubs your starters play for, in "+
+        "your own timezone.",caveat:""}),
+  accuracy:()=>({title:"These projections",
+    what:"How wrong this source has been lately.",
+    how:"Mean absolute error against what players actually scored, over the "+
+        "weeks already played this season, with the direction it leans.",
+    caveat:"A mean error over a handful of weeks is a small sample, and it is "+
+        "measured across all players rather than the ones you start."}),
+  bench:()=>({title:"Opponent leaves",
+    what:"The share of available points this manager has historically left "+
+        "on his bench.",
+    how:"His best possible line-up against the one he actually started, "+
+        "averaged over the seasons in the database.",
+    caveat:"The bench optimum ignores slot eligibility, so it is an upper "+
+        "bound on what he could really have started."}),
+  luck:()=>({title:"Your schedule luck",
+    what:"How much of your record is the draw rather than the roster.",
+    how:"Your win rate minus your all-play win rate — what you would "+
+        "have gone if you had played everybody every week — across all "+
+        "seasons.",
+    caveat:"Correlational and on a small sample. It says the schedule was "+
+        "kind, not that the team was bad."}),
+  floor:()=>({title:"Floor",
+    what:"A bad week for him, from his own record.",
+    how:"His 20th percentile score across the games he has actually played.",
+    caveat:"A percentile of what he has done, not a projection. Weeks he did "+
+        "not play are excluded, because a zero for a man who was inactive is "+
+        "not a bad game."}),
+  ceiling:()=>({title:"Ceiling",
+    what:"A good week for him, from his own record.",
+    how:"His 80th percentile score across the games he has actually played.",
+    caveat:"A percentile of what he has done, not a projection. Weeks he did "+
+        "not play are excluded, because a zero for a man who was inactive is "+
+        "not a bad game."}),
+  livePoints:()=>({title:"Live points",
+    what:"What he has scored so far this week.",
+    how:"From the shared live feed, which is the same snapshot every viewer "+
+        "of this board gets.",
+    caveat:"Providers restate points after a stat correction, so a figure can "+
+        "move after his game has finished."}),
+  playerProj:()=>{
+    const d={title:"Projection",
+      what:"What he is projected for this week, from "+projLabel(projSrc)+".",
+      how:whose(),caveat:""};
+    const sp=cardCell&&PROJ.players
+      ?(PROJ.players.find(r=>String(r.id)===String(cardCell.id))||{}).spread
+      :null;
+    if(sp!=null)
+      d.caveat=`The loaded sources are ${nf(sp)} points apart on him`+
+        (sp>=2?", which is enough to move him in or out of a line-up. "
+              :". ")+
+        "Open Compare on the projection bar to see it broken down by source.";
+    return d;},
+};
+
+/* One popover, moved and refilled. Several would need several dismiss
+   handlers and would let two contradictory explanations sit open at once. */
+let exOpen=null;
+function exPop(){
+  let el=$("expop");
+  if(!el){
+    el=document.createElement("div");
+    el.id="expop";el.className="expop";el.hidden=true;
+    el.setAttribute("role","dialog");
+    document.body.appendChild(el);}
+  return el;}
+function closeEx(){
+  const el=$("expop");if(el)el.hidden=true;
+  if(exOpen){exOpen.setAttribute("aria-expanded","false");exOpen=null;}}
+function openEx(trigger,key){
+  const make=EXPLAIN[key];if(!make)return;
+  if(exOpen===trigger){closeEx();return;}
+  closeEx();
+  const d=make();
+  const el=exPop();
+  el.innerHTML=`<button class="x" aria-label="Close">✕</button>`+
+    `<h4>${esc(d.title)}</h4><p class="what">${esc(d.what)}</p>`+
+    `<div class="row"><span class="f">ƒ</span><p>${esc(d.how)}</p></div>`+
+    (d.caveat?`<div class="row">${mk("caution","","sm")}`+
+      `<p>${esc(d.caveat)}</p></div>`:"");
+  el.hidden=false;
+  // Positioned after it is measurable, and clamped to the viewport rather
+  // than anchored blindly below: on a landscape phone there is often no room
+  // underneath at all, and a popover half off the bottom of a 390px-tall
+  // window is the same as no popover.
+  const r=trigger.getBoundingClientRect(),b=el.getBoundingClientRect();
+  const pad=10;
+  let left=Math.min(Math.max(pad,r.left),innerWidth-b.width-pad);
+  let top=r.bottom+8;
+  if(top+b.height>innerHeight-pad)
+    top=Math.max(pad,r.top-b.height-8);
+  if(top+b.height>innerHeight-pad)top=Math.max(pad,innerHeight-b.height-pad);
+  el.style.left=left+"px";el.style.top=top+"px";
+  trigger.setAttribute("aria-expanded","true");
+  exOpen=trigger;
+  el.querySelector(".x").addEventListener("click",closeEx);}
+
+/* Delegated, because every one of these blocks is rebuilt from innerHTML on
+   a tick and a listener bound per node would be re-bound per tick. */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-ex]");
+  if(t){e.stopPropagation();openEx(t,t.dataset.ex);return;}
+  if(!e.target.closest("#expop"))closeEx();});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")closeEx();
+  if((e.key==="Enter"||e.key===" ")&&document.activeElement
+     &&document.activeElement.matches("[data-ex]")){
+    e.preventDefault();
+    openEx(document.activeElement,document.activeElement.dataset.ex);}});
+addEventListener("resize",closeEx);
+/* A figure that scrolls out from under its own explanation is worse than one
+   that never had one. */
+addEventListener("scroll",()=>{if(exOpen)closeEx();},true);
+
+/* The attributes that make a block explain itself. */
+const exAttr=key=>EXPLAIN[key]
+  ?` class="exq" tabindex="0" role="button" aria-expanded="false"`
+   +` data-ex="${key}" aria-label="What this number is"`
+  :"";
+
 /* ── side by side ───────────────────────────────────────────────────── */
 let cmpSort="spread",cmpScope="mine";
+
+/* Each source's own positional rank for a player, "QB4" style.
+   Computed here rather than taken from the payload's own rank, which is
+   ranked for whichever source was asked for - quoting it beside a different
+   source's points would put ESPN's rank next to Sleeper's number.
+   This is the sharp end of a disagreement and the reason the whole panel
+   earns its space: two sources four tenths apart on a quarterback can still
+   be naming a different QB2, and half a point of "agreement" between a QB4
+   and a QB13 is a start and a sit. Ranked over every player the server sent,
+   not just the ones on screen, or the number would mean "fourth of the
+   fifteen I happened to draw".
+   Memoised because the table wants a full ordering per source and would
+   otherwise sort several hundred rows once per column per repaint. */
+const posRankCache=new Map();
+function posRanks(source){
+  const key=source+"|"+(PROJ.players||[]).length;
+  const hit=posRankCache.get(key);
+  if(hit)return hit;
+  const men=[];
+  for(const r of (PROJ.players||[])){
+    const v=source==="consensus"?r.consensus:(r.by||{})[source];
+    if(v!=null&&r.pos)men.push([r,+v]);}
+  men.sort((a,b)=>b[1]-a[1]);
+  const seen={},out={};
+  for(const [r] of men){
+    const n=(seen[r.pos]||0)+1;seen[r.pos]=n;out[String(r.id)]=r.pos+n;}
+  posRankCache.set(key,out);
+  return out;}
 
 function cmpRows(){
   const mine=new Set();
@@ -2714,6 +3269,7 @@ function renderCompare(force){
   const tbl=$("pcmptbl");
   const srcs=PROJLOADED;
   const rows=cmpRows().slice(0,60);
+  const ranks=srcs.map(posRanks);
   const sig=[cmpSort,cmpScope,projSrc,srcs.join(","),rows.length].join("|");
   if(!force&&tbl.dataset.k===sig)return;
   tbl.dataset.k=sig;
@@ -2728,14 +3284,16 @@ function renderCompare(force){
     const hi=got.length>1?Math.max(...got):null,lo=got.length>1?Math.min(...got):null;
     return `<div class="crow"><span class="num dim">${i+1}</span>`+
       `<span class="nm">${esc(m.name)}</span>`+
-      `<span class="c-pos"><span class="pos" style="--pc:var(--pos-${esc(m.pos)},#8E93A0)">`+
+      `<span class="c-pos"><span class="pos" style="--pc:${posFill(m.pos)}">`+
         `${esc(m.pos)}</span></span>`+
       `<span class="c-tm dim">${esc(m.team)}</span>`+
       srcs.map((k,j)=>{
         const v=vals[j];
         if(v==null)return '<span class="num dim">&mdash;</span>';
         const cls=hi!=null&&v===hi?"hi":(lo!=null&&v===lo?"lo":"");
-        return `<span class="num ${cls}">${nf(v)}</span>`;}).join("")+
+        const rk=ranks[j][String(m.id)]||"";
+        return `<span class="num ${cls}">${nf(v)}`+
+          (rk?`<b class="c-rk">${esc(rk)}</b>`:"")+`</span>`;}).join("")+
       // n travels with the consensus on every single row. A mean of one that
       // does not say so is the whole failure this feature exists to avoid.
       `<span class="num c-cons">${m.consensus==null?"&mdash;":nf(m.consensus)}`+
@@ -2751,7 +3309,11 @@ function renderCompare(force){
     `Showing ${rows.length} of ${many}. <b>Gap</b> is the distance between the `+
     `highest and lowest source for that player &mdash; the disagreement itself, `+
     `left in rather than averaged away. A row marked <b>only 1</b> has one `+
-    `source's number and therefore no consensus worth the word.`;}
+    `source's number and therefore no consensus worth the word. Under each `+
+    `figure is the rank <i>that source</i> gives him at his position, over `+
+    `all ${(PROJ.players||[]).length} players it projected: two sources half `+
+    `a point apart can still be naming a different QB2, and that is a start `+
+    `and a sit.`;}
 
 $("pbchips").addEventListener("click",e=>{
   const b=e.target.closest(".pb-chip");
@@ -2888,7 +3450,7 @@ function renderHurt(){
     // currently selected and so not in the cross-league roster
     const p=ALLP.find(x=>String(x.id)===String(h.id))||h;
     return `<button class="hurt-item" data-pid="${h.id}">`+
-      `<div>${faceHTML(p)}</div>`+
+      `<div>${faceHTML(p,IMGW.faceLead)}</div>`+
       `<div><div class="hurt-who"><span class="hurt-badge">${h.label}</span>`+
         `<span class="hurt-name">${h.name}</span>`+
         `<span class="st-m" style="margin:0">${h.pos}</span></div>`+
@@ -2931,13 +3493,16 @@ function renderDaybar(evals){
         nextKick=g.kickoff;}}
   const cards=[
     ["Leagues", String(evals.length),
-     `${ahead} ahead · ${evals.length-ahead} behind`, ahead>evals.length/2?"good":""],
+     `${ahead} ahead · ${evals.length-ahead} behind`,
+     ahead>evals.length/2?"good":"", ahead>evals.length/2?"ahead":"behind",
+     "aheadBehind"],
     ["Projected today", nf(proj),
-     "your combined starters across every league", ""],
+     "your combined starters across every league", "", "", "projectedToday"],
     ["Yet to play", String(toPlay),
-     playing?`${playing} in progress · ${done} final`:`${done} final`, ""],
+     playing?`${playing} in progress · ${done} final`:`${done} final`, "", "",
+     "toPlay"],
     ["Next kickoff", nextKick?KICK(nextKick):"—",
-     "earliest game with a starter of yours in it", ""],
+     "earliest game with a starter of yours in it", "", "", "kickoff"],
   ];
   if(unset)
     cards.push(["Pick your team", String(unset),
@@ -2949,8 +3514,10 @@ function renderDaybar(evals){
   const key=cards.map(c=>c[1]).join("|")+"|"+line;
   if(box.dataset.k===key)return;
   box.dataset.k=key;
-  box.innerHTML=cards.map(([k,v,n,cls])=>
-    `<div class="db ${cls}"><div class="db-k">${k}</div>`+
+  box.innerHTML=cards.map(([k,v,n,cls,mark,ex])=>
+    `<div class="db ${cls}"${exAttr(ex)}><div class="db-krow">`+
+    `${mark?mk(mark,"","sm"):(cls==="act"?mk("caution","","sm"):"")}`+
+    `<span class="db-k">${k}</span></div>`+
     `<div class="db-v">${v}</div><div class="db-n">${n}</div></div>`).join("")
     + (line?`<div class="insight"><span class="ins-b">Insight</span>`+
             `<span class="ins-t">${line}</span></div>`:"");}
@@ -2994,9 +3561,13 @@ function makeLeagueCell(L){
   el.innerHTML=
     `<div class="lc-top"><span class="lc-name"></span><span class="lc-wk"></span></div>`+
     `<div class="lc-score">`+
-      `<div class="lc-side a"><div class="lc-team"></div><div class="lc-pts"></div></div>`+
+      `<div class="lc-side a"><div class="lc-team"></div>`+
+      `<div class="lc-ptsrow"><span class="lc-pts"></span>`+
+      `<span class="lc-mk"></span></div></div>`+
       `<div class="lc-odds"></div>`+
-      `<div class="lc-side b"><div class="lc-team"></div><div class="lc-pts"></div></div></div>`+
+      `<div class="lc-side b"><div class="lc-team"></div>`+
+      `<div class="lc-ptsrow"><span class="lc-mk"></span>`+
+      `<span class="lc-pts"></span></div></div></div>`+
     `<div class="lc-bar"><i></i></div><div class="faces"></div>`+
     `<div class="lc-open">Open board →</div>`+
     `<div class="lc-pick"><span class="lc-pk">You</span>`+
@@ -3050,6 +3621,16 @@ function renderLeagues(minute){
       `wk ${L.week} · ${L.season} · ${rel.reason}`);
     setText(el.querySelector(".lc-side.a .lc-pts"),nf(m.yourScore));
     setText(el.querySelector(".lc-side.b .lc-pts"),nf(m.oppScore));
+    // Which way this league is going. It used to be the colour of the two
+    // figures; taking the tint off without putting the mark on would have
+    // removed the information rather than re-said it.
+    {const k=markOf(m.margin,0.05),
+       flip={ahead:"behind",behind:"ahead",level:"level"}[k],
+       a=el.querySelector(".lc-side.a .lc-mk"),
+       b=el.querySelector(".lc-side.b .lc-mk"),
+       ha=mk(k,"","sm"),hb=mk(flip,"","sm");
+     if(a.dataset.k!==ha){a.innerHTML=ha;a.dataset.k=ha;}
+     if(b.dataset.k!==hb){b.innerHTML=hb;b.dataset.k=hb;}}
     setText(el.querySelector(".lc-odds"),Math.round(m.winProb*100)+"%");
     el.querySelector(".lc-bar i").style.width=(m.winProb*100)+"%";
     el.classList.toggle("unset",!L.chosen);
@@ -3087,24 +3668,38 @@ function renderLeagues(minute){
   document.querySelector(".wrap").style.setProperty("--sat",
     (0.3+(hot?hot.m.intensity:1)*0.7).toFixed(2));}
 
+/* A tile's portrait is drawn at 118% of its row height, and the rows differ by
+   a factor of nearly four between a small tile and an extra-large one. One
+   width for all of them is either soft on the big tile or wasteful on the
+   twenty small ones. */
+const tileW=band=>band==="xl"?IMGW.tileXl:band==="sm"?IMGW.tileSm:IMGW.tileMd;
+function growShot(el,c){
+  const im=el.querySelector("img.shot");if(!im)return;
+  const want=tileW(c.band);
+  if((+im.dataset.w||0)>=want)return;    // never re-fetch to go smaller
+  const u=src(c,want);
+  if(u&&u!==im.src){im.src=u;}
+  im.dataset.w=want;}
 function makeTile(c){
   const el=document.createElement("div");
   el.dataset.id=c.id;el.tabIndex=0;
   el.style.setProperty("--tc",c.color||"#666");
-  const lg=logoSrc(c);
+  const lg=logoSrc(c,IMGW.watermark);
   el.innerHTML=
-    (lg?`<img class="logo" alt="" src="${lg}" onerror="this.remove()">`:"")+
+    (lg?`<img class="logo" alt="" loading="lazy" decoding="async" `
+       +`src="${esc(lg)}" onerror="this.remove()">`:"")+
     `<span class="mono">${initials(c.name)}</span>`+
     `<div class="t-head"><span class="t-name"></span>`+
-    `<span class="pos" style="--pc:var(--pos-${c.pos},#8E93A0)">${c.slot}</span></div>`+
+    `<span class="pos" style="--pc:${posFill(c.pos)}">${c.slot}</span></div>`+
     `<div class="t-foot"><span class="t-nums"><span class="t-pts"></span>`+
     `<span class="t-proj"></span></span>`+
     `<span style="text-align:right"><span class="t-state"></span><br>`+
     `<span class="t-sub"></span></span></div>`;
-  const u=src(c);
+  const u=src(c,tileW(c.band));
   if(u){
     const im=document.createElement("img");
-    im.className="shot";im.alt="";im.src=u;
+    im.className="shot";im.alt="";im.src=u;im.decoding="async";
+    im.dataset.w=tileW(c.band);
     im.onerror=()=>{el.classList.add("noshot");im.remove();};
     el.insertBefore(im,el.firstChild);
   } else el.classList.add("noshot");
@@ -3118,6 +3713,7 @@ function renderLeague(minute,statsOnly){
   if(statsOnly){                       // rankings are up; the grid is not visible
     const m=evaluate(L.cells.slice(),bands);
     setText($("youpts"),nf(m.yourScore));setText($("opppts"),nf(m.oppScore));
+    scoreMarks(m);
     setText($("youproj"),"proj "+nf(m.yourProjected));
     setText($("oppproj"),"proj "+nf(m.oppProjected));
     setText($("odds"),Math.round(m.winProb*100)+"%");
@@ -3144,6 +3740,7 @@ function renderLeague(minute,statsOnly){
       el.addEventListener("click",()=>openCard(cellById(c.id)));
       el.addEventListener("keydown",ev=>{
         if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();openCard(cellById(c.id));}});}
+    growShot(el,c);
     el.className=`tile ${c.side} b-${c.band}`+(c.state==="RZ"?" rz":"")+
       (c.remaining<=0?" done":"")+(el.classList.contains("noshot")?" noshot":"");
     el.style.setProperty("--lev",Math.min(100,c.share*260)+"%");
@@ -3183,6 +3780,7 @@ function renderLeague(minute,statsOnly){
   if(surface==="xr")applySpatial(grid);   // the spatial pass owns transform
 
   setText($("youpts"),nf(m.yourScore));setText($("opppts"),nf(m.oppScore));
+  scoreMarks(m);
   setText($("youproj"),"proj "+nf(m.yourProjected));
   setText($("oppproj"),"proj "+nf(m.oppProjected));
   setText($("odds"),Math.round(m.winProb*100)+"%");
@@ -3231,7 +3829,8 @@ function openCard(c,leagueId){
   pcard.querySelector(".pc-what").hidden=!inMatchup;
   pcard.style.setProperty("--tc",c.color||"#666");
   pcard.classList.toggle("rz",c.state==="RZ");
-  const shot=$("pcshot"),logo=$("pclogo"),u=src(c),lg=logoSrc(c);
+  const shot=$("pcshot"),logo=$("pclogo"),
+        u=src(c,IMGW.card),lg=logoSrc(c,IMGW.cardLogo);
   pcard.classList.remove("noshot");
   if(u){shot.style.display="";shot.src=u;
     shot.onerror=()=>{shot.style.display="none";pcard.classList.add("noshot");};}
@@ -3245,7 +3844,7 @@ function openCard(c,leagueId){
     :(L?` · ${c.started?"starting":"bench"} · ${c.slot||c.pos}`
        :" · not on a roster of yours")));
   const pos=$("pcpos");pos.textContent=c.pos;
-  pos.style.setProperty("--pc",`var(--pos-${c.pos},#8E93A0)`);
+  pos.style.setProperty("--pc",posFill(c.pos));
   // Green is yours and red is theirs; a player in neither line-up is neither,
   // and colouring him red said "opponent" about a free agent.
   $("pcpts").style.color=!c.side?"var(--ink)"
@@ -3598,10 +4197,11 @@ function makeRow(pl){
   el.innerHTML=
     `<span class="r-rk"></span>`+
     `<span class="r-face" style="--fc:${pl.color||'#222'}">`+
-      (src(pl)?`<img alt="" src="${src(pl)}">`:"")+
+      (src(pl,IMGW.row)?`<img alt="" loading="lazy" decoding="async" `
+        +`src="${esc(src(pl,IMGW.row))}">`:"")+
       `<span class="ini">${initials(pl.name)}</span></span>`+
     `<span class="r-nm"><span class="nmtxt">${pl.name}</span>`+
-      `<span class="pos" style="--pc:var(--pos-${pl.pos},#8E93A0)">${pl.pos}</span></span>`+
+      `<span class="pos" style="--pc:${posFill(pl.pos)}">${pl.pos}</span></span>`+
     `<span class="r-club">${pl.team}</span>`+
     `<span class="r-own"></span>`+
     `<span class="r-num r-pts"></span>`+
@@ -3844,27 +4444,32 @@ function renderPregame(L,m){
     .filter(Boolean))].sort();
   const cards=[
     ["Projected", `${nf(m.yourProjected)} – ${nf(m.oppProjected)}`,
-     `${Math.round(m.winProb*100)}% on projections alone`, ""],
+     `${Math.round(m.winProb*100)}% on projections alone`, "", "projected"],
     ["First kickoff", kicks.length?KICK(kicks[0]):"—",
-     `${kicks.length} game window${kicks.length===1?"":"s"} across your line-up`, ""],
+     `${kicks.length} game window${kicks.length===1?"":"s"} across your line-up`,
+     "", "kickoff"],
   ];
   if(opp.bench!=null)
     cards.push(["Opponent leaves", opp.bench+"%",
       `${L.opp.name} has historically left this share of available points on the bench`,
-      "edge"]);
+      "edge","bench"]);
   if(you.luck!=null)
     cards.push(["Your schedule luck", (you.luck>0?"+":"")+you.luck,
-      "points of win rate above your all-play record, across all seasons", ""]);
+      "points of win rate above your all-play record, across all seasons",
+      "","luck"]);
   if(acc)
     cards.push(["These projections", "±"+acc.mae,
       `${acc.source} mean error over ${acc.weeks} weeks, leaning `+
       `${acc.bias>0?"high":"low"} by ${Math.abs(acc.bias)}. Top-12 hit ${acc.hit}%.`,
-      "warn"]);
+      "warn","accuracy"]);
   const key=cards.map(c=>c[1]).join("|");
   if(box.dataset.k===key)return;
   box.dataset.k=key;
-  box.innerHTML=cards.map(([k,v,n,cls])=>
-    `<div class="pg ${cls}"><div class="pg-k">${k}</div>`+
+  const PGMARK={edge:"ahead",warn:"caution"};
+  box.innerHTML=cards.map(([k,v,n,cls,ex])=>
+    `<div class="pg ${cls}"${exAttr(ex)}><div class="pg-krow">`+
+    `${PGMARK[cls]?mk(PGMARK[cls],"","sm"):""}`+
+    `<span class="pg-k">${k}</span></div>`+
     `<div class="pg-v">${v}</div><div class="pg-n">${n}</div></div>`).join("");}
 
 $("mmodes").addEventListener("click",e=>{
@@ -3907,7 +4512,8 @@ function badgeHTML(t,cls){
   // the hole would be permanent and silent.
   const drawable=t&&t.logo&&t.logoRaster&&showImg;
   return `<span class="tbadge ${cls||""}" style="--tb:${teamTint(name)}">`+
-    (drawable?`<img alt="" src="${esc(t.logo)}" onerror="`+
+    (drawable?`<img alt="" loading="lazy" decoding="async" `+
+      `src="${esc(atW(t.logo,cls==="lg"?IMGW.badgeLg:IMGW.badge))}" onerror="`+
       `this.closest('.tbadge').classList.add('nologo');this.remove()">`:"")+
     `<span class="tb-ini">${esc(monogram(name))}</span></span>`;}
 const teamOf=(L,tid)=>(L.teams||[]).find(t=>String(t.teamId)===String(tid))
@@ -3979,7 +4585,7 @@ function rosterRow(p){
   el.className="lvrow";el.dataset.id=p.id;
   el.innerHTML=
     `<span class="lv-slot"><span class="pos" `+
-      `style="--pc:var(--pos-${esc(p.pos)},#8E93A0)">${esc(p.pos)}</span>`+
+      `style="--pc:${posFill(p.pos)}">${esc(p.pos)}</span>`+
       (p.started&&p.slot&&p.slot!==p.pos?`<span class="lv-flex">${esc(p.slot)}</span>`:"")+
     `</span>`+
     `<span class="lv-who2">${faceHTML(p)}<span class="lv-pn">`+
@@ -4002,7 +4608,9 @@ function paintRosterRow(el,p){
   setText(el.querySelector(".lv-num:not(.dim)"),played?nf(p.scored):"—");
   const st=gameStatus(p.team,p.state);
   const cell=el.querySelector(".lv-st");
-  setText(cell,st.t);
+  const want=(st.c==="live"?mk("live","","sm"):"")
+    +`<span>${esc(st.t)}</span>`;
+  if(cell.dataset.k!==want){cell.innerHTML=want;cell.dataset.k=want;}
   cell.className="lv-st"+(st.c?" "+st.c:"");}
 
 function renderRoster(L){
@@ -4328,7 +4936,7 @@ function uniRowHTML(p,i){
     `<span class="lv-num dim">${i+1}</span>`+
     `<span class="lv-who2">${faceHTML(p)}<span class="lv-pn">`+
       `<b>${esc(p.name)}</b><span>${esc(p.team)}</span></span></span>`+
-    `<span class="pos" style="--pc:var(--pos-${esc(p.pos)},#8E93A0)">${esc(p.pos)}</span>`+
+    `<span class="pos" style="--pc:${posFill(p.pos)}">${esc(p.pos)}</span>`+
     `<span class="lv-num">${p.projected==null?"—":nf(p.projected)}</span>`+
     `<span class="u-own">${p.owned?`<b>${own}</b>`:own}</span>`+
     `<span class="u-lg">${p.status?`<span class="u-hurt">${esc(p.status)}</span> `:""}`+
@@ -4434,7 +5042,7 @@ const castAt=new Map();      // event -> the liveVer we last asked at
    than a guessed URL. */
 const CLUBIMG={};
 for(const p of allPlayers)
-  if(p.team&&!CLUBIMG[p.team]){const u=logoSrc(p);if(u)CLUBIMG[p.team]=u;}
+  if(p.team&&!CLUBIMG[p.team]){const u=logoSrc(p,IMGW.clubLg);if(u)CLUBIMG[p.team]=u;}
 const clubHTML=(ab,cls)=>`<span class="club ${cls||""}">`+
   (CLUBIMG[ab]?`<img src="${esc(CLUBIMG[ab])}" alt="" loading="lazy">`
               :`<span>${esc(ab||"—")}</span>`)+"</span>";
@@ -4529,7 +5137,8 @@ function needCast(g){
     .then(j=>{
       casts.set(g.event,j);castState.set(g.event,"ok");
       for(const s of [j&&j.home,j&&j.away])
-        if(s&&s.abbr&&s.logo&&!CLUBIMG[s.abbr])CLUBIMG[s.abbr]=s.logo;
+        if(s&&s.abbr&&s.logo&&!CLUBIMG[s.abbr])
+          CLUBIMG[s.abbr]=atW(s.logo,IMGW.clubLg);
       if(home==="live")renderLive();})
     .catch(e=>{castState.set(g.event,"err");
                castMsg.set(g.event,String(e&&e.message||e));
@@ -4581,7 +5190,10 @@ function renderSlate(slate){
     setText(b.querySelector(".sl-sc"),
       g.state==="pre"?`${g.away||"—"} @ ${g.home||"—"}`
                      :`${intOr(g.as,0)}–${intOr(g.hs,0)}`);
-    setText(b.querySelector(".sl-st"),g.label||g.state||"");}}
+    const cell=b.querySelector(".sl-st");
+    const want=(g.state==="in"?mk("live","","sm"):"")
+      +`<span>${esc(g.label||g.state||"")}</span>`;
+    if(cell.dataset.k!==want){cell.innerHTML=want;cell.dataset.k=want;}}}
 
 /* ── the field ─────────────────────────────────────────────────────────
    One SVG rather than a stack of elements: a pitch is about a hundred and
@@ -4741,7 +5353,8 @@ function drawSituation(gc,now){
     if(at)out.push(`<span class="sit-at">at ${esc(at)}</span>`);}
   if(p&&intOr(p.down,0)>0&&Number.isFinite(+p.yards)){
     const y=+p.yards;
-    out.push(`<span class="sit-y ${y>=0?"up":"down"}">${y>=0?"+":""}${y} yds</span>`);}
+    out.push(`<span class="sit-y">${mk(markOf(y,0.5),"","sm")}`+
+      `${y>=0?"+":""}${y} yds</span>`);}
   // ESPN's own sentence for the *next* snap, and only when the reader is
   // looking at the latest play of a running game - on any earlier play it
   // would be a line about a different moment sitting next to this one.
@@ -4770,7 +5383,7 @@ function myStarters(){
       const k=String(pl.id);
       let e=seen.get(k);
       if(!e){e={id:k,name:pl.name||"",pos:pl.pos||"",team:pl.team||"",
-                color:pl.color||"",img:src(pl),pts:0,n:0,state:""};
+                color:pl.color||"",img:src(pl,IMGW.mine),pts:0,n:0,state:""};
              seen.set(k,e);}
       e.n++;
       e.pts=numOr(pl.scored,e.pts);
@@ -4945,7 +5558,9 @@ function renderLive(){
   setText($("gp-k"),`${g.away||"—"} at ${g.home||"—"}`);
   const note=$("gp-note");
   note.className="gp-note"+(g.state==="in"?" live":"");
-  setText(note,g.label||g.state||"");
+  const nw=(g.state==="in"?mk("live","","sm"):"")
+    +`<span>${esc(g.label||g.state||"")}</span>`;
+  if(note.dataset.k!==nw){note.innerHTML=nw;note.dataset.k=nw;}
   if(!gc){
     $("gpanel").hidden=false;$("gcols").hidden=true;
     $("gsb").innerHTML="";$("fw").innerHTML="";$("sit").innerHTML="";turfKey="";

@@ -3082,3 +3082,245 @@ class TestAnUnplayedWeekIsNotAMiss(unittest.TestCase):
 
         r = projection_accuracy(self.store, "espn", "L")
         self.assertIn("in progress", r.caveat.lower())
+
+
+def _contrast(a: str, b: str) -> float:
+    """WCAG 2.1 contrast between two hex colours. Duplicated from
+    `apple/contrast_check.py` rather than imported, so the web tests still run
+    in a checkout with no Apple sources in it."""
+    def lum(h):
+        h = h.lstrip("#")
+        cs = []
+        for i in (0, 2, 4):
+            c = int(h[i:i + 2], 16) / 255
+            cs.append(c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4)
+        return 0.2126 * cs[0] + 0.7152 * cs[1] + 0.0722 * cs[2]
+    la, lb = lum(a), lum(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+
+class TestTheChipFillsAreTheAppsOwn(unittest.TestCase):
+    """The browser and the headset must not drift into two palettes.
+
+    `apple/contrast_check.py` solves for the one luminance band where white
+    text on a chip clears 4.5:1 and the chip's edge clears 3:1 against both a
+    bright room and a dark one, and writes the answer into `Theme.swift`. The
+    web board reuses those exact values. A hand-tweak on either side is the
+    failure this asserts against: two surfaces that merely rhyme.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        root = pathlib.Path(__file__).resolve().parents[1]
+        cls.page = (root / "fantasyedge" / "templates" / "mosaic.html").read_text()
+        cls.theme = root / "apple" / "FantasyEdge" / "Sources" / "Theme.swift"
+
+    @staticmethod
+    def _swift_hexes(src, names):
+        """The RGB triples Theme.swift declares, as hex, for the named tokens."""
+        out = {}
+        for name in names:
+            m = re.search(
+                r"static let %s\s*=\s*Color\(red:\s*([\d.]+),\s*green:\s*([\d.]+),"
+                r"\s*blue:\s*([\d.]+)\)" % re.escape(name), src)
+            if m:
+                out[name] = "#" + "".join(
+                    f"{round(float(v) * 255):02x}" for v in m.groups())
+        return out
+
+    def test_the_state_fills_match_the_swift_source(self):
+        if not self.theme.exists():                 # web-only checkout
+            self.skipTest("the visionOS sources are not in this checkout")
+        src = self.theme.read_text()
+        want = self._swift_hexes(src, ["greenFill", "redFill", "goldFill"])
+        self.assertEqual(len(want), 3, "Theme.swift no longer declares the fills")
+        for token, css in (("greenFill", "--fill-green"),
+                           ("redFill", "--fill-red"),
+                           ("goldFill", "--fill-gold")):
+            self.assertIn(f"{css}:{want[token]}", self.page,
+                          f"{css} has drifted from Theme.swift's {token} "
+                          f"({want[token]}); rerun apple/contrast_check.py")
+
+    def test_the_position_fills_match_the_swift_source(self):
+        if not self.theme.exists():
+            self.skipTest("the visionOS sources are not in this checkout")
+        src = self.theme.read_text()
+        i = src.find("func positionFill(")
+        self.assertGreater(i, 0, "positionFill is gone from Theme.swift")
+        body = src[i:src.find("\n    }", i)]
+        pairs = re.findall(
+            r'case "([A-Z/]+)":\s*return Color\(red:\s*([\d.]+),\s*'
+            r'green:\s*([\d.]+),\s*blue:\s*([\d.]+)\)', body)
+        self.assertTrue(pairs, "no position cases found")
+        for pos, r, g, b in pairs:
+            hexed = "#" + "".join(f"{round(float(v) * 255):02x}" for v in (r, g, b))
+            self.assertIn(f"--posfill-{pos}:{hexed}", self.page,
+                          f"the web's {pos} chip fill has drifted from the app's")
+
+    def test_white_on_every_chip_fill_clears_body_text(self):
+        """The property the fills exist for, re-checked on this side rather
+        than trusted. 4.5:1 is the WCAG floor for text this size."""
+        for m in re.finditer(r"--(?:fill|posfill)-[\w]+:(#[0-9a-f]{6})", self.page):
+            self.assertGreaterEqual(
+                _contrast("#ffffff", m.group(1)), 4.5,
+                f"white text on {m.group(1)} is below 4.5:1")
+
+    def test_a_chip_carries_a_hairline_because_navy_is_darker_than_glass(self):
+        """The fills were solved to stay visible against a *bright* room. This
+        page is darker than either room that solver considered, so a bare chip
+        boundary measures about 2.2-4.0:1 here against the 3:1 WCAG wants for
+        the edge of a non-text component. The stroke is what buys it back, and
+        removing it would silently reintroduce that."""
+        self.assertIn("--chip-edge:", self.page)
+        for cls in (".mk{", ".pos{"):
+            i = self.page.find(cls)
+            self.assertGreater(i, 0, f"{cls} is gone")
+            self.assertIn("var(--chip-edge)", self.page[i:i + 800],
+                          f"{cls} lost the stroke that gives it an edge on navy")
+
+
+class TestColourIsNeverTheOnlyCarrier(unittest.TestCase):
+    """Every state pairs with a glyph, so a red-green colourblind reader loses
+    nothing. Two of the six states share a fill with another state on purpose;
+    the glyph is the only thing separating those pairs."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1]
+                    / "fantasyedge" / "templates" / "mosaic.html").read_text()
+
+    def test_all_six_marks_exist_with_a_glyph_and_a_spoken_label(self):
+        i = self.page.find("const MARK={")
+        self.assertGreater(i, 0, "the mark table is gone")
+        table = self.page[i:self.page.find("};", i)]
+        for state, say in (("ahead", "ahead"), ("behind", "behind"),
+                           ("level", "level"), ("caution", "worth a look"),
+                           ("live", "live"), ("hurt", "on the injury wire")):
+            self.assertIn(state, table, f"the {state} mark is missing")
+            self.assertIn(say, table,
+                          f"the {state} mark lost the label a screen reader reads")
+        # The two pairs that share a fill are only distinguishable by glyph.
+        self.assertIn("↑", table)      # ahead
+        self.assertIn("↓", table)      # behind
+        self.assertIn("✚", table)      # hurt
+
+    def test_the_scoreline_totals_are_ink_not_two_tints(self):
+        """A green figure and a red figure are the classic pair a deuteranope
+        cannot separate, and at 66px a tint is at its least readable."""
+        self.assertIn(".team .pts{color:var(--ink)}", self.page)
+        self.assertNotIn(".team.a .pts{color:var(--green)}", self.page)
+        self.assertIn("function scoreMarks(", self.page)
+
+    def test_a_mark_is_announced_rather_than_left_as_decoration(self):
+        i = self.page.find("function mk(")
+        self.assertGreater(i, 0)
+        body = self.page[i:i + 700]
+        self.assertIn('role="img"', body)
+        self.assertIn("aria-label=", body)
+
+
+class TestPortraitsAreAskedForAtTheSizeTheyAreDrawn(unittest.TestCase):
+    """The payload carries ESPN's bare path, which is one size for every
+    surface. `live.py` exposes the combiner; the board is what has to ask."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1]
+                    / "fantasyedge" / "templates" / "mosaic.html").read_text()
+
+    def test_a_bare_espn_path_is_rewritten_through_the_combiner(self):
+        self.assertIn("combiner/i?img=", self.page)
+        self.assertIn("function atW(", self.page)
+
+    def test_an_embedded_data_uri_is_left_alone(self):
+        """`build_docs.py --embed` inlines portraits as data: URIs for hosts
+        that block the CDN. Rewriting one of those produces a dead image."""
+        i = self.page.find("function atW(")
+        body = self.page[i:i + 420]
+        self.assertIn('url.startsWith("data:")', body)
+
+    def test_the_row_avatar_does_not_ask_for_the_original(self):
+        """The universe table draws a 38px avatar and runs to hundreds of
+        rows. Asking for the 1200px original there is most of a megabyte a row
+        for pixels nobody can see - which is the reason this is a ladder and
+        not one number."""
+        i = self.page.find("const IMGW={")
+        self.assertGreater(i, 0, "the width ladder is gone")
+        table = self.page[i:self.page.find("};", i)]
+        row = int(re.search(r"row:(\d+)", table).group(1))
+        card = int(re.search(r"card:(\d+)", table).group(1))
+        self.assertLessEqual(row, 128, "the table avatar got greedy")
+        self.assertGreater(card, row, "the one big image should ask for more")
+
+
+class TestEveryNumberCanExplainItself(unittest.TestCase):
+    """Ported from `Explain` on the headset so a figure cannot come to mean
+    two things on two surfaces."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1]
+                    / "fantasyedge" / "templates" / "mosaic.html").read_text()
+
+    def test_every_explanation_says_what_how_and_usually_a_caveat(self):
+        i = self.page.find("const EXPLAIN={")
+        self.assertGreater(i, 0, "the explanation table is gone")
+        block = self.page[i:self.page.find("\n};", i)]
+        keys = re.findall(r"\n  (\w+):\(\)=>", block)
+        self.assertGreaterEqual(len(keys), 12, f"only {len(keys)} explanations")
+        for field in ("title:", "what:", "how:", "caveat:"):
+            self.assertIn(field, block)
+
+    def test_a_trigger_is_reachable_without_a_mouse(self):
+        """Hover does not exist on a phone, and this page is used on one."""
+        i = self.page.find("const exAttr=")
+        body = self.page[i:i + 320]
+        self.assertIn('tabindex="0"', body)
+        self.assertIn('role="button"', body)
+        self.assertIn("aria-expanded", body)
+
+    def test_the_caveat_is_a_chip_and_the_sentence_is_ink(self):
+        """It used to be gold text on the headset, which measured 1.02:1 - the
+        most important sentence on the card and the least readable thing on
+        it."""
+        i = self.page.find("function openEx(")
+        body = self.page[i:i + 900]
+        self.assertIn('mk("caution"', body)
+
+
+class TestTheBoardSurvivesEveryShape(unittest.TestCase):
+    """Landscape phone is the shape most likely to be broken: wide, and often
+    under 400 CSS pixels tall, where the page's own furniture can account for
+    the whole window."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = (pathlib.Path(__file__).resolve().parents[1]
+                    / "fantasyedge" / "templates" / "mosaic.html").read_text()
+
+    def test_a_tab_strip_scrolls_rather_than_clipping(self):
+        """Nine tabs do not fit across a 390px phone. When the strip clipped
+        instead of scrolling, Headlines was simply unreachable."""
+        i = self.page.find(".seg{display:flex")
+        self.assertGreater(i, 0)
+        body = self.page[i:i + 400]
+        self.assertIn("overflow-x:auto", body)
+        self.assertIn("max-width:100%", body)
+
+    def test_the_controls_can_shrink(self):
+        """`flex:none` here put the cluster off the right edge of a 1440px
+        window, which shows up as a horizontal scrollbar on the document."""
+        i = self.page.find(".ctrls{display:flex")
+        self.assertGreater(i, 0)
+        self.assertIn("min-width:0", self.page[i:i + 220])
+
+    def test_a_short_landscape_window_gets_a_deliberate_treatment(self):
+        self.assertIn("@media (orientation:landscape) and (max-height:500px)",
+                      self.page)
+
+    def test_the_pitch_keeps_its_geometry_when_it_is_capped(self):
+        """The field is the one drawing whose proportions carry meaning. It may
+        be made smaller; it may not be squashed."""
+        self.assertIn('viewBox="0 0 1200 300"', self.page)
+        i = self.page.find('viewBox="0 0 1200 300"')
+        self.assertNotIn('preserveAspectRatio="none"', self.page[i:i + 200])

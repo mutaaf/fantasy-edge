@@ -17,6 +17,19 @@ final class Board {
     var watchURL: String {
         didSet { UserDefaults.standard.set(watchURL, forKey: "fe.watch") }
     }
+    /// How much of the room the hall of fame takes, and the one piece of
+    /// scene state the app's `ImmersiveSpace` declaration and the space itself
+    /// both have to see. It lives here rather than in either because
+    /// `.immersionStyle(selection:)` is declared on the scene and the picker
+    /// that drives it is inside the space, and `any ImmersionStyle` cannot be
+    /// compared or stored in a `@State` the two share.
+    var hallStyle: RoomStyle = .full
+    /// The same choice for the board space, which defaults the other way: a
+    /// board is a thing you have *while* watching a real game in a real room,
+    /// so blacking the room out is the wrong default even though it is now
+    /// offered.
+    var boardStyle: RoomStyle = .mixed
+
     var leagues: [LeaguePayload] = []
     var live: LivePayload?
     var selected: String?

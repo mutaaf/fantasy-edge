@@ -65,7 +65,7 @@ struct ImmersiveBoard: View {
     /// screen - somebody off the attention rail or out of the brief. The
     /// hologram takes an id alone, so the cell is not needed to draw him.
     @State private var detailID: String?
-    @State private var player = AVPlayer()
+    @State private var feed = GameFeed()
     @State private var watching = false
 
     private let radius: Float = 1.9
@@ -307,7 +307,7 @@ struct ImmersiveBoard: View {
         HStack(spacing: 14) {
             Button {
                 watching.toggle()
-                if watching { startWatching() } else { player.pause() }
+                if watching { feed.start(board.watchURL) } else { feed.stop() }
             } label: {
                 Label(watching ? "Close game" : "Watch the game",
                       systemImage: watching ? "xmark.circle" : "play.tv")
@@ -320,6 +320,14 @@ struct ImmersiveBoard: View {
             // enforce. See `apple/contrast_check.py`.
             .buttonStyle(.borderedProminent)
             .tint(watching ? Theme.redFill : Theme.greenFill)
+
+            // Full is offered here now, and mixed is still what you get by
+            // default. See the note on the scene in `FantasyEdgeApp`.
+            Picker("", selection: Binding(get: { board.boardStyle },
+                                          set: { board.boardStyle = $0 })) {
+                ForEach(RoomStyle.allCases) { r in Text(r.label).tag(r) }
+            }
+            .pickerStyle(.segmented).frame(width: s(280))
 
             Button {
                 Task { await dismissImmersive(); openWindow(id: "board") }
@@ -559,30 +567,52 @@ struct ImmersiveBoard: View {
     /// bundled here and inventing one would be worse than asking.
     private var screen: some View {
         VStack(spacing: 0) {
-            if board.watchURL.isEmpty {
-                VStack(spacing: 14) {
-                    Image(systemName: "play.tv").font(.system(size: s(44)))
-                        .foregroundStyle(.secondary)
-                    Text("No video source set")
-                        .font(.system(size: s(21), weight: .semibold))
-                    Text("Add a stream or file URL in the window's settings and it "
-                         + "will play here, with your line-up around it.")
-                        .font(.system(size: s(16))).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center).frame(maxWidth: s(460))
-                }
-                .frame(width: 900, height: 506)
-            } else {
-                VideoPlayer(player: player)
+            switch feed.state {
+            case .playing, .opening:
+                VideoPlayer(player: feed.player)
                     .frame(width: 900, height: 506)
+                    .overlay(alignment: .top) {
+                        // Said out loud until the first frame arrives. A
+                        // stream that is still opening and one that has died
+                        // look identical, and the whole point of this rewrite
+                        // is that they no longer read the same.
+                        if feed.state == .opening {
+                            Label("Opening the stream…", systemImage: "clock")
+                                .font(.system(size: s(15), weight: .medium))
+                                .padding(.horizontal, s(16)).padding(.vertical, s(9))
+                                .glassBackgroundEffect(in: .capsule)
+                                .padding(.top, s(18))
+                        }
+                    }
+            case .failed(let why):
+                trouble(why)
+            case .idle:
+                trouble(GameFeed.verdict(board.watchURL))
             }
         }
         .glassBackgroundEffect(in: .rect(cornerRadius: 26))
     }
 
-    private func startWatching() {
-        guard let url = URL(string: board.watchURL), !board.watchURL.isEmpty
-        else { return }
-        player.replaceCurrentItem(with: AVPlayerItem(url: url))
-        player.play()
+    /// Why there is no picture, in a sentence, at the size of the thing it
+    /// replaced. A black rectangle is not an error message.
+    private func trouble(_ why: String) -> some View {
+        VStack(spacing: 14) {
+            MarkChip(mark: .caution, text: "NO PICTURE", size: s(12))
+            Text(why)
+                .font(.system(size: s(19), weight: .semibold))
+                .multilineTextAlignment(.center).frame(maxWidth: s(560))
+                .fixedSize(horizontal: false, vertical: true)
+            if !board.watchURL.isEmpty {
+                Text(board.watchURL)
+                    .font(.system(size: s(13), design: .monospaced))
+                    .foregroundStyle(.tertiary).lineLimit(2).truncationMode(.middle)
+                    .frame(maxWidth: s(560))
+            }
+            Text("Set it in the window's settings. Nothing is bundled - point "
+                 + "it at whatever you are already watching.")
+                .font(.system(size: s(14))).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center).frame(maxWidth: s(460))
+        }
+        .frame(width: 900, height: 506)
     }
 }

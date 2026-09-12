@@ -244,6 +244,18 @@ struct BoardView: View {
             .buttonStyle(.borderedProminent)
             .tint(Theme.green)
 
+            // Two rooms, and they are not the same offer. The board puts your
+            // line-up round you in the room you are already in; the hall is a
+            // place you go, built out of seven seasons of your own records.
+            Button {
+                Task {
+                    if await openImmersive(id: "hall-space") == .opened {
+                        dismissWindow(id: "board")
+                    }
+                }
+            } label: { Label("Hall of Fame", systemImage: "trophy") }
+                .buttonStyle(.bordered).tint(Theme.gold)
+
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape").font(.system(size: 17))
             }
@@ -310,13 +322,30 @@ struct HostSheet: View {
                 Section {
                     TextField("https://…/stream.m3u8", text: $watch)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    // The verdict, live, beside the field. "Any stream or file
+                    // URL AVPlayer can open" is true and useless at the moment
+                    // it will not open one: a plain-http address is refused by
+                    // the system before playback even starts, and that used to
+                    // surface as a black rectangle in an immersive space and
+                    // nothing else anywhere.
+                    HStack(alignment: .top, spacing: 8) {
+                        MarkChip(mark: GameFeed.fault(in: watch) == nil
+                                 ? .ahead : .caution, size: 9)
+                        Text(GameFeed.verdict(watch))
+                            .font(.system(size: 12)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 } header: {
                     Text("Game video")
                 } footer: {
-                    Text("Played in the middle of the immersive board, with your "
-                         + "line-up opened into a ring around it. Any stream or "
-                         + "file URL AVPlayer can open. Nothing is bundled - "
-                         + "point it at whatever you are already watching.")
+                    Text("Plays on the screen in the **immersive board** - press "
+                         + "Immersive, then \"Watch the game\" - with your line-up "
+                         + "opened into a ring around it. It does not play in this "
+                         + "window. https and local file URLs only; plain http is "
+                         + "blocked by the system, and the app says so rather than "
+                         + "weakening every other request it makes to allow it. "
+                         + "Nothing is bundled: point it at whatever you are "
+                         + "already watching.")
                 }
             }
             .navigationTitle("Where is the board?")

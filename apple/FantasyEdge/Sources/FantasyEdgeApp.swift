@@ -32,9 +32,47 @@ struct FantasyEdgeApp: App {
             // presented into an immersive space, so the card is placed in it.
             ImmersiveBoard().environment(board)
         }
-        // Mixed keeps the room; progressive lets the wearer dial it up with the
-        // crown. Full is available but a fantasy board has no business blacking
-        // out someone's living room on a Sunday.
-        .immersionStyle(selection: .constant(.mixed), in: .mixed, .progressive)
+        // Mixed keeps the room; progressive lets the wearer dial it up with
+        // the crown; full is there now too. Mixed stays the *default* for the
+        // board, and that is not timidity - a board is a thing you have while
+        // a real game is on in a real room, and blacking the room out is the
+        // wrong thing to do to somebody on a Sunday afternoon. The hall is the
+        // other way round, because a hall is somewhere you go.
+        .immersionStyle(selection: style(\.boardStyle), in: .mixed, .progressive, .full)
+
+        ImmersiveSpace(id: "hall-space") {
+            HallOfFame().environment(board)
+        }
+        .immersionStyle(selection: style(\.hallStyle), in: .full, .progressive, .mixed)
+    }
+
+    /// Bridge between the app's stored choice and SwiftUI's existential.
+    ///
+    /// `.immersionStyle(selection:)` wants a `Binding<any ImmersionStyle>` and
+    /// the picker inside the space wants something it can compare, so the
+    /// truth is the enum on `Board` and this converts in both directions. The
+    /// getter is what makes the in-space picker work at all: a `.constant`
+    /// here, which is what this used to be, means the scene never re-reads the
+    /// choice and the control does nothing.
+    private func style(
+        _ key: ReferenceWritableKeyPath<Board, RoomStyle>
+    ) -> Binding<any ImmersionStyle> {
+        Binding(
+            get: {
+                switch board[keyPath: key] {
+                case .full:        return .full
+                case .progressive: return .progressive
+                case .mixed:       return .mixed
+                }
+            },
+            set: { new in
+                // The system can hand this back when the wearer changes
+                // immersion themselves, so it is written through rather than
+                // dropped - otherwise the space's own picker would drift out
+                // of step with the room it is describing.
+                if new is FullImmersionStyle { board[keyPath: key] = .full }
+                else if new is ProgressiveImmersionStyle { board[keyPath: key] = .progressive }
+                else if new is MixedImmersionStyle { board[keyPath: key] = .mixed }
+            })
     }
 }
