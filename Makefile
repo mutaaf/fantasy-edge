@@ -1,4 +1,4 @@
-.PHONY: test doctor demo report docs api board clean
+.PHONY: test doctor demo publish-demo report docs api board clean
 
 test:
 	python3 -m unittest discover -s tests
@@ -33,3 +33,13 @@ fixtures:
 clean:
 	rm -rf data/*.db report.html
 	find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true
+
+# Refresh the PUBLIC demo from live data and push it. Named `publish-demo`
+# rather than `demo` because `demo` is already the credential-free fixture run,
+# and make silently keeps the first definition of a duplicated target - so this
+# would have looked wired up and done nothing.
+#
+# Refuses to publish if the suite fails, or if any manager who is not you
+# reaches the built page. Unattended publishing has to fail closed.
+publish-demo:
+	tools/publish_demo.sh

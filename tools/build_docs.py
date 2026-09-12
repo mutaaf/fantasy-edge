@@ -48,6 +48,45 @@ DEMO = "demo.html"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0"
 
 
+#: Stand-in names for the people who did not choose to be on a public page.
+#:
+#: "Team 1" through "Team 12" was safe and read like a spreadsheet, which made
+#: the demo look like test data rather than a real Sunday. These are invented,
+#: recognisably not anybody's actual name, and long enough to exercise the
+#: layout the way real team names do - a board that only ever renders "Team 3"
+#: never finds out what happens to a name that wraps.
+STAND_INS = [
+    "Gridiron Gladiators", "Hail Mary Holdings", "The Fumble Dynasty",
+    "Play Action Heroes", "Victory Formation", "Pylon Pushers",
+    "Squib Kick Society", "Onside Optimists", "Red Zone Regulars",
+    "Two Minute Warning", "Shotgun Diplomacy", "The Audible",
+    "Pocket Collapse", "Fourth And Forever", "Neutral Zone Infraction",
+    "Delay Of Game", "The Flea Flicker", "Icing The Kicker",
+    "Coffin Corner Club", "Statue Of Liberty", "Prevent Defense",
+    "The Hurry Up", "Bootleg Brigade", "Screen Pass Syndicate",
+    "Wildcat Formation", "Cover Two Deep", "The Nickel Package",
+    "Zone Blitz Ltd", "Play Clock Panic", "Garbage Time Glory",
+    "Backdoor Cover", "The Waiver Wire", "Handcuff Holdings",
+    "Bye Week Blues", "Stack And Shed", "Trips Right",
+]
+
+
+def _stand_in(n: int, taken: set[str]) -> str:
+    """The nth stand-in, skipping anything a real person is already called.
+
+    The collision matters: ESPN names an unnamed team "Team 8", and an earlier
+    version of this minted labels of exactly that shape - so a real team could
+    match the label invented for somebody else and two managers collapsed into
+    one. Checking against the real names first makes that impossible rather
+    than unlikely.
+    """
+    for i in range(len(STAND_INS)):
+        pick = STAND_INS[(n + i) % len(STAND_INS)]
+        if pick not in taken:
+            return pick
+    return f"Manager {n + 1}"          # more people than names; still unique
+
+
 def anonymise(data: dict) -> dict:
     """Scrub the people, keep the football.
 
@@ -64,11 +103,19 @@ def anonymise(data: dict) -> dict:
         if not key:
             return name
         if key not in labels:
-            labels[key] = f"Team {len(labels) + 1}"
+            labels[key] = _stand_in(len(labels), taken | set(labels.values()))
         return labels[key]
 
     # Collect every manager and league name first, so the mapping is stable
     # wherever the same person turns up.
+    # The reader's own teams stay as they are. They are the one set of names
+    # on this page that belong to the person publishing it - scrubbing them
+    # made the demo read as a stranger's league, which is the opposite of what
+    # a demo is for. Everybody else in these leagues did not choose to be here.
+    mine = {((L.get("you") or {}).get("name") or "").strip()
+            for L in data.get("leagues") or []}
+    mine.discard("")
+
     people: set[str] = set()
     for L in data.get("leagues") or []:
         for side in ("you", "opp"):
@@ -84,6 +131,8 @@ def anonymise(data: dict) -> dict:
         for k in (L.get("priors") or {}):
             if k.strip():
                 people.add(k.strip())
+    people -= mine
+    taken = set(people) | mine
     for n in sorted(people):
         label(n)
 

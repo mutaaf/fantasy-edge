@@ -1332,12 +1332,61 @@ class TestAnonymisation(unittest.TestCase):
                  "roast": "Fault Nation took him in round 2 of Sure Buds."}]},
         }
 
-    def test_no_real_name_survives_anywhere(self):
+    def test_nobody_elses_name_survives_anywhere(self):
+        """The reader's own team is the one exemption, and it is deliberate.
+
+        The demo is published by the person whose leagues these are, and
+        scrubbing their own team made it read as a stranger's league - which is
+        the opposite of what a demo is for. Everyone else in these leagues did
+        not choose to be on a public page, so they are still swept, and this
+        test is the thing standing between that decision and a leak.
+        """
         import tools.build_docs as bd
 
         out = json.dumps(bd.anonymise(self.payload()))
-        for name in ("Silky Johnson", "Fault Nation", "Sure Buds"):
+        for name in ("Fault Nation", "Sure Buds"):
             self.assertNotIn(name, out, f"{name} survived anonymisation")
+
+    def test_the_readers_own_team_is_kept(self):
+        import tools.build_docs as bd
+
+        out = bd.anonymise(self.payload())
+        self.assertEqual(out["leagues"][0]["you"]["name"], "Silky Johnson")
+
+    def test_the_exemption_does_not_leak_through_another_league(self):
+        """Somebody else's team in league A must not survive because a team of
+        the same name happens to be the reader's in league B. The exemption is
+        by name, so two leagues are the case that would break it."""
+        import tools.build_docs as bd
+
+        data = self.payload()
+        data["leagues"].append({
+            "id": "espn-2", "league": "Other League", "week": 1, "season": 2026,
+            "you": {"teamId": "9", "name": "My Other Team", "starters": []},
+            "opp": {"teamId": "3", "name": "Fault Nation", "starters": []},
+            "teams": [{"teamId": "3", "name": "Fault Nation"}],
+            "roster": [], "priors": {},
+        })
+        out = json.dumps(bd.anonymise(data))
+        self.assertNotIn("Fault Nation", out,
+                         "an opponent survived because a league listed them "
+                         "differently")
+        self.assertIn("Silky Johnson", out)
+        self.assertIn("My Other Team", out)
+
+    def test_a_stand_in_never_collides_with_a_real_name(self):
+        """ESPN calls an unnamed team "Team 8", and an earlier version of this
+        minted labels of exactly that shape - so a real team matched the label
+        invented for somebody else and two managers collapsed into one."""
+        import tools.build_docs as bd
+
+        data = self.payload()
+        real = bd.STAND_INS[0]
+        data["leagues"][0]["teams"].append({"teamId": "7", "name": real})
+        out = bd.anonymise(data)
+        labels = [t["name"] for t in out["leagues"][0]["teams"]]
+        self.assertEqual(len(set(labels)), len(labels),
+                         f"two teams share a name: {labels}")
 
     def test_the_same_person_gets_the_same_label(self):
         import tools.build_docs as bd
