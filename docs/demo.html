@@ -1429,10 +1429,82 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 .sit-dr{margin-left:auto;font-size:11px;color:var(--ink-faint);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46%}
 
-/* your men in this game. The point of a cross-league board is that a game only
-   matters through the people you own in it. */
+/* Game or the twenty. Two questions about the same afternoon: which game am I
+   watching, and where can somebody of mine score in the next ten seconds. */
+.lvmode{display:flex;align-items:center;gap:7px}
+.rz-n{font-family:var(--cond);font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-faint);margin-left:4px}
+.rz{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.rz[hidden]{display:none!important}
+.rz-g{background:var(--card);border:1px solid rgba(255,255,255,.11);
+  border-radius:var(--r-card);padding:13px 15px 14px;display:grid;gap:9px}
+.rz-h{display:flex;align-items:center;gap:9px}
+.rz-dd{font-family:var(--cond);font-size:12.5px;font-weight:800;letter-spacing:.06em;
+  background:var(--fill-red);color:#fff;border-radius:var(--r-chip);padding:2px 10px}
+.rz-at{font-size:11px;color:var(--ink-dim)}
+.rz-open{margin-left:auto;font-family:var(--cond);font-size:10px;font-weight:800;
+  letter-spacing:.09em;text-transform:uppercase;background:rgba(255,255,255,.07);
+  border:1px solid var(--hair);color:var(--ink-dim);border-radius:var(--r-chip);
+  padding:4px 10px;cursor:pointer;transition:.2s var(--ease)}
+.rz-open:hover{color:var(--ink);background:rgba(255,255,255,.13)}
+.rz-open:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.rz-men{display:flex;flex-wrap:wrap;gap:7px}
+.rz-w{font-size:10.5px;color:var(--ink-faint)}
+
+/* walking the game. The slider is the play index rather than the clock: plays
+   are what the feed publishes and what the field can actually be placed at, and
+   a clock scrub would have to interpolate between two of them and put the ball
+   somewhere the game never had it. */
+.gwalk{display:flex;align-items:center;gap:10px;margin-top:13px}
+.gw-b{font-family:var(--cond);font-size:11px;font-weight:800;letter-spacing:.1em;
+  background:rgba(255,255,255,.07);border:1px solid var(--hair);color:var(--ink-dim);
+  border-radius:var(--r-chip);padding:5px 11px;cursor:pointer;flex:none;
+  transition:.2s var(--ease);min-width:34px}
+.gw-b:hover{color:var(--ink);background:rgba(255,255,255,.13)}
+.gw-b:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.gw-b[aria-pressed="true"]{background:var(--fill-green);color:#fff;
+  border-color:transparent;box-shadow:inset 0 0 0 1px var(--chip-edge)}
+.gw-b.on{background:var(--fill-green);color:#fff;border-color:transparent;
+  box-shadow:inset 0 0 0 1px var(--chip-edge)}
+.gw-n{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);flex:none;
+  min-width:74px;text-align:right}
+.gw-sc{flex:1;min-width:80px;accent-color:var(--green);height:20px;cursor:pointer}
+.gw-sc:focus-visible{outline:2px solid var(--you);outline-offset:3px}
+.gw-gap{flex:1}
+
+/* Pinned: the field stays put while the play-by-play is read beside it. Off
+   under 760px of viewport, where a panel this tall pinned to the top is the
+   whole screen and there is nothing left to scroll. */
+@media (min-height:760px){
+  .live.pinned #gpanel{position:sticky;top:10px;z-index:4;
+    box-shadow:0 18px 40px rgba(0,0,0,.45)}
+}
+
+/* who is on the list. Two questions, so two rows of chips: whose men, and
+   which positions. */
+.gwho{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px}
+.chip.sm{font-size:11px;padding:4px 10px;letter-spacing:.09em}
+
+/* your men in this game, or everyone in it. The point of a cross-league board
+   is that a game only matters through the people you own in it - but a game
+   scores twenty-odd men and the other two-thirds were invisible, which is what
+   "Everyone" is for. */
 .mine{display:flex;gap:8px;overflow-x:auto;margin-top:13px;padding-bottom:6px;
   scrollbar-width:thin}
+/* Everyone is a list, not a strip: twenty-three cards scrolled sideways is a
+   thing nobody reads to the end of. */
+.mine.all{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));
+  gap:7px;overflow:visible;max-height:340px;overflow-y:auto;padding-right:4px}
+.mine.all .mn{flex:auto;width:auto}
+.mn-pt{font-family:var(--mono);font-size:12.5px;font-weight:700;margin-left:auto;
+  padding-left:10px;flex:none}
+.mn.yours{border-color:rgba(91,194,54,.55);background:rgba(91,194,54,.10)}
+.mn-you{font-family:var(--cond);font-size:9px;font-weight:800;letter-spacing:.1em;
+  background:var(--fill-green);color:#fff;border-radius:var(--r-chip);
+  padding:1px 6px;margin-left:6px}
+.mn-l{font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;
+  max-width:210px}
 .mine::-webkit-scrollbar{height:6px}
 .mine::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
 .mn{flex:0 0 auto;display:flex;align-items:center;gap:8px;cursor:pointer;
@@ -1501,6 +1573,14 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
 @media (max-width:980px){
   .gcols{grid-template-columns:minmax(0,1fr)}
   .pbp{max-height:320px}
+  /* Portrait. The walk row is six controls on one line and the slider is the
+     one that has to keep its length, so the rest wrap under it rather than
+     squeezing it to nothing. */
+  .gwalk{flex-wrap:wrap}
+  .gw-sc{order:-1;flex:1 0 100%;min-width:0}
+  .gw-n{min-width:0;text-align:left;margin-right:auto}
+  .mine.all{grid-template-columns:minmax(0,1fr);max-height:300px}
+  .mn-l{max-width:none}
 }
 
 
@@ -1844,6 +1924,12 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
     </div>
   </div>
   <div class="live" id="live" hidden>
+    <div class="lvmode" id="lvmode" role="group" aria-label="What the live tab shows">
+      <button class="chip sm" data-lv="game" aria-pressed="true">Game</button>
+      <button class="chip sm" data-lv="rz" aria-pressed="false">Red Zone</button>
+      <span class="rz-n" id="rz-n"></span>
+    </div>
+    <div class="rz" id="rz" hidden></div>
     <div class="sl" id="slate" role="group" aria-label="Today's games"></div>
     <div class="nosrc" id="livenone" hidden></div>
     <div class="gp" id="gpanel" hidden>
@@ -1852,6 +1938,32 @@ body.tv .hurt-name{font-size:26px}body.tv .hurt-roast{font-size:17px}
       <div class="gsb" id="gsb"></div>
       <div class="fw" id="fw"></div>
       <div class="sit" id="sit"></div>
+      <!-- Walking the game. The slider is the play index, oldest on the left,
+           so scrubbing it is scrubbing the afternoon; ▶ walks it for you. -->
+      <div class="gwalk" id="gwalk" hidden>
+        <button class="gw-b" id="gw-play" type="button"
+                aria-label="Play out every play">▶</button>
+        <input class="gw-sc" id="gw-scrub" type="range" min="0" max="0" value="0"
+               step="1" aria-label="Which play the field shows">
+        <span class="gw-n" id="gw-n"></span>
+        <button class="gw-b gw-sp" id="gw-speed" type="button"
+                aria-label="Playback speed">1×</button>
+        <button class="gw-b gw-live" id="gw-live" type="button"
+                aria-label="Follow the live play">LIVE</button>
+        <button class="gw-b gw-pin" id="gw-pin" type="button" aria-pressed="false"
+                aria-label="Keep the field on screen while you read">PIN</button>
+      </div>
+      <div class="gwho" id="gwho">
+        <button class="chip sm" data-who="mine" aria-pressed="true">My men</button>
+        <button class="chip sm" data-who="all" aria-pressed="false">Everyone</button>
+        <span class="gw-gap"></span>
+        <button class="chip sm gwho-p" data-pos="" aria-pressed="true">All</button>
+        <button class="chip sm gwho-p" data-pos="QB" aria-pressed="false">QB</button>
+        <button class="chip sm gwho-p" data-pos="RB" aria-pressed="false">RB</button>
+        <button class="chip sm gwho-p" data-pos="WR" aria-pressed="false">WR</button>
+        <button class="chip sm gwho-p" data-pos="TE" aria-pressed="false">TE</button>
+        <button class="chip sm gwho-p" data-pos="K" aria-pressed="false">K</button>
+      </div>
       <div class="mine" id="mine"></div>
     </div>
     <div class="gcols" id="gcols" hidden>
@@ -5390,39 +5502,169 @@ function myStarters(){
       e.state=pl.state||e.state;}}
   return [...seen.values()];}
 
+/* ── who is in this game ───────────────────────────────────────────────
+   Two scopes. "My men" is the original question a cross-league board asks: a
+   game matters through the people you own in it. "Everyone" is the one it
+   could not answer until the gamecast started carrying the whole box score -
+   twenty-odd men score a fantasy line in a game and a four-league board names
+   a dozen of them, so the other two-thirds were invisible.
+
+   The points differ by scope on purpose. A man of yours is shown the number
+   his own league scored him, because that is the one that decides your week;
+   everyone else is shown this install's scoring, which is the only rule we
+   have to score a stranger under. */
+let liveWho="mine", livePos="";
+
+/* Position chips against a box score, which does not carry a position.
+   `pos` is shown and filtered on wherever a source knew one - ESPN's leaders
+   block, or the player table. Where nobody did, the chip falls back to the
+   role the line implies, and the row shows that role instead of a position so
+   it is never mistaken for one: "REC" is what the stat line says, "WR" is
+   what somebody told us. The fallback can put a tight end under WR, which is
+   why it is a fallback and not the rule. */
+const ROLEPOS={PASS:["QB"],RUSH:["RB"],REC:["WR","TE"],KICK:["K"],RET:[]};
+const posMatch=(r,want)=>!want||(r.pos?r.pos===want:(ROLEPOS[r.role]||[]).includes(want));
+
+function myIDs(){
+  const out=new Set();
+  for(const L of leagues)for(const pl of (L.you&&L.you.starters)||[])out.add(String(pl.id));
+  return out;}
+
 let mineKey="";
 const mnNodes=new Map();
+function mnCard(r){
+  const b=document.createElement("button");
+  b.type="button";b.className="mn"+(r.yours?" yours":"");b.dataset.pid=r.id;
+  b.innerHTML=`<span class="mn-f" style="--fc:${esc(r.color||"#222")}">`+
+    (r.img?`<img src="${esc(r.img)}" alt="" loading="lazy">`
+          :`<span>${esc(initials(r.name))}</span>`)+"</span>"+
+    `<span style="min-width:0"><span class="mn-n">${esc(r.name)}</span>`+
+    (r.yours?'<span class="mn-you">YOURS</span>':"")+
+    '<br><span class="mn-s"></span>'+
+    (r.line?`<span class="mn-l">${esc(r.line)}</span>`:"")+"</span>"+
+    '<span class="mn-pt"></span>';
+  return b;}
+
 function drawMine(gc){
   const hm=(gc.home&&gc.home.abbr)||"",aw=(gc.away&&gc.away.abbr)||"";
-  const men=myStarters().filter(m=>m.team===hm||m.team===aw)
-    .sort((a,b)=>a.name.localeCompare(b.name));
+  const mine=myStarters().filter(m=>m.team===hm||m.team===aw);
+  const lines={};
+  for(const r of gc.players||[])lines[String(r.id)]=r;
+  let rows;
+  if(liveWho==="all"){
+    const own=myIDs();
+    rows=(gc.players||[])
+      .filter(r=>r.skill&&posMatch(r,livePos))
+      .map(r=>({id:String(r.id),name:r.name,pos:r.pos,role:r.role,team:r.team,
+                img:r.img,color:(gc.home&&gc.home.abbr)===r.team
+                  ?(gc.home.color||""):(gc.away&&gc.away.color)||"",
+                line:r.line,pts:numOr(r.points,0),n:0,
+                sourced:!!r.pos,yours:own.has(String(r.id))}));
+  }else{
+    rows=mine.map(m=>{const g=lines[String(m.id)]||{};
+      return {...m,line:g.line||"",role:g.role||"",sourced:!!m.pos,yours:true};})
+      .filter(r=>posMatch(r,livePos))
+      .sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));}
+
   const host=$("mine");
-  const key=gc.event+"|"+men.map(m=>m.id).join(",");
+  host.classList.toggle("all",liveWho==="all");
+  const key=`${gc.event}|${liveWho}|${livePos}|`+rows.map(r=>r.id).join(",");
   if(key!==mineKey){
     mineKey=key;mnNodes.clear();
-    if(!men.length){
-      host.innerHTML='<span class="nosrc">None of your starters are in '+
-        'this game.</span>';return;}
+    if(!rows.length){
+      host.innerHTML='<span class="nosrc">'+(
+        liveWho==="all"
+          ? (gc.players&&gc.players.length
+             ? "Nobody in this game plays that position."
+             : "<b>No box score for this game yet.</b> The lines appear once "+
+               "it is under way.")
+          : livePos ? "None of your starters in this game play that position."
+                    : "None of your starters are in this game.")+"</span>";
+      return;}
     const frag=document.createDocumentFragment();
-    for(const m of men){
-      const b=document.createElement("button");
-      b.type="button";b.className="mn";b.dataset.pid=m.id;
-      b.innerHTML=`<span class="mn-f" style="--fc:${esc(m.color||"#222")}">`+
-        (m.img?`<img src="${esc(m.img)}" alt="" loading="lazy">`
-              :`<span>${esc(initials(m.name))}</span>`)+"</span>"+
-        `<span><span class="mn-n">${esc(m.name)}</span><br>`+
-        '<span class="mn-s"></span></span>';
-      frag.appendChild(b);mnNodes.set(m.id,b);}
+    for(const r of rows){const b=mnCard(r);frag.appendChild(b);mnNodes.set(r.id,b);}
     host.replaceChildren(frag);}
-  // Only the number moves, so only the number is rewritten. A headshot pulled
-  // out of the DOM and put back is a headshot fetched again.
-  for(const m of men){
-    const b=mnNodes.get(m.id);if(!b)continue;
-    const s=b.querySelector(".mn-s");if(!s)continue;
-    const line=`${m.pos} · ${m.team} · ${nf(m.pts)} pts`+
-      (m.n>1?` · ${m.n} line-ups`:"");
-    setText(s,line);
-    s.style.color=m.pts>0?"var(--green)":"";}}
+  // Only the numbers move, so only the numbers are rewritten. A headshot
+  // pulled out of the DOM and put back is a headshot fetched again.
+  for(const r of rows){
+    const b=mnNodes.get(r.id);if(!b)continue;
+    const s=b.querySelector(".mn-s"),pt=b.querySelector(".mn-pt");
+    // No marker needed to say which is which: the two vocabularies do not
+    // overlap. QB, RB, WR, TE and K are positions somebody told us; PASS,
+    // RUSH, REC and KICK are what the stat line says he did.
+    if(s)setText(s,`${r.pos||r.role||"—"} · ${r.team}`+
+                   (r.n>1?` · ${r.n} line-ups`:""));
+    if(pt){setText(pt,nf(r.pts));
+           pt.style.color=r.pts>0?"var(--green)":"var(--ink-faint)";}}}
+
+/* ── walking the game ──────────────────────────────────────────────────
+   Play out every play, or scrub to one. The slider is the play index rather
+   than the clock: plays are what the feed publishes and what the field can be
+   placed at, and scrubbing a clock would mean interpolating between two of
+   them and putting the ball somewhere the game never had it.
+
+   The walk drives `livePlay`, which is the same thing tapping a row in the
+   play-by-play sets, so the field, the situation line, the win-probability
+   marker and the selected row all follow it for free - there is no second
+   copy of "where are we" for them to disagree about.
+
+   It is stopped, not paused, by anything that changes what is on screen:
+   picking another game, or the reader tapping a play themselves. A walk that
+   survived either would be moving the field out from under them. */
+let walkTimer=0, walkSpeed=1;
+const WALK_MS=1100;              // one play a beat at 1x, about a drive a minute
+const SPEEDS=[1,2,4];
+const walking=()=>!!walkTimer;
+
+function walkStop(){
+  if(walkTimer){clearTimeout(walkTimer);walkTimer=0;}
+  const b=$("gw-play");if(b){b.textContent="▶";b.classList.remove("on");}}
+
+function walkStep(){
+  const gc=casts.get(liveEvent);if(!gc){walkStop();return;}
+  const all=castPlays(gc);                       // newest first
+  const n=all.length;if(!n){walkStop();return;}
+  const at=livePlay?all.findIndex(x=>x.play&&String(x.play.id)===livePlay):0;
+  const idx=at<0?0:at;                           // newest first, so we walk backwards
+  if(idx<=0){                                    // caught up with the live play
+    livePlay=null;walkStop();renderLive();return;}
+  const nxt=all[idx-1];
+  livePlay=String((nxt&&nxt.play&&nxt.play.id)||"");
+  renderLive();
+  // A score gets a beat longer. It is the one thing on the field a reader
+  // wants a moment to look at, and at 4x the whole drive goes past otherwise.
+  const hold=(nxt&&nxt.play&&nxt.play.scoring?1.9:1)*WALK_MS/walkSpeed;
+  walkTimer=setTimeout(walkStep,hold);}
+
+function walkStart(){
+  const gc=casts.get(liveEvent);if(!gc)return;
+  const all=castPlays(gc);if(all.length<2)return;
+  // Starting with nothing picked means starting from the beginning rather
+  // than from the live play, where there is nowhere left to walk to.
+  if(!livePlay){const first=all[all.length-1];
+    livePlay=String((first&&first.play&&first.play.id)||"");}
+  const b=$("gw-play");if(b){b.textContent="❚❚";b.classList.add("on");}
+  renderLive();
+  walkTimer=setTimeout(walkStep,WALK_MS/walkSpeed);}
+
+function drawWalk(gc){
+  const all=castPlays(gc),n=all.length;
+  const box=$("gwalk");
+  box.hidden=n<2;
+  if(n<2){walkStop();return;}
+  const at=livePlay?all.findIndex(x=>x.play&&String(x.play.id)===livePlay):0;
+  const idx=at<0?0:at;
+  const ord=n-1-idx;                 // oldest is 0, which is how a slider reads
+  const sc=$("gw-scrub");
+  if(sc.max!==String(n-1))sc.max=String(n-1);
+  if(document.activeElement!==sc&&sc.value!==String(ord))sc.value=String(ord);
+  const play=all[idx]&&all[idx].play;
+  const q=intOr(play&&play.period,0);
+  setText($("gw-n"),`${ord+1}/${n}`+(play?`  ${q?(q>4?"OT":"Q"+q):""} ${play.clock||""}`:""));
+  const live=$("gw-live");
+  live.classList.toggle("on",!livePlay);
+  live.disabled=!livePlay;
+  setText($("gw-speed"),walkSpeed+"×");}
 
 /* ── win probability ───────────────────────────────────────────────────
    Drawn, not modelled. The series is ESPN's, one point per play; the only
@@ -5533,8 +5775,114 @@ function drawPBP(gc){
     el.setAttribute("aria-pressed",String(id===sel));
   setText($("pbp-note"),livePlay?"showing a play you picked":"following the latest");}
 
+/* ── the twenty ────────────────────────────────────────────────────────
+   Only the men whose game is inside the twenty.
+
+   No new endpoint and no new arithmetic: /api/live already carries `redZone`
+   per club, and it carries `attacking` too - which is what decides whether a
+   given man can score on the next snap. For a defence that is the snaps his
+   club is *not* attacking on, so a D/ST whose opponent is first and goal
+   belongs here exactly as much as the running back does.
+
+   Ordered by how close the ball is to the line, because that is the order a
+   reader cares about them in. */
+let liveMode="game";
+
+function rzGames(){
+  const out=[];
+  const seen=new Set();
+  for(const club of Object.keys(liveGames||{})){
+    const g=liveGames[club];
+    if(!g||!g.redZone||!g.event||seen.has(g.event))continue;
+    seen.add(g.event);
+    // The club with the ball, which is the one the down and distance belong
+    // to. `attacking` is per club, so the entry that says true is the one.
+    const other=g.opp||"";
+    const off=g.attacking===true?club:(g.attacking===false?other:club);
+    out.push({event:String(g.event),off,def:off===club?other:club,
+              toEndzone:intOr(g.toEndzone,NaN),down:g.down,distance:g.distance,
+              label:g.label||""});}
+  return out.sort((a,b)=>(a.toEndzone||99)-(b.toEndzone||99));}
+
+function rzMen(ev){
+  const own=new Set();
+  const out=[];
+  for(const m of myStarters()){
+    const g=liveGames[m.team];
+    if(!g||String(g.event)!==ev||own.has(m.id))continue;
+    own.add(m.id);
+    // A defence scores when its own club is not the one attacking; everybody
+    // else scores when it is. Same rule the headset's field places men by.
+    const def=(m.pos||"").toUpperCase()==="DEF"||(m.pos||"").toUpperCase()==="D/ST";
+    const attacking=g.attacking===true;
+    out.push({...m,can:def?!attacking:attacking});}
+  return out.sort((a,b)=>(b.can-a.can)||b.pts-a.pts||a.name.localeCompare(b.name));}
+
+function renderRedZone(){
+  const games=rzGames();
+  const host=$("rz");
+  const n=games.reduce((t,g)=>t+rzMen(g.event).filter(m=>m.can).length,0);
+  setText($("rz-n"),games.length
+    ? `${n} of yours can score now`
+    : "");
+  if(!games.length){
+    host.innerHTML='<div class="nosrc">'+(
+      !liveAsked?"Reading the slate…"
+      :"<b>No drive is inside the twenty.</b> The feed reports one red zone "+
+       "per game, so this fills the moment somebody reaches it.")+"</div>";
+    return;}
+  host.innerHTML=games.map(g=>{
+    const men=rzMen(g.event);
+    const dd=ddText(g.down,g.distance,g.toEndzone);
+    return '<div class="rz-g">'+
+      '<div class="rz-h">'+clubHTML(g.off)+
+      (dd?`<span class="rz-dd">${esc(dd)}</span>`:"")+
+      `<span class="rz-at">${esc(g.off)} attacking ${esc(g.def)}</span>`+
+      `<button class="rz-open" data-rzev="${esc(g.event)}">Open</button></div>`+
+      (men.length
+       ? '<div class="rz-men">'+men.map(m=>
+           `<button class="mn${m.can?" yours":""}" data-pid="${esc(m.id)}">`+
+           `<span class="mn-f" style="--fc:${esc(m.color||"#222")}">`+
+           (m.img?`<img src="${esc(m.img)}" alt="" loading="lazy">`
+                 :`<span>${esc(initials(m.name))}</span>`)+"</span>"+
+           `<span><span class="mn-n">${esc(m.name)}</span><br>`+
+           `<span class="mn-s">${esc(m.pos)} · ${esc(nf(m.pts))} pts · `+
+           esc(m.can?"can score on this snap":"his club is defending")+
+           "</span></span></button>").join("")+"</div>"
+       : '<div class="rz-w">None of your starters are in this game.</div>')+
+      "</div>";}).join("");}
+
+$("lvmode").addEventListener("click",e=>{
+  const b=e.target.closest("[data-lv]");if(!b||b.dataset.lv===liveMode)return;
+  liveMode=b.dataset.lv;
+  // A walk belongs to the field it was walking. Leaving the game view stops it
+  // rather than leaving it running against a panel nobody is looking at.
+  walkStop();
+  for(const el of $("lvmode").querySelectorAll("[data-lv]"))
+    el.setAttribute("aria-pressed",String(el.dataset.lv===liveMode));
+  renderLive();});
+
+$("rz").addEventListener("click",e=>{
+  const open=e.target.closest("[data-rzev]");
+  if(open){liveMode="game";liveEvent=open.dataset.rzev;livePlay=null;
+    for(const el of $("lvmode").querySelectorAll("[data-lv]"))
+      el.setAttribute("aria-pressed",String(el.dataset.lv==="game"));
+    renderLive();return;}
+  const b=e.target.closest("[data-pid]");if(!b)return;
+  for(const L of leagues){
+    const c=(L.cells||[]).find(x=>String(x.id)===String(b.dataset.pid));
+    if(c){openCard(c,L.id);return;}}});
+
 /* ── the tab ───────────────────────────────────────────────────────────── */
 function renderLive(){
+  const rz=liveMode==="rz";
+  $("rz").hidden=!rz;
+  $("slate").hidden=rz;
+  if(rz){
+    $("livenone").hidden=true;
+    $("gpanel").hidden=true;$("gcols").hidden=true;
+    renderRedZone();return;}
+  setText($("rz-n"),"");
   const slate=liveSlate();
   renderSlate(slate);
   const none=$("livenone");
@@ -5563,7 +5911,9 @@ function renderLive(){
   if(note.dataset.k!==nw){note.innerHTML=nw;note.dataset.k=nw;}
   if(!gc){
     $("gpanel").hidden=false;$("gcols").hidden=true;
+    $("gwalk").hidden=true;$("gwho").hidden=true;walkStop();
     $("gsb").innerHTML="";$("fw").innerHTML="";$("sit").innerHTML="";turfKey="";
+    mineKey="";
     const st=castState.get(liveEvent);
     // Not-yet-kicked-off is checked first and on its own: it is a state, not a
     // failure, and it is the answer even if an earlier tab visit left an error
@@ -5577,12 +5927,13 @@ function renderLive(){
         ? "<b>No play data for this game.</b> "+esc(castMsg.get(liveEvent)||"")
         : "Loading the gamecast…")+"</span>";
     return;}
-  $("gpanel").hidden=false;$("gcols").hidden=false;
+  $("gpanel").hidden=false;$("gcols").hidden=false;$("gwho").hidden=false;
   const now=currentPlay(gc);
   drawScoreboard(gc,now);
   drawField(gc,now);
   drawSituation(gc,now);
   drawMine(gc);
+  drawWalk(gc);
   drawWinProb(gc,now);
   drawPBP(gc);}
 
@@ -5593,7 +5944,7 @@ $("slate").addEventListener("click",e=>{
   // feed all rebuild themselves. The one thing that does not is the play the
   // reader had walked to: carried over, it would leave a different game's
   // play id selected and the field following the wrong ball.
-  liveEvent=b.dataset.ev;livePlay=null;
+  liveEvent=b.dataset.ev;livePlay=null;walkStop();
   renderLive();});
 
 $("pbp").addEventListener("click",e=>{
@@ -5603,17 +5954,63 @@ $("pbp").addEventListener("click",e=>{
   // rather than a moment in it.
   const latest=all[0]&&all[0].play?String(all[0].play.id):"";
   livePlay=(b.dataset.pid===livePlay||b.dataset.pid===latest)?null:b.dataset.pid;
+  walkStop();
   renderLive();});
 
 /* cellById() reads whichever league is *open*, and on this tab none is - the
    same man can be a starter in three of them. So the card is opened against
    the first league he starts in, which is the one whose leverage share the
    card can honestly quote. */
+/* A man of yours opens his card. A man who is not opens nothing yet: the card
+   is built out of a leverage cell, and a stranger has none - he is in no
+   line-up of yours, so there is no share of anything for it to quote. Saying
+   so is better than opening a card with every number blank. */
 $("mine").addEventListener("click",e=>{
   const b=e.target.closest("[data-pid]");if(!b)return;
   for(const L of leagues){
     const c=(L.cells||[]).find(x=>String(x.id)===String(b.dataset.pid));
     if(c){openCard(c,L.id);return;}}});
+
+$("gwho").addEventListener("click",e=>{
+  const b=e.target.closest("[data-who],[data-pos]");if(!b)return;
+  if(b.dataset.who!==undefined){
+    if(b.dataset.who===liveWho)return;
+    liveWho=b.dataset.who;
+    for(const el of $("gwho").querySelectorAll("[data-who]"))
+      el.setAttribute("aria-pressed",String(el.dataset.who===liveWho));
+  }else{
+    livePos=b.dataset.pos===livePos?"":b.dataset.pos;
+    for(const el of $("gwho").querySelectorAll("[data-pos]"))
+      el.setAttribute("aria-pressed",String(el.dataset.pos===livePos));}
+  renderLive();});
+
+$("gw-play").addEventListener("click",()=>{walking()?walkStop():walkStart();});
+$("gw-live").addEventListener("click",()=>{walkStop();livePlay=null;renderLive();});
+$("gw-speed").addEventListener("click",()=>{
+  walkSpeed=SPEEDS[(SPEEDS.indexOf(walkSpeed)+1)%SPEEDS.length];
+  setText($("gw-speed"),walkSpeed+"×");
+  // Take effect now rather than after the beat already in flight.
+  if(walking()){clearTimeout(walkTimer);walkTimer=setTimeout(walkStep,WALK_MS/walkSpeed);}});
+$("gw-scrub").addEventListener("input",e=>{
+  const gc=casts.get(liveEvent);if(!gc)return;
+  walkStop();
+  const all=castPlays(gc),n=all.length;
+  const idx=n-1-intOr(e.target.value,0);         // the slider reads oldest-first
+  const hit=all[Math.max(0,Math.min(n-1,idx))];
+  livePlay=idx<=0?null:String((hit&&hit.play&&hit.play.id)||"");
+  renderLive();});
+$("gw-pin").addEventListener("click",()=>{
+  const on=$("live").classList.toggle("pinned");
+  $("gw-pin").setAttribute("aria-pressed",String(on));
+  try{localStorage.setItem("fe.pinField",on?"1":"0");}catch(_){}});
+/* Pinned by default where there is room for it, because the field is the
+   thing the tab is for and reading the play-by-play scrolls it off. */
+(function(){
+  let want=null;
+  try{want=localStorage.getItem("fe.pinField");}catch(_){}
+  const on=want===null?matchMedia("(min-height:760px)").matches:want==="1";
+  if(on){$("live").classList.add("pinned");
+         $("gw-pin").setAttribute("aria-pressed","true");}})();
 
 
 function setSubView(v){
