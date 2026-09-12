@@ -168,10 +168,15 @@ struct PlayerHologram: View {
             SpinRing(diameter: 226, dash: [30, 22], width: 1.6,
                      tint: Theme.position(pos).opacity(0.35),
                      seconds: 34, clockwise: false, spinning: !reduceMotion)
-            AsyncImage(url: img.flatMap(URL.init(string:))) { phase in
+            // The largest a portrait is drawn anywhere in this app, and the
+            // one place the bare 600 pixel file was genuinely short: 260pt of
+            // frame is 520 device pixels with nothing spare, and a headset
+            // resolves more than the simulator's 2.0 scale suggests. Asked for
+            // at 800 instead.
+            AsyncImage(url: Art.at(img, points: 260)) { phase in
                 switch phase {
                 case .success(let image):
-                    image.resizable().scaledToFit()
+                    image.resizable().interpolation(.high).scaledToFit()
                         .shadow(color: .black.opacity(0.45), radius: 22, y: 14)
                 default:
                     Image(systemName: "person.crop.circle.fill")
@@ -321,8 +326,18 @@ struct PlayerHologram: View {
                 .frame(height: plot)
                 HStack(spacing: 3) {
                     ForEach(Array(weeks.enumerated()), id: \.offset) { i, _ in
-                        Text("\(i + 1)").font(.system(size: 7))
-                            .foregroundStyle(.tertiary)
+                        // Nine, not seven, and secondary rather than
+                        // tertiary. Seven point is the smallest type in the
+                        // app and it sits under the one chart on the card, so
+                        // it is the axis you have to read to use the bars.
+                        // Instrumenting the window found no scale factor and
+                        // no resampling anywhere on this surface - see the
+                        // note beside `defaultSize` - which means what reads
+                        // as soft here is simply type set below what a headset
+                        // can resolve. A week column is 38 points wide and
+                        // holds two digits at nine with room over.
+                        Text("\(i + 1)").font(.system(size: 9))
+                            .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                     }
                 }

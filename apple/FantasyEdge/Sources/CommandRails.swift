@@ -786,7 +786,7 @@ extension CommandView {
                     ForEach(free.prefix(4)) { p in
                         Button { focus = p.id } label: {
                             HStack(spacing: 9) {
-                                Headshot(url: "https://a.espncdn.com/i/headshots/nfl/players/full/\(p.id).png",
+                                Headshot(id: p.id,
                                          name: p.name, tint: Theme.positionFill(p.pos), size: 38)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(p.name).font(.system(size: 11, weight: .semibold))

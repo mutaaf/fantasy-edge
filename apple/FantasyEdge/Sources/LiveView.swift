@@ -33,12 +33,28 @@ struct LiveView: View {
         VStack(spacing: 12) {
             switcher
             scope
-            switch mode {
-            case .mine: MyTeamField(focus: $focus)
-            case .game: GameFieldView(event: $event, focus: $focus)
-            case .red:  RedZoneField(focus: $focus)
+            // One vertical scroller, here, for all three modes.
+            //
+            // `CommandView` hands this tab a fixed height and no scroll of its
+            // own, and every mode is taller than it: the Game mode alone is a
+            // slate strip, a scoreboard, a field, a bench row, a win
+            // probability chart and a play-by-play. Without this the
+            // play-by-play could not be reached at all - it had an inner
+            // scroller of its own, which is precisely what disguised the bug,
+            // because the part you could not get to was the part that scrolled.
+            //
+            // One axis, one scroller. The modes below therefore carry no
+            // vertical ScrollView of their own: two of the same axis nested
+            // means the inner one eats the drag and the outer never moves,
+            // which on visionOS is a worse bug than the one being fixed.
+            ScrollView(.vertical) {
+                switch mode {
+                case .mine: MyTeamField(focus: $focus)
+                case .game: GameFieldView(event: $event, focus: $focus)
+                case .red:  RedZoneField(focus: $focus)
+                }
             }
-            Spacer(minLength: 0)
+            .scrollIndicators(.visible)
         }
         // Arriving with a game already named means somebody tapped a
         // scoreline to get here, so the field they asked for is what opens -
@@ -313,15 +329,14 @@ struct MyTeamField: View {
                     legend(drawn, crowded: onField.count - drawn.count)
                 }
             }
-            ScrollView {
-                VStack(spacing: 12) {
-                    bench(byStation[.bench] ?? [])
-                    sideline(byStation[.sideline] ?? [])
-                    finished(byStation[.done] ?? [])
-                }
-            }
-            .frame(maxHeight: 360)
-            .scrollIndicators(.hidden)
+            // Plain stack. This was a 360pt scroller inside a view that had
+            // no scroller above it, which meant three lanes reachable and the
+            // rest of the tab not; the tab's own scroller now carries all of
+            // it. Each lane is still capped by `lane` with a "N more" button,
+            // so the grids below stay bounded whoever is hosting them.
+            bench(byStation[.bench] ?? [])
+            sideline(byStation[.sideline] ?? [])
+            finished(byStation[.done] ?? [])
         }
     }
 
@@ -546,11 +561,11 @@ struct MyTeamField: View {
         }
     }
 
-    /// Bounded above by the scroll view this lives in, which is the point:
-    /// a lazy grid handed unbounded height builds every row and fires every
-    /// headshot request at once, which is exactly the bug this app had.
-    ///
-    /// Bounded again by `lane` once the roster is a portfolio. Sixty finished
+    /// Bounded by `lane`, which is now the only thing bounding it: a lazy
+    /// grid handed unbounded height builds every row and fires every headshot
+    /// request at once, which is exactly the bug this app had, and the 360pt
+    /// scroller that used to sit above these lanes has gone so that the tab
+    /// can scroll as one. The cap plus the "N more" button is the bound. Sixty finished
     /// men under a field is not a lane, it is a directory - and every one of
     /// those rows is a headshot request. Ordered by how many of your line-ups
     /// he is in before it folds, so what survives the fold is what matters

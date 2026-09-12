@@ -155,9 +155,13 @@ struct Headshot: View {
             // Opaque, not a wash. The initials are white, and at 28% alpha
             // they were really white on whatever room was behind the glass.
             Circle().fill(tint)
-            if let s = url, let u = URL(string: s) {
+            // Asked for at the diameter this is drawn at rather than as the
+            // one 600 pixel file ESPN serves off the bare path. A 28pt row
+            // avatar in a table of hundreds was pulling 241 KB to fill
+            // eighty-four pixels; `Art` asks for ~128 instead. See Imagery.
+            if let u = Art.avatar(url, diameter: size) {
                 AsyncImage(url: u) { img in
-                    img.resizable().scaledToFill()
+                    img.resizable().interpolation(.high).scaledToFill()
                 } placeholder: { initials }
             } else { initials }
         }
@@ -173,6 +177,21 @@ struct Headshot: View {
     }
 }
 
+extension Headshot {
+    /// The same avatar from a player id, for the panels that have one and no
+    /// URL. Three of them were assembling ESPN's bare portrait path inline,
+    /// which is three places that would each have had to learn separately
+    /// that the path can be asked for at a size - and two of them draw the
+    /// face at 24pt, where the bare file is two hundred times the pixels
+    /// needed. A negative id is a team defence and has no portrait, so it
+    /// falls through to the initials rather than to a 404.
+    init(id: String, name: String, tint: Color, size: CGFloat = 42) {
+        let path = (id.isEmpty || id.hasPrefix("-")) ? nil
+            : "https://a.espncdn.com/i/headshots/nfl/players/full/\(id).png"
+        self.init(url: path, name: name, tint: tint, size: size)
+    }
+}
+
 /// An NFL club mark, built from the abbreviation. ESPN publishes these at a
 /// stable path, which is why a slate with only abbreviations can still show
 /// the badges.
@@ -180,9 +199,8 @@ struct ClubMark: View {
     let abbr: String
     var size: CGFloat = 26
     var body: some View {
-        AsyncImage(url: URL(string:
-            "https://a.espncdn.com/i/teamlogos/nfl/500/\(abbr.lowercased()).png")) { img in
-            img.resizable().scaledToFit()
+        AsyncImage(url: Art.club(abbr, points: size)) { img in
+            img.resizable().interpolation(.high).scaledToFit()
         } placeholder: {
             Text(abbr).font(.system(size: size * 0.34, weight: .heavy))
                 .foregroundStyle(.secondary)
@@ -351,8 +369,8 @@ struct TeamBadge: View {
     var body: some View {
         ZStack {
             Circle().fill(tint)
-            if let l = logo, let u = URL(string: l) {
-                AsyncImage(url: u) { $0.resizable().scaledToFill() }
+            if let u = Art.at(logo, points: size) {
+                AsyncImage(url: u) { $0.resizable().interpolation(.high).scaledToFill() }
                     placeholder: { monogram }
             } else {
                 monogram

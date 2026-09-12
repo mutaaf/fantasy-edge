@@ -14,6 +14,10 @@ struct GameFieldView: View {
     /// The play the field is showing. Nil means "the latest one", which is
     /// what a running game should do on its own as plays arrive.
     @State private var playID: String?
+    /// Whether the feed is showing every drive or only the recent ones. See
+    /// `feed` for why this is a cap rather than a lazy stack.
+    @State private var allDrives = false
+    private static let drivesShown = 6
 
     /// Nothing is picked until the reader picks it, so the default is the
     /// game most worth looking at: one that is running, else the last one
@@ -52,7 +56,7 @@ struct GameFieldView: View {
         // and only then - polling the gamecast on its own clock would ask for
         // a field of plays that had not changed.
         .onChange(of: board.live?.version ?? "") { _, _ in Task { await load() } }
-        .onChange(of: chosen) { _, _ in playID = nil }
+        .onChange(of: chosen) { _, _ in playID = nil; allDrives = false }
     }
 
     private func load() async {
@@ -467,26 +471,55 @@ struct GameFieldView: View {
 
     // MARK: - play by play
 
+    /// The play-by-play, newest drive first.
+    ///
+    /// No scroller of its own. It used to have one, 200pt tall, and that is
+    /// what hid the real bug: this whole view is taller than the window and
+    /// had nothing above it that scrolled, so the feed was below the fold and
+    /// unreachable - and its inner scroller made the mistake look deliberate.
+    /// `LiveView` owns the one vertical scroller now, and nesting a second on
+    /// the same axis inside it would let the inner one swallow the drag while
+    /// the outer stayed put.
+    ///
+    /// Which leaves the laziness question the old `LazyVStack` was answering.
+    /// It is answered by the cap instead: a full game is about a hundred and
+    /// seventy rows, and this shows the most recent `Self.drivesShown` drives
+    /// until asked for the rest. That is the same "N more" idiom the line-up
+    /// lanes use, and unlike a lazy stack it is honest about how much is
+    /// hidden. The rows themselves are plain text - no headshots - so the
+    /// 18%-CPU incident that made this app wary of eager stacks does not
+    /// apply here; that was a hundred and twenty rows each firing two image
+    /// requests.
     private func feed(_ gc: Gamecast) -> some View {
-        Panel(title: "Play by Play",
+        let drives = Array(gc.drives.reversed())
+        let shown = allDrives ? drives : Array(drives.prefix(Self.drivesShown))
+        let hidden = drives.count - shown.count
+        return Panel(title: "Play by Play",
               trailing: AnyView(Text(playID == nil ? "latest" : "tap a play to move the ball")
                 .font(.system(size: 9)).foregroundStyle(.tertiary))) {
             if gc.drives.isEmpty {
                 NoSource(what: "No drives in this game yet.")
             } else {
-                // Bounded on purpose. A lazy stack inside a parent offering
-                // unbounded height builds every one of a hundred and seventy
-                // rows before the first frame.
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 4) {
-                        ForEach(gc.drives.reversed()) { d in
-                            driveHeader(d)
-                            ForEach(d.plays.reversed()) { p in row(p) }
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(shown) { d in
+                        driveHeader(d)
+                        ForEach(d.plays.reversed()) { p in row(p) }
+                    }
+                    if hidden > 0 || allDrives {
+                        Button {
+                            allDrives.toggle()
+                        } label: {
+                            Text(allDrives
+                                 ? "Show the latest \(Self.drivesShown) drives"
+                                 : "\(hidden) earlier \(hidden == 1 ? "drive" : "drives")")
+                                .font(.system(size: 11, weight: .medium))
+                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                .plate(10, .white.opacity(0.06))
                         }
+                        .buttonStyle(.plain).hoverEffect(.highlight)
+                        .padding(.top, 6)
                     }
                 }
-                .frame(maxHeight: 200)
-                .scrollIndicators(.visible)
             }
         }
     }

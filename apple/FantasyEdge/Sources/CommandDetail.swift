@@ -67,8 +67,8 @@ struct PlayerPanel: View {
         let tint = Theme.position(pos)
         return VStack(spacing: 0) {
             HStack(spacing: 11) {
-                if let l = p?.logo ?? owner?.logo, let u = URL(string: l) {
-                    AsyncImage(url: u) { $0.resizable().scaledToFit() }
+                if let u = Art.at(p?.logo ?? owner?.logo, points: 34) {
+                    AsyncImage(url: u) { $0.resizable().interpolation(.high).scaledToFit() }
                         placeholder: { Color.clear }
                         .frame(width: 34, height: 34)
                 }
@@ -106,15 +106,19 @@ struct PlayerPanel: View {
                 RadialGradient(colors: [tint.opacity(0.42), tint.opacity(0.10), .clear],
                                center: .center, startRadius: 8, endRadius: 130)
                 // The club, faint and behind him - identity without a label.
-                if let l = p?.logo ?? owner?.logo, let u = URL(string: l) {
-                    AsyncImage(url: u) { $0.resizable().scaledToFit() }
+                if let u = Art.at(p?.logo ?? owner?.logo, points: 190) {
+                    AsyncImage(url: u) { $0.resizable().interpolation(.high).scaledToFit() }
                         placeholder: { Color.clear }
                         .frame(width: 190, height: 190)
                         .opacity(0.10)
                 }
-                if let img = p?.img ?? owner?.img, let u = URL(string: img) {
+                // Fitted by height, so the width actually drawn is the
+                // portrait's own 600:436 across 168pt of height - which is
+                // what is asked for, not the 168.
+                if let u = Art.at(p?.img ?? owner?.img,
+                                  points: 168 * Art.headshotAspect) {
                     AsyncImage(url: u) { i in
-                        i.resizable().scaledToFit()
+                        i.resizable().interpolation(.high).scaledToFit()
                     } placeholder: {
                         ProgressView().controlSize(.small)
                     }

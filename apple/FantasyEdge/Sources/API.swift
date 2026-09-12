@@ -78,7 +78,14 @@ final class Board {
         return out
     }
 
-    var mosaic: Mosaic { Leverage.evaluate(cells) }
+    /// The board for whichever league is on screen.
+    ///
+    /// Routed through the memoised `mosaic(for:)` rather than evaluating the
+    /// leverage model afresh. It reads as a cheap property and is not: the
+    /// immersive space asks for it three times per pass - once to build the
+    /// attachments, once to place them, once for the scoreline - and a
+    /// `RealityView` update runs on the compositor's clock, not on a poll.
+    var mosaic: Mosaic { league.map { mosaic(for: $0) } ?? Leverage.evaluate([]) }
 
     // MARK: - the league that is selected
     //

@@ -32,13 +32,17 @@ struct SourceTag: View {
 struct SpreadChip: View {
     let spread: Double
     var compact = false
+    /// Points multiplier, for the immersive space - see `CellView.scale`. A
+    /// mark small enough to be missed is a mark that was not worth drawing.
+    var scale: CGFloat = 1
     var body: some View {
-        HStack(spacing: 2) {
-            Text("Δ").font(.system(size: compact ? 8 : 9, weight: .black))
+        let base = (compact ? 8.0 : 9.0) * scale
+        return HStack(spacing: 2 * scale) {
+            Text("Δ").font(.system(size: base, weight: .black))
             Text(spread, format: .number.precision(.fractionLength(1)))
-                .font(.system(size: compact ? 8 : 9, weight: .heavy)).monospacedDigit()
+                .font(.system(size: base, weight: .heavy)).monospacedDigit()
         }
-        .padding(.horizontal, compact ? 5 : 6).padding(.vertical, 2)
+        .padding(.horizontal, (compact ? 5 : 6) * scale).padding(.vertical, 2 * scale)
         // Opaque. At 20% alpha this was gold text on the wearer's wall, which
         // measured 1.02:1 - the mark meant to draw the eye was the least
         // visible thing on the row.

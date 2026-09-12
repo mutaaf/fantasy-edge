@@ -256,7 +256,7 @@ struct IntelView: View {
         HStack(spacing: 7) {
             ForEach(i.players.prefix(5)) { p in
                 HStack(spacing: 6) {
-                    Headshot(url: "https://a.espncdn.com/i/headshots/nfl/players/full/\(p.id).png",
+                    Headshot(id: p.id,
                              name: p.name, tint: Theme.positionFill(p.pos), size: 24)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(p.name).font(.system(size: 10, weight: .semibold))
