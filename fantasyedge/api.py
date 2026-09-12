@@ -29,10 +29,15 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote
 
-from . import analytics
+from . import analytics, identity
 from .store import Store
 
 MOSAIC = pathlib.Path(__file__).parent / "templates" / "mosaic.html"
+
+#: How wide a portrait is asked for when it is going in a list row rather than
+#: a hero. The bare path returns the full original, which for a page of
+#: twenty-three of them is several megabytes of image to draw at 44 points.
+CARD_WIDTH = 200
 
 ROUTES = [
     ["GET", "/api", "this index"],
@@ -742,7 +747,8 @@ class Api:
         Shared, not personal: this is the same payload for every reader, which
         is what lets it cache like the rest of the live tier.
         """
-        from .live import _num_score, logo_url
+        from .live import _num_score, headshot_url, logo_url
+        from .scoring import boxscore_lines, score_boxscore
 
         src = self.live_source()
         if not hasattr(src, "summary"):
@@ -810,6 +816,31 @@ class Api:
               for w in (data.get("winprobability") or [])
               if w.get("homeWinPercentage") is not None]
 
+        # Everyone this game has scored, whether or not anybody rosters them.
+        #
+        # A board is the twelve or so men in your line-ups. A game is
+        # twenty-odd who put up a fantasy line, and until now the other
+        # two-thirds were invisible: the Live tab could tell you your receiver
+        # had eight catches and could not tell you the man opposite him had
+        # nine. They come out of the summary the scoring already parsed, so
+        # this costs no request.
+        #
+        # Shared, like everything else here. Which of these men are *yours* is
+        # personal, is static between transactions, and is a set the client
+        # already holds - so it is intersected there, on ids, and never
+        # computed per reader on the server.
+        lines = boxscore_lines(data)
+        pts = score_boxscore(data, src.scoring)
+        pos = self._positions(data, lines)
+        players = sorted(
+            ({**row,
+              "points": round(pts.get(pid, 0.0), 2),
+              "pos": pos.get(pid, ("", ""))[0],
+              "posFrom": pos.get(pid, ("", ""))[1],
+              "img": headshot_url(pid, row["team"], width=CARD_WIDTH)}
+             for pid, row in lines.items()),
+            key=lambda r: (-r["points"], r["name"]))
+
         last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
         return {
             "event": str(event),
@@ -821,6 +852,7 @@ class Api:
             "possession": (comp.get("situation") or {}).get("possession", ""),
             "situation": comp.get("situation") or {},
             "lastPlay": last,
+            "players": players,
             "drives": drives,
             "winProbability": wp,
             "scoringPlays": [{
@@ -832,6 +864,59 @@ class Api:
                 "away": _num_score(sp.get("awayScore")),
             } for sp in (data.get("scoringPlays") or [])],
         }
+
+    def _positions(self, summary: dict, lines: dict) -> dict[str, tuple[str, str]]:
+        """Athlete id -> (position, where the position came from).
+
+        A box score has no position in it. It groups athletes by what they
+        did, which is why `boxscore_lines` reports a role rather than a
+        position - and a role is enough to sort a list but not enough to
+        answer "show me the tight ends".
+
+        Two sources, and the answer says which one it used, because a card
+        that shows a position it guessed is worse than one that shows none.
+
+          * ESPN's own `leaders` block, which carries a real position - for
+            the handful of men per game it names.
+          * The `player` table, which knows the position of everyone who has
+            ever been on a roster in a league this install follows. An ESPN
+            fantasy id is also a site athlete id, so those join directly; the
+            other providers join through `identity`, on a folded name.
+
+        Anybody neither source knows gets no position and keeps his role.
+        """
+        out: dict[str, tuple[str, str]] = {}
+        for group in (summary.get("leaders") or []):
+            for cat in (group.get("leaders") or []):
+                for entry in (cat.get("leaders") or []):
+                    a = entry.get("athlete") or {}
+                    aid = str(a.get("id") or "")
+                    ab = ((a.get("position") or {}).get("abbreviation") or "")
+                    if aid and ab and aid not in out:
+                        out[aid] = (ab.upper(), "espn")
+
+        want = {pid for pid in lines if pid not in out}
+        if not want:
+            return out
+        rows = self.store().q(
+            "SELECT provider, player_id, name, pos FROM player WHERE pos IS NOT NULL")
+        by_name: dict[str, str] = {}
+        for r in rows:
+            po = identity.position(r["pos"] or "")
+            if not po:
+                continue
+            if r["provider"] == "espn" and str(r["player_id"]) in want:
+                out[str(r["player_id"])] = (po, "roster")
+            if r["name"]:
+                k = identity.fold(r["name"])
+                # A name two providers disagree about is left out rather than
+                # decided by whichever row came back last.
+                by_name[k] = po if by_name.get(k, po) == po else ""
+        for pid in want - set(out):
+            po = by_name.get(identity.fold(lines[pid]["name"]), "")
+            if po:
+                out[pid] = (po, "roster")
+        return out
 
     def headlines(self) -> dict:
         """Recent NFL news, tagged with whoever you actually roster.

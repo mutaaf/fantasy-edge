@@ -19,6 +19,30 @@ struct GameFieldView: View {
     @State private var allDrives = false
     private static let drivesShown = 6
 
+    /// Whether the field stays put while the feed below it is read. Owned by
+    /// `LiveView`, so it is one setting across both fields.
+    var pinned: Bool = true
+
+    /// Whose men the list under the field is about, and which positions.
+    ///
+    /// "Mine" is the question a cross-league board exists to answer. "Everyone"
+    /// is the one it could not answer until the gamecast started carrying the
+    /// whole box score: a game scores twenty-odd men and a four-league board
+    /// names a dozen of them, so the rest were invisible - you could see your
+    /// receiver's eight catches and not the nine by the man opposite him.
+    @State private var everyone = false
+    @State private var wantPos = ""
+
+    /// Playing the game out, one play a beat.
+    ///
+    /// It drives `playID`, which is the same thing tapping a row in the feed
+    /// sets, so the ball, the situation line, the win-probability cursor and
+    /// the selected row all follow it - there is no second copy of "where are
+    /// we" for them to disagree about.
+    @State private var walking = false
+    @State private var speed = 1
+    private static let beat: Duration = .milliseconds(1100)
+
     /// Nothing is picked until the reader picks it, so the default is the
     /// game most worth looking at: one that is running, else the last one
     /// that finished.
@@ -56,7 +80,41 @@ struct GameFieldView: View {
         // and only then - polling the gamecast on its own clock would ask for
         // a field of plays that had not changed.
         .onChange(of: board.live?.version ?? "") { _, _ in Task { await load() } }
-        .onChange(of: chosen) { _, _ in playID = nil; allDrives = false }
+        .onChange(of: chosen) { _, _ in
+            // A walk that survived a change of game would be moving a
+            // different field out from under the reader.
+            playID = nil; allDrives = false; walking = false
+        }
+        .task(id: walkKey) { await walk() }
+    }
+
+    /// Restarted whenever anything the walk depends on changes: switching it
+    /// off, changing speed, or picking another game all cancel the sleep in
+    /// flight rather than letting it land one more play late.
+    private var walkKey: String { "\(walking)|\(speed)|\(chosen)" }
+
+    private func walk() async {
+        guard walking else { return }
+        while !Task.isCancelled && walking {
+            try? await Task.sleep(for: Self.beat / speed)
+            guard !Task.isCancelled, walking,
+                  let gc = board.gamecasts[chosen] else { return }
+            let all = gc.playsNewestFirst
+            let at = playID.flatMap { id in all.firstIndex { $0.play.id == id } } ?? 0
+            // Newest first, so walking forwards in the game is walking
+            // backwards through the list. Index zero is the live play: there
+            // is nowhere left to go, so the walk stops and hands the field
+            // back to following the game.
+            guard at > 0 else { playID = nil; walking = false; return }
+            let next = all[at - 1]
+            playID = next.play.id
+            // A score gets a beat longer. It is the one thing on the field a
+            // reader wants a moment with, and at 4x a drive goes past
+            // otherwise.
+            if next.play.scoring {
+                try? await Task.sleep(for: Self.beat / speed)
+            }
+        }
     }
 
     private func load() async {
@@ -106,25 +164,110 @@ struct GameFieldView: View {
         let ball = snap(gc)
         let men = placed(gc, ball)
         VStack(spacing: 12) {
-            Panel(title: "\(gc.away.mark) at \(gc.home.mark)",
-                  trailing: AnyView(HStack(spacing: 5) {
-                    if gc.state == "in" { MarkDot(mark: .live, size: 6) }
-                    Text(gc.clockLine)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(gc.state == "in" ? AnyShapeStyle(.primary)
-                                                          : AnyShapeStyle(.secondary))
-                  })) {
-                scoreboard(gc, now?.play)
-                field(gc, ball, men.on)
-                situation(gc, ball)
-                showing(now, ball)
+            if pinned { grass(gc, now, ball, men) }
+            ScrollView(.vertical) {
+                VStack(spacing: 12) {
+                    if !pinned { grass(gc, now, ball, men) }
+                    who(gc, men)
+                    HStack(alignment: .top, spacing: 12) {
+                        winProbability(gc, now?.play)
+                            .frame(maxWidth: .infinity)
+                    }
+                    feed(gc)
+                }
             }
-            mine(gc, men)
-            HStack(alignment: .top, spacing: 12) {
-                winProbability(gc, now?.play)
-                    .frame(maxWidth: .infinity)
+            .scrollIndicators(.visible)
+        }
+    }
+
+    /// The field and everything read off the same snap. Pinned or not, this
+    /// is one unit: a scoreboard showing a play the field is not drawing
+    /// would be two answers to one question.
+    private func grass(_ gc: Gamecast, _ now: (drive: Drive, play: GamePlay)?,
+                       _ ball: (drive: Drive, play: GamePlay)?,
+                       _ men: Squad) -> some View {
+        Panel(title: "\(gc.away.mark) at \(gc.home.mark)",
+              trailing: AnyView(HStack(spacing: 5) {
+                if gc.state == "in" { MarkDot(mark: .live, size: 6) }
+                Text(gc.clockLine)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(gc.state == "in" ? AnyShapeStyle(.primary)
+                                                      : AnyShapeStyle(.secondary))
+              })) {
+            scoreboard(gc, now?.play)
+            field(gc, ball, men.on)
+            situation(gc, ball)
+            walkBar(gc, now)
+            showing(now, ball)
+        }
+    }
+
+    // MARK: - walking the game
+
+    /// Play out every play, or step to one.
+    ///
+    /// A slider over the play *index* rather than the clock: plays are what
+    /// the feed publishes and what the field can be placed at, and scrubbing
+    /// a clock would mean interpolating between two of them and putting the
+    /// ball somewhere the game never had it.
+    @ViewBuilder
+    private func walkBar(_ gc: Gamecast,
+                         _ now: (drive: Drive, play: GamePlay)?) -> some View {
+        let all = gc.playsNewestFirst
+        if all.count > 1 {
+            let at = playID.flatMap { id in all.firstIndex { $0.play.id == id } } ?? 0
+            // The slider reads oldest-first, which is how a game is watched.
+            let ord = Double(all.count - 1 - at)
+            HStack(spacing: 10) {
+                Button { walking.toggle() } label: {
+                    Image(systemName: walking ? "pause.fill" : "play.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(width: 30, height: 26)
+                        .plate(8, walking ? Theme.greenFill : .white.opacity(0.06))
+                        .foregroundStyle(walking ? AnyShapeStyle(.white)
+                                                 : AnyShapeStyle(.secondary))
+                }
+                .buttonStyle(.plain).hoverEffect(.highlight)
+                .help(walking ? "Stop" : "Play out every play from here")
+
+                // Continuous, and rounded in the setter. A `step:` of one
+                // over a hundred and seventy plays makes SwiftUI draw a tick
+                // per play, which on a 300pt track is a dotted line rather
+                // than a scale.
+                Slider(value: Binding(
+                    get: { ord },
+                    set: { v in
+                        walking = false
+                        let idx = all.count - 1 - Int(v.rounded())
+                        playID = idx <= 0 ? nil : all[max(0, min(all.count - 1, idx))].play.id
+                    }), in: 0...Double(all.count - 1))
+                    .tint(Theme.green)
+                    .frame(minWidth: 120)
+
+                Text("\(Int(ord) + 1)/\(all.count)")
+                    .font(.system(size: 10)).monospacedDigit()
+                    .foregroundStyle(.tertiary)
+
+                Button { speed = speed == 4 ? 1 : speed * 2 } label: {
+                    Text("\(speed)×").font(.system(size: 10, weight: .bold))
+                        .frame(width: 30, height: 26)
+                        .plate(8, .white.opacity(0.06))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain).hoverEffect(.highlight)
+                .help("Playback speed")
+
+                Button { walking = false; playID = nil } label: {
+                    Text("LIVE").font(.system(size: 9, weight: .heavy))
+                        .padding(.horizontal, 9).frame(height: 26)
+                        .plate(8, playID == nil ? Theme.greenFill : .white.opacity(0.06))
+                        .foregroundStyle(playID == nil ? AnyShapeStyle(.white)
+                                                       : AnyShapeStyle(.secondary))
+                }
+                .buttonStyle(.plain).hoverEffect(.highlight)
+                .disabled(playID == nil)
+                .help("Follow the live play")
             }
-            feed(gc)
         }
     }
 
@@ -368,6 +511,117 @@ struct GameFieldView: View {
                     .lineLimit(1)
             }
         }
+    }
+
+    // MARK: - who is in this game
+
+    /// Two scopes over one list. Mine is the men off the grass and why they
+    /// are off it; Everyone is the whole box score, which is the only place
+    /// the men on nobody's roster exist.
+    @ViewBuilder
+    private func who(_ gc: Gamecast, _ men: Squad) -> some View {
+        VStack(spacing: 8) {
+            // All of it left-aligned. Pushed to the trailing edge with a
+            // Spacer, the last position chip sat flush against the window's
+            // rounded edge and the K was clipped in half - this row is not
+            // inside a Panel, so it has none of a panel's inset to save it.
+            HStack(spacing: 7) {
+                scopeChip("My men", on: !everyone) { everyone = false }
+                scopeChip("Everyone", on: everyone) { everyone = true }
+                if everyone {
+                    Rectangle().fill(.white.opacity(0.14))
+                        .frame(width: 1, height: 16).padding(.horizontal, 3)
+                    ForEach(["", "QB", "RB", "WR", "TE", "K"], id: \.self) { p in
+                        scopeChip(p.isEmpty ? "All" : p, on: wantPos == p) { wantPos = p }
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            if everyone { everybody(gc) } else { mine(gc, men) }
+        }
+    }
+
+    private func scopeChip(_ label: String, on: Bool,
+                           _ tap: @escaping () -> Void) -> some View {
+        Button(action: tap) {
+            Text(label).font(.system(size: 10, weight: .semibold))
+                .padding(.horizontal, 9).padding(.vertical, 4)
+                .plate(9, on ? Theme.greenFill : .white.opacity(0.05))
+                .foregroundStyle(on ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
+        }
+        .buttonStyle(.plain).hoverEffect(.highlight)
+    }
+
+    /// The whole box score, mine marked.
+    ///
+    /// Which of these men are yours is personal and static between
+    /// transactions; the box score is shared and changes every poll. So they
+    /// are intersected here, on ids, rather than the server computing a
+    /// different gamecast for every reader - which is the rule the whole live
+    /// tier is built on.
+    ///
+    /// The points differ by whose man it is, on purpose. One of yours shows
+    /// what his own league scored him, because that is the number that
+    /// decides your week; everyone else shows this install's scoring, which
+    /// is the only rule available to score a stranger under.
+    @ViewBuilder
+    private func everybody(_ gc: Gamecast) -> some View {
+        let ours = Dictionary(board.lineup().map { ($0.id, $0) },
+                              uniquingKeysWith: { a, _ in a })
+        let rows = gc.players.filter { $0.skill && $0.matches(wantPos) }
+        Panel(title: "Everyone in This Game · \(rows.count)",
+              trailing: AnyView(Text(gc.state == "post" ? "final" : "so far")
+                .font(.system(size: 9)).foregroundStyle(.tertiary))) {
+            if gc.players.isEmpty {
+                NoSource(what: gc.state == "pre"
+                         ? "No box score until this game is under way."
+                         : "The feed published no box score for this game.")
+            } else if rows.isEmpty {
+                Text("Nobody in this game plays that position.")
+                    .font(.system(size: 10)).foregroundStyle(.tertiary)
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(rows) { r in
+                        strangerRow(r, mine: ours[r.id],
+                                    tint: r.team == gc.home.mark
+                                          ? Color(feed: gc.home.color, fallback: Theme.green)
+                                          : Color(feed: gc.away.color, fallback: Theme.navy))
+                    }
+                }
+            }
+        }
+    }
+
+    private func strangerRow(_ r: GamePlayer, mine: FieldMan?,
+                             tint: Color) -> some View {
+        Button { focus = r.id } label: {
+            HStack(spacing: 9) {
+                Headshot(url: r.img, name: r.name, tint: tint, size: 30)
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(spacing: 5) {
+                        Text(r.name).font(.system(size: 11, weight: .semibold))
+                            .lineLimit(1)
+                        if mine != nil {
+                            Chip(text: "YOURS", fill: Theme.greenFill, size: 8)
+                        }
+                    }
+                    Text("\(r.badge) · \(r.team) · \(r.line)")
+                        .font(.system(size: 9)).foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Text(mine?.points ?? r.points,
+                     format: .number.precision(.fractionLength(1)))
+                    .font(.system(size: 13, weight: .bold)).monospacedDigit()
+                    .foregroundStyle((mine?.points ?? r.points) > 0
+                                     ? AnyShapeStyle(.primary) : AnyShapeStyle(.tertiary))
+            }
+            .padding(.vertical, 5).padding(.horizontal, 8)
+            .plate(10, focus == r.id ? Theme.green.opacity(0.16)
+                       : mine != nil ? Theme.green.opacity(0.07) : .white.opacity(0.04))
+        }
+        .buttonStyle(.plain).hoverEffect(.highlight)
+        .revealsHologram(r.id)
     }
 
     /// The men who are not on the grass, and why not.

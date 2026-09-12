@@ -1658,6 +1658,86 @@ class TestGamecast(unittest.TestCase):
         self.assertEqual(src.summary("not-an-event"), {})
 
 
+class TestBoxScoreLines(unittest.TestCase):
+    """Everyone a game scored, not just everyone somebody rosters.
+
+    Against the real capture of 401872656 (NE 10 @ SEA 13), because every
+    assertion here is about how ESPN actually shapes a box score - a role read
+    off columns that are named differently in every category, and a display
+    line assembled from labels ESPN reorders from time to time.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from fantasyedge.scoring import boxscore_lines, score_boxscore
+
+        cls.summary = json.loads((FIX / "replay_summary.json").read_text())
+        cls.lines = boxscore_lines(cls.summary)
+        cls.points = score_boxscore(cls.summary)
+
+    def one(self, name):
+        hit = [r for r in self.lines.values() if r["name"] == name]
+        self.assertEqual(len(hit), 1, f"{name} appears {len(hit)} times")
+        return hit[0]
+
+    def test_a_back_who_catches_is_still_a_back(self):
+        """The role rule that a first version got wrong.
+
+        Rhamondre Stevenson ran eighteen times for 51 and caught five for 44.
+        In full PPR the catches score 9.4 and the carries 5.1, so a rule that
+        picked the highest-scoring category filed a bell-cow running back
+        under REC. Volume - touches, which is also how a person reads the line
+        - puts him back where he belongs.
+        """
+        self.assertEqual(self.one("Rhamondre Stevenson")["role"], "RUSH")
+
+    def test_a_quarterback_who_runs_is_still_a_quarterback(self):
+        """Drake Maye: 33 attempts and 7 carries."""
+        self.assertEqual(self.one("Drake Maye")["role"], "PASS")
+
+    def test_a_receiver_who_returns_kicks_is_not_a_return_man(self):
+        """ESPN publishes return *yards* and no return attempts, so the number
+        in that slot is in a different unit from a carry or a catch. Rashid
+        Shaheed's 80 return yards beat his one reception on the arithmetic and
+        used to make a receiver into a returner."""
+        self.assertEqual(self.one("Rashid Shaheed")["role"], "REC")
+
+    def test_a_man_with_nothing_but_returns_is_a_return_man(self):
+        self.assertEqual(self.one("Kyle Williams")["role"], "RET")
+        self.assertFalse(self.one("Kyle Williams")["skill"])
+
+    def test_the_two_return_lines_are_told_apart(self):
+        """Both categories label their yards column "YDS", so an untagged line
+        reads "80 YDS · 9 YDS" and says nothing about which was which."""
+        line = self.one("Rashid Shaheed")["line"]
+        self.assertIn("KR 80 YDS", line)
+        self.assertIn("PR 9 YDS", line)
+
+    def test_a_kicker_line_says_which_pair_is_which(self):
+        """"2/2, 1/1" is two pairs and no way to know which is the field
+        goals. Both labels are kept for exactly that reason, where C/ATT's is
+        dropped because the value already reads as a pair."""
+        self.assertEqual(self.one("Jason Myers")["line"], "2/2 FG, 1/1 XP")
+        self.assertTrue(self.one("Drew Lock")["line"].startswith("16/22, 187 YDS"))
+
+    def test_a_zero_shows_only_in_the_volume_column(self):
+        """Romeo Doubs was targeted three times and caught none. "0 REC" is
+        the fact; a string of zeroes after it is noise."""
+        self.assertEqual(self.one("Romeo Doubs")["line"], "0 REC, 3 TGTS")
+
+    def test_it_finds_the_men_no_board_would_mention(self):
+        """The point of the whole block: a four-league board names a dozen
+        players and this game scored twenty-odd."""
+        self.assertGreaterEqual(len(self.lines), 20)
+        self.assertGreaterEqual(sum(1 for r in self.lines.values() if r["skill"]), 18)
+
+    def test_the_points_agree_with_the_scoring_the_board_uses(self):
+        """Same parse, so a man cannot read one number in the game panel and a
+        different one in the row above it."""
+        jsn = self.one("Jaxon Smith-Njigba")
+        self.assertAlmostEqual(self.points[jsn["id"]], 26.2, places=2)
+
+
 class TestReplay(unittest.TestCase):
     """`frame()`: a finished game as it looked at one instant of its own clock.
 

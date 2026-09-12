@@ -16,6 +16,10 @@ struct Gamecast: Decodable {
     /// Club id, not abbreviation - matched against `GameSide.id`.
     let possession: String?
     let lastPlay: GamePlay?
+    /// Everyone this game scored a fantasy line for, whether or not anybody
+    /// rosters them - see `GamePlayer`. Defaulted rather than required so a
+    /// headset talking to an older API still draws its field.
+    var players: [GamePlayer] = []
     let drives: [Drive]
     /// Already one point per play, from the feed. Not modelled here: a win
     /// probability this app invented would look exactly like one ESPN
@@ -71,6 +75,53 @@ struct GamePlay: Decodable, Identifiable, Hashable {
     let penalty: Bool
     let home: Double?
     let away: Double?
+}
+
+/// One athlete's line in this game, from the box score the scoring already
+/// parsed. Twenty-odd men score a fantasy line in a game and a four-league
+/// board names a dozen of them; this is the other two-thirds.
+///
+/// `pos` and `role` are different claims and the view must not blur them.
+/// `pos` is a position somebody told us - ESPN's leaders block, or a player
+/// row - and is empty when nobody did. `role` is what the stat line says he
+/// did, which a box score can always answer because it groups by exactly
+/// that. So a man reads "WR" when his position is known and "REC" when only
+/// his line is, and the two vocabularies do not overlap by design.
+struct GamePlayer: Decodable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let team: String
+    let jersey: String?
+    let img: String?
+    /// A position, from a source that knew one. Empty otherwise.
+    let pos: String
+    /// Which source. "espn" or "roster".
+    let posFrom: String
+    /// PASS / RUSH / REC / KICK / RET, read off the line.
+    let role: String
+    /// Whether that role is one a fantasy line-up starts.
+    let skill: Bool
+    /// The line itself, already rendered: "8 REC, 122 YDS, 1 TD, 11 TGTS".
+    let line: String
+    let points: Double
+
+    /// What to show where a position goes. Never invents one.
+    var badge: String { pos.isEmpty ? role : pos }
+
+    /// Does this man answer a position chip? On `pos` where there is one; on
+    /// the role the line implies where there is not, which can put a tight
+    /// end under WR - hence a fallback rather than the rule.
+    func matches(_ want: String) -> Bool {
+        if want.isEmpty { return true }
+        if !pos.isEmpty { return pos == want }
+        switch role {
+        case "PASS": return want == "QB"
+        case "RUSH": return want == "RB"
+        case "REC":  return want == "WR" || want == "TE"
+        case "KICK": return want == "K"
+        default:     return false
+        }
+    }
 }
 
 struct WinProbPoint: Decodable, Hashable {

@@ -258,3 +258,148 @@ def parse_team_defence(summary: dict) -> dict[str, dict]:
                     if i < len(stats):
                         bucket[key] = bucket.get(key, 0.0) + _num(stats[i])
     return out
+
+
+# ── the whole line, not just the points ─────────────────────────────────
+#
+# The board needs a number. A card needs the line that produced it, and the
+# Live tab needs both for men who are on nobody's roster - the twenty-six
+# athletes a game scores that a four-league board never mentions. That is the
+# same parse either way, so it happens once, here, rather than three times in
+# three clients.
+
+#: Which columns of each category a fantasy reader wants back, in reading
+#: order. Everything else ESPN sends - QBR, air yards, long gains, the whole
+#: defensive block - is either not scored or not a skill line, and a card that
+#: showed it would be showing noise beside the number that matters.
+LINE = {
+    "passing": ["completions/passingAttempts", "passingYards",
+                "passingTouchdowns", "interceptions"],
+    "rushing": ["rushingAttempts", "rushingYards", "rushingTouchdowns"],
+    "receiving": ["receptions", "receivingYards", "receivingTouchdowns",
+                  "receivingTargets"],
+    "kicking": ["fieldGoalsMade/fieldGoalAttempts",
+                "extraPointsMade/extraPointAttempts"],
+    "kickReturns": ["kickReturnYards"],
+    "puntReturns": ["puntReturnYards"],
+    "fumbles": ["fumblesLost"],
+}
+
+#: What a man was doing, decided by volume: the column that carries how many
+#: times the ball came to him this way. Whichever is biggest is the job.
+#:
+#: Deliberately not a position. A box score groups by what happened, not by
+#: who somebody is, so this can say a back ran and cannot say he is an RB -
+#: a position, where this ships one, comes from a source that knows it.
+#:
+#: Volume rather than points, which was the first rule and was wrong in a way
+#: worth keeping a note about: in a full-PPR league Rhamondre Stevenson's five
+#: catches for 44 outscored his eighteen carries for 51, so scoring by
+#: production filed a bell-cow running back under REC. Touches do not have
+#: that problem, and touches are also how a person reads the line.
+VOLUME = {"passing": ("completions/passingAttempts", "PASS"),
+          "rushing": ("rushingAttempts", "RUSH"),
+          "receiving": ("receptions", "REC"),
+          "kicking": ("fieldGoalsMade/fieldGoalAttempts", "KICK"),
+          "kickReturns": ("kickReturnYards", "RET"),
+          "puntReturns": ("puntReturnYards", "RET")}
+
+#: Ties break down this list.
+RANK = ["PASS", "RUSH", "REC", "KICK"]
+
+#: A return line is not comparable with the others and is never allowed to
+#: win on volume. ESPN publishes return *yards* and no attempt column, so the
+#: number sitting in that slot is measured in a different unit from a carry or
+#: a catch: eighty return yards beat one reception on the arithmetic and made
+#: Rashid Smith - a receiver who happens to return kicks - into a return man.
+#: So a return decides the role only when it is the only line there is.
+LAST = "RET"
+
+#: Which of those roles is fantasy-relevant at all. `fumbles` is in LINE
+#: because a lost fumble belongs on the card; it is not here because nobody is
+#: a fumbler by trade.
+SKILL = {"PASS", "RUSH", "REC", "KICK"}
+
+#: Categories whose own labels do not say which category they are. ESPN calls
+#: both return columns "YDS", so a man who returned a kick and a punt reads as
+#: "80 YDS · 9 YDS" with nothing to tell them apart.
+TAG = {"kickReturns": "KR", "puntReturns": "PR", "fumbles": "LOST"}
+
+
+def boxscore_lines(summary: dict) -> dict[str, dict]:
+    """Athlete id -> everything a card wants: who, what he did, and his role.
+
+    Sibling of `parse_boxscore`, which stays as it is because scoring is on
+    its critical path and wants nothing but numbers. This one carries the
+    name, club, jersey and headshot ESPN already sent, a rendered line per
+    category, and the role that line implies.
+
+    The role is the category he was given the ball in most often - see
+    `VOLUME`. A quarterback who takes a carry is still a quarterback and a
+    back who throws one pass is not one, which precedence by order would get
+    wrong in both directions.
+    """
+    out: dict[str, dict] = {}
+    for team in ((summary.get("boxscore") or {}).get("players") or []):
+        ab = ((team.get("team") or {}).get("abbreviation") or "").upper()
+        for cat in (team.get("statistics") or []):
+            name = cat.get("name") or ""
+            want = LINE.get(name)
+            if not want:
+                continue
+            keys = cat.get("keys") or []
+            labels = cat.get("labels") or []
+            cols = [(i, k, labels[i] if i < len(labels) else "")
+                    for i, k in enumerate(keys) if k in want]
+            if not cols:
+                continue
+            for ath in (cat.get("athletes") or []):
+                a = ath.get("athlete") or {}
+                pid = str(a.get("id") or "")
+                if not pid:
+                    continue
+                stats = ath.get("stats") or []
+                seg = []
+                for n, (i, k, label) in enumerate(cols):
+                    if i >= len(stats):
+                        continue
+                    raw = stats[i]
+                    # The volume column always shows, even at zero - "0 CAR"
+                    # is information. A zero in any other column is not.
+                    if _num(raw) or n == 0:
+                        # A column whose own label is a pair - C/ATT - reads
+                        # as "23/33" and naming it again adds nothing. FG and
+                        # XP are pairs whose label is the only thing telling
+                        # them apart, so those keep theirs.
+                        seg.append(str(raw) if "/" in str(label)
+                                   else f"{raw} {label}".strip())
+                if not seg:
+                    continue
+                row = out.setdefault(pid, {
+                    "id": pid,
+                    "name": a.get("displayName") or "",
+                    "team": ab,
+                    "jersey": str(a.get("jersey") or ""),
+                    "headshot": ((a.get("headshot") or {}).get("href") or ""),
+                    "lines": [], "role": "", "_vol": {},
+                })
+                row["lines"].append({"kind": name, "text": ", ".join(seg)})
+                col = VOLUME.get(name)
+                if col:
+                    key, role = col
+                    i = keys.index(key) if key in keys else -1
+                    if 0 <= i < len(stats):
+                        row["_vol"][role] = max(row["_vol"].get(role, 0.0),
+                                                _num(stats[i]))
+    for row in out.values():
+        vol = row.pop("_vol", {})
+        real = {r: v for r, v in vol.items() if r != LAST}
+        if real:
+            row["role"] = max(real, key=lambda r: (real[r], -RANK.index(r)))
+        elif vol:
+            row["role"] = LAST
+        row["line"] = " · ".join(
+            f"{TAG[l['kind']]} {l['text']}" if l["kind"] in TAG else l["text"]
+            for l in row["lines"])
+        row["skill"] = row["role"] in SKILL
+    return out

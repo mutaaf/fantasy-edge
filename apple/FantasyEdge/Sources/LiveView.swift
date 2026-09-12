@@ -16,6 +16,14 @@ struct LiveView: View {
     /// has to be able to say which game it meant before this view exists.
     @Binding var event: String
     @State private var mode: Mode = .mine
+    /// Whether the field stays put while the rest of the mode is read.
+    ///
+    /// On by default. The field is what the tab is *for*, and the two modes
+    /// that draw one are both taller than the window - reading the
+    /// play-by-play, or the list of men who cannot score on this snap, used
+    /// to scroll the grass off the top of the panel and leave the reader
+    /// scrolling back up to see what the play they just tapped did.
+    @AppStorage("live.pinField") private var pinned = true
 
     enum Mode: String, CaseIterable, Identifiable {
         case mine = "My Team", game = "Game", red = "Red Zone"
@@ -33,28 +41,28 @@ struct LiveView: View {
         VStack(spacing: 12) {
             switcher
             scope
-            // One vertical scroller, here, for all three modes.
+            // Exactly one vertical scroller per mode, and the mode owns it.
             //
             // `CommandView` hands this tab a fixed height and no scroll of its
             // own, and every mode is taller than it: the Game mode alone is a
             // slate strip, a scoreboard, a field, a bench row, a win
-            // probability chart and a play-by-play. Without this the
-            // play-by-play could not be reached at all - it had an inner
-            // scroller of its own, which is precisely what disguised the bug,
-            // because the part you could not get to was the part that scrolled.
+            // probability chart and a play-by-play. Without a scroller the
+            // play-by-play could not be reached at all - it had an inner one
+            // of its own, which is precisely what disguised the bug, because
+            // the part you could not get to was the part that scrolled.
             //
-            // One axis, one scroller. The modes below therefore carry no
-            // vertical ScrollView of their own: two of the same axis nested
-            // means the inner one eats the drag and the outer never moves,
-            // which on visionOS is a worse bug than the one being fixed.
-            ScrollView(.vertical) {
-                switch mode {
-                case .mine: MyTeamField(focus: $focus)
-                case .game: GameFieldView(event: $event, focus: $focus)
-                case .red:  RedZoneField(focus: $focus)
-                }
+            // This used to be one ScrollView here, wrapping whichever mode was
+            // showing. It moved down into the modes so the field can be
+            // pinned: a pinned field is a header *above* the scroller, not a
+            // sticky row inside it, and one view cannot be both. The rule it
+            // was protecting still holds and still matters - one scroller on
+            // one axis, never two of the same axis nested, because on visionOS
+            // the inner one eats the drag and the outer never moves.
+            switch mode {
+            case .mine: MyTeamField(focus: $focus)
+            case .game: GameFieldView(event: $event, focus: $focus, pinned: pinned)
+            case .red:  RedZoneField(focus: $focus, pinned: pinned)
             }
-            .scrollIndicators(.visible)
         }
         // Arriving with a game already named means somebody tapped a
         // scoreline to get here, so the field they asked for is what opens -
@@ -80,6 +88,23 @@ struct LiveView: View {
             Spacer(minLength: 0)
             Text(board.live?.source.map { "source: \($0)" } ?? "")
                 .font(.system(size: 9)).foregroundStyle(.tertiary)
+            // Only offered where there is a field to pin. "My Team" is one
+            // panel and a set of lanes; pinning its field would leave the
+            // lanes a strip to scroll in.
+            if mode != .mine {
+                Button { pinned.toggle() } label: {
+                    Label("Pin", systemImage: pinned ? "pin.fill" : "pin.slash")
+                        .labelStyle(.iconOnly)
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 30, height: 28)
+                        .plate(9, pinned ? Theme.greenFill : .white.opacity(0.05))
+                        .foregroundStyle(pinned ? AnyShapeStyle(.white)
+                                                : AnyShapeStyle(.secondary))
+                }
+                .buttonStyle(.plain).hoverEffect(.highlight)
+                .help(pinned ? "The field scrolls with the rest"
+                             : "Keep the field on screen")
+            }
             LiveRefresh()
         }
     }
@@ -186,36 +211,49 @@ struct LiveRefresh: View {
 struct RedZoneField: View {
     @Environment(Board.self) private var board
     @Binding var focus: String?
+    /// Whether the twenty stays put while the rest is read. Owned by
+    /// `LiveView` so the setting is one setting across both fields.
+    var pinned: Bool = true
 
     var body: some View {
         let men = board.lineup().filter { $0.redZone }
         let live = men.filter { $0.station == .field }
         let waiting = men.filter { $0.station != .field }
         return VStack(spacing: 12) {
-            Panel(title: "In the Twenty",
-                  trailing: AnyView(Text(live.count == 1 ? "1 can score now"
-                                         : "\(live.count) can score now")
-                    .font(.system(size: 10)).foregroundStyle(.tertiary))) {
-                if men.isEmpty {
-                    // Said plainly rather than drawn as an empty field. For
-                    // most of a Sunday this is the true answer, and a bare
-                    // patch of grass reads as a view that failed to load.
-                    NoSource(what: board.lineupScope.isEmpty
-                             ? "Nobody you are starting is in a red zone right "
-                               + "now. The feed reports one per game, so this "
-                               + "fills the moment a drive reaches the twenty."
-                             : "Nobody in this line-up is in a red zone right "
-                               + "now.")
-                } else {
-                    field(live)
-                }
-            }
-            if !waiting.isEmpty {
-                Panel(title: "In the twenty, cannot score on this snap · \(waiting.count)") {
-                    VStack(alignment: .leading, spacing: 7) {
-                        ForEach(waiting) { m in row(m) }
+            if pinned { twenty(men, live) }
+            ScrollView(.vertical) {
+                VStack(spacing: 12) {
+                    if !pinned { twenty(men, live) }
+                    if !waiting.isEmpty {
+                        Panel(title: "In the twenty, cannot score on this snap · \(waiting.count)") {
+                            VStack(alignment: .leading, spacing: 7) {
+                                ForEach(waiting) { m in row(m) }
+                            }
+                        }
                     }
                 }
+            }
+            .scrollIndicators(.visible)
+        }
+    }
+
+    private func twenty(_ men: [FieldMan], _ live: [FieldMan]) -> some View {
+        Panel(title: "In the Twenty",
+              trailing: AnyView(Text(live.count == 1 ? "1 can score now"
+                                     : "\(live.count) can score now")
+                .font(.system(size: 10)).foregroundStyle(.tertiary))) {
+            if men.isEmpty {
+                // Said plainly rather than drawn as an empty field. For
+                // most of a Sunday this is the true answer, and a bare
+                // patch of grass reads as a view that failed to load.
+                NoSource(what: board.lineupScope.isEmpty
+                         ? "Nobody you are starting is in a red zone right "
+                           + "now. The feed reports one per game, so this "
+                           + "fills the moment a drive reaches the twenty."
+                         : "Nobody in this line-up is in a red zone right "
+                           + "now.")
+            } else {
+                field(live)
             }
         }
     }
@@ -316,7 +354,8 @@ struct MyTeamField: View {
             .sorted { ($0.lineups, $0.points) > ($1.lineups, $1.points) }
         let drawn = Array(onField.prefix(Self.crowd))
 
-        return VStack(spacing: 12) {
+        return ScrollView(.vertical) {
+          VStack(spacing: 12) {
             Panel(title: "Your Men, Right Now", trailing: AnyView(counts(byStation))) {
                 if men.isEmpty {
                     NoSource(what: board.scale.single
@@ -337,7 +376,9 @@ struct MyTeamField: View {
             bench(byStation[.bench] ?? [])
             sideline(byStation[.sideline] ?? [])
             finished(byStation[.done] ?? [])
+          }
         }
+        .scrollIndicators(.visible)
     }
 
     /// How long a lane may run before it folds. Bounded at every scale, and
