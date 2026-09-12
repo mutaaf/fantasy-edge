@@ -15,6 +15,21 @@ import SwiftUI
 /// around the screen, so you are watching with your line-up around you rather
 /// than beside a list.
 ///
+/// ## The middle belongs to whoever just did something
+///
+/// Both arrangements now form around a centre rather than filling row by row.
+/// `Spotlight` decides who stands there - the man who most recently scored
+/// while that is still news, and the man with the most at stake the rest of
+/// the time - and the remaining cells fill the slots outward from him in
+/// leverage order. So the middle of the wearer's view is the one place on the
+/// board that is always about the present tense, and the arc still says
+/// importance with distance.
+///
+/// The re-forming is a movement, not a cut. Entities are told where to go with
+/// `move(to:)` and only when the place they were last *told* about actually
+/// changed - see `place(_:_:_:_:)`, which is where the difference between an
+/// animation and a stutter lives.
+///
 /// ## What is in here and what is not
 ///
 /// The window has five tabs. Three of them have something that is genuinely
@@ -68,6 +83,30 @@ struct ImmersiveBoard: View {
     @State private var feed = GameFeed()
     @State private var watching = false
 
+    /// The reaction the centre of the room is currently given to, and the
+    /// timer that hands the middle back when it stops being news.
+    ///
+    /// State rather than a computed read of `board.recent.first`, because
+    /// something has to *move* when the dwell runs out. Nothing else changes
+    /// at that instant - no poll has landed, no number is different - so
+    /// without a piece of state to invalidate on, the room would keep the old
+    /// man in the middle until the next poll happened to arrive, which is up
+    /// to thirty-five seconds later.
+    @State private var held: Board.Reaction?
+    @State private var dwell: Task<Void, Never>?
+    @State private var placed = Placement()
+
+    /// How long the centre keeps a man who has just scored.
+    ///
+    /// Longer than the longest poll interval, deliberately. `Board.beat()`
+    /// draws 25 to 35 seconds, so a dwell shorter than that would hand the
+    /// middle back before the next poll could either confirm the man or
+    /// replace him - the centre would spend most of a live afternoon in its
+    /// resting state with a flicker of news between polls, which is the
+    /// opposite of what it is for. Forty-five seconds means a score holds the
+    /// room until at least one further poll has had its say.
+    private static let dwellFor: TimeInterval = 45
+
     private let radius: Float = 1.9
     private let eyeHeight: Float = 1.35
     private let columns = 5
@@ -80,8 +119,22 @@ struct ImmersiveBoard: View {
     /// the bottom row of the board was down by the sofa. Starting a fifth of a
     /// metre high centres the arc on the wearer instead.
     private let arcTop: Float = 0.18
-    /// Wider when a game is on, so the screen has the middle to itself.
-    private var ringAngle: Float { watching ? 28 * .pi / 180 : columnAngle }
+    /// Wider when a game is on, so the screen has the middle to itself, and
+    /// wider again when a hologram is up: the card is placed dead ahead and
+    /// half a metre nearer than the arc, so the cells on either side of it
+    /// have to give it air rather than crowd its edges. The middle three of
+    /// the top row are hidden outright below; this is what happens to the rest.
+    private var ringAngle: Float {
+        if watching { return 28 * .pi / 180 }
+        if openID != nil { return 25 * .pi / 180 }
+        return columnAngle
+    }
+    /// How much nearer the wearer the man in the middle stands than his band
+    /// alone would put him. Enough to read as forward - the arc's own bands
+    /// span 0.46 metres end to end - and not so much that he overlaps his
+    /// neighbours: at 17 degrees of separation a cell has about 11 degrees of
+    /// angular width to spend and 17 to spend it in.
+    private let focusLift: Float = 0.25
 
     /// Points per degree, here against the window.
     ///
@@ -125,6 +178,9 @@ struct ImmersiveBoard: View {
                     }
                 }
             }
+            if centre != nil {
+                Attachment(id: "spotlight") { spotlightBanner }
+            }
             Attachment(id: "scoreline") { scoreline }
             Attachment(id: "controls") { controls }
             Attachment(id: "attention") { attentionPanel }
@@ -149,21 +205,77 @@ struct ImmersiveBoard: View {
         // The window calls `board.stop()` when it disappears, and entering
         // this space dismisses the window - so without this the room showed a
         // board that had quietly stopped being live the moment you opened it.
+        // The start below was not enough on its own: the window's
+        // `onDisappear` runs *after* this task, so it cancelled the poll this
+        // had just begun. `Board` counts its watchers now; see the note there.
         .task {
+            // A score that landed while the wearer was still in the window
+            // should be in the middle of the room when they walk into it.
+            // `onChange` cannot see one that fired before this view existed.
+            hold(board.recent.first)
             board.start()
             await board.loadPrefs()
             await board.loadProjections()
             await board.loadIntel()
         }
-        .onDisappear { board.stop() }
+        // Newest first, so `first` is the newest thing to land. Within one
+        // poll the batch is sorted by size, which is the right tie-break: two
+        // men who scored in the same thirty seconds are equally recent, and
+        // the bigger play is the one worth turning the room around.
+        .onChange(of: board.recent.first) { _, fresh in hold(fresh) }
+        .onDisappear { board.stop(); dwell?.cancel() }
+    }
+
+    /// Give the middle of the room to a reaction, and set the clock that takes
+    /// it back.
+    ///
+    /// The task is cancelled and replaced rather than left to expire, so a
+    /// second score inside the window resets the dwell instead of inheriting
+    /// the remains of the first man's - which would have handed the room back
+    /// seconds after the second man arrived in it.
+    ///
+    /// What is left of the dwell is computed from when the reaction actually
+    /// landed rather than from now, because this is also called as the space
+    /// opens, with whatever the window had already collected. Sleeping the
+    /// full forty-five seconds there would give a two-minute-old touchdown a
+    /// fresh spell in the middle of the room.
+    private func hold(_ r: Board.Reaction?) {
+        guard let r else { return }
+        let left = Self.dwellFor - Date.now.timeIntervalSince(r.at)
+        guard left > 0 else { return }
+        dwell?.cancel()
+        held = r
+        dwell = Task {
+            try? await Task.sleep(for: .seconds(left))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { held = nil }
+        }
+    }
+
+    /// Who has the middle, and why. Recomputed on every pass because the
+    /// resting half of the rule follows leverage, which moves with the poll.
+    private var centre: Spotlight? {
+        Spotlight.decide(cells: board.mosaic.cells, recent: board.recent,
+                         holding: held, now: .now, dwell: Self.dwellFor)
     }
 
     // MARK: - what a tap and a long press mean here
 
-    /// A tap on any face opens him in depth, wherever the face was drawn -
-    /// on the arc, or in the brief. The window raises a sheet for this; a
-    /// sheet cannot be presented into an immersive space, so here the card is
-    /// an attachment placed in front of the arc.
+    /// A tap on anything that represents a man opens him in depth - a cell on
+    /// the arc, the banner over the middle of the room, a face in the brief, a
+    /// row in the reaction feed. The window raises a sheet for this; a sheet
+    /// cannot be presented into an immersive space, so here the card is an
+    /// attachment placed in front of the arc.
+    ///
+    /// It is placed *dead ahead*, never where the thing that opened it was
+    /// drawn. A card that appeared over the cell you tapped would put itself
+    /// forty degrees off centre for anything on the outer columns and behind
+    /// your shoulder for anything in a wing, and a wearer would have to turn
+    /// their head to read the deepest surface in the app. Straight ahead and
+    /// half a metre nearer than the arc is the one placement that is the same
+    /// wherever the tap came from - and the arc widens and the middle of the
+    /// top row hides while it is up, so the card has air rather than cells
+    /// crowding its edges.
     ///
     /// The cell is carried alongside the id when there is one, because the
     /// leverage figures on that card - his share of what is still in doubt -
@@ -185,20 +297,38 @@ struct ImmersiveBoard: View {
     // MARK: - placement
 
     private func layout(into root: Entity, attachments: RealityViewAttachments) {
-        let cells = board.mosaic.cells
-        for (i, cell) in cells.enumerated() {
+        let order = arranged(board.mosaic.cells)
+        let slots = seats(order.count)
+        for (k, cell) in order.enumerated() {
             guard let view = attachments.entity(for: cell.id) else { continue }
-            if view.parent !== root { root.addChild(view) }
+            let i = slots[k]
             let col = Float(i % columns) - Float(columns - 1) / 2
             let row = Float(i / columns)
             let angle = col * ringAngle
-            let depth = radius - cell.band.depth
-            view.position = SIMD3(x: sin(angle) * depth,
-                                  y: eyeHeight + arcTop - row * rowDrop,
-                                  z: -cos(angle) * depth)
-            view.orientation = simd_quatf(angle: -angle, axis: SIMD3(0, 1, 0))
-            // A detail panel is open in the middle; get the near cells out of it.
+            // The man in the middle stands forward of his own band. Distance
+            // is still importance on this arc; this is the one cell allowed to
+            // borrow a little of it to say "now" instead.
+            let depth = radius - cell.band.depth - (k == 0 ? focusLift : 0)
+            // A detail panel is open in the middle; get the near cells out of
+            // it. Assigned before the placement below, because a disabled
+            // entity is placed rather than animated - an animation on
+            // something nobody can see is a frame budget spent on nothing, and
+            // it would still be playing when the panel closed.
             view.isEnabled = !(openID != nil && abs(col) < 1.2 && row < 1)
+            place(cell.id, view, root,
+                  SIMD3(x: sin(angle) * depth,
+                        y: eyeHeight + arcTop - row * rowDrop,
+                        z: -cos(angle) * depth),
+                  yaw: -angle)
+        }
+        if let c = centre {
+            // Above the man it is about, in front of him so his own cell
+            // cannot occlude it. The height clears the tallest band - an xl
+            // cell is 215 points, which is 344 in the room and about a quarter
+            // of a metre - and still sits well under the scoreline at +0.66.
+            pin("spotlight", attachments, root,
+                SIMD3(0, eyeHeight + arcTop + 0.19,
+                      -(radius - c.cell.band.depth - focusLift - 0.03)))
         }
         pin("scoreline", attachments, root, SIMD3(0, eyeHeight + 0.66, -radius + 0.1))
         // Low, and nearer than the arc so it reads as a bar under the board
@@ -218,8 +348,50 @@ struct ImmersiveBoard: View {
         wing("slate", attachments, root, angle: -wingAngle, y: eyeHeight - 0.46)
         wing("reactions", attachments, root, angle: wingAngle, y: eyeHeight + 0.42)
         wing("brief", attachments, root, angle: wingAngle, y: eyeHeight - 0.44)
+        // Dead ahead, at eye level, whichever man was tapped and wherever he
+        // was drawn when he was. See the note on `open(_:)`.
         pin("detail", attachments, root, SIMD3(0, eyeHeight - 0.02, -radius + 0.55))
         pin("screen", attachments, root, SIMD3(0, eyeHeight, -radius - 0.25))
+    }
+
+    /// The cells in the order the seats want them: the man in the middle
+    /// first, then everybody else in the leverage order the model already
+    /// sorted them into.
+    ///
+    /// He is *moved* rather than swapped with whoever held the middle seat.
+    /// Swapping would send one man across the whole board every time somebody
+    /// scored; moving shuffles everybody behind him by one seat, which is a
+    /// row of small movements rather than one long one, and reads as the board
+    /// re-forming instead of two cells trading places.
+    private func arranged(_ cells: [Cell]) -> [Cell] {
+        guard let id = centre?.cell.id,
+              let i = cells.firstIndex(where: { $0.id == id }), i != 0
+        else { return cells }
+        var out = cells
+        out.insert(out.remove(at: i), at: 0)
+        return out
+    }
+
+    /// The grid positions, ranked by how central they are.
+    ///
+    /// `seats(n)[k]` is the row-major slot the k-th most important cell gets,
+    /// so seat 0 is the middle of the top row and the rest spread outward from
+    /// it. A row costs less than a column because it *is* less: the rows are
+    /// 0.37 metres apart and the columns about 0.55 at seventeen degrees, so a
+    /// step down is two thirds of a step sideways. The ratio is fixed rather
+    /// than derived from `ringAngle`, which widens when a hologram opens -
+    /// deriving it would re-rank every seat at that moment and send the whole
+    /// board shuffling for a reason that has nothing to do with the board.
+    private func seats(_ n: Int) -> [Int] {
+        let rowCost: Float = 0.37 / 0.55
+        func cost(_ i: Int) -> Float {
+            abs(Float(i % columns) - Float(columns - 1) / 2)
+                + Float(i / columns) * rowCost
+        }
+        // The index is the tie-break, so two seats of equal cost keep the same
+        // order every pass. Without it `sorted` is free to hand back either,
+        // and a pair of cells would swap places on nothing.
+        return (0..<n).sorted { (cost($0), $0) < (cost($1), $1) }
     }
 
     /// A side panel, on the arc at a given angle and height. Same convention
@@ -235,16 +407,130 @@ struct ImmersiveBoard: View {
     private func pin(_ id: String, _ attachments: RealityViewAttachments,
                      _ root: Entity, _ position: SIMD3<Float>, yaw: Float = 0) {
         guard let e = attachments.entity(for: id) else { return }
-        if e.parent !== root { root.addChild(e) }
-        e.position = position
-        // Assigned every pass rather than only when non-zero. The old version
-        // skipped `yaw == 0`, which meant a panel that had once been turned
-        // kept its old rotation if it was later placed straight - and the two
-        // wings swapped sides during the rebuild that introduced them.
-        e.orientation = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+        place(id, e, root, position, yaw: yaw)
+    }
+
+    /// Put an entity where it now belongs, moving it if it is already
+    /// somewhere else.
+    ///
+    /// Three things this has to get right, and each of them is a bug that
+    /// happens the moment it is dropped:
+    ///
+    ///   * **The first placement is a cut.** An entity that has just been
+    ///     added sits at the root's origin, which in an immersive space is the
+    ///     floor between the wearer's feet. Animating from there means the
+    ///     whole board flies up off the carpet on every open.
+    ///   * **A move is compared against the last place this asked for, not
+    ///     against where the entity currently is.** Mid-animation
+    ///     `entity.position` reads as wherever the movement has got to, and
+    ///     `update:` runs on the compositor's clock rather than on the poll -
+    ///     so comparing against it re-issues `move(to:)` sixty times a second,
+    ///     each call restarting the animation from a hair further along. The
+    ///     cell creeps and never arrives.
+    ///   * **A disabled entity is cut, not moved.** It is behind the hologram
+    ///     and nobody can see it; an animation there is frame budget spent on
+    ///     nothing, and it would still be running when the panel closed.
+    ///
+    /// The yaw is assigned along with the position rather than only when it is
+    /// non-zero. The old version skipped `yaw == 0`, so a panel that had once
+    /// been turned kept its old rotation if it was later placed straight, and
+    /// the two wings swapped sides during the rebuild that introduced them.
+    private func place(_ id: String, _ e: Entity, _ root: Entity,
+                       _ position: SIMD3<Float>, yaw: Float = 0) {
+        let target = Transform(
+            scale: .one,
+            rotation: simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0)),
+            translation: position)
+        let arriving = e.parent !== root
+        if arriving { root.addChild(e) }
+        let told = placed.at[id].map { (at: $0, yaw: placed.yaw[id] ?? 0) }
+        if arriving || !e.isEnabled || told == nil {
+            e.transform = target
+        } else if let t = told,
+                  // A third of a centimetre, or a tenth of a degree. Below
+                  // that nothing is visible at a metre and a half and the
+                  // animation is only work.
+                  simd_distance(t.at, position) > 0.003
+                    || abs(t.yaw - yaw) > 0.002 {
+            e.move(to: target, relativeTo: root, duration: 0.55,
+                   timingFunction: .easeInOut)
+        } else {
+            return                      // already there, or already on its way
+        }
+        placed.at[id] = position
+        placed.yaw[id] = yaw
+    }
+
+    /// Where each entity was last *told* to go.
+    ///
+    /// A plain class held in `@State` rather than anything observable: it is
+    /// written from inside `RealityView`'s update closure, and a stored
+    /// property SwiftUI tracked would invalidate the view that is mid-update
+    /// and loop - the same reason every memo on `Board` is
+    /// `@ObservationIgnored`.
+    private final class Placement {
+        var at: [String: SIMD3<Float>] = [:]
+        var yaw: [String: Float] = [:]
     }
 
     // MARK: - furniture
+
+    /// Who has the middle, said out loud above him.
+    ///
+    /// The cell itself cannot say this. It is the same `CellView` the window
+    /// draws and it carries what is true of the man - his points, his
+    /// position, his share - not what is true of his *place in the room*, and
+    /// a reader looking at the middle of an arc is owed the reason it is the
+    /// middle. Two states have to be separable at a glance and never merge: a
+    /// green live chip over "+6.5 just landed" is an event, and a slate chip
+    /// over "nothing has landed yet" is an arrangement. Both are opaque chips
+    /// with a glyph, so neither depends on the colour surviving the room.
+    ///
+    /// Tapping it opens the same hologram tapping his cell does. It sits over
+    /// a man, so it is one of the things on this surface that represents a
+    /// person, and every one of those leads to the card.
+    @ViewBuilder
+    private var spotlightBanner: some View {
+        if let c = centre {
+            Button { open(c.cell) } label: {
+                HStack(spacing: s(14)) {
+                    Headshot(id: c.cell.id, name: c.cell.name,
+                             tint: Theme.positionFill(c.cell.pos), size: s(44))
+                    VStack(alignment: .leading, spacing: s(4)) {
+                        HStack(spacing: s(7)) {
+                            if case .scored(let r) = c.reason {
+                                MarkChip(mark: .live, text: c.headline,
+                                         size: s(10))
+                                Chip(text: r.headline.uppercased(),
+                                     fill: Theme.sideFill(r.side), size: s(10))
+                            } else {
+                                Chip(text: c.headline,
+                                     fill: Theme.positionFill("DEF"),
+                                     size: s(10))
+                            }
+                            Text(c.cell.name)
+                                .font(.system(size: s(19), weight: .bold))
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                        }
+                        Text(c.caption)
+                            .font(.system(size: s(13)))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2).fixedSize(horizontal: false,
+                                                    vertical: true)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: s(13), weight: .bold))
+                        .foregroundStyle(.tertiary)
+                }
+                .frame(width: s(430), alignment: .leading)
+                .padding(.horizontal, s(18)).padding(.vertical, s(12))
+                .glassBackgroundEffect(in: .rect(cornerRadius: s(24)))
+            }
+            .buttonStyle(.plain).hoverEffect(.highlight)
+            .accessibilityLabel("\(c.cell.name). \(c.caption)")
+            .animation(.smooth(duration: 0.4), value: c)
+        }
+    }
 
     /// Where this matchup stands, and whose numbers say so.
     ///
@@ -445,35 +731,63 @@ struct ImmersiveBoard: View {
 
     /// A live feed of what just landed, at the edge of vision, so a big play
     /// registers even while you are looking at the game rather than the board.
+    ///
+    /// Every row is a man, so every row opens him. This was the last thing on
+    /// the surface that named a player and did nothing when you looked at it
+    /// and pinched - which on a headset reads as broken rather than as
+    /// read-only, because the row beside it in the brief and every cell on the
+    /// arc do open.
     private var reactionFeed: some View {
         roomPanel("AS IT HAPPENS") {
             if board.recent.isEmpty {
                 Text("Nothing yet").font(.system(size: s(15)))
                     .foregroundStyle(.secondary)
             } else {
-                VStack(alignment: .leading, spacing: s(10)) {
+                VStack(alignment: .leading, spacing: s(6)) {
                     ForEach(board.recent.prefix(5)) { r in
-                        HStack(spacing: s(10)) {
-                            HStack(spacing: 0) {
-                                Chip(text: "+" + r.delta.formatted(
-                                        .number.precision(.fractionLength(1))),
-                                     fill: Theme.sideFill(r.side), size: s(13))
-                                Spacer(minLength: 0)
-                            }
-                            .frame(width: s(74), alignment: .leading)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(r.name).font(.system(size: s(16), weight: .semibold))
-                                    .lineLimit(1).minimumScaleFactor(0.8)
-                                Text("\(r.headline) · now \(r.total, format: .number.precision(.fractionLength(1)))")
-                                    .font(.system(size: s(13)))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        Button { open(id: r.id) } label: { reactionRow(r) }
+                            .buttonStyle(.plain).hoverEffect(.highlight)
+                            .transition(.move(edge: .top).combined(with: .opacity))
                     }
                 }
                 .animation(.smooth, value: board.recent)
             }
+        }
+    }
+
+    /// One landing. The whole row is the target rather than the words in it,
+    /// for the reason `leagueRow` is: a pinch lands where the wearer was
+    /// looking, which is rarely the sixteen points of a name.
+    private func reactionRow(_ r: Board.Reaction) -> some View {
+        HStack(spacing: s(10)) {
+            HStack(spacing: 0) {
+                Chip(text: "+" + r.delta.formatted(
+                        .number.precision(.fractionLength(1))),
+                     fill: Theme.sideFill(r.side), size: s(13))
+                Spacer(minLength: 0)
+            }
+            .frame(width: s(74), alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(r.name).font(.system(size: s(16), weight: .semibold))
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Text("\(r.headline) · now \(r.total, format: .number.precision(.fractionLength(1)))")
+                    .font(.system(size: s(13)))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, s(8)).padding(.vertical, s(7))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // The man currently standing in the middle of the room is marked
+        // here, so the feed and the centre are legibly the same claim. Marked
+        // with a lighter ground and an edge rather than with a tint: this row
+        // carries secondary ink, and the one colour that would mean anything
+        // here - his side - is a fill built for white text, not for grey.
+        .plate(s(11), .white.opacity(r.id == centre?.cell.id ? 0.16 : 0.06))
+        .overlay {
+            RoundedRectangle(cornerRadius: s(11))
+                .strokeBorder(.white.opacity(r.id == centre?.cell.id ? 0.5 : 0),
+                              lineWidth: 1)
         }
     }
 

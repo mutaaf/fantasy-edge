@@ -34,6 +34,7 @@
 		DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEBA4BC9684357AC9155984 /* PlayersView.swift */; };
 		F8ED720F0D5071B5620CACA3 /* Projections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E3466D5422E0389280CFCA /* Projections.swift */; };
 		F96424E8A9B7076E203F9B63 /* ProjectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */; };
+		8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EACBD5850D41E9E135D82C /* Spotlight.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
 		DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B52FBF15637237B331C3961 /* Watch.swift */; };
 /* End PBXBuildFile section */
@@ -68,6 +69,7 @@
 		4FEBA4BC9684357AC9155984 /* PlayersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersView.swift; sourceTree = "<group>"; };
 		38E3466D5422E0389280CFCA /* Projections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Projections.swift; sourceTree = "<group>"; };
 		EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectionsView.swift; sourceTree = "<group>"; };
+		C0EACBD5850D41E9E135D82C /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		6B52FBF15637237B331C3961 /* Watch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -121,6 +123,7 @@
 				4FEBA4BC9684357AC9155984 /* PlayersView.swift */,
 				38E3466D5422E0389280CFCA /* Projections.swift */,
 				EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */,
+				C0EACBD5850D41E9E135D82C /* Spotlight.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
 				6B52FBF15637237B331C3961 /* Watch.swift */,
 			);
@@ -221,6 +224,7 @@
 				DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */,
 				F8ED720F0D5071B5620CACA3 /* Projections.swift in Sources */,
 				F96424E8A9B7076E203F9B63 /* ProjectionsView.swift in Sources */,
+				8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
 				DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */,
 			);

@@ -1089,8 +1089,27 @@ final class Board {
         }
     }
 
+    /// How many scenes are currently watching.
+    ///
+    /// Counted rather than assumed, because the two scenes hand over in the
+    /// wrong order and nothing can make them hand over in the right one.
+    /// Pressing Immersive opens the space and then dismisses the window, so
+    /// the space's `.task` calls `start()` and the window's `onDisappear`
+    /// calls `stop()` *after* it. With an unconditional stop the room came up
+    /// with one live scoreline and never received another: every number froze
+    /// at whatever it was the instant you walked in, no reaction could ever
+    /// fire, and the centre of the board - which is built out of reactions -
+    /// had nothing to react to. It looked like a rendering problem and was a
+    /// cancelled task.
+    ///
+    /// Measured before it was fixed: the window showed 23.2 to 12.2 with four
+    /// men live, and the same board in the room showed 0.0 to 0.0 with every
+    /// cell reading PRE.
+    @ObservationIgnored private var watchers = 0
+
     func start() {
-        poll?.cancel()
+        watchers += 1
+        guard poll == nil else { return }
         poll = Task { [weak self] in
             await self?.load()
             while !Task.isCancelled {
@@ -1099,5 +1118,14 @@ final class Board {
             }
         }
     }
-    func stop() { poll?.cancel(); poll = nil }
+    /// Stops only when the last scene has gone. A scene that never started -
+    /// or a second `onDisappear` for one that already stopped - must not take
+    /// the count negative, or the next handover leaves the poll running with
+    /// nobody watching it.
+    func stop() {
+        watchers = max(0, watchers - 1)
+        guard watchers == 0 else { return }
+        poll?.cancel()
+        poll = nil
+    }
 }
