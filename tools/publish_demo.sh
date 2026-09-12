@@ -11,6 +11,33 @@ export PATH="/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
 
 log() { printf '%s  %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 
+# `--check` proves the scheduled job can actually run, without running it.
+#
+# Worth having because the failure this was written for was invisible from a
+# shell. The job sat in launchd for a day exiting 126 - "Operation not
+# permitted" - while the same script ran fine by hand: the repository was
+# under ~/Desktop, which is one of the three folders macOS withholds from a
+# background agent, so launchd could not execute the file at all. Nothing
+# published, no error anybody saw, and a shell test could not have caught it
+# because a shell has the grant the agent does not.
+#
+# So this exits before the first thing with a consequence, and reports what
+# the run would depend on. `launchctl kickstart` it after any change to where
+# this lives or what runs it.
+if [ "${1:-}" = "--check" ]; then
+  log "check: running as $(id -un) from $(pwd)"
+  for f in Makefile data/fantasy.db "$HOME/.fantasy-edge/leagues.json"; do
+    [ -r "$f" ] && log "  can read $f" || { log "  CANNOT READ $f"; exit 1; }
+  done
+  command -v python3 >/dev/null || { log "  no python3 on PATH"; exit 1; }
+  log "  python3 at $(command -v python3)"
+  git rev-parse --short HEAD >/dev/null 2>&1 \
+    && log "  git ok at $(git rev-parse --short HEAD)" \
+    || { log "  not a git checkout"; exit 1; }
+  log "check: this job can run"
+  exit 0
+fi
+
 # Credentials live outside the repository and are read, never written.
 [ -f "$HOME/.fantasy-edge/espn.env" ] && { set -a; . "$HOME/.fantasy-edge/espn.env"; set +a; }
 
