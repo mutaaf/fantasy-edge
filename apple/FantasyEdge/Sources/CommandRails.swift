@@ -83,15 +83,15 @@ extension CommandView {
                         Divider().opacity(0.2)
                         HStack(spacing: 6) {
                             StatTile(value: figure(m.yourProjected), label: "YOU",
-                                     detail: Explain.projected)
+                                     detail: Explain.projected(board))
                             StatTile(value: figure(m.oppProjected),
                                      label: (f.league.opp?.name ?? "OPPONENT")
                                         .uppercased(),
-                                     detail: Explain.opponentProjected)
+                                     detail: Explain.opponentProjected(board))
                             StatTile(value: (m.margin >= 0 ? "+" : "") + figure(m.margin),
                                      label: "MARGIN",
-                                     tint: m.margin >= 0 ? Theme.green : Theme.red,
-                                     detail: Explain.margin)
+                                     mark: .of(m.margin),
+                                     detail: Explain.margin(board))
                         }
                         HStack(spacing: 6) {
                             StatTile(value: board.rankSummary.value,
@@ -201,7 +201,7 @@ extension CommandView {
                 if here {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.green)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, 8).padding(.horizontal, 10)
@@ -237,9 +237,13 @@ extension CommandView {
                         .font(.system(size: 10)).foregroundStyle(.tertiary)
                         .lineLimit(2)
                     Spacer(minLength: 4)
-                    Button("Show") { Task { await board.unhideAll() } }
-                        .font(.system(size: 10, weight: .semibold))
-                        .buttonStyle(.plain).foregroundStyle(Theme.green)
+                    // A chip rather than green words: this is the only way
+                    // back from a hidden league and it has to be visible over
+                    // a bright room, where green text measures 1.6:1.
+                    Button { Task { await board.unhideAll() } } label: {
+                        Chip(text: "SHOW", fill: Theme.greenFill)
+                    }
+                    .buttonStyle(.plain).hoverEffect(.highlight)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 9)
                 .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.04)))
@@ -257,18 +261,18 @@ extension CommandView {
                     StatTile(value: "\(board.distinctPlayers)", label: "PLAYERS",
                              detail: Explain.rostered)
                     StatTile(value: "\(w) - \(l)", label: "PROJECTED",
-                             tint: w >= l ? Theme.green : Theme.red,
-                             detail: Explain.projectedRecord)
+                             mark: .of(Double(w - l), level: 0.5),
+                             detail: Explain.projectedRecord(board))
                 }
                 Divider().opacity(0.2)
                 HStack(spacing: 6) {
                     StatTile(value: figure(board.totalProjected), label: "PROJ POINTS",
-                             detail: Explain.totalProjected)
+                             detail: Explain.totalProjected(board))
                     StatTile(value: (board.edgeOverOpponents >= 0 ? "+" : "")
                              + figure(board.edgeOverOpponents),
                              label: "VS OPPONENTS",
-                             tint: board.edgeOverOpponents >= 0 ? Theme.green : Theme.red,
-                             detail: Explain.edge)
+                             mark: .of(board.edgeOverOpponents),
+                             detail: Explain.edge(board))
                     // Says "league rank" over one league and "avg rank" over
                     // several, and names how many reported one when they
                     // differ - a tile whose meaning drifts with the league
@@ -301,11 +305,15 @@ extension CommandView {
                 ForEach(board.injuries.prefix(5)) { inj in
                     Button { focus = inj.id } label: {
                         HStack(spacing: 10) {
+                            // Opaque disc, white cross. The old version drew
+                            // a coloured glyph on a 22% wash, so on a bright
+                            // room the injury icon was a faint smudge on the
+                            // one panel whose whole job is to be noticed.
                             ZStack {
-                                Circle().fill(severityTint(inj.severity).opacity(0.22))
+                                Circle().fill(severityFill(inj.severity))
                                 Image(systemName: "cross.case.fill")
                                     .font(.system(size: 12))
-                                    .foregroundStyle(severityTint(inj.severity))
+                                    .foregroundStyle(.white)
                             }
                             .frame(width: 30, height: 30)
                             VStack(alignment: .leading, spacing: 2) {
@@ -314,11 +322,8 @@ extension CommandView {
                                         .font(.system(size: 12, weight: .semibold))
                                         .lineLimit(1)
                                     if let lab = inj.label {
-                                        Text(lab).font(.system(size: 8, weight: .heavy))
-                                            .padding(.horizontal, 5).padding(.vertical, 1)
-                                            .background(severityTint(inj.severity)
-                                                .opacity(0.25), in: .capsule)
-                                            .foregroundStyle(severityTint(inj.severity))
+                                        Chip(text: lab.uppercased(),
+                                             fill: severityFill(inj.severity), size: 8)
                                     }
                                 }
                                 Text(inj.headline ?? "")
@@ -338,12 +343,18 @@ extension CommandView {
         }
     }
 
-    func severityTint(_ s: String?) -> Color {
+    /// How bad it is, as an opaque ground for white text.
+    ///
+    /// Doubtful sits between out and questionable by hue *and* by being the
+    /// one solved for at runtime, so the three are ordered rather than merely
+    /// different - a reader who cannot separate red from amber still gets the
+    /// wording, which is what the chip actually says.
+    func severityFill(_ s: String?) -> Color {
         switch (s ?? "").lowercased() {
-        case "out", "ir": return Theme.red
-        case "doubtful":  return Color.orange
-        case "questionable": return Theme.gold
-        default: return .secondary
+        case "out", "ir":    return Theme.redFill
+        case "doubtful":     return Theme.chipFill(hue: 0.055)
+        case "questionable": return Theme.goldFill
+        default:             return Theme.positionFill("DEF")
         }
     }
 
@@ -360,6 +371,10 @@ extension CommandView {
                 weekHeader
                 liveGames
                 playersInAction
+                // Directly under the men it is about. It draws nothing when
+                // one source is loaded, which is not agreement - it is
+                // nobody to disagree with.
+                DisagreementPanel(focus: $focus)
                 opportunities
             }
         }
@@ -367,7 +382,12 @@ extension CommandView {
     }
 
     var weekHeader: some View {
-        Panel(title: "Week \(board.league?.week ?? 0) Command Center") {
+        // One chip for the whole header rather than one per scoreline: every
+        // projected total under it is built from the same source, and saying
+        // so four times would be four copies of one sentence.
+        Panel(title: "Week \(board.league?.week ?? 0) Command Center",
+              trailing: board.loadedSources.isEmpty ? nil
+                : AnyView(SourceTag(text: board.projectionTag))) {
             switch board.scale {
             case .single: singleWeek
             case .few:    weekCards(board.attention())
@@ -385,12 +405,12 @@ extension CommandView {
                 VStack(spacing: 12) {
                     HStack(alignment: .firstTextBaseline, spacing: 14) {
                         side(f.league.you.name, m.yourScore, m.yourProjected, lead: true)
-                            .explains(Explain.projected)
+                            .explains(Explain.projected(board))
                         Text("vs").font(.system(size: 11, weight: .heavy))
                             .foregroundStyle(.tertiary)
                         side(f.league.opp?.name ?? "Opponent",
                              m.oppScore, m.oppProjected, lead: false)
-                            .explains(Explain.opponentProjected)
+                            .explains(Explain.opponentProjected(board))
                     }
                     // The bar and the percentage under it are one figure, so
                     // they are one target: tapping the bar and tapping the
@@ -405,9 +425,13 @@ extension CommandView {
                         }
                         .frame(height: 6)
                         HStack {
+                            // The bar above already draws the lean in
+                            // colour, where colour is a shape rather than a
+                            // glyph. The sentence is ink, with the arrow
+                            // saying which way it leans.
+                            MarkChip(mark: .of(m.winProb - 0.5, level: 0.005), size: 8)
                             Text("\(Int(m.winProb * 100))% win probability")
                                 .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(m.winProb >= 0.5 ? Theme.green : Theme.red)
                             Spacer(minLength: 0)
                             Text(phrase(m)).font(.system(size: 10))
                                 .foregroundStyle(.tertiary)
@@ -503,11 +527,11 @@ extension CommandView {
         let shut = ranked.filter(\.decided)
         return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 6) {
-                StatTile(value: "\(ahead)", label: "AHEAD", tint: Theme.green,
+                StatTile(value: "\(ahead)", label: "AHEAD", mark: .ahead,
                          detail: Explain.tally("Ahead"))
-                StatTile(value: "\(doubt)", label: "IN DOUBT", tint: Theme.gold,
+                StatTile(value: "\(doubt)", label: "IN DOUBT", mark: .level,
                          detail: Explain.tally("In doubt"))
-                StatTile(value: "\(behind)", label: "BEHIND", tint: Theme.red,
+                StatTile(value: "\(behind)", label: "BEHIND", mark: .behind,
                          detail: Explain.tally("Behind"))
             }
             if weekExpanded {
@@ -562,7 +586,7 @@ extension CommandView {
         let won = m.winProb >= 0.5
         return Button { choose(f.league.id) } label: {
             HStack(spacing: 9) {
-                Circle().fill(won ? Theme.green : Theme.red).frame(width: 6, height: 6)
+                MarkChip(mark: won ? .ahead : .behind, size: 7)
                 Text(f.league.league).font(.system(size: 11))
                     .lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 6)
@@ -603,11 +627,14 @@ extension CommandView {
                                              : "\(g.awayScore) – \(g.homeScore)")
                                             .font(.system(size: 13, weight: .bold))
                                             .monospacedDigit()
-                                        Text(g.label).font(.system(size: 8))
-                                            .foregroundStyle(g.live
-                                                ? AnyShapeStyle(Theme.green)
-                                                : AnyShapeStyle(.tertiary))
-                                            .lineLimit(1)
+                                        HStack(spacing: 3) {
+                                            if g.live { MarkDot(mark: .live, size: 5) }
+                                            Text(g.label).font(.system(size: 8))
+                                                .foregroundStyle(g.live
+                                                    ? AnyShapeStyle(.primary)
+                                                    : AnyShapeStyle(.tertiary))
+                                                .lineLimit(1)
+                                        }
                                     }
                                     .frame(minWidth: 54)
                                     ClubMark(abbr: g.home, size: 24)
@@ -646,7 +673,8 @@ extension CommandView {
                 if many, a.startedIn != b.startedIn { return a.startedIn > b.startedIn }
                 let la = live[a.id]?.s ?? -1, lb = live[b.id]?.s ?? -1
                 if la != lb { return la > lb }
-                return (a.projected ?? 0) > (b.projected ?? 0)
+                return board.projected(a.id, fallback: a.projected)
+                     > board.projected(b.id, fallback: b.projected)
             }
             let cap = board.scale.single ? 9 : (many ? 12 : 8)
             // Bounded by `cap` before the grid sees it - see `weekCards`.
@@ -656,19 +684,40 @@ extension CommandView {
                     Button { focus = p.id } label: {
                         HStack(spacing: 9) {
                             Headshot(url: p.img, name: p.name,
-                                     tint: Theme.position(p.pos), size: 40)
+                                     tint: Theme.positionFill(p.pos), size: 40)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(p.name).font(.system(size: 11, weight: .semibold))
                                     .lineLimit(1).minimumScaleFactor(0.7)
                                 Text("\(p.pos) · \(p.team)")
                                     .font(.system(size: 9)).foregroundStyle(.tertiary)
-                                Text("\(figure(p.projected ?? 0)) proj")
-                                    .font(.system(size: 9)).foregroundStyle(.secondary)
-                                    .monospacedDigit()
+                                // The number, and a mark only when the
+                                // sources are far enough apart on him for the
+                                // choice of source to change a decision. A
+                                // source name on every tile would be the same
+                                // word forty times; the ornament and the panel
+                                // head already say it once.
+                                let pick = board.projectionPick(
+                                    p.id, fallback: p.projected)
+                                HStack(spacing: 4) {
+                                    Text("\(figure(pick?.value ?? 0)) proj")
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(.secondary)
+                                        .monospacedDigit()
+                                    if let sp = pick?.spread, pick?.disputed == true {
+                                        SpreadChip(spread: sp, compact: true)
+                                    }
+                                }
                                 if let s = live[p.id]?.s, s > 0 {
-                                    Text("\(figure(s)) live")
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(Theme.green).monospacedDigit()
+                                    // The word "live" is the message; the dot
+                                    // agrees with it. Green digits said it
+                                    // only in a colour that vanishes over a
+                                    // bright wall.
+                                    HStack(spacing: 4) {
+                                        MarkDot(mark: .live, size: 5)
+                                        Text("\(figure(s)) live")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .monospacedDigit()
+                                    }
                                 }
                                 // Where he sits in *this* league, which is a
                                 // different fact from where he sits in the
@@ -676,17 +725,19 @@ extension CommandView {
                                 // pick a different league in the rail.
                                 if !board.scale.single, let o = board.here(p) {
                                     HStack(spacing: 5) {
-                                        Text((o.started == true) ? "START"
-                                                                 : (o.slot ?? "BENCH"))
-                                            .font(.system(size: 8, weight: .heavy))
-                                            .foregroundStyle((o.started == true)
-                                                             ? AnyShapeStyle(Theme.green)
-                                                             : AnyShapeStyle(.secondary))
+                                        if o.started == true {
+                                            Chip(text: "START",
+                                                 fill: Theme.greenFill, size: 8)
+                                        } else {
+                                            Text(o.slot ?? "BENCH")
+                                                .font(.system(size: 8, weight: .heavy))
+                                                .foregroundStyle(.secondary)
+                                        }
                                         Text(p.exposure == 1 ? "1 league"
                                                              : "\(p.exposure) leagues")
                                             .font(.system(size: 8, weight: .heavy))
                                             .foregroundStyle(p.exposure > 1
-                                                             ? AnyShapeStyle(Theme.gold)
+                                                             ? AnyShapeStyle(.primary)
                                                              : AnyShapeStyle(.tertiary))
                                     }
                                 }
@@ -722,7 +773,8 @@ extension CommandView {
             // every man who happened to be rostered in one other league,
             // which is not a reason he is unavailable to you here.
             let free = board.freeHere
-                .sorted { ($0.projected ?? 0) > ($1.projected ?? 0) }
+                .sorted { board.projected($0.id, fallback: $0.projected)
+                        > board.projected($1.id, fallback: $1.projected) }
             if free.isEmpty {
                 NoSource(what: board.scale.single
                          ? "Everybody on today's slate is rostered in your league."
@@ -735,7 +787,7 @@ extension CommandView {
                         Button { focus = p.id } label: {
                             HStack(spacing: 9) {
                                 Headshot(url: "https://a.espncdn.com/i/headshots/nfl/players/full/\(p.id).png",
-                                         name: p.name, tint: Theme.position(p.pos), size: 38)
+                                         name: p.name, tint: Theme.positionFill(p.pos), size: 38)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(p.name).font(.system(size: 11, weight: .semibold))
                                         .lineLimit(1).minimumScaleFactor(0.7)
@@ -751,9 +803,9 @@ extension CommandView {
                                         .font(.system(size: 8, weight: .heavy))
                                         .foregroundStyle(.tertiary)
                                         .lineLimit(1).minimumScaleFactor(0.7)
-                                    Text("+\(figure(p.projected ?? 0)) proj")
+                                    Text("+\(figure(board.projected(p.id, fallback: p.projected))) proj")
                                         .font(.system(size: 10, weight: .bold))
-                                        .foregroundStyle(Theme.green).monospacedDigit()
+                                        .monospacedDigit()
                                 }
                                 Spacer(minLength: 0)
                             }
@@ -769,14 +821,20 @@ extension CommandView {
     }
 }
 
-/// Why a league is where it is in the rail, in three words and a colour.
+/// Why a league is where it is in the rail, in three words and a mark.
+///
+/// Opaque, and with a glyph. It was coloured text on an 18% wash, which put
+/// the wearer's wall behind the one sentence in the rail that says which
+/// league to open - and made "needs a swing" and "comfortable" the same shape
+/// in two hues a deuteranope reads alike.
 struct ReasonChip: View {
     let reason: LeagueFocus.Reason
     var body: some View {
-        Text(reason.label)
-            .font(.system(size: 9, weight: .heavy)).kerning(0.3)
-            .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(reason.tint.opacity(0.18), in: .capsule)
-            .foregroundStyle(reason.tint)
+        if let m = reason.mark {
+            MarkChip(mark: m, text: reason.label.uppercased())
+        } else {
+            Chip(text: reason.label.uppercased(),
+                 fill: Theme.positionFill("DEF"))
+        }
     }
 }

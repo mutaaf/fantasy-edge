@@ -64,9 +64,9 @@ struct PlayersView: View {
                                 }
                             }
                             .padding(.vertical, 7).padding(.horizontal, 10)
-                            .plate(11, scope == key ? Theme.green.opacity(0.16)
+                            .plate(11, scope == key ? Theme.greenFill
                                                     : .white.opacity(0.04))
-                            .foregroundStyle(scope == key ? AnyShapeStyle(Theme.green)
+                            .foregroundStyle(scope == key ? AnyShapeStyle(.white)
                                                           : AnyShapeStyle(.primary))
                         }
                         .buttonStyle(.plain).hoverEffect(.highlight)
@@ -103,8 +103,8 @@ struct PlayersView: View {
                 if let n { Text("\(n)").font(.system(size: 9)).foregroundStyle(.tertiary) }
             }
             .frame(maxWidth: .infinity).padding(.vertical, 7)
-            .plate(10, pos == key ? Theme.green.opacity(0.20) : .white.opacity(0.05))
-            .foregroundStyle(pos == key ? AnyShapeStyle(Theme.green)
+            .plate(10, pos == key ? Theme.greenFill : .white.opacity(0.05))
+            .foregroundStyle(pos == key ? AnyShapeStyle(.white)
                                         : AnyShapeStyle(.primary))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
@@ -179,7 +179,11 @@ struct PlayersView: View {
             Text("PLAYER").frame(maxWidth: .infinity, alignment: .leading)
             Text("POS").frame(width: 38, alignment: .leading)
             Text("OPP").frame(width: 70, alignment: .leading)
-            Text("PROJ").frame(width: 50, alignment: .trailing)
+            // The attribution belongs in the column head, once. Six hundred
+            // rows each repeating "SLEEPER" would be the same word six
+            // hundred times and would crowd out the number it qualifies.
+            Text(board.hasProjections ? "PROJ · \(board.projectionTag)" : "PROJ")
+                .frame(width: 108, alignment: .trailing)
             Text("LIVE").frame(width: 50, alignment: .trailing)
             Text("YOUR LEAGUES").frame(width: 96, alignment: .trailing)
             Text("STATUS").frame(width: 74, alignment: .trailing)
@@ -195,7 +199,7 @@ struct PlayersView: View {
             HStack(spacing: 10) {
                 HStack(spacing: 9) {
                     Headshot(url: p.img, name: p.name,
-                             tint: Theme.position(p.pos), size: 28)
+                             tint: Theme.positionFill(p.pos), size: 28)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(p.name).font(.system(size: 12))
                             .lineLimit(1).minimumScaleFactor(0.7)
@@ -205,24 +209,40 @@ struct PlayersView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text(p.pos).font(.system(size: 10, weight: .heavy))
-                    .foregroundStyle(Theme.position(p.pos))
-                    .frame(width: 38, alignment: .leading)
+                // The letters ride on the colour rather than being it. A TE
+                // in ESPN orange measured 1.30:1 as text on a bright room and
+                // was the least legible glyph in the table.
+                HStack(spacing: 0) {
+                    Chip(text: p.pos, fill: Theme.positionFill(p.pos), size: 9)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: 38, alignment: .leading)
 
                 Text(fx?.line ?? "—").font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .frame(width: 70, alignment: .leading)
 
-                Text(p.projected.map {
-                    $0.formatted(.number.precision(.fractionLength(1))) } ?? "—")
-                    .font(.system(size: 11)).monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .frame(width: 50, alignment: .trailing)
+                // Only the men the sources actually argue about carry a
+                // mark. Below two points the disagreement is rounding, and a
+                // chip on every row would train the eye to skip the chip.
+                let pick = board.projectionPick(p.id, fallback: p.projected)
+                HStack(spacing: 5) {
+                    Spacer(minLength: 0)
+                    if let sp = pick?.spread, pick?.disputed == true {
+                        SpreadChip(spread: sp, compact: true)
+                    }
+                    if pick?.fallback == true { SourceTag(text: "LEAGUE", fill: Theme.goldFill) }
+                    Text(pick.map {
+                        $0.value.formatted(.number.precision(.fractionLength(1))) } ?? "—")
+                        .font(.system(size: 11)).monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 108, alignment: .trailing)
 
                 Group {
                     if let s = live?.s, (fx?.state ?? "pre") != "pre" {
                         Text(s, format: .number.precision(.fractionLength(1)))
-                            .foregroundStyle(s > 0 ? AnyShapeStyle(Theme.green)
+                            .foregroundStyle(s > 0 ? AnyShapeStyle(.primary)
                                                    : AnyShapeStyle(.secondary))
                     } else { Text("–").foregroundStyle(.tertiary) }
                 }
@@ -233,24 +253,32 @@ struct PlayersView: View {
                 // own team. Both are facts about your leagues, not the world.
                 HStack(spacing: 5) {
                     if p.mine > 0 {
-                        Text("\(p.mine) yours").font(.system(size: 9, weight: .heavy))
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Theme.green.opacity(0.22), in: .capsule)
-                            .foregroundStyle(Theme.green)
+                        Chip(text: "\(p.mine) YOURS", fill: Theme.greenFill, size: 9)
                     }
-                    Text("\(p.owned)/\(board.universe?.leagues ?? 0)")
-                        .font(.system(size: 10)).monospacedDigit()
-                        .foregroundStyle(p.owned == 0 ? AnyShapeStyle(Theme.gold)
-                                                      : AnyShapeStyle(.tertiary))
+                    // Free everywhere is the interesting case, so it is the
+                    // one that gets a chip. It used to be gold digits, which
+                    // is the palette's worst token on the surface's smallest
+                    // type - 1.02:1, gone.
+                    if p.owned == 0 {
+                        Chip(text: "FREE", fill: Theme.goldFill, size: 9)
+                    } else {
+                        Text("\(p.owned)/\(board.universe?.leagues ?? 0)")
+                            .font(.system(size: 10)).monospacedDigit()
+                            .foregroundStyle(.tertiary)
+                    }
                 }
                 .frame(width: 96, alignment: .trailing)
 
-                Text((p.status ?? "").isEmpty ? "—" : p.status!)
-                    .font(.system(size: 9, weight: (p.status ?? "").isEmpty ? .regular : .heavy))
-                    .foregroundStyle((p.status ?? "").isEmpty ? AnyShapeStyle(.tertiary)
-                                                              : AnyShapeStyle(Theme.red))
-                    .lineLimit(1)
-                    .frame(width: 74, alignment: .trailing)
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    if let st = p.status, !st.isEmpty {
+                        Chip(text: st.uppercased(), systemImage: Theme.Mark.hurt.symbol,
+                             fill: Theme.redFill, size: 8)
+                    } else {
+                        Text("—").font(.system(size: 9)).foregroundStyle(.tertiary)
+                    }
+                }
+                .frame(width: 74, alignment: .trailing)
             }
             .padding(.vertical, 5).padding(.horizontal, 5)
             .plate(9, focus == p.id ? Theme.green.opacity(0.12) : .clear)

@@ -9,6 +9,11 @@ import SwiftUI
 /// free, and `hoverEffect` is what tells you the thing under your eyes is
 /// live before you pinch.
 struct CellView: View {
+    /// Read only for the projection behind the cell: the denominator is one
+    /// source's number, and which source that is decides the band this cell
+    /// was given. Both scenes that draw a cell already put the board in the
+    /// environment.
+    @Environment(Board.self) private var board
     let cell: Cell
     var compact = false
     /// Set for a few seconds after this player scores. A cell that only shows a
@@ -44,11 +49,11 @@ struct CellView: View {
                     .lineLimit(2).minimumScaleFactor(0.7)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Text(cell.pos)
-                    .font(.system(size: 10, weight: .heavy)).kerning(0.7)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Theme.position(cell.pos).opacity(0.9), in: Capsule())
-                    .foregroundStyle(.black)
+                // Opaque, and white rather than black on it. At 90% alpha
+                // the room still showed through enough to move the ground
+                // under two-point type, and black on a light hue and white on
+                // a dark one cannot both be right for six positions.
+                Chip(text: cell.pos, fill: Theme.positionFill(cell.pos), size: 10)
             }
             Spacer(minLength: 6)
             HStack(alignment: .lastTextBaseline, spacing: 6) {
@@ -62,12 +67,24 @@ struct CellView: View {
                     .font(.system(size: compact ? 12 : 14))
                     .foregroundStyle(.secondary).monospacedDigit()
                     .lineLimit(1).layoutPriority(1)
+                // Only where the sources actually argue. The cell has room
+                // for one mark beside the denominator, and spending it on a
+                // source name would spend it on something the ornament
+                // already says for the whole board - whereas "these two do
+                // not agree about this man" is true of him and nothing else.
+                if let sp = spread { SpreadChip(spread: sp, compact: compact) }
                 Spacer(minLength: 4)
-                Text(isRedZone ? "RZ" : cell.state)
-                    .font(.system(size: 10, weight: .heavy)).kerning(0.6)
-                    .lineLimit(1).fixedSize()
-                    .foregroundStyle(isRedZone ? AnyShapeStyle(Theme.gold)
-                                               : AnyShapeStyle(.secondary))
+                // The red zone is the one state on a cell worth shouting, so
+                // it gets the chip. Gold as text measured 1.02:1 - the loudest
+                // thing on the board was the one nobody could read.
+                if isRedZone {
+                    Chip(text: "RZ", fill: Theme.goldFill, size: 10)
+                } else {
+                    Text(cell.state)
+                        .font(.system(size: 10, weight: .heavy)).kerning(0.6)
+                        .lineLimit(1).fixedSize()
+                        .foregroundStyle(.secondary)
+                }
             }
             leverageBar
         }
@@ -103,11 +120,19 @@ struct CellView: View {
                     .font(.system(size: 13, weight: .heavy)).monospacedDigit()
             }
             .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(accent, in: Capsule())
-            .foregroundStyle(.black)
+            .background(Theme.sideFill(cell.side), in: Capsule())
+            .foregroundStyle(.white)
             .offset(x: 10, y: -10)
             .transition(.scale(scale: 0.4).combined(with: .opacity))
         }
+    }
+
+    /// How far apart the loaded sources are on this man, when that is far
+    /// enough to have changed the band he was given.
+    private var spread: Double? {
+        guard let s = board.projectionIndex[cell.id]?.spread,
+              s >= ProjectionPick.disputedAt else { return nil }
+        return s
     }
 
     /// The share this cell holds, drawn. It is the only chart on the cell and

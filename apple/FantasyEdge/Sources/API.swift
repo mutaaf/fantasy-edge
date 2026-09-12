@@ -65,9 +65,15 @@ final class Board {
     var cells: [Cell] {
         guard let L = league else { return [] }
         let players = live?.players ?? [:]
-        var out = L.you.starters.map { Cell.make($0, side: "you", live: players[$0.id]) }
+        var out = L.you.starters.map {
+            Cell.make($0, side: "you", live: players[$0.id],
+                      projected: projected($0.id, fallback: $0.projected))
+        }
         if let opp = L.opp {
-            out += opp.starters.map { Cell.make($0, side: "opp", live: players[$0.id]) }
+            out += opp.starters.map {
+                Cell.make($0, side: "opp", live: players[$0.id],
+                          projected: projected($0.id, fallback: $0.projected))
+            }
         }
         return out
     }
@@ -193,7 +199,9 @@ final class Board {
         _ = await (a, b, c)
     }
 
-    private func fetch<T: Decodable>(_ path: String, into: T.Type,
+    /// Internal rather than private only because `Projections.swift` fetches
+    /// through it; an extension cannot see a private member of the class.
+    func fetch<T: Decodable>(_ path: String, into: T.Type,
                                      apply: @MainActor (T) -> Void) async {
         guard let u = url(path) else { return }
         guard let (d, _) = try? await URLSession.shared.data(from: u),
@@ -207,14 +215,19 @@ final class Board {
     // this device: asking the server to re-derive them would be a round trip
     // to add four numbers.
 
+    /// Every total on this surface goes through `side(_:)` so the cross-league
+    /// tiles cannot come to disagree with the cells they are a sum of. Adding
+    /// the payload's inline figure here while the board was sized by Sleeper
+    /// would have put two different projected totals on the same screen.
+    private func side(_ men: [Starter]) -> Double {
+        men.reduce(0) { $0 + projected($1.id, fallback: $1.projected) }
+    }
     var totalProjected: Double {
-        leagues.reduce(0) { $0 + $1.you.starters.reduce(0) { $0 + ($1.projected ?? 0) } }
+        leagues.reduce(0) { $0 + side($1.you.starters) }
     }
     var edgeOverOpponents: Double {
         leagues.reduce(0) { acc, L in
-            let you = L.you.starters.reduce(0) { $0 + ($1.projected ?? 0) }
-            let opp = (L.opp?.starters ?? []).reduce(0) { $0 + ($1.projected ?? 0) }
-            return acc + (you - opp)
+            acc + (side(L.you.starters) - side(L.opp?.starters ?? []))
         }
     }
     /// Projected win-loss this week, one per league, by who is ahead on
@@ -222,9 +235,7 @@ final class Board {
     var projectedRecord: (Int, Int) {
         var w = 0, l = 0
         for L in leagues {
-            let you = L.you.starters.reduce(0) { $0 + ($1.projected ?? 0) }
-            let opp = (L.opp?.starters ?? []).reduce(0) { $0 + ($1.projected ?? 0) }
-            if you >= opp { w += 1 } else { l += 1 }
+            if side(L.you.starters) >= side(L.opp?.starters ?? []) { w += 1 } else { l += 1 }
         }
         return (w, l)
     }
@@ -376,8 +387,12 @@ final class Board {
     /// changed, and not on every poll that returned the same thing. Which
     /// team is yours is in the key too, because picking a different team
     /// rebuilds the board around a different roster.
+    /// Which source is quoted is in the key because the board is *sized* by
+    /// it: without this the memoised mosaic would keep handing back cells
+    /// built from the source you just moved off, and the picker would change
+    /// a label and nothing behind it.
     private func stamp(_ L: LeaguePayload) -> String {
-        "\(live?.version ?? "-")|\(L.you.teamId)|\(L.opp?.teamId ?? "-")"
+        "\(live?.version ?? "-")|\(L.you.teamId)|\(L.opp?.teamId ?? "-")|\(projectionStamp)"
     }
 
     /// The board for one league, so the rail can show a win probability per
@@ -392,9 +407,13 @@ final class Board {
         let key = stamp(L)
         if let hit = mosaicCache[L.id], hit.key == key { return hit.value }
         let players = live?.players ?? [:]
-        var cells = L.you.starters.map { Cell.make($0, side: "you", live: players[$0.id]) }
+        var cells = L.you.starters.map {
+            Cell.make($0, side: "you", live: players[$0.id],
+                      projected: projected($0.id, fallback: $0.projected))
+        }
         cells += (L.opp?.starters ?? []).map {
-            Cell.make($0, side: "opp", live: players[$0.id])
+            Cell.make($0, side: "opp", live: players[$0.id],
+                      projected: projected($0.id, fallback: $0.projected))
         }
         let m = Leverage.evaluate(cells)
         mosaicCache[L.id] = (key, m)
@@ -423,7 +442,7 @@ final class Board {
         if let hit = totalsCache[L.id], hit.key == stamp(L) { return hit.value }
         var out: [String: Double] = [:]
         for r in L.roster ?? [] where r.started == true {
-            out[r.teamId ?? "", default: 0] += r.projected ?? 0
+            out[r.teamId ?? "", default: 0] += projected(r.id, fallback: r.projected)
         }
         totalsCache[L.id] = (stamp(L), out)
         return out
@@ -601,18 +620,45 @@ final class Board {
     /// hidden league's name can come from, since the board stops sending it.
     var catalogue: [LeagueRef] = []
 
+    // MARK: - whose projections
+    //
+    // Stored here rather than beside the code that uses them in
+    // `Projections.swift` only because Swift will not let an extension add
+    // stored properties - the same reason `focusCache` lives up here.
+
+    /// The saved choice, verbatim. Empty means nobody has chosen; it is
+    /// resolved against the sources actually loaded by `projectionChoice`,
+    /// never defaulted to a source name here.
+    var projectionPref: String = ""
+    var projectionCatalog: [ProjectionSource] = []
+    /// Every source's number per player, keyed on the ESPN player id the
+    /// mosaic and the roster rows already use.
+    var projectionIndex: [String: ProjectionRow] = [:]
+    var projectionSeason = 0
+    var projectionWeek = 0
+    /// Fetched once, off the slow clock. `@ObservationIgnored` because it is
+    /// read and set from a `.task` that a body starts, and tracking it would
+    /// invalidate the view that just triggered the fetch.
+    @ObservationIgnored var projectionsLoaded = false
+    /// Positional orderings per source, written during a body evaluation - so
+    /// `@ObservationIgnored` for the same load-bearing reason as every other
+    /// cache on this class.
+    @ObservationIgnored var posRankCache: [String: [String: String]] = [:]
+
     @MainActor
     func loadPrefs() async {
         guard let u = url("/api/prefs") else { return }
         struct P: Decodable {
             let teams: [String: String]?
             let hidden: [String]?, order: [String]?
+            let projection: String?
         }
         if let (d, _) = try? await URLSession.shared.data(from: u),
            let p = try? JSONDecoder().decode(P.self, from: d) {
             teamPrefs = p.teams ?? [:]
             hiddenLeagues = p.hidden ?? []
             leagueOrder = p.order ?? []
+            projectionPref = p.projection ?? ""
         }
         await fetch("/api/leagues", into: LeagueCatalogue.self) {
             self.catalogue = $0.leagues
@@ -653,8 +699,10 @@ final class Board {
         await writePrefs(["order": [id] + rest])
     }
 
+    /// Internal for the same reason `fetch` is: the projection picker writes
+    /// through this one merge path rather than growing a second POST.
     @MainActor
-    private func writePrefs(_ patch: [String: Any]) async {
+    func writePrefs(_ patch: [String: Any]) async {
         guard let u = url("/api/prefs") else { return }
         var req = URLRequest(url: u)
         req.httpMethod = "POST"

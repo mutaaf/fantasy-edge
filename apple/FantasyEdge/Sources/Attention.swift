@@ -67,12 +67,21 @@ struct LeagueFocus: Identifiable {
             case .inPlay:      return "in play"
             }
         }
-        var tint: Color {
+        /// The state this reason is, as a mark rather than as a colour.
+        ///
+        /// A chip that says what it means only by being red is unreadable
+        /// twice over on this surface: over a bright room the hue is gone,
+        /// and against the green one beside it a red-green colourblind reader
+        /// cannot tell them apart either way. The glyph carries it; the colour
+        /// agrees. Nil where the reason is a fact rather than a state -
+        /// "final" is not a warning and should not wear one.
+        var mark: Theme.Mark? {
             switch self {
-            case .hurt, .behind:            return Theme.red
-            case .slipping, .coinFlip:      return Theme.gold
-            case .comfortable:              return Theme.green
-            case .finished, .notStarted, .inPlay: return .secondary
+            case .hurt:                     return .hurt
+            case .behind:                   return .behind
+            case .slipping, .coinFlip:      return .caution
+            case .comfortable:              return .ahead
+            case .finished, .notStarted, .inPlay: return nil
             }
         }
     }
@@ -99,7 +108,8 @@ extension Board {
     /// cache on this class is: it is written during a body evaluation, and a
     /// tracked write would invalidate the view that just read it.
     func attention() -> [LeagueFocus] {
-        let key = leagues.reduce("\(live?.version ?? "-")|\(injuries.count)") {
+        let key = leagues.reduce(
+            "\(live?.version ?? "-")|\(injuries.count)|\(projectionStamp)") {
             $0 + "|\($1.id):\($1.you.teamId)"
         }
         if let hit = focusCache, hit.key == key { return hit.value }

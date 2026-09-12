@@ -54,9 +54,9 @@ struct LiveView: View {
                     Label(m.rawValue, systemImage: m.icon)
                         .font(.system(size: 12, weight: .semibold))
                         .padding(.horizontal, 14).padding(.vertical, 8)
-                        .plate(12, mode == m ? Theme.green.opacity(0.18)
+                        .plate(12, mode == m ? Theme.greenFill
                                              : .white.opacity(0.05))
-                        .foregroundStyle(mode == m ? AnyShapeStyle(Theme.green)
+                        .foregroundStyle(mode == m ? AnyShapeStyle(.white)
                                                    : AnyShapeStyle(.secondary))
                 }
                 .buttonStyle(.plain).hoverEffect(.highlight)
@@ -93,8 +93,8 @@ struct LiveView: View {
             Text(label).font(.system(size: 10, weight: .semibold))
                 .lineLimit(1)
                 .padding(.horizontal, 10).padding(.vertical, 5)
-                .plate(10, on ? Theme.green.opacity(0.18) : .white.opacity(0.05))
-                .foregroundStyle(on ? AnyShapeStyle(Theme.green)
+                .plate(10, on ? Theme.greenFill : .white.opacity(0.05))
+                .foregroundStyle(on ? AnyShapeStyle(.white)
                                     : AnyShapeStyle(.secondary))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
@@ -409,7 +409,9 @@ struct MyTeamField: View {
             Text("\(s.club) · \(s.situation)")
                 .font(.system(size: 9, weight: .bold))
                 .padding(.horizontal, 6).padding(.vertical, 2)
-                .background((s.redZone ? Theme.red : Color.black).opacity(0.72), in: .capsule)
+                .background(s.redZone ? AnyShapeStyle(Theme.redFill)
+                                      : AnyShapeStyle(Color.black.opacity(0.72)),
+                            in: .capsule)
                 .fixedSize()
                 .position(x: min(size.width - 60, max(60, los)), y: 10)
         }
@@ -443,9 +445,12 @@ struct MyTeamField: View {
                 Spacer(minLength: 0)
             }
             if crowded > 0 {
-                Text("\(crowded) more of your men have the ball than the field "
-                     + "can hold. Drawn: the \(men.count) in most of your line-ups.")
-                    .font(.system(size: 9)).foregroundStyle(Theme.gold)
+                HStack(alignment: .top, spacing: 6) {
+                    MarkChip(mark: .caution, size: 8)
+                    Text("\(crowded) more of your men have the ball than the field "
+                         + "can hold. Drawn: the \(men.count) in most of your line-ups.")
+                        .font(.system(size: 9)).foregroundStyle(.secondary)
+                }
             }
             if !unplaced.isEmpty {
                 Text("On the field, spot not reported: "
@@ -464,8 +469,11 @@ struct MyTeamField: View {
 
     private func counts(_ g: [Gridiron.Station: [FieldMan]]) -> some View {
         HStack(spacing: 10) {
-            tally(g[.field]?.count ?? 0, "ON", Theme.green)
-            tally(g[.bench]?.count ?? 0, "BENCHED", Theme.red)
+            // The counts are ink; which state each is stays in the word
+            // beside it. Four numbers in four hues was four things to decode
+            // and none of them readable over a bright room.
+            tally(g[.field]?.count ?? 0, "ON", .primary)
+            tally(g[.bench]?.count ?? 0, "BENCHED", .primary)
             tally(g[.sideline]?.count ?? 0, "TO COME", .secondary)
             tally(g[.done]?.count ?? 0, "DONE", .tertiary)
         }
@@ -567,9 +575,13 @@ struct MyTeamField: View {
                             FieldToken(man: m, selected: focus == m.id,
                                        size: 36, dimmed: dim)
                             VStack(alignment: .leading, spacing: 1) {
-                                Text("\(m.pos) · \(m.fixture)")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(Theme.position(m.pos))
+                                HStack(spacing: 5) {
+                                    Chip(text: m.pos,
+                                         fill: Theme.positionFill(m.pos), size: 8)
+                                    Text(m.fixture)
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .foregroundStyle(.secondary)
+                                }
                                 Text(note(m)).font(.system(size: 9))
                                     .foregroundStyle(.tertiary)
                                     .lineLimit(2)

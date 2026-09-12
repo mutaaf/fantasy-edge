@@ -49,8 +49,13 @@ struct LeagueView: View {
     private func header(_ L: LeaguePayload) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: "trophy.fill").font(.system(size: 22))
-                    .foregroundStyle(Theme.gold)
+                // Gold measured 1.02:1 against a bright room - the single
+                // worst token in the palette, and this was a 22pt glyph in
+                // it. On an opaque disc the same mark is 4.6:1 either way.
+                Image(systemName: "trophy.fill").font(.system(size: 15))
+                    .foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
+                    .background(Theme.goldFill, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L.league).font(.system(size: 21, weight: .bold))
                         .lineLimit(1).minimumScaleFactor(0.6)
@@ -71,9 +76,9 @@ struct LeagueView: View {
                     Button { tab = s } label: {
                         Text(s.rawValue).font(.system(size: 12, weight: .medium))
                             .padding(.horizontal, 14).padding(.vertical, 7)
-                            .background(Capsule().fill(tab == s ? Theme.green.opacity(0.20)
+                            .background(Capsule().fill(tab == s ? Theme.greenFill
                                                                 : .white.opacity(0.05)))
-                            .foregroundStyle(tab == s ? AnyShapeStyle(Theme.green)
+                            .foregroundStyle(tab == s ? AnyShapeStyle(.white)
                                                       : AnyShapeStyle(.secondary))
                             .contentShape(.capsule)
                     }
@@ -92,13 +97,13 @@ struct LeagueView: View {
             strip(L.record?.line ?? "—", L.record?.place ?? "record",
                   Explain.record)
             strip(m.yourProjected.formatted(.number.precision(.fractionLength(1))),
-                  "proj points", Explain.projected)
+                  "proj points", Explain.projected(board))
             strip(m.oppProjected.formatted(.number.precision(.fractionLength(1))),
-                  "opponent proj", Explain.opponentProjected)
+                  "opponent proj", Explain.opponentProjected(board))
             VStack(alignment: .leading, spacing: 5) {
                 Text(m.winProb, format: .percent.precision(.fractionLength(0)))
                     .font(.system(size: 22, weight: .bold)).monospacedDigit()
-                    .foregroundStyle(m.winProb >= 0.5 ? Theme.green : Theme.red)
+                    .foregroundStyle(.primary)
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
                         Capsule().fill(.white.opacity(0.14))
@@ -175,7 +180,8 @@ struct LeagueView: View {
             let a = order[($0.slot ?? "").uppercased()] ?? 9
             let b = order[($1.slot ?? "").uppercased()] ?? 9
             if a != b { return a < b }
-            return ($0.projected ?? 0) > ($1.projected ?? 0)
+            return board.projected($0.id, fallback: $0.projected)
+                 > board.projected($1.id, fallback: $1.projected)
         }
     }
 
@@ -198,9 +204,9 @@ struct LeagueView: View {
                 Button { group = g } label: {
                     Text(g.rawValue).font(.system(size: 10, weight: .semibold))
                         .padding(.horizontal, 11).padding(.vertical, 5)
-                        .background(Capsule().fill(group == g ? Theme.green.opacity(0.22)
+                        .background(Capsule().fill(group == g ? Theme.greenFill
                                                               : .white.opacity(0.06)))
-                        .foregroundStyle(group == g ? AnyShapeStyle(Theme.green)
+                        .foregroundStyle(group == g ? AnyShapeStyle(.white)
                                                     : AnyShapeStyle(.secondary))
                         .contentShape(.capsule)
                 }
@@ -214,7 +220,11 @@ struct LeagueView: View {
             Text("POS").frame(width: 46, alignment: .leading)
             Text("PLAYER").frame(maxWidth: .infinity, alignment: .leading)
             Text("OPP").frame(width: 74, alignment: .leading)
-            Text("PROJ").frame(width: 52, alignment: .trailing)
+            // Named once, in the head, for the same reason the players
+            // table does it there: the column is one source's opinion from
+            // top to bottom.
+            Text(board.hasProjections ? "PROJ · \(board.projectionTag)" : "PROJ")
+                .frame(width: 110, alignment: .trailing)
             Text("ACTUAL").frame(width: 58, alignment: .trailing)
             Text("STATUS").frame(width: 92, alignment: .trailing)
         }
@@ -228,14 +238,20 @@ struct LeagueView: View {
         let live = board.live?.players[r.id]
         return Button { focus = r.id } label: {
             HStack(spacing: 10) {
-                Text((r.slot ?? "").uppercased())
-                    .font(.system(size: 10, weight: .heavy))
-                    .frame(width: 46, alignment: .leading)
-                    .foregroundStyle(Theme.position(r.pos))
+                // The slot on an opaque chip, which is what lets it keep the
+                // position's colour: the letters are white on a ground this
+                // code painted, so the hue is identity rather than the thing
+                // being read. As coloured text it was 1.3:1 for a TE.
+                HStack(spacing: 0) {
+                    Chip(text: (r.slot ?? "").uppercased(),
+                         fill: Theme.positionFill(r.pos), size: 9)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: 46, alignment: .leading)
 
                 HStack(spacing: 9) {
                     Headshot(url: r.img, name: r.name,
-                             tint: Theme.position(r.pos), size: 30)
+                             tint: Theme.positionFill(r.pos), size: 30)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(r.name).font(.system(size: 12, weight: .medium))
                             .lineLimit(1).minimumScaleFactor(0.7)
@@ -249,17 +265,29 @@ struct LeagueView: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 74, alignment: .leading)
 
-                Text((r.projected ?? 0), format: .number.precision(.fractionLength(1)))
-                    .font(.system(size: 12)).monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .frame(width: 52, alignment: .trailing)
+                let pick = board.projectionPick(r.id, fallback: r.projected)
+                HStack(spacing: 5) {
+                    Spacer(minLength: 0)
+                    if let sp = pick?.spread, pick?.disputed == true {
+                        SpreadChip(spread: sp, compact: true)
+                    }
+                    if pick?.fallback == true { SourceTag(text: "LEAGUE", fill: Theme.goldFill) }
+                    Text(pick?.value ?? 0, format: .number.precision(.fractionLength(1)))
+                        .font(.system(size: 12)).monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 110, alignment: .trailing)
 
                 // A dash, not a zero, before his game has started. Zero is a
                 // score; "has not played" is not.
                 Group {
                     if let s = live?.s, (fx?.state ?? "pre") != "pre" {
+                        // Ink. The column is headed ACTUAL and a dash already
+                        // distinguishes "has not played" from a zero, so the
+                        // green was carrying nothing that survived a bright
+                        // room anyway.
                         Text(s, format: .number.precision(.fractionLength(1)))
-                            .foregroundStyle(s > 0 ? AnyShapeStyle(Theme.green)
+                            .foregroundStyle(s > 0 ? AnyShapeStyle(.primary)
                                                    : AnyShapeStyle(.secondary))
                     } else {
                         Text("–").foregroundStyle(.tertiary)
@@ -268,11 +296,15 @@ struct LeagueView: View {
                 .font(.system(size: 13, weight: .semibold)).monospacedDigit()
                 .frame(width: 58, alignment: .trailing)
 
-                Text(status(fx)).font(.system(size: 10))
-                    .foregroundStyle(fx?.live == true ? AnyShapeStyle(Theme.green)
-                                                      : AnyShapeStyle(.tertiary))
-                    .lineLimit(1)
-                    .frame(width: 92, alignment: .trailing)
+                HStack(spacing: 4) {
+                    Spacer(minLength: 0)
+                    if fx?.live == true { MarkDot(mark: .live, size: 5) }
+                    Text(status(fx)).font(.system(size: 10))
+                        .foregroundStyle(fx?.live == true ? AnyShapeStyle(.primary)
+                                                          : AnyShapeStyle(.tertiary))
+                        .lineLimit(1)
+                }
+                .frame(width: 92, alignment: .trailing)
             }
             .padding(.vertical, 6).padding(.horizontal, 4)
             .plate(10, focus == r.id ? Theme.green.opacity(0.12) : .clear)
@@ -304,25 +336,30 @@ struct LeagueView: View {
         let m = board.mosaic(for: L)
         return Panel(title: "This Week") {
             HStack(spacing: 18) {
-                sideBlock(L.you.name, m.yourScore, m.yourProjected, Theme.green)
+                sideBlock(L.you.name, m.yourScore, m.yourProjected, true)
                 VStack(spacing: 3) {
                     Text("vs").font(.system(size: 11)).foregroundStyle(.tertiary)
                     Text("Week \(L.week)").font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
-                sideBlock(L.opp?.name ?? "Opponent", m.oppScore, m.oppProjected, Theme.red)
+                sideBlock(L.opp?.name ?? "Opponent", m.oppScore, m.oppProjected, false)
             }
         }
     }
 
+    /// One side of the matchup. `mine` decides emphasis by weight and a mark,
+    /// not by tinting a 40pt figure green - the biggest number on the page was
+    /// also the least readable one over a bright room.
     private func sideBlock(_ name: String, _ score: Double, _ proj: Double,
-                           _ tint: Color) -> some View {
+                           _ mine: Bool) -> some View {
         VStack(spacing: 4) {
-            Text(name).font(.system(size: 12, weight: .semibold))
-                .lineLimit(1).minimumScaleFactor(0.7)
+            HStack(spacing: 5) {
+                if mine { Chip(text: "YOU", fill: Theme.greenFill, size: 8) }
+                Text(name).font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
             Text(score, format: .number.precision(.fractionLength(1)))
                 .font(.system(size: 40, weight: .bold)).monospacedDigit()
-                .foregroundStyle(tint)
             Text("proj \(proj, format: .number.precision(.fractionLength(1)))")
                 .font(.system(size: 11)).foregroundStyle(.tertiary).monospacedDigit()
         }
@@ -381,8 +418,8 @@ struct LeagueView: View {
         return Button { open(id, in: L) } label: {
             HStack(spacing: 8) {
                 if align == .leading { score; TeamBadge(name: name, logo: logo, size: 24) }
-                Text(name).font(.system(size: 11, weight: mine ? .semibold : .regular))
-                    .foregroundStyle(mine ? AnyShapeStyle(Theme.green) : AnyShapeStyle(.primary))
+                Text(name).font(.system(size: 11, weight: mine ? .bold : .regular))
+                    .foregroundStyle(.primary)
                     .lineLimit(1).minimumScaleFactor(0.7)
                     .frame(maxWidth: .infinity,
                            alignment: align == .leading ? .leading : .trailing)
@@ -429,9 +466,8 @@ struct LeagueView: View {
                                 .foregroundStyle(.secondary)
                             TeamBadge(name: r.team ?? r.teamId, logo: r.drawable, size: 26)
                             Text(r.team ?? r.teamId)
-                                .font(.system(size: 12, weight: mine ? .semibold : .regular))
-                                .foregroundStyle(mine ? AnyShapeStyle(Theme.green)
-                                                      : AnyShapeStyle(.primary))
+                                .font(.system(size: 12, weight: mine ? .bold : .regular))
+                                .foregroundStyle(.primary)
                                 .lineLimit(1).minimumScaleFactor(0.7)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             Text(r.record).font(.system(size: 11)).monospacedDigit()

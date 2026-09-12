@@ -72,10 +72,13 @@ struct GameFieldView: View {
                             VStack(spacing: 1) {
                                 Text(g.state == "pre" ? "vs" : "\(g.awayScore)–\(g.homeScore)")
                                     .font(.system(size: 11, weight: .bold)).monospacedDigit()
-                                Text(g.label).font(.system(size: 8))
-                                    .foregroundStyle(g.live ? AnyShapeStyle(Theme.green)
-                                                            : AnyShapeStyle(.tertiary))
-                                    .lineLimit(1)
+                                HStack(spacing: 3) {
+                                    if g.live { MarkDot(mark: .live, size: 5) }
+                                    Text(g.label).font(.system(size: 8))
+                                        .foregroundStyle(g.live ? AnyShapeStyle(.primary)
+                                                                : AnyShapeStyle(.tertiary))
+                                        .lineLimit(1)
+                                }
                             }
                             .frame(minWidth: 48)
                             ClubMark(abbr: g.home, size: 18)
@@ -100,10 +103,13 @@ struct GameFieldView: View {
         let men = placed(gc, ball)
         VStack(spacing: 12) {
             Panel(title: "\(gc.away.mark) at \(gc.home.mark)",
-                  trailing: AnyView(Text(gc.clockLine)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(gc.state == "in" ? AnyShapeStyle(Theme.green)
-                                                      : AnyShapeStyle(.secondary)))) {
+                  trailing: AnyView(HStack(spacing: 5) {
+                    if gc.state == "in" { MarkDot(mark: .live, size: 6) }
+                    Text(gc.clockLine)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(gc.state == "in" ? AnyShapeStyle(.primary)
+                                                          : AnyShapeStyle(.secondary))
+                  })) {
                 scoreboard(gc, now?.play)
                 field(gc, ball, men.on)
                 situation(gc, ball)
@@ -204,8 +210,13 @@ struct GameFieldView: View {
                 HStack(spacing: 4) {
                     Text(s.mark).font(.system(size: 12, weight: .bold))
                     if ball {
+                        // The ball on an opaque disc: a gold glyph beside a
+                        // club abbreviation is the smallest and faintest mark
+                        // on the scoreboard, and it says who has possession.
                         Image(systemName: "football.fill")
-                            .font(.system(size: 9)).foregroundStyle(Theme.gold)
+                            .font(.system(size: 7)).foregroundStyle(.white)
+                            .frame(width: 14, height: 14)
+                            .background(Theme.goldFill, in: .circle)
                     }
                 }
                 Text(Int(score ?? 0), format: .number)
@@ -264,6 +275,11 @@ struct GameFieldView: View {
                         .fill((m.ball >= m.los ? Theme.green : Theme.red).opacity(0.55))
                         .frame(width: max(2, abs(end - los)), height: 3)
                         .position(x: (end + los) / 2, y: g.size.height * 0.5)
+                    // Gold as ink, and legitimately: the pitch under it is
+                    // an opaque dark green this app paints, not the wearer's
+                    // room, so the ground is known. 8.92:1 there against
+                    // 1.02:1 on glass - the difference the whole palette rule
+                    // is about. Measured by `apple/contrast_check.py`.
                     Image(systemName: "football.fill")
                         .font(.system(size: 17))
                         .foregroundStyle(Theme.gold)
@@ -335,9 +351,11 @@ struct GameFieldView: View {
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             if let y = p?.yards, (p?.down ?? 0) > 0 {
-                Text(y >= 0 ? "+\(y) yds" : "\(y) yds")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(y >= 0 ? Theme.green : Theme.red)
+                HStack(spacing: 4) {
+                    MarkChip(mark: .of(Double(y), level: 0.5), size: 8)
+                    Text(y >= 0 ? "+\(y) yds" : "\(y) yds")
+                        .font(.system(size: 11, weight: .semibold))
+                }
             }
             Spacer(minLength: 0)
             if let d = now?.drive, !d.description.isEmpty {
@@ -386,7 +404,7 @@ struct GameFieldView: View {
                                         .lineLimit(1)
                                     Text("\(m.pos) · \(m.points, format: .number.precision(.fractionLength(1))) pts")
                                         .font(.system(size: 9)).monospacedDigit()
-                                        .foregroundStyle(m.points > 0 ? AnyShapeStyle(Theme.green)
+                                        .foregroundStyle(m.points > 0 ? AnyShapeStyle(.primary)
                                                                       : AnyShapeStyle(.tertiary))
                                     // The reason, in words. A man off the
                                     // grass is a claim about his game, and a
@@ -476,9 +494,14 @@ struct GameFieldView: View {
     private func driveHeader(_ d: Drive) -> some View {
         HStack(spacing: 7) {
             ClubMark(abbr: d.team, size: 15)
-            Text(d.result.isEmpty ? "Drive" : d.result)
-                .font(.system(size: 10, weight: .heavy))
-                .foregroundStyle(d.scored ? Theme.gold : .secondary)
+            if d.scored {
+                Chip(text: (d.result.isEmpty ? "DRIVE" : d.result.uppercased()),
+                     fill: Theme.goldFill, size: 9)
+            } else {
+                Text(d.result.isEmpty ? "Drive" : d.result)
+                    .font(.system(size: 10, weight: .heavy))
+                    .foregroundStyle(.secondary)
+            }
             Text(d.description).font(.system(size: 9)).foregroundStyle(.tertiary)
             Spacer(minLength: 0)
         }
@@ -507,11 +530,8 @@ struct GameFieldView: View {
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if p.scoring || p.turnover {
-                    Text(p.scoring ? "SCORE" : "TURNOVER")
-                        .font(.system(size: 8, weight: .heavy))
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(tint.opacity(0.25), in: .capsule)
-                        .foregroundStyle(tint)
+                    Chip(text: p.scoring ? "SCORE" : "TURNOVER",
+                         fill: p.scoring ? Theme.goldFill : Theme.redFill, size: 8)
                 }
             }
             .padding(.vertical, 5).padding(.horizontal, 7)

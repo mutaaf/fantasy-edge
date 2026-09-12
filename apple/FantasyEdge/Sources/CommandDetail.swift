@@ -48,7 +48,15 @@ struct PlayerPanel: View {
     var body: some View {
         VStack(spacing: 14) {
             header
-            if let p { figures(p); ownership(p); insights(p) }
+            // The per-source block sits directly under the figures it
+            // explains, because the tile above can only carry one number and
+            // the disagreement is the half worth reading.
+            if let p {
+                figures(p)
+                SourceBreakdown(id: id, fallback: owner?.projected)
+                ownership(p)
+                insights(p)
+            }
             else { Panel(title: "Loading") { NoSource(what: "Fetching his card…") } }
         }
         .task { p = await board.profile(id) }
@@ -74,11 +82,14 @@ struct PlayerPanel: View {
                 Spacer(minLength: 0)
                 if let reveal {
                     Button { reveal.open(id) } label: {
+                        // White on an opaque disc. A green glyph on a 14%
+                        // wash was the only control in the card's header and
+                        // it disappeared over a bright room.
                         Image(systemName: "cube.transparent")
                             .font(.system(size: 15))
-                            .foregroundStyle(Theme.green)
+                            .foregroundStyle(.white)
                             .padding(7)
-                            .background(Circle().fill(Theme.green.opacity(0.14)))
+                            .background(Circle().fill(Theme.greenFill))
                             .contentShape(.circle)
                     }
                     .buttonStyle(.plain).hoverEffect(.lift)
@@ -121,19 +132,34 @@ struct PlayerPanel: View {
     /// Live, projected, and a floor and ceiling derived from his own weeks.
     private func figures(_ p: Profile) -> some View {
         let weeks = p.playedWeeks
-        return Panel(title: "This Week") {
+        // One attribution for the panel rather than a badge on the tile: the
+        // label under a stat tile has room for a word, and "CONSENSUS · 2"
+        // is not a word. Live, floor and ceiling are not the source's, so the
+        // chip sits in the panel head where it reads as scope rather than as
+        // a claim about all four numbers - and the block below breaks the one
+        // number it does govern down by source.
+        let pick = board.projectionPick(id, fallback: owner?.projected)
+        return Panel(title: "This Week",
+                     trailing: AnyView(SourceTag(
+                        text: pick?.fallback == true ? "LEAGUE" : board.projectionTag,
+                        fill: pick?.fallback == true ? Theme.goldFill
+                                                     : Theme.positionFill("DEF")))) {
             HStack(spacing: 6) {
                 StatTile(value: (liveLine?.s ?? 0)
                             .formatted(.number.precision(.fractionLength(1))),
                          label: "LIVE",
-                         // Green means "he has done something". Before kickoff
-                         // that is a lie told in colour.
-                         tint: (liveLine?.s ?? 0) > 0 ? Theme.green : .primary,
+                         // The mark says he has done something. It used to be
+                         // said by tinting the digits green, which was a lie
+                         // told in colour before kickoff and an unreadable one
+                         // over a bright room after it.
+                         mark: (liveLine?.s ?? 0) > 0 ? .live : nil,
                          detail: Explain.livePoints)
-                StatTile(value: (owner?.projected ?? 0)
-                            .formatted(.number.precision(.fractionLength(1))),
+                StatTile(value: pick.map {
+                            $0.value.formatted(.number.precision(.fractionLength(1))) }
+                            ?? "—",
                          label: "PROJECTED",
-                         detail: Explain.playerProjection)
+                         mark: (pick?.disputed == true) ? .caution : nil,
+                         detail: Explain.playerProjection(pick, board: board))
                 // Only explained when there is a distribution behind them. A
                 // man with no games played shows a dash, and a dash has
                 // nothing to open.
@@ -233,7 +259,7 @@ struct PlayerPanel: View {
 
     private func bullet(_ s: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            Circle().fill(Theme.green).frame(width: 5, height: 5).padding(.top, 5)
+            Circle().fill(Theme.greenFill).frame(width: 5, height: 5).padding(.top, 5)
             Text(s).font(.system(size: 11)).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -265,12 +291,9 @@ private struct LeagueLine: View {
             Text(o.league ?? "—").font(.system(size: 11))
                 .lineLimit(1).minimumScaleFactor(0.7)
             Spacer(minLength: 4)
-            Text((o.started == true) ? "START" : (o.slot ?? "BENCH"))
-                .font(.system(size: 9, weight: .heavy))
-                .padding(.horizontal, 7).padding(.vertical, 2)
-                .background(((o.started == true) ? Theme.green : Color.secondary)
-                    .opacity(0.22), in: .capsule)
-                .foregroundStyle((o.started == true) ? Theme.green : .secondary)
+            Chip(text: (o.started == true) ? "START" : (o.slot ?? "BENCH"),
+                 fill: (o.started == true) ? Theme.greenFill
+                                           : Theme.positionFill("DEF"))
         }
         .padding(.vertical, 5).padding(.horizontal, 9)
         // The plate lives on `face` rather than on the button, so the

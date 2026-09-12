@@ -163,8 +163,8 @@ struct IntelView: View {
                     .monospacedDigit().opacity(0.7)
             }
             .padding(.horizontal, 11).padding(.vertical, 7)
-            .plate(11, on ? Theme.green.opacity(0.18) : .white.opacity(0.05))
-            .foregroundStyle(on ? AnyShapeStyle(Theme.green)
+            .plate(11, on ? Theme.greenFill : .white.opacity(0.05))
+            .foregroundStyle(on ? AnyShapeStyle(.white)
                                 : AnyShapeStyle(.secondary))
         }
         .buttonStyle(.plain).hoverEffect(.highlight)
@@ -219,11 +219,7 @@ struct IntelView: View {
     private func card(_ i: IntelInsight) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
-                Text(i.kindLabel)
-                    .font(.system(size: 8, weight: .heavy)).kerning(0.6)
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Theme.green.opacity(0.16), in: .capsule)
-                    .foregroundStyle(Theme.green)
+                Chip(text: i.kindLabel, fill: Theme.greenFill, size: 8)
                 if !i.league.isEmpty {
                     Text(i.league).font(.system(size: 10))
                         .foregroundStyle(.secondary).lineLimit(1)
@@ -261,7 +257,7 @@ struct IntelView: View {
             ForEach(i.players.prefix(5)) { p in
                 HStack(spacing: 6) {
                     Headshot(url: "https://a.espncdn.com/i/headshots/nfl/players/full/\(p.id).png",
-                             name: p.name, tint: Theme.position(p.pos), size: 24)
+                             name: p.name, tint: Theme.positionFill(p.pos), size: 24)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(p.name).font(.system(size: 10, weight: .semibold))
                             .lineLimit(1)
@@ -304,11 +300,13 @@ struct IntelView: View {
     /// Python copies an analysis's caveat character for character precisely so
     /// no layer downstream is the one that loses the qualification.
     private func caveat(_ text: String) -> some View {
+        // The caveat is the sentence the Python copies verbatim so nothing
+        // downstream loses the qualification - and it was set in the one
+        // colour on the surface that measured 1.02:1. The warning is a chip
+        // now; the sentence is ink.
         HStack(alignment: .top, spacing: 7) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 9)).foregroundStyle(Theme.gold)
-                .padding(.top, 1)
-            Text(text).font(.system(size: 10)).foregroundStyle(Theme.gold)
+            MarkChip(mark: .caution, size: 8).padding(.top, 1)
+            Text(text).font(.system(size: 10)).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -338,11 +336,8 @@ struct IntelView: View {
     private func prose(_ n: IntelNarration) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
-                Label("MODEL-WRITTEN", systemImage: "sparkles")
-                    .font(.system(size: 8, weight: .heavy)).kerning(0.6)
-                    .padding(.horizontal, 7).padding(.vertical, 3)
-                    .background(Theme.gold.opacity(0.18), in: .capsule)
-                    .foregroundStyle(Theme.gold)
+                Chip(text: "MODEL-WRITTEN", systemImage: "sparkles",
+                     fill: Theme.goldFill, size: 8)
                 Spacer(minLength: 4)
                 Text(n.model.isEmpty ? n.provider : "\(n.provider) · \(n.model)")
                     .font(.system(size: 9, design: .monospaced))
@@ -393,9 +388,9 @@ struct IntelView: View {
 
     private func flag(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
-            Image(systemName: "exclamationmark.octagon.fill")
-                .font(.system(size: 10)).foregroundStyle(Theme.red)
-            Text(text).font(.system(size: 10)).foregroundStyle(Theme.red)
+            Chip(systemImage: "exclamationmark.octagon.fill",
+                 fill: Theme.redFill, size: 9)
+            Text(text).font(.system(size: 10)).foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -412,18 +407,14 @@ struct IntelView: View {
                     ProgressView().controlSize(.mini)
                     Text("WRITING ON DEVICE")
                         .font(.system(size: 8, weight: .heavy)).kerning(0.8)
-                        .foregroundStyle(Theme.gold)
+                        .foregroundStyle(.secondary)
                 }
             } else if board.narration != nil {
                 HStack(spacing: 6) {
-                    Text(board.narrationFresh ? "FRESH" : "REUSED")
-                        .font(.system(size: 8, weight: .heavy)).kerning(0.8)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background((board.narrationFresh ? Theme.green : Color.secondary)
-                            .opacity(0.18), in: .capsule)
-                        .foregroundStyle(board.narrationFresh
-                                         ? AnyShapeStyle(Theme.green)
-                                         : AnyShapeStyle(.secondary))
+                    Chip(text: board.narrationFresh ? "FRESH" : "REUSED",
+                         fill: board.narrationFresh ? Theme.greenFill
+                                                    : Theme.positionFill("DEF"),
+                         size: 8)
                     if let at = board.narrationAt {
                         Text(at, format: .dateTime.hour().minute())
                             .font(.system(size: 9)).foregroundStyle(.tertiary)
@@ -443,7 +434,7 @@ struct IntelView: View {
                       systemImage: "text.quote")
                     .font(.system(size: 12, weight: .semibold))
             }
-            .buttonStyle(.borderedProminent).tint(Theme.gold.opacity(0.8))
+            .buttonStyle(.borderedProminent).tint(Theme.goldFill)
             .disabled(!canNarrate)
 
             if board.narration != nil {
@@ -475,7 +466,8 @@ struct IntelView: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 6) {
                 Circle()
-                    .fill(AppleIntelligence.readiness.usable ? Theme.green : Color.secondary)
+                    .fill(AppleIntelligence.readiness.usable ? Theme.greenFill
+                                                              : Color.secondary)
                     .frame(width: 6, height: 6)
                 Text(AppleIntelligence.readiness.line)
                     .font(.system(size: 9)).foregroundStyle(.tertiary)
@@ -543,7 +535,7 @@ struct IntelView: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: "slash.circle")
                                         .font(.system(size: 9))
-                                        .foregroundStyle(Theme.red.opacity(0.8))
+                                        .foregroundStyle(.secondary)
                                     Text(u.metric)
                                         .font(.system(size: 12, weight: .semibold))
                                 }

@@ -63,7 +63,14 @@ struct PlayerHologram: View {
     /// live line at all, and a bold 0.0 in the middle of the card would read
     /// as a bad afternoon rather than as a week that has not started.
     private var scored: Double? { cell?.scored ?? liveLine?.s }
+    /// The chosen source's number for him, falling back to the cell the
+    /// hologram was opened from - which is itself already sized by that
+    /// source, so the two cannot disagree.
+    private var pick: ProjectionPick? {
+        board.projectionPick(id, fallback: owner?.projected)
+    }
     private var projected: Double? {
+        if let p = pick { return p.value }
         if let c = cell, c.projected > 0 { return c.projected }
         return owner?.projected
     }
@@ -184,17 +191,16 @@ struct PlayerHologram: View {
                 .font(.system(size: 38, weight: .bold))
                 .multilineTextAlignment(.center)
             HStack(spacing: 10) {
-                Text(pos)
-                    .font(.system(size: 12, weight: .heavy))
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Theme.position(pos), in: Capsule())
-                    .foregroundStyle(.black)
+                Chip(text: pos, fill: Theme.positionFill(pos), size: 12)
                 Text(team).font(.system(size: 15, weight: .medium))
                     .foregroundStyle(.secondary)
                 if let s = state {
-                    Text(s == "RZ" ? "RED ZONE" : s)
-                        .font(.system(size: 12, weight: .heavy))
-                        .foregroundStyle(s == "RZ" ? Theme.gold : .secondary)
+                    if s == "RZ" {
+                        Chip(text: "RED ZONE", fill: Theme.goldFill, size: 12)
+                    } else {
+                        Text(s).font(.system(size: 12, weight: .heavy))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             scoreline
@@ -211,6 +217,10 @@ struct PlayerHologram: View {
                 if let pr = projected {
                     Text("of \(pr, format: .number.precision(.fractionLength(1))) projected")
                         .font(.system(size: 15)).foregroundStyle(.secondary)
+                    // Whose projection, said beside the projection. This is
+                    // the largest unattributed number the app had.
+                    SourceTag(text: pick?.fallback == true
+                              ? "LEAGUE" : board.projectionTag)
                 }
             }
         } else if let pr = projected {
@@ -218,6 +228,7 @@ struct PlayerHologram: View {
                 Text(pr, format: .number.precision(.fractionLength(1)))
                     .font(.system(size: 58, weight: .bold)).monospacedDigit()
                 Text("projected").font(.system(size: 15)).foregroundStyle(.secondary)
+                SourceTag(text: pick?.fallback == true ? "LEAGUE" : board.projectionTag)
             }
         } else {
             NoSource(what: "No live line or projection for him this week.")
@@ -232,11 +243,13 @@ struct PlayerHologram: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 12) {
                     figure(scored.map { fmt($0, 1) } ?? "—", "LIVE",
-                           tint: (scored ?? 0) > 0 ? Theme.green : .primary)
-                    figure(projected.map { fmt($0, 1) } ?? "—", "PROJECTED")
+                           mark: (scored ?? 0) > 0 ? .live : nil)
+                    figure(projected.map { fmt($0, 1) } ?? "—", "PROJECTED",
+                           mark: (pick?.disputed == true) ? .caution : nil)
                     figure(p.percentileWeek(0.2).map { fmt($0, 1) } ?? "—", "FLOOR")
                     figure(p.percentileWeek(0.8).map { fmt($0, 1) } ?? "—", "CEILING")
                 }
+                bySource
                 if weeks.isEmpty {
                     NoSource(what: "No games played, so there is no distribution "
                                  + "to take a floor and a ceiling from.")
@@ -288,10 +301,10 @@ struct PlayerHologram: View {
             VStack(alignment: .leading, spacing: 7) {
                 ZStack(alignment: .bottom) {
                     if let c = p.percentileWeek(0.8) {
-                        rule(c / peak, plot, Theme.green.opacity(0.7))
+                        rule(c / peak, plot, Theme.greenFill)
                     }
                     if let f = p.percentileWeek(0.2) {
-                        rule(f / peak, plot, Theme.gold.opacity(0.7))
+                        rule(f / peak, plot, Theme.goldFill)
                     }
                     HStack(alignment: .bottom, spacing: 3) {
                         ForEach(Array(weeks.enumerated()), id: \.offset) { _, v in
@@ -503,7 +516,6 @@ struct PlayerHologram: View {
                         if let reach = d.reach {
                             Text("\(reach > 0 ? "+" : "")\(reach, format: .number.precision(.fractionLength(1)))")
                                 .font(.system(size: 12)).monospacedDigit()
-                                .foregroundStyle(reach > 0 ? Theme.gold : Theme.green)
                                 .frame(width: 54, alignment: .trailing)
                         } else {
                             Color.clear.frame(width: 54, height: 1)
@@ -546,10 +558,52 @@ struct PlayerHologram: View {
         if r <= 15 { return Theme.green.opacity(0.35) }
         return .white.opacity(0.12)
     }
-    private func rankTintText(_ rank: Int) -> Color {
-        if rank <= 5 { return Theme.gold }
-        if rank <= 15 { return Theme.green }
-        return .primary
+    /// A rank's colour is the *cell* behind it, never the digits. The band is
+    /// already drawn by `rankTint`; tinting the number too said the same thing
+    /// again in the one form a bright room erases.
+    private func rankTintText(_ rank: Int) -> Color { .primary }
+
+    /// Every loaded source's number for him, in this card's own idiom
+    /// rather than in a glass panel borrowed from the console.
+    ///
+    /// A card opened this large is the one place a reader has asked for the
+    /// detail, so the disagreement is shown rather than summarised: the
+    /// PROJECTED figure above is whichever source is sizing the board, and on
+    /// a man the sources are apart on, that single number is a choice being
+    /// made on the reader's behalf.
+    @ViewBuilder
+    private var bySource: some View {
+        if board.loadedSources.isEmpty {
+            NoSource(what: "No projection source is loaded on the server.")
+        } else {
+            let row = board.projectionIndex[id]
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    ForEach(board.loadedSources) { s in
+                        let chosen = s.source == board.projectionChoice
+                        figure(row?.by[s.source].map { fmt($0, 2) } ?? "—",
+                               s.label.uppercased() + (chosen ? " · SIZING" : ""))
+                    }
+                    if board.consensusOffered {
+                        figure(row?.consensus.map { fmt($0, 2) } ?? "—",
+                               "CONSENSUS · \(row?.n ?? board.consensusN)")
+                    }
+                    if let sp = row?.spread {
+                        figure(fmt(sp, 2), "SPREAD",
+                               mark: sp >= ProjectionPick.disputedAt ? .caution : nil)
+                    }
+                }
+                if !board.pendingSources.isEmpty {
+                    Text(board.pendingSources
+                            .map { "\($0.label) needs \($0.needs)" }
+                            .joined(separator: " · ")
+                         + ". Not loaded, so not averaged in - a source that "
+                         + "cannot produce a number must not produce a zero.")
+                        .font(.system(size: 11)).foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
     }
 
     private func fmt(_ v: Double, _ places: Int) -> String {
@@ -561,13 +615,19 @@ struct PlayerHologram: View {
             .frame(width: width, alignment: .trailing)
     }
 
+    /// Same rule as `StatTile` on the console: the number is ink and the
+    /// state is a mark beside its label, because a tinted 26pt figure is the
+    /// largest unreadable thing a bright room can produce.
     private func figure(_ value: String, _ label: String,
-                        tint: Color = .primary) -> some View {
+                        mark: Theme.Mark? = nil) -> some View {
         VStack(spacing: 3) {
             Text(value).font(.system(size: 26, weight: .bold)).monospacedDigit()
-                .foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.6)
-            Text(label).font(.system(size: 8, weight: .heavy)).kerning(0.7)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.6)
+            HStack(spacing: 4) {
+                if let m = mark { MarkChip(mark: m, size: 7) }
+                Text(label).font(.system(size: 8, weight: .heavy)).kerning(0.7)
+                    .foregroundStyle(.tertiary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

@@ -83,6 +83,10 @@ struct CommandView: View {
         .task {
             board.start()
             await board.loadPrefs()
+            // After prefs, because which source is chosen is read from them,
+            // and once, because a weekly projection does not move on the
+            // live clock.
+            await board.loadProjections()
             await board.loadContext()
         }
         // A man you opened stays open when he is in the league you just moved
@@ -168,8 +172,13 @@ struct CommandView: View {
     private var topBar: some View {
         HStack(spacing: 14) {
             HStack(spacing: 11) {
-                Image(systemName: "football.fill").font(.system(size: 21))
-                    .foregroundStyle(Theme.green)
+                // The brand mark on an opaque disc rather than a green glyph
+                // on glass: at 21pt over a bright room the bare icon measured
+                // 1.6:1 and read as a smudge.
+                Image(systemName: "football.fill").font(.system(size: 15))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Theme.greenFill, in: .circle)
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Fantasy Command").font(.system(size: 17, weight: .bold))
                     // With one league the strapline was a claim about a
@@ -194,11 +203,13 @@ struct CommandView: View {
                             Text(t.rawValue).font(.system(size: 10, weight: .medium))
                         }
                         .frame(width: 72, height: 50)
-                        // The label rides on top of the highlight rather than
-                        // under it, so the selected tab can still be read.
-                        .foregroundStyle(tab == t ? AnyShapeStyle(Theme.green)
+                        // White on an opaque fill, not green on a wash. The
+                        // wash let the room through, so on a bright one the
+                        // selected tab's own label was the least readable
+                        // thing in the bar - green text measures 1.6:1 there.
+                        .foregroundStyle(tab == t ? AnyShapeStyle(.white)
                                                   : AnyShapeStyle(.secondary))
-                        .plate(13, tab == t ? Theme.green.opacity(0.18) : .clear)
+                        .plate(13, tab == t ? Theme.greenFill : .clear)
                     }
                     .buttonStyle(.plain)
                     .hoverEffect(.highlight)
@@ -259,6 +270,17 @@ struct CommandView: View {
             }
             .disabled(teamOptions.count < 2)
 
+            // The third chooser, beside the other two, because whose
+            // projection the board is sized by is the same kind of choice as
+            // which league and which team: it changes what every panel is
+            // about, and it was the only one of the three the headset could
+            // not make.
+            chooser(icon: "chart.line.uptrend.xyaxis", label: "PROJECTIONS",
+                    value: board.loadedSources.isEmpty ? "none loaded"
+                                                       : projectionValue) {
+                ProjectionMenu()
+            }
+
             Divider().frame(height: 26)
 
             Button {
@@ -280,6 +302,14 @@ struct CommandView: View {
 
     private var teamOptions: [TeamRef] {
         (board.league?.teams ?? []).sorted { $0.display < $1.display }
+    }
+
+    /// A consensus never appears without the count behind it, here or
+    /// anywhere else: "Consensus" alone reads as an authority, "Consensus of
+    /// 2" reads as what it is.
+    private var projectionValue: String {
+        board.projectionChoice == "consensus"
+            ? "Consensus of \(board.consensusN)" : board.projectionLabel
     }
 
     private var leagueOptions: [LeaguePayload] {

@@ -22,6 +22,75 @@ extension View {
     }
 }
 
+/// A word on an opaque ground.
+///
+/// The only shape on this surface allowed to put colour underneath text.
+/// Opaque is the whole point: `glassBackgroundEffect` is translucent over a
+/// room this code cannot see, so a chip filled at 18% alpha meant its label
+/// was really sitting on the wearer's wall - and gold-on-a-bright-wall
+/// measures 1.02:1, which is invisible. White on a `Theme.*Fill` measures
+/// 4.6:1 or better whatever the room, because the ground is painted rather
+/// than borrowed. See `apple/contrast_check.py`.
+struct Chip: View {
+    var text: String = ""
+    var systemImage: String? = nil
+    var fill: Color = Theme.greenFill
+    var size: CGFloat = 9
+
+    var body: some View {
+        HStack(spacing: 3) {
+            if let s = systemImage {
+                Image(systemName: s).font(.system(size: size - 1, weight: .black))
+            }
+            if !text.isEmpty {
+                Text(text).font(.system(size: size, weight: .heavy)).kerning(0.4)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, text.isEmpty ? 4 : 6).padding(.vertical, 2)
+        .background(fill, in: .capsule)
+        .foregroundStyle(.white)
+    }
+}
+
+/// A status as a chip: the glyph carries the meaning and the colour agrees
+/// with it.
+///
+/// Ahead and behind used to be a green number and a red number, which failed
+/// twice over - neither was legible over a bright room, and green against red
+/// is the one pair a red-green colourblind reader cannot separate. An arrow up
+/// beside an arrow down is separable by anybody, in any room.
+struct MarkChip: View {
+    let mark: Theme.Mark
+    var text: String = ""
+    var size: CGFloat = 9
+    var body: some View {
+        Chip(text: text, systemImage: mark.symbol, fill: mark.fill, size: size)
+            .accessibilityLabel(Text(label))
+    }
+    private var label: String {
+        switch mark {
+        case .ahead: return "ahead"
+        case .behind: return "behind"
+        case .level: return "level"
+        case .caution: return "worth a look"
+        case .live: return "live"
+        case .hurt: return "on the injury wire"
+        }
+    }
+}
+
+/// The smallest mark there is, for where a chip would out-weigh the number it
+/// is qualifying. Only used where the words beside it already say which state
+/// this is, so nothing rests on the colour alone.
+struct MarkDot: View {
+    let mark: Theme.Mark
+    var size: CGFloat = 7
+    var body: some View {
+        Circle().fill(mark.fill).frame(width: size, height: size)
+    }
+}
+
 /// One glass panel with a title. Every card on this surface is one of these,
 /// so they share edges, padding and type without each re-deciding.
 struct Panel<C: View>: View {
@@ -83,7 +152,9 @@ struct Headshot: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(tint.opacity(0.28))
+            // Opaque, not a wash. The initials are white, and at 28% alpha
+            // they were really white on whatever room was behind the glass.
+            Circle().fill(tint)
             if let s = url, let u = URL(string: s) {
                 AsyncImage(url: u) { img in
                     img.resizable().scaledToFill()
@@ -92,13 +163,13 @@ struct Headshot: View {
         }
         .frame(width: size, height: size)
         .clipShape(.circle)
-        .overlay(Circle().stroke(tint.opacity(0.55), lineWidth: 1.5))
+        .overlay(Circle().stroke(tint, lineWidth: 1.5))
     }
     private var initials: some View {
         Text(name.split(separator: " ").prefix(2).compactMap { $0.first }
                  .map(String.init).joined())
             .font(.system(size: size * 0.36, weight: .bold))
-            .foregroundStyle(.white.opacity(0.85))
+            .foregroundStyle(.white)
     }
 }
 
@@ -152,16 +223,25 @@ struct StatPopover: View {
             Text(detail.title).font(.system(size: 15, weight: .bold))
             Text(detail.what).font(.system(size: 12))
                 .fixedSize(horizontal: false, vertical: true)
-            line("function", detail.how, .secondary)
-            if let c = detail.caveat { line("exclamationmark.triangle", c, Theme.gold) }
+            line("function", detail.how, mark: nil)
+            // The caveat used to be gold text, which measured 1.02:1 against
+            // a bright room - the most important sentence on the card and the
+            // least readable thing on the surface. The warning is now a chip
+            // and the sentence is ordinary ink.
+            if let c = detail.caveat { line(nil, c, mark: .caution) }
         }
         .padding(18).frame(width: 320)
     }
-    private func line(_ icon: String, _ text: String, _ tint: Color) -> some View {
+    private func line(_ icon: String?, _ text: String,
+                      mark: Theme.Mark?) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            Image(systemName: icon).font(.system(size: 10)).foregroundStyle(tint)
-                .padding(.top, 2)
-            Text(text).font(.system(size: 11)).foregroundStyle(tint)
+            if let m = mark {
+                MarkChip(mark: m, size: 8).padding(.top, 1)
+            } else if let icon {
+                Image(systemName: icon).font(.system(size: 10))
+                    .foregroundStyle(.tertiary).padding(.top, 2)
+            }
+            Text(text).font(.system(size: 11)).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -213,17 +293,28 @@ private struct ExplainedFigure<C: View>: View {
 struct StatTile: View {
     let value: String
     let label: String
-    var tint: Color = .primary
+    /// What the figure says, as a mark beside the label rather than as colour
+    /// on the digits.
+    ///
+    /// The digits used to be tinted green or red. That is the one thing this
+    /// surface must not do: the tint was the message, and the message was
+    /// unreadable over a bright room - and green against red is exactly the
+    /// pair a deuteranope cannot separate. Naming the state rather than the
+    /// colour also stops a call site deciding twice what "green" meant here.
+    var mark: Theme.Mark? = nil
     var detail: StatDetail? = nil
 
     var body: some View { face.explains(detail) }
 
     private var face: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 3) {
             Text(value).font(.system(size: 19, weight: .bold)).monospacedDigit()
-                .foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.6)
-            Text(label).font(.system(size: 8, weight: .heavy)).kerning(0.7)
-                .foregroundStyle(.tertiary).lineLimit(1)
+                .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.6)
+            HStack(spacing: 4) {
+                if let m = mark { MarkChip(mark: m, size: 7) }
+                Text(label).font(.system(size: 8, weight: .heavy)).kerning(0.7)
+                    .foregroundStyle(.tertiary).lineLimit(1).minimumScaleFactor(0.7)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 4)
@@ -259,7 +350,7 @@ struct TeamBadge: View {
 
     var body: some View {
         ZStack {
-            Circle().fill(tint.opacity(0.30))
+            Circle().fill(tint)
             if let l = logo, let u = URL(string: l) {
                 AsyncImage(url: u) { $0.resizable().scaledToFill() }
                     placeholder: { monogram }
@@ -269,13 +360,13 @@ struct TeamBadge: View {
         }
         .frame(width: size, height: size)
         .clipShape(.circle)
-        .overlay(Circle().stroke(tint.opacity(0.55), lineWidth: 1))
+        .overlay(Circle().stroke(.white.opacity(0.25), lineWidth: 1))
     }
 
     private var monogram: some View {
         Text(initials)
             .font(.system(size: size * 0.40, weight: .heavy))
-            .foregroundStyle(.white.opacity(0.9))
+            .foregroundStyle(.white)
             .minimumScaleFactor(0.5).lineLimit(1)
     }
 
@@ -290,10 +381,16 @@ struct TeamBadge: View {
 
     /// Hashed from the name so a team keeps its colour across every surface
     /// and every launch. Not random: the same string always lands here.
+    ///
+    /// The brightness is solved for rather than set, because the monogram is
+    /// white and the hue is whatever the name happened to hash to. At the old
+    /// `brightness: 0.85` a team that landed on yellow gave 1.8:1 and its
+    /// initials could not be read at all; `chipFill` puts every hue at the one
+    /// luminance where white on it clears 4.5:1.
     private var tint: Color {
         var h: UInt64 = 5381
         for b in name.utf8 { h = (h &* 33) &+ UInt64(b) }
-        return Color(hue: Double(h % 360) / 360.0, saturation: 0.55, brightness: 0.85)
+        return Theme.chipFill(hue: Double(h % 360) / 360.0)
     }
 }
 
@@ -311,29 +408,64 @@ struct TeamBadge: View {
 /// or `API.swift` already does. None of it is a new claim.
 enum Explain {
 
-    static let projected = StatDetail(
-        title: "Projected total",
-        what: "Where this line-up is expected to finish the week.",
-        how: "Points already banked, plus what is left of each starter's "
-           + "projection scaled by how much of his game is still to play.",
-        caveat: "Before kickoff it is entirely projection: the provider's "
-              + "numbers, added up, with nothing yet decided.")
+    /// One sentence naming whose numbers a figure is made of.
+    ///
+    /// Built from the catalogue rather than written out per tile, so a source
+    /// connected on the server names itself here with no change on this side,
+    /// and two panels quoting the same arithmetic cannot come to credit
+    /// different sources for it. Every projection-derived popover ends with
+    /// this line - which is how a figure that has no room for a label on the
+    /// tile still says whose it is.
+    static func whose(_ board: Board) -> String {
+        guard !board.loadedSources.isEmpty else {
+            return "No projection source is loaded on the server, so this is "
+                 + "the figure the league's own board shipped inline."
+        }
+        if board.projectionChoice == "consensus" {
+            return "The projections are the consensus: the mean of the "
+                 + "\(board.consensusN) sources loaded "
+                 + "(\(board.loadedSources.map(\.label).formatted())). A "
+                 + "source that is not loaded contributes nothing to it - it "
+                 + "cannot produce a zero or a share of a mean."
+        }
+        let s = board.loadedSources.first { $0.source == board.projectionChoice }
+        let credit = (s.map { $0.attribution.isEmpty ? "" : " - \($0.attribution)" }) ?? ""
+        return "The projections are \(board.projectionLabel)'s\(credit). Pick "
+             + "another source from the ornament and every figure on this "
+             + "surface is rebuilt from it, not merely relabelled."
+    }
 
-    static let opponentProjected = StatDetail(
-        title: "Opponent's projected total",
-        what: "The same arithmetic, run on the other side of your matchup.",
-        how: "Their banked points plus the unplayed remainder of each of "
-           + "their starters' projections.",
-        caveat: "It assumes they leave the line-up they have set. A late "
-              + "swap for somebody on a bye moves this and nothing here "
-              + "will know until the feed does.")
+    static func projected(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "Projected total",
+            what: "Where this line-up is expected to finish the week.",
+            how: "Points already banked, plus what is left of each starter's "
+               + "projection scaled by how much of his game is still to play. "
+               + whose(board),
+            caveat: "Before kickoff it is entirely projection: the source's "
+                  + "numbers, added up, with nothing yet decided.")
+    }
 
-    static let margin = StatDetail(
-        title: "Margin",
-        what: "Your projected total minus your opponent's.",
-        how: "The two projections above, subtracted.",
-        caveat: "Before kickoff this is a difference between two forecasts, "
-              + "not a lead.")
+    static func opponentProjected(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "Opponent's projected total",
+            what: "The same arithmetic, run on the other side of your matchup.",
+            how: "Their banked points plus the unplayed remainder of each of "
+               + "their starters' projections. " + whose(board),
+            caveat: "It assumes they leave the line-up they have set. A late "
+                  + "swap for somebody on a bye moves this and nothing here "
+                  + "will know until the feed does.")
+    }
+
+    static func margin(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "Margin",
+            what: "Your projected total minus your opponent's.",
+            how: "The two projections above, subtracted. " + whose(board),
+            caveat: "Before kickoff this is a difference between two "
+                  + "forecasts, not a lead - and a difference between two "
+                  + "sources' forecasts changes when you change source.")
+    }
 
     static let winProbability = StatDetail(
         title: "Win probability",
@@ -372,27 +504,36 @@ enum Explain {
         how: "Everything the server sends. A league you have put away is not "
            + "counted, which is why hiding one changes this number.")
 
-    static let projectedRecord = StatDetail(
-        title: "This week's projected record",
-        what: "How many of your matchups you are currently ahead in.",
-        how: "One win for each league where your starters out-project your "
-           + "opponent's, counted right now.",
-        caveat: "This Sunday only. It is not a season forecast and it does "
-              + "not know your schedule.")
+    static func projectedRecord(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "This week's projected record",
+            what: "How many of your matchups you are currently ahead in.",
+            how: "One win for each league where your starters out-project "
+               + "your opponent's, counted right now. " + whose(board),
+            caveat: "This Sunday only. It is not a season forecast and it "
+                  + "does not know your schedule. A matchup inside a point "
+                  + "can flip on the source alone.")
+    }
 
-    static let totalProjected = StatDetail(
-        title: "Projected points, everywhere",
-        what: "Every league's projected total for your team, added together.",
-        how: "The sum of each league's own projection for your starters.",
-        caveat: "Leagues can score differently, so this is a total rather "
-              + "than a comparable figure.")
+    static func totalProjected(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "Projected points, everywhere",
+            what: "Every league's projected total for your team, added together.",
+            how: "The sum of the projection for your starters in each "
+               + "league. " + whose(board),
+            caveat: "Leagues can score differently, so this is a total rather "
+                  + "than a comparable figure.")
+    }
 
-    static let edge = StatDetail(
-        title: "Points over your opponents",
-        what: "How far ahead of the field you are projected across everything.",
-        how: "Your projection minus your opponent's in each league, added up.",
-        caveat: "A big edge in one league hides a deficit in another; the "
-              + "sum cannot tell you which.")
+    static func edge(_ board: Board) -> StatDetail {
+        StatDetail(
+            title: "Points over your opponents",
+            what: "How far ahead of the field you are projected across everything.",
+            how: "Your projection minus your opponent's in each league, added "
+               + "up. " + whose(board),
+            caveat: "A big edge in one league hides a deficit in another; the "
+                  + "sum cannot tell you which.")
+    }
 
     /// The rank tile changes meaning with the league count, so its
     /// explanation has to as well - which is the whole reason it is here.
@@ -434,10 +575,39 @@ enum Explain {
         caveat: "Providers restate points after a stat correction, so a "
               + "figure can move after his game has finished.")
 
-    static let playerProjection = StatDetail(
-        title: "Projection",
-        what: "What he is projected for this week.",
-        how: "The provider's own number, carried through unchanged.")
+    /// The one projection popover that can also report a disagreement, since
+    /// it is the only one about a single man - a spread is a fact about a
+    /// player, and a total's spread would be a sum of them pretending to be
+    /// one.
+    static func playerProjection(_ pick: ProjectionPick?,
+                                 board: Board) -> StatDetail {
+        let apart = pick?.spread.map {
+            "The loaded sources are "
+            + $0.formatted(.number.precision(.fractionLength(1)))
+            + " points apart on him"
+            + ($0 >= ProjectionPick.disputedAt
+               ? ", which is enough to move him in or out of a line-up. "
+               : ". ")
+            + "The card below breaks the number down by source."
+        }
+        if pick?.fallback == true {
+            return StatDetail(
+                title: "Projection",
+                what: "\(board.projectionLabel) has no number for him this "
+                    + "week, so this is the figure the league's own board "
+                    + "shipped inline.",
+                how: "Substituted rather than left blank so the board can "
+                   + "still be sized, and named so nobody reads it as "
+                   + "\(board.projectionLabel)'s opinion of him.",
+                caveat: apart)
+        }
+        return StatDetail(
+            title: "Projection",
+            what: "What he is projected for this week, "
+                + "from \(pick?.label ?? board.projectionLabel).",
+            how: whose(board),
+            caveat: apart)
+    }
 
     /// Floor and ceiling are the two figures on this surface most likely to
     /// be read as a forecast, which they are not.

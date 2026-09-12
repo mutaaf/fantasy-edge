@@ -137,7 +137,7 @@ struct FieldToken: View {
     /// *is* the row, and there it takes the tap itself.
     var tap: (() -> Void)? = nil
 
-    private var tint: Color { Theme.position(man.pos) }
+    private var tint: Color { Theme.positionFill(man.pos) }
     private var surname: String {
         // A D/ST is "Rams D/ST" and the useful half is the club; a man's is
         // his surname. Both come out of the same trim.
@@ -164,8 +164,8 @@ struct FieldToken: View {
                         Text(man.points, format: .number.precision(.fractionLength(0)))
                             .font(.system(size: 9, weight: .heavy)).monospacedDigit()
                             .padding(.horizontal, 4).padding(.vertical, 1)
-                            .background(Theme.green, in: .capsule)
-                            .foregroundStyle(.black)
+                            .background(Theme.greenFill, in: .capsule)
+                            .foregroundStyle(.white)
                             .offset(x: 5, y: -3)
                             // Points land in lumps - a touchdown is six at
                             // once - so the badge rolls to the new number

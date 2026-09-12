@@ -98,9 +98,17 @@ struct LivePayload: Decodable {
 extension Cell {
     /// One place where a starter plus its live line becomes a cell, so the
     /// window and the immersive space cannot drift apart.
-    static func make(_ s: Starter, side: String, live: LiveState?) -> Cell {
+    ///
+    /// `projected` overrides the figure the payload shipped inline. The mosaic
+    /// carries the league provider's own projection on each starter, so
+    /// choosing another source has to replace the number *here*, where the
+    /// cell is built - the leverage model sizes every band off it. Relabelling
+    /// the figure and leaving the board built from ESPN's would be a picker
+    /// that changes a caption and nothing else.
+    static func make(_ s: Starter, side: String, live: LiveState?,
+                     projected: Double? = nil) -> Cell {
         Cell(id: s.id, name: s.name, pos: s.pos, team: s.team, side: side,
-             scored: live?.s ?? 0, projected: s.projected ?? 0,
+             scored: live?.s ?? 0, projected: projected ?? s.projected ?? 0,
              remaining: live?.r ?? 1, state: live?.g ?? "PRE",
              img: s.img ?? "")
     }

@@ -106,18 +106,27 @@ struct ImmersiveBoard: View {
     private var scoreline: some View {
         let m = board.mosaic
         return HStack(spacing: 30) {
-            Text(m.yourScore, format: .number.precision(.fractionLength(1)))
-                .font(.system(size: 54, weight: .bold))
-                .foregroundStyle(Theme.green).contentTransition(.numericText())
+            // Both scores in ink, with a chip naming which side is which.
+            // Tinting a 54pt figure was the single largest thing on this
+            // surface that a bright room erased.
+            VStack(spacing: 4) {
+                Text(m.yourScore, format: .number.precision(.fractionLength(1)))
+                    .font(.system(size: 54, weight: .bold))
+                    .contentTransition(.numericText())
+                Chip(text: "YOU", fill: Theme.greenFill, size: 9)
+            }
             VStack(spacing: 2) {
                 Text(m.winProb, format: .percent.precision(.fractionLength(0)))
                     .font(.system(size: 30, weight: .bold))
                 Text(board.league?.league ?? "").font(.system(size: 12))
                     .foregroundStyle(.secondary).lineLimit(1)
             }
-            Text(m.oppScore, format: .number.precision(.fractionLength(1)))
-                .font(.system(size: 54, weight: .bold))
-                .foregroundStyle(Theme.red).contentTransition(.numericText())
+            VStack(spacing: 4) {
+                Text(m.oppScore, format: .number.precision(.fractionLength(1)))
+                    .font(.system(size: 54, weight: .bold))
+                    .contentTransition(.numericText())
+                Chip(text: "THEM", fill: Theme.redFill, size: 9)
+            }
         }
         .monospacedDigit()
         .padding(.horizontal, 38).padding(.vertical, 22)
@@ -160,10 +169,13 @@ struct ImmersiveBoard: View {
             } else {
                 ForEach(board.recent.prefix(5)) { r in
                     HStack(spacing: 10) {
-                        Text("+\(r.delta, format: .number.precision(.fractionLength(1)))")
-                            .font(.system(size: 15, weight: .heavy)).monospacedDigit()
-                            .foregroundStyle(r.side == "you" ? Theme.green : Theme.red)
-                            .frame(width: 54, alignment: .leading)
+                        HStack(spacing: 0) {
+                            Chip(text: "+" + r.delta.formatted(
+                                    .number.precision(.fractionLength(1))),
+                                 fill: Theme.sideFill(r.side), size: 11)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(width: 64, alignment: .leading)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(r.name).font(.system(size: 14, weight: .semibold))
                                 .lineLimit(1)

@@ -80,10 +80,9 @@ struct ComingSoon: View {
                 Image(systemName: icon).font(.system(size: 12))
                 Text("NOT BUILT YET").font(.system(size: 9, weight: .heavy)).kerning(1.4)
             }
-            .foregroundStyle(Theme.green)
+            .foregroundStyle(.white)
             .padding(.horizontal, 13).padding(.vertical, 6)
-            .background(Capsule().fill(Theme.green.opacity(0.14)))
-            .overlay(Capsule().stroke(Theme.green.opacity(0.35), lineWidth: 1))
+            .background(Capsule().fill(Theme.greenFill))
 
             Text(title)
                 .font(.system(size: 40, weight: .bold))
@@ -106,7 +105,7 @@ struct ComingSoon: View {
                     HStack(alignment: .top, spacing: 9) {
                         Text(String(format: "%02d", i + 1))
                             .font(.system(size: 10, weight: .heavy)).monospacedDigit()
-                            .foregroundStyle(Theme.green.opacity(0.8))
+                            .foregroundStyle(.secondary)
                             .padding(.top, 2)
                         Text(line).font(.system(size: 12)).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

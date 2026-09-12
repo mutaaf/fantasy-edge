@@ -29,7 +29,11 @@ struct BoardView: View {
         }
         .sheet(isPresented: $showSettings) { HostSheet() }
         .sheet(item: $detail) { PlayerHologram(cell: $0) }
-        .task { board.start(); await board.loadPrefs() }
+        .task {
+            board.start()
+            await board.loadPrefs()
+            await board.loadProjections()
+        }
         .onDisappear { board.stop() }
     }
 
@@ -210,6 +214,18 @@ struct BoardView: View {
                 }
             }
             .disabled(teamOptions.count < 2)
+
+            // The same chooser the console carries. This window sizes its
+            // cells by the projection too, so leaving it out here would mean
+            // two boards in the same app showing different numbers with no
+            // way to tell why.
+            chooser(icon: "chart.line.uptrend.xyaxis", label: "PROJECTIONS",
+                    value: board.loadedSources.isEmpty ? "none loaded"
+                        : (board.projectionChoice == "consensus"
+                           ? "Consensus of \(board.consensusN)"
+                           : board.projectionLabel)) {
+                ProjectionMenu()
+            }
 
             Divider().frame(height: 26)
 
