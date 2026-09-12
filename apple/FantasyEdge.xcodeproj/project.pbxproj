@@ -22,9 +22,6 @@
 		B03E4A9891D492752E873555 /* GameFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */; };
 		D008569B94DFD109A002453A /* Gamecast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D260E8769E75220D2DCB99F6 /* Gamecast.swift */; };
 		C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F54AC836EC2489FF7E7976 /* Gridiron.swift */; };
-		3F85BCF6861E10DD96592FBC /* Hall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA7F5E4B50815191C084106 /* Hall.swift */; };
-		3CF51E4A6D077B4C31187408 /* HallGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0834E27E20F200130B14DF /* HallGeometry.swift */; };
-		A908DBC1EA61810CAE9A9298 /* HallOfFame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138C5DD17E2A7B88B5A5B4BD /* HallOfFame.swift */; };
 		A2488459E3B26CCA1122BC2B /* Imagery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5D59E50C6419125834A3BA2 /* Imagery.swift */; };
 		33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */; };
 		2B7B9AB5FD830CB3C8C366FC /* Intel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */; };
@@ -59,9 +56,6 @@
 		0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFieldView.swift; sourceTree = "<group>"; };
 		D260E8769E75220D2DCB99F6 /* Gamecast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gamecast.swift; sourceTree = "<group>"; };
 		92F54AC836EC2489FF7E7976 /* Gridiron.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gridiron.swift; sourceTree = "<group>"; };
-		0AA7F5E4B50815191C084106 /* Hall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hall.swift; sourceTree = "<group>"; };
-		0D0834E27E20F200130B14DF /* HallGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HallGeometry.swift; sourceTree = "<group>"; };
-		138C5DD17E2A7B88B5A5B4BD /* HallOfFame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HallOfFame.swift; sourceTree = "<group>"; };
 		F5D59E50C6419125834A3BA2 /* Imagery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Imagery.swift; sourceTree = "<group>"; };
 		889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveBoard.swift; sourceTree = "<group>"; };
 		8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel.swift; sourceTree = "<group>"; };
@@ -115,9 +109,6 @@
 				0E2BED24FCC9005C4E3ED20E /* GameFieldView.swift */,
 				D260E8769E75220D2DCB99F6 /* Gamecast.swift */,
 				92F54AC836EC2489FF7E7976 /* Gridiron.swift */,
-				0AA7F5E4B50815191C084106 /* Hall.swift */,
-				0D0834E27E20F200130B14DF /* HallGeometry.swift */,
-				138C5DD17E2A7B88B5A5B4BD /* HallOfFame.swift */,
 				F5D59E50C6419125834A3BA2 /* Imagery.swift */,
 				889E750143DD9C72D3C2AA8E /* ImmersiveBoard.swift */,
 				8E958FC9FF9B6AB5EA7A1C91 /* Intel.swift */,
@@ -218,9 +209,6 @@
 				B03E4A9891D492752E873555 /* GameFieldView.swift in Sources */,
 				D008569B94DFD109A002453A /* Gamecast.swift in Sources */,
 				C0FB3324DC26E412EDCF15FE /* Gridiron.swift in Sources */,
-				3F85BCF6861E10DD96592FBC /* Hall.swift in Sources */,
-				3CF51E4A6D077B4C31187408 /* HallGeometry.swift in Sources */,
-				A908DBC1EA61810CAE9A9298 /* HallOfFame.swift in Sources */,
 				A2488459E3B26CCA1122BC2B /* Imagery.swift in Sources */,
 				33A91A5D2EC233EB192C2C23 /* ImmersiveBoard.swift in Sources */,
 				2B7B9AB5FD830CB3C8C366FC /* Intel.swift in Sources */,

@@ -40,10 +40,6 @@ struct FantasyEdgeApp: App {
         // other way round, because a hall is somewhere you go.
         .immersionStyle(selection: style(\.boardStyle), in: .mixed, .progressive, .full)
 
-        ImmersiveSpace(id: "hall-space") {
-            HallOfFame().environment(board)
-        }
-        .immersionStyle(selection: style(\.hallStyle), in: .full, .progressive, .mixed)
     }
 
     /// Bridge between the app's stored choice and SwiftUI's existential.

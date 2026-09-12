@@ -89,14 +89,6 @@ struct CommandView: View {
             await board.loadProjections()
             await board.loadContext()
         }
-        // TEMPORARY-HALL-HOOK
-        .task {
-            try? await Task.sleep(for: .seconds(2))
-            if await openImmersive(id: "hall-space") == .opened {
-                dismissWindow(id: "board")
-            }
-        }
-        // END-TEMPORARY-HALL-HOOK
         // A man you opened stays open when he is in the league you just moved
         // to - watching his slot change from START to BENCH league to league
         // is the point of a cross-league card. When he is not in it the rail
@@ -300,17 +292,14 @@ struct CommandView: View {
             } label: { Label("Immersive", systemImage: "visionpro") }
                 .buttonStyle(.borderedProminent).tint(Theme.green)
 
-            // Two rooms, and they are not the same offer. The board puts your
-            // line-up round you in the room you are already in; the hall is a
-            // place you go, built out of seven seasons of your own records.
-            Button {
-                Task {
-                    if await openImmersive(id: "hall-space") == .opened {
-                        dismissWindow(id: "board")
-                    }
-                }
-            } label: { Label("Hall of Fame", systemImage: "trophy") }
-                .buttonStyle(.bordered).tint(Theme.gold)
+            // The hall is cut for now, so the control says so rather than
+            // opening a room that is not finished. Disabled and labelled beats
+            // removed: the offer is real, it is just not ready.
+            Button { } label: {
+                Label("Hall of Fame · soon", systemImage: "trophy")
+            }
+            .buttonStyle(.bordered)
+            .disabled(true)
 
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape").font(.system(size: 17))

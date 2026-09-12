@@ -244,17 +244,14 @@ struct BoardView: View {
             .buttonStyle(.borderedProminent)
             .tint(Theme.green)
 
-            // Two rooms, and they are not the same offer. The board puts your
-            // line-up round you in the room you are already in; the hall is a
-            // place you go, built out of seven seasons of your own records.
-            Button {
-                Task {
-                    if await openImmersive(id: "hall-space") == .opened {
-                        dismissWindow(id: "board")
-                    }
-                }
-            } label: { Label("Hall of Fame", systemImage: "trophy") }
-                .buttonStyle(.bordered).tint(Theme.gold)
+            // The hall is cut for now, so the control says so rather than
+            // opening a room that is not finished. Disabled and labelled beats
+            // removed: the offer is real, it is just not ready.
+            Button { } label: {
+                Label("Hall of Fame · soon", systemImage: "trophy")
+            }
+            .buttonStyle(.bordered)
+            .disabled(true)
 
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape").font(.system(size: 17))

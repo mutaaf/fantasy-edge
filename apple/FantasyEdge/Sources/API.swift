@@ -7,6 +7,24 @@ import Observation
 /// is exactly why it is safe to point a headset on the living-room network at
 /// it. The host is settable because a real Vision Pro is not on the Mac's
 /// loopback the way the simulator is.
+/// How much of the room an immersive space takes.
+///
+/// A plain enum rather than `any ImmersionStyle` because the scene and the
+/// space both need to read the same value, and an existential cannot be
+/// compared or stored in shared state. `FantasyEdgeApp` converts.
+enum RoomStyle: String, CaseIterable, Identifiable {
+    case mixed, progressive, full
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .mixed:       return "Keep the room"
+        case .progressive: return "Dial it in"
+        case .full:        return "Replace the room"
+        }
+    }
+}
+
+
 @Observable
 final class Board {
     var host: String {
@@ -17,17 +35,15 @@ final class Board {
     var watchURL: String {
         didSet { UserDefaults.standard.set(watchURL, forKey: "fe.watch") }
     }
-    /// How much of the room the hall of fame takes, and the one piece of
-    /// scene state the app's `ImmersiveSpace` declaration and the space itself
-    /// both have to see. It lives here rather than in either because
-    /// `.immersionStyle(selection:)` is declared on the scene and the picker
-    /// that drives it is inside the space, and `any ImmersionStyle` cannot be
-    /// compared or stored in a `@State` the two share.
-    var hallStyle: RoomStyle = .full
-    /// The same choice for the board space, which defaults the other way: a
-    /// board is a thing you have *while* watching a real game in a real room,
-    /// so blacking the room out is the wrong default even though it is now
-    /// offered.
+    /// How much of the room the board takes.
+    ///
+    /// It lives on `Board` rather than in either the scene or the space
+    /// because `.immersionStyle(selection:)` is declared on the scene while
+    /// the picker that drives it sits inside the space, and `any
+    /// ImmersionStyle` can be neither compared nor held in a `@State` the two
+    /// share. Mixed is the default deliberately: a board is something you have
+    /// *while* a real game is on in a real room, so blacking the room out is
+    /// the wrong thing to do by default even though full is offered.
     var boardStyle: RoomStyle = .mixed
 
     var leagues: [LeaguePayload] = []
