@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.db
+.DS_Store
+apple/build/
+xcuserdata/
+data/capture/*/stdout.log
