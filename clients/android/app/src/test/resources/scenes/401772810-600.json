@@ -1,0 +1,752 @@
+{
+ "activeMoment": null,
+ "axes": {
+  "x": "yards from the home goal line; end zones -10..0 and 100..110",
+  "y": "yards up",
+  "z": "yards from the centre line, positive toward the home sideline"
+ },
+ "ball": {
+  "beacon": {
+   "color": "beacon",
+   "height": 34.0
+  },
+  "x": 25.0,
+  "y": 0.0,
+  "z": 0.0
+ },
+ "bowl": {
+  "concourse": {
+   "color": "bowl.concourse",
+   "inner": 36.0,
+   "outer": 42.0
+  },
+  "crowd": {
+   "away": "#4f2683",
+   "awaySection": {
+    "fromX": 90.0,
+    "side": "far"
+   },
+   "dark": "crowd.dark",
+   "home": "#0b1c3a",
+   "neutral": "crowd.neutral"
+  },
+  "rimLights": {
+   "color": "rim.light",
+   "count": 10,
+   "height": 9.0,
+   "offset": 71.0,
+   "side": "far"
+  },
+  "sectionTint": {
+   "color": null,
+   "dim": 0.28,
+   "side": null
+  },
+  "shape": {
+   "exponent": 4.0,
+   "halfLength": 60.0,
+   "halfWidth": 26.666666666666668,
+   "type": "superellipse"
+  },
+  "tiers": [
+   {
+    "color": "bowl.lower",
+    "inner": 6.0,
+    "name": "lower",
+    "outer": 36.0,
+    "rise": [
+     1.0,
+     19.6
+    ]
+   },
+   {
+    "color": "bowl.upper",
+    "inner": 42.0,
+    "name": "upper",
+    "outer": 70.0,
+    "rise": [
+     24.0,
+     45.8
+    ]
+   }
+  ]
+ },
+ "currentDrive": 2,
+ "drives": [
+  {
+   "arcs": [
+    {
+     "apex": 18.0,
+     "clock": "15:00",
+     "color": "arc.kick",
+     "dash": null,
+     "distance": 0,
+     "down": 0,
+     "duration": 0.733,
+     "fromX": 35.0,
+     "id": "40177281041",
+     "lane": -9.067,
+     "period": 1,
+     "seconds": 2.2,
+     "shape": "kick",
+     "side": "home",
+     "style": "kick",
+     "text": "C.Santos kicks 65 yards from CHI 35 to MIN 0. T.Chandler to MIN 25 for 25 yards (R.Hyppolite; C.Jones).",
+     "toX": 75.0,
+     "type": "Kickoff"
+    },
+    {
+     "apex": 1.16,
+     "clock": "14:53",
+     "color": "arc.run",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.33,
+     "fromX": 75.0,
+     "id": "40177281064",
+     "lane": -4.533,
+     "period": 1,
+     "seconds": 0.99,
+     "shape": "run",
+     "side": "away",
+     "style": "run",
+     "text": "A.Jones right end pushed ob at MIN 28 for 3 yards (T.Stevenson).",
+     "toX": 72.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 4.75,
+     "clock": "14:17",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 7,
+     "down": 2,
+     "duration": 0.442,
+     "fromX": 72.0,
+     "id": "40177281091",
+     "lane": 0.0,
+     "period": 1,
+     "seconds": 1.325,
+     "shape": "pass",
+     "side": "away",
+     "style": "pass",
+     "text": "(No Huddle) J.McCarthy pass short right to J.Oliver pushed ob at MIN 33 for 5 yards (J.Brisker).",
+     "toX": 67.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 0.92,
+     "clock": "13:40",
+     "color": "arc.loss",
+     "dash": null,
+     "distance": 2,
+     "down": 3,
+     "duration": 0.333,
+     "fromX": 67.0,
+     "id": "401772810125",
+     "lane": 4.533,
+     "period": 1,
+     "seconds": 1.0,
+     "shape": "run",
+     "side": "away",
+     "style": "loss",
+     "text": "(Shotgun) J.McCarthy sacked at MIN 32 for -1 yards (G.Dexter).",
+     "toX": 68.0,
+     "type": "Sack"
+    },
+    {
+     "apex": 15.25,
+     "clock": "12:58",
+     "color": "arc.kick",
+     "dash": null,
+     "distance": 3,
+     "down": 4,
+     "duration": 0.733,
+     "fromX": 68.0,
+     "id": "401772810145",
+     "lane": 9.067,
+     "period": 1,
+     "seconds": 2.2,
+     "shape": "kick",
+     "side": "away",
+     "style": "kick",
+     "text": "R.Wright punts 51 yards to CHI 17, Center-A.DePaola. D.Duvernay to CHI 39 for 22 yards (E.Wilson; A.DePaola).",
+     "toX": 39.0,
+     "type": "Punt"
+    }
+   ],
+   "id": "4017728101",
+   "result": "Punt",
+   "side": "away",
+   "team": "MIN"
+  },
+  {
+   "arcs": [
+    {
+     "apex": 4.05,
+     "clock": "12:45",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.425,
+     "fromX": 39.0,
+     "id": "401772810171",
+     "lane": -9.067,
+     "period": 1,
+     "seconds": 1.275,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "(Shotgun) C.Williams pass short right to D.Swift pushed ob at CHI 42 for 3 yards (I.Pace).",
+     "toX": 42.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 5.8,
+     "clock": "12:15",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 7,
+     "down": 2,
+     "duration": 0.467,
+     "fromX": 42.0,
+     "id": "401772810201",
+     "lane": -7.052,
+     "period": 1,
+     "seconds": 1.4,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "C.Williams pass short left to D.Swift to 50 for 8 yards (B.Murphy).",
+     "toX": 50.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 1.28,
+     "clock": "11:29",
+     "color": "arc.run",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.34,
+     "fromX": 50.0,
+     "id": "401772810226",
+     "lane": -5.037,
+     "period": 1,
+     "seconds": 1.02,
+     "shape": "run",
+     "side": "home",
+     "style": "run",
+     "text": "T.Benedet reported in as eligible.  D.Swift right guard to MIN 46 for 4 yards (I.Pace; A.Van Ginkel).",
+     "toX": 54.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 6.85,
+     "clock": "10:47",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 6,
+     "down": 2,
+     "duration": 0.492,
+     "fromX": 54.0,
+     "id": "401772810250",
+     "lane": -3.022,
+     "period": 1,
+     "seconds": 1.475,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "C.Williams pass short middle to K.Monangai to MIN 35 for 11 yards (T.Jackson).",
+     "toX": 65.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 4.75,
+     "clock": "10:13",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.442,
+     "fromX": 65.0,
+     "id": "401772810275",
+     "lane": -1.007,
+     "period": 1,
+     "seconds": 1.325,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "C.Williams pass short middle to D.Moore to MIN 30 for 5 yards (B.Cashman).",
+     "toX": 70.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 0.8,
+     "clock": "9:34",
+     "color": "arc.run",
+     "dash": null,
+     "distance": 5,
+     "down": 2,
+     "duration": 0.3,
+     "fromX": 70.0,
+     "id": "401772810300",
+     "lane": 1.007,
+     "period": 1,
+     "seconds": 0.9,
+     "shape": "run",
+     "side": "home",
+     "style": "run",
+     "text": "T.Benedet reported in as eligible.  D.Swift up the middle to MIN 30 for no gain (J.Greenard).",
+     "toX": 70.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 8.95,
+     "clock": "8:50",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 5,
+     "down": 3,
+     "duration": 0.542,
+     "fromX": 70.0,
+     "id": "401772810324",
+     "lane": 3.022,
+     "period": 1,
+     "seconds": 1.625,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "(Shotgun) C.Williams pass deep right to R.Odunze ran ob at MIN 13 for 17 yards.",
+     "toX": 87.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 5.45,
+     "clock": "8:29",
+     "color": "arc.pass",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.458,
+     "fromX": 87.0,
+     "id": "401772810366",
+     "lane": 5.037,
+     "period": 1,
+     "seconds": 1.375,
+     "shape": "pass",
+     "side": "home",
+     "style": "pass",
+     "text": "(No Huddle) C.Williams pass short left to O.Zaccheaus to MIN 6 for 7 yards (J.Okudah).",
+     "toX": 94.0,
+     "type": "Pass Reception"
+    },
+    {
+     "apex": 1.16,
+     "clock": "7:52",
+     "color": "arc.loss",
+     "dash": null,
+     "distance": 3,
+     "down": 2,
+     "duration": 0.333,
+     "fromX": 94.0,
+     "id": "401772810391",
+     "lane": 7.052,
+     "period": 1,
+     "seconds": 1.0,
+     "shape": "run",
+     "side": "home",
+     "style": "loss",
+     "text": "D.Swift left tackle to MIN 9 for -3 yards (L.Rodriguez).",
+     "toX": 91.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 1.88,
+     "clock": "7:04",
+     "color": "arc.score",
+     "dash": null,
+     "distance": 6,
+     "down": 3,
+     "duration": 0.39,
+     "fromX": 91.0,
+     "id": "401772810420",
+     "lane": 9.067,
+     "period": 1,
+     "seconds": 1.17,
+     "shape": "run",
+     "side": "home",
+     "style": "score",
+     "text": "(Shotgun) C.Williams scrambles left end for 9 yards, TOUCHDOWN. C.Santos extra point is GOOD, Center-S.Daly, Holder-T.Taylor.",
+     "toX": 100.0,
+     "type": "Rushing Touchdown"
+    }
+   ],
+   "id": "4017728102",
+   "result": "Touchdown",
+   "side": "home",
+   "team": "CHI"
+  },
+  {
+   "arcs": [
+    {
+     "apex": 18.25,
+     "clock": "7:04",
+     "color": "arc.kick",
+     "dash": null,
+     "distance": 0,
+     "down": 0,
+     "duration": 0.733,
+     "fromX": 35.0,
+     "id": "401772810458",
+     "lane": -9.067,
+     "period": 1,
+     "seconds": 2.2,
+     "shape": "kick",
+     "side": "home",
+     "style": "kick",
+     "text": "C.Santos kicks 65 yards from CHI 35 to MIN 0. M.Price to MIN 24 for 24 yards (D.Hardy).",
+     "toX": 76.0,
+     "type": "Kickoff"
+    },
+    {
+     "apex": 1.28,
+     "clock": "6:59",
+     "color": "arc.run",
+     "dash": null,
+     "distance": 10,
+     "down": 1,
+     "duration": 0.34,
+     "fromX": 76.0,
+     "id": "401772810493",
+     "lane": -4.533,
+     "period": 1,
+     "seconds": 1.02,
+     "shape": "run",
+     "side": "away",
+     "style": "run",
+     "text": "(Shotgun) J.Jefferson right end pushed ob at MIN 28 for 4 yards (K.Byard).",
+     "toX": 72.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 1.04,
+     "clock": "6:21",
+     "color": "arc.run",
+     "dash": null,
+     "distance": 6,
+     "down": 2,
+     "duration": 0.32,
+     "fromX": 72.0,
+     "id": "401772810520",
+     "lane": 0.0,
+     "period": 1,
+     "seconds": 0.96,
+     "shape": "run",
+     "side": "away",
+     "style": "run",
+     "text": "A.Jones right tackle to MIN 30 for 2 yards (G.Jarrett; D.Odeyingbo).",
+     "toX": 70.0,
+     "type": "Rush"
+    },
+    {
+     "apex": 1.04,
+     "clock": "5:41",
+     "color": "arc.loss",
+     "dash": null,
+     "distance": 4,
+     "down": 3,
+     "duration": 0.333,
+     "fromX": 70.0,
+     "id": "401772810542",
+     "lane": 4.533,
+     "period": 1,
+     "seconds": 1.0,
+     "shape": "run",
+     "side": "away",
+     "style": "loss",
+     "text": "(Shotgun) J.McCarthy sacked at MIN 28 for -2 yards (D.Odeyingbo).",
+     "toX": 72.0,
+     "type": "Sack"
+    },
+    {
+     "apex": 19.75,
+     "clock": "5:04",
+     "color": "arc.kick",
+     "dash": null,
+     "distance": 6,
+     "down": 4,
+     "duration": 0.733,
+     "fromX": 72.0,
+     "id": "401772810562",
+     "lane": 9.067,
+     "period": 1,
+     "seconds": 2.2,
+     "shape": "kick",
+     "side": "away",
+     "style": "kick",
+     "text": " R.Wright punts 54 yards to CHI 18, Center-A.DePaola. D.Duvernay to CHI 25 for 7 yards (D.Turner; T.Thomas).",
+     "toX": 25.0,
+     "type": "Punt"
+    }
+   ],
+   "id": "4017728103",
+   "result": "",
+   "side": "away",
+   "team": "MIN"
+  }
+ ],
+ "event": "401772810",
+ "field": {
+  "awayEndZone": [
+   100.0,
+   110.0
+  ],
+  "endZone": 10.0,
+  "goalPostWidth": 6.167,
+  "hashFromSideline": 23.583,
+  "homeEndZone": [
+   -10.0,
+   0.0
+  ],
+  "league": "nfl",
+  "length": 100.0,
+  "numbersEvery": 10,
+  "stripeEvery": 5,
+  "width": 53.333333333333336
+ },
+ "kind": "football-scene",
+ "lasers": [
+  {
+   "color": "laser.scrimmage",
+   "kind": "scrimmage",
+   "x": 25.0
+  },
+  {
+   "color": "laser.lineToGain",
+   "kind": "lineToGain",
+   "x": 35.0
+  }
+ ],
+ "league": "nfl",
+ "moments": [
+  {
+   "clock": "7:04",
+   "kind": "touchdown",
+   "period": 1,
+   "playId": "401772810420",
+   "points": 7.0,
+   "side": "home",
+   "team": "CHI",
+   "text": "(Shotgun) C.Williams scrambles left end for 9 yards, TOUCHDOWN. C.Santos extra point is GOOD, Center-S.Daly, Holder-T.Taylor."
+  }
+ ],
+ "motion": {
+  "about": "Real-time play durations are clamped to [minSeconds, maxSeconds]. A replay faster than referenceSpeed divides them by speed / referenceSpeed, never below floorSeconds, so a play finishes before the next snap arrives.",
+  "floorSeconds": 0.2,
+  "maxSeconds": 2.5,
+  "minSeconds": 0.6,
+  "reduceMotion": "jump",
+  "referenceSpeed": 20,
+  "sectionDim": 0.28
+ },
+ "palette": {
+  "arc.incomplete": "#FFFFFF",
+  "arc.kick": "#E8D9A8",
+  "arc.loss": "#FFBABA",
+  "arc.pass": "#FFFFFF",
+  "arc.penalty": "#FFD400",
+  "arc.run": "#9FD8FF",
+  "arc.score": "#FFD400",
+  "arc.turnover": "#FFBABA",
+  "beacon": "#BFE3FF",
+  "beacon.score": "#FFF3B0",
+  "bowl.concourse": "#15110F",
+  "bowl.lower": "#302722",
+  "bowl.upper": "#261F1C",
+  "crowd.dark": "#2A2A2A",
+  "crowd.neutral": "#F4F1EA",
+  "fill.live": "#237A04",
+  "fill.redZone": "#DF0B0B",
+  "fill.score": "#8B7300",
+  "ink": "#F7F6F2",
+  "ink.secondary": "#F7F6F2BD",
+  "laser.lineToGain": "#FFD400",
+  "laser.scrimmage": "#A6D0FF",
+  "line.yard": "#FFFFFF",
+  "plate": "#121417E0",
+  "rim.light": "#FFF8E6",
+  "sky.horizon": "#1A2436",
+  "sky.top": "#03050A",
+  "turf.a": "#1E6A34",
+  "turf.b": "#237A3C",
+  "turf.surround": "#17401F",
+  "turf.tabletopA": "#0E3A1F",
+  "turf.tabletopB": "#124726"
+ },
+ "presentation": {
+  "beaconHeight": 34.0,
+  "horizon": {
+   "y0": 52.0,
+   "y1": 76.0,
+   "z": -58.0
+  },
+  "stadium": {
+   "bowlTiers": [
+    "lower",
+    "upper"
+   ],
+   "metersPerYard": 0.9144,
+   "seat": {
+    "x": 50.0,
+    "y": 8.0,
+    "z": 42.7
+   }
+  },
+  "tabletop": {
+   "bowlTiers": [
+    "lower"
+   ],
+   "floor": -0.18,
+   "metersPerYard": 0.0045,
+   "volume": [
+    0.9,
+    0.4,
+    0.6
+   ]
+  }
+ },
+ "replay": {
+  "awayScore": 0,
+  "boxscore": {
+   "mode": "captured",
+   "note": "This summary carries no box-score athlete list, so there was nothing to derive from and the captured FINAL box score is served unchanged. Player totals are the end of the game from the first snap."
+  },
+  "clock": "5:00",
+  "event": "401772810",
+  "gameSeconds": 600,
+  "homeScore": 7,
+  "period": 1,
+  "playsIncluded": 23,
+  "playsTotal": 185,
+  "state": "in"
+ },
+ "replayControl": {
+  "awayScore": 0,
+  "clock": "5:00",
+  "driveStart": 476,
+  "event": "401772810",
+  "gameSeconds": 600,
+  "homeScore": 7,
+  "label": "5:00 1st",
+  "length": 3600,
+  "loaded": true,
+  "matchup": {
+   "away": {
+    "abbr": "MIN",
+    "score": 27
+   },
+   "complete": true,
+   "date": "2025-09-09T00:15Z",
+   "final": "Final",
+   "home": {
+    "abbr": "CHI",
+    "score": 24
+   }
+  },
+  "period": 1,
+  "playing": false,
+  "progress": 0.1667,
+  "replay": true,
+  "speed": 60.0,
+  "speeds": [
+   1.0,
+   5.0,
+   15.0,
+   30.0,
+   60.0,
+   120.0,
+   300.0
+  ],
+  "state": "in"
+ },
+ "source": "replay",
+ "speed": 60.0,
+ "status": {
+  "awayScore": 0.0,
+  "clock": "5:00",
+  "distance": 10,
+  "down": 1,
+  "downDistance": "1st & 10 at CHI 25",
+  "homeScore": 7.0,
+  "label": "5:00 - 1st",
+  "period": 1,
+  "possession": "home",
+  "redZone": false,
+  "state": "in"
+ },
+ "teams": {
+  "away": {
+   "abbr": "MIN",
+   "chip": "#8E44EC",
+   "chipText": "#FFFFFF",
+   "color": "#4f2683",
+   "hatch": false,
+   "id": "16",
+   "name": "Minnesota Vikings",
+   "score": 0.0
+  },
+  "home": {
+   "abbr": "CHI",
+   "chip": "#296ADB",
+   "chipText": "#FFFFFF",
+   "color": "#0b1c3a",
+   "hatch": false,
+   "id": "3",
+   "name": "Chicago Bears",
+   "score": 7.0
+  }
+ },
+ "units": {
+  "length": "yard",
+  "time": "second"
+ },
+ "version": "1.0",
+ "winProbability": {
+  "horizon": {
+   "x0": -10.0,
+   "x1": 110.0,
+   "y0": 52.0,
+   "y1": 76.0,
+   "z": -58.0
+  },
+  "series": [
+   0.5207,
+   0.5023,
+   0.5108,
+   0.5003,
+   0.5434,
+   0.5559,
+   0.5482,
+   0.5714,
+   0.5675,
+   0.5953,
+   0.6018,
+   0.5864,
+   0.5832,
+   0.6371,
+   0.6461,
+   0.6422,
+   0.6064,
+   0.6879,
+   0.6882,
+   0.6905,
+   0.6949,
+   0.7274,
+   0.7151
+  ],
+  "side": "home"
+ }
+}

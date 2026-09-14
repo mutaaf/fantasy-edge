@@ -26,3 +26,11 @@ data/replay/
 
 # Look-dev shots, scratch scenes and derived data
 .work/
+# Android client
+clients/android/.gradle/
+clients/android/.kotlin/
+clients/android/build/
+clients/android/app/build/
+clients/android/local.properties
+clients/android/.idea/
+*.iml

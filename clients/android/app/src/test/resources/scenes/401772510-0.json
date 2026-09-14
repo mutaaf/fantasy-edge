@@ -1,0 +1,325 @@
+{
+ "activeMoment": null,
+ "axes": {
+  "x": "yards from the home goal line; end zones -10..0 and 100..110",
+  "y": "yards up",
+  "z": "yards from the centre line, positive toward the home sideline"
+ },
+ "ball": {
+  "beacon": {
+   "color": "beacon",
+   "height": 34.0
+  },
+  "x": 53.0,
+  "y": 0.0,
+  "z": 0.0
+ },
+ "bowl": {
+  "concourse": {
+   "color": "bowl.concourse",
+   "inner": 36.0,
+   "outer": 42.0
+  },
+  "crowd": {
+   "away": "#002a5c",
+   "awaySection": {
+    "fromX": 90.0,
+    "side": "far"
+   },
+   "dark": "crowd.dark",
+   "home": "#06424d",
+   "neutral": "crowd.neutral"
+  },
+  "rimLights": {
+   "color": "rim.light",
+   "count": 10,
+   "height": 9.0,
+   "offset": 71.0,
+   "side": "far"
+  },
+  "sectionTint": {
+   "color": null,
+   "dim": 0.28,
+   "side": null
+  },
+  "shape": {
+   "exponent": 4.0,
+   "halfLength": 60.0,
+   "halfWidth": 26.666666666666668,
+   "type": "superellipse"
+  },
+  "tiers": [
+   {
+    "color": "bowl.lower",
+    "inner": 6.0,
+    "name": "lower",
+    "outer": 36.0,
+    "rise": [
+     1.0,
+     19.6
+    ]
+   },
+   {
+    "color": "bowl.upper",
+    "inner": 42.0,
+    "name": "upper",
+    "outer": 70.0,
+    "rise": [
+     24.0,
+     45.8
+    ]
+   }
+  ]
+ },
+ "currentDrive": 0,
+ "drives": [
+  {
+   "arcs": [
+    {
+     "apex": 12.5,
+     "clock": "15:00",
+     "color": "arc.kick",
+     "dash": null,
+     "distance": 0,
+     "down": 0,
+     "duration": 0.733,
+     "fromX": 35.0,
+     "id": "40177251040",
+     "lane": 0.0,
+     "period": 1,
+     "seconds": 2.2,
+     "shape": "kick",
+     "side": "home",
+     "style": "kick",
+     "text": "J.Elliott kicks 60 yards from PHI 35 to DAL 5. K.Turpin pushed ob at DAL 32 for 27 yards (K.Granson). PHI-B.VanSumeren was injured during the play. PENALTY on PHI-J.Carter, Disqualification, 15 yards, enforced at DAL 32.",
+     "toX": 53.0,
+     "type": "Kickoff"
+    }
+   ],
+   "id": "4017725101",
+   "result": "",
+   "side": "away",
+   "team": "DAL"
+  }
+ ],
+ "event": "401772510",
+ "field": {
+  "awayEndZone": [
+   100.0,
+   110.0
+  ],
+  "endZone": 10.0,
+  "goalPostWidth": 6.167,
+  "hashFromSideline": 23.583,
+  "homeEndZone": [
+   -10.0,
+   0.0
+  ],
+  "league": "nfl",
+  "length": 100.0,
+  "numbersEvery": 10,
+  "stripeEvery": 5,
+  "width": 53.333333333333336
+ },
+ "kind": "football-scene",
+ "lasers": [
+  {
+   "color": "laser.scrimmage",
+   "kind": "scrimmage",
+   "x": 53.0
+  },
+  {
+   "color": "laser.lineToGain",
+   "kind": "lineToGain",
+   "x": 43.0
+  }
+ ],
+ "league": "nfl",
+ "moments": [],
+ "motion": {
+  "about": "Real-time play durations are clamped to [minSeconds, maxSeconds]. A replay faster than referenceSpeed divides them by speed / referenceSpeed, never below floorSeconds, so a play finishes before the next snap arrives.",
+  "floorSeconds": 0.2,
+  "maxSeconds": 2.5,
+  "minSeconds": 0.6,
+  "reduceMotion": "jump",
+  "referenceSpeed": 20,
+  "sectionDim": 0.28
+ },
+ "palette": {
+  "arc.incomplete": "#FFFFFF",
+  "arc.kick": "#E8D9A8",
+  "arc.loss": "#FFBABA",
+  "arc.pass": "#FFFFFF",
+  "arc.penalty": "#FFD400",
+  "arc.run": "#9FD8FF",
+  "arc.score": "#FFD400",
+  "arc.turnover": "#FFBABA",
+  "beacon": "#BFE3FF",
+  "beacon.score": "#FFF3B0",
+  "bowl.concourse": "#15110F",
+  "bowl.lower": "#302722",
+  "bowl.upper": "#261F1C",
+  "crowd.dark": "#2A2A2A",
+  "crowd.neutral": "#F4F1EA",
+  "fill.live": "#237A04",
+  "fill.redZone": "#DF0B0B",
+  "fill.score": "#8B7300",
+  "ink": "#F7F6F2",
+  "ink.secondary": "#F7F6F2BD",
+  "laser.lineToGain": "#FFD400",
+  "laser.scrimmage": "#A6D0FF",
+  "line.yard": "#FFFFFF",
+  "plate": "#121417E0",
+  "rim.light": "#FFF8E6",
+  "sky.horizon": "#1A2436",
+  "sky.top": "#03050A",
+  "turf.a": "#1E6A34",
+  "turf.b": "#237A3C",
+  "turf.surround": "#17401F",
+  "turf.tabletopA": "#0E3A1F",
+  "turf.tabletopB": "#124726"
+ },
+ "presentation": {
+  "beaconHeight": 34.0,
+  "horizon": {
+   "y0": 52.0,
+   "y1": 76.0,
+   "z": -58.0
+  },
+  "stadium": {
+   "bowlTiers": [
+    "lower",
+    "upper"
+   ],
+   "metersPerYard": 0.9144,
+   "seat": {
+    "x": 50.0,
+    "y": 8.0,
+    "z": 42.7
+   }
+  },
+  "tabletop": {
+   "bowlTiers": [
+    "lower"
+   ],
+   "floor": -0.18,
+   "metersPerYard": 0.0045,
+   "volume": [
+    0.9,
+    0.4,
+    0.6
+   ]
+  }
+ },
+ "replay": {
+  "awayScore": 0,
+  "boxscore": {
+   "mode": "captured",
+   "note": "This summary carries no box-score athlete list, so there was nothing to derive from and the captured FINAL box score is served unchanged. Player totals are the end of the game from the first snap."
+  },
+  "clock": "15:00",
+  "event": "401772510",
+  "gameSeconds": 0,
+  "homeScore": 0,
+  "period": 1,
+  "playsIncluded": 1,
+  "playsTotal": 169,
+  "state": "in"
+ },
+ "replayControl": {
+  "awayScore": 0,
+  "clock": "15:00",
+  "driveStart": 0,
+  "event": "401772510",
+  "gameSeconds": 0,
+  "homeScore": 0,
+  "label": "15:00 1st",
+  "length": 3600,
+  "loaded": true,
+  "matchup": {
+   "away": {
+    "abbr": "DAL",
+    "score": 20
+   },
+   "complete": true,
+   "date": "2025-09-05T00:20Z",
+   "final": "Final",
+   "home": {
+    "abbr": "PHI",
+    "score": 24
+   }
+  },
+  "period": 1,
+  "playing": false,
+  "progress": 0.0,
+  "replay": true,
+  "speed": 60.0,
+  "speeds": [
+   1.0,
+   5.0,
+   15.0,
+   30.0,
+   60.0,
+   120.0,
+   300.0
+  ],
+  "state": "in"
+ },
+ "source": "replay",
+ "speed": 60.0,
+ "status": {
+  "awayScore": 0.0,
+  "clock": "15:00",
+  "distance": 10,
+  "down": 1,
+  "downDistance": "1st & 10 at DAL 47",
+  "homeScore": 0.0,
+  "label": "15:00 - 1st",
+  "period": 1,
+  "possession": "away",
+  "redZone": false,
+  "state": "in"
+ },
+ "teams": {
+  "away": {
+   "abbr": "DAL",
+   "chip": "#116CD9",
+   "chipText": "#FFFFFF",
+   "color": "#002a5c",
+   "hatch": false,
+   "id": "6",
+   "name": "Dallas Cowboys",
+   "score": 0.0
+  },
+  "home": {
+   "abbr": "PHI",
+   "chip": "#0B798E",
+   "chipText": "#FFFFFF",
+   "color": "#06424d",
+   "hatch": false,
+   "id": "21",
+   "name": "Philadelphia Eagles",
+   "score": 0.0
+  }
+ },
+ "units": {
+  "length": "yard",
+  "time": "second"
+ },
+ "version": "1.0",
+ "winProbability": {
+  "horizon": {
+   "x0": -10.0,
+   "x1": 110.0,
+   "y0": 52.0,
+   "y1": 76.0,
+   "z": -58.0
+  },
+  "series": [
+   0.676,
+   0.7022,
+   0.6335
+  ],
+  "side": "home"
+ }
+}

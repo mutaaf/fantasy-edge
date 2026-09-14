@@ -1,0 +1,88 @@
+{
+ "awayScore": 6,
+ "clock": "12:51",
+ "event": "401772810",
+ "gameSeconds": 1929,
+ "games": [
+  {
+   "away": {
+    "abbr": "LAR",
+    "score": 37
+   },
+   "complete": true,
+   "date": "2025-12-19T01:15Z",
+   "event": "401772949",
+   "final": "Final/OT",
+   "home": {
+    "abbr": "SEA",
+    "score": 38
+   },
+   "length": 4007,
+   "plays": 221
+  },
+  {
+   "away": {
+    "abbr": "MIN",
+    "score": 27
+   },
+   "complete": true,
+   "date": "2025-09-09T00:15Z",
+   "event": "401772810",
+   "final": "Final",
+   "home": {
+    "abbr": "CHI",
+    "score": 24
+   },
+   "length": 3600,
+   "plays": 185
+  },
+  {
+   "away": {
+    "abbr": "DAL",
+    "score": 20
+   },
+   "complete": true,
+   "date": "2025-09-05T00:20Z",
+   "event": "401772510",
+   "final": "Final",
+   "home": {
+    "abbr": "PHI",
+    "score": 24
+   },
+   "length": 3600,
+   "plays": 169
+  }
+ ],
+ "homeScore": 17,
+ "label": "12:51 3rd",
+ "length": 3600,
+ "loaded": true,
+ "matchup": {
+  "away": {
+   "abbr": "MIN",
+   "score": 27
+  },
+  "complete": true,
+  "date": "2025-09-09T00:15Z",
+  "final": "Final",
+  "home": {
+   "abbr": "CHI",
+   "score": 24
+  }
+ },
+ "period": 3,
+ "playing": false,
+ "progress": 0.5358,
+ "replay": true,
+ "speed": 60.0,
+ "speeds": [
+  1.0,
+  5.0,
+  15.0,
+  30.0,
+  60.0,
+  120.0,
+  300.0
+ ],
+ "state": "in"
+}
