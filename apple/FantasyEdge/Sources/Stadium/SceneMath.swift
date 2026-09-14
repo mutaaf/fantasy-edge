@@ -93,6 +93,85 @@ public enum SceneMath {
         return SIMD3(-at.x, Float(eye) - at.y, -at.z)
     }
 
+    // MARK: 1.1 - seats, rows, trails
+
+    /// The root transform that puts the wearer in a seat: the seat's floor
+    /// `eye` metres below the eyes, facing the seat's `lookAt` down -z.
+    ///
+    /// The world turns about the wearer; the wearer never moves. That is the
+    /// comfort rule for every seat change.
+    public static func seatRoot(_ seat: SceneSpec.SeatOption, metersPerYard s: Double,
+                                eye: Double) -> (position: SIMD3<Float>, orientation: simd_quatf) {
+        let at = local(x: seat.x, y: seat.y, z: seat.z)
+        let target = local(x: seat.lookAt.x, y: seat.lookAt.y, z: seat.lookAt.z)
+        let d = target - at
+        // Yaw that carries the seat's facing onto -z.
+        let yaw = atan2(d.x, -d.z)
+        let turn = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+        let scaled = turn.act(at * Float(s))
+        return (SIMD3(-scaled.x, Float(eye) - scaled.y, -scaled.z), turn)
+    }
+
+    /// Row `r` of `rows` on a tier, as the stepped seating is built: the
+    /// tread runs from `front` to `back` (offsets from the field's edge) at
+    /// height `tread`, and the riser in front of it climbs from `riserFrom`.
+    public static func row(_ tier: SceneSpec.Tier, _ r: Int, of rows: Int)
+        -> (front: Double, back: Double, tread: Double, riserFrom: Double) {
+        let n = Double(max(1, rows))
+        let depth = (tier.outer - tier.inner) / n
+        let front = tier.inner + depth * Double(r)
+        let back = front + depth
+        let rise = tier.rise[1] - tier.rise[0]
+        let tread = tier.rise[0] + rise * Double(r + 1) / n
+        let riserFrom = tier.rise[0] + rise * Double(r) / n
+        return (front, back, tread, riserFrom)
+    }
+
+    /// Angles around a superellipse at even spacing along its length, so a
+    /// row of seats or a ribbon board's text does not bunch at the corners.
+    public static func evenAngles(_ shape: SceneSpec.Shape, offset m: Double, count: Int,
+                                  resolution: Int = 1440) -> (angles: [Double], length: Double) {
+        var cumulative = [0.0]
+        var prev = bowlPoint(shape, offset: m, angle: 0)
+        for i in 1...resolution {
+            let t = Double(i) / Double(resolution) * 2 * .pi
+            let p = bowlPoint(shape, offset: m, angle: t)
+            cumulative.append(cumulative[i - 1] + hypot(p.x - prev.x, p.z - prev.z))
+            prev = p
+        }
+        let total = cumulative[resolution]
+        var angles: [Double] = []
+        var j = 0
+        for k in 0..<max(0, count) {
+            let want = total * Double(k) / Double(max(1, count))
+            while j < resolution - 1 && cumulative[j + 1] < want { j += 1 }
+            let span = max(1e-9, cumulative[j + 1] - cumulative[j])
+            let f = (want - cumulative[j]) / span
+            angles.append((Double(j) + f) / Double(resolution) * 2 * .pi)
+        }
+        return (angles, total)
+    }
+
+    /// Unit vector from a bowl point back toward the field, in the x-z plane.
+    public static func inward(_ shape: SceneSpec.Shape, offset m: Double, angle t: Double) -> SIMD2<Double> {
+        let e = 1e-3
+        let a = bowlPoint(shape, offset: m, angle: t - e), b = bowlPoint(shape, offset: m, angle: t + e)
+        var n = SIMD2(-(b.z - a.z), b.x - a.x)       // tangent turned a quarter
+        let here = bowlPoint(shape, offset: m, angle: t)
+        if n.x * here.x + n.y * here.z > 0 { n = -n }
+        let len = max(1e-9, (n.x * n.x + n.y * n.y).squareRoot())
+        return n / len
+    }
+
+    /// How much of its core thickness a trail keeps, given how close it comes
+    /// to the seat: full beyond `yards`, thinning in proportion inside it, and
+    /// never below `minScale`. Distances in yards, points in local space.
+    public static func nearSeatScale(_ points: [SIMD3<Float>], seat: SIMD3<Float>,
+                                     rule: SceneSpec.Look.NearSeat) -> Double {
+        guard let nearest = points.map({ simd_distance($0, seat) }).min() else { return 1 }
+        return max(rule.minScale, min(1, Double(nearest) / max(1e-6, rule.yards)))
+    }
+
     /// Hex "#RRGGBB" or "#RRGGBBAA" as linear-ish sRGB components and alpha.
     public static func rgba(_ hex: String) -> SIMD4<Float> {
         var h = hex.trimmingCharacters(in: .whitespaces)

@@ -19,3 +19,6 @@ xcuserdata/
 # with `replay --capture`. The trimmed fixture under tests/ is the committed one.
 data/replay/
 .vercel
+
+# Look-dev shots, scratch scenes and derived data
+.work/

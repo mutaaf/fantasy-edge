@@ -43,37 +43,42 @@ TOKENS_PATH = pathlib.Path(
 # What differs between codes of football, and nothing else. College is stubbed:
 # its field geometry is here because the stadium is shared, and everything the
 # scene does not yet use for it is left out rather than guessed.
+def _props(bench_from: float, bench_to: float) -> dict:
+    """The sideline furniture, in yards. Both codes share its shape; where
+    they differ - the team area - is an argument.
+
+    The goal post stands on the end line: a base two yards behind it, a
+    gooseneck forward, a crossbar 10 ft up, uprights 30 ft above that, 18 ft
+    6 in apart (field.goalPostWidth)."""
+    return {
+        "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
+                     "radius": {"base": 0.13, "crossbar": 0.09, "upright": 0.06},
+                     "padHeight": 2.2, "padWidth": 0.7, "color": "prop.goalpost"},
+        "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
+        "benches": {"fromX": bench_from, "toX": bench_to, "offset": 3.8,
+                    "height": 0.5, "depth": 0.7, "backHeight": 0.65, "color": "prop.bench"},
+        # The chain crew works the visitors' sideline.
+        "chains": {"length": 10.0, "offset": 2.5, "poleHeight": 2.0, "markerWidth": 0.5,
+                   "side": "away", "color": "prop.chain"},
+    }
+
+
 RULES = {
     "nfl": {
         "field": {"length": 100.0, "endZone": 10.0, "width": 160 / 3,
                   # 70 ft 9 in in from each sideline; 18 ft 6 in apart.
                   "hashFromSideline": 23.583, "goalPostWidth": 6.167},
         "overtimeSeconds": 600,
-        "props": {
-            # The goal post stands on the end line: a base two yards behind
-            # it, a gooseneck forward, a crossbar 10 ft up, uprights 30 ft
-            # above that, 18 ft 6 in apart (goalPostWidth).
-            "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
-                         "color": "prop.goalpost"},
-            "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
-            # Each club's team area between the 32-yard lines, on opposite sidelines.
-            "benches": {"fromX": 32.0, "toX": 68.0, "offset": 6.0, "color": "prop.bench"},
-            "chains": {"length": 10.0, "offset": 2.5, "color": "prop.chain"},
-        },
+        # Each club's team area between the 32-yard lines, on opposite sidelines.
+        "props": _props(32.0, 68.0),
     },
     "college-football": {
         "field": {"length": 100.0, "endZone": 10.0, "width": 160 / 3,
                   # 60 ft in from each sideline; 40 ft apart.
                   "hashFromSideline": 20.0, "goalPostWidth": 6.167},
         "overtimeSeconds": None,
-        "props": {
-            "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
-                         "color": "prop.goalpost"},
-            "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
-            # College team areas run between the 25-yard lines.
-            "benches": {"fromX": 25.0, "toX": 75.0, "offset": 6.0, "color": "prop.bench"},
-            "chains": {"length": 10.0, "offset": 2.5, "color": "prop.chain"},
-        },
+        # College team areas run between the 25-yard lines.
+        "props": _props(25.0, 75.0),
         "stub": True,
     },
 }
@@ -90,15 +95,18 @@ BOWL = {
         {"name": "upper", "inner": 42.0, "outer": 70.0, "rise": [24.0, 45.8], "color": "bowl.upper"},
     ],
     "concourse": {"inner": 36.0, "outer": 42.0, "color": "bowl.concourse"},
-    "rimLights": {"count": 10, "offset": 71.0, "height": 9.0, "side": "far",
-                  "color": "rim.light"},
+    # Light banks just beyond the outermost tier a renderer draws - the upper
+    # deck in the stadium, the lower on the tabletop - `beyondOuter` yards out.
+    # How high above that tier's top they stand is look.light.rim.heightAbove.
+    "rimLights": {"count": 10, "beyondOuter": 1.0, "side": "far", "color": "rim.light"},
     # The stands' front wall, lined with LED boards, short of the first row;
     # the ribbon board on the upper deck's fascia, all the way round; the
     # press box in the far concourse; tunnels under each end zone.
     "wall": {"offset": 5.4, "height": 1.4, "color": "board.base"},
     "ribbon": {"offset": 41.6, "rise": [21.0, 23.6], "color": "ribbon.base", "text": "ribbon.text"},
-    "pressBox": {"side": "far", "fromX": 22.0, "toX": 78.0, "offset": 37.0,
-                 "rise": [19.8, 23.8], "glass": "pressbox.glass"},
+    "pressBox": {"side": "far", "fromX": 22.0, "toX": 78.0, "offset": 37.0, "depth": 4.5,
+                 "rise": [19.8, 23.8], "mullionEvery": 3.0, "glass": "pressbox.glass",
+                 "glassBrightness": 0.38},
     "tunnels": [{"x": -16.0, "width": 7.0, "height": 3.2},
                 {"x": 116.0, "width": 7.0, "height": 3.2}],
 }
@@ -141,7 +149,7 @@ PRESENTATION = {
                 "seats": SEATS, "defaultSeat": SEATS[0]["id"],
                 "bowlTiers": ["lower", "upper"]},
     "horizon": {"z": -58.0, "y0": 52.0, "y1": 76.0},
-    "beaconHeight": 34.0,
+    "beaconHeight": 22.0,
 }
 
 
@@ -401,6 +409,16 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                            "side": _side(drive.get("team", ""), home, away),
                            "result": drive.get("result", ""), "arcs": arcs})
 
+    # 1.1: whether a moment stops the stadium, and where its banner, light and
+    # sound go - the middle of the end zone the scoring side attacks. Home
+    # attacks x = 100, so a home score lands in 100..110.
+    celebrate = set(tokens["look"]["moment"]["celebrate"])
+    for m in moments:
+        m["celebrates"] = m["kind"] in celebrate
+        ez = field["endZone"]
+        m["anchor"] = {"x": field["length"] + ez / 2 if m["side"] == "home" else -ez / 2,
+                       "y": 0.0, "z": 0.0}
+
     state = game.get("state", "pre")
     current = len(drives_out) - 1 if drives_out and state == "in" else None
 
@@ -456,7 +474,10 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
     bowl = json.loads(json.dumps(BOWL))
     bowl["shape"].update({"halfLength": field["length"] / 2 + field["endZone"],
                           "halfWidth": width / 2})
-    bowl["crowd"] = {"home": home["color"] or home["chip"], "away": away["color"] or away["chip"],
+    # Shirts wear the chip, not the raw club colour: at night a navy or a
+    # black shirt is indistinguishable from an empty seat, and the chip is
+    # the same hue solved into a band that reads.
+    bowl["crowd"] = {"home": home["chip"], "away": away["chip"],
                      "neutral": "crowd.neutral", "dark": "crowd.dark",
                      "awaySection": {"side": "far", "fromX": 90.0}}
     bowl["sectionTint"] = {"side": tint_side,

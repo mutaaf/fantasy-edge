@@ -33,6 +33,9 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let presentation: Presentation
     public let palette: [String: String]
     public let motion: Motion
+    /// 1.1: every visual-only number a renderer reads. Nil from a 1.0 server,
+    /// in which case the renderer uses `Look.fallback`, a copy of the tokens.
+    public let look: Look?
     public let replayControl: ReplayState?
 
     public var isReplay: Bool { source == "replay" }
@@ -52,6 +55,56 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let goalPostWidth: Double
         public let stripeEvery: Double
         public let numbersEvery: Double
+        /// 1.1: goal posts, pylons, benches and chains, by league.
+        public let props: Props?
+    }
+
+    public struct PostRadius: Decodable, Equatable, Sendable {
+        public let base: Double
+        public let crossbar: Double
+        public let upright: Double
+    }
+
+    public struct Goalpost: Decodable, Equatable, Sendable {
+        public let baseBehind: Double
+        public let crossbar: Double
+        public let uprightAbove: Double
+        public let radius: PostRadius
+        public let padHeight: Double
+        public let padWidth: Double
+        public let color: String
+    }
+
+    public struct Pylon: Decodable, Equatable, Sendable {
+        public let size: Double
+        public let height: Double
+        public let color: String
+    }
+
+    public struct Benches: Decodable, Equatable, Sendable {
+        public let fromX: Double
+        public let toX: Double
+        public let offset: Double
+        public let height: Double
+        public let depth: Double
+        public let backHeight: Double
+        public let color: String
+    }
+
+    public struct Chains: Decodable, Equatable, Sendable {
+        public let length: Double
+        public let offset: Double
+        public let poleHeight: Double
+        public let markerWidth: Double
+        public let side: String
+        public let color: String
+    }
+
+    public struct Props: Decodable, Equatable, Sendable {
+        public let goalpost: Goalpost
+        public let pylon: Pylon
+        public let benches: Benches
+        public let chains: Chains
     }
 
     public struct Team: Decodable, Equatable, Sendable {
@@ -146,6 +199,12 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let horizon: Horizon
     }
 
+    public struct Point: Decodable, Equatable, Sendable {
+        public let x: Double
+        public let y: Double
+        public let z: Double
+    }
+
     public struct Moment: Decodable, Equatable, Sendable {
         public let kind: String
         public let side: String
@@ -155,10 +214,25 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let text: String
         public let period: Int?
         public let clock: String
+        /// 1.1: the scene says whether it celebrates, and where its banner,
+        /// light and sound go.
+        public let anchor: Point?
+        private let decidedCelebrates: Bool?
+
+        enum CodingKeys: String, CodingKey {
+            case kind, side, team, points, playId, text, period, clock, anchor
+            case decidedCelebrates = "celebrates"
+        }
 
         /// A moment worth stopping the stadium for. A turnover changes the
-        /// drive; it does not light a section.
-        public var celebrates: Bool { kind == "touchdown" || kind == "fieldGoal" || kind == "safety" }
+        /// drive; it does not light a section. The server decides from 1.1 on;
+        /// the rule below is only what a 1.0 server meant.
+        public var celebrates: Bool {
+            decidedCelebrates ?? (kind == "touchdown" || kind == "fieldGoal" || kind == "safety")
+        }
+
+        /// Field x the moment's effects gather over.
+        public var anchorX: Double { anchor?.x ?? (side == "home" ? 105 : -5) }
     }
 
     public struct Tier: Decodable, Equatable, Sendable {
@@ -178,8 +252,9 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
 
     public struct RimLights: Decodable, Equatable, Sendable {
         public let count: Int
-        public let offset: Double
-        public let height: Double
+        /// Yards beyond the outermost drawn tier. 1.0 servers sent absolute
+        /// `offset`/`height` that no renderer honoured; 1.1 replaced them.
+        public let beyondOuter: Double?
         public let side: String
         public let color: String
     }
@@ -190,11 +265,48 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let dim: Double
     }
 
+    public struct AwaySection: Decodable, Equatable, Sendable {
+        public let side: String
+        public let fromX: Double
+    }
+
     public struct Crowd: Decodable, Equatable, Sendable {
         public let home: String
         public let away: String
         public let neutral: String
         public let dark: String
+        public let awaySection: AwaySection?
+    }
+
+    public struct Wall: Decodable, Equatable, Sendable {
+        public let offset: Double
+        public let height: Double
+        public let color: String
+    }
+
+    public struct Ribbon: Decodable, Equatable, Sendable {
+        public let offset: Double
+        public let rise: [Double]
+        public let color: String
+        public let text: String
+    }
+
+    public struct PressBox: Decodable, Equatable, Sendable {
+        public let side: String
+        public let fromX: Double
+        public let toX: Double
+        public let offset: Double
+        public let depth: Double
+        public let rise: [Double]
+        public let mullionEvery: Double
+        public let glass: String
+        public let glassBrightness: Double
+    }
+
+    public struct Tunnel: Decodable, Equatable, Sendable {
+        public let x: Double
+        public let width: Double
+        public let height: Double
     }
 
     public struct Bowl: Decodable, Equatable, Sendable {
@@ -203,12 +315,26 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let rimLights: RimLights
         public let crowd: Crowd
         public let sectionTint: SectionTint
+        public let wall: Wall?
+        public let ribbon: Ribbon?
+        public let pressBox: PressBox?
+        public let tunnels: [Tunnel]?
     }
 
     public struct Seat: Decodable, Equatable, Sendable {
         public let x: Double
         public let y: Double
         public let z: Double
+    }
+
+    /// 1.1: a place to sit. The floor under the wearer, and what they face.
+    public struct SeatOption: Decodable, Equatable, Sendable, Identifiable {
+        public let id: String
+        public let label: String
+        public let x: Double
+        public let y: Double
+        public let z: Double
+        public let lookAt: Point
     }
 
     public struct Tabletop: Decodable, Equatable, Sendable {
@@ -222,6 +348,18 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let metersPerYard: Double
         public let seat: Seat
         public let bowlTiers: [String]
+        public let seats: [SeatOption]?
+        public let defaultSeat: String?
+
+        /// The seat with this id, else the default, else the 1.0 `seat`
+        /// facing midfield.
+        public func seat(_ id: String?) -> SeatOption {
+            let all = seats ?? []
+            return all.first(where: { $0.id == id })
+                ?? all.first(where: { $0.id == defaultSeat })
+                ?? SeatOption(id: "seat", label: "Seat", x: seat.x, y: seat.y, z: seat.z,
+                              lookAt: Point(x: 50, y: 0, z: 0))
+        }
     }
 
     public struct Presentation: Decodable, Equatable, Sendable {
@@ -239,6 +377,8 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// How long a celebration stays up. Optional until `design/tokens.json`
         /// carries it; the views fall back to `MomentHold.defaultSeconds`.
         public let momentSeconds: Double?
+        /// 1.1: the ball's flight eases out by this power, quick off the snap.
+        public let flightEase: Double?
     }
 }
 

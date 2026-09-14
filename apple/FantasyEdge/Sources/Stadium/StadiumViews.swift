@@ -195,6 +195,10 @@ public struct TabletopView: View {
     public var body: some View {
         RealityView { content, attachments in
             content.add(renderer.root)
+            let r = renderer
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
+                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            }
             if let flag = attachments.entity(for: "moment") {
                 flag.position = SIMD3(0, 0.13, 0)
                 content.add(flag)
@@ -207,7 +211,7 @@ public struct TabletopView: View {
                 flag.isEnabled = hold.shown != nil
                 if let m = hold.shown, let spec = feed.spec {
                     // Over the end zone the score went into, at table scale.
-                    let x = StadiumLayout.endZoneX(scoredBy: m.side)
+                    let x = m.anchorX
                     let s = Float(spec.presentation.tabletop.metersPerYard)
                     flag.position = SIMD3(Float(x - 50) * s, 0.13, 0)
                 }
@@ -369,11 +373,13 @@ public enum StadiumLayout {
     /// degrees round, where a banner sized to read is a postage stamp and a
     /// head turned that far misses the field. So it sits on the same bearing,
     /// held to `maxYaw`, a few metres out.
-    public static func moment(scoredBy side: String, spec: SceneSpec) -> SIMD3<Float> {
-        let seat = spec.presentation.stadium.seat
-        let dx = endZoneX(scoredBy: side) - seat.x
-        let dz = seat.z                                   // the field's centre line is z = 0
-        let yaw = Float(atan2(dx, dz) * 180 / .pi)
+    public static func moment(_ m: SceneSpec.Moment, seat: SceneSpec.SeatOption) -> SIMD3<Float> {
+        // The bearing of the scene's anchor as the seated wearer sees it: the
+        // world is turned so the seat faces -z, so turn the anchor the same way.
+        let facing = SIMD3(Float(seat.lookAt.x - seat.x), 0, Float(seat.lookAt.z - seat.z))
+        let turn = simd_quatf(angle: atan2(facing.x, -facing.z), axis: SIMD3(0, 1, 0))
+        let toward = turn.act(SIMD3(Float(m.anchorX - seat.x), 0, Float((m.anchor?.z ?? 0) - seat.z)))
+        let yaw = atan2(toward.x, -toward.z) * 180 / .pi
         let held = max(-maxYaw, min(maxYaw, yaw))
         return at(degrees: held, distance: 2.4, height: eye + 0.65)
     }
@@ -413,6 +419,13 @@ public struct StadiumSpaceView<Trailing: View>: View {
     public var body: some View {
         RealityView { content, attachments in
             world.addChild(renderer.root)
+            let r = renderer
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
+                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            }
+            let args = ProcessInfo.processInfo.arguments
+            if let i = args.firstIndex(of: "-stadiumSeat"), i + 1 < args.count { renderer.sit(args[i + 1]) }
+            if args.contains("-stadiumMute") { renderer.setMuted(true) }
             let place: [(String, SIMD3<Float>)] = [
                 // Closer than it was (2.4 m): at that distance the scorebug
                 // was a thumbnail under the rim lights.
@@ -445,7 +458,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
             if let flag = attachments.entity(for: "moment") {
                 flag.isEnabled = hold.shown != nil
                 if let m = hold.shown, let spec = feed.spec {
-                    face(flag, at: StadiumLayout.moment(scoredBy: m.side, spec: spec))
+                    face(flag, at: StadiumLayout.moment(m, seat: renderer.seat(spec)))
                 }
             }
         } attachments: {
@@ -496,6 +509,24 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 }
             }
             HStack(spacing: 12) {
+                if let seats = feed.spec?.presentation.stadium.seats, !seats.isEmpty, let spec = feed.spec {
+                    Menu {
+                        ForEach(seats) { seat in
+                            Button(seat.label) { renderer.sit(seat.id) }
+                        }
+                    } label: {
+                        Label(renderer.seat(spec).label, systemImage: "chair.lounge")
+                            .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
+                    }
+                    .accessibilityHint("Moves the stadium around you to another seat")
+                }
+                Button {
+                    renderer.setMuted(!renderer.muted)
+                } label: {
+                    Image(systemName: renderer.muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .font(.system(size: 20, weight: .semibold)).frame(width: 60, height: 60)
+                }
+                .accessibilityLabel(renderer.muted ? "Unmute the crowd" : "Mute the crowd")
                 Picker("Immersion", selection: $immersion) {
                     Text("Crown dial").tag(StadiumImmersion.dial)
                     Text("Full 100%").tag(StadiumImmersion.full)

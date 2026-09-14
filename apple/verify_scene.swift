@@ -13,6 +13,7 @@
 //     python3 tools/scene_samples.py /tmp/scenes     # writes replayed scenes
 //     swiftc -o /tmp/verify-scene \
 //         apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
+//         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
 //
@@ -48,7 +49,7 @@ struct VerifyScene {
         }
         let spec = try JSONDecoder().decode(SceneSpec.self, from: blob)
         let name = URL(fileURLWithPath: path).lastPathComponent
-        expect(spec.version == "1.0", "\(name): unexpected scene version \(spec.version)")
+        expect(spec.version == "1.1", "\(name): unexpected scene version \(spec.version)")
 
         // ---- arcs: the apex formula, drawn ----
         for drive in spec.drives {
@@ -130,6 +131,30 @@ struct VerifyScene {
         let seat = SceneMath.local(x: st.seat.x, y: st.seat.y, z: st.seat.z) * Float(st.metersPerYard)
         expect(simd_distance(root + seat, SIMD3(0, 1.2, 0)) < 1e-3,
                "\(name): the seat should land at the wearer's eyes")
+        // 1.1: every seat puts the wearer's eyes at the origin, facing its
+        // lookAt down -z, with the world turned about them.
+        for option in st.seats ?? [] {
+            let placed = SceneMath.seatRoot(option, metersPerYard: st.metersPerYard, eye: 1.2)
+            let s = placed.orientation.act(SceneMath.local(x: option.x, y: option.y, z: option.z) * Float(st.metersPerYard))
+            expect(simd_distance(placed.position + s, SIMD3(0, 1.2, 0)) < 1e-3,
+                   "\(name): seat \(option.id) does not land at the eyes")
+            let target = placed.orientation.act(SceneMath.local(x: option.lookAt.x, y: 1.2 / st.metersPerYard,
+                                                                z: option.lookAt.z) * Float(st.metersPerYard))
+            let toward = placed.position + target
+            let flat = simd_normalize(SIMD3(toward.x, 0, toward.z))
+            expect(flat.z < -0.999, "\(name): seat \(option.id) should face its lookAt down -z, faces \(flat)")
+            if let tier = spec.bowl.tiers.first(where: { option.y >= $0.rise[0] - 1e-6 && option.y <= $0.rise[1] + 1e-6 }),
+               option.y > 0 {
+                expect(option.y >= tier.rise[0] - 1e-3, "\(name): seat \(option.id) floats below its tier")
+            }
+        }
+        if let look = spec.look {
+            let seatPoint = SceneMath.local(x: 50, y: 12, z: 50)
+            let near = [SceneMath.local(x: 50, y: 12, z: 45)]
+            let s = SceneMath.nearSeatScale(near, seat: seatPoint, rule: look.trail.nearSeat)
+            expect(abs(s - max(look.trail.nearSeat.minScale, 5 / look.trail.nearSeat.yards)) < 1e-6,
+                   "\(name): a trail 5 yards from the seat should thin to \(5 / look.trail.nearSeat.yards), not \(s)")
+        }
         let tt = spec.presentation.tabletop
         let reach = Float((spec.bowl.shape.halfLength + (spec.bowl.tiers.first?.outer ?? 0)) * tt.metersPerYard)
         expect(reach * 2 <= Float(tt.volume[0]) + 1e-3,

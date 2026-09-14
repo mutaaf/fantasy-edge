@@ -27,8 +27,8 @@
   --fe-color-bowl-lower: #302722;
   --fe-color-bowl-upper: #261F1C;
   --fe-color-bowl-concourse: #15110F;
-  --fe-color-crowd-neutral: #F4F1EA;
-  --fe-color-crowd-dark: #2A2A2A;
+  --fe-color-crowd-neutral: #A39E94;
+  --fe-color-crowd-dark: #3E424A;
   --fe-color-rim-light: #FFF8E6;
   --fe-color-sky-top: #03050A;
   --fe-color-sky-horizon: #1A2436;
@@ -42,6 +42,7 @@
   --fe-color-pressbox-glass: #FFD7A1;
   --fe-color-baseplate: #101216;
   --fe-color-baseplate-rim: #FFE9C2;
+  --fe-color-bowl-aisle: #5A5650;
   --fe-chip-luminance: 0.159;
   --fe-chip-max-saturation: 0.92;
   --fe-chip-neutral-below: 0.12;
@@ -52,4 +53,6 @@
   --fe-motion-reference-speed: 20;
   --fe-motion-floor-seconds: 0.2s;
   --fe-motion-section-dim: 0.28;
+  --fe-motion-moment-seconds: 6.0s;
+  --fe-motion-flight-ease: 1.6;
 }

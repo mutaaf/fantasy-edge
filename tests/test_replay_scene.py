@@ -523,6 +523,14 @@ class TestSceneGeometry(unittest.TestCase):
                 want = tier["rise"][0] + (tier["rise"][1] - tier["rise"][0]) * f
                 self.assertAlmostEqual(s["y"], want, places=2, msg=s)
 
+    def test_a_celebration_is_held_for_the_scenes_own_seconds(self):
+        """Clients hold a moment for motion.momentSeconds, not for a poll: at
+        60x the server's moment is gone before the next frame."""
+        held = self.final["motion"]["momentSeconds"]
+        self.assertEqual(held, self.tokens["motion"]["momentSeconds"])
+        self.assertGreaterEqual(held, 3.0)
+        self.assertLessEqual(held, 10.0)
+
     def test_props_follow_the_league_and_look_names_real_assets(self):
         nfl = self.final["field"]["props"]
         self.assertEqual(nfl["benches"]["fromX"], 32.0)
@@ -535,6 +543,30 @@ class TestSceneGeometry(unittest.TestCase):
         root = pathlib.Path(__file__).resolve().parents[1] / "assets" / "src"
         for name, rel in self.final["look"]["assets"].items():
             self.assertTrue((root / rel).is_file(), f"{name}: assets/src/{rel} is missing; run tools/make_assets.py")
+
+    def test_every_look_field_the_renderer_reads_is_in_the_tokens(self):
+        """The visionOS renderer may only read appearance through SceneLook.swift.
+        Every `let` there must be a key the tokens carry under `look`, so no
+        renderer-facing number lives only in Swift and every port can reach it."""
+        import re
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        src = (root / "apple/FantasyEdge/Sources/Stadium/SceneLook.swift").read_text()
+        block = src.split("// LOOK-BEGIN", 1)[1].split("// LOOK-END", 1)[0]
+        swift = set(re.findall(r"public let (\w+):", block)) - {"stadium", "tabletop"}
+
+        def keys(node):
+            out = set()
+            if isinstance(node, dict):
+                for k, v in node.items():
+                    out.add(k)
+                    out |= keys(v)
+            return out
+
+        carried = keys(self.final["look"])
+        self.assertTrue(swift, "no fields parsed from SceneLook.swift")
+        self.assertEqual(swift - carried, set(),
+                         "SceneLook.swift reads these but tokens.json look does not carry them")
 
     def test_the_module_imports_nothing_but_the_standard_library(self):
         tree = ast.parse(pathlib.Path(sc.__file__).read_text())
@@ -602,6 +634,13 @@ class TestSceneMoments(unittest.TestCase):
                                                     "color": s["teams"]["home"]["chip"],
                                                     "dim": 0.28})
         self.assertEqual(s["ball"]["beacon"]["color"], "beacon.score")
+        # 1.1: the moment says it celebrates and where: Chicago is home, and
+        # home attacks x = 100, so the effects anchor in the 100..110 end zone
+        # the pick-six was returned into.
+        self.assertTrue(m["celebrates"])
+        self.assertEqual(m["anchor"], {"x": 105.0, "y": 0.0, "z": 0.0})
+        self.assertTrue(all(x["celebrates"] == (x["kind"] != "turnover") for x in s["moments"]
+                            if x["kind"] in ("touchdown", "turnover")))
 
     def test_a_moment_holds_until_the_clock_moves(self):
         summary = game(PICK_SIX)["summary"]

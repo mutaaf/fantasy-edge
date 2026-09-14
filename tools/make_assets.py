@@ -274,17 +274,17 @@ def seats() -> None:
         for x in range(w):
             u = x / w
             g = grit.at(u * 64, v * 32)
-            base = 0.20 + 0.06 * g
+            base = 0.34 + 0.08 * g
             r, gg, b = base, base * 0.98, base * 0.95
             seat_phase = (u * 8) % 1.0
             if v > 0.55 and 0.12 < seat_phase < 0.88:
-                back = 0.10 + 0.03 * g
+                back = 0.16 + 0.04 * g
                 r, gg, b = back, back, back * 1.05
                 if v > 0.9:
                     r, gg, b = r * 0.6, gg * 0.6, b * 0.6
             if v < 0.04:
                 r, gg, b = r * 1.4, gg * 1.4, b * 1.4
-            row += bytes((clamp8(srgb(r * 0.5)), clamp8(srgb(gg * 0.5)), clamp8(srgb(b * 0.5)), 255))
+            row += bytes((clamp8(srgb(r * 0.8)), clamp8(srgb(gg * 0.8)), clamp8(srgb(b * 0.8)), 255))
         rows.append(bytes(row))
     write_png(OUT / "textures/seats.png", w, h, rows, 4)
 
@@ -295,8 +295,8 @@ def seats() -> None:
         row = bytearray()
         for x in range(s):
             n = fbm(stain, x / s, y / s, [0.5, 0.3, 0.2])
-            c = 0.30 + 0.12 * (n - 0.5)
-            row += bytes((clamp8(srgb(c * 0.55)), clamp8(srgb(c * 0.54)), clamp8(srgb(c * 0.52)), 255))
+            c = 0.42 + 0.14 * (n - 0.5)
+            row += bytes((clamp8(srgb(c * 0.8)), clamp8(srgb(c * 0.78)), clamp8(srgb(c * 0.75)), 255))
         rows.append(bytes(row))
     write_png(OUT / "textures/concrete.png", s, s, rows, 4)
 
@@ -378,16 +378,17 @@ def sky() -> None:
     Deep blue at the zenith, a warm sodium dome near the horizon where the
     stadium's own light hangs in the air, and stars that thin out into it.
     """
-    W, H = 2048, 1024
+    # 4096 wide so a star is a point, not a coin, on a 900-yard dome.
+    W, H = 4096, 2048
     rng = random.Random(71)
     haze = Noise(72, 16)
     stars = {}
-    for _ in range(2600):
+    for _ in range(9000):
         x, y = rng.randrange(W), rng.randrange(H // 2)
         elevation = (0.5 - y / H) * math.pi
-        if rng.random() > math.sin(max(0.0, elevation)) ** 0.6:
+        if rng.random() > math.sin(max(0.0, elevation)) ** 0.9:
             continue
-        stars[(x, y)] = rng.uniform(0.25, 1.0) ** 2.5
+        stars[(x, y)] = rng.uniform(0.15, 1.0) ** 3.2 * 0.55
     rows = []
     for y in range(H):
         row = bytearray()
