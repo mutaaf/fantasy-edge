@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Device frame</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}iframe{border:0;display:block}</style>
+</head>
+<body>
+<!-- Headless Chrome will not make a window narrower than ~500 px, so a phone
+     layout is screenshotted inside an iframe of the phone's size instead.
+     /tools/frame.html?w=390&h=844&q=event%3D401772810%26mode%3Dstadium -->
+<iframe id="f"></iframe>
+<script>
+  const p = new URLSearchParams(location.search);
+  const f = document.getElementById("f");
+  f.width = p.get("w") || 390;
+  f.height = p.get("h") || 844;
+  f.src = "/?" + (p.get("q") || "");
+</script>
+</body>
+</html>

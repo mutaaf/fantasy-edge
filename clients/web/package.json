@@ -1,0 +1,22 @@
+{
+  "name": "fantasy-edge-web-stadium",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A thin web renderer of /api/scene: the stadium and the tabletop, drawn from the scene spec and nothing else.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "tsc --noEmit && node --test \"test/*.test.ts\"",
+    "fixtures": "python3 tools/fixtures.py record",
+    "stage": "python3 tools/fixtures.py stage .replay"
+  },
+  "dependencies": {
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.186.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.0"
+  }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Stadium · Fantasy Edge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+  <canvas id="stage" aria-label="The stadium"></canvas>
+
+  <header class="top">
+    <label class="picker glass">
+      <span class="sr">Game</span>
+      <select id="game" aria-label="Game to replay"></select>
+    </label>
+    <div id="scorebug" class="scorebug glass" aria-live="polite"></div>
+    <div class="modes glass" role="tablist" aria-label="View">
+      <button id="mode-tabletop" role="tab" type="button">Tabletop</button>
+      <button id="mode-stadium" role="tab" type="button">Stadium</button>
+    </div>
+  </header>
+
+  <aside id="drive" class="drive glass" aria-label="This drive"></aside>
+  <div id="moment" class="moment" hidden></div>
+  <div id="status" class="status glass" hidden role="status"></div>
+
+  <footer class="controls glass">
+    <button id="play" class="icon" type="button" aria-label="Play"></button>
+    <input id="scrub" type="range" min="0" max="3600" step="1" value="0" aria-label="Game time">
+    <span id="clock" class="clock">—</span>
+    <label class="speed">
+      <span class="sr">Speed</span>
+      <select id="speed" aria-label="Replay speed"></select>
+    </label>
+    <button id="replay-drive" type="button">Replay drive</button>
+    <button id="drive-toggle" type="button" aria-controls="drive">Drive</button>
+    <span id="vr"></span>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
