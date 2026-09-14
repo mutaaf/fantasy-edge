@@ -31,6 +31,9 @@ class Handlers(unittest.TestCase):
         self.assertEqual(out["spotlight"], OSU_TEX)
         self.assertTrue(out["replay"])
         self.assertEqual(sum(out["counts"].values()), len(out["games"]))
+        by_state = {k: sum(1 for g in out["games"] if g["status"]["state"] == k and not g["status"]["delayed"]) for k in ("in", "pre", "post")}
+        self.assertEqual((out["counts"]["live"], out["counts"]["pre"], out["counts"]["post"]), (by_state["in"], by_state["pre"], by_state["post"]))
+        self.assertGreater(out["counts"]["live"], 20)
         self.assertEqual(out["asOf"], "2026-09-13T00:34:00Z")
 
     def test_game_matches_contract(self):

@@ -121,6 +121,16 @@ class Leverage(unittest.TestCase):
         top = {g["id"] for g in finals[:3]}
         self.assertIn(OKST_ORE, top)
 
+    def test_sections_partition_every_game_but_the_spotlight(self):
+        secs = leverage.sections(self.ordered)
+        ids = [i for sec in secs for i in sec["games"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(set(ids) | {OSU_TEX}, {g["id"] for g in self.ordered})
+        by = {sec["id"]: sec["games"] for sec in secs}
+        jvst = next(g["id"] for g in self.ordered if g["away"]["abbr"] == "JVST")
+        self.assertIn(jvst, by["closeLate"])
+        self.assertEqual(by["finals"][0], OKST_ORE)
+
     def test_caveat_is_not_empty(self):
         self.assertTrue(leverage.CAVEAT.strip())
 
@@ -143,7 +153,9 @@ class Summary(unittest.TestCase):
         g = game_from_summary(OSU_TEX, load(f"summary_{OSU_TEX}.json"))
         self.assertFalse(g["status"]["completed"])
         self.assertEqual(g["possession"], "194")
-        self.assertTrue(any(d["current"] for d in g["drives"]))
+        self.assertEqual(sum(d["current"] for d in g["drives"]), 1)
+        ids = [d["id"] for d in g["drives"]]
+        self.assertEqual(len(ids), len(set(ids)), "the drive in progress must not be listed twice")
         self.assertGreater(len(g["winProbability"]), 10)
         self.assertTrue(all(0 <= w["home"] <= 1 for w in g["winProbability"]))
 

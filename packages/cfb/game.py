@@ -56,8 +56,15 @@ def game_from_summary(event: str, data: dict) -> dict:
 
     raw = data.get("drives") or {}
     current = raw.get("current")
+    previous = raw.get("previous") or []
+    # ESPN lists the drive in progress in `previous` as well as in `current`.
+    # Keyed on id it appears once, in its place, taken from `current`.
+    seen = {str(d.get("id")) for d in previous}
+    ordered = [current if current and str(d.get("id")) == str(current.get("id")) else d for d in previous]
+    if current and str(current.get("id")) not in seen:
+        ordered.append(current)
     drives = []
-    for d in (raw.get("previous") or []) + ([current] if current and current not in (raw.get("previous") or []) else []):
+    for d in ordered:
         plays = [_play(p) for p in d.get("plays") or []
                  if (p.get("type") or {}).get("text") not in ("End Period", "End of Half", "End of Game")]
         result = d.get("displayResult") or d.get("result") or ""

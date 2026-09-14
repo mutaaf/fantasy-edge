@@ -40,7 +40,7 @@ def slate(source: Source) -> dict:
     counts = {"live": 0, "pre": 0, "post": 0, "delayed": 0}
     for g in games:
         s = g["status"]
-        counts["delayed" if s["delayed"] else s["state"] if s["state"] in counts else "pre"] += 1
+        counts["delayed" if s["delayed"] else {"in": "live", "post": "post"}.get(s["state"], "pre")] += 1
     return {
         "version": VERSION,
         "league": "college-football",
@@ -49,6 +49,7 @@ def slate(source: Source) -> dict:
         "replay": bool(source.replay),
         "counts": counts,
         "spotlight": leverage.spotlight(games),
+        "sections": leverage.sections(games),
         "leverageCaveat": leverage.CAVEAT,
         "games": games,
     }

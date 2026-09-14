@@ -11,6 +11,7 @@
     "replay",
     "counts",
     "spotlight",
+    "sections",
     "leverageCaveat",
     "games"
   ],
@@ -71,6 +72,42 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/game"
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Wall groups in display order; every non-spotlight game appears in exactly one.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "overline",
+          "games"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "closeLate",
+              "rankedLive",
+              "live",
+              "upcoming",
+              "finals"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "overline": {
+            "type": "string"
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     }
   },

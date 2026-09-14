@@ -96,3 +96,38 @@ def rank(games: list[dict]) -> list[dict]:
 def spotlight(ordered: list[dict]) -> str | None:
     live = [g for g in ordered if g["status"]["state"] == "in" and not g["status"]["delayed"]]
     return live[0]["id"] if live else None
+
+
+SECTIONS = (
+    ("closeLate", "Close & late", "4th quarter or overtime, one score"),
+    ("rankedLive", "Ranked, live", "Top 25 in progress"),
+    ("live", "Everything else", "Also live"),
+    ("upcoming", "Coming up", "Not yet kicked off"),
+    ("finals", "Tonight so far", "Upsets, overtime and one-score finishes first"),
+)
+
+
+def sections(ordered: list[dict]) -> list[dict]:
+    """The wall's groups, decided here so no client reimplements them.
+
+    Each game appears in exactly one section, in wall order; the spotlight
+    game is excluded from all of them because every layout draws it apart.
+    """
+    spot = spotlight(ordered)
+    buckets = {key: [] for key, _, _ in SECTIONS}
+    for g in ordered:
+        if g["id"] == spot:
+            continue
+        s, reasons = g["status"], g["leverage"]["reasons"]
+        if s["state"] == "post":
+            key = "finals"
+        elif s["state"] == "pre":
+            key = "upcoming"
+        elif not s["delayed"] and ("late" in reasons or "overtime" in reasons):
+            key = "closeLate"
+        elif not s["delayed"] and g["flags"]["ranked"]:
+            key = "rankedLive"
+        else:
+            key = "live"
+        buckets[key].append(g["id"])
+    return [{"id": key, "title": title, "overline": over, "games": buckets[key]} for key, title, over in SECTIONS]
