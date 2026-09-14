@@ -1,0 +1,296 @@
+import SwiftUI
+
+/// Drives, win probability, box score and leaders for one game. Everything
+/// is read from /api/game/{id}; the chart plots ESPN's published series and
+/// says so.
+struct GameDetailView: View {
+    @Environment(SaturdayStore.self) private var store
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    let gameID: String
+    @Binding var path: NavigationPath
+    @State private var detail: GameDetail?
+    @State private var error: String?
+
+    var body: some View {
+        ScrollView {
+            if let d = detail {
+                VStack(alignment: .leading, spacing: 22) {
+                    header(d)
+                    Divider()
+                    if threeColumns {
+                        HStack(alignment: .top, spacing: 34) {
+                            DrivesColumn(detail: d).frame(maxWidth: .infinity, alignment: .topLeading)
+                            VStack(alignment: .leading, spacing: 18) { WinChart(detail: d); ScoringList(detail: d) }
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
+                            BoxColumn(detail: d).frame(maxWidth: .infinity, alignment: .topLeading)
+                        }
+                    } else if wide {
+                        HStack(alignment: .top, spacing: 28) {
+                            DrivesColumn(detail: d).frame(maxWidth: .infinity, alignment: .topLeading)
+                            VStack(alignment: .leading, spacing: 22) { WinChart(detail: d); ScoringList(detail: d); BoxColumn(detail: d) }
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
+                        }
+                    } else {
+                        WinChart(detail: d)
+                        ScoringList(detail: d)
+                        DrivesColumn(detail: d)
+                        BoxColumn(detail: d)
+                    }
+                }
+                .padding(wide ? 34 : 16)
+            } else if let error {
+                ContentUnavailableView("Game unavailable", systemImage: "exclamationmark.triangle", description: Text(error))
+            } else {
+                ProgressView().padding(60)
+            }
+        }
+        .navigationTitle(title)
+        .task(id: gameID) { await poll() }
+    }
+
+    /// Three columns need the visionOS window's width; an iPad gets two.
+    private var threeColumns: Bool {
+        #if os(visionOS)
+        true
+        #else
+        false
+        #endif
+    }
+
+    private var wide: Bool {
+        #if os(visionOS)
+        true
+        #else
+        sizeClass == .regular
+        #endif
+    }
+
+    private var title: String {
+        guard let g = store.game(gameID) else { return "Game" }
+        return "\(g.away.abbr) at \(g.home.abbr)"
+    }
+
+    private func poll() async {
+        while !Task.isCancelled {
+            do {
+                detail = try await store.detail(gameID)
+                error = nil
+            } catch {
+                self.error = SaturdayStore.describe(error, host: store.host)
+            }
+            // A finished game never changes; a live one is re-read with the slate.
+            if detail?.status.completed == true { return }
+            try? await Task.sleep(for: SaturdayStore.interval)
+        }
+    }
+
+    @ViewBuilder private func header(_ d: GameDetail) -> some View {
+        let slateGame = store.game(gameID)
+        let status = VStack(spacing: 6) {
+            Text(d.status.detail.replacingOccurrences(of: " - ", with: " · ")).font(Typeface.display(30, .heavy))
+            HStack(spacing: 8) {
+                if slateGame?.flags.redZone == true { StateBadge(text: "Red zone", fill: Tokens.redFill, glyph: Glyph.redZone, size: 13) }
+                if slateGame?.flags.upset == true { StateBadge(text: "Upset", fill: Tokens.goldFill, glyph: Glyph.upset, size: 13) }
+                if d.status.overtimes > 0 { StateBadge(text: "\(d.status.overtimes)OT", fill: Tokens.otFill, glyph: Glyph.overtime, size: 13) }
+            }
+        }
+        VStack(alignment: .leading, spacing: 14) {
+            if wide {
+                HStack(alignment: .center) {
+                    ScoreSide(team: d.away, side: slateGame?.away, mirrored: false)
+                    Spacer()
+                    status
+                    Spacer()
+                    ScoreSide(team: d.home, side: slateGame?.home, mirrored: true)
+                }
+            } else {
+                status.frame(maxWidth: .infinity)
+                ScoreSide(team: d.away, side: slateGame?.away, mirrored: false)
+                ScoreSide(team: d.home, side: slateGame?.home, mirrored: false)
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack { meta(d); Spacer(); actions }
+                VStack(alignment: .leading, spacing: 12) { meta(d); actions }
+            }
+        }
+    }
+
+    private func meta(_ d: GameDetail) -> some View {
+        Text([d.venue, store.game(gameID)?.tv, d.replay ? "Replay" : nil].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+            .font(Typeface.sans(14)).foregroundStyle(.secondary)
+    }
+
+    private var actions: some View {
+        HStack(spacing: 12) {
+            Button { path.append(Route.tabletop(gameID)) } label: {
+                Label("View in 3D", systemImage: Glyph.tabletop)
+            }
+            .buttonStyle(PillButtonStyle(primary: true))
+            Button { path.append(Route.stadium(gameID)) } label: {
+                Label("Enter stadium", systemImage: Glyph.stadium)
+            }
+            .buttonStyle(PillButtonStyle())
+        }
+        .font(Typeface.sans(17, .semibold))
+    }
+}
+
+private struct ScoreSide: View {
+    @Environment(SaturdayStore.self) private var store
+    let team: DetailTeam
+    let side: Side?
+    /// The home side on a wide header reads right to left: score nearest the middle.
+    let mirrored: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if mirrored { favorite; score; names; chip } else { chip; names; Spacer(minLength: 8); score; favorite }
+        }
+    }
+
+    private var chip: some View {
+        TeamChip(abbr: team.abbr, fill: team.fill ?? side?.fill ?? "#666666", hatch: team.hatch ?? false, width: 84, height: 40, fontSize: 23)
+    }
+
+    private var names: some View {
+        VStack(alignment: mirrored ? .trailing : .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                if let r = team.rank { Text("#\(r)").font(Typeface.display(20, .bold)).foregroundStyle(.secondary) }
+                Text(team.location).font(Typeface.sans(19, .semibold)).lineLimit(1)
+            }
+            Text("\(team.record) · \(team.linescores.map(String.init).joined(separator: " · "))")
+                .font(Typeface.sans(13)).foregroundStyle(.secondary).lineLimit(1)
+        }
+    }
+
+    private var score: some View {
+        Text(team.score.map(String.init) ?? "–").font(Typeface.display(64, .black)).monospacedDigit()
+    }
+
+    private var favorite: some View {
+        Button { store.toggleFavorite(team.id) } label: {
+            Image(systemName: store.favorites.contains(team.id) ? Glyph.favorite : Glyph.notFavorite)
+                .frame(minWidth: Tokens.target, minHeight: Tokens.target)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(store.favorites.contains(team.id) ? "Remove \(team.location) from my teams" : "Add \(team.location) to my teams")
+    }
+}
+
+private struct DrivesColumn: View {
+    let detail: GameDetail
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var wideIndent: CGFloat { sizeClass == .compact ? 16 : 80 }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeading(title: "Drives", overline: "\(detail.drives.count) so far")
+            ForEach(Array(detail.drives.enumerated()), id: \.offset) { _, drive in
+                HStack(spacing: 12) {
+                    TeamChip(abbr: drive.team, fill: fill(for: drive.team), width: 52, height: 24, fontSize: 15)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(drive.result.isEmpty ? "In progress" : drive.result).font(Typeface.sans(15, .semibold))
+                        Text(drive.description).font(Typeface.sans(13)).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: drive.scored ? Glyph.score : drive.turnover ? Glyph.turnover : drive.current ? Glyph.possession : Glyph.final)
+                }
+                .padding(.horizontal, 14).frame(minHeight: 60)
+                .background(drive.current ? .white.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 16))
+                if drive.current {
+                    ForEach(drive.plays.suffix(4)) { play in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(play.downText ?? "").font(Typeface.sans(13, .semibold)).fixedSize(horizontal: true, vertical: false)
+                            Text(play.text).font(Typeface.sans(13)).foregroundStyle(.secondary)
+                        }
+                        .padding(.leading, wideIndent)
+                    }
+                }
+            }
+        }
+    }
+
+    private func fill(for abbr: String) -> String {
+        abbr == detail.away.abbr ? (detail.away.fill ?? "#666666") : (detail.home.fill ?? "#666666")
+    }
+}
+
+private struct WinChart: View {
+    let detail: GameDetail
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Win probability", overline: "ESPN's model, not ours")
+            if detail.winProbability.count > 1 {
+                Canvas { ctx, size in
+                    let pts = detail.winProbability.enumerated().map { i, p in
+                        CGPoint(x: size.width * CGFloat(i) / CGFloat(detail.winProbability.count - 1), y: size.height * CGFloat(p.home))
+                    }
+                    var mid = Path(); mid.move(to: CGPoint(x: 0, y: size.height / 2)); mid.addLine(to: CGPoint(x: size.width, y: size.height / 2))
+                    ctx.stroke(mid, with: .color(.white.opacity(0.35)), style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
+                    var line = Path(); line.addLines(pts)
+                    var area = line; area.addLine(to: CGPoint(x: size.width, y: size.height / 2)); area.addLine(to: CGPoint(x: 0, y: size.height / 2)); area.closeSubpath()
+                    ctx.fill(area, with: .color(Color(hex: detail.away.fill ?? "#666666").opacity(0.5)))
+                    ctx.stroke(line, with: .color(.primary), lineWidth: 2.5)
+                }
+                .frame(height: 220)
+                .overlay(alignment: .topLeading) { Text(detail.away.abbr).font(Typeface.sans(12)).foregroundStyle(.secondary) }
+                .overlay(alignment: .bottomLeading) { Text(detail.home.abbr).font(Typeface.sans(12)).foregroundStyle(.secondary) }
+                .accessibilityLabel("Win probability: \(detail.away.abbr) \(Int(((1 - (detail.winProbability.last?.home ?? 0.5)) * 100).rounded())) percent")
+            }
+            Text(detail.winProbabilityCaveat).font(Typeface.sans(12)).foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct ScoringList: View {
+    let detail: GameDetail
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "Scoring", overline: "")
+            ForEach(Array(detail.scoringPlays.enumerated()), id: \.offset) { _, s in
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    TeamChip(abbr: s.team, fill: s.team == detail.away.abbr ? (detail.away.fill ?? "#666666") : (detail.home.fill ?? "#666666"), width: 48, height: 22, fontSize: 14)
+                    Text(periodLabel(s.period) + " " + s.clock).font(Typeface.sans(14)).foregroundStyle(.secondary).frame(width: 74, alignment: .leading)
+                    Text(s.text).font(Typeface.sans(14))
+                }
+            }
+        }
+    }
+
+    private func periodLabel(_ p: Int) -> String { p > 4 ? (p == 5 ? "OT" : "\(p - 4)OT") : "Q\(p)" }
+}
+
+private struct BoxColumn: View {
+    let detail: GameDetail
+    private let rows = ["Total Yards", "1st Downs", "3rd down efficiency", "Turnovers", "Possession"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeading(title: "Box score", overline: "")
+            if detail.boxscore.count == 2 {
+                let away = Dictionary(detail.boxscore[0].stats.map { ($0.label, $0.value) }, uniquingKeysWith: { a, _ in a })
+                let home = Dictionary(detail.boxscore[1].stats.map { ($0.label, $0.value) }, uniquingKeysWith: { a, _ in a })
+                ForEach(rows, id: \.self) { label in
+                    HStack {
+                        Text(away[label] ?? "–").font(Typeface.sans(14, .bold))
+                        Spacer()
+                        Text(label).font(Typeface.sans(14)).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(home[label] ?? "–").font(Typeface.sans(14, .bold))
+                    }
+                }
+            }
+            SectionHeading(title: "Leaders", overline: "")
+            ForEach(Array(detail.leaders.enumerated()), id: \.offset) { _, l in
+                HStack(spacing: 10) {
+                    TeamChip(abbr: l.team, fill: l.team == detail.away.abbr ? (detail.away.fill ?? "#666666") : (detail.home.fill ?? "#666666"), width: 44, height: 20, fontSize: 13)
+                    Text(l.name).font(Typeface.sans(14, .semibold))
+                    Spacer()
+                    Text(l.line).font(Typeface.sans(14)).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+        }
+    }
+}

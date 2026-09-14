@@ -1,0 +1,288 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0118C2914C6121BE3E44CF45 /* Chips.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFABF6E1DC84357961AF326B /* Chips.swift */; };
+		BB553F1FF36B767511037009 /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */; };
+		358725298EF1C4087866A4C1 /* GameTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005085A5F8E52622CE0F3DE7 /* GameTile.swift */; };
+		D76A75032DA125522FF91F07 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543988707BD0C2E7F3C73F08 /* Models.swift */; };
+		48505A2124BCF5E523214D6F /* SaturdayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */; };
+		B03E545D897FE5F1BEA08EA6 /* SaturdayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7187DE9F43439687A479EB6A /* SaturdayStore.swift */; };
+		15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA9051C81335C8D903D40AE /* SaturdayWall.swift */; };
+		13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */; };
+		B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 936D5053E2A50560B42233F7 /* Spotlight.swift */; };
+		C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D4FB59DE7619B0CE12329B /* Tokens.swift */; };
+		2DEA3DB01E067F79B332E1D8 /* BigShouldersDisplay.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */; };
+		A47D024D412A5A435FDBF35C /* InstrumentSans.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CBC52927C887C7AB1B22ACDF /* InstrumentSans.ttf */; };
+		5F0795319A6E613848A990AA /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4560B6D0F453EAFFCF024052 /* InstrumentSerif-Italic.ttf */; };
+		8AB7F37C25665E101EBDBCCA /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6CAF79AD58BA623FCA32DC12 /* InstrumentSerif-Regular.ttf */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		85673086EF6CFD3A1F8591AF /* Saturday.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Saturday.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFABF6E1DC84357961AF326B /* Chips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Chips.swift"; path = "Saturday/Sources/Chips.swift"; sourceTree = SOURCE_ROOT; };
+		D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GameDetailView.swift"; path = "Saturday/Sources/GameDetailView.swift"; sourceTree = SOURCE_ROOT; };
+		005085A5F8E52622CE0F3DE7 /* GameTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GameTile.swift"; path = "Saturday/Sources/GameTile.swift"; sourceTree = SOURCE_ROOT; };
+		543988707BD0C2E7F3C73F08 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Models.swift"; path = "Saturday/Sources/Models.swift"; sourceTree = SOURCE_ROOT; };
+		EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayApp.swift"; path = "Saturday/Sources/SaturdayApp.swift"; sourceTree = SOURCE_ROOT; };
+		7187DE9F43439687A479EB6A /* SaturdayStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayStore.swift"; path = "Saturday/Sources/SaturdayStore.swift"; sourceTree = SOURCE_ROOT; };
+		0CA9051C81335C8D903D40AE /* SaturdayWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayWall.swift"; path = "Saturday/Sources/SaturdayWall.swift"; sourceTree = SOURCE_ROOT; };
+		8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SharedRendererPlaceholder.swift"; path = "Saturday/Sources/SharedRendererPlaceholder.swift"; sourceTree = SOURCE_ROOT; };
+		936D5053E2A50560B42233F7 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Spotlight.swift"; path = "Saturday/Sources/Spotlight.swift"; sourceTree = SOURCE_ROOT; };
+		12D4FB59DE7619B0CE12329B /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Tokens.swift"; path = "Saturday/Sources/Tokens.swift"; sourceTree = SOURCE_ROOT; };
+		BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BigShouldersDisplay.ttf"; path = "Saturday/Fonts/BigShouldersDisplay.ttf"; sourceTree = SOURCE_ROOT; };
+		CBC52927C887C7AB1B22ACDF /* InstrumentSans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "InstrumentSans.ttf"; path = "Saturday/Fonts/InstrumentSans.ttf"; sourceTree = SOURCE_ROOT; };
+		4560B6D0F453EAFFCF024052 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "InstrumentSerif-Italic.ttf"; path = "Saturday/Fonts/InstrumentSerif-Italic.ttf"; sourceTree = SOURCE_ROOT; };
+		6CAF79AD58BA623FCA32DC12 /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "InstrumentSerif-Regular.ttf"; path = "Saturday/Fonts/InstrumentSerif-Regular.ttf"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CC931E1219AD275C20F3632C = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E50290A24C49A459B43487C5 = {
+			isa = PBXGroup;
+			children = (
+				958B6263A0B70C847CDA462B /* Sources */,
+				758935787A20FEBD83890720 /* Fonts */,
+				328EC33DF3954DC9B83FA285 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		958B6263A0B70C847CDA462B /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				CFABF6E1DC84357961AF326B /* Chips.swift */,
+				D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */,
+				005085A5F8E52622CE0F3DE7 /* GameTile.swift */,
+				543988707BD0C2E7F3C73F08 /* Models.swift */,
+				EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */,
+				7187DE9F43439687A479EB6A /* SaturdayStore.swift */,
+				0CA9051C81335C8D903D40AE /* SaturdayWall.swift */,
+				8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */,
+				936D5053E2A50560B42233F7 /* Spotlight.swift */,
+				12D4FB59DE7619B0CE12329B /* Tokens.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		758935787A20FEBD83890720 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */,
+				CBC52927C887C7AB1B22ACDF /* InstrumentSans.ttf */,
+				4560B6D0F453EAFFCF024052 /* InstrumentSerif-Italic.ttf */,
+				6CAF79AD58BA623FCA32DC12 /* InstrumentSerif-Regular.ttf */,
+			);
+			name = Fonts;
+			sourceTree = "<group>";
+		};
+		328EC33DF3954DC9B83FA285 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				85673086EF6CFD3A1F8591AF /* Saturday.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0E8A3AD980EC179856012B7E /* Saturday */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4C54DBBEE4CD1F0693131A9;
+			buildPhases = (
+				E66CB3B8F89DAB928E81ABB5,
+				CC931E1219AD275C20F3632C,
+				59078AB1F481882BED053FC9,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = Saturday;
+			productName = Saturday;
+			productReference = 85673086EF6CFD3A1F8591AF /* Saturday.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		98F54143AB4E86B28C3AFEE0 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 3A3AA46345CA81460312FF60;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = E50290A24C49A459B43487C5;
+			productRefGroup = 328EC33DF3954DC9B83FA285 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0E8A3AD980EC179856012B7E /* Saturday */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		59078AB1F481882BED053FC9 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DEA3DB01E067F79B332E1D8 /* BigShouldersDisplay.ttf in Resources */,
+				A47D024D412A5A435FDBF35C /* InstrumentSans.ttf in Resources */,
+				5F0795319A6E613848A990AA /* InstrumentSerif-Italic.ttf in Resources */,
+				8AB7F37C25665E101EBDBCCA /* InstrumentSerif-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E66CB3B8F89DAB928E81ABB5 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0118C2914C6121BE3E44CF45 /* Chips.swift in Sources */,
+				BB553F1FF36B767511037009 /* GameDetailView.swift in Sources */,
+				358725298EF1C4087866A4C1 /* GameTile.swift in Sources */,
+				D76A75032DA125522FF91F07 /* Models.swift in Sources */,
+				48505A2124BCF5E523214D6F /* SaturdayApp.swift in Sources */,
+				B03E545D897FE5F1BEA08EA6 /* SaturdayStore.swift in Sources */,
+				15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */,
+				13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */,
+				B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */,
+				C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		671D9E2E95809E27B85B6A20 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				SDKROOT = auto;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AC5D6E15C21DCFD954DE2D0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				SDKROOT = auto;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		5FD7CB20C3C0A7C4C28C16DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Saturday/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Saturday;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Saturday reads the slate from the Mac on your network.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.saturday;
+				PRODUCT_NAME = Saturday;
+				SWIFT_VERSION = 5.0;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = NO;
+			};
+			name = Debug;
+		};
+		AF694ED35853F54DD12B6EE6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Saturday/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Saturday;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Saturday reads the slate from the Mac on your network.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.saturday;
+				PRODUCT_NAME = Saturday;
+				SWIFT_VERSION = 5.0;
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				XROS_DEPLOYMENT_TARGET = 2.0;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGNING_ALLOWED = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3A3AA46345CA81460312FF60 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				671D9E2E95809E27B85B6A20 /* Debug */,
+				AC5D6E15C21DCFD954DE2D0E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A4C54DBBEE4CD1F0693131A9 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5FD7CB20C3C0A7C4C28C16DB /* Debug */,
+				AF694ED35853F54DD12B6EE6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0;
+}

@@ -1,7 +1,7 @@
 PY ?= python3
 export PYTHONPATH := packages:apps/saturday:tests
 
-.PHONY: test fixtures doctor serve replay project build-visionos build-ios mockups
+.PHONY: test fixtures doctor serve replay project build-visionos build-ios build-ipad mockups
 
 test:
 	$(PY) -m unittest discover -s tests -t tests
@@ -27,7 +27,11 @@ build-visionos: project
 
 build-ios: project
 	xcodebuild -project apps/saturday/apple/Saturday.xcodeproj -scheme Saturday \
-	  -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -derivedDataPath apps/saturday/apple/build build
+	  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -derivedDataPath apps/saturday/apple/build build
 
 mockups:
 	$(PY) design/build.py && $(PY) design/immersive.py
+
+build-ipad: project
+	xcodebuild -project apps/saturday/apple/Saturday.xcodeproj -scheme Saturday \
+	  -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=26.5' -derivedDataPath apps/saturday/apple/build build
