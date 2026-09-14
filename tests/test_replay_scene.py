@@ -557,6 +557,9 @@ class TestSceneMoments(unittest.TestCase):
         m = s["activeMoment"]
         self.assertEqual((m["kind"], m["side"], m["team"]), ("touchdown", "home", "CHI"))
         arc = next(a for d in s["drives"] for a in d["arcs"] if a["id"] == m["playId"])
+        shown = s["drives"][s["currentDrive"]]
+        self.assertIn(m["playId"], [a["id"] for a in shown["arcs"]],
+                      "under a TOUCHDOWN banner the scoring drive is shown, not the kickoff after it")
         self.assertEqual(arc["style"], "score")
         self.assertEqual(arc["side"], "away", "Minnesota snapped it")
         self.assertEqual((arc["fromX"], arc["toX"]), (32.0, 100.0))

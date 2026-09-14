@@ -76,8 +76,12 @@ BOWL = {
 }
 
 PRESENTATION = {
-    "tabletop": {"metersPerYard": 0.8 / 120, "volume": [0.9, 0.4, 0.6],
-                 "bowlTiers": ["lower"]},
+    # The lower bowl reaches 36 yards past the end line, so the tabletop is
+    # sized for the bowl rather than the field: 96 yards either side of
+    # midfield at 4.5 mm is 0.86 m, inside a 0.9 m volume. Sized for the field
+    # alone, the bowl came out 1.28 m across and was clipped by the volume.
+    "tabletop": {"metersPerYard": 0.0045, "volume": [0.9, 0.4, 0.6],
+                 "floor": -0.18, "bowlTiers": ["lower"]},
     "stadium": {"metersPerYard": 0.9144, "seat": {"x": 50.0, "y": 8.0, "z": 42.7},
                 "bowlTiers": ["lower", "upper"]},
     "horizon": {"z": -58.0, "y0": 52.0, "y1": 76.0},
@@ -184,7 +188,11 @@ def style_of(play: dict) -> tuple[str, str] | None:
     yards = play.get("yards") or 0
     if "kickoff" in kind or "punt" in kind or "field goal" in kind or "extra point" in kind:
         shape = "kick"
-    elif "incompletion" in kind or "pass" in kind or "reception" in kind or "interception" in kind:
+    elif "interception" in kind or "fumble" in kind:
+        # The yards on a turnover are the return, run along the ground. Flown
+        # as a pass, the 68-yard pick-six in 401772810 peaked 27 yards up.
+        shape = "run"
+    elif "incompletion" in kind or "pass" in kind or "reception" in kind:
         shape = "pass"
     elif "penalty" in kind:
         shape = "flat"
@@ -358,6 +366,15 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 active = newest
         elif drawn and (drawn[-1][1], drawn[-1][2]) == (newest["period"], newest["clock"]):
             active = newest
+    # While a moment holds, the drive to show is the one it happened in. The
+    # kickoff after a touchdown starts the next drive on the same clock, and
+    # showing that drive put a kick arc in the air under a TOUCHDOWN banner
+    # while the scoring play itself was nowhere to be seen.
+    if active and state == "in":
+        for i, d in enumerate(drives_out):
+            if any(a["id"] == active["playId"] for a in d["arcs"]):
+                current = i
+                break
 
     possession = sit.get("possession")
     holder = "home" if possession and str(possession) == home["id"] else \

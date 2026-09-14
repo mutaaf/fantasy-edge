@@ -545,7 +545,15 @@ class Api:
         director = self._replay_loaded()
         out = sc.build(self.gamecast(director.event, src=self.replay_source()),
                        league="nfl", speed=director.speed)
-        out["replayControl"] = director.state()
+        control = director.state()
+        # Where "replay this drive" seeks to: the game second of the shown
+        # drive's first snap. Only the replay knows game seconds, so it is
+        # stated here rather than rebuilt from clock strings on each client.
+        drive = (out["drives"][out["currentDrive"]] if out["currentDrive"] is not None
+                 else (out["drives"][-1] if out["drives"] else None))
+        control["driveStart"] = director.seconds_of(drive["arcs"][0]["id"]) \
+            if drive and drive["arcs"] else None
+        out["replayControl"] = control
         return out
 
     def replay_control(self, body: dict) -> dict:
@@ -889,7 +897,14 @@ class Api:
         # Drives, flattened to the fields a field animation actually uses.
         drives = []
         raw = data.get("drives") or {}
-        for d in (raw.get("previous") or []) + ([raw["current"]] if raw.get("current") else []):
+        # ESPN lists the drive in progress in `previous` as well as in
+        # `current` (seen on college live snapshots, and nothing in the NFL
+        # payload rules it out), so a live game drew that drive twice and
+        # counted its score twice. `current` is the fresher copy and wins.
+        current = raw.get("current")
+        ordered = [d for d in (raw.get("previous") or [])
+                   if not (current and str(d.get("id")) == str(current.get("id")))]
+        for d in ordered + ([current] if current else []):
             plays = []
             for pl in (d.get("plays") or []):
                 st, en = pl.get("start") or {}, pl.get("end") or {}

@@ -1876,6 +1876,15 @@ class ReplayDirector:
                     "awayScore": note.get("awayScore", 0),
                     "matchup": matchup(self.summary)}
 
+    def seconds_of(self, play_id: str) -> int | None:
+        """The game second a play was snapped at, in the loaded game."""
+        with self._lock:
+            lengths = period_lengths(self.summary)
+            for p in _all_plays(self.summary):
+                if str(p.get("id")) == str(play_id):
+                    return play_seconds(p, lengths)
+        return None
+
     # ── the stand-in fetch ──
 
     def fetch(self, url: str) -> dict:
