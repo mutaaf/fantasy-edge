@@ -9,6 +9,8 @@ import SwiftUI
 /// because its drives cannot change.
 struct GameFieldView: View {
     @Environment(Board.self) private var board
+    @Environment(\.openWindow) private var openWindow
+    @State private var showReplays = false
     @Binding var event: String
     @Binding var focus: String?
     /// The play the field is showing. Nil means "the latest one", which is
@@ -125,6 +127,28 @@ struct GameFieldView: View {
     // MARK: - the slate
 
     private var picker: some View {
+        HStack(spacing: 8) {
+            slateStrip
+            // A real 3D field for the chosen game, on the table in front of
+            // you; from there the stadium is one tap away.
+            Button {
+                openWindow(id: "tabletop", value: chosen)
+            } label: {
+                Label("View in 3D", systemImage: "cube.transparent")
+                    .font(.system(size: 13, weight: .semibold)).frame(minHeight: 44)
+            }
+            .disabled(chosen.isEmpty)
+            Button { showReplays = true } label: {
+                Label("Replay a game", systemImage: "gobackward")
+                    .font(.system(size: 13, weight: .semibold)).frame(minHeight: 44)
+            }
+        }
+        .sheet(isPresented: $showReplays) {
+            ReplayPicker { openWindow(id: "tabletop", value: StadiumHost.replayWindow) }
+        }
+    }
+
+    private var slateStrip: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(board.slate) { g in

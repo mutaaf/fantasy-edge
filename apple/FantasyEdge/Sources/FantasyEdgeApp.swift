@@ -2,11 +2,21 @@ import SwiftUI
 
 @main
 struct FantasyEdgeApp: App {
-    @State private var board = Board()
+    @State private var board: Board
+    /// One scene feed for the tabletop and the stadium together, so walking
+    /// from one into the other keeps the same game and the same poll.
+    @State private var scene: SceneFeed
+
+    init() {
+        let b = Board()
+        _board = State(initialValue: b)
+        _scene = State(initialValue: SceneFeed(base: { "http://\(b.host)" }))
+    }
 
     var body: some Scene {
         WindowGroup(id: "board") {
-            CommandView().environment(board)
+            CommandView().environment(board).environment(scene)
+                .modifier(StadiumLaunchArguments())
         }
         // .plain would mean painting our own background, which is exactly what
         // made the first version fight the room. Let the system own the glass.
@@ -30,7 +40,7 @@ struct FantasyEdgeApp: App {
         ImmersiveSpace(id: "board-space") {
             // The space owns its own detail panel now: a sheet cannot be
             // presented into an immersive space, so the card is placed in it.
-            ImmersiveBoard().environment(board)
+            ImmersiveBoard().environment(board).environment(scene)
         }
         // Mixed keeps the room; progressive lets the wearer dial it up with
         // the crown; full is there now too. Mixed stays the *default* for the
@@ -40,6 +50,20 @@ struct FantasyEdgeApp: App {
         // other way round, because a hall is somewhere you go.
         .immersionStyle(selection: style(\.boardStyle), in: .mixed, .progressive, .full)
 
+        // A game on the table: a real 3D field in a volume.
+        WindowGroup(id: "tabletop", for: String.self) { $value in
+            TabletopHost(value: value ?? StadiumHost.replayWindow)
+                .environment(board).environment(scene)
+        }
+        .windowStyle(.volumetric)
+        .defaultSize(width: 0.9, height: 0.4, depth: 0.6, in: .meters)
+
+        // Seated at the fifty. Full by default, because a stadium is somewhere
+        // you go; progressive is offered so the Crown can bring the room back.
+        ImmersiveSpace(id: "stadium") {
+            StadiumHostSpace().environment(board).environment(scene)
+        }
+        .immersionStyle(selection: style(\.stadiumStyle), in: .progressive, .full)
     }
 
     /// Bridge between the app's stored choice and SwiftUI's existential.

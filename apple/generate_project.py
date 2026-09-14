@@ -30,7 +30,12 @@ def oid(*parts: str) -> str:
 
 
 def main() -> None:
-    sources = sorted(p.name for p in (APP / "Sources").glob("*.swift"))
+    # Recursive, because `Sources/Stadium/` is a folder of its own: the
+    # renderer that is meant to lift out into a Swift package. A flat glob
+    # would have left it out of the target and the build would have failed on
+    # every type it defines.
+    sources = sorted(str(p.relative_to(APP / "Sources"))
+                     for p in (APP / "Sources").rglob("*.swift"))
     if not sources:
         raise SystemExit("no sources found")
 
@@ -55,6 +60,20 @@ def main() -> None:
         group_children.append(f'\t\t\t\t{cref} /* {catalog} */,')
         resources_phase.append(
             f'\t\t\t\t{cbuild} /* {catalog} in Resources */,')
+    # The design tokens, bundled unchanged. The scene endpoint carries the
+    # same palette, so this is the offline copy, not a second source.
+    tokens = ROOT.parent / "design" / "tokens.json"
+    if tokens.exists():
+        tref, tbuild = oid("fref", "tokens.json"), oid("bfile", "tokens.json")
+        file_refs.append(
+            f'\t\t{tref} /* tokens.json */ = {{isa = PBXFileReference; '
+            f'lastKnownFileType = text.json; path = ../design/tokens.json; '
+            f'sourceTree = SOURCE_ROOT; }};')
+        build_files.append(
+            f'\t\t{tbuild} /* tokens.json in Resources */ = {{isa = PBXBuildFile; '
+            f'fileRef = {tref} /* tokens.json */; }};')
+        group_children.append(f'\t\t\t\t{tref} /* tokens.json */,')
+        resources_phase.append(f'\t\t\t\t{tbuild} /* tokens.json in Resources */,')
     for name in sources:
         fref, bfile = oid("fref", name), oid("bfile", name)
         file_refs.append(

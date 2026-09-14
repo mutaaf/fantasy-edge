@@ -45,6 +45,9 @@ final class Board {
     /// *while* a real game is on in a real room, so blacking the room out is
     /// the wrong thing to do by default even though full is offered.
     var boardStyle: RoomStyle = .mixed
+    /// The stadium's immersion. Full by default: unlike the board, a stadium
+    /// is a place you choose to go.
+    var stadiumStyle: RoomStyle = .full
 
     var leagues: [LeaguePayload] = []
     var live: LivePayload?
