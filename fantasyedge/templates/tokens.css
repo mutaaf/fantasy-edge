@@ -32,6 +32,16 @@
   --fe-color-rim-light: #FFF8E6;
   --fe-color-sky-top: #03050A;
   --fe-color-sky-horizon: #1A2436;
+  --fe-color-prop-goalpost: #F2C21B;
+  --fe-color-prop-pylon: #FF6A13;
+  --fe-color-prop-bench: #23272E;
+  --fe-color-prop-chain: #FF6A13;
+  --fe-color-board-base: #07090D;
+  --fe-color-ribbon-base: #05060A;
+  --fe-color-ribbon-text: #F7F6F2;
+  --fe-color-pressbox-glass: #FFD7A1;
+  --fe-color-baseplate: #101216;
+  --fe-color-baseplate-rim: #FFE9C2;
   --fe-chip-luminance: 0.159;
   --fe-chip-max-saturation: 0.92;
   --fe-chip-neutral-below: 0.12;

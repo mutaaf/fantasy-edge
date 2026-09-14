@@ -250,6 +250,13 @@ def check_tokens(path=TOKENS) -> list[str]:
             print(f"  {name:18s} {value:9s} on turf {on:5.2f}  {'OK' if ok else 'FAILS'}")
             if not ok:
                 fails.append(f"tokens {name}: {on:.2f}:1 on the turf")
+    # The ribbon board is text in the stadium, read from across the bowl.
+    if "ribbon.text" in tokens and "ribbon.base" in tokens:
+        on = contrast(rgb(tokens["ribbon.text"]), rgb(tokens["ribbon.base"]))
+        ok = on >= BODY
+        print(f"  {'ribbon.text':18s} {tokens['ribbon.text']:9s} on ribbon {on:5.2f}  {'OK' if ok else 'FAILS'}")
+        if not ok:
+            fails.append(f"tokens ribbon.text: {on:.2f}:1 on the ribbon board")
     return fails
 
 

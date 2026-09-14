@@ -501,6 +501,41 @@ class TestSceneGeometry(unittest.TestCase):
         with self.assertRaises(ValueError):
             sc.build({}, league="rugby")
 
+    def test_seats_sit_on_a_row_of_the_bowl_and_face_the_field(self):
+        """1.1: every seat is on its tier's surface or on the field, looks at
+        midfield, and the 1.0 `seat` is the default of them."""
+        st = self.final["presentation"]["stadium"]
+        seats = {s["id"]: s for s in st["seats"]}
+        self.assertEqual(st["defaultSeat"], "club")
+        self.assertEqual({k: st["seat"][k] for k in "xyz"}, {k: seats["club"][k] for k in "xyz"})
+        self.assertEqual(set(seats), {"club", "field", "endzone", "upper"})
+        tiers = {t["name"]: t for t in self.final["bowl"]["tiers"]}
+        half_w, half_l = self.final["field"]["width"] / 2, 60.0
+        for s in seats.values():
+            self.assertEqual((s["lookAt"]["x"], s["lookAt"]["z"]), (50.0, 0.0))
+            off = max(abs(s["z"]) - half_w, abs(s["x"] - 50) - half_l)
+            tier = next((t for t in tiers.values() if t["inner"] <= off <= t["outer"]), None)
+            if tier is None:
+                self.assertEqual(s["y"], 0.0, s)
+                self.assertLess(off, tiers["lower"]["inner"], s)
+            else:
+                f = (off - tier["inner"]) / (tier["outer"] - tier["inner"])
+                want = tier["rise"][0] + (tier["rise"][1] - tier["rise"][0]) * f
+                self.assertAlmostEqual(s["y"], want, places=2, msg=s)
+
+    def test_props_follow_the_league_and_look_names_real_assets(self):
+        nfl = self.final["field"]["props"]
+        self.assertEqual(nfl["benches"]["fromX"], 32.0)
+        self.assertEqual(sc.RULES["college-football"]["props"]["benches"]["fromX"], 25.0)
+        self.assertAlmostEqual(nfl["goalpost"]["crossbar"] * 3, 10.0, places=2)
+        for key in ("goalpost", "pylon", "benches", "chains"):
+            self.assertIn(nfl[key]["color"], self.final["palette"])
+        for key in ("wall", "ribbon", "pressBox"):
+            self.assertIn(key, self.final["bowl"])
+        root = pathlib.Path(__file__).resolve().parents[1] / "assets" / "src"
+        for name, rel in self.final["look"]["assets"].items():
+            self.assertTrue((root / rel).is_file(), f"{name}: assets/src/{rel} is missing; run tools/make_assets.py")
+
     def test_the_module_imports_nothing_but_the_standard_library(self):
         tree = ast.parse(pathlib.Path(sc.__file__).read_text())
         names = set()

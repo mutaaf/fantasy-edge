@@ -34,7 +34,7 @@ import json
 import os
 import pathlib
 
-SCENE_VERSION = "1.0"
+SCENE_VERSION = "1.1"
 
 TOKENS_PATH = pathlib.Path(
     os.environ.get("FANTASYEDGE_TOKENS")
@@ -49,12 +49,31 @@ RULES = {
                   # 70 ft 9 in in from each sideline; 18 ft 6 in apart.
                   "hashFromSideline": 23.583, "goalPostWidth": 6.167},
         "overtimeSeconds": 600,
+        "props": {
+            # The goal post stands on the end line: a base two yards behind
+            # it, a gooseneck forward, a crossbar 10 ft up, uprights 30 ft
+            # above that, 18 ft 6 in apart (goalPostWidth).
+            "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
+                         "color": "prop.goalpost"},
+            "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
+            # Each club's team area between the 32-yard lines, on opposite sidelines.
+            "benches": {"fromX": 32.0, "toX": 68.0, "offset": 6.0, "color": "prop.bench"},
+            "chains": {"length": 10.0, "offset": 2.5, "color": "prop.chain"},
+        },
     },
     "college-football": {
         "field": {"length": 100.0, "endZone": 10.0, "width": 160 / 3,
                   # 60 ft in from each sideline; 40 ft apart.
                   "hashFromSideline": 20.0, "goalPostWidth": 6.167},
         "overtimeSeconds": None,
+        "props": {
+            "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
+                         "color": "prop.goalpost"},
+            "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
+            # College team areas run between the 25-yard lines.
+            "benches": {"fromX": 25.0, "toX": 75.0, "offset": 6.0, "color": "prop.bench"},
+            "chains": {"length": 10.0, "offset": 2.5, "color": "prop.chain"},
+        },
         "stub": True,
     },
 }
@@ -73,7 +92,41 @@ BOWL = {
     "concourse": {"inner": 36.0, "outer": 42.0, "color": "bowl.concourse"},
     "rimLights": {"count": 10, "offset": 71.0, "height": 9.0, "side": "far",
                   "color": "rim.light"},
+    # The stands' front wall, lined with LED boards, short of the first row;
+    # the ribbon board on the upper deck's fascia, all the way round; the
+    # press box in the far concourse; tunnels under each end zone.
+    "wall": {"offset": 5.4, "height": 1.4, "color": "board.base"},
+    "ribbon": {"offset": 41.6, "rise": [21.0, 23.6], "color": "ribbon.base", "text": "ribbon.text"},
+    "pressBox": {"side": "far", "fromX": 22.0, "toX": 78.0, "offset": 37.0,
+                 "rise": [19.8, 23.8], "glass": "pressbox.glass"},
+    "tunnels": [{"x": -16.0, "width": 7.0, "height": 3.2},
+                {"x": 116.0, "width": 7.0, "height": 3.2}],
 }
+
+
+def _tier_height(name: str, offset: float) -> float:
+    tier = next(t for t in BOWL["tiers"] if t["name"] == name)
+    f = max(0.0, min(1.0, (offset - tier["inner"]) / (tier["outer"] - tier["inner"])))
+    return round(tier["rise"][0] + (tier["rise"][1] - tier["rise"][0]) * f, 3)
+
+
+def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: float,
+          look_at=(50.0, 0.0, 0.0)) -> dict:
+    """A place to sit: the floor under the wearer, in field yards, and the
+    point the seat faces. Heights come from the bowl, so a seat is always on a
+    row rather than floating in front of one."""
+    y = _tier_height(tier, offset) if tier else 0.0
+    return {"id": sid, "label": label, "x": x, "y": y, "z": round(z, 3),
+            "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]}}
+
+
+HALF_WIDTH = 80 / 3
+SEATS = [
+    _seat("club", "50-yard line, lower bowl", 50.0, HALF_WIDTH + 24.0, "lower", 24.0),
+    _seat("field", "Field level, home sideline", 50.0, HALF_WIDTH + 4.5, None, 0.0),
+    _seat("endzone", "Behind the home end zone", -24.0, 0.0, "lower", 14.0),
+    _seat("upper", "Upper deck, midfield", 50.0, HALF_WIDTH + 50.0, "upper", 50.0),
+]
 
 PRESENTATION = {
     # The lower bowl reaches 36 yards past the end line, so the tabletop is
@@ -82,7 +135,10 @@ PRESENTATION = {
     # alone, the bowl came out 1.28 m across and was clipped by the volume.
     "tabletop": {"metersPerYard": 0.0045, "volume": [0.9, 0.4, 0.6],
                  "floor": -0.18, "bowlTiers": ["lower"]},
-    "stadium": {"metersPerYard": 0.9144, "seat": {"x": 50.0, "y": 8.0, "z": 42.7},
+    # `seat` is the default of `seats`, kept so a 1.0 renderer still sits down.
+    "stadium": {"metersPerYard": 0.9144,
+                "seat": {k: SEATS[0][k] for k in ("x", "y", "z")},
+                "seats": SEATS, "defaultSeat": SEATS[0]["id"],
                 "bowlTiers": ["lower", "upper"]},
     "horizon": {"z": -58.0, "y0": 52.0, "y1": 76.0},
     "beaconHeight": 34.0,
@@ -421,6 +477,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                  "z": "yards from the centre line, positive toward the home sideline",
                  "y": "yards up"},
         "field": {**field, "league": league, "stripeEvery": 5, "numbersEvery": 10,
+                  "props": json.loads(json.dumps(rules["props"])),
                   "homeEndZone": [-field["endZone"], 0.0],
                   "awayEndZone": [field["length"], field["length"] + field["endZone"]]},
         "teams": {"home": home, "away": away},
@@ -445,4 +502,5 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
         "presentation": PRESENTATION,
         "palette": tokens["color"],
         "motion": tokens["motion"],
+        "look": tokens["look"],
     }
