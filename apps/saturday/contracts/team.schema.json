@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "team.schema.json",
+  "title": "GET /api/teams",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "teams",
+    "caveat"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "teams": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.schema.json#/$defs/team"
+          }
+        ],
+        "type": "object",
+        "required": [
+          "fill"
+        ]
+      }
+    },
+    "caveat": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

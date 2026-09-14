@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Shared definitions",
+  "$defs": {
+    "status": {
+      "type": "object",
+      "required": [
+        "state",
+        "name",
+        "detail",
+        "period",
+        "clock",
+        "completed",
+        "delayed",
+        "overtimes",
+        "halftime"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "pre",
+            "in",
+            "post"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "period": {
+          "type": "integer"
+        },
+        "clock": {
+          "type": "string"
+        },
+        "clockSeconds": {
+          "type": "number"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "delayed": {
+          "type": "boolean"
+        },
+        "stopped": {
+          "type": "boolean"
+        },
+        "overtimes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "halftime": {
+          "type": "boolean"
+        }
+      },
+      "description": "completed is true only for a STATUS_FINAL* status; never inferred from play text."
+    },
+    "team": {
+      "type": "object",
+      "required": [
+        "id",
+        "abbr",
+        "name",
+        "location",
+        "color",
+        "logo",
+        "rank",
+        "record"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "abbr": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        },
+        "alternateColor": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "conferenceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 25
+        },
+        "record": {
+          "type": "string"
+        },
+        "fill": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        }
+      },
+      "description": "fill is the chip colour, already normalised so white text clears 4.5:1. Clients draw it, never compute it."
+    },
+    "side": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/team"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "score",
+        "fill",
+        "hatch"
+      ],
+      "properties": {
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "hatch": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

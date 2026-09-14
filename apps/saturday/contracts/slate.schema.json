@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "slate.schema.json",
+  "title": "GET /api/slate",
+  "type": "object",
+  "required": [
+    "version",
+    "league",
+    "asOf",
+    "source",
+    "replay",
+    "counts",
+    "spotlight",
+    "leverageCaveat",
+    "games"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "league": {
+      "const": "college-football"
+    },
+    "asOf": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "replay": {
+      "type": "boolean"
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "live",
+        "pre",
+        "post",
+        "delayed"
+      ],
+      "properties": {
+        "live": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pre": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "post": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delayed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "spotlight": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "leverageCaveat": {
+      "type": "string",
+      "minLength": 1
+    },
+    "games": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/game"
+      }
+    }
+  },
+  "$defs": {
+    "game": {
+      "type": "object",
+      "required": [
+        "id",
+        "kickoff",
+        "status",
+        "away",
+        "home",
+        "situation",
+        "tv",
+        "venue",
+        "flags",
+        "leverage"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kickoff": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "common.schema.json#/$defs/status"
+        },
+        "away": {
+          "$ref": "common.schema.json#/$defs/side"
+        },
+        "home": {
+          "$ref": "common.schema.json#/$defs/side"
+        },
+        "situation": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "possession",
+            "down",
+            "distance",
+            "text",
+            "yardsToGoal",
+            "redZone"
+          ],
+          "properties": {
+            "possession": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "down": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "distance": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "yardsToGoal": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "redZone": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tv": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "venue": {
+          "type": "object",
+          "required": [
+            "name",
+            "city",
+            "state"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            }
+          }
+        },
+        "neutralSite": {
+          "type": "boolean"
+        },
+        "conferenceGame": {
+          "type": "boolean"
+        },
+        "flags": {
+          "type": "object",
+          "required": [
+            "live",
+            "redZone",
+            "overtime",
+            "delayed",
+            "upset",
+            "upsetAlert",
+            "oneScore",
+            "ranked"
+          ],
+          "properties": {
+            "live": {
+              "type": "boolean"
+            },
+            "redZone": {
+              "type": "boolean"
+            },
+            "overtime": {
+              "type": "boolean"
+            },
+            "delayed": {
+              "type": "boolean"
+            },
+            "upset": {
+              "type": "boolean"
+            },
+            "upsetAlert": {
+              "type": "boolean"
+            },
+            "oneScore": {
+              "type": "boolean"
+            },
+            "ranked": {
+              "type": "boolean"
+            }
+          }
+        },
+        "leverage": {
+          "type": "object",
+          "required": [
+            "score",
+            "reasons",
+            "rank"
+          ],
+          "properties": {
+            "score": {
+              "type": "number"
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rank": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}
