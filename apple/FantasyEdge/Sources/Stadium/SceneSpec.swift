@@ -236,6 +236,9 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let referenceSpeed: Double
         public let floorSeconds: Double
         public let sectionDim: Double
+        /// How long a celebration stays up. Optional until `design/tokens.json`
+        /// carries it; the views fall back to `MomentHold.defaultSeconds`.
+        public let momentSeconds: Double?
     }
 }
 
