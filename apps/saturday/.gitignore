@@ -5,3 +5,4 @@ __pycache__/
 apple/build/
 xcuserdata/
 data/capture/*/stdout.log
+design/saturday-initial-views.html
