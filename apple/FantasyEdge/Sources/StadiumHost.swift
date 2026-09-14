@@ -16,24 +16,49 @@ enum StadiumHost {
 /// this is how the tabletop and the stadium are screenshotted at all:
 ///
 ///     xcrun simctl launch booted com.mutaaf.fantasyedge -openTabletop replay -openStadium
+///
+/// `-stadiumStyle full` opens the stadium at 100% instead of on the dial, and
+/// in a debug build `-stadiumLook <degrees>` turns the bowl so a panel off to
+/// one side can be captured head-on: the simulator's camera cannot be aimed
+/// from a script.
 struct StadiumLaunchArguments: ViewModifier {
+    @Environment(Board.self) private var board
+    @Environment(StadiumPassage.self) private var passage
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    @State private var done = false
+    @Environment(\.dismissWindow) private var dismissWindow
+    /// Once per process, not per window. Leaving the stadium reopens the
+    /// board, a fresh window with fresh `@State`; a per-view flag let that
+    /// window read `-openStadium` again and walk straight back in, forever.
+    @MainActor private static var done = false
 
     func body(content: Content) -> some View {
         content.task {
-            guard !done else { return }
-            done = true
+            guard !Self.done else { return }
+            Self.done = true
             let args = ProcessInfo.processInfo.arguments
             if let i = args.firstIndex(of: "-openTabletop"), i + 1 < args.count {
                 openWindow(id: "tabletop", value: args[i + 1])
             }
-            if args.contains("-openStadium") {
+            guard args.contains("-openStadium") else { return }
+            let style: RoomStyle = StadiumHost.argument("-stadiumStyle") == "full" ? .full : .progressive
+            // Unstructured: entering closes this very window, and a `.task`
+            // tied to it would be cancelled halfway through closing the rest.
+            let passage = passage, board = board
+            let open = openImmersiveSpace, dismiss = dismissWindow
+            Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
-                _ = await openImmersiveSpace(id: "stadium")
+                await passage.enter(style: style, board: board, openSpace: open, dismissWindow: dismiss)
             }
         }
+    }
+}
+
+extension StadiumHost {
+    static func argument(_ name: String) -> String? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
+        return args[i + 1]
     }
 }
 
@@ -41,16 +66,27 @@ struct StadiumLaunchArguments: ViewModifier {
 struct TabletopHost: View {
     let value: String
     @Environment(SceneFeed.self) private var feed
+    @Environment(Board.self) private var board
+    @Environment(StadiumPassage.self) private var passage
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
 
     var body: some View {
         TabletopView(feed: feed) {
-            Task { _ = await openImmersiveSpace(id: "stadium") }
+            let passage = passage, board = board
+            let open = openImmersiveSpace, dismiss = dismissWindow
+            // The dial, not a blackout: the Crown takes you the rest of the way.
+            Task { @MainActor in
+                await passage.enter(style: .progressive, board: board, openSpace: open, dismissWindow: dismiss)
+            }
         }
         .onAppear {
+            passage.appeared(.tabletop(value))
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
         }
-        .onChange(of: value) { _, new in
+        .onDisappear { passage.disappeared(.tabletop(value)) }
+        .onChange(of: value) { old, new in
+            passage.renamed(from: .tabletop(old), to: .tabletop(new))
             feed.target = new == StadiumHost.replayWindow ? .replay : .live(event: new)
         }
     }
@@ -60,19 +96,55 @@ struct TabletopHost: View {
 struct StadiumHostSpace: View {
     @Environment(SceneFeed.self) private var feed
     @Environment(Board.self) private var board
+    @Environment(StadiumPassage.self) private var passage
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
 
     var body: some View {
-        StadiumSpaceView(feed: feed, leave: {
-            Task { await dismissImmersiveSpace() }
-        }) {
-            Elsewhere(games: board.slate.filter { $0.event != currentEvent })
+        StadiumSpaceView(
+            feed: feed,
+            immersion: Binding(
+                get: { board.stadiumStyle == .full ? .full : .dial },
+                set: { board.stadiumStyle = $0 == .full ? .full : .progressive }),
+            look: Self.look,
+            leave: {
+                let passage = passage, open = openWindow, dismiss = dismissImmersiveSpace
+                Task { @MainActor in await passage.leave(openWindow: open, dismissSpace: dismiss) }
+            }
+        ) {
+            // Only games the board has actually read. An unreachable board
+            // shows nothing here rather than an empty panel in the stands.
+            let others = board.slate.filter { $0.event != currentEvent }
+            if !others.isEmpty { Elsewhere(games: others) }
         }
         .task { board.start() }
-        .onDisappear { board.stop() }
+        .task {
+            #if DEBUG
+            // `-stadiumLeaveAfter <seconds>`: press Leave without a pinch, so
+            // the way back out can be captured in the simulator.
+            if let s = Double(StadiumHost.argument("-stadiumLeaveAfter") ?? "") {
+                try? await Task.sleep(for: .seconds(s))
+                await passage.leave(openWindow: openWindow, dismissSpace: dismissImmersiveSpace)
+            }
+            #endif
+        }
+        .onDisappear {
+            board.stop()
+            passage.spaceDisappeared(openWindow: openWindow)
+        }
     }
 
     private var currentEvent: String { feed.spec?.event ?? "" }
+
+    /// (yaw, pitch) from `-stadiumLook` and `-stadiumPitch`, debug builds only.
+    private static var look: SIMD2<Float> {
+        #if DEBUG
+        return SIMD2(Float(StadiumHost.argument("-stadiumLook") ?? "") ?? 0,
+                     Float(StadiumHost.argument("-stadiumPitch") ?? "") ?? 0)
+        #else
+        return .zero
+        #endif
+    }
 }
 
 /// The other games, live ones first. A replay is never mixed in here: this

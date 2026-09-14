@@ -43,6 +43,7 @@
 		9860C1A78D235DDBDC2D3797 /* Stadium/StadiumRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F52960F6D5F03C809B34D40D /* Stadium/StadiumRenderer.swift */; };
 		02B4B67D8FFC1045289D6293 /* Stadium/StadiumViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD6D6127C4C4AD733B578029 /* Stadium/StadiumViews.swift */; };
 		E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C27A2460C89A62A912EAAF /* StadiumHost.swift */; };
+		6ED38DCA7612403AA4FF5F3D /* StadiumPassage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
 		DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B52FBF15637237B331C3961 /* Watch.swift */; };
 /* End PBXBuildFile section */
@@ -86,6 +87,7 @@
 		F52960F6D5F03C809B34D40D /* Stadium/StadiumRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/StadiumRenderer.swift; sourceTree = "<group>"; };
 		FD6D6127C4C4AD733B578029 /* Stadium/StadiumViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/StadiumViews.swift; sourceTree = "<group>"; };
 		29C27A2460C89A62A912EAAF /* StadiumHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumHost.swift; sourceTree = "<group>"; };
+		1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumPassage.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		6B52FBF15637237B331C3961 /* Watch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -148,6 +150,7 @@
 				F52960F6D5F03C809B34D40D /* Stadium/StadiumRenderer.swift */,
 				FD6D6127C4C4AD733B578029 /* Stadium/StadiumViews.swift */,
 				29C27A2460C89A62A912EAAF /* StadiumHost.swift */,
+				1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
 				6B52FBF15637237B331C3961 /* Watch.swift */,
 			);
@@ -257,6 +260,7 @@
 				9860C1A78D235DDBDC2D3797 /* Stadium/StadiumRenderer.swift in Sources */,
 				02B4B67D8FFC1045289D6293 /* Stadium/StadiumViews.swift in Sources */,
 				E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */,
+				6ED38DCA7612403AA4FF5F3D /* StadiumPassage.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
 				DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */,
 			);
