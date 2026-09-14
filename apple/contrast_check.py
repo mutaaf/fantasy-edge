@@ -208,6 +208,51 @@ def propose(rgb, target=None):
     return tuple(round(c, 3) for c in best)
 
 
+# --------------------------------------------------------------------- tokens
+
+TOKENS = HERE.parent / "design" / "tokens.json"
+
+
+def check_tokens(path=TOKENS) -> list[str]:
+    """The stadium's palette lives in design/tokens.json, not in Theme.swift.
+
+    Two rules apply there. A `fill.*` token carries white text, so it is held
+    to the chip rule above. Everything drawn on the turf - lasers, arcs, the
+    beacon, yard lines - is a graphic on a ground this app paints, so it has to
+    clear the component ratio against the lit turf it sits on, the lighter of
+    the two stripes, which is the harder case.
+    """
+    import json
+
+    if not path.exists():
+        return []
+    tokens = json.loads(path.read_text())["color"]
+
+    def rgb(hexs):
+        h = hexs.lstrip("#")[:6]
+        return tuple(int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+
+    turf = max((rgb(tokens["turf.a"]), rgb(tokens["turf.b"])), key=luminance)
+    fails = []
+    print(f"\ndesign/tokens.json - fills as chips, turf graphics against {hexof(turf)}")
+    for name, value in sorted(tokens.items()):
+        if name.startswith("fill."):
+            c = rgb(value)
+            wo, cl, cd = contrast(WHITE, c), contrast(c, LIGHT), contrast(c, DARK)
+            ok = wo >= BODY and cl >= COMPONENT and cd >= COMPONENT
+            print(f"  {name:18s} {value:9s} white {wo:5.2f}  edge {cl:5.2f}/{cd:5.2f}  "
+                  f"{'chip OK' if ok else 'CHIP FAILS'}")
+            if not ok:
+                fails.append(f"tokens {name}: white {wo:.2f}:1, edge {cl:.2f}/{cd:.2f}")
+        elif name.split(".")[0] in ("laser", "arc", "beacon", "line"):
+            on = contrast(rgb(value), turf)
+            ok = on >= COMPONENT
+            print(f"  {name:18s} {value:9s} on turf {on:5.2f}  {'OK' if ok else 'FAILS'}")
+            if not ok:
+                fails.append(f"tokens {name}: {on:.2f}:1 on the turf")
+    return fails
+
+
 # --------------------------------------------------------------------- report
 
 def main() -> int:
@@ -277,6 +322,8 @@ def main() -> int:
         sim = delta_e(simulate(theme[a]), simulate(theme[b]))
         flag = "" if sim >= 11 else "   <- hue alone is not enough here"
         print(f"  {a:12s} vs {b:12s}  dE {raw:6.1f} -> {sim:6.1f} deuteranopic{flag}")
+
+    fails += check_tokens()
 
     if fails:
         print("\nFAIL")

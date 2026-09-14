@@ -681,15 +681,23 @@ class EspnLiveSource(LiveSource):
                     "r": round(1.0 - info["played"], 4),
                     "g": info["label"]}
         sb = self.scoreboard()
+        # A replay frame says so in the scoreboard it rewrote. Before this the
+        # snapshot served from `replay` files read `"source": "espn"`, which is
+        # a recorded game wearing the label of a live one.
+        note = sb.get("replay")
         payload = {
             "asOf": 0.0,
             "window": (sb.get("week") or {}).get("number", 0),
-            "source": "espn" if ok else "espn-unavailable",
+            "source": ("replay" if note else "espn") if ok else "espn-unavailable",
             "error": self.last_error,
             "scored": len(pts) + len(dst),
             "games": g,
             "players": players,
         }
+        if note:
+            payload["replay"] = {k: note.get(k) for k in
+                                 ("event", "gameSeconds", "state", "clock", "period",
+                                  "homeScore", "awayScore")}
         payload["version"] = hashlib.sha1(
             json.dumps(players, sort_keys=True,
                        separators=(",", ":")).encode()).hexdigest()[:16]

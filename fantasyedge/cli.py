@@ -443,6 +443,19 @@ def cmd_replay(args, cfg) -> None:
 
     out = pathlib.Path(args.out)
     quiet = getattr(args, "json", False)
+    if args.list:
+        games = rp.ReplayDirector(out / "source").catalog()
+        lines = [f"  {g['event']}  {g['away']['abbr']} {g['away']['score']} @ "
+                 f"{g['home']['abbr']} {g['home']['score']}  {g['final']}  "
+                 f"{g['date'][:10]}{'' if g['complete'] else '  (partial capture)'}"
+                 for g in games]
+        return emit(args, {"games": games},
+                    "\n".join(lines) or f"No captured games in {out / 'source'}.")
+    if not args.game:
+        if not (args.season and args.week and args.team):
+            raise SystemExit("Pass --game EVENT_ID, or --season, --week and --team "
+                             "to find one.")
+        args.game = rp.find_event(args.season, args.week, args.team, args.seasontype)
     if not quiet:
         # Printed before the loop, not after it. A replay at 60x runs for a
         # minute and a daemon runs until the game ends, so a notice that only
@@ -789,7 +802,14 @@ def build_parser() -> argparse.ArgumentParser:
     jsonify(ap); ap.set_defaults(fn=cmd_api)
 
     rpl = sub.add_parser("replay", help="replay a finished NFL game as if it were live")
-    rpl.add_argument("--game", required=True, help="ESPN event id, e.g. 401872656")
+    rpl.add_argument("--game", help="ESPN event id, e.g. 401872656")
+    rpl.add_argument("--season", type=int, help="with --week and --team: find the game")
+    rpl.add_argument("--week", type=int, help="week number within --seasontype")
+    rpl.add_argument("--team", help="club abbreviation, e.g. SEA")
+    rpl.add_argument("--seasontype", type=int, default=2,
+                     help="ESPN season type: 1 preseason, 2 regular (default), 3 postseason")
+    rpl.add_argument("--list", action="store_true",
+                     help="list the games already captured under --out and exit")
     rpl.add_argument("--out", default="data/replay",
                      help="directory the frames are written to")
     rpl.add_argument("--speed", type=float, default=60.0,

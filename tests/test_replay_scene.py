@@ -1,0 +1,597 @@
+"""Replay any finished game, and the scene every renderer draws from it.
+
+Three real 2025 games, each a different shape, cut by
+`tools/make_replay_fixture.py --game` and never edited by hand:
+
+  401772510  DAL 20 @ PHI 24   a regulation game
+  401772949  LAR 37 @ SEA 38   overtime, won by a touchdown and a two-point try
+  401772810  MIN 24 @ CHI 27   a pick-six, scored by the side without the ball
+
+The scene assertions are the contract a port has to match - RealityKit today,
+a web or Android renderer later - so they are stated as the formulas and
+facts of these games rather than as whatever the code currently returns.
+"""
+
+from __future__ import annotations
+
+import ast
+import io
+import json
+import math
+import os
+import pathlib
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+
+from fantasyedge import replay as rp                          # noqa: E402
+from fantasyedge import scene as sc                           # noqa: E402
+
+FIX = pathlib.Path(__file__).parent / "fixtures"
+REGULATION, OVERTIME, PICK_SIX = "401772510", "401772949", "401772810"
+
+
+def setUpModule():
+    # The same promise as the rest of the suite: no network. The replay routes
+    # never touch the real source, but the real source is asserted on below.
+    os.environ["FANTASYEDGE_SCOREBOARD_FILE"] = str(FIX / "espn_scoreboard.json")
+    os.environ["FANTASYEDGE_SUMMARY_FILE"] = str(FIX / "espn_summary.json")
+
+
+_GAMES: dict[str, dict] = {}
+
+
+def game(event: str) -> dict:
+    if event not in _GAMES:
+        _GAMES[event] = json.loads((FIX / f"replay_game_{event}.json").read_text())
+    return _GAMES[event]
+
+
+def source_dir(*events: str) -> pathlib.Path:
+    """A capture directory holding these games, as `capture` writes it."""
+    root = pathlib.Path(tempfile.mkdtemp())
+    for ev in events:
+        g = game(ev)
+        (root / f"{ev}.json").write_text(json.dumps(g["summary"]))
+        rp.scoreboard_path(root, ev).write_text(json.dumps(g["scoreboard"]))
+    return root
+
+
+class Clock:
+    def __init__(self):
+        self.now = 1000.0
+
+    def __call__(self):
+        return self.now
+
+
+def director(*events: str) -> tuple[rp.ReplayDirector, Clock]:
+    clock = Clock()
+    return rp.ReplayDirector(source_dir(*events), clock=clock), clock
+
+
+def api_with(*events: str):
+    from fantasyedge import api
+
+    app = api.Api(db=str(pathlib.Path(tempfile.mkdtemp()) / "t.db"))
+    d, clock = director(*events)
+    app._replay = d
+    return app, d, clock
+
+
+def play_second(summary: dict, text: str) -> int:
+    lengths = rp.period_lengths(summary)
+    p = next(p for p in rp._all_plays(summary) if text in (p.get("text") or ""))
+    return rp.play_seconds(p, lengths)
+
+
+# ═════════════════════════════ the replay ═════════════════════════════
+
+class TestOvertimeRunsOnItsOwnClock(unittest.TestCase):
+    """A regular-season overtime is ten minutes. Encoded against fifteen, its
+    first snap sat five minutes of game clock after regulation ended."""
+
+    def test_overtime_is_six_hundred_seconds_and_regulation_is_untouched(self):
+        self.assertEqual(rp.period_lengths(game(OVERTIME)["summary"]), {5: 600})
+        self.assertEqual(rp.period_lengths(game(REGULATION)["summary"]), {})
+
+    def test_the_first_overtime_snap_follows_regulation_directly(self):
+        sm = game(OVERTIME)["summary"]
+        lengths = rp.period_lengths(sm)
+        first = next(p for p in rp._all_plays(sm) if p["period"]["number"] == 5)
+        self.assertEqual(first["clock"]["displayValue"], "10:00")
+        self.assertEqual(rp.play_seconds(first, lengths), 3600)
+        # 3:13 left in a ten-minute overtime is 407 seconds in.
+        self.assertEqual(rp.total_seconds(sm), 3600 + 407)
+
+    def test_a_frame_in_overtime_reads_the_overtime_clock(self):
+        g = game(OVERTIME)
+        _, sm = rp.frame(g["scoreboard"], g["summary"], 3600 + 60)
+        self.assertEqual(sm["replay"]["period"], 5)
+        status = sm["header"]["competitions"][0]["status"]
+        self.assertEqual(status["type"]["shortDetail"].split(" - ")[1], "OT")
+        self.assertTrue(status["displayClock"].startswith("9:"))
+
+    def test_clock_at_inverts_play_seconds_across_periods(self):
+        lengths = {5: 600}
+        self.assertEqual(rp.clock_at(0, lengths), (1, 900))
+        self.assertEqual(rp.clock_at(2700 + 899, lengths), (4, 1))
+        self.assertEqual(rp.clock_at(3600 + 407, lengths), (5, 600 - 407))
+
+
+class TestAGameIsCompleteByItsHeaderAndItsLastPlay(unittest.TestCase):
+
+    def test_every_whole_capture_is_complete(self):
+        for ev in (REGULATION, OVERTIME, PICK_SIX):
+            self.assertTrue(rp.capture_is_complete(game(ev)["summary"]), ev)
+
+    def test_a_walk_off_with_no_closing_record_is_still_complete(self):
+        """College overtime ends on the scoring play. Strip the NFL's closing
+        records and the same game must still be judged whole."""
+        sm = json.loads(json.dumps(game(OVERTIME)["summary"]))
+        last = sm["drives"]["previous"][-1]
+        while last["plays"][-1]["type"]["text"] in ("End of Game", "Timeout"):
+            last["plays"].pop()
+        self.assertEqual(last["plays"][-1]["type"]["text"], "Passing Touchdown")
+        self.assertTrue(rp.capture_is_complete(sm))
+
+    def test_a_trimmed_capture_of_a_final_game_is_not(self):
+        """The header of a trimmed capture still says FINAL; the last play
+        does not carry the final score, so it is partial."""
+        sm = json.loads(json.dumps(game(REGULATION)["summary"]))
+        sm["drives"]["previous"] = sm["drives"]["previous"][:6]
+        self.assertFalse(rp.capture_is_complete(sm))
+
+
+class TestCaptureKeepsEveryGamesSlate(unittest.TestCase):
+
+    def fake_espn(self, event: str, filed_under: str):
+        g = game(event)
+        asked = []
+
+        def http(url):
+            asked.append(url)
+            if "summary?event=" in url:
+                return g["summary"]
+            if f"dates={filed_under}" in url:
+                return g["scoreboard"]
+            return {"events": []}
+        return http, asked
+
+    def test_a_night_game_is_found_on_the_eastern_date(self):
+        """401772810 kicked off 2025-09-09T00:20Z, Monday night the 8th."""
+        http, asked = self.fake_espn(PICK_SIX, "20250908")
+        dest = pathlib.Path(tempfile.mkdtemp())
+        info = rp.capture(PICK_SIX, dest, http=http)
+        self.assertEqual(info["plays"], 185)
+        boards = [u for u in asked if "scoreboard" in u]
+        self.assertIn("dates=20250909", boards[0])
+        self.assertIn("dates=20250908", boards[1])
+        self.assertTrue(rp.scoreboard_path(dest, PICK_SIX).exists())
+
+    def test_a_second_capture_does_not_break_the_first(self):
+        dest = pathlib.Path(tempfile.mkdtemp())
+        for ev, day in ((REGULATION, "20250904"), (OVERTIME, "20251218")):
+            http, _ = self.fake_espn(ev, day)
+            rp.capture(ev, dest, http=http)
+        for ev in (REGULATION, OVERTIME):
+            board, summary = rp.load(dest, ev)
+            self.assertTrue(rp._event(board, ev), ev)
+
+    def test_a_legacy_shared_scoreboard_is_read_only_if_it_carries_the_game(self):
+        dest = pathlib.Path(tempfile.mkdtemp())
+        (dest / f"{OVERTIME}.json").write_text(json.dumps(game(OVERTIME)["summary"]))
+        (dest / "scoreboard.json").write_text(json.dumps(game(REGULATION)["scoreboard"]))
+        with self.assertRaises(SystemExit):
+            rp.load(dest, OVERTIME)
+
+    def test_find_event_by_week_and_club(self):
+        board = game(PICK_SIX)["scoreboard"]
+        asked = []
+
+        def http(url):
+            asked.append(url)
+            return board
+        self.assertEqual(rp.find_event(2025, 1, "chi", http=http), PICK_SIX)
+        self.assertIn("seasontype=2&week=1", asked[0])
+        with self.assertRaises(SystemExit):
+            rp.find_event(2025, 1, "SEA", http=http)
+
+
+class TestTheDirector(unittest.TestCase):
+
+    def test_play_pause_seek_and_speed_move_an_anchor_not_a_ticker(self):
+        d, clock = director(REGULATION)
+        d.load(REGULATION)
+        self.assertEqual(d.game_seconds(), 0)
+        d.set_speed(60)
+        d.play()
+        clock.now += 10
+        self.assertEqual(d.game_seconds(), 600)
+        d.pause()
+        clock.now += 100
+        self.assertEqual(d.game_seconds(), 600)
+        d.seek(1800)
+        self.assertEqual(d.state()["period"], 3)
+        d.set_speed(5)
+        d.play()
+        clock.now += 4
+        self.assertEqual(d.game_seconds(), 1820)
+
+    def test_the_tape_stops_at_the_end_and_play_rewinds_it(self):
+        d, clock = director(OVERTIME)
+        d.load(OVERTIME, at=4000)
+        d.play()
+        clock.now += 60
+        state = d.state()
+        self.assertEqual(state["gameSeconds"], 4007)
+        self.assertFalse(state["playing"])
+        self.assertEqual((state["homeScore"], state["awayScore"]), (38, 37))
+        d.play()
+        self.assertEqual(d.game_seconds(), 0)
+
+    def test_the_board_carries_only_the_replayed_game(self):
+        """The rest of that week's slate would show its finals beside a game
+        still in its first quarter."""
+        d, _ = director(REGULATION)
+        d.load(REGULATION, at=900)
+        board = d.fetch("https://x/scoreboard")
+        self.assertEqual([e["id"] for e in board["events"]], [REGULATION])
+        self.assertEqual(board["replay"]["event"], REGULATION)
+        with self.assertRaises(LookupError):
+            d.fetch("https://x/summary?event=401772949")
+
+    def test_every_state_says_replay(self):
+        d, _ = director(REGULATION)
+        self.assertTrue(d.state()["replay"])
+        d.load(REGULATION)
+        self.assertTrue(d.state()["replay"])
+        self.assertEqual(d.catalog()[0]["event"], REGULATION)
+
+    def test_bad_controls_are_refused(self):
+        d, _ = director(REGULATION)
+        with self.assertRaises(LookupError):
+            d.play()
+        d.load(REGULATION)
+        with self.assertRaises(ValueError):
+            d.control({"action": "rewind"})
+        with self.assertRaises(ValueError):
+            d.set_speed(10_000)
+        with self.assertRaises(ValueError):
+            d.load("../../etc/passwd")
+
+
+class TestReplayRoutes(unittest.TestCase):
+
+    def test_routes_are_listed_and_cached_as_replays(self):
+        from fantasyedge import api
+
+        listed = {(m, p) for m, p, _ in api.ROUTES}
+        for route in (("GET", "/api/replay"), ("POST", "/api/replay"),
+                      ("GET", "/api/replay/live"), ("GET", "/api/replay/gamecast"),
+                      ("GET", "/api/replay/scene"), ("GET", "/api/scene/{event}")):
+            self.assertIn(route, listed)
+        app, d, _ = api_with(OVERTIME)
+        self.addCleanup(app.close)
+        d.load(OVERTIME, at=3700)
+        for path in ("/api/replay", "/api/replay/live", "/api/replay/gamecast",
+                     "/api/replay/scene"):
+            _, policy = app.dispatch(path, {})
+            self.assertEqual(policy, api.REPLAY, path)
+
+    def test_a_replay_never_reaches_the_real_live_tier(self):
+        app, d, _ = api_with(OVERTIME)
+        self.addCleanup(app.close)
+        d.load(OVERTIME, at=3700)
+        self.assertIsNot(app.replay_source(), app.live_source())
+        self.assertEqual(app.replay_live()["source"], "replay")
+        self.assertNotEqual(app.live()["source"], "replay")
+
+    def test_the_gamecast_and_scene_are_labelled(self):
+        app, d, _ = api_with(OVERTIME)
+        self.addCleanup(app.close)
+        d.load(OVERTIME, at=3700)
+        gc = app.replay_gamecast()
+        self.assertEqual(gc["replay"]["event"], OVERTIME)
+        self.assertTrue(gc["replayControl"]["replay"])
+        scene = app.replay_scene()
+        self.assertEqual(scene["source"], "replay")
+        self.assertEqual(scene["status"]["period"], 5)
+
+    def test_nothing_loaded_is_a_404_with_a_fix(self):
+        from fantasyedge.api import HttpError
+
+        app, _, _ = api_with(OVERTIME)
+        self.addCleanup(app.close)
+        with self.assertRaises(HttpError) as ctx:
+            app.dispatch("/api/replay/scene", {})
+        self.assertEqual(ctx.exception.code, 404)
+        self.assertIn("load", ctx.exception.fix)
+
+    def _post(self, host: str, body: dict):
+        from fantasyedge.api import make_handler
+
+        app, _, _ = api_with(REGULATION)
+        self.addCleanup(app.close)
+        raw = json.dumps(body).encode()
+        handler = object.__new__(make_handler(app))
+        handler.client_address = (host, 5000)
+        handler.path = "/api/replay"
+        handler.headers = {"Content-Length": str(len(raw))}
+        handler.rfile = io.BytesIO(raw)
+        sent = {}
+        handler._send = lambda payload, code=200, policy=None: sent.update(
+            payload=payload, code=code, policy=policy)
+        handler.do_POST()
+        return sent
+
+    def test_the_controls_are_loopback_only(self):
+        os.environ.pop("FANTASYEDGE_ALLOW_REMOTE_REPLAY", None)
+        refused = self._post("192.168.1.40", {"action": "load", "event": REGULATION})
+        self.assertEqual(refused["code"], 403)
+        self.assertIn("FANTASYEDGE_ALLOW_REMOTE_REPLAY", refused["payload"]["fix"])
+        ok = self._post("127.0.0.1", {"action": "load", "event": REGULATION})
+        self.assertEqual(ok["code"], 200)
+        self.assertTrue(ok["payload"]["loaded"])
+
+    def test_the_escape_hatch_is_its_own(self):
+        os.environ["FANTASYEDGE_ALLOW_REMOTE_PREFS"] = "1"
+        try:
+            self.assertEqual(self._post("192.168.1.40", {"action": "play"})["code"], 403)
+        finally:
+            os.environ.pop("FANTASYEDGE_ALLOW_REMOTE_PREFS", None)
+        os.environ["FANTASYEDGE_ALLOW_REMOTE_REPLAY"] = "1"
+        try:
+            sent = self._post("192.168.1.40", {"action": "load", "event": REGULATION})
+            self.assertEqual(sent["code"], 200)
+        finally:
+            os.environ.pop("FANTASYEDGE_ALLOW_REMOTE_REPLAY", None)
+
+    def test_a_bad_action_is_a_400(self):
+        sent = self._post("127.0.0.1", {"action": "rewind"})
+        self.assertEqual(sent["code"], 400)
+        self.assertIn("seek", sent["payload"]["fix"])
+
+
+class TestNamesThePlayTextActuallyWrites(unittest.TestCase):
+    """Two ways the 2025 text broke name resolution, both found by reconciling
+    these captures against ESPN's own box scores."""
+
+    def roster(self):
+        def ath(pid, name, cat):
+            return {"name": cat, "athletes": [{"athlete": {"id": pid, "displayName": name}}]}
+        summary = {"boxscore": {"players": [{
+            "team": {"abbreviation": "CHI"},
+            "statistics": [ath("1", "Caleb Williams", "passing"),
+                           ath("2", "Chris Williams", "defensive"),
+                           ath("3", "Jaquan Brisker", "defensive"),
+                           ath("4", "Tremaine Edmunds", "defensive")]}]}}
+        return rp.Roster(summary)
+
+    def test_two_men_with_one_initial_are_told_apart_by_the_slot(self):
+        roster = self.roster()
+        self.assertIsNone(roster.find("C.Williams", "CHI"))
+        self.assertEqual(roster.find("C.Williams", "CHI", "passing"), "1")
+        self.assertEqual(roster.find("C.Williams", "CHI", "defensive"), "2")
+        self.assertEqual(roster.find("Ch.Williams", "CHI"), "2")
+
+    def test_tacklers_split_on_a_comma_as_well_as_a_semicolon(self):
+        self.assertEqual(rp._names("J.Brisker, T.Edmunds"), ["J.Brisker", "T.Edmunds"])
+        self.assertEqual(rp._names("J.Brisker; T.Edmunds"), ["J.Brisker", "T.Edmunds"])
+
+
+# ═════════════════════════════ the scene ═════════════════════════════
+
+class SceneAt:
+    """A scene for one fixture game at one game second, through the API."""
+    _apps: dict = {}
+
+    @classmethod
+    def at(cls, event: str, seconds: int, speed: float = 1.0) -> dict:
+        app, d, _ = api_with(event)
+        d.load(event, at=seconds)
+        if speed != 60.0:
+            d.set_speed(speed)
+        out = app.replay_scene()
+        app.close()
+        return out
+
+
+class TestSceneGeometry(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tokens = sc.load_tokens()
+        cls.final = SceneAt.at(REGULATION, 99999, speed=1.0)
+
+    def arcs(self, scene):
+        return [a for d in scene["drives"] for a in d["arcs"]]
+
+    def test_version_axes_and_field(self):
+        s = self.final
+        self.assertEqual(s["version"], sc.SCENE_VERSION)
+        self.assertEqual(s["kind"], "football-scene")
+        self.assertAlmostEqual(s["field"]["width"], 53.333, places=2)
+        self.assertEqual(s["field"]["homeEndZone"], [-10.0, 0.0])
+        self.assertEqual(s["field"]["awayEndZone"], [100.0, 110.0])
+        self.assertEqual(set(s["palette"]), set(self.tokens["color"]))
+
+    def test_apex_is_the_stated_formula_for_every_arc(self):
+        """Pass 3 + 0.35d, run 0.8 + 0.12d, kick 8 + 0.25d, flat 0."""
+        formula = {"pass": (3.0, 0.35), "run": (0.8, 0.12), "kick": (8.0, 0.25),
+                   "flat": (0.0, 0.0)}
+        arcs = self.arcs(self.final)
+        self.assertGreater(len(arcs), 140)
+        for a in arcs:
+            base, per = formula[a["shape"]]
+            self.assertAlmostEqual(a["apex"], base + per * abs(a["toX"] - a["fromX"]),
+                                   places=2, msg=a["text"])
+        ten = [a for a in arcs if a["shape"] == "pass" and abs(a["toX"] - a["fromX"]) == 10]
+        self.assertTrue(ten)
+        self.assertAlmostEqual(ten[0]["apex"], 6.5)
+
+    def test_lanes_fan_each_drive_symmetrically(self):
+        spread = self.final["field"]["width"] * self.tokens["arc"]["laneSpread"]
+        for d in self.final["drives"]:
+            lanes = [a["lane"] for a in d["arcs"]]
+            if len(lanes) == 1:
+                self.assertEqual(lanes, [0.0])
+            elif len(lanes) > 1:
+                # Rounded to a thousandth of a yard on the wire.
+                self.assertTrue(all(abs(z) <= spread + 0.001 for z in lanes), lanes)
+                self.assertEqual(lanes, sorted(lanes))
+                self.assertAlmostEqual(lanes[0], -spread, places=2)
+
+    def test_clock_records_are_never_drawn(self):
+        for a in self.arcs(self.final):
+            self.assertNotIn(a["type"].lower(), sc.NOT_A_PLAY)
+
+    def test_styles_follow_the_play(self):
+        by_type = {}
+        for a in self.arcs(self.final):
+            by_type.setdefault(a["type"], set()).add(a["style"])
+        self.assertLessEqual(by_type["Pass Incompletion"], {"incomplete", "turnover"})
+        self.assertIn("kick", by_type["Punt"])
+        self.assertIn("score", by_type.get("Passing Touchdown", set())
+                      | by_type.get("Rushing Touchdown", set()))
+        self.assertEqual(by_type["Sack"], {"loss"})
+
+    def test_durations_scale_with_speed_and_stay_in_bounds(self):
+        motion = self.tokens["motion"]
+        fast = SceneAt.at(REGULATION, 99999, speed=60.0)
+        for slow_arc, fast_arc in zip(self.arcs(self.final), self.arcs(fast)):
+            self.assertGreaterEqual(slow_arc["seconds"], motion["minSeconds"])
+            self.assertLessEqual(slow_arc["seconds"], motion["maxSeconds"])
+            self.assertEqual(slow_arc["duration"], slow_arc["seconds"])
+            want = max(motion["floorSeconds"], slow_arc["seconds"] / (60 / motion["referenceSpeed"]))
+            self.assertAlmostEqual(fast_arc["duration"], want, places=2)
+
+    def test_x_is_fixed_to_the_field_not_to_possession(self):
+        """Home attacks toward 100 whoever has the ball; an away drive's
+        gains run toward 0."""
+        s = self.final
+        for d in s["drives"]:
+            gains = [a for a in d["arcs"] if a["style"] in ("run", "pass")
+                     and a["toX"] != a["fromX"] and a["side"] == d["side"]]
+            for a in gains[:3]:
+                forward = a["toX"] > a["fromX"]
+                self.assertEqual(forward, d["side"] == "home", a["text"])
+
+    def test_chips_are_in_the_band_and_carry_white_text(self):
+        band = self.tokens["chip"]
+        for ev in (REGULATION, OVERTIME, PICK_SIX):
+            s = SceneAt.at(ev, 0)
+            for side in ("home", "away"):
+                team = s["teams"][side]
+                self.assertAlmostEqual(sc.luminance(team["chip"]), band["luminance"],
+                                       delta=0.006, msg=team)
+                self.assertGreaterEqual(sc.contrast(team["chip"], "#FFFFFF"), 4.5)
+
+    def test_navy_against_blue_gives_the_away_side_its_alternate(self):
+        s = SceneAt.at(OVERTIME, 0)
+        self.assertEqual((s["teams"]["home"]["abbr"], s["teams"]["away"]["abbr"]), ("SEA", "LAR"))
+        self.assertFalse(sc.clash(s["teams"]["home"]["chip"], s["teams"]["away"]["chip"],
+                                  self.tokens["chip"]))
+
+    def test_league_rules(self):
+        self.assertAlmostEqual(sc.RULES["nfl"]["field"]["hashFromSideline"], 23.583)
+        self.assertEqual(sc.RULES["college-football"]["field"]["hashFromSideline"], 20.0)
+        with self.assertRaises(ValueError):
+            sc.build({}, league="rugby")
+
+    def test_the_module_imports_nothing_but_the_standard_library(self):
+        tree = ast.parse(pathlib.Path(sc.__file__).read_text())
+        names = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                names |= {a.name.split(".")[0] for a in node.names}
+            elif isinstance(node, ast.ImportFrom):
+                self.assertEqual(node.level, 0, "no relative imports: it must lift out whole")
+                names.add((node.module or "").split(".")[0])
+        self.assertLessEqual(names, set(sys.stdlib_module_names))
+
+
+class TestTokensHaveOneSource(unittest.TestCase):
+
+    def test_the_css_is_a_current_rendering_of_the_json(self):
+        import importlib.util
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("make_tokens", root / "tools" / "make_tokens.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.assertEqual(mod.CSS.read_text(), mod.render(sc.load_tokens()),
+                         "run python3 tools/make_tokens.py")
+
+    def test_every_token_on_the_turf_or_under_text_passes_contrast(self):
+        import contextlib
+        import importlib.util
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("contrast_check", root / "apple" / "contrast_check.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(mod.check_tokens(), [])
+
+
+class TestSceneMoments(unittest.TestCase):
+
+    def test_the_overtime_winner_is_the_last_moment_and_no_phantom_follows(self):
+        """ESPN's records after the touchdown dip back to the pre-conversion
+        score and climb again at End of Game; that is not a second score."""
+        s = SceneAt.at(OVERTIME, 4007)
+        last = s["moments"][-1]
+        self.assertEqual((last["kind"], last["side"], last["team"]), ("touchdown", "home", "SEA"))
+        self.assertEqual((last["period"], last["clock"], last["points"]), (5, "3:13", 8.0))
+        self.assertEqual(s["activeMoment"]["playId"], last["playId"])
+        self.assertEqual(s["bowl"]["sectionTint"]["side"], "home")
+        self.assertIsNone(s["ball"], "nobody has the ball after the whistle")
+
+    def test_a_pick_six_lights_the_defence_not_the_offence(self):
+        summary = game(PICK_SIX)["summary"]
+        snap = play_second(summary, "INTERCEPTED by N.Wright")
+        s = SceneAt.at(PICK_SIX, snap)
+        m = s["activeMoment"]
+        self.assertEqual((m["kind"], m["side"], m["team"]), ("touchdown", "home", "CHI"))
+        arc = next(a for d in s["drives"] for a in d["arcs"] if a["id"] == m["playId"])
+        self.assertEqual(arc["style"], "score")
+        self.assertEqual(arc["side"], "away", "Minnesota snapped it")
+        self.assertEqual((arc["fromX"], arc["toX"]), (32.0, 100.0))
+        self.assertEqual(s["bowl"]["sectionTint"], {"side": "home",
+                                                    "color": s["teams"]["home"]["chip"],
+                                                    "dim": 0.28})
+        self.assertEqual(s["ball"]["beacon"]["color"], "beacon.score")
+
+    def test_a_moment_holds_until_the_clock_moves(self):
+        summary = game(PICK_SIX)["summary"]
+        snap = play_second(summary, "INTERCEPTED by N.Wright")
+        self.assertIsNotNone(SceneAt.at(PICK_SIX, snap + 5)["activeMoment"])
+        later = SceneAt.at(PICK_SIX, snap + 30)
+        self.assertIsNone(later["activeMoment"])
+        self.assertIsNone(later["bowl"]["sectionTint"]["side"])
+
+    def test_a_turnover_is_a_moment_for_the_side_that_took_it(self):
+        s = SceneAt.at(OVERTIME, 4007)
+        turnovers = [m for m in s["moments"] if m["kind"] == "turnover"]
+        self.assertTrue(turnovers)
+        for m in turnovers:
+            self.assertIn(m["side"], ("home", "away"))
+            self.assertEqual(m["points"], 0)
+
+    def test_lasers_point_the_way_the_offence_is_going(self):
+        for ev in (REGULATION, OVERTIME):
+            for at in range(300, 3500, 400):
+                s = SceneAt.at(ev, at)
+                lasers = {l["kind"]: l["x"] for l in s["lasers"]}
+                if "lineToGain" not in lasers:
+                    continue
+                step = lasers["lineToGain"] - lasers["scrimmage"]
+                self.assertAlmostEqual(abs(step), s["status"]["distance"])
+                self.assertEqual(step > 0, s["status"]["possession"] == "home", (ev, at))
+
+
+if __name__ == "__main__":
+    unittest.main()

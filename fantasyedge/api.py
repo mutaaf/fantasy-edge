@@ -67,6 +67,12 @@ ROUTES = [
     ["GET", "/api/intel", "the computed brief: insights, caveats, provenance"],
     ["GET", "/api/intel/models", "which model providers are configured"],
     ["POST", "/api/intel/narrate", "narrate the brief - loopback only, costs money"],
+    ["GET", "/api/scene/{event}", "one live game as renderable geometry: field, arcs, lasers, moments"],
+    ["GET", "/api/replay", "the replay being driven, and every captured game"],
+    ["POST", "/api/replay", "load, play, pause, seek, speed - loopback only, see the handler"],
+    ["GET", "/api/replay/live", "the replay's own /api/live - labelled, never the real one"],
+    ["GET", "/api/replay/gamecast", "the replayed game's gamecast, with the controls' state"],
+    ["GET", "/api/replay/scene", "the replayed game as renderable geometry, paced to its speed"],
 ]
 
 RASTER = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic")
@@ -107,6 +113,11 @@ DERIVED = "public, max-age=60, stale-while-revalidate=86400"
 CONFIG = "public, max-age=30, stale-while-revalidate=300"
 LIVE = "public, max-age=2, stale-while-revalidate=8"
 PRIVATE = "no-cache"
+# A replay is shared bytes like the live tier, but it moves when someone
+# presses a button, and a cache serving the frame from before a scrub for
+# eight seconds of stale-while-revalidate is a remote control that ignores
+# you. Nothing between here and the screen may keep it.
+REPLAY = "no-store"
 
 # ── model spend ──────────────────────────────────────────────────────────────
 #
@@ -413,26 +424,7 @@ class Api:
         if src is None:
             from . import live as livemod
 
-            store = self.store()
-            # Grouped by provider as well as id. A player id is only unique
-            # within the provider that issued it, so grouping on the id alone
-            # merges two different people the moment a second provider is
-            # followed - ESPN's 4262921 and a Sleeper id are unrelated numbers
-            # that collide as strings.
-            rows = store.q(
-                """SELECT r.provider, r.player_id, p.name, p.pos, p.nfl_team,
-                          MAX(COALESCE(r.projected, r.points, 0)) AS proj
-                   FROM roster_slot r
-                   LEFT JOIN player p ON p.provider=r.provider
-                                     AND p.player_id=r.player_id
-                   WHERE p.name IS NOT NULL
-                   GROUP BY r.provider, r.player_id""")
-            players = [{"player_id": r["player_id"], "name": r["name"],
-                        "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
-                        # Only ESPN's fantasy ids double as site athlete ids.
-                        # Everyone else joins to a box score by name.
-                        "espn_ids": r["provider"] == "espn",
-                        "projected": r["proj"] or 0.0} for r in rows]
+            players = self._live_players()
             # Real game state by default. It needs no credential - this is the
             # same public feed espn.com renders - so it belongs in this
             # credential-free process rather than in `serve`. The simulator
@@ -443,18 +435,132 @@ class Api:
                 src = livemod.SimulatedSource(players, seed=7, speed=90.0,
                                               start=time.time() - 100.0)
             else:
-                # The league's own scoring, so a half-PPR board is not told it
-                # is winning by a point it does not actually score.
-                from .cli import load_config
-                from .scoring import Scoring
-                try:
-                    rules = Scoring.from_config(load_config())
-                except Exception:
-                    rules = Scoring()
-                src = livemod.EspnLiveSource(players, scoring=rules)
+                src = livemod.EspnLiveSource(players, scoring=self._scoring())
             with self._lock:
                 self._live = src
         return src
+
+    def _live_players(self) -> list[dict]:
+        from . import live as livemod
+
+        # Grouped by provider as well as id. A player id is only unique
+        # within the provider that issued it, so grouping on the id alone
+        # merges two different people the moment a second provider is
+        # followed - ESPN's 4262921 and a Sleeper id are unrelated numbers
+        # that collide as strings.
+        rows = self.store().q(
+            """SELECT r.provider, r.player_id, p.name, p.pos, p.nfl_team,
+                      MAX(COALESCE(r.projected, r.points, 0)) AS proj
+               FROM roster_slot r
+               LEFT JOIN player p ON p.provider=r.provider
+                                 AND p.player_id=r.player_id
+               WHERE p.name IS NOT NULL
+               GROUP BY r.provider, r.player_id""")
+        return [{"player_id": r["player_id"], "name": r["name"],
+                 "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
+                 # Only ESPN's fantasy ids double as site athlete ids.
+                 # Everyone else joins to a box score by name.
+                 "espn_ids": r["provider"] == "espn",
+                 "projected": r["proj"] or 0.0} for r in rows]
+
+    def _scoring(self):
+        # The league's own scoring, so a half-PPR board is not told it is
+        # winning by a point it does not actually score.
+        from .cli import load_config
+        from .scoring import Scoring
+        try:
+            return Scoring.from_config(load_config())
+        except Exception:
+            return Scoring()
+
+    # ---------- replay ----------
+
+    def replay_director(self):
+        """The one replay this process can be driven through.
+
+        Captures live under `FANTASYEDGE_REPLAY_DIR`, `data/replay/source` by
+        default - the same directory `replay --capture` fills, so a game
+        captured on the command line is already in the app's picker.
+        """
+        with self._lock:
+            director = getattr(self, "_replay", None)
+            if director is None:
+                from .replay import ReplayDirector
+                root = os.environ.get("FANTASYEDGE_REPLAY_DIR", "data/replay/source")
+                director = self._replay = ReplayDirector(pathlib.Path(root))
+        return director
+
+    def replay_source(self):
+        """A live source of its own, reading the director instead of ESPN.
+
+        Separate from `live_source()` on purpose. Routing a replay through the
+        real source would be one environment variable away from a recorded
+        game showing up on `/api/live` as though it were being played. Here
+        the two cannot meet: the real routes never see this instance.
+
+        No cache: the director already memoises frames by game second, and a
+        scrub must show on the next poll, not twenty seconds later.
+        """
+        from . import live as livemod
+
+        with self._lock:
+            src = getattr(self, "_replay_src", None)
+        if src is None:
+            src = livemod.EspnLiveSource(self._live_players(), ttl=0.0, box_ttl=0.0,
+                                         http=self.replay_director().fetch,
+                                         scoring=self._scoring())
+            with self._lock:
+                self._replay_src = src
+        return src
+
+    def _replay_loaded(self):
+        director = self.replay_director()
+        if not director.event:
+            raise HttpError(404, "No replay is loaded.",
+                            'POST /api/replay {"action": "load", "event": "401772949"}')
+        return director
+
+    def replay_state(self) -> dict:
+        director = self.replay_director()
+        return {**director.state(), "games": director.catalog()}
+
+    def replay_live(self) -> dict:
+        self._replay_loaded()
+        snap = self.replay_source().snapshot()
+        snap["source"] = "replay"
+        return snap
+
+    def replay_gamecast(self) -> dict:
+        director = self._replay_loaded()
+        out = self.gamecast(director.event, src=self.replay_source())
+        out["replayControl"] = director.state()
+        return out
+
+    def scene(self, event: str) -> dict:
+        from . import scene as sc
+        return sc.build(self.gamecast(event), league="nfl", speed=1.0)
+
+    def replay_scene(self) -> dict:
+        from . import scene as sc
+        director = self._replay_loaded()
+        out = sc.build(self.gamecast(director.event, src=self.replay_source()),
+                       league="nfl", speed=director.speed)
+        out["replayControl"] = director.state()
+        return out
+
+    def replay_control(self, body: dict) -> dict:
+        director = self.replay_director()
+        try:
+            state = director.control(body)
+        except (ValueError, TypeError) as exc:
+            raise HttpError(400, str(exc), 'actions: load {event, capture?, at?}, '
+                                           'play, pause, seek {at}, speed {speed}')
+        except LookupError as exc:
+            raise HttpError(404, str(exc), 'load a game first: {"action": "load", "event": ...}')
+        except SystemExit as exc:
+            raise HttpError(404, str(exc), "capture it with `python3 -m fantasyedge "
+                                           "replay --game EVENT --at 0`")
+        return {**state, "games": director.catalog()}
 
     def live(self) -> dict:
         return self.live_source().snapshot()
@@ -734,7 +840,7 @@ class Api:
                 "ties": mine["ties"] or 0, "rank": mine["rank"],
                 "of": len(rows), "pointsFor": mine["points_for"] or 0.0}
 
-    def gamecast(self, event: str) -> dict:
+    def gamecast(self, event: str, src=None) -> dict:
         """One game, in the shape a field wants to draw.
 
         Everything here comes from the summary the live tier has already
@@ -746,11 +852,14 @@ class Api:
 
         Shared, not personal: this is the same payload for every reader, which
         is what lets it cache like the rest of the live tier.
+
+        `src` is the replay's own source when the replay routes ask; nothing
+        else passes one, so the real routes can only ever read the real feed.
         """
         from .live import _num_score, headshot_url, logo_url
         from .scoring import boxscore_lines, score_boxscore
 
-        src = self.live_source()
+        src = src or self.live_source()
         if not hasattr(src, "summary"):
             raise HttpError(404, "This live source has no play data.",
                             "the simulated source cannot animate a real game")
@@ -772,8 +881,10 @@ class Api:
                 "logo": ((t.get("logos") or [{}])[0].get("href", "")
                          if t.get("logos") else logo_url(t.get("abbreviation") or "")),
                 "color": "#" + (t.get("color") or "444444"),
+                "altColor": "#" + t["alternateColor"] if t.get("alternateColor") else "",
                 "score": _num_score(c.get("score")),
             }
+        abbr_of = {s["id"]: s["abbr"] for s in sides.values()}
 
         # Drives, flattened to the fields a field animation actually uses.
         drives = []
@@ -784,6 +895,17 @@ class Api:
                 st, en = pl.get("start") or {}, pl.get("end") or {}
                 plays.append({
                     "id": str(pl.get("id") or ""),
+                    "type": (pl.get("type") or {}).get("text", ""),
+                    # Who snapped it. A drive's team is not enough: a pick-six
+                    # is in the offence's drive and scored by the defence.
+                    "team": abbr_of.get(str((st.get("team") or {}).get("id") or ""), ""),
+                    # Yards from the HOME goal line, which is what ESPN's
+                    # `yardLine` is. Unlike `yardsToEndzone` it is fixed to
+                    # the field: it does not flip with possession, and it is
+                    # not the placeholder 0 a timeout carries or the punter's
+                    # own yard line a punt carries.
+                    "fromYard": st.get("yardLine"),
+                    "toYard": en.get("yardLine"),
                     "text": pl.get("text") or "",
                     "clock": (pl.get("clock") or {}).get("displayValue", ""),
                     "period": (pl.get("period") or {}).get("number", 0),
@@ -844,6 +966,9 @@ class Api:
         last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
         return {
             "event": str(event),
+            # Present only on a replay, and then always: a client must never
+            # be able to mistake a recorded game for one being played.
+            "replay": data.get("replay"),
             "state": (status.get("type") or {}).get("state", "pre"),
             "label": (status.get("type") or {}).get("shortDetail", ""),
             "clock": status.get("displayClock", ""),
@@ -1752,6 +1877,16 @@ class Api:
             return self.universe(qs), DERIVED
         if len(rest) == 2 and rest[0] == "gamecast":
             return self.gamecast(rest[1]), LIVE
+        if len(rest) == 2 and rest[0] == "scene":
+            return self.scene(rest[1]), LIVE
+        if rest == ["replay"]:
+            return self.replay_state(), REPLAY
+        if rest == ["replay", "live"]:
+            return self.replay_live(), REPLAY
+        if rest == ["replay", "gamecast"]:
+            return self.replay_gamecast(), REPLAY
+        if rest == ["replay", "scene"]:
+            return self.replay_scene(), REPLAY
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
         if rest == ["context"]:
@@ -1988,8 +2123,30 @@ def make_handler(app: Api):
                     return self._send({"error": exc.message, "fix": exc.fix},
                                       exc.code)
 
+            if path == "/api/replay":
+                # A third write, with the same loopback rule and its own escape
+                # hatch. It spends nothing and holds no credential, but it can
+                # make this machine fetch from ESPN (`capture`), and it moves
+                # what every screen watching the replay sees. A headset on the
+                # LAN needs FANTASYEDGE_ALLOW_REMOTE_REPLAY=1, which is a
+                # separate decision from letting it edit your prefs.
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_REPLAY") != "1":
+                    return self._send(
+                        {"error": "A replay may only be driven from this machine.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_REPLAY=1 to allow it"}, 403)
+                try:
+                    body = self._body(4_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": '{"action": "play"}'}, 400)
+                try:
+                    return self._send(app.replay_control(body), 200, REPLAY)
+                except HttpError as exc:
+                    return self._send({"error": exc.message, "fix": exc.fix}, exc.code)
+
             return self._send({"error": f"No route {path}.",
-                               "fix": "POST /api/prefs or POST /api/intel/narrate"},
+                               "fix": "POST /api/prefs, /api/intel/narrate or /api/replay"},
                               404)
 
         do_GET = do_HEAD = _handle

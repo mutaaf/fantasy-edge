@@ -160,6 +160,47 @@ def trim_pbp(summary: dict) -> dict:
     }
 
 
+# A whole game for the scene and the director: every drive and play, win
+# probability and scoring plays, and no box score. The box score is the
+# reconciliation fixture's job; here it would be 300KB of stat lines that the
+# geometry never reads.
+GAME_PLAY_KEEP = ("id", "text", "statYardage", "scoringPlay", "isTurnover", "isPenalty",
+                  "awayScore", "homeScore")
+GAME_SIDE_KEEP = ("down", "distance", "yardLine", "yardsToEndzone", "downDistanceText",
+                  "possessionText")
+
+
+def trim_game(summary: dict, board: dict, event: str) -> dict:
+    drives = []
+    for d in rp._drives(summary):
+        plays = []
+        for p in (d.get("plays") or []):
+            keep = {k: p[k] for k in GAME_PLAY_KEEP if k in p}
+            keep["type"] = {"text": (p.get("type") or {}).get("text")}
+            keep["period"] = {"number": (p.get("period") or {}).get("number")}
+            keep["clock"] = {"displayValue": (p.get("clock") or {}).get("displayValue")}
+            for side in ("start", "end"):
+                raw = p.get(side) or {}
+                keep[side] = {k: raw[k] for k in GAME_SIDE_KEEP if k in raw}
+                keep[side]["team"] = {"id": str(((raw.get("team") or {}).get("id")) or "")}
+            plays.append(keep)
+        drives.append({**{k: d[k] for k in ("id", "description", "displayResult", "result",
+                                           "isScore", "yards") if k in d},
+                       "team": slim_team(d.get("team") or {}), "plays": plays})
+    out = trim_summary(summary, 0)
+    out.pop("boxscore", None)
+    out["drives"] = {"previous": drives}
+    out["winprobability"] = [{"homeWinPercentage": w.get("homeWinPercentage"),
+                              "playId": w.get("playId")}
+                             for w in (summary.get("winprobability") or [])]
+    out["scoringPlays"] = [{**{k: v for k, v in sp.items() if k in
+                               ("id", "text", "awayScore", "homeScore", "period", "clock",
+                                "type", "scoringType")},
+                            "team": slim_team(sp.get("team") or {})}
+                           for sp in (summary.get("scoringPlays") or [])]
+    return {"event": event, "scoreboard": trim_scoreboard(board, event), "summary": out}
+
+
 def trim_scoreboard(board: dict, event: str) -> dict:
     ev = rp._event(board, event)
     if not ev:
@@ -188,10 +229,24 @@ def main() -> None:
                     help="write the whole-game reconciliation fixture instead")
     ap.add_argument("--offline", action="store_true",
                     help="require a local capture rather than fetching")
+    ap.add_argument("--game", action="store_true",
+                    help="write the whole-game scene fixture, tests/fixtures/replay_game_EVENT.json, "
+                         "from a capture made with `replay --capture`")
     args = ap.parse_args()
 
+    if args.game:
+        board, summary = rp.load(CAPTURE, args.event)
+        out = FIX / f"replay_game_{args.event}.json"
+        out.write_text(json.dumps(trim_game(summary, board, args.event), sort_keys=True,
+                                  separators=(",", ":")))
+        print(f"event {args.event}: {len(rp._all_plays(summary))} plays, "
+              f"{rp.total_seconds(summary)}s -> {out} ({out.stat().st_size // 1024} KB)")
+        return
+
     game = CAPTURE / f"{args.event}.json"
-    board_file = CAPTURE / "scoreboard.json"
+    board_file = rp.scoreboard_path(CAPTURE, args.event)
+    if not board_file.exists():
+        board_file = CAPTURE / "scoreboard.json"
     if not game.exists():
         alt = pathlib.Path(f"/tmp/rp{args.event[-3:]}/source/{args.event}.json")
         if alt.exists():

@@ -1,0 +1,45 @@
+/* Generated from design/tokens.json by tools/make_tokens.py. Do not edit. */
+:root {
+  --fe-color-ink: #F7F6F2;
+  --fe-color-ink-secondary: #F7F6F2BD;
+  --fe-color-plate: #121417E0;
+  --fe-color-fill-live: #237A04;
+  --fe-color-fill-red-zone: #DF0B0B;
+  --fe-color-fill-score: #8B7300;
+  --fe-color-turf-a: #1E6A34;
+  --fe-color-turf-b: #237A3C;
+  --fe-color-turf-surround: #17401F;
+  --fe-color-turf-tabletop-a: #0E3A1F;
+  --fe-color-turf-tabletop-b: #124726;
+  --fe-color-line-yard: #FFFFFF;
+  --fe-color-laser-scrimmage: #A6D0FF;
+  --fe-color-laser-line-to-gain: #FFD400;
+  --fe-color-arc-run: #9FD8FF;
+  --fe-color-arc-pass: #FFFFFF;
+  --fe-color-arc-incomplete: #FFFFFF;
+  --fe-color-arc-loss: #FFBABA;
+  --fe-color-arc-score: #FFD400;
+  --fe-color-arc-kick: #E8D9A8;
+  --fe-color-arc-turnover: #FFBABA;
+  --fe-color-arc-penalty: #FFD400;
+  --fe-color-beacon: #BFE3FF;
+  --fe-color-beacon-score: #FFF3B0;
+  --fe-color-bowl-lower: #302722;
+  --fe-color-bowl-upper: #261F1C;
+  --fe-color-bowl-concourse: #15110F;
+  --fe-color-crowd-neutral: #F4F1EA;
+  --fe-color-crowd-dark: #2A2A2A;
+  --fe-color-rim-light: #FFF8E6;
+  --fe-color-sky-top: #03050A;
+  --fe-color-sky-horizon: #1A2436;
+  --fe-chip-luminance: 0.159;
+  --fe-chip-max-saturation: 0.92;
+  --fe-chip-neutral-below: 0.12;
+  --fe-chip-clash-degrees: 16;
+  --fe-chip-text: #FFFFFF;
+  --fe-motion-min-seconds: 0.6s;
+  --fe-motion-max-seconds: 2.5s;
+  --fe-motion-reference-speed: 20;
+  --fe-motion-floor-seconds: 0.2s;
+  --fe-motion-section-dim: 0.28;
+}
