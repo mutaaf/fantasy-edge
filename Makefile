@@ -1,4 +1,4 @@
-.PHONY: test doctor demo publish-demo report docs api board clean
+.PHONY: test doctor demo publish-demo report docs api board clean verify-scene
 
 test:
 	python3 -m unittest discover -s tests
@@ -29,6 +29,17 @@ docs:
 
 fixtures:
 	python3 tests/fixtures/make_fixtures.py
+
+# Decode every replayed scene with the Swift client's own types and check the
+# maths (seats, facing, trails) against scene.py. Needs Xcode's swiftc.
+STADIUM = apple/FantasyEdge/Sources/Stadium
+verify-scene:
+	mkdir -p .work/scenes
+	python3 tools/scene_samples.py .work/scenes
+	swiftc -O -o .work/verify-scene $(STADIUM)/SceneSpec.swift $(STADIUM)/SceneLook.swift \
+		$(STADIUM)/Actors/*/*Look.swift $(STADIUM)/Actors/Field/FieldArtSpec.swift \
+		$(STADIUM)/SceneMath.swift apple/verify_scene.swift
+	.work/verify-scene .work/scenes/*.json
 
 clean:
 	rm -rf data/*.db report.html
