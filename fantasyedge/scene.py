@@ -723,6 +723,45 @@ def lane(index: int, count: int, width: float, tokens: dict) -> float:
     return round(-spread + 2 * spread * index / (count - 1), 3)
 
 
+def goal_kick(play: dict, from_x: float, side: str | None, field: dict, tokens: dict) -> dict | None:
+    """Where a field goal or extra point goes: through the uprights or past them.
+
+    ESPN's end yard line for a kick is where the next play starts, not where
+    the ball went, so a made kick drawn from it landed beside the posts. The
+    uprights stand on the end line of the end zone the kicking side attacks
+    (home attacks x = 100, so x = 110). A good kick ends `overshootYards` past
+    that plane on the centre line, and the kick apex formula carries it over
+    the crossbar (a test asserts the clearance). A miss the text calls wide
+    ends `wideYards` outside the upright on that side of the kicker; a short
+    one ends `shortYards` in front of the plane. Returns None for anything
+    else, including blocks, which keep their own lane.
+
+    Facing +x with +y up, the kicker's right is +z.
+    """
+    kind = (play.get("type") or "").lower()
+    if "field goal" not in kind and "extra point" not in kind:
+        return None
+    text = (play.get("text") or "").lower()
+    if "blocked" in text or "blocked" in kind:
+        return None
+    rule = tokens["arc"]["goalKick"]
+    if side is None:
+        side = "home" if from_x >= field["length"] / 2 else "away"
+    attack = 1.0 if side == "home" else -1.0
+    plane = field["length"] + field["endZone"] if side == "home" else -field["endZone"]
+    half = field["goalPostWidth"] / 2
+    if "short" in text:
+        return {"toX": round(plane - attack * rule["shortYards"], 3), "lane": 0.0, "result": "short"}
+    to_x = round(plane + attack * rule["overshootYards"], 3)
+    if "wide right" in text or "wide left" in text:
+        right = 1.0 if "wide right" in text else -1.0
+        return {"toX": to_x, "lane": round(right * attack * (half + rule["wideYards"]), 3),
+                "result": "wideRight" if right > 0 else "wideLeft"}
+    if "no good" in text or "missed" in kind:
+        return {"toX": to_x, "lane": round(attack * (half + rule["wideYards"]), 3), "result": "wide"}
+    return {"toX": to_x, "lane": 0.0, "result": "good"}
+
+
 def _side(team_abbr: str, home: dict, away: dict) -> str | None:
     if team_abbr and team_abbr == home.get("abbr"):
         return "home"
@@ -922,6 +961,10 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
             x0, x1 = play.get("fromYard"), play.get("toYard")
             if x0 is None or x1 is None:
                 continue
+            side = _side(play.get("team") or drive.get("team", ""), home, away)
+            goal = goal_kick(play, _num(x0), side, field, tokens)
+            if goal:
+                x1 = goal["toX"]
             dist = abs(_num(x1) - _num(x0))
             real = seconds(style, dist, tokens)
             arcs.append({
@@ -929,13 +972,13 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 "style": style, "shape": shape,
                 "type": play.get("type", ""),
                 "fromX": _num(x0), "toX": _num(x1),
-                "lane": lane(pi, len(plays), width, tokens),
+                "lane": goal["lane"] if goal else lane(pi, len(plays), width, tokens),
                 "apex": apex(shape, dist, tokens),
                 "color": f"arc.{style}",
                 "dash": tokens["arc"]["dash"].get(style),
                 "seconds": real,
                 "duration": duration(real, speed, tokens),
-                "side": _side(play.get("team") or drive.get("team", ""), home, away),
+                "side": side,
                 "text": play.get("text", ""),
                 "period": play.get("period"), "clock": play.get("clock", ""),
                 "down": play.get("down"), "distance": play.get("distance"),
