@@ -237,6 +237,33 @@ extension SceneSpec.Look {
         public let olderLines: Int
     }
 
+    /// The play's ground card: a ring on the snap, then the ball's shadow.
+    public struct PlayMarker: Decodable, Equatable, Sendable {
+        public let pulseSeconds: Double
+        public let pulseYards: SceneSpec.PerMode<Double>
+        public let pulseOpacity: Double
+        public let pulseColor: String
+        public let shadowYards: SceneSpec.PerMode<Double>
+        public let shadowOpacity: Double
+        public let shadowFadeYards: Double
+    }
+
+    public struct PlayHeights: Decodable, Equatable, Sendable {
+        /// How high over the grass a carried leg of a trail lies.
+        public let trailLift: Double
+    }
+
+    /// What the renderer reads of `visual.broadcast.play`; the path itself
+    /// is laid out by scene.play_path and arrives on every arc.
+    public struct PlayLook: Decodable, Equatable, Sendable {
+        public let heights: PlayHeights
+        /// The rest between one play landing and the next snap, in real seconds.
+        public let beatSeconds: Double
+        public let marker: PlayMarker
+        /// The ball's glow grows by this while it is in the air.
+        public let flightGlowScale: Double
+    }
+
     public struct BroadcastLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -249,6 +276,7 @@ extension SceneSpec.Look {
         public let banner: BannerLook
         public let videoBoard: VideoBoardLook
         public let driveLog: DriveLogLook
+        public let play: PlayLook
     }
 }
 

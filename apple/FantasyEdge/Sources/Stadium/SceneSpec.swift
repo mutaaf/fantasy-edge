@@ -197,6 +197,34 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let clock: String
         public let down: Int?
         public let distance: Int?
+        /// How the ball moves, as scene.play_path lays it out. Optional: a
+        /// scene from before the path flies the parabola `apex` describes.
+        public var path: PlayPath? = nil
+
+        /// How long this play animates at the scene's speed.
+        public var flightSeconds: Double { path?.duration ?? duration }
+    }
+
+    /// A play as timed segments (`visual.broadcast.play`): `hold` keeps the
+    /// ball `at` a spot, `carry` runs it along `points`, `air` flies it
+    /// `from` → `to` on a gravity parabola `rise` yards over the chord.
+    /// Times are real seconds; `duration` is the whole at the scene's speed.
+    public struct PlayPath: Decodable, Equatable, Sendable {
+        public let seconds: Double
+        public let duration: Double
+        public let snap: [Double]
+        public var segments: [PathSegment]
+    }
+
+    public struct PathSegment: Decodable, Equatable, Sendable {
+        public let kind: String
+        public let phase: String
+        public let seconds: Double
+        public let at: [Double]?
+        public let points: [[Double]]?
+        public let from: [Double]?
+        public let to: [Double]?
+        public var rise: Double?
     }
 
     public struct Drive: Decodable, Equatable, Sendable, Identifiable {

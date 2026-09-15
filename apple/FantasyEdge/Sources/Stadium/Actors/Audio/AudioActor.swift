@@ -245,7 +245,7 @@ final class AudioActor: StadiumActor {
         landed += 1
         guard landed % A.playWhistle.every == 0 else { return }
         let at = SceneMath.local(x: arc.toX, y: 1, z: arc.lane)
-        schedule(c.shared.time + arc.duration + A.playWhistle.afterFlight) { [weak self, c] in
+        schedule(c.shared.time + arc.flightSeconds + A.playWhistle.afterFlight) { [weak self, c] in
             self?.play("whistle", at: at, extra: A.playWhistle.gain - (A.gains["whistle"] ?? 0), c)
         }
     }

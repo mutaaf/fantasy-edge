@@ -34,6 +34,7 @@ import json
 import math
 import os
 import pathlib
+import re
 
 SCENE_VERSION = "1.3"
 
@@ -986,6 +987,446 @@ def goal_kick(play: dict, from_x: float, side: str | None, field: dict, tokens: 
     return {"toX": to_x, "lane": 0.0, "result": "good"}
 
 
+# ───────────────────────────── how a play moves ─────────────────────────────
+#
+# A broadcast replay graphic, not tracking: the feed says where a play started
+# and ended, what kind it was, and in its text which way it went ("right end",
+# "pass deep left", "punts 51 yards to DAL 26"). play_path turns that into
+# timed segments - hold, carry, air - that every client flies the same way, so
+# a run hugs the grass, a pass drops back and throws, and a punt hangs. It never
+# draws a person; where the text is silent it takes the plain middle.
+
+CROSSBAR_YARDS = 3.333   # 10 ft, both codes (_props)
+_RE_YARDS = re.compile(r"(-?\d+)\s+yards?")
+
+
+def _club_x(abbr: str, n: float, home: dict, away: dict) -> float | None:
+    """A text spot ("DAL 32") as field x. Home's goal line is x = 0. The text
+    may shorten an abbreviation ("LA" for LAR), so a prefix either way counts."""
+    up = abbr.upper()
+    for club, x in ((home.get("abbr") or "", n), (away.get("abbr") or "", 100.0 - n)):
+        club = club.upper()
+        if club and (club == up or club.startswith(up) or up.startswith(club)):
+            return float(x)
+    return None
+
+
+def _spot_after(text: str, words: tuple[str, ...], home: dict, away: dict) -> float | None:
+    """The first spot following any of `words` ("at", "to") in `text`."""
+    for m in re.finditer(r"\b(?:%s)\s+(?:the\s+)?(?:([A-Z]{2,4})\s(\d{1,2})|(50)\b)" % "|".join(words), text):
+        if m.group(3):
+            return 50.0
+        x = _club_x(m.group(1), float(m.group(2)), home, away)
+        if x is not None:
+            return x
+    return None
+
+
+def _direction(text: str) -> str | None:
+    t = text.lower()
+    for word in ("left", "right", "middle"):
+        if re.search(rf"\b{word}\b", t):
+            return word
+    return None
+
+
+def _depth(text: str) -> str:
+    t = text.lower()
+    return "deep" if " deep" in t else "short" if " short" in t else "other"
+
+
+class _Path:
+    """Segments laid end to end; every one starts where the last ended."""
+
+    def __init__(self, at: tuple[float, float, float]):
+        self.at = at
+        self.segments: list[dict] = []
+
+    @staticmethod
+    def _r(p):
+        return [round(v, 3) for v in p]
+
+    def hold(self, seconds: float, phase: str, y: float | None = None):
+        if y is not None:
+            self.at = (self.at[0], y, self.at[2])
+        self.segments.append({"kind": "hold", "phase": phase, "at": self._r(self.at),
+                              "seconds": round(max(0.0, seconds), 3)})
+
+    def carry(self, points: list[tuple[float, float, float]], seconds: float, phase: str):
+        pts = [self.at] + [p for p in points]
+        self.segments.append({"kind": "carry", "phase": phase,
+                              "points": [self._r(p) for p in pts],
+                              "seconds": round(max(0.05, seconds), 3)})
+        self.at = pts[-1]
+
+    def air(self, to: tuple[float, float, float], hang: float, drag: float, gravity: float,
+            phase: str, floor_rise: float = 0.0):
+        rise = max(floor_rise, gravity * hang * hang / 8.0 * drag)
+        self.segments.append({"kind": "air", "phase": phase, "from": self._r(self.at),
+                              "to": self._r(to), "rise": round(rise, 3),
+                              "seconds": round(max(0.1, hang), 3)})
+        self.at = to
+
+    @property
+    def seconds(self) -> float:
+        return sum(s["seconds"] for s in self.segments)
+
+
+def _timed(path: dict, speed: float, tokens: dict) -> dict:
+    """A path's animation length at a replay speed, the way `duration` scales a play."""
+    motion = tokens["motion"]
+    factor = max(1.0, float(speed or 1.0) / motion["referenceSpeed"])
+    return {**path, "duration": round(max(motion["floorSeconds"], path["seconds"] / factor), 3)}
+
+
+def play_body(text: str) -> str:
+    """The part of a play's text that says what the ball did. A review that
+    reversed the call is followed by the play as it stands ("...REVERSED.
+    (Shotgun) M.Stafford pass..."), and a conversion or a penalty after the
+    play is another snap: "pass to Z.Charbonnet is incomplete" in a two-point
+    try must not make the touchdown pass before it fall to the grass."""
+    if "REVERSED." in text:
+        text = text.rsplit("REVERSED.", 1)[1]
+    return re.split(r"TWO-POINT CONVERSION|PENALTY on|\*\* Injury|The Replay Official", text)[0].strip()
+
+
+def air_point(seg: dict, u: float) -> tuple[float, float, float]:
+    """Where an `air` segment has the ball `u` of the way through its hang:
+    level ground speed, and a gravity parabola over the chord."""
+    u = max(0.0, min(1.0, u))
+    a, b = seg["from"], seg["to"]
+    return (a[0] + (b[0] - a[0]) * u,
+            a[1] + (b[1] - a[1]) * u + seg["rise"] * 4 * u * (1 - u),
+            a[2] + (b[2] - a[2]) * u)
+
+
+def _segment_point(seg: dict, u: float) -> tuple[float, float, float]:
+    """SceneMath.segmentPoint in field coordinates: a carry eases in time
+    (smoothstep) and is walked by length; air is air_point; a hold is its spot."""
+    if seg["kind"] == "air":
+        return air_point(seg, u)
+    if seg["kind"] == "carry":
+        pts = seg["points"]
+        e = u * u * (3 - 2 * u)
+        lengths = [0.0]
+        for a, b in zip(pts, pts[1:]):
+            lengths.append(lengths[-1] + math.dist(a, b))
+        want = e * lengths[-1]
+        i = 1
+        while i < len(pts) - 1 and lengths[i] < want:
+            i += 1
+        span = max(1e-9, lengths[i] - lengths[i - 1])
+        k = max(0.0, min(1.0, (want - lengths[i - 1]) / span))
+        return tuple(pts[i - 1][j] + (pts[i][j] - pts[i - 1][j]) * k for j in range(3))
+    return tuple(seg["at"])
+
+
+def trail_points(arc: dict, count: int = 72, lift: float = 0.12) -> list[tuple[float, float, float]]:
+    """The line a play's trail draws, in field coordinates - SceneMath.trace,
+    restated so a port or a test draws the same line: carried legs lie at
+    `lift`, a flight's ends ease down to it and its middle keeps its height,
+    holds draw nothing."""
+    segs = arc["path"]["segments"]
+
+    def length(seg):
+        if seg["kind"] == "hold":
+            return 0.0
+        a, b = _segment_point(seg, 0.0), _segment_point(seg, 1.0)
+        flat = math.dist((a[0], a[2]), (b[0], b[2]))
+        return flat + 2 * seg.get("rise", 0.0) if seg["kind"] == "air" else flat
+
+    lengths = [length(s) for s in segs]
+    total = max(1e-6, sum(lengths))
+    out: list[tuple[float, float, float]] = []
+    for seg, ln in zip(segs, lengths):
+        if seg["kind"] == "hold":
+            continue
+        n = max(2, round(count * ln / total) + 1)
+        for i in range(n):
+            f = i / (n - 1)
+            if seg["kind"] == "carry":
+                e = f
+                u = 0.5 - math.sin(math.asin(1 - 2 * e) / 3)
+                x, _, z = _segment_point(seg, u)
+                q = (x, lift, z)
+            else:
+                x, y, z = _segment_point(seg, f)
+                w = 4 * f * (1 - f)
+                q = (x, lift if seg["phase"] == "snap" else lift + w * (y - lift), z)
+            if out and math.dist(out[-1], q) < 1e-4:
+                continue
+            out.append(q)
+    return out
+
+
+def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: float,
+              side: str | None, goal: dict | None, field: dict, home: dict, away: dict,
+              tokens: dict) -> dict:
+    """How the ball moves on one play, as timed segments (see `visual.broadcast.play`).
+
+    x0 and x1 are the scene's snap and finish spots; `lane` the drive's layout
+    lane the snap sits in. Facing the side's attack (+x for home), right is
+    +z x attack. Every segment carries a `phase` a client may key a graphic to:
+    presnap, snap, drop, mesh, run, throw, catch, yac, fall, kick, return, walk.
+    """
+    rule = tokens["visual"]["broadcast"]["play"]
+    h, g = rule["heights"], rule["gravity"]
+    text = play_body(play.get("text") or "")
+    low = text.lower()
+    kind = (play.get("type") or "").lower()
+    half = field["width"] / 2 - 0.5
+    attack = 1.0 if side == "home" else -1.0 if side == "away" else (1.0 if x1 >= x0 else -1.0)
+    clamp_z = lambda z: max(-half, min(half, z))
+    end_x = (-field["endZone"], field["length"] + field["endZone"])
+    clamp_x = lambda x: max(end_x[0], min(end_x[1], x))
+    shotgun = "shotgun" in low
+    path = _Path((x0, h["kick"], lane))
+    path.hold(rule["presnapSeconds"], "presnap")
+
+    def lateral(word: str | None, table: dict, default: float = 0.0) -> float:
+        if word == "right":
+            return attack * table.get("right", table.get("side", default))
+        if word == "left":
+            return -attack * table.get("left", table.get("side", default))
+        return 0.0
+
+    def snap_to_qb():
+        if shotgun:
+            back = (x0 - attack * rule["snap"]["shotgunYards"], h["carry"], lane)
+            path.air(back, rule["snap"]["shotgunSeconds"], 0.0, g, "snap")
+        else:
+            path.carry([(x0 - attack * 0.6, h["carry"], lane)], rule["snap"]["underCenterSeconds"], "snap")
+
+    def run_from_here(to_x: float, word: str | None, gap: str | None, sideline: bool, scramble: bool):
+        r = rule["run"]
+        hole = r["holeYards"].get(gap or "", r["holeYards"]["middle"]) if word != "middle" else 0.0
+        sign = attack if word == "right" else -attack if word == "left" else 0.0
+        hole_z = clamp_z(lane + sign * hole)
+        if not scramble:
+            # The mesh: the ball is handed off beside the quarterback - just
+            # behind the line under center, a step up from him in the gun.
+            back = rule["snap"]["shotgunYards"] - 1.0 if shotgun else r["handoffBackYards"]
+            mesh = (x0 - attack * back, h["carry"], clamp_z(lane + sign * min(hole, 1.5)))
+            path.carry([mesh], r["meshSeconds"], "mesh")
+        start = path.at
+        at_line = (x0 + attack * 0.5, h["carry"], hole_z)
+        d_hole = math.dist(start[::2], at_line[::2])
+        path.carry([at_line], max(0.2, d_hole / r["toHoleYardsPerSecond"]), "run")
+        gain = to_x - at_line[0]
+        drift = sign * min(r["maxDriftYards"], abs(gain) * r["driftShare"])
+        end_z = clamp_z(hole_z + drift)
+        if sideline:
+            end_z = half if (end_z if end_z != 0 else sign or 1.0) > 0 else -half
+        # A cut: two-thirds of the way the runner bends toward where he ends.
+        cut = (at_line[0] + gain * 0.6, h["carry"], hole_z + (end_z - hole_z) * 0.35)
+        end = (to_x, h["carry"], end_z)
+        length = math.dist(at_line[::2], cut[::2]) + math.dist(cut[::2], end[::2])
+        path.carry([cut, end], max(0.25, length / r["yardsPerSecond"]), "run")
+        path.hold(r["settleSeconds"], "settle")
+
+    sideline = bool(re.search(r"\b(?:pushed|ran)\s+ob\b|out of bounds", low))
+    gap_m = re.search(r"\b(left|right)\s+(end|tackle|guard)\b", low)
+    gap = gap_m.group(2) if gap_m else ("middle" if "middle" in low else None)
+    word = gap_m.group(1) if gap_m else _direction(text)
+
+    if shape == "flat":
+        pen = rule["penalty"]
+        path.hold(pen["flagSeconds"], "flag", y=h["ground"])
+        path.carry([(x1, h["ground"], lane)], pen["walkSeconds"], "walk")
+
+    elif shape == "kick" and goal is not None:
+        k = rule["goalKick"]
+        path.carry([(x0 - attack * k["backYards"], h["kick"], lane)], k["snapSeconds"], "snap")
+        path.hold(k["holdSeconds"], "hold")
+        start = path.at
+        to = (goal["toX"], 0.0, goal["lane"])
+        dist = abs(to[0] - start[0])
+        hang = k["hangBase"] + k["hangPerYard"] * dist
+        # Clear the crossbar with the clearance the scene promises a good kick.
+        floor = 0.0
+        plane = field["length"] + field["endZone"] if attack > 0 else -field["endZone"]
+        if goal.get("result") == "good" and dist > 0:
+            u = abs(plane - start[0]) / dist
+            need = CROSSBAR_YARDS + tokens["arc"]["goalKick"].get("minClearanceYards", 1.0)
+            base = start[1] + (to[1] - start[1]) * u
+            if 0 < u < 1:
+                floor = (need + 0.5 - base) / (4 * u * (1 - u))
+        path.air(to, hang, k["drag"], g, "kick", floor_rise=floor)
+
+    elif shape == "kick" and ("field goal" in kind or "extra point" in kind):
+        # Blocked: the snap, the hold, and the ball knocked down short.
+        k = rule["goalKick"]
+        path.carry([(x0 - attack * k["backYards"], h["kick"], lane)], k["snapSeconds"], "snap")
+        path.hold(k["holdSeconds"], "hold")
+        path.air((x0 - attack * (k["backYards"] - 2.0), 0.0, lane), 0.5, 0.3, g, "kick")
+        if abs(x1 - path.at[0]) > 1.0:
+            path.carry([(x1, h["carry"], clamp_z(lane * 0.6))],
+                       max(0.3, abs(x1 - path.at[0]) / rule["returnYardsPerSecond"]), "return")
+        path.hold(rule["run"]["settleSeconds"], "settle")
+
+    elif shape == "kick" and "punt" in kind:
+        p = rule["punt"]
+        path.carry([(x0 - attack * p["backYards"], h["carry"], lane)], p["snapSeconds"], "snap")
+        path.hold(p["operationSeconds"], "hold")
+        n = _RE_YARDS.search(low.split("punts", 1)[-1]) if "punts" in low else None
+        land_x = _spot_after(text.split("punts", 1)[-1], ("to",), home, away) if "punts" in text else None
+        if land_x is None:
+            land_x = x0 + attack * (float(n.group(1)) if n else abs(x1 - x0))
+        land_x = clamp_x(land_x)
+        start = path.at
+        hang = p["hangBase"] + p["hangPerYard"] * abs(land_x - x0)
+        oob = "out of bounds" in low
+        land = (land_x, h["catch"] if not oob else 0.0, clamp_z(lane * 0.5) if not oob else (half + 1.0) * (1 if lane >= 0 else -1))
+        path.air(land, hang, p["drag"], g, "kick")
+        tail = text.split("Center-", 1)[-1] if "Center-" in text else ""
+        if "fair catch" in low or "downed" in low or oob or "touchback" in low:
+            path.hold(p["fairCatchSeconds"], "catch")
+        else:
+            back = _spot_after(tail, ("to", "at"), home, away)
+            if back is None and "touchdown" in low:
+                back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
+            if back is None:
+                back = x1
+            dist = abs(back - land[0])
+            path.carry([(back, h["carry"], clamp_z(land[2] * 0.6))],
+                       max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            path.hold(rule["run"]["settleSeconds"], "settle")
+
+    elif shape == "kick":   # kickoffs, and anything else kicked
+        k = rule["kickoff"]
+        path.hold(k["approachSeconds"], "approach")
+        clause = text.split("kicks", 1)[-1] if "kicks" in text else ""
+        land_x = None
+        if "to end zone" in clause.lower():
+            land_x = (field["length"] + k["endZoneYards"]) if attack > 0 else -k["endZoneYards"]
+        else:
+            m = re.search(r"\bto\s+([A-Z]{2,4})\s(\d{1,2})\b", clause)
+            if m:
+                land_x = _club_x(m.group(1), float(m.group(2)), home, away)
+        n = _RE_YARDS.search(clause)
+        if land_x is None:
+            land_x = x0 + attack * (float(n.group(1)) if n else max(10.0, abs(x1 - x0)))
+        land_x = clamp_x(land_x)
+        hang = k["hangBase"] + k["hangPerYard"] * abs(land_x - x0)
+        land = (land_x, h["catch"], clamp_z(lane * 0.3))
+        path.air(land, hang, k["drag"], g, "kick")
+        if "touchback" in low or "fair catch" in low:
+            path.hold(k["touchbackSeconds"], "catch")
+        else:
+            after = clause.split(".", 1)[-1] if "." in clause else ""
+            back = _spot_after(after, ("at", "to"), home, away)
+            if back is None and "touchdown" in low:
+                back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
+            if back is None:
+                back = x1
+            dist = abs(back - land[0])
+            end_z = half * (1 if land[2] >= 0 else -1) if sideline else clamp_z(land[2] * 0.5)
+            path.carry([(back, h["carry"], end_z)], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            path.hold(rule["run"]["settleSeconds"], "settle")
+
+    elif re.search(r"\bkneels?\b", low):
+        path.carry([(x0 - attack * 1.0, h["carry"], lane)], 0.5, "snap")
+        path.hold(1.0, "settle", y=h["ground"])
+
+    elif re.search(r"\bspike[sd]?\b", low):
+        path.carry([(x0 - attack * 0.6, h["carry"], lane)], rule["snap"]["underCenterSeconds"], "snap")
+        path.carry([(x0 - attack * 0.4, h["ground"], lane)], 0.25, "spike")
+        path.hold(0.6, "settle")
+
+    elif "sack" in kind or " sacked" in low:
+        snap_to_qb()
+        ps = rule["pass"]
+        drop = ps["dropYards"]["shotgun" if shotgun else "underCenter"]
+        qb = (x0 - attack * (rule["snap"]["shotgunYards"] if shotgun else 0.0) - attack * drop, h["carry"], lane)
+        path.carry([qb], ps["pocketSeconds"]["shotgun" if shotgun else "underCenter"], "drop")
+        at = _spot_after(text, ("at",), home, away)
+        down_x = at if at is not None else x1
+        path.carry([(down_x, h["ground"] + 0.4, clamp_z(lane + 1.2 * (1 if lane <= 0 else -1)))],
+                   rule["sack"]["pushSeconds"], "sack")
+        path.hold(rule["run"]["settleSeconds"], "settle")
+
+    elif "interception" in kind or "intercepted" in low:
+        snap_to_qb()
+        ps = rule["pass"]
+        drop = ps["dropYards"]["shotgun" if shotgun else "underCenter"]
+        qb = (x0 - attack * (rule["snap"]["shotgunYards"] if shotgun else 0.0) - attack * drop, h["release"], lane)
+        path.carry([qb], ps["pocketSeconds"]["shotgun" if shotgun else "underCenter"], "drop")
+        pick = _spot_after(text.split("INTERCEPTED", 1)[-1], ("at",), home, away)
+        depth = _depth(text)
+        if pick is None:
+            pick = x0 + attack * ps["incompleteAir"][depth]
+        pick_z = clamp_z(lane + lateral(_direction(text.split("intended", 1)[0]),
+                                        {"side": ps["wideYards"]["deep" if depth == "deep" else "short"]}))
+        dist = math.dist((qb[0], qb[2]), (pick, pick_z))
+        path.air((pick, h["catch"], pick_z), ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw")
+        tail = text.split("INTERCEPTED", 1)[-1].split(".", 1)[-1]
+        back = _spot_after(tail, ("to", "at"), home, away)
+        if back is None and "touchdown" in low:
+            back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
+        if back is None:
+            back = x1
+        dist = abs(back - pick)
+        path.carry([(back, h["carry"], clamp_z(pick_z * 0.6))], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+        path.hold(rule["run"]["settleSeconds"], "settle")
+
+    elif shape == "pass" or "pass" in kind or re.search(r"\bpass\b", low):
+        snap_to_qb()
+        ps = rule["pass"]
+        mode = "shotgun" if shotgun else "underCenter"
+        qb_x = x0 - attack * (rule["snap"]["shotgunYards"] if shotgun else 0.0) - attack * ps["dropYards"][mode]
+        qb = (qb_x, h["release"], lane)
+        path.carry([qb], ps["pocketSeconds"][mode], "drop")
+        depth = _depth(text)
+        direction = _direction(text.split(" to ", 1)[0] if " to " in text else text)
+        wide = ps["wideYards"]["middle"] if direction == "middle" else ps["wideYards"]["deep" if depth == "deep" else "short"]
+        if style == "incomplete" or "incomplete" in low:
+            air = ps["incompleteAir"][depth]
+            to_z = clamp_z(lane + lateral(direction, {"side": wide}))
+            if "thrown away" in low or sideline:
+                to_z = (half + 1.5) * (1 if to_z >= 0 else -1)
+            to = (clamp_x(x0 + attack * air), 0.0, to_z)
+            dist = math.dist((qb[0], qb[2]), (to[0], to[2]))
+            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw")
+            path.hold(ps["fallSeconds"], "fall")
+        else:
+            gain = (x1 - x0) * attack
+            band = ps["air"][depth]
+            air = max(band["min"], min(band["max"], gain * band["share"])) if gain > band["min"] else max(-2.0, gain)
+            catch_x = x0 + attack * air
+            catch_z = clamp_z(lane + lateral(direction, {"side": wide}))
+            if sideline:
+                # Pushed out after the catch: it was caught near that sideline.
+                edge = 1.0 if (catch_z if abs(catch_z) > 1e-6 else lane or 1.0) > 0 else -1.0
+                catch_z = edge * (half - ps["sidelineCatchYards"])
+            to = (catch_x, h["catch"], catch_z)
+            dist = math.dist((qb[0], qb[2]), (to[0], to[2]))
+            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw")
+            yac = abs(x1 - catch_x)
+            end_z = catch_z
+            if sideline:
+                end_z = half if catch_z >= 0 else -half
+            if yac > 0.5 or sideline:
+                length = math.dist((catch_x, catch_z), (x1, end_z))
+                path.carry([(x1, h["carry"], end_z)], max(0.25, length / ps["yacYardsPerSecond"]), "yac")
+            path.hold(ps["settleSeconds"], "settle")
+
+    else:   # every run, scramble, and the plays a run carries
+        if shotgun or "scrambles" in low:
+            snap_to_qb()
+        else:
+            path.carry([(x0 - attack * 0.6, h["carry"], lane)], rule["snap"]["underCenterSeconds"], "snap")
+        run_from_here(x1, word, gap, sideline, scramble="scrambles" in low)
+
+    total = min(rule["maxSeconds"], path.seconds)
+    scale = total / path.seconds if path.seconds > 0 else 1.0
+    if scale < 1.0:
+        for s in path.segments:
+            s["seconds"] = round(s["seconds"] * scale, 3)
+    return {"seconds": round(sum(s["seconds"] for s in path.segments), 3),
+            "snap": [round(x0, 3), round(lane, 3)],
+            "segments": path.segments}
+
+
 def _side(team_abbr: str, home: dict, away: dict) -> str | None:
     if team_abbr and team_abbr == home.get("abbr"):
         return "home"
@@ -1202,6 +1643,9 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 "dash": tokens["arc"]["dash"].get(style),
                 "seconds": real,
                 "duration": duration(real, speed, tokens),
+                "path": _timed(play_path(play, style, shape, _num(x0), _num(x1),
+                                         goal["lane"] if goal else lane(pi, len(plays), width, tokens),
+                                         side, goal, field, home, away, tokens), speed, tokens),
                 "side": side,
                 "text": play.get("text", ""),
                 "period": play.get("period"), "clock": play.get("clock", ""),

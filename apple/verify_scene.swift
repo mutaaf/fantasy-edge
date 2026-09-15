@@ -217,6 +217,59 @@ struct VerifyScene {
                     }
                 }
             }
+
+            // ---- the play's path: scene.play_path flown by SceneMath and BallFlight ----
+            let play = look.broadcast.play
+            let floor: Float = 0.1
+            for arc in spec.drives.flatMap(\.arcs) {
+                guard let path = arc.path else {
+                    expect(false, "\(name): arc \(arc.id) has no path")
+                    continue
+                }
+                expect(!path.segments.isEmpty && path.segments[0].phase == "presnap",
+                       "\(name): arc \(arc.id) does not start on its spot")
+                let start = SceneMath.ball(on: arc, at: 0).position
+                expect(abs(start.x - Float(arc.fromX - 50)) < 1e-3, "\(name): arc \(arc.id) snaps at \(start.x + 50), not \(arc.fromX)")
+                var previous: SIMD3<Float>? = nil
+                let steps = 60
+                for i in 0...steps {
+                    let t = path.seconds * Double(i) / Double(steps)
+                    let pose = BallFlight.pose(arc, seconds: t, flight: flight, floor: floor)
+                    expect(pose.position.y >= floor - 1e-4, "\(name): arc \(arc.id) puts the ball in the grass at \(t)s")
+                    expect(abs(simd_length(pose.orientation.act(SIMD3<Float>(1, 0, 0))) - 1) < 1e-3,
+                           "\(name): arc \(arc.id) orientation is not a rotation at \(t)s")
+                    if let prev = previous {
+                        // At most a hundred yards a second: nothing on a play teleports.
+                        let step = simd_distance(SIMD2(prev.x, prev.z), SIMD2(pose.position.x, pose.position.z))
+                        expect(Double(step) <= 100 * path.seconds / Double(steps) + 0.05,
+                               "\(name): arc \(arc.id) jumps \(step) yd at \(t)s")
+                    }
+                    previous = pose.position
+                    if let seg = SceneMath.ball(on: arc, at: t).segment, seg.kind == "air", seg.phase != "snap" {
+                        let heading = pose.orientation.act(SIMD3<Float>(1, 0, 0))
+                        if BallFlight.manner(arc, flight) == .spiral {
+                            let ahead = SceneMath.ball(on: arc, at: t + 0.02).position - SceneMath.ball(on: arc, at: max(0, t - 0.02)).position
+                            if simd_length(ahead) > 1e-3 {
+                                expect(simd_dot(simd_normalize(ahead), heading) > 0.95,
+                                       "\(name): pass \(arc.id) spiral off its flight at \(t)s")
+                            }
+                        }
+                    }
+                }
+                let line = SceneMath.trace(arc, count: 72, lift: play.heights.trailLift)
+                expect(line.count > 1 && line.allSatisfy { $0.y >= -1e-4 }, "\(name): arc \(arc.id) trail under the grass")
+                if ["run"].contains(arc.shape) && !arc.type.lowercased().contains("interception") && !arc.type.lowercased().contains("fumble") {
+                    expect(line.allSatisfy { Double($0.y) <= play.heights.trailLift + 1e-3 },
+                           "\(name): run \(arc.id) trail stands off the grass")
+                }
+                let cap = 2.0
+                let low = SceneMath.lowered(arc, cap: cap)
+                let airTops = (low.path?.segments ?? []).filter { $0.kind == "air" }
+                    .map { max($0.from?[1] ?? 0, $0.to?[1] ?? 0) + ($0.rise ?? 0) }
+                expect(airTops.allSatisfy { $0 <= max(cap, 2.2) + 1e-6 }, "\(name): arc \(arc.id) lowered still flies high")
+                let partial = SceneMath.trace(arc, count: 72, lift: play.heights.trailLift, until: path.seconds / 2)
+                expect(partial.count <= line.count + 2, "\(name): arc \(arc.id) half a trail is longer than the whole")
+            }
         }
         let tt = spec.presentation.tabletop
         let reach = Float((spec.bowl.shape.halfLength + (spec.bowl.tiers.first?.outer ?? 0)) * tt.metersPerYard)
@@ -256,7 +309,7 @@ struct VerifyScene {
             expect(fresh.map(\.id) == drive.arcs.suffix(2).map(\.id),
                    "\(name): exactly the two new plays should fly, in order")
             let first = motion.next(reduceMotion: false, floor: spec.motion.floorSeconds)
-            expect(first?.0.id == fresh.first?.id && abs((first?.1 ?? 0) - (fresh.first?.duration ?? -1)) < 1e-9,
+            expect(first?.0.id == fresh.first?.id && abs((first?.1 ?? 0) - (fresh.first?.flightSeconds ?? -1)) < 1e-9,
                    "\(name): the oldest new play flies first, for its stated duration")
             let second = motion.next(reduceMotion: true, floor: spec.motion.floorSeconds)
             expect(second?.1 == 0, "\(name): reduce motion lands the ball rather than flying it")

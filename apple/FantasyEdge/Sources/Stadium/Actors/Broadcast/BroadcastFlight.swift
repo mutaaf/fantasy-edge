@@ -27,6 +27,62 @@ public enum BallFlight {
         return Manner(rawValue: f.byShape[arc.shape] ?? "") ?? .carry
     }
 
+    /// Where the ball is and how it is turned `seconds` of real time into a
+    /// play that carries a path: resting on its spot before the snap, tucked
+    /// and bobbing on a run, spiralling on a throw, tumbling on a kick. The
+    /// manner follows the segment, so one pass drops, flies and runs on.
+    /// Never below `floor` - a ball resting on the grass sits on it, not in it.
+    public static func pose(_ arc: SceneSpec.Arc, seconds: Double, flight f: SceneSpec.Look.BallFlight,
+                            floor: Float) -> Pose {
+        guard arc.path != nil else {
+            let t = arc.seconds > 0 ? seconds / arc.seconds : 1
+            return pose(arc, t: t, elapsed: seconds, manner: manner(arc, f), flight: f, lift: floor)
+        }
+        let now = SceneMath.ball(on: arc, at: seconds)
+        let ahead = SceneMath.ball(on: arc, at: seconds + 0.04).position
+        let behind = SceneMath.ball(on: arc, at: max(0, seconds - 0.04)).position
+        var p = now.position
+        let sign: Float = arc.toX >= arc.fromX ? 1 : -1
+        var dir = ahead - behind
+        let moving = simd_length(dir) > 1e-4
+        dir = moving ? simd_normalize(dir) : SIMD3(sign, 0, 0)
+        var flat = SIMD3<Float>(dir.x, 0, dir.z)
+        if simd_length(flat) < 1e-4 { flat = SIMD3(sign, 0, 0) }
+        flat = simd_normalize(flat)
+        let yaw = simd_quatf(angle: atan2(-flat.z, flat.x), axis: SIMD3(0, 1, 0))
+        let pitch = simd_quatf(angle: asin(max(-1, min(1, dir.y))), axis: SIMD3(0, 0, 1))
+        let time = Float(seconds)
+        let seg = now.segment
+        var q: simd_quatf
+        switch (seg?.kind ?? "hold", seg?.phase ?? "") {
+        case ("air", "snap"):
+            q = yaw * pitch * simd_quatf(angle: Float(f.spiralPerSecond) * 4 * .pi * time, axis: SIMD3(1, 0, 0))
+        case ("air", _):
+            let spin = Float(f.spiralPerSecond) * 2 * .pi * time
+            switch manner(arc, f) {
+            case .tumble:
+                q = yaw * simd_quatf(angle: Float(f.tumblePerSecond) * 2 * .pi * time, axis: SIMD3(0, 0, 1))
+            case .wobble:
+                let w = Float(f.wobbleDegrees * .pi / 180) * sin(2 * .pi * Float(f.wobbleHz) * time)
+                q = yaw * pitch * simd_quatf(angle: w, axis: SIMD3(0, 1, 0)) * simd_quatf(angle: spin * 0.55, axis: SIMD3(1, 0, 0))
+            default:
+                // A pass flies as a spiral whatever the play's shape - an
+                // interception is filed as a run, and its throw still spirals.
+                q = yaw * pitch * simd_quatf(angle: spin, axis: SIMD3(1, 0, 0))
+            }
+        case ("carry", let phase) where ["run", "yac", "return", "mesh"].contains(phase):
+            q = yaw * simd_quatf(angle: Float(f.carryTiltDegrees * .pi / 180), axis: SIMD3(0, 0, 1))
+            p.y += Float(f.carryBobYards) * abs(sin(2 * .pi * Float(f.carryBobHz) * time))
+        case ("carry", _):
+            q = yaw * simd_quatf(angle: Float(f.carryTiltDegrees * .pi / 180), axis: SIMD3(0, 0, 1))
+        default:
+            // At rest: lying on the grass along the field, laces up.
+            q = simd_quatf(angle: sign > 0 ? 0 : .pi, axis: SIMD3(0, 1, 0))
+        }
+        p.y = max(p.y, floor)
+        return Pose(position: p, orientation: q)
+    }
+
     /// Where the ball is and how it is turned `t` of the way along its arc
     /// (already eased), `elapsed` seconds after the snap.
     public static func pose(_ arc: SceneSpec.Arc, t: Double, elapsed: Double, manner: Manner,

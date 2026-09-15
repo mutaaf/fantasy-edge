@@ -141,7 +141,8 @@ final class BroadcastTrails {
         guard let seat = c.shared.seat, !c.tabletop else { return nil }
         let rule = c.look.broadcast.trail.lowSeat
         let cap = max(rule.minApexYards, Double(seat.y) * rule.apexOverEye)
-        guard arc.apex > cap else { return nil }
+        guard SceneMath.peak(arc) > cap else { return nil }
+        if arc.path != nil { return SceneMath.lowered(arc, cap: cap) }
         return SceneSpec.Arc(id: arc.id, style: arc.style, shape: arc.shape, type: arc.type, fromX: arc.fromX,
                              toX: arc.toX, lane: arc.lane, apex: cap, color: arc.color, dash: arc.dash,
                              seconds: arc.seconds, duration: arc.duration, side: arc.side, text: arc.text,
@@ -160,8 +161,10 @@ final class BroadcastTrails {
         var g = Geometry()
         g.emphasis = arc.style == "score"
         var width = look.core.value(tabletop: c.tabletop)
+        let lift = c.look.broadcast.play.heights.trailLift
+        let line = SceneMath.trace(arc, count: 96, lift: lift)
         if let seat = c.shared.seat, !c.tabletop {
-            width *= SceneMath.nearSeatScale(SceneMath.samples(arc, count: 32), seat: seat, rule: look.nearSeat)
+            width *= SceneMath.nearSeatScale(line, seat: seat, rule: look.nearSeat)
         }
         let a = Double(age)
         g.fade = age == 0 ? 1 : max(look.age.minOpacity, pow(look.age.decay, a))
@@ -173,7 +176,7 @@ final class BroadcastTrails {
             // A kick stands tall, so it fades over a steeper range than a play along the grass.
             let rule = arc.shape == "kick" ? SceneSpec.Look.TrailEdge(fullDegrees: look.kick.fullDegrees,
                 goneDegrees: look.kick.goneDegrees, minOpacity: look.edge.minOpacity, minScale: look.edge.minScale) : look.edge
-            let seen = Self.sideOn(arc, seat: seat, edge: rule)
+            let seen = Self.sideOn(line, seat: seat, edge: rule)
             g.fade *= look.edge.minOpacity + (1 - look.edge.minOpacity) * seen
             width *= look.edge.minScale + (1 - look.edge.minScale) * seen
         }
@@ -181,14 +184,14 @@ final class BroadcastTrails {
         let core = Float(width * (g.emphasis ? look.scoreEmphasis.core : 1))
         let halo = Float(width * look.haloScale * (g.emphasis ? look.scoreEmphasis.halo : 1))
         let view = Self.view(c)
-        let pieces = SceneMath.dashes(arc, count: 72)
+        let pieces = SceneMath.dashes(line, dash: arc.dash)
         let total = Float(pieces.count)
         for (i, piece) in pieces.enumerated() {
             let lo = pieces.count == 1 ? 0 : Float(i) / total
             let hi = pieces.count == 1 ? 1 : Float(i + 1) / total
             g.core.facingStrip(piece, halfWidth: core / 2, view: view, uRange: lo...hi)
         }
-        g.halo.facingStrip(SceneMath.samples(arc, count: 72), halfWidth: halo / 2, view: view)
+        g.halo.facingStrip(line, halfWidth: halo / 2, view: view)
         return g
     }
 
@@ -234,23 +237,24 @@ final class BroadcastTrails {
     private var live: Entity?
     private var liveDrawn: Double = -1
 
-    /// The play in the air, drawn behind the ball as far as it has flown, so
-    /// a trail grows with the flight instead of appearing only on landing.
-    /// Redrawn at most every `live.intervalSeconds`; `clearLive` when it lands.
-    func grow(_ arc: SceneSpec.Arc, to t: Double, _ c: StadiumContext) {
+    /// The play under way, drawn behind the ball as far as it has gone, so a
+    /// trail grows with the play instead of appearing only when it ends.
+    /// `seconds` is real time into the play. Redrawn at most every
+    /// `live.intervalSeconds`; `clearLive` when it lands.
+    func grow(_ arc: SceneSpec.Arc, seconds: Double, _ c: StadiumContext) {
         let look = c.look.broadcast.trail
-        guard c.shared.time - liveDrawn >= look.live.intervalSeconds || t >= 1 else { return }
+        guard c.shared.time - liveDrawn >= look.live.intervalSeconds else { return }
         liveDrawn = c.shared.time
         live?.removeFromParent()
-        let u = max(0.02, min(1, t))
-        let n = max(4, Int(48 * u))
-        let pts = (0...n).map { SceneMath.point(on: arc, at: u * Double($0) / Double(n)) }
+        live = nil
+        let pts = SceneMath.trace(arc, count: 64, lift: c.look.broadcast.play.heights.trailLift, until: seconds)
+        guard pts.count > 1, simd_distance(pts.first!, pts.last!) > 0.3 else { return }
         var width = look.core.value(tabletop: c.tabletop)
         var fade = look.live.opacity
         if let seat = c.shared.seat, !c.tabletop, look.edge.shapes.contains(arc.shape) {
             let rule = arc.shape == "kick" ? SceneSpec.Look.TrailEdge(fullDegrees: look.kick.fullDegrees,
                 goneDegrees: look.kick.goneDegrees, minOpacity: look.edge.minOpacity, minScale: look.edge.minScale) : look.edge
-            let seen = Self.sideOn(arc, seat: seat, edge: rule)
+            let seen = Self.sideOn(pts, seat: seat, edge: rule)
             fade *= look.edge.minOpacity + (1 - look.edge.minOpacity) * seen
             width *= look.edge.minScale + (1 - look.edge.minScale) * seen
         }
@@ -288,18 +292,20 @@ final class BroadcastTrails {
     /// How side-on a seat sees an arc, 0...1: the mean angle between each
     /// piece of the arc and the sightline to it, mapped from
     /// `edge.goneDegrees` (0, end-on) to `edge.fullDegrees` (1).
-    nonisolated static func sideOn(_ arc: SceneSpec.Arc, seat: SIMD3<Float>, edge: SceneSpec.Look.TrailEdge) -> Double {
-        let n = 32
-        var total = 0.0
-        for i in 0..<n {
-            let p = SceneMath.point(on: arc, at: Double(i) / Double(n))
-            let q = SceneMath.point(on: arc, at: Double(i + 1) / Double(n))
+    nonisolated static func sideOn(_ line: [SIMD3<Float>], seat: SIMD3<Float>, edge: SceneSpec.Look.TrailEdge) -> Double {
+        // Only the flight can streak: the legs carried along the grass read
+        // foreshortened, not end-on, and a catch run toward the near sideline
+        // must not dim the throw before it. Weighted by length.
+        let ground = line.map(\.y).min() ?? 0
+        var total = 0.0, weight = 0.0
+        for (p, q) in zip(line, line.dropFirst()) where max(p.y, q.y) > ground + 0.05 {
             let t = q - p, d = seat - (p + q) / 2
             let tl = simd_length(t), dl = simd_length(d)
-            guard tl > 1e-5, dl > 1e-5 else { total += 90; continue }
-            total += acos(Double(min(1, abs(simd_dot(t, d)) / (tl * dl)))) * 180 / .pi
+            guard tl > 1e-5, dl > 1e-5 else { continue }
+            total += Double(tl) * acos(Double(min(1, abs(simd_dot(t, d)) / (tl * dl)))) * 180 / .pi
+            weight += Double(tl)
         }
-        let deg = total / Double(n)
+        let deg = weight > 0 ? total / weight : 90
         return max(0, min(1, (deg - edge.goneDegrees) / max(1e-6, edge.fullDegrees - edge.goneDegrees)))
     }
 

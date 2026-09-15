@@ -35,8 +35,12 @@ public enum SceneMath {
     /// The arc split into the pieces a dashed style draws. `dash` is
     /// [on, off] in yards along the field; a solid arc is one piece.
     public static func dashes(_ arc: SceneSpec.Arc, count: Int = 48) -> [[SIMD3<Float>]] {
-        let pts = samples(arc, count: count)
-        guard let pattern = arc.dash, pattern.count == 2, pattern[0] > 0 else { return [pts] }
+        dashes(samples(arc, count: count), dash: arc.dash)
+    }
+
+    /// Any line split into the pieces a dash pattern draws.
+    public static func dashes(_ pts: [SIMD3<Float>], dash: [Double]?) -> [[SIMD3<Float>]] {
+        guard let pattern = dash, pattern.count == 2, pattern[0] > 0, pts.count > 1 else { return [pts] }
         var pieces: [[SIMD3<Float>]] = []
         var current: [SIMD3<Float>] = [pts[0]]
         var travelled: Float = 0
@@ -55,6 +59,146 @@ public enum SceneMath {
         }
         if current.count > 1 { pieces.append(current) }
         return pieces
+    }
+
+    // MARK: how a play moves (scene.play_path)
+
+    /// Where the ball is on a play `seconds` of real time after the presnap
+    /// began, and which segment it is in. Without a path, the parabola.
+    /// A carry eases gently in and out; an air segment keeps level ground
+    /// speed under its gravity parabola, exactly scene.air_point.
+    public static func ball(on arc: SceneSpec.Arc, at seconds: Double) -> (position: SIMD3<Float>, segment: SceneSpec.PathSegment?, u: Double) {
+        guard let path = arc.path, !path.segments.isEmpty else {
+            let t = arc.seconds > 0 ? seconds / arc.seconds : 1
+            return (point(on: arc, at: t), nil, max(0, min(1, t)))
+        }
+        var start = 0.0
+        for seg in path.segments {
+            let end = start + seg.seconds
+            if seconds < end || seg == path.segments.last! {
+                let u = seg.seconds > 0 ? max(0, min(1, (seconds - start) / seg.seconds)) : 1
+                return (segmentPoint(seg, u: u), seg, u)
+            }
+            start = end
+        }
+        return (point(on: arc, at: 1), nil, 1)
+    }
+
+    /// A segment `u` of the way through its time, in local space.
+    public static func segmentPoint(_ seg: SceneSpec.PathSegment, u: Double) -> SIMD3<Float> {
+        func v(_ a: [Double]?) -> SIMD3<Double> {
+            guard let a, a.count == 3 else { return .zero }
+            return SIMD3(a[0], a[1], a[2])
+        }
+        let p: SIMD3<Double>
+        switch seg.kind {
+        case "air":
+            let a = v(seg.from), b = v(seg.to)
+            var q = a + (b - a) * u
+            q.y += (seg.rise ?? 0) * 4 * u * (1 - u)
+            p = q
+        case "carry":
+            let pts = (seg.points ?? []).map { v($0) }
+            guard pts.count > 1 else { p = pts.first ?? .zero; break }
+            // Smoothstep in time, walked by length, so a run leaves and
+            // arrives without a jolt and speeds the same along each leg.
+            let e = u * u * (3 - 2 * u)
+            var lengths: [Double] = [0]
+            for i in 1..<pts.count { lengths.append(lengths[i - 1] + simd_distance(pts[i - 1], pts[i])) }
+            let want = e * lengths.last!
+            var i = 1
+            while i < pts.count - 1 && lengths[i] < want { i += 1 }
+            let span = max(1e-9, lengths[i] - lengths[i - 1])
+            p = pts[i - 1] + (pts[i] - pts[i - 1]) * max(0, min(1, (want - lengths[i - 1]) / span))
+        default:
+            p = v(seg.at)
+        }
+        return local(x: p.x, y: p.y, z: p.z)
+    }
+
+    /// The line a play's trail draws, snap to finish: what was carried lies
+    /// on the grass at `lift`, what flew keeps its height. Holds draw nothing.
+    /// `until` stops it at that many real seconds, for a trail growing behind
+    /// the ball. Without a path, the parabola.
+    public static func trace(_ arc: SceneSpec.Arc, count: Int = 72, lift: Double, until: Double? = nil) -> [SIMD3<Float>] {
+        guard let path = arc.path, !path.segments.isEmpty else {
+            let n = max(2, count)
+            let top = until.map { arc.seconds > 0 ? max(0, min(1, $0 / arc.seconds)) : 1 } ?? 1
+            return (0..<n).map { point(on: arc, at: top * Double($0) / Double(n - 1)) }
+        }
+        let lengths = path.segments.map { seg -> Double in
+            guard seg.kind != "hold" else { return 0 }
+            let a = segmentPoint(seg, u: 0), b = segmentPoint(seg, u: 1)
+            let flat = Double(simd_distance(SIMD2(a.x, a.z), SIMD2(b.x, b.z)))
+            return seg.kind == "air" ? flat + 2 * (seg.rise ?? 0) : flat
+        }
+        let total = max(1e-6, lengths.reduce(0, +))
+        var out: [SIMD3<Float>] = []
+        var start = 0.0
+        for (k, seg) in path.segments.enumerated() {
+            defer { start += seg.seconds }
+            if let until, start >= until { break }
+            guard seg.kind != "hold" else { continue }
+            let n = max(2, Int((Double(count) * lengths[k] / total).rounded()) + 1)
+            let stop = until.map { seg.seconds > 0 ? max(0, min(1, ($0 - start) / seg.seconds)) : 1 } ?? 1
+            for i in 0..<n {
+                let f = Double(i) / Double(n - 1)
+                var p: SIMD3<Float>
+                if seg.kind == "carry" {
+                    // A carry eases in time, not in shape: lay its line by
+                    // length, as far as the ball has run by `stop`.
+                    let reached = stop * stop * (3 - 2 * stop)
+                    p = segmentPoint(seg, u: invertSmoothstep(reached * f))
+                    p.y = Float(lift)
+                } else {
+                    // A flight's line leaves and meets the grass, as a replay
+                    // graphic draws a throw from passer to catch, rather than
+                    // standing up from the carry line at release height. The
+                    // ends ease down to `lift`; the middle keeps its height.
+                    let u = stop * f
+                    p = segmentPoint(seg, u: u)
+                    let w = Float(4 * u * (1 - u))
+                    p.y = Float(lift) + w * (p.y - Float(lift))
+                    if seg.phase == "snap" { p.y = Float(lift) }
+                }
+                if let last = out.last, simd_distance(last, p) < 1e-4 { continue }
+                out.append(p)
+            }
+        }
+        if out.count == 1 { out.append(out[0] + SIMD3(0.01, 0, 0)) }
+        return out
+    }
+
+    /// u such that smoothstep(u) = e: laying a carry's points by length.
+    static func invertSmoothstep(_ e: Double) -> Double {
+        let e = max(0, min(1, e))
+        return 0.5 - sin(asin(1 - 2 * e) / 3)
+    }
+
+    /// The highest point anything on a play reaches.
+    public static func peak(_ arc: SceneSpec.Arc) -> Double {
+        guard let path = arc.path else { return arc.apex }
+        return path.segments.map { seg -> Double in
+            switch seg.kind {
+            case "air": return max(seg.from?[1] ?? 0, seg.to?[1] ?? 0) + (seg.rise ?? 0)
+            case "carry": return (seg.points ?? []).map { $0.count == 3 ? $0[1] : 0 }.max() ?? 0
+            default: return seg.at?[1] ?? 0
+            }
+        }.max() ?? 0
+    }
+
+    /// A play laid lower: every flight's peak held to `cap` yards. A carry
+    /// already lies on the grass, so only air segments change.
+    public static func lowered(_ arc: SceneSpec.Arc, cap: Double) -> SceneSpec.Arc {
+        var a = arc
+        guard var path = arc.path else { return arc }
+        for i in path.segments.indices where path.segments[i].kind == "air" {
+            let s = path.segments[i]
+            let top = max(s.from?[1] ?? 0, s.to?[1] ?? 0)
+            path.segments[i].rise = max(0, min(s.rise ?? 0, cap - top))
+        }
+        a.path = path
+        return a
     }
 
     /// A point on the superellipse the bowl is built from, `m` yards out from
@@ -278,6 +422,6 @@ public struct PlayMotion {
         if reduceMotion { return (arc, 0) }
         let backlog = queue.count
         let squeeze = backlog > 3 ? 0.5 : 1.0
-        return (arc, max(floor, arc.duration * squeeze))
+        return (arc, max(floor, arc.flightSeconds * squeeze))
     }
 }
