@@ -304,7 +304,10 @@ final class CrowdActor: StadiumActor {
             if let normal { mat.normal = .init(texture: .init(normal)) }
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
-            mat.emissiveColor = .init(color: .white, texture: .init(key.away ? dress.cardAway : dress.cardHome))
+            // Spill in the club's colour, not the texture's: an emissive texture read grey here,
+            // and at a hundred metres the albedo carries the mottle anyway.
+            let spill = SceneMath.rgba(key.away ? s.bowl.crowd.away : s.bowl.crowd.home)
+            mat.emissiveColor = .init(color: UIColor(red: CGFloat(spill.x), green: CGFloat(spill.y), blue: CGFloat(spill.z), alpha: 1))
             mat.emissiveIntensity = Float(C.impostor.floodFill)
             mat.faceCulling = .none
             let e = ModelEntity(mesh: res, materials: [mat])
@@ -350,7 +353,6 @@ final class CrowdActor: StadiumActor {
         for g in groups {
             let t: TextureResource = g.ring == .card ? (g.away ? d.cardAway : d.cardHome) : (g.away ? d.fanAway : d.fanHome)
             g.material.baseColor.texture = .init(t)
-            if g.ring == .card { g.material.emissiveColor.texture = .init(t) }
             g.entity.model?.materials = [g.material]
         }
     }
