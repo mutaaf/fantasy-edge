@@ -117,6 +117,8 @@ extension SceneSpec {
         public struct BowlLook: Decodable, Equatable, Sendable {
             public let assets: [String: String]
             public let models: [String: String]
+            public let seatColor: String
+            public let yardMeters: Double
             public let rows: [String: Int]
             public let segments: Int
             public let aisleEvery: Int

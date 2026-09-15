@@ -19,7 +19,7 @@ from mathutils import Vector
 import common as C
 import kit
 
-REVIEW = kit.OUT / "review"
+REVIEW = kit.ROOT / "docs" / "actors" / "bowl" / "review"
 
 
 def cycles(samples: int = 64, w: int = 1600, h: int = 900) -> None:
@@ -57,7 +57,7 @@ def world_night(strength: float = 0.35) -> None:
     w.use_nodes = True
     nt = w.node_tree
     env = nt.nodes.new("ShaderNodeTexEnvironment")
-    env.image = bpy.data.images.load(str(kit.ROOT / "assets" / "src" / "env" / "stadium_night.hdr"))
+    env.image = bpy.data.images.load(str(kit.ROOT / "assets" / "generated" / "lighting" / "stadium_night.hdr"))
     nt.links.new(env.outputs["Color"], nt.nodes["Background"].inputs["Color"])
     nt.nodes["Background"].inputs["Strength"].default_value = strength
     bpy.context.scene.world = w
@@ -71,6 +71,7 @@ def area(name, loc_local_yards, target_local_yards, size_m, watts, color=(1.0, 0
     obj = bpy.data.objects.new(name, light)
     bpy.context.scene.collection.objects.link(obj)
     obj.location = C.bl(*loc_local_yards)
+    obj.visible_camera = False
     look(obj, C.bl(*target_local_yards))
     return obj
 
@@ -104,7 +105,7 @@ def render(name: str) -> None:
 
 def import_module(name: str):
     before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=str(C.MOD / f"{name}.gltf"))
+    bpy.ops.import_scene.gltf(filepath=str(kit.OUT / f"{name}.glb"))
     return [o for o in bpy.data.objects if o not in before]
 
 
@@ -178,10 +179,12 @@ def shot_seat() -> None:
     cycles(128, 1600, 900)
     world_studio()
     ground(20, (0.3, 0.3, 0.3, 1))
-    for k, (name, x) in enumerate((("seat_lod0_down", -0.55), ("seat_lod0_up", 0.0), ("seat_lod1_down", 0.55), ("seat_lod2", 1.1))):
-        objs = import_module(name)
-        for o in objs:
-            o.location.x += x / kit.YARD * kit.YARD
+    import seat as SEAT
+    mats = SEAT.materials()
+    for k, (detail, up) in enumerate(((0, False), (0, True), (1, False), (2, True))):
+        b = SEAT.seat(detail, up)
+        o = b.build(mats, smooth_angle=50 if detail < 2 else None)
+        o.location.x += 0.55 * k
     area("key", (1.5, 2.2, 1.8), (0.3, 0.5, 0), 1.5, 400)
     area("rim", (-1.5, 1.8, -1.5), (0.3, 0.5, 0), 1.0, 200, (0.7, 0.8, 1.0))
     camera((2.4, 1.35, 2.9), (0.55, 0.45, 0.0), 50)
@@ -190,51 +193,88 @@ def shot_seat() -> None:
     render("seat_back")
 
 
-def stadium_scene(seat_module="seat_lod1_down", near=None):
-    """The kit assembled: structure, far bands or instanced seats, and a
-    review light rig of four warm floods on the far rim plus the night probe."""
+def stadium_scene(preset="club"):
+    """The kit as the actor assembles it for a preset: stands, every band but
+    this preset's fill, and this preset's near patch. A neutral review rig:
+    floods on the rim all round, the night probe."""
     C.reset()
     cycles(96, 1920, 1080)
     world_night(0.25)
-    for name in ("bowl_lower_lod0", "bowl_club_lod0", "bowl_upper_lod0"):
-        import_module(name)
-    ground(600)
-    seat_points(seat_module)
-    for k, t in enumerate((3.6, 4.4, 5.0, 5.8)):
+    import_module("stands")
+    for o in import_module("seats_far"):
+        if o.name.startswith(f"fill_{preset}"):
+            o.hide_render = True
+    for o in import_module("near"):
+        if not o.name.startswith(f"near_{preset}"):
+            o.hide_render = True
+    ground(700)
+    for k in range(8):
+        t = 0.3 + k * math.pi / 4
         x, z = kit.bowl_point(74, t)
-        area(f"flood{k}", (x, 60, z), (0, 0, 0), 12, 1.6e5)
-    x, z = kit.bowl_point(74, 1.2)
-    area("fill", (x, 60, z), (0, 0, 0), 20, 3e4, (0.8, 0.85, 1.0))
+        area(f"flood{k}", (x, 58, z), (0, 0, 0), 12, 9e4)
+
+
+def eye_of(preset):
+    import structure
+    reg = next(r for r in structure.presets() if r["id"] == preset)
+    return reg["eye"]
+
+
+def shot_club():
+    stadium_scene("club")
+    ex, ey, ez = eye_of("club")
+    camera((ex, ey, ez), (ex, 1.0, 0.0), 20)
+    render("bowl_club_seat")
+
+
+def shot_foreground():
+    stadium_scene("club")
+    ex, ey, ez = eye_of("club")
+    camera((ex + 0.6, ey + 0.2, ez + 0.3), (ex - 1.5, ey - 3.0, ez - 6.0), 24)
+    render("bowl_club_foreground")
+
+
+def shot_crowd_closeup():
+    stadium_scene("club")
+    ex, ey, ez = eye_of("club")
+    a = math.radians(62)
+    camera((ex, ey, ez), (ex + math.sin(a) * 30, ey - 6, ez - math.cos(a) * 30), 22)
+    render("bowl_crowd_closeup")
 
 
 def shot_wide():
-    stadium_scene()
-    camera((0, 34, 78), (0, 4, -20), 18)
+    stadium_scene("upper")
+    ex, ey, ez = eye_of("upper")
+    camera((ex, ey, ez), (0, 2, -8), 18)
     render("bowl_wide")
 
 
-def shot_row16():
-    stadium_scene()
-    # the club seat preset: home 50-yard line, lower bowl, 24 yards out; eyes 1.26 m up
-    y = kit.row(kit.TIERS["lower"], 17, kit.ROWS["lower"])["tread"] + 1.26 / kit.YARD
-    camera((0.3, y, kit.SHAPE["halfWidth"] + 24.2), (0, 2, 0), 22)
-    render("bowl_row16")
-
-
 def shot_fieldlevel():
-    stadium_scene()
-    camera((-50, 1.9, 18), (-66, 3.5, 0), 20)
-    render("bowl_fieldlevel_tunnel")
+    stadium_scene("club")
+    camera((0, 1.9, kit.SHAPE["halfWidth"] + 2.0), (-40, 8, -10), 18)
+    render("bowl_field_level")
 
 
-def shot_upper():
-    stadium_scene()
-    y = kit.row(kit.TIERS["upper"], 14, kit.ROWS["upper"])["tread"] + 1.26 / kit.YARD
-    camera((4, y, kit.SHAPE["halfWidth"] + 57), (0, 10, -10), 20)
-    render("bowl_upper")
+def shot_endzone():
+    stadium_scene("endzone")
+    ex, ey, ez = eye_of("endzone")
+    camera((ex, ey, ez), (0, 2, 0), 20)
+    render("bowl_endzone_seat")
 
 
-SHOTS = {"seat": shot_seat, "wide": shot_wide, "row16": shot_row16, "fieldlevel": shot_fieldlevel, "upper": shot_upper}
+def shot_tabletop():
+    C.reset()
+    cycles(96, 1600, 1000)
+    world_night(0.4)
+    import_module("table")
+    ground(400)
+    area("key", (0, 90, 120), (0, 0, 0), 40, 2e5)
+    camera((0, 110, 190), (0, 0, -10), 32)
+    render("bowl_tabletop")
+
+
+SHOTS = {"seat": shot_seat, "club": shot_club, "foreground": shot_foreground, "closeup": shot_crowd_closeup, "wide": shot_wide,
+         "fieldlevel": shot_fieldlevel, "endzone": shot_endzone, "tabletop": shot_tabletop}
 
 
 def build(names: list[str]) -> None:

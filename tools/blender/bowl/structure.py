@@ -1,65 +1,70 @@
-"""The bowl's structure: every tier, stair, tunnel, wall, suite and fascia.
+"""The bowl as four models, inside the Bowl actor's budget (70k triangles,
+20 draw parts, 50 MB; docs/ART_BIBLE.md).
 
-Built in local yards on the same rows `SceneMath.row` draws, so the kit
-replaces the slab bowl without moving a seat. Faces are oriented by the
-normal they should have rather than by hand-kept winding, so a surface
-never turns inside out on the far side of the bowl.
+  stands.usdz     one entity, six materials: every row's riser and tread,
+                  painted aisle steps, vomitories, the padded wall, team
+                  tunnels, the club and press box under the upper deck, the
+                  ribbon fascia and the cantilevered lip over it, the parapet
+                  and exterior fins. ~30k triangles.
+  seats_far.usdz  `bands`: every row of seats as one slanted, textured band,
+                  with the preset regions left out; `fill_<preset>`: those
+                  regions as bands, shown for every preset but the one the
+                  wearer sits in.
+  near.usdz       `near_<preset>`: the foreground around each seat preset -
+                  real aisle stairs, handrails, nosing strips, the seats in
+                  front of you as modelled chairs, bands beyond. The actor
+                  shows the one the wearer is in and hides the rest.
+  table.usdz      the lower bowl stepped three rows at a time with the home
+                  stands cut away, for the tabletop.
 
-Modules:
-  bowl_lower_lod0   rows, nosings, aisle stairs, handrails, vomitories,
-                    accessible platforms, the padded field wall, team tunnels
-  bowl_club_lod0    concourse slab, suites behind glass, open end concourses,
-                    soffit with its light cove, the ribbon fascia
-  bowl_upper_lod0   rows, stairs, rails, vomitories, parapet, exterior fins
-  bowl_seats_far    one slanted, textured band per row of seats, aisles cut
-  bowl_lod2         a stepped bowl, three rows a step, for the table and the
-                    distance - split into wedges so the table can cut the
-                    near stands away
-
-Every module is split into angular wedges (objects named *_wNN) so a renderer
-can LOD or cull by direction.
+All geometry is built on the rows and seats `fantasyedge/scene.py` puts in
+`bowl.seating`, so a modelled chair sits exactly where the Crowd actor seats a
+fan. Faces are oriented by the normal they should have rather than by kept
+winding, so nothing turns inside out on the far side of the bowl.
 """
 from __future__ import annotations
 
 import math
 
+import bpy
+
 import common as C
 import kit
+import seat as SEAT
 from textures import TRIM, TRIM_U_YARDS
 
 T = kit.TIERS
 ROWS = kit.ROWS
-HALF_W, HALF_L = kit.SHAPE["halfWidth"], kit.SHAPE["halfLength"]
+HALF_L = kit.SHAPE["halfLength"]
 RAIL_H = 1.04            # 0.95 m guard height, in yards
+EYE = 1.26 / kit.YARD    # a seated eye above the tread
 STEPS = {"lower": 2, "upper": 3}
-NOSE = 0.045
-WEDGES_LOD0 = 16
+LOD0_RADIUS, LOD1_RADIUS = 2.4, 9.0
+CUTAWAY = kit.VISUAL["experience"]["tabletop"]["cutaway"]
+
+# Interiors atlas regions, v: suites 0.5-1, press box 0.25-0.5, glow 0-0.25.
+ATLAS = {"suites": (0.5, 1.0, 48.0), "press": (0.25, 0.5, 56.0), "glow": (0.0, 0.25, 32.0)}
 
 
 def materials():
     return {
-        "bowl_trim": C.material("bowl_trim", albedo="bowl_trim_albedo.jpg", normal="bowl_trim_normal.png",
-                                orm="bowl_trim_orm.png", color=(1, 1, 1, 1)),
-        "concrete_wall": C.material("concrete_wall", albedo="concrete_wall_albedo.jpg", normal="concrete_wall_normal.png",
-                                    orm="concrete_wall_orm.png", color=(1, 1, 1, 1)),
-        "steel_painted": C.material("steel_painted", color=(0.05, 0.053, 0.058, 1), roughness=0.4, metallic=0.7),
-        "glass_rail": C.material("glass_rail", color=(0.55, 0.62, 0.66, 1), roughness=0.05, alpha=0.22, double_sided=True),
-        "glass_suite": C.material("glass_suite", color=(0.08, 0.10, 0.12, 1), roughness=0.04, metallic=0.2, alpha=0.5,
-                                  double_sided=True),
-        "suite_interior": C.material("suite_interior", color=(0, 0, 0, 1), emission="suite_interior_emission.jpg",
-                                     emission_strength=2.0),
-        "concourse_glow": C.material("concourse_glow", color=(0, 0, 0, 1), emission="concourse_glow_emission.jpg",
-                                     emission_strength=3.0),
-        "tunnel_dark": C.material("tunnel_dark", color=(0.018, 0.018, 0.02, 1), roughness=0.9),
-        # Slots other actors fill: they ship dark and self-lit just enough to read as screens.
-        "wall_led": C.material("wall_led", color=(0.01, 0.01, 0.012, 1), roughness=0.3, emission_color=(0.02, 0.03, 0.05),
-                               emission_strength=1.0),
-        "ribbon_screen": C.material("ribbon_screen", color=(0.01, 0.01, 0.012, 1), roughness=0.3,
-                                    emission_color=(0.02, 0.03, 0.05), emission_strength=1.0),
-        "tunnel_header": C.material("tunnel_header", color=(0.02, 0.02, 0.025, 1), roughness=0.4,
-                                    emission_color=(0.05, 0.05, 0.06), emission_strength=1.0),
-        "seat_band": C.material("seat_band", color=(0.035, 0.06, 0.16, 1), albedo="seat_band_albedo.png",
-                                normal="seat_band_normal.png", normal_strength=0.5),
+        "trim": C.material("bowl_trim", albedo="bowl_trim_albedo.jpg", normal="bowl_trim_normal.png",
+                           orm="bowl_trim_orm.png", color=(1, 1, 1, 1)),
+        "concrete": C.material("bowl_concrete", albedo="concrete_wall_albedo.jpg", normal="concrete_wall_normal.png",
+                               orm="concrete_wall_orm.png", color=(1, 1, 1, 1)),
+        "steel": C.material("bowl_steel", color=(0.05, 0.053, 0.058, 1), roughness=0.4, metallic=0.7),
+        "glass": C.material("bowl_glass", color=(0.20, 0.24, 0.27, 1), roughness=0.05, metallic=0.1, alpha=0.32,
+                            double_sided=True),
+        "interiors": C.material("bowl_interiors", color=(0, 0, 0, 1), emission="interiors_emission.jpg",
+                                emission_strength=3.5),
+        # A slot: dark screens other actors light (ribbon, wall boards, tunnel header).
+        "screens": C.material("bowl_screens", color=(0.012, 0.012, 0.014, 1), roughness=0.3,
+                              emission_color=(0.02, 0.03, 0.05), emission_strength=1.0),
+        "band": C.material("bowl_seat_band", color=(0.03, 0.05, 0.14, 1), albedo="seat_band_albedo.png", roughness=0.92),
+        "stair": C.material("bowl_stair", albedo="stair_albedo.jpg", roughness=0.85, color=(1, 1, 1, 1)),
+        "seat_plastic": SEAT.materials()["seat_plastic"],
+        "seat_hardware": SEAT.materials()["seat_hardware"],
+        "table_trim": C.material("bowl_table_trim", albedo="table_trim_albedo.jpg", roughness=0.9, color=(1, 1, 1, 1)),
     }
 
 
@@ -71,14 +76,19 @@ def pt(m, t, y):
 
 
 def band_uv(band, u0, u1, a=0.0, b=1.0):
-    """UVs for a quad in trim band `band`: u along, v from fraction a to b of the band."""
     v0, v1 = TRIM[band]
     va, vb = v0 + (v1 - v0) * a, v0 + (v1 - v0) * b
     return ((u0, va), (u1, va), (u1, vb), (u0, vb))
 
 
+def atlas_uv(region, u0, u1, a=0.0, b=1.0):
+    v0, v1, per = ATLAS[region]
+    va, vb = v0 + (v1 - v0) * a, v0 + (v1 - v0) * b
+    return ((u0 / per, va), (u1 / per, va), (u1 / per, vb), (u0 / per, vb))
+
+
 def oquad(b: C.Builder, pts, want, material, uv=((0, 0), (1, 0), (1, 1), (0, 1))):
-    """A quad whose winding is chosen so its normal points along `want`."""
+    """A quad wound so its normal points along `want`."""
     p0, p1, _, p3 = pts
     n = C._cross(C._sub(p1, p0), C._sub(p3, p0))
     if C._dot(n, want) < 0:
@@ -92,44 +102,13 @@ def inward3(m, t):
     return (nx, 0.0, nz)
 
 
-class Wedges:
-    """Builders keyed by direction, so a module splits into angular pieces."""
-
-    def __init__(self, name, count):
-        self.name, self.count = name, count
-        self.parts: dict[int, C.Builder] = {}
-
-    def at(self, t) -> C.Builder:
-        k = int(((t % (2 * math.pi)) / (2 * math.pi)) * self.count) % self.count
-        if k not in self.parts:
-            self.parts[k] = C.Builder(f"{self.name}_w{k:02d}")
-        return self.parts[k]
-
-    def meta(self):
-        return [{"object": f"{self.name}_w{k:02d}", "from": round(2 * math.pi * k / self.count, 5),
-                 "to": round(2 * math.pi * (k + 1) / self.count, 5)} for k in sorted(self.parts)]
-
-    def build(self, mats):
-        objs = []
-        for k in sorted(self.parts):
-            b = self.parts[k]
-            if b.faces:
-                objs.append(b.build(mats))
-        return objs
-
-    @property
-    def triangles(self):
-        return sum(b.triangles for b in self.parts.values())
-
-
-def spans(cuts, ring: kit.Ring):
+def spans(cuts, ring):
     """Angle ranges of a ring left after removing arc-length cuts."""
     L = ring.length
     marks = []
     for a, b in cuts:
+        length = b - a
         a %= L
-        b = a + (b - a) if b > a else b
-        length = b - a if b >= a else (b % L) + L - a
         if a + length <= L:
             marks.append((a, a + length))
         else:
@@ -143,12 +122,11 @@ def spans(cuts, ring: kit.Ring):
         cur = max(cur, b)
     if cur < L:
         keep.append((cur, L))
-    return [(ring.angle(a), ring.angle(b) if b < L else 2 * math.pi) for a, b in keep if b - a > 0.05]
+    return [(ring.angle(a), ring.angle(b) if b < L - 1e-9 else 2 * math.pi) for a, b in keep if b - a > 0.05]
 
 
 def sample(base, t0, t1):
-    inner = [t for t in base if t0 < t < t1]
-    return [t0] + inner + [t1]
+    return [t0] + [t for t in base if t0 < t < t1] + [t1]
 
 
 def arclen(m, ts):
@@ -161,90 +139,104 @@ def arclen(m, ts):
     return out
 
 
-# ───────────────────────────── tiers ─────────────────────────────
+def cut_on_table(t0, t1):
+    mid = ((t0 + t1) / 2) % (2 * math.pi)
+    f = (mid if CUTAWAY["side"] == "home" else mid - math.pi) / math.pi
+    return CUTAWAY["from"] < f < CUTAWAY["to"]
 
-def tier_rows(tier_name: str, W: Wedges, rails: Wedges, dark: Wedges) -> None:
+
+# ───────────────────────────── preset regions ─────────────────────────────
+
+def presets():
+    """The foreground around every seat preset that sits in a tier: its tier,
+    angle, rows and lateral reach, and the wearer's eye."""
+    out = []
+    for s in kit.SC.SEATS:
+        lx, lz = s["x"] - 50.0, s["z"]
+        tier = None
+        for name, tr in T.items():
+            if tr["rise"][0] - 0.01 <= s["y"] <= tr["rise"][1] + 0.01 and s["y"] > 0.5:
+                tier = name
+        if tier is None:
+            continue
+        tr = T[tier]
+        best = None
+        for m10 in range(int(tr["inner"] * 10), int(tr["outer"] * 10) + 1, 2):
+            m = m10 / 10
+            for k in range(720):
+                t = 2 * math.pi * k / 720
+                x, z = kit.bowl_point(m, t)
+                d = (x - lx) ** 2 + (z - lz) ** 2
+                if best is None or d < best[0]:
+                    best = (d, m, t)
+        _, m, t = best
+        n = ROWS[tier]
+        r = min(n - 1, int((m - tr["inner"]) / ((tr["outer"] - tr["inner"]) / n)))
+        rw = kit.row(tr, r, n)
+        feet = kit.bowl_point(rw["front"] + (rw["back"] - rw["front"]) * kit.SEATING_CFG["feetDepth"], t)
+        out.append({"id": s["id"], "tier": tier, "angle": t, "row": r,
+                    "rows": (max(0, r - 13), min(n - 1, r + 2)), "reach": 30.0,
+                    "eye": (feet[0], rw["tread"] + EYE, feet[1]), "feet": (feet[0], rw["tread"], feet[1])})
+    return out
+
+
+def in_region(region, tier_name, r, ring, s):
+    if region["tier"] != tier_name or not (region["rows"][0] <= r <= region["rows"][1]):
+        return False
+    c = ring.arc_at(region["angle"])
+    d = abs(((s - c) + ring.length / 2) % ring.length - ring.length / 2)
+    return d <= region["reach"]
+
+
+# ───────────────────────────── stands ─────────────────────────────
+
+def stands_rows(b: C.Builder, tier_name: str) -> None:
+    """Riser and tread for every row, cut only where the stands are open
+    (vomitories, tunnels), with a painted step front across each aisle."""
     tier = T[tier_name]
     n = ROWS[tier_name]
     secs = kit.sections(tier_name)
-    base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.05)
-    v = kit.VOMITORY[tier_name]
+    base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.15, max_step=12.0)
     rise_step = (tier["rise"][1] - tier["rise"][0]) / n
-    rails_by_aisle: dict[str, list] = {}
-
     for r in range(n):
         rw = kit.row(tier, r, n)
-        ring = kit.Ring(rw["front"] + (rw["back"] - rw["front"]) * 0.38)
+        ring = kit.Ring(rw["front"] + (rw["back"] - rw["front"]) * kit.SEATING_CFG["feetDepth"])
         gaps = kit.gaps_for_row(tier_name, r, secs, ring)
-        cuts = [(a, b) for a, b, k in gaps if k in ("vomitory", "tunnel")]
+        cuts = [(a, bb) for a, bb, k in gaps if k in ("vomitory", "tunnel")]
         f, bk, tr, rf = rw["front"], rw["back"], rw["tread"], rw["riserFrom"]
         for t0, t1 in spans(cuts, ring):
             ts = sample(base, t0, t1)
             ul = arclen(f, ts)
             for i in range(len(ts) - 1):
                 ta, tb = ts[i], ts[i + 1]
-                bld = W.at((ta + tb) / 2)
                 nin = inward3(f, (ta + tb) / 2)
                 ua, ub = ul[i] / TRIM_U_YARDS["riser"], ul[i + 1] / TRIM_U_YARDS["riser"]
-                oquad(bld, (pt(f, ta, rf), pt(f, tb, rf), pt(f, tb, tr - NOSE), pt(f, ta, tr - NOSE)), nin,
-                      "bowl_trim", band_uv("riser", ua, ub, 0.0, min(1.0, (tr - rf) / 0.9)))
-                up_in = C._norm((nin[0], 1.0, nin[2]))
-                oquad(bld, (pt(f, ta, tr - NOSE), pt(f, tb, tr - NOSE), pt(f + NOSE, tb, tr), pt(f + NOSE, ta, tr)), up_in,
-                      "bowl_trim", band_uv("nosing", ua, ub))
-                oquad(bld, (pt(f + NOSE, ta, tr), pt(f + NOSE, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0),
-                      "bowl_trim", band_uv("tread", ua, ub))
-
-        # Aisle stairs and their centre handrail.
-        steps = STEPS[tier_name]
+                oquad(b, (pt(f, ta, rf), pt(f, tb, rf), pt(f, tb, tr), pt(f, ta, tr)), nin, "trim",
+                      band_uv("riser", ua, ub, 0.0, min(1.0, (tr - rf) / 0.9)))
+                oquad(b, (pt(f, ta, tr), pt(f, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0), "trim",
+                      band_uv("tread", ua, ub))
+        # painted aisle steps: one riser face per intermediate step, no volume
         L = ring.length
         for sec in secs:
             s = sec["from"] * L
-            if any(a - 0.5 <= s <= b + 0.5 for a, b in cuts):
-                rails_by_aisle.setdefault(sec["id"], []).append(None)
+            if any(a - 0.6 <= s <= bb + 0.6 for a, bb in cuts):
                 continue
             ta = ring.angle(s)
             nx, nz = kit.inward(ring.m, ta)
             tan = (nz, 0.0, -nx)
             half = kit.AISLE / 2
-            bld = W.at(ta)
-
-            def P(depth, lat, y):
-                x, z = kit.bowl_point(f + (bk - f) * depth, ta)
-                return (x + tan[0] * lat, y, z + tan[2] * lat)
-
-            for k in range(1, steps):
-                d0, d1 = k / steps, (k + 1) / steps
-                h = tr + rise_step * k / steps
-                hp = tr + rise_step * (k - 1) / steps
-                oquad(bld, (P(d0, -half, hp), P(d0, half, hp), P(d0, half, h), P(d0, -half, h)), (nx, 0, nz),
-                      "bowl_trim", band_uv("nosing", 0, kit.AISLE / TRIM_U_YARDS["nosing"], 0.2, 1.0))
-                oquad(bld, (P(d0, -half, h), P(d0, half, h), P(d1, half, h), P(d1, -half, h)), (0, 1, 0),
-                      "bowl_trim", band_uv("tread", 0, kit.AISLE / TRIM_U_YARDS["tread"], 0.0, (d1 - d0) * 0.9))
-                for side in (-1, 1):
-                    oquad(bld, (P(d0, side * half, tr), P(d1, side * half, tr), P(d1, side * half, h), P(d0, side * half, h)),
-                          (tan[0] * side, 0, tan[2] * side), "bowl_trim",
-                          band_uv("riser", 0, (d1 - d0) / TRIM_U_YARDS["riser"], 0, 0.3))
-            rails_by_aisle.setdefault(sec["id"], []).append((P(0.06, 0, rf + RAIL_H), P(0.06, 0, rf), ta))
-
-    # Handrails: one polyline per aisle, broken wherever a row was cut.
-    for sec_id, pts in rails_by_aisle.items():
-        run = []
-        for i, item in enumerate(pts + [None]):
-            if item is None:
-                if len(run) >= 2:
-                    rb = rails.at(run[len(run) // 2][2])
-                    rb.tube([p[0] for p in run], 0.026, "steel_painted", sides=5)
-                    for j, (top, foot, _) in enumerate(run):
-                        if j % 3 == 0:
-                            rb.tube([foot, top], 0.03, "steel_painted", sides=5)
-                run = []
-            else:
-                run.append(item)
-
-    vomitories(tier_name, secs, W, rails, dark)
+            for k in range(1, STEPS[tier_name]):
+                d = f + (bk - f) * k / STEPS[tier_name]
+                x, z = kit.bowl_point(d, ta)
+                h = tr + rise_step * k / STEPS[tier_name]
+                P = lambda lat, y: (x + tan[0] * lat, y, z + tan[2] * lat)
+                oquad(b, (P(-half, tr), P(half, tr), P(half, h), P(-half, h)), (nx, 0, nz), "trim",
+                      band_uv("nosing", 0, kit.AISLE / TRIM_U_YARDS["nosing"], 0.0, 1.0))
+                oquad(b, (P(-half, h), P(half, h), P(half, h + 0.001), P(-half, h + 0.001)), (0, 1, 0), "trim",
+                      band_uv("tread", 0, 0.2, 0.2, 0.3))
 
 
-def vomitories(tier_name: str, secs, W: Wedges, rails: Wedges, dark: Wedges) -> None:
+def vomitories(b: C.Builder, tier_name: str) -> None:
     tier = T[tier_name]
     n = ROWS[tier_name]
     v = kit.VOMITORY[tier_name]
@@ -253,376 +245,457 @@ def vomitories(tier_name: str, secs, W: Wedges, rails: Wedges, dark: Wedges) -> 
     landing = kit.row(tier, r0 - 1, n)["tread"]
     roof = landing + 2.84
     outer = tier["outer"] if tier_name == "lower" else kit.PARAPET["offset"] - 0.1
-    mid_ring = kit.Ring((tier["inner"] + tier["outer"]) / 2)
-    for sec in secs:
+    mid = kit.Ring((tier["inner"] + tier["outer"]) / 2)
+    for sec in kit.sections(tier_name):
         if not sec["vomitory"]:
             continue
-        frac = (sec["from"] + sec["to"]) / 2
-        tc = mid_ring.angle(frac * mid_ring.length)
-        nx, nz = kit.inward(mid_ring.m, tc)
+        tc = mid.angle(((sec["from"] + sec["to"]) / 2) * mid.length)
+        nx, nz = kit.inward(mid.m, tc)
         tan = (nz, 0.0, -nx)
-        out = (-nx, 0.0, -nz)
-        bld = W.at(tc)
-        dk = dark.at(tc)
         f0 = kit.row(tier, r0, n)["front"]
         b1 = kit.row(tier, r1, n)["back"]
+        nxt = kit.row(tier, r1 + 1, n)
 
         def Q(m, lat, y):
             x, z = kit.bowl_point(m, tc)
             return (x + tan[0] * lat, y, z + tan[2] * lat)
 
-        # stepped cheek walls through the cut rows
         for r in range(r0, r1 + 1):
             rw = kit.row(tier, r, n)
             for side in (-1, 1):
-                oquad(bld, (Q(rw["front"], side * half, landing), Q(rw["back"], side * half, landing),
-                            Q(rw["back"], side * half, rw["tread"]), Q(rw["front"], side * half, rw["tread"])),
-                      (-tan[0] * side, 0, -tan[2] * side), "concrete_wall",
-                      ((0, 0), ((rw["back"] - rw["front"]) / 3, 0), ((rw["back"] - rw["front"]) / 3, (rw["tread"] - landing) / 3),
-                       (0, (rw["tread"] - landing) / 3)))
-        # the lintel: from the tunnel's roof up to the first uncut row's riser
-        nxt = kit.row(tier, r1 + 1, n)
-        oquad(bld, (Q(nxt["front"], -half, roof), Q(nxt["front"], half, roof),
-                    Q(nxt["front"], half, nxt["riserFrom"]), Q(nxt["front"], -half, nxt["riserFrom"])),
-              (nx, 0, nz), "bowl_trim", band_uv("riser", 0, v["width"] / TRIM_U_YARDS["riser"], 0, 0.6))
-        # the tunnel under the rows behind: floor, roof, walls, and the glow at its end
-        oquad(dk, (Q(f0, -half, landing), Q(f0, half, landing), Q(outer, half, landing), Q(outer, -half, landing)),
-              (0, 1, 0), "bowl_trim", band_uv("tread", 0, v["width"] / TRIM_U_YARDS["tread"], 0, 1))
-        oquad(dk, (Q(nxt["front"], -half, roof), Q(nxt["front"], half, roof), Q(outer, half, roof), Q(outer, -half, roof)),
-              (0, -1, 0), "bowl_trim", band_uv("soffit", 0, v["width"] / TRIM_U_YARDS["soffit"], 0, 0.5))
+                oquad(b, (Q(rw["front"], side * half, landing), Q(rw["back"], side * half, landing),
+                          Q(rw["back"], side * half, rw["tread"]), Q(rw["front"], side * half, rw["tread"])),
+                      (-tan[0] * side, 0, -tan[2] * side), "concrete",
+                      ((0, 0), (0.35, 0), (0.35, (rw["tread"] - landing) / 3), (0, (rw["tread"] - landing) / 3)))
+        oquad(b, (Q(nxt["front"], -half, roof), Q(nxt["front"], half, roof),
+                  Q(nxt["front"], half, nxt["riserFrom"]), Q(nxt["front"], -half, nxt["riserFrom"])),
+              (nx, 0, nz), "trim", band_uv("riser", 0, v["width"] / 4.4, 0, 0.6))
+        oquad(b, (Q(f0, -half, landing), Q(f0, half, landing), Q(outer, half, landing), Q(outer, -half, landing)),
+              (0, 1, 0), "trim", band_uv("tread", 0, v["width"] / 4.4))
+        oquad(b, (Q(nxt["front"], -half, roof), Q(nxt["front"], half, roof), Q(outer, half, roof), Q(outer, -half, roof)),
+              (0, -1, 0), "trim", band_uv("soffit", 0, 0.5, 0, 0.5))
         for side in (-1, 1):
-            oquad(dk, (Q(b1, side * half, landing), Q(outer, side * half, landing), Q(outer, side * half, roof),
-                       Q(b1, side * half, roof)), (-tan[0] * side, 0, -tan[2] * side), "tunnel_dark")
-        oquad(dk, (Q(outer - 0.05, -half, landing), Q(outer - 0.05, half, landing), Q(outer - 0.05, half, roof),
-                   Q(outer - 0.05, -half, roof)), (nx, 0, nz), "concourse_glow")
-        # guard rails: along each cheek's stepped top and a glass panel across the lintel
-        rb = rails.at(tc)
-        for side in (-1, 1):
-            line = []
-            for r in range(r0, r1 + 1):
-                rw = kit.row(tier, r, n)
-                line.append(Q(rw["front"] + 0.1, side * (half + 0.1), rw["tread"] + RAIL_H))
-            line.append(Q(b1, side * (half + 0.1), kit.row(tier, r1, n)["tread"] + RAIL_H))
-            rb.tube(line, 0.026, "steel_painted", sides=5)
+            oquad(b, (Q(b1, side * half, landing), Q(outer, side * half, landing), Q(outer, side * half, roof),
+                      Q(b1, side * half, roof)), (-tan[0] * side, 0, -tan[2] * side), "trim",
+                  band_uv("padding", 0, 1.5, 0, 1))
+        oquad(b, (Q(outer - 0.05, -half, landing), Q(outer - 0.05, half, landing), Q(outer - 0.05, half, roof),
+                  Q(outer - 0.05, -half, roof)), (nx, 0, nz), "interiors", atlas_uv("glow", 0, v["width"] * 3))
         top = nxt["tread"]
-        rb.tube([Q(nxt["front"] + 0.12, -half, top + RAIL_H), Q(nxt["front"] + 0.12, half, top + RAIL_H)], 0.03,
-                "steel_painted", sides=6)
-        oquad(rb, (Q(nxt["front"] + 0.12, -half, top), Q(nxt["front"] + 0.12, half, top),
-                   Q(nxt["front"] + 0.12, half, top + RAIL_H - 0.05), Q(nxt["front"] + 0.12, -half, top + RAIL_H - 0.05)),
-              (nx, 0, nz), "glass_rail")
-        # the accessible platform's front rail
-        acc = kit.row(tier, r0 - 1, n)
-        wide = half + kit.ACCESSIBLE_MARGIN
-        rb.tube([Q(acc["front"] + 0.1, -wide, acc["tread"] + RAIL_H * 0.8), Q(acc["front"] + 0.1, wide, acc["tread"] + RAIL_H * 0.8)],
-                0.026, "steel_painted", sides=5)
-        for lat in (-wide, 0.0, wide):
-            rb.tube([Q(acc["front"] + 0.1, lat, acc["tread"]), Q(acc["front"] + 0.1, lat, acc["tread"] + RAIL_H * 0.8)],
-                    0.028, "steel_painted", sides=5)
-        del out
+        oquad(b, (Q(nxt["front"] + 0.12, -half, top), Q(nxt["front"] + 0.12, half, top),
+                  Q(nxt["front"] + 0.12, half, top + RAIL_H), Q(nxt["front"] + 0.12, -half, top + RAIL_H)),
+              (nx, 0, nz), "glass")
 
 
-# ───────────────────────────── field level ─────────────────────────────
-
-def field_wall(W: Wedges, rails: Wedges) -> None:
+def field_wall(b: C.Builder) -> None:
     wall = kit.BOWL["wall"]
-    m = wall["offset"]
-    top = wall["height"]
+    m, top = wall["offset"], wall["height"]
     ring = kit.Ring(m)
     cuts = [(s0 + 0.7, s1 - 0.7) for s0, s1, _ in kit.tunnel_spans(ring)]
-    base = kit.adaptive_angles(m, tolerance=0.03)
+    base = kit.adaptive_angles(m, tolerance=0.06, max_step=10.0)
     inner = T["lower"]["inner"]
     for t0, t1 in spans(cuts, ring):
         ts = sample(base, t0, t1)
         ul = arclen(m, ts)
         for i in range(len(ts) - 1):
             ta, tb = ts[i], ts[i + 1]
-            bld = W.at((ta + tb) / 2)
             nin = inward3(m, (ta + tb) / 2)
-            u = (ul[i] / 3.0, ul[i + 1] / 3.0)
-            layers = [(0.0, 0.16, m, "concrete_wall", None), (0.16, 0.2, m - 0.02, "steel_painted", None),
-                      (0.2, 1.0, m - 0.02, "wall_led", None), (1.0, 1.03, m - 0.02, "steel_painted", None)]
-            for y0, y1, mm, mat, _ in layers:
-                uv = ((u[0], y0), (u[1], y0), (u[1], y1), (u[0], y1))
-                oquad(bld, (pt(mm, ta, y0), pt(mm, tb, y0), pt(mm, tb, y1), pt(mm, ta, y1)), nin, mat, uv)
-            # the pad: a rounded roll of vinyl proud of the wall
-            pad = [(1.03, m - 0.02), (1.08, m - 0.12), (top - 0.08, m - 0.14), (top, m - 0.06)]
+            u0, u1 = ul[i], ul[i + 1]
+            oquad(b, (pt(m, ta, 0.0), pt(m, tb, 0.0), pt(m, tb, 0.18), pt(m, ta, 0.18)), nin, "concrete",
+                  ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.06), (u0 / 3, 0.06)))
+            oquad(b, (pt(m - 0.02, ta, 0.18), pt(m - 0.02, tb, 0.18), pt(m - 0.02, tb, 1.0), pt(m - 0.02, ta, 1.0)),
+                  nin, "screens")
+            pad = [(1.0, m - 0.02), (1.06, m - 0.13), (top - 0.07, m - 0.14), (top, m - 0.05)]
             for j in range(len(pad) - 1):
                 (ya, ma), (yb, mb) = pad[j], pad[j + 1]
-                oquad(bld, (pt(ma, ta, ya), pt(ma, tb, ya), pt(mb, tb, yb), pt(mb, ta, yb)),
-                      C._norm((nin[0], 0.4, nin[2])), "bowl_trim",
-                      band_uv("padding", ul[i] / TRIM_U_YARDS["padding"], ul[i + 1] / TRIM_U_YARDS["padding"],
-                              j / 3, (j + 1) / 3))
-            oquad(bld, (pt(m - 0.06, ta, top), pt(m - 0.06, tb, top), pt(inner, tb, top), pt(inner, ta, top)), (0, 1, 0),
-                  "bowl_trim", band_uv("tread", ul[i] / 4.4, ul[i + 1] / 4.4, 0.6, 0.9))
-            oquad(bld, (pt(inner, ta, T["lower"]["rise"][0]), pt(inner, tb, T["lower"]["rise"][0]),
-                        pt(inner, tb, top), pt(inner, ta, top)), (-nin[0], 0, -nin[2]), "concrete_wall")
-        # glass along the wall's cap, steel top rail
-        rb = rails.at((t0 + t1) / 2)
-        gl = [pt(m + 0.25, t, top + 0.95) for t in ts]
-        rb.tube(gl, 0.03, "steel_painted", sides=5)
-        for i in range(len(ts) - 1):
-            ta, tb = ts[i], ts[i + 1]
-            oquad(rb, (pt(m + 0.25, ta, top), pt(m + 0.25, tb, top), pt(m + 0.25, tb, top + 0.93), pt(m + 0.25, ta, top + 0.93)),
-                  inward3(m, ta), "glass_rail")
+                oquad(b, (pt(ma, ta, ya), pt(ma, tb, ya), pt(mb, tb, yb), pt(mb, ta, yb)),
+                      C._norm((nin[0], 0.4, nin[2])), "trim",
+                      band_uv("padding", u0 / TRIM_U_YARDS["padding"], u1 / TRIM_U_YARDS["padding"], j / 3, (j + 1) / 3))
+            oquad(b, (pt(m - 0.05, ta, top), pt(m - 0.05, tb, top), pt(inner, tb, top), pt(inner, ta, top)), (0, 1, 0),
+                  "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.6, 0.9))
+            oquad(b, (pt(m + 0.3, ta, top), pt(m + 0.3, tb, top), pt(m + 0.3, tb, top + 0.92), pt(m + 0.3, ta, top + 0.92)),
+                  nin, "glass")
+            oquad(b, (pt(m + 0.24, ta, top + 0.92), pt(m + 0.24, tb, top + 0.92), pt(m + 0.36, tb, top + 0.95),
+                      pt(m + 0.36, ta, top + 0.95)), (0, 1, 0), "steel")
 
 
-def team_tunnels(W: Wedges, rails: Wedges, dark: Wedges) -> None:
+def team_tunnels(b: C.Builder) -> None:
     tier = T["lower"]
     n = ROWS["lower"]
+    wall_m = kit.BOWL["wall"]["offset"]
     for tn in kit.BOWL["tunnels"]:
-        x = tn["x"] - 50
-        tc = 0.0 if x > 0 else math.pi
-        half = tn["width"] / 2 + 0.3
-        h = tn["height"]
-        nx, nz = kit.inward(5.4, tc)
+        tc = 0.0 if tn["x"] > 50 else math.pi
+        half, h = tn["width"] / 2 + 0.3, tn["height"]
+        nx, nz = kit.inward(wall_m, tc)
         tan = (nz, 0.0, -nx)
-        bld = W.at(tc)
-        dk = dark.at(tc)
-        wall_m = kit.BOWL["wall"]["offset"]
         cut_rows = [r for r in range(n) if kit.row(tier, r, n)["tread"] < h + kit.TUNNEL_CLEAR]
-        last = kit.row(tier, cut_rows[-1], n)
-        nxt = kit.row(tier, cut_rows[-1] + 1, n)
-        deck = last["tread"]
-        end = 20.0
+        last, nxt = kit.row(tier, cut_rows[-1], n), kit.row(tier, cut_rows[-1] + 1, n)
+        deck, end, wide = last["tread"], 20.0, half + 1.0
 
         def Q(m, lat, y):
-            xx, zz = kit.bowl_point(m, tc)
-            return (xx + tan[0] * lat, y, zz + tan[2] * lat)
+            x, z = kit.bowl_point(m, tc)
+            return (x + tan[0] * lat, y, z + tan[2] * lat)
 
-        wide = half + 1.0
-        # cheek walls rising under the removed rows, then the deck over the mouth
-        for r in cut_rows:
-            rw = kit.row(tier, r, n)
-            for side in (-1, 1):
-                oquad(bld, (Q(rw["front"], side * wide, 0), Q(rw["back"], side * wide, 0),
-                            Q(rw["back"], side * wide, rw["tread"]), Q(rw["front"], side * wide, rw["tread"])),
-                      (-tan[0] * side, 0, -tan[2] * side), "concrete_wall")
         for side in (-1, 1):
-            oquad(bld, (Q(wall_m, side * wide, 0), Q(tier["inner"], side * wide, 0), Q(tier["inner"], side * wide, deck),
-                        Q(wall_m, side * wide, deck)), (-tan[0] * side, 0, -tan[2] * side), "concrete_wall")
-        oquad(bld, (Q(wall_m, -wide, deck), Q(wall_m, wide, deck), Q(nxt["front"], wide, deck), Q(nxt["front"], -wide, deck)),
-              (0, 1, 0), "bowl_trim", band_uv("tread", 0, 2 * wide / 4.4, 0, 1))
-        oquad(bld, (Q(nxt["front"], -wide, deck), Q(nxt["front"], wide, deck), Q(nxt["front"], wide, nxt["riserFrom"]),
-                    Q(nxt["front"], -wide, nxt["riserFrom"])), (nx, 0, nz), "bowl_trim",
-              band_uv("riser", 0, 2 * wide / 4.4, 0, 0.4))
-        # the tunnel: floor, ceiling, walls, glow at the end
-        oquad(dk, (Q(wall_m, -half, 0.01), Q(wall_m, half, 0.01), Q(end, half, 0.01), Q(end, -half, 0.01)), (0, 1, 0), "tunnel_dark")
-        oquad(dk, (Q(wall_m, -half, h), Q(wall_m, half, h), Q(end, half, h), Q(end, -half, h)), (0, -1, 0), "tunnel_dark")
+            oquad(b, (Q(wall_m, side * wide, 0), Q(nxt["front"], side * wide, 0), Q(nxt["front"], side * wide, deck),
+                      Q(wall_m, side * wide, deck)), (-tan[0] * side, 0, -tan[2] * side), "concrete")
+        oquad(b, (Q(wall_m, -wide, deck), Q(wall_m, wide, deck), Q(nxt["front"], wide, deck), Q(nxt["front"], -wide, deck)),
+              (0, 1, 0), "concrete", ((0, 0), (2 * wide / 3, 0), (2 * wide / 3, 1.5), (0, 1.5)))
+        oquad(b, (Q(nxt["front"], -wide, deck), Q(nxt["front"], wide, deck), Q(nxt["front"], wide, nxt["riserFrom"]),
+                  Q(nxt["front"], -wide, nxt["riserFrom"])), (nx, 0, nz), "trim", band_uv("riser", 0, 2 * wide / 4.4, 0, 0.4))
+        oquad(b, (Q(wall_m, -half, 0.01), Q(wall_m, half, 0.01), Q(end, half, 0.01), Q(end, -half, 0.01)), (0, 1, 0),
+              "trim", band_uv("tread", 0, 1.5))
+        oquad(b, (Q(wall_m, -half, h), Q(wall_m, half, h), Q(end, half, h), Q(end, -half, h)), (0, -1, 0), "trim",
+              band_uv("soffit", 0, 1.2, 0, 1))
         for side in (-1, 1):
-            oquad(dk, (Q(wall_m, side * half, 0), Q(end, side * half, 0), Q(end, side * half, h), Q(wall_m, side * half, h)),
-                  (-tan[0] * side, 0, -tan[2] * side), "tunnel_dark")
-        oquad(dk, (Q(end, -half, 0), Q(end, half, 0), Q(end, half, h), Q(end, -half, h)), (nx, 0, nz), "concourse_glow")
-        # the entry arch: posts, a header screen, the deck's front face
+            oquad(b, (Q(wall_m, side * half, 0), Q(end, side * half, 0), Q(end, side * half, h), Q(wall_m, side * half, h)),
+                  (-tan[0] * side, 0, -tan[2] * side), "trim", band_uv("padding", 0, 4.0, 0, 1))
+        oquad(b, (Q(end, -half, 0), Q(end, half, 0), Q(end, half, h), Q(end, -half, h)), (nx, 0, nz), "interiors",
+              atlas_uv("glow", 0, 16))
         arch_m = wall_m - 0.5
+        yaw = math.atan2(nx, nz)
         for side in (-1, 1):
-            c = Q(arch_m, side * (half + 0.35), (deck + 1.3) / 2)
-            yaw = math.atan2(nx, nz)
-            bld.box(c, (0.7, deck + 1.3, 1.1), "steel_painted", yaw=yaw)
-        c = Q(arch_m, 0, deck + 0.65)
-        bld.box(c, (2 * half + 1.4, 1.3, 1.1), "steel_painted", yaw=math.atan2(nx, nz), skip=("front",))
-        oquad(bld, (Q(arch_m - 0.56, -half - 0.6, deck + 0.05), Q(arch_m - 0.56, half + 0.6, deck + 0.05),
-                    Q(arch_m - 0.56, half + 0.6, deck + 1.25), Q(arch_m - 0.56, -half - 0.6, deck + 1.25)), (nx, 0, nz),
-              "tunnel_header")
-        oquad(bld, (Q(arch_m - 0.56, -half, h), Q(arch_m - 0.56, half, h), Q(arch_m - 0.56, half, deck), Q(arch_m - 0.56, -half, deck)),
-              (nx, 0, nz), "bowl_trim", band_uv("padding", 0, 2 * half / 3.0, 0, 1))
-        rb = rails.at(tc)
-        rb.tube([Q(wall_m + 0.3, -wide, deck + 1.35), Q(wall_m + 0.3, wide, deck + 1.35)], 0.03, "steel_painted", sides=6)
-        oquad(rb, (Q(wall_m + 0.3, -wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 2.3),
-                   Q(wall_m + 0.3, -wide, deck + 2.3)), (nx, 0, nz), "glass_rail")
+            b.box(Q(arch_m, side * (half + 0.35), (deck + 1.3) / 2), (0.7, deck + 1.3, 1.1), "steel", yaw=yaw, skip=("bottom",))
+        b.box(Q(arch_m, 0, deck + 0.65), (2 * half + 1.4, 1.3, 1.1), "steel", yaw=yaw, skip=("front",))
+        oquad(b, (Q(arch_m - 0.56, -half - 0.6, deck + 0.05), Q(arch_m - 0.56, half + 0.6, deck + 0.05),
+                  Q(arch_m - 0.56, half + 0.6, deck + 1.25), Q(arch_m - 0.56, -half - 0.6, deck + 1.25)), (nx, 0, nz), "screens")
+        oquad(b, (Q(arch_m - 0.56, -half, h), Q(arch_m - 0.56, half, h), Q(arch_m - 0.56, half, deck),
+                  Q(arch_m - 0.56, -half, deck)), (nx, 0, nz), "trim", band_uv("padding", 0, 2 * half / 3.0, 0, 1))
+        oquad(b, (Q(wall_m + 0.3, -wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 2.3),
+                  Q(wall_m + 0.3, -wide, deck + 2.3)), (nx, 0, nz), "glass")
 
 
-# ───────────────────────────── club level ─────────────────────────────
-
-def club(W: Wedges, rails: Wedges) -> None:
-    lower_top = T["lower"]["rise"][1]
-    ceil = kit.CLUB["ceiling"]
-    glass_m = kit.CLUB["glass"]
-    back_m = 41.0
+def club(b: C.Builder) -> None:
+    """The concourse at the top of the lower bowl; the club and press box
+    under the upper deck behind glass; the ribbon fascia; and the upper deck's
+    cantilevered lip, whose underside is what you see from the lower rows."""
+    y0 = T["lower"]["rise"][1]
     fas = kit.FASCIA
+    glass_m, ceil, back = 42.4, 23.9, 46.5
+    lip_m, lip_under, lip_top = 39.8, 25.0, 25.3
     pb = kit.BOWL["pressBox"]
-    base = kit.adaptive_angles(39.0, tolerance=0.04, max_step=3.0)
-    ring = kit.Ring(39.0)
+    rib = kit.BOWL["ribbon"]["rise"]
+    base = kit.adaptive_angles(40.0, tolerance=0.1, max_step=8.0)
     ul = arclen(glass_m, base)
-    mull_every = 3.0
-    next_mull = 0.0
+    next_mull, next_col = 0.0, 0.0
     for i in range(len(base) - 1):
         ta, tb = base[i], base[i + 1]
         tm = (ta + tb) / 2
-        bld = W.at(tm)
-        nin = inward3(39.0, tm)
-        x, z = kit.bowl_point(39.0, tm)
+        nin = inward3(40.0, tm)
+        x, z = kit.bowl_point(40.0, tm)
         u0, u1 = ul[i], ul[i + 1]
         end = abs(x) > HALF_L + 2
-        press = (pb["side"] == "far" and z < 0 and (pb["fromX"] - 50) <= x <= (pb["toX"] - 50))
-        # slab and balcony edge
-        oquad(bld, (pt(T["lower"]["outer"], ta, lower_top), pt(T["lower"]["outer"], tb, lower_top),
-                    pt(back_m, tb, lower_top), pt(back_m, ta, lower_top)), (0, 1, 0), "bowl_trim",
-              band_uv("tread", u0 / 4.4, u1 / 4.4))
-        # soffit with a light cove
-        oquad(bld, (pt(T["lower"]["outer"], ta, ceil), pt(T["lower"]["outer"], tb, ceil), pt(fas["front"], tb, ceil),
-                    pt(fas["front"], ta, ceil)), (0, -1, 0), "bowl_trim", band_uv("soffit", u0 / 6.0, u1 / 6.0))
-        oquad(bld, (pt(36.35, ta, ceil - 0.02), pt(36.35, tb, ceil - 0.02), pt(36.55, tb, ceil - 0.02), pt(36.55, ta, ceil - 0.02)),
-              (0, -1, 0), "concourse_glow")
-        if press:
-            pass                                  # architecture.py builds the press box here
-        elif end:
-            oquad(bld, (pt(back_m, ta, lower_top), pt(back_m, tb, lower_top), pt(back_m, tb, ceil), pt(back_m, ta, ceil)),
-                  nin, "concourse_glow", ((u0 / 32, 0), (u1 / 32, 0), (u1 / 32, 1), (u0 / 32, 1)))
-        else:
-            oquad(bld, (pt(back_m, ta, lower_top), pt(back_m, tb, lower_top), pt(back_m, tb, ceil), pt(back_m, ta, ceil)),
-                  nin, "suite_interior", ((u0 / 48, 0), (u1 / 48, 0), (u1 / 48, 1), (u0 / 48, 1)))
-            oquad(bld, (pt(glass_m, ta, lower_top), pt(glass_m, tb, lower_top), pt(glass_m, tb, ceil), pt(glass_m, ta, ceil)),
-                  nin, "glass_suite")
-            # balcony glass rail in front of the suites
-            oquad(rails.at(tm), (pt(36.25, ta, lower_top), pt(36.25, tb, lower_top), pt(36.25, tb, lower_top + 0.95),
-                                 pt(36.25, ta, lower_top + 0.95)), nin, "glass_rail")
-        # fascia: trim, the ribbon screen in its frame, concrete above, cap, underside, back
-        rib = kit.BOWL["ribbon"]["rise"]
-        fm = fas["front"]
-        layers = [(fas["bottom"], rib[0] + 0.15, "steel_painted"), (rib[0] + 0.15, rib[1] - 0.15, "ribbon_screen"),
-                  (rib[1] - 0.15, rib[1], "steel_painted"), (rib[1], fas["top"], "concrete_wall")]
-        for y0, y1, mat in layers:
-            oquad(bld, (pt(fm, ta, y0), pt(fm, tb, y0), pt(fm, tb, y1), pt(fm, ta, y1)), nin, mat,
-                  ((u0 / 3, y0 / 3), (u1 / 3, y0 / 3), (u1 / 3, y1 / 3), (u0 / 3, y1 / 3)))
-        oquad(bld, (pt(fm, ta, fas["top"]), pt(fm, tb, fas["top"]), pt(fas["back"], tb, fas["top"]), pt(fas["back"], ta, fas["top"])),
-              (0, 1, 0), "bowl_trim", band_uv("steel", u0 / 3, u1 / 3))
-        oquad(bld, (pt(fm, ta, fas["bottom"]), pt(fm, tb, fas["bottom"]), pt(fas["back"], tb, fas["bottom"]),
-                    pt(fas["back"], ta, fas["bottom"])), (0, -1, 0), "concrete_wall")
-        oquad(bld, (pt(fas["back"], ta, fas["bottom"]), pt(fas["back"], tb, fas["bottom"]), pt(fas["back"], tb, ceil),
-                    pt(fas["back"], ta, ceil)), (-nin[0], 0, -nin[2]), "concrete_wall")
-        # glass rail on the fascia
-        oquad(rails.at(tm), (pt(41.9, ta, fas["top"]), pt(41.9, tb, fas["top"]), pt(41.9, tb, fas["top"] + 0.95),
-                             pt(41.9, ta, fas["top"] + 0.95)), nin, "glass_rail")
-        # mullions and end-concourse columns, spaced along the curve
+        press = pb["side"] == "far" and z < 0 and (pb["fromX"] - 50) <= x <= (pb["toX"] - 50)
+        region = "press" if press else "glow" if end else "suites"
+        # concourse floor, running back under the deck to the glass
+        oquad(b, (pt(T["lower"]["outer"], ta, y0), pt(T["lower"]["outer"], tb, y0), pt(glass_m, tb, y0), pt(glass_m, ta, y0)),
+              (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4))
+        # the glass wall and the lit room behind it
+        oquad(b, (pt(glass_m, ta, y0), pt(glass_m, tb, y0), pt(glass_m, tb, ceil), pt(glass_m, ta, ceil)), nin, "glass")
+        oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, ceil), pt(back, ta, ceil)), nin, "interiors",
+              atlas_uv(region, u0, u1))
+        oquad(b, (pt(glass_m, ta, ceil), pt(glass_m, tb, ceil), pt(back, tb, ceil), pt(back, ta, ceil)), (0, -1, 0), "trim",
+              band_uv("soffit", u0 / 6, u1 / 6, 0, 0.6))
+        # the ribbon fascia: steel trim, the screen, concrete, and its underside
+        fm, fb = fas["front"], glass_m
+        for ya, yb, mat, uv in ((fas["bottom"], rib[0] + 0.12, "trim", band_uv("steel", u0 / 3, u1 / 3, 0, 0.3)),
+                                (rib[0] + 0.12, rib[1] - 0.12, "screens", ((0, 0), (1, 0), (1, 1), (0, 1))),
+                                (rib[1] - 0.12, rib[1], "trim", band_uv("steel", u0 / 3, u1 / 3, 0.3, 0.6)),
+                                (rib[1], lip_under, "concrete", ((u0 / 3, rib[1] / 3), (u1 / 3, rib[1] / 3),
+                                                                 (u1 / 3, lip_under / 3), (u0 / 3, lip_under / 3)))):
+            oquad(b, (pt(fm, ta, ya), pt(fm, tb, ya), pt(fm, tb, yb), pt(fm, ta, yb)), nin, mat, uv)
+        oquad(b, (pt(fm, ta, fas["bottom"]), pt(fm, tb, fas["bottom"]), pt(fb, tb, fas["bottom"]), pt(fb, ta, fas["bottom"])),
+              (0, -1, 0), "concrete")
+        # the lip: underside with a light cove, a thin front, glass on top
+        oquad(b, (pt(lip_m, ta, lip_under), pt(lip_m, tb, lip_under), pt(fm, tb, lip_under), pt(fm, ta, lip_under)),
+              (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+        oquad(b, (pt(lip_m + 0.35, ta, lip_under - 0.02), pt(lip_m + 0.35, tb, lip_under - 0.02),
+                  pt(lip_m + 0.6, tb, lip_under - 0.02), pt(lip_m + 0.6, ta, lip_under - 0.02)), (0, -1, 0), "interiors",
+              atlas_uv("glow", u0, u1, 0.6, 0.9))
+        oquad(b, (pt(lip_m, ta, lip_under), pt(lip_m, tb, lip_under), pt(lip_m, tb, lip_top), pt(lip_m, ta, lip_top)), nin,
+              "trim", band_uv("steel", u0 / 3, u1 / 3))
+        oquad(b, (pt(lip_m, ta, lip_top), pt(lip_m, tb, lip_top), pt(T["upper"]["inner"], tb, lip_top),
+                  pt(T["upper"]["inner"], ta, lip_top)), (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.1, 0.9))
+        oquad(b, (pt(lip_m + 0.25, ta, lip_top), pt(lip_m + 0.25, tb, lip_top), pt(lip_m + 0.25, tb, lip_top + 0.95),
+                  pt(lip_m + 0.25, ta, lip_top + 0.95)), nin, "glass")
+        # mullions behind the glass, columns in the open end concourses
         while next_mull <= u1:
             if next_mull >= u0:
-                f = (next_mull - u0) / max(1e-6, u1 - u0)
-                t = ta + (tb - ta) * f
+                t = ta + (tb - ta) * (next_mull - u0) / max(1e-6, u1 - u0)
                 nx, nz = kit.inward(glass_m, t)
-                yaw = math.atan2(nx, nz)
-                if end:
-                    if int(next_mull / mull_every) % 3 == 0:
-                        bld.box(pt(38.6, t, (lower_top + ceil) / 2), (0.7, ceil - lower_top, 0.7), "concrete_wall", yaw=yaw)
-                elif not press:
-                    bld.box(pt(glass_m, t, (lower_top + ceil) / 2), (0.09, ceil - lower_top, 0.12), "steel_painted", yaw=yaw)
-            next_mull += mull_every
-        # the rail on top of the fascia glass
-    top_line = [pt(41.9, t, fas["top"] + 0.97) for t in base]
-    for k in range(0, len(top_line) - 1, 12):
-        chunk = top_line[k:k + 13]
-        rails.at(base[k]).tube(chunk, 0.03, "steel_painted", sides=5)
-    del ring
+                if not end:
+                    tx, tz = nz * 0.05, -nx * 0.05
+                    px, pz = kit.bowl_point(glass_m - 0.03, t)
+                    oquad(b, ((px - tx, y0, pz - tz), (px + tx, y0, pz + tz), (px + tx, ceil, pz + tz), (px - tx, ceil, pz - tz)),
+                          (nx, 0, nz), "steel")
+            next_mull += pb["mullionEvery"] * (1 if press else 2)
+        while next_col <= u1:
+            if next_col >= u0 and end:
+                t = ta + (tb - ta) * (next_col - u0) / max(1e-6, u1 - u0)
+                nx, nz = kit.inward(40.0, t)
+                b.box(pt(41.0, t, (y0 + fas["bottom"]) / 2), (0.8, fas["bottom"] - y0, 0.8), "concrete",
+                      yaw=math.atan2(nx, nz), skip=("top", "bottom"), uv_scale=0.33)
+            next_col += 9.0
+    # the press box's broadcast bay: a glazed box pushed forward under the lip
+    x0, x1 = pb["fromX"] - 50, pb["toX"] - 50
+    bay_half = 6.0
+    for tt in (math.pi * 1.5,):
+        nx, nz = kit.inward(40.0, tt)
+        tan = (nz, 0.0, -nx)
+
+        def Q(m, lat, y):
+            x, z = kit.bowl_point(m, tt)
+            return (x + tan[0] * lat, y, z + tan[2] * lat)
+        front, top = 39.6, fas["bottom"] - 0.05
+        oquad(b, (Q(front, -bay_half, y0), Q(front, bay_half, y0), Q(front, bay_half, top), Q(front, -bay_half, top)),
+              (nx, 0, nz), "glass")
+        oquad(b, (Q(front + 0.8, -bay_half, y0), Q(front + 0.8, bay_half, y0), Q(front + 0.8, bay_half, top),
+                  Q(front + 0.8, -bay_half, top)), (nx, 0, nz), "interiors", atlas_uv("press", 0, 2 * bay_half))
+        oquad(b, (Q(front, -bay_half, top), Q(front, bay_half, top), Q(glass_m, bay_half, top), Q(glass_m, -bay_half, top)),
+              (0, 1, 0), "trim", band_uv("steel", 0, 4))
+        for side in (-1, 1):
+            oquad(b, (Q(front, side * bay_half, y0), Q(glass_m, side * bay_half, y0), Q(glass_m, side * bay_half, top),
+                      Q(front, side * bay_half, top)), (tan[0] * side, 0, tan[2] * side), "glass")
+    del x0, x1
 
 
-# ───────────────────────────── the top ─────────────────────────────
-
-def parapet(W: Wedges) -> None:
-    m0 = T["upper"]["outer"]
-    m1 = kit.PARAPET["offset"]
+def parapet(b: C.Builder) -> None:
+    m0, m1 = T["upper"]["outer"], kit.PARAPET["offset"]
     y0, y1 = T["upper"]["rise"][1], kit.PARAPET["top"]
-    base = kit.adaptive_angles(m1, tolerance=0.06)
+    base = kit.adaptive_angles(m1, tolerance=0.15, max_step=12.0)
     ul = arclen(m1, base)
-    fin_every, next_fin = 5.0, 0.0
+    next_fin = 0.0
     for i in range(len(base) - 1):
         ta, tb = base[i], base[i + 1]
-        tm = (ta + tb) / 2
-        bld = W.at(tm)
-        nin = inward3(m1, tm)
+        nin = inward3(m1, (ta + tb) / 2)
         u0, u1 = ul[i], ul[i + 1]
-        oquad(bld, (pt(m0, ta, y0), pt(m0, tb, y0), pt(m0, tb, y1), pt(m0, ta, y1)), nin, "concrete_wall",
+        oquad(b, (pt(m0, ta, y0), pt(m0, tb, y0), pt(m0, tb, y1), pt(m0, ta, y1)), nin, "concrete",
               ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.6), (u0 / 3, 0.6)))
-        oquad(bld, (pt(m0, ta, y1), pt(m0, tb, y1), pt(m1 + 0.2, tb, y1), pt(m1 + 0.2, ta, y1)), (0, 1, 0), "bowl_trim",
+        oquad(b, (pt(m0, ta, y1), pt(m0, tb, y1), pt(m1 + 0.2, tb, y1), pt(m1 + 0.2, ta, y1)), (0, 1, 0), "trim",
               band_uv("steel", u0 / 3, u1 / 3))
-        oquad(bld, (pt(m1 + 0.2, ta, 26.0), pt(m1 + 0.2, tb, 26.0), pt(m1 + 0.2, tb, y1), pt(m1 + 0.2, ta, y1)),
-              (-nin[0], 0, -nin[2]), "concrete_wall", ((u0 / 4, 0), (u1 / 4, 0), (u1 / 4, 5.4), (u0 / 4, 5.4)))
+        oquad(b, (pt(m1 + 0.2, ta, 30.0), pt(m1 + 0.2, tb, 30.0), pt(m1 + 0.2, tb, y1), pt(m1 + 0.2, ta, y1)),
+              (-nin[0], 0, -nin[2]), "concrete", ((u0 / 4, 0), (u1 / 4, 0), (u1 / 4, 4.4), (u0 / 4, 4.4)))
         while next_fin <= u1:
             if next_fin >= u0:
-                f = (next_fin - u0) / max(1e-6, u1 - u0)
-                t = ta + (tb - ta) * f
+                t = ta + (tb - ta) * (next_fin - u0) / max(1e-6, u1 - u0)
                 nx, nz = kit.inward(m1, t)
-                c = pt(m1 + 0.95, t, (26.0 + y1 + 0.6) / 2)
-                bld.box(c, (0.45, y1 + 0.6 - 26.0, 1.5), "concrete_wall", yaw=math.atan2(nx, nz), uv_scale=0.3)
-            next_fin += fin_every
+                b.box(pt(m1 + 0.95, t, (30.0 + y1 + 0.6) / 2), (0.45, y1 + 0.6 - 30.0, 1.5), "concrete",
+                      yaw=math.atan2(nx, nz), uv_scale=0.3, skip=("bottom", "back"))
+            next_fin += 8.0
 
 
-# ───────────────────────────── far seats ─────────────────────────────
+# ───────────────────────────── seats ─────────────────────────────
 
-def far_seats(W: Wedges) -> None:
-    """Each row of seats as one slanted band - pan edge to back top - with the
-    seat texture, and every gap in it that seats.json has."""
-    lip, top = 0.24, 0.93
+LIP, BAND_TOP = 0.24, 0.93
+
+
+def band_quads(b: C.Builder, row_floor: float, m_feet: float, ts, material="band") -> None:
+    ul = arclen(m_feet, ts)
+    for i in range(len(ts) - 1):
+        ta, tb = ts[i], ts[i + 1]
+        nin = inward3(m_feet, ta)
+        u0, u1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
+        oquad(b, (pt(m_feet - LIP, ta, row_floor + 0.05), pt(m_feet - LIP, tb, row_floor + 0.05),
+                  pt(m_feet + 0.3, tb, row_floor + BAND_TOP), pt(m_feet + 0.3, ta, row_floor + BAND_TOP)),
+              C._norm((nin[0], 0.6, nin[2])), material, ((u0, 0), (u1, 0), (u1, 1), (u0, 1)))
+
+
+def seat_runs(tier_name: str):
+    """Row by row, the seated stretches as (r, row, ring, [(s0, s1)]) in arc
+    length, split wherever the scene's runs break."""
+    plan = next(t for t in kit.seating()["tiers"] if t["tier"] == tier_name)
+    tier = T[tier_name]
+    n = ROWS[tier_name]
+    for r, rp in enumerate(plan["rows"]):
+        ring = kit.Ring(rp["feet"])
+        stretches = [(first - rp["pitch"] / 2, first + (count - 0.5) * rp["pitch"]) for first, count in rp["runs"]]
+        yield r, kit.row(tier, r, n), ring, rp, stretches
+
+
+def far_bands(regions) -> dict[str, C.Builder]:
+    """`bands` for the whole bowl minus the preset regions; `fill_<id>` for each region."""
+    out = {"bands": C.Builder("bands")}
+    for reg in regions:
+        out[reg["id"]] = C.Builder(f"fill_{reg['id']}")
     for tier_name in ("lower", "upper"):
         tier = T[tier_name]
-        n = ROWS[tier_name]
-        base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.12)
-        for r, rw, ring, seats, gaps, secs in kit.seat_rows(tier_name):
-            cuts = [(a, b) for a, b, _ in gaps]
-            m_feet = ring.m
-            for t0, t1 in spans(cuts, ring):
-                ts = sample(base, t0, t1)
-                ul = arclen(m_feet, ts)
-                for i in range(len(ts) - 1):
-                    ta, tb = ts[i], ts[i + 1]
-                    bld = W.at((ta + tb) / 2)
-                    nin = inward3(m_feet, ta)
-                    u0, u1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
-                    oquad(bld, (pt(m_feet - lip, ta, rw["tread"] + 0.05), pt(m_feet - lip, tb, rw["tread"] + 0.05),
-                                pt(m_feet + 0.3, tb, rw["tread"] + top), pt(m_feet + 0.3, ta, rw["tread"] + top)),
-                          C._norm((nin[0], 0.6, nin[2])), "seat_band", ((u0, 0), (u1, 0), (u1, 1), (u0, 1)))
+        base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.2, max_step=12.0)
+        for r, rw, ring, rp, stretches in seat_runs(tier_name):
+            for s0, s1 in stretches:
+                # split the stretch where it enters and leaves any region
+                cuts = [s0, s1]
+                for reg in regions:
+                    if reg["tier"] == tier_name and reg["rows"][0] <= r <= reg["rows"][1]:
+                        c = ring.arc_at(reg["angle"])
+                        for edge in (c - reg["reach"], c + reg["reach"]):
+                            for off in (-ring.length, 0.0, ring.length):
+                                if s0 < edge + off < s1:
+                                    cuts.append(edge + off)
+                cuts.sort()
+                for a, bb in zip(cuts, cuts[1:]):
+                    if bb - a < 0.05:
+                        continue
+                    mid = (a + bb) / 2
+                    owner = next((reg["id"] for reg in regions if in_region(reg, tier_name, r, ring, mid)), "bands")
+                    ta, tb = ring.angle(a), ring.angle(bb)
+                    if tb < ta:
+                        tb += 2 * math.pi
+                    ts = sample(base, ta, tb)
+                    band_quads(out[owner], rw["tread"], rp["feet"], ts)
+    return out
 
 
-# ───────────────────────────── LOD2 ─────────────────────────────
-
-def lod2(W: Wedges) -> None:
-    group = 3
-    for tier_name in ("lower", "upper"):
-        tier = T[tier_name]
-        n = ROWS[tier_name]
-        base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.35, max_step=10.0)
-        for g0 in range(0, n, group):
-            g1 = min(n, g0 + group) - 1
-            first, last = kit.row(tier, g0, n), kit.row(tier, g1, n)
-            f, bk, tr, rf = first["front"], last["back"], last["tread"], first["riserFrom"]
-            ul = arclen(f, base)
-            for i in range(len(base) - 1):
-                ta, tb = base[i], base[i + 1]
-                bld = W.at((ta + tb) / 2)
+def near_patch(reg) -> C.Builder:
+    """The foreground around one preset: nosing strips, aisle stairs,
+    handrails, modelled chairs in front of the wearer, bands beyond."""
+    b = C.Builder(f"near_{reg['id']}")
+    tier_name = reg["tier"]
+    tier = T[tier_name]
+    n = ROWS[tier_name]
+    secs = kit.sections(tier_name)
+    rise_step = (tier["rise"][1] - tier["rise"][0]) / n
+    base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.04, max_step=4.0)
+    ex, ey, ez = reg["eye"]
+    fx, _, fz = reg["feet"]
+    lod0 = SEAT.seat(0, False)
+    lod1 = SEAT.seat(1, False)
+    rails: dict[str, list] = {}
+    for r, rw, ring, rp, stretches in seat_runs(tier_name):
+        if not (reg["rows"][0] <= r <= reg["rows"][1]):
+            continue
+        f, bk, tr = rw["front"], rw["back"], rw["tread"]
+        c = ring.arc_at(reg["angle"])
+        s_lo, s_hi = c - reg["reach"], c + reg["reach"]
+        # a rubber nosing strip proud of the riser along the whole region
+        gaps = kit.gaps_for_row(tier_name, r, secs, ring)
+        cuts = [(a, bb) for a, bb, k in gaps if k in ("vomitory", "tunnel")]
+        for t0, t1 in spans(cuts, ring):
+            a0, a1 = ring.arc_at(t0), ring.arc_at(t1) if t1 < 2 * math.pi - 1e-9 else ring.length
+            lo, hi = max(a0, s_lo), min(a1, s_hi)
+            if hi - lo < 0.1:
+                continue
+            ts = sample(base, ring.angle(lo), ring.angle(hi))
+            ul = arclen(f, ts)
+            for i in range(len(ts) - 1):
+                ta, tb = ts[i], ts[i + 1]
                 nin = inward3(f, (ta + tb) / 2)
-                ua, ub = ul[i] / 4.4, ul[i + 1] / 4.4
-                oquad(bld, (pt(f, ta, rf), pt(f, tb, rf), pt(f, tb, tr), pt(f, ta, tr)), nin, "bowl_trim",
-                      band_uv("riser", ua, ub, 0, 1))
-                su0, su1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
-                oquad(bld, (pt(f, ta, tr), pt(f, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0), "seat_band",
-                      ((su0, 0), (su1, 0), (su1, g1 - g0 + 1), (su0, g1 - g0 + 1)))
-    # wall, club band, fascia and parapet as single faces
-    fas = kit.FASCIA
-    lower_top, ceil = T["lower"]["rise"][1], kit.CLUB["ceiling"]
-    base = kit.adaptive_angles(40.0, tolerance=0.35, max_step=10.0)
-    ul = arclen(40.0, base)
+                u0, u1 = ul[i] / 2.2, ul[i + 1] / 2.2
+                oquad(b, (pt(f - 0.02, ta, tr - 0.06), pt(f - 0.02, tb, tr - 0.06), pt(f - 0.02, tb, tr + 0.012),
+                          pt(f - 0.02, ta, tr + 0.012)), nin, "stair", ((u0, 0.02), (u1, 0.02), (u1, 0.16), (u0, 0.16)))
+                oquad(b, (pt(f - 0.02, ta, tr + 0.012), pt(f - 0.02, tb, tr + 0.012), pt(f + 0.07, tb, tr + 0.012),
+                          pt(f + 0.07, ta, tr + 0.012)), (0, 1, 0), "stair", ((u0, 0.05), (u1, 0.05), (u1, 0.15), (u0, 0.15)))
+        # seats: chairs near the wearer, bands beyond
+        for s0, s1 in stretches:
+            lo, hi = max(s0, s_lo), min(s1, s_hi)
+            if hi - lo < 0.05:
+                continue
+            band_from = None
+            k0 = math.ceil((lo - rp["runs"][0][0]) / rp["pitch"] - 1e-6) if rp["runs"] else 0
+            s = rp["runs"][0][0] + k0 * rp["pitch"] if rp["runs"] else lo
+            while s <= hi + 1e-6:
+                if s >= lo - 1e-6:
+                    t = ring.angle(s)
+                    x, z = kit.bowl_point(ring.m, t)
+                    d = math.dist((x, tr, z), (ex, ey, ez))
+                    own = math.dist((x, z), (fx, fz)) < rp["pitch"] * 0.6 and abs(tr - reg["feet"][1]) < 0.1
+                    nx, nz = kit.inward(ring.m, t)
+                    yaw = math.atan2(nx, nz)
+                    if own:
+                        pass
+                    elif d <= LOD1_RADIUS:
+                        if band_from is not None:
+                            band_quads(b, tr, rp["feet"], sample(base, ring.angle(band_from), ring.angle(s - rp["pitch"] / 2)))
+                            band_from = None
+                        b.extend_placed(lod0 if d <= LOD0_RADIUS else lod1, yaw, (x, tr, z))
+                    elif band_from is None:
+                        band_from = s - rp["pitch"] / 2
+                s += rp["pitch"]
+            if band_from is not None and hi - band_from > 0.05:
+                band_quads(b, tr, rp["feet"], sample(base, ring.angle(band_from), ring.angle(hi)))
+        # aisle stairs as real blocks, and their handrail points
+        L = ring.length
+        for sec in secs:
+            s = sec["from"] * L
+            if not (s_lo <= s <= s_hi) or any(a - 0.6 <= s <= bb + 0.6 for a, bb in cuts):
+                rails.setdefault(sec["id"], []).append(None)
+                continue
+            ta = ring.angle(s)
+            nx, nz = kit.inward(ring.m, ta)
+            tan = (nz, 0.0, -nx)
+            half = kit.AISLE / 2 - 0.02
+
+            def P(depth, lat, y):
+                x, z = kit.bowl_point(f + (bk - f) * depth, ta)
+                return (x + tan[0] * lat, y, z + tan[2] * lat)
+
+            steps = STEPS[tier_name]
+            for k in range(1, steps):
+                d0, d1 = k / steps, 1.0
+                h = tr + rise_step * k / steps
+                front_d = d0 - 0.012
+                oquad(b, (P(front_d, -half, tr), P(front_d, half, tr), P(front_d, half, h), P(front_d, -half, h)), (nx, 0, nz),
+                      "stair", ((0, 0), (1, 0), (1, 0.4), (0, 0.4)))
+                oquad(b, (P(front_d, -half, h), P(front_d, half, h), P(d1, half, h), P(d1, -half, h)), (0, 1, 0), "stair",
+                      ((0, 0.4), (1, 0.4), (1, 1), (0, 1)))
+                for side in (-1, 1):
+                    oquad(b, (P(front_d, side * half, tr), P(d1, side * half, tr), P(d1, side * half, h),
+                              P(front_d, side * half, h)), (tan[0] * side, 0, tan[2] * side), "stair",
+                          ((0, 0.45), (0.3, 0.45), (0.3, 0.6), (0, 0.6)))
+            rails.setdefault(sec["id"], []).append((P(0.06, 0, rw["riserFrom"] + RAIL_H), P(0.06, 0, rw["riserFrom"])))
+    for pts in rails.values():
+        run = []
+        for item in pts + [None]:
+            if item is None:
+                if len(run) >= 2:
+                    b.tube([p[0] for p in run], 0.026, "seat_hardware", sides=5)
+                    for j, (top, foot) in enumerate(run):
+                        if j % 3 == 0:
+                            b.tube([foot, top], 0.03, "seat_hardware", sides=4)
+                run = []
+            else:
+                run.append(item)
+    return b
+
+
+# ───────────────────────────── table ─────────────────────────────
+
+def table() -> C.Builder:
+    """The lower bowl three rows a step, the wall and the concourse rail, with
+    the home stands cut away so the wearer looks in."""
+    b = C.Builder("table")
+    tier = T["lower"]
+    n = ROWS["lower"]
+    base = kit.adaptive_angles((tier["inner"] + tier["outer"]) / 2, tolerance=0.35, max_step=12.0)
+    for g0 in range(0, n, 3):
+        g1 = min(n, g0 + 3) - 1
+        first, last = kit.row(tier, g0, n), kit.row(tier, g1, n)
+        f, bk, tr, rf = first["front"], last["back"], last["tread"], first["riserFrom"]
+        ul = arclen(f, base)
+        for i in range(len(base) - 1):
+            ta, tb = base[i], base[i + 1]
+            if cut_on_table(ta, tb):
+                continue
+            nin = inward3(f, (ta + tb) / 2)
+            oquad(b, (pt(f, ta, rf), pt(f, tb, rf), pt(f, tb, tr), pt(f, ta, tr)), nin, "table_trim",
+                  band_uv("riser", ul[i] / 4.4, ul[i + 1] / 4.4))
+            su0, su1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
+            oquad(b, (pt(f, ta, tr), pt(f, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0), "band",
+                  ((su0, 0), (su1, 0), (su1, g1 - g0 + 1), (su0, g1 - g0 + 1)))
+    wm, top = kit.BOWL["wall"]["offset"], kit.BOWL["wall"]["height"]
+    base = kit.adaptive_angles(20.0, tolerance=0.35, max_step=12.0)
     for i in range(len(base) - 1):
         ta, tb = base[i], base[i + 1]
-        bld = W.at((ta + tb) / 2)
-        nin = inward3(40.0, (ta + tb) / 2)
-        u0, u1 = ul[i], ul[i + 1]
-        wm = kit.BOWL["wall"]["offset"]
-        oquad(bld, (pt(wm, ta, 0), pt(wm, tb, 0), pt(wm, tb, 1.0), pt(wm, ta, 1.0)), nin, "wall_led")
-        oquad(bld, (pt(wm, ta, 1.0), pt(wm, tb, 1.0), pt(wm, tb, 1.4), pt(wm, ta, 1.4)), nin, "bowl_trim",
-              band_uv("padding", u0 / 3, u1 / 3))
-        oquad(bld, (pt(T["lower"]["outer"], ta, lower_top), pt(T["lower"]["outer"], tb, lower_top),
-                    pt(40.5, tb, lower_top), pt(40.5, ta, lower_top)), (0, 1, 0), "bowl_trim", band_uv("tread", u0 / 4.4, u1 / 4.4))
-        oquad(bld, (pt(40.5, ta, lower_top), pt(40.5, tb, lower_top), pt(40.5, tb, ceil), pt(40.5, ta, ceil)), nin,
-              "suite_interior", ((u0 / 48, 0), (u1 / 48, 0), (u1 / 48, 1), (u0 / 48, 1)))
-        oquad(bld, (pt(T["lower"]["outer"], ta, ceil), pt(T["lower"]["outer"], tb, ceil), pt(fas["front"], tb, ceil),
-                    pt(fas["front"], ta, ceil)), (0, -1, 0), "bowl_trim", band_uv("soffit", u0 / 6, u1 / 6))
-        oquad(bld, (pt(fas["front"], ta, fas["bottom"]), pt(fas["front"], tb, fas["bottom"]), pt(fas["front"], tb, kit.BOWL["ribbon"]["rise"][1]),
-                    pt(fas["front"], ta, kit.BOWL["ribbon"]["rise"][1])), nin, "ribbon_screen")
-        oquad(bld, (pt(fas["front"], ta, kit.BOWL["ribbon"]["rise"][1]), pt(fas["front"], tb, kit.BOWL["ribbon"]["rise"][1]),
-                    pt(fas["front"], tb, fas["top"]), pt(fas["front"], ta, fas["top"])), nin, "concrete_wall")
-        oquad(bld, (pt(fas["front"], ta, fas["top"]), pt(fas["front"], tb, fas["top"]), pt(T["upper"]["inner"], tb, fas["top"]),
-                    pt(T["upper"]["inner"], ta, fas["top"])), (0, 1, 0), "bowl_trim", band_uv("steel", u0 / 3, u1 / 3))
-        pm = T["upper"]["outer"]
-        oquad(bld, (pt(pm, ta, T["upper"]["rise"][1]), pt(pm, tb, T["upper"]["rise"][1]), pt(pm, tb, kit.PARAPET["top"]),
-                    pt(pm, ta, kit.PARAPET["top"])), nin, "concrete_wall")
+        if cut_on_table(ta, tb):
+            continue
+        nin = inward3(wm, (ta + tb) / 2)
+        oquad(b, (pt(wm, ta, 0), pt(wm, tb, 0), pt(wm, tb, top), pt(wm, ta, top)), nin, "screens")
+        oquad(b, (pt(wm, ta, top), pt(wm, tb, top), pt(tier["inner"], tb, top), pt(tier["inner"], ta, top)), (0, 1, 0),
+              "table_trim", band_uv("tread", 0, 1, 0.5, 0.8))
+        o, yt = tier["outer"], tier["rise"][1]
+        oquad(b, (pt(o, ta, yt), pt(o, tb, yt), pt(o, tb, yt + 1.6), pt(o, ta, yt + 1.6)), nin, "table_trim",
+              band_uv("steel", 0, 1))
+        oquad(b, (pt(o + 0.4, ta, 0), pt(o + 0.4, tb, 0), pt(o + 0.4, tb, yt + 1.6), pt(o + 0.4, ta, yt + 1.6)),
+              (-nin[0], 0, -nin[2]), "table_trim", band_uv("riser", 0, 1))
+    return b
 
 
 # ───────────────────────────── build ─────────────────────────────
@@ -632,45 +705,34 @@ def build() -> list[dict]:
     mats = materials()
     entries = []
 
-    def emit(name, groups, about, **extra):
-        objs = []
-        tris = 0
-        meta = []
-        for g in groups:
-            objs += g.build(mats)
-            tris += g.triangles
-            meta += g.meta()
+    def emit(name, builders, about, **extra):
+        objs = [bd.build(mats) for bd in builders if bd.faces]
         e = C.export(objs, name)
-        e.update({"kind": "structure", "about": about, "wedges": meta, "triangles": tris, **extra})
+        e.update({"about": about, **extra})
         entries.append(e)
-        print(f"[structure] {name}: {tris} tris in {len(objs)} objects", flush=True)
+        print(f"[structure] {name}: {e['triangles']} tris, parts {e['parts']}, "
+              f"{e['bytes']['usdz'] / 1e6:.1f} MB usdz / {e['bytes']['glb'] / 1e6:.1f} MB glb", flush=True)
         for o in objs:
-            import bpy
             bpy.data.objects.remove(o)
 
-    W, R, D = Wedges("lower", WEDGES_LOD0), Wedges("lower_rails", WEDGES_LOD0), Wedges("lower_tunnels", WEDGES_LOD0)
-    tier_rows("lower", W, R, D)
-    field_wall(W, R)
-    team_tunnels(W, R, D)
-    emit("bowl_lower_lod0", (W, R, D), "Lower tier at full detail: rows, stairs, rails, vomitories, wall, team tunnels.", lod=0)
+    regions = presets()
+    stands = C.Builder("stands")
+    for tier_name in ("lower", "upper"):
+        stands_rows(stands, tier_name)
+        vomitories(stands, tier_name)
+    field_wall(stands)
+    team_tunnels(stands)
+    club(stands)
+    parapet(stands)
+    emit("stands", [stands], "The whole bowl's structure in one entity.")
 
-    W, R = Wedges("club", WEDGES_LOD0), Wedges("club_rails", WEDGES_LOD0)
-    club(W, R)
-    emit("bowl_club_lod0", (W, R), "Club level: concourse slab, suites behind glass, end concourses, soffit, ribbon fascia.", lod=0)
-
-    W, R, D = Wedges("upper", WEDGES_LOD0), Wedges("upper_rails", WEDGES_LOD0), Wedges("upper_tunnels", WEDGES_LOD0)
-    tier_rows("upper", W, R, D)
-    parapet(W)
-    emit("bowl_upper_lod0", (W, R, D), "Upper tier at full detail: rows, stairs, rails, vomitories, parapet, exterior.", lod=0)
-
-    W = Wedges("seats_far", kit.WEDGES)
-    far_seats(W)
-    emit("bowl_seats_far", (W,), "Every row of seats as one textured band, for seats beyond instancing range. Tint: seat_band base colour.",
-         lod=2)
-
-    W = Wedges("lod2", kit.WEDGES)
-    lod2(W)
-    emit("bowl_lod2", (W,), "The whole bowl stepped three rows at a time, for the tabletop (hide wedges inside the cutaway) and distance.",
-         lod=2)
+    bands = far_bands(regions)
+    emit("seats_far", list(bands.values()),
+         "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill "
+         "except the preset the wearer sits in.", regions=[{k: r[k] for k in ("id", "tier", "angle", "rows", "reach")}
+                                                         for r in regions])
+    emit("near", [near_patch(r) for r in regions],
+         "Foreground detail per preset (`near_<preset>`): show only the wearer's.")
+    emit("table", [table()], "The tabletop bowl: lower tier, stepped, home stands cut away.")
     C.write_manifest_part("structure", entries)
     return entries

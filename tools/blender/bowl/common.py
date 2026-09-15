@@ -21,7 +21,7 @@ import bmesh  # noqa: F401  (kept for scripts that import common)
 import kit
 
 OUT = kit.OUT
-TEX = OUT / "textures"
+TEX = kit.ROOT / ".work" / "bowl-textures"
 MOD = OUT / "modules"
 Y = kit.YARD
 
@@ -141,6 +141,20 @@ class Builder:
             self.uvs.append(u)
             self.mats.append(remap[mi])
 
+    def extend_placed(self, other: "Builder", yaw: float, at) -> None:
+        """Append another builder's triangles turned by yaw about +y (local)
+        and moved to `at` (local yards). Builders hold Blender metres, where a
+        local yaw is a turn about +Z."""
+        c, s = math.cos(yaw), math.sin(yaw)
+        ox, oy, oz = bl(*at)
+        base = len(self.verts)
+        self.verts.extend((x * c - y * s + ox, x * s + y * c + oy, z + oz) for x, y, z in other.verts)
+        remap = [self.slot(m) for m in other.slots]
+        for f, u, mi in zip(other.faces, other.uvs, other.mats):
+            self.faces.append(tuple(i + base for i in f))
+            self.uvs.append(u)
+            self.mats.append(remap[mi])
+
     @property
     def triangles(self) -> int:
         return sum(len(f) - 2 for f in self.faces)
@@ -149,11 +163,8 @@ class Builder:
         me = bpy.data.meshes.new(self.name)
         me.from_pydata(self.verts, [], self.faces)
         uv = me.uv_layers.new(name="UVMap")
-        loop = 0
-        for poly_uvs in self.uvs:
-            for u in poly_uvs:
-                uv.data[loop].uv = u
-                loop += 1
+        flat = [c for poly_uvs in self.uvs for u in poly_uvs for c in u]
+        uv.data.foreach_set("uv", flat)
         for name in self.slots:
             me.materials.append(materials[name])
         me.polygons.foreach_set("material_index", self.mats)
@@ -274,28 +285,31 @@ def material(name: str, *, color=(0.8, 0.8, 0.8, 1.0), albedo: str | None = None
 # ───────────────────────────── export ─────────────────────────────
 
 def export(objects, name: str) -> dict:
-    """Write modules/<name>.gltf (+ .bin, textures shared in ../textures) and
-    modules/<name>.usdc. Returns the manifest entry."""
-    MOD.mkdir(parents=True, exist_ok=True)
+    """Write assets/actors/bowl/<name>.usdz for the headset and <name>.glb
+    beside it for Three.js and Filament, from the same selection. Each object
+    becomes a named child a renderer can find (`near_club`, `fill_upper`)."""
+    OUT.mkdir(parents=True, exist_ok=True)
     bpy.ops.object.select_all(action="DESELECT")
     for o in objects:
         o.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
-    bpy.ops.export_scene.gltf(filepath=str(MOD / f"{name}.gltf"), export_format="GLTF_SEPARATE",
-                              export_texture_dir="../textures", use_selection=True, export_yup=True,
-                              export_apply=True, export_image_format="AUTO",
-                              export_keep_originals=True, export_tangents=False,
-                              export_cameras=False, export_lights=False, export_extras=True)
-    bpy.ops.wm.usd_export(filepath=str(MOD / f"{name}.usdc"), selected_objects_only=True,
+    bpy.ops.export_scene.gltf(filepath=str(OUT / f"{name}.glb"), export_format="GLB", use_selection=True,
+                              export_yup=True, export_apply=True, export_image_format="AUTO",
+                              export_jpeg_quality=88, export_tangents=False, export_cameras=False,
+                              export_lights=False, export_extras=True)
+    bpy.ops.wm.usd_export(filepath=str(OUT / f"{name}.usdz"), selected_objects_only=True,
                           export_materials=True, generate_preview_surface=True,
-                          export_textures_mode="KEEP", relative_paths=True,
+                          export_textures_mode="NEW", overwrite_textures=True, relative_paths=True,
                           convert_orientation=True, export_global_forward_selection="NEGATIVE_Z",
                           export_global_up_selection="Y", meters_per_unit=1.0,
-                          triangulate_meshes=False, export_animation=False)
+                          triangulate_meshes=False, export_animation=False, usdz_downscale_size="KEEP")
     tris = sum(int(o.get("triangles", 0)) for o in objects)
     mats = sorted({s.material.name for o in objects for s in o.material_slots if s.material})
-    return {"name": name, "gltf": f"modules/{name}.gltf", "usd": f"modules/{name}.usdc",
-            "objects": [o.name for o in objects], "triangles": tris, "materials": mats}
+    parts = {o.name: len([sl for sl in o.material_slots if sl.material]) for o in objects}
+    return {"name": name, "usdz": f"actors/bowl/{name}.usdz", "glb": f"actors/bowl/{name}.glb",
+            "objects": {o.name: int(o.get("triangles", 0)) for o in objects}, "parts": parts,
+            "triangles": tris, "materials": mats,
+            "bytes": {"usdz": (OUT / f"{name}.usdz").stat().st_size, "glb": (OUT / f"{name}.glb").stat().st_size}}
 
 
 def write_manifest_part(key: str, entries) -> None:

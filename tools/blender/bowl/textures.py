@@ -1,7 +1,7 @@
 """The bowl kit's textures: CC0 scans where a real surface matters, numpy
 where the pattern is ours.
 
-Sources are fetched once into assets/actors/bowl/.cache (git-ignored) and
+Sources are fetched once into .work/bowl-sources and
 every committed map is derived from them here, deterministically. The trim
 sheet is the kit's main material: one 2048 map, banded, that every riser,
 tread, nosing, pad, steel edge and soffit panel in the bowl samples by v,
@@ -21,8 +21,10 @@ import numpy as np
 import kit
 
 OUT = kit.OUT
-TEX = OUT / "textures"
-CACHE = OUT / ".cache"
+# Working files live in .work/ (ignored, never bundled): the app bundles
+# assets/ whole, and every texture already rides inside its .usdz and .glb.
+TEX = kit.ROOT / ".work" / "bowl-textures"
+CACHE = kit.ROOT / ".work" / "bowl-sources"
 
 SOURCES = {
     "concrete_floor_worn_001": ("diff", "nor_gl", "arm"),
@@ -145,6 +147,13 @@ def normal_from_height(height: np.ndarray, strength: float) -> np.ndarray:
     return n * 0.5 + 0.5
 
 
+def down(arr: np.ndarray, factor: int) -> np.ndarray:
+    """Box-filter an image down by an integer factor."""
+    h, w = arr.shape[0] // factor, arr.shape[1] // factor
+    a = arr[:h * factor, :w * factor]
+    return a.reshape(h, factor, w, factor, -1).mean(axis=(1, 3))
+
+
 def tile_band(src: np.ndarray, width: int, height: int, row_offset: int = 0) -> np.ndarray:
     """Tile a square tileable source across `width`, crop `height` rows."""
     reps = int(np.ceil(width / src.shape[1]))
@@ -205,7 +214,7 @@ def trim_sheet(S: int = 2048) -> None:
     chips = fbm(h, S, 40, 13, 3) > 0.62
     base = np.full((h, S, 3), 0.085, np.float32) + (grit[:, :, None] - 0.5) * 0.05
     top = (np.arange(h) >= int(h * 0.62))[:, None]
-    line = np.array([0.86, 0.66, 0.08], np.float32)
+    line = np.array([0.74, 0.60, 0.16], np.float32)
     base = np.where((top & ~chips)[:, :, None], line * (0.85 + 0.15 * grit[:, :, None]), base)
     albedo[r0:r1] = base
     normal[r0:r1] = normal_from_height(grit * 0.6 + top * 0.4, 6.0)
@@ -268,30 +277,42 @@ def trim_sheet(S: int = 2048) -> None:
     normal[r0:r1] = normal_from_height(-joint * 0.7 + speck * 0.1, 4.0)
     orm[r0:r1] = np.stack([1 - 0.3 * joint, np.full((h, S), 0.85), np.zeros((h, S))], -1)
 
+    # Colour carries the detail at 2K; normal and ORM are soft signals and ship
+    # at 1K, which is what keeps the bowl inside its 50 MB.
     save(albedo, "bowl_trim_albedo.jpg", jpeg=True)
-    save(normal, "bowl_trim_normal.png")
-    save(orm, "bowl_trim_orm.png")
+    n = down(normal, 2) - 0.5
+    n /= np.maximum(1e-6, np.linalg.norm(n, axis=-1, keepdims=True))
+    save(n * 0.5 + 0.5, "bowl_trim_normal.png")
+    save(down(orm, 2), "bowl_trim_orm.png")
+    save(down(albedo, 4), "table_trim_albedo.jpg", jpeg=True)
 
 
 def tileables() -> None:
-    # Fascia, walls, vomitory cheeks, exterior: painted concrete, pale.
+    # Fascia, walls, vomitory cheeks, exterior: painted concrete, pale, at 512.
     s = {m: load(CACHE / f"painted_concrete_{m}_1k.png", 1024) for m in ("diff", "nor_gl", "arm")}
-    save(tint(s["diff"], (0.60, 0.59, 0.56), keep=0.0), "concrete_wall_albedo.jpg", jpeg=True)
-    save(s["nor_gl"], "concrete_wall_normal.png")
-    o = s["arm"].copy()
+    save(down(tint(s["diff"], (0.60, 0.59, 0.56), keep=0.0), 2), "concrete_wall_albedo.jpg", jpeg=True)
+    save(down(s["nor_gl"], 2), "concrete_wall_normal.png")
+    o = down(s["arm"], 2)
     o[:, :, 2] = 0.0
     save(o, "concrete_wall_orm.png")
 
-    s = {m: load(CACHE / f"metal_plate_{m}_1k.png", 1024) for m in ("diff", "nor_gl", "arm")}
-    save(tint(s["diff"], (0.19, 0.21, 0.24), keep=0.1), "steel_albedo.jpg", jpeg=True)
-    save(s["nor_gl"], "steel_normal.png")
-    o = s["arm"].copy()
-    o[:, :, 1] = np.clip(o[:, :, 1] * 0.7 + 0.15, 0.25, 0.75)
-    o[:, :, 2] = 0.55
-    save(o, "steel_orm.png")
+
+def stair_sheet() -> None:
+    """Aisle stairs up close: tread concrete above, a riser with its anti-slip
+    nosing and yellow safety edge below. v 0.4-1.0 is the tread, 0-0.4 the front."""
+    W, H = 512, 256
+    src = load(CACHE / "concrete_floor_worn_001_diff_1k.png", 1024)
+    tread = down(src[:512, :1024], 2)[:int(H * 0.6)]
+    grit = fbm(int(H * 0.4), W, 90, 61, 2)
+    front = np.full((int(H * 0.4), W, 3), 0.09, np.float32) + (grit[:, :, None] - 0.5) * 0.04
+    edge = (np.arange(int(H * 0.4)) >= int(H * 0.4 * 0.72))[:, None]
+    chips = fbm(int(H * 0.4), W, 30, 63, 3) > 0.66
+    front = np.where((edge & ~chips)[:, :, None], np.array([0.74, 0.60, 0.16]) * (0.85 + 0.15 * grit[:, :, None]), front)
+    img = np.concatenate([front, tread * 0.9], axis=0)
+    save(img, "stair_albedo.jpg", jpeg=True)
 
 
-def seat_maps(S: int = 512) -> None:
+def seat_maps(S: int = 256) -> None:
     """Moulded seat plastic: near-white so a venue colour multiplies cleanly,
     with orange-peel texture and grime pooled at the bottom of the bucket."""
     peel = fbm(S, S, 96, 41, 2)
@@ -301,10 +322,8 @@ def seat_maps(S: int = 512) -> None:
     base = 0.93 - pooled
     save(np.stack([base, base, base * 0.99], -1), "seat_plastic_albedo.png")
     save(normal_from_height(peel, 0.6), "seat_plastic_normal.png")
-    save(np.stack([1 - pooled * 0.6, 0.42 + 0.1 * peel + pooled * 0.3, np.zeros_like(peel)], -1), "seat_plastic_orm.png")
-    # The tint mask: 1 where venue colour applies. The whole shell tints; the
-    # mask is for renderers that bake seat + hardware into one material.
-    save(np.ones((64, 64, 3), np.float32), "seat_tint_mask.png")
+    save(np.stack([1 - pooled * 0.6, 0.66 + 0.08 * peel + pooled * 0.2, np.zeros_like(peel)], -1), "seat_plastic_orm.png")
+
 
     # The far-row band: a row of seat backs seen from the field, eight to a
     # tile, grey so the venue colour multiplies, with the dark gap beneath.
@@ -316,7 +335,7 @@ def seat_maps(S: int = 512) -> None:
     pan = (y > 0.18) & (y <= 0.30)
     col = np.where(back, 0.78 * (0.85 + 0.15 * rounded), np.where(pan, 0.55, 0.05))
     save(np.stack([col, col, col], -1), "seat_band_albedo.png")
-    save(normal_from_height(back * rounded * 0.8 + pan * 0.3, 3.0), "seat_band_normal.png")
+
 
 
 def interiors() -> None:
@@ -334,26 +353,34 @@ def interiors() -> None:
         img[tv] = np.array([0.35, 0.55, 0.95]) * (0.7 + 0.3 * rng.random())
         img[int(H * 0.08):int(H * 0.32), k + 12:k + 116] *= 0.35    # counter and chairs
         img[int(H * 0.88):int(H * 0.93), k + 20:k + 108] = warm * 1.0  # cove light
-    save(img, "suite_interior_emission.jpg", jpeg=True)
+    suites = img
 
     cool = np.array([0.72, 0.84, 1.0], np.float32)
     img = (0.12 + 0.45 * np.exp(-((y - 0.9) / 0.3) ** 2))[:, :, None] * cool * np.ones((1, W, 1), np.float32)
     for k in range(10, W, 64):
         img[int(H * 0.30):int(H * 0.46), k:k + 40] = np.array([0.2, 0.9, 0.6]) * (0.4 + 0.6 * rng.random())
         img[int(H * 0.10):int(H * 0.28), k - 6:k + 50] *= 0.3
-    save(img, "press_interior_emission.jpg", jpeg=True)
+    press = img
 
     W, H = 512, 256
     x = np.linspace(0, 1, W)[None, :]
     img = (0.25 + 0.75 * np.exp(-((np.linspace(0, 1, H)[:, None] - 0.8) / 0.35) ** 2)
            * (0.7 + 0.3 * np.cos(x * np.pi * 6) ** 2))[:, :, None] * np.array([1.0, 0.68, 0.36])
-    save(img, "concourse_glow_emission.jpg", jpeg=True)
+    glow = img
+    # One atlas, one material: suites in the top half (v 0.5-1), the press box
+    # below that (v 0.25-0.5), the concourse glow in the bottom quarter.
+    atlas = np.zeros((1024, 1024, 3), np.float32)
+    atlas[512:1024] = suites
+    atlas[256:512] = down(press, 2).repeat(2, axis=1)
+    atlas[0:256] = np.tile(glow, (1, 2, 1))[:256, :1024]
+    save(atlas, "interiors_emission.jpg", jpeg=True)
 
 
 def build() -> dict:
     credits = fetch()
     trim_sheet()
     tileables()
+    stair_sheet()
     seat_maps()
     interiors()
     return credits

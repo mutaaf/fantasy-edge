@@ -31,10 +31,8 @@ def materials():
         # A venue colour multiplies the near-white shell; renderers replace the factor.
         "seat_plastic": C.material("seat_plastic", color=(0.035, 0.06, 0.16, 1.0), albedo="seat_plastic_albedo.png",
                                    normal="seat_plastic_normal.png", orm="seat_plastic_orm.png", normal_strength=0.12),
-        # Powder-coated steel: smooth, satin, no scan - a diamond plate reads as bark at this size.
+        # Powder-coated standard, armrest, cupholder and plaque share one part.
         "seat_hardware": C.material("seat_hardware", color=(0.045, 0.047, 0.052, 1.0), roughness=0.42, metallic=0.65),
-        "seat_cup": C.material("seat_cup", color=(0.03, 0.03, 0.035, 1.0), roughness=0.5),
-        "seat_plaque": C.material("seat_plaque", color=(0.78, 0.79, 0.80, 1.0), roughness=0.35, metallic=1.0),
     }
 
 
@@ -156,35 +154,32 @@ def standard(b: C.Builder, detail: int) -> None:
         # armrest: a moulded bar with a rounded front, cupholder under the tip
         arm = [(-0.20, 0.61), (0.10, 0.61)]
         pts = [P(x, 0.625, z) for z in (-0.20, -0.05, 0.08, 0.11)]
-        b.tube([(p[0], p[1], p[2]) for p in pts], 0.022 * M, "seat_cup", sides=8, caps=True)
-        cylinder(b, (x, 0.145), 0.042, 0.555, 0.628, 14, "seat_cup", inner=0.035)
-        # foot bolts
-        for z in (-0.26, -0.02):
-            cylinder(b, (x, z), 0.012, 0.0, 0.02, 6, "seat_hardware")
+        b.tube([(p[0], p[1], p[2]) for p in pts], 0.022 * M, "seat_hardware", sides=6, caps=True)
+        cylinder(b, (x, 0.145), 0.042, 0.555, 0.628, 9, "seat_hardware", inner=0.035)
         del arm
     else:
         b.box(P(x, 0.30, -0.10), (0.014 * M, 0.60 * M, 0.06 * M), "seat_hardware", skip=("bottom",))
         b.box(P(x, 0.02, -0.12), (0.03 * M, 0.04 * M, 0.30 * M), "seat_hardware", skip=("bottom",))
-        b.box(P(x, 0.625, -0.04), (0.04 * M, 0.035 * M, 0.30 * M), "seat_cup", skip=("bottom",))
+        b.box(P(x, 0.625, -0.04), (0.04 * M, 0.035 * M, 0.30 * M), "seat_hardware", skip=("bottom",))
 
 
 def plaque(b: C.Builder) -> None:
-    b.box(P(0.0, 0.79, -0.292), (0.08 * M, 0.035 * M, 0.004 * M), "seat_plaque")
+    b.box(P(0.0, 0.79, -0.292), (0.08 * M, 0.035 * M, 0.004 * M), "seat_hardware", skip=("bottom", "top", "left", "right"))
 
 
 def seat(detail: int, up: bool) -> C.Builder:
     b = C.Builder(f"seat_lod{detail}_{'up' if up else 'down'}")
     if detail == 0:
-        shell(b, back_surface, 10, 12, 0.013, "seat_plastic", solid=True)
-        shell(b, lambda u, v: pan_surface(u, v, up), 10, 10, 0.013, "seat_plastic", solid=True)
+        shell(b, back_surface, 6, 8, 0.013, "seat_plastic", solid=True)
+        shell(b, lambda u, v: pan_surface(u, v, up), 6, 6, 0.013, "seat_plastic", solid=True)
         # the pan's hinge bar and the back's mounting tube
-        b.tube([P(-0.22, 0.44, -0.17), P(0.22, 0.44, -0.17)], 0.011 * M, "seat_hardware", sides=8, caps=True)
-        b.tube([P(-0.2415, 0.50, -0.235), P(0.2415, 0.50, -0.235)], 0.013 * M, "seat_hardware", sides=8, caps=True)
+        b.tube([P(-0.22, 0.44, -0.17), P(0.22, 0.44, -0.17)], 0.011 * M, "seat_hardware", sides=5)
+        b.tube([P(-0.2415, 0.50, -0.235), P(0.2415, 0.50, -0.235)], 0.013 * M, "seat_hardware", sides=5)
         standard(b, 0)
         plaque(b)
     elif detail == 1:
-        shell(b, back_surface, 4, 4, 0.01, "seat_plastic", solid=True, rim=False)
-        shell(b, lambda u, v: pan_surface(u, v, up), 3, 3, 0.01, "seat_plastic", solid=True, rim=False)
+        shell(b, back_surface, 3, 3, 0.01, "seat_plastic", solid=True, rim=False)
+        shell(b, lambda u, v: pan_surface(u, v, up), 3, 2, 0.01, "seat_plastic", solid=True, rim=False)
         standard(b, 1)
     else:
         shell(b, back_surface, 1, 2, 0.01, "seat_plastic", solid=True, rim=False)
@@ -193,18 +188,13 @@ def seat(detail: int, up: bool) -> C.Builder:
 
 
 def build() -> list[dict]:
+    """Report the seat's cost. The seats ship inside `near.usdz`, merged per
+    preset; there is no standalone seat model to load."""
     C.reset()
-    mats = materials()
-    entries = []
-    for detail, up in ((0, True), (0, False), (1, True), (1, False), (2, True)):
+    out = []
+    for detail, up in ((0, False), (0, True), (1, False), (2, True)):
         b = seat(detail, up)
-        obj = b.build(mats, smooth_angle=50 if detail < 2 else None)
-        name = "seat_lod2" if detail == 2 else b.name
-        obj.name = name
-        e = C.export([obj], name)
-        e.update({"kind": "seat", "lod": detail, "folded": up,
-                  "about": "Origin at the feet, facing +z; turn by seats.json yaw. Tint via seat_plastic base colour."})
-        entries.append(e)
-        print(f"[seat] {name}: {b.triangles} tris", flush=True)
-    C.write_manifest_part("seat", entries)
-    return entries
+        out.append({"seat": b.name, "triangles": b.triangles})
+        print(f"[seat] {b.name}: {b.triangles} tris", flush=True)
+    C.write_manifest_part("seat", out)
+    return out
