@@ -57,4 +57,46 @@ Review renders: `assets/actors/crowd/review/lineup_*.png`, `poses_*.png`.
 
 ### Iteration 3: `crowd-iter3/`
 
-In progress.
+- **Colour:** the quick dress works. Clubs show from the first frame.
+- **Near:** fans read as people, but faceted, because decimation marked edges sharp.
+- **Far:** a confetti of white and black flecks on two flat hues. Every club
+  fan wears the chip.
+- **Banding:** vertical stripes where a whole slice changes pose.
+- **`bowl-wide`:** near-black, but the baseline is identical. The harness
+  camera sits inside the upper-deck geometry at `7530d53`, so this isn't a
+  crowd problem.
+
+### Iteration 4: `crowd-iter4/`
+
+- **Fixes:**
+  - Sharp edges stripped and polygons smoothed.
+  - A third of each side wears neutrals (grey, black, denim, stone).
+  - Every club colour gets its own value (0.72–1.08) and saturation (0–35% toward grey).
+  - Far cards softened toward each fan's mean (contrast 0.72).
+  - Card groups split into two interleaved variants, with slice edges jittered.
+- **Result:** sections read as a mass. 117k triangles, 34 parts.
+- **Gap:** the upper deck reads as sparse stick figures. Fans were about
+  1.1 yd apart; real seats are 0.55 yd. Doubling the cards would break the budget.
+
+### Iteration 5: `crowd-iter5/`
+
+- **Fixes:**
+  - Paired impostors: each far card is two neighbours at 0.503 m, baked
+    in Blender as two passes composited nearest-first. The halves of a cell
+    are dressed as different people.
+  - Seats at 0.55 yd pitch, from `bowl.seating` when the scene carries it
+    (through `SceneMath.seat`), with pairs kept inside a run and group
+    edges on section boundaries.
+- **Result:** 52,039 fans, **108k triangles, 34 draw parts**. The full dress
+  composes in 6.4 s. The far stands are a dense, mottled, textured crowd.
+- **Gaps:**
+  - Too much cream: the neutral stone, a near-white secondary and khaki trousers.
+  - Near fans show white wedges and sawtooth sleeve edges. The tint mask
+    shipped at 1024² against a 2048² albedo.
+  - LOD1 arms are faceted at 420 triangles.
+
+### Iteration 6: `crowd-iter6/`
+
+- **Changes:** full-size mask, LOD1 at 650 triangles (ring capped at 55),
+  cream dropped from the neutrals, secondary darkened to `#CFCBC2`.
+- **Shots:** iteration 6 adds `tabletop` to the shot list.

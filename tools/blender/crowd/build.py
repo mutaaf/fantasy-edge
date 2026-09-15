@@ -36,7 +36,7 @@ import rig as R
 import specs
 
 OUT = common.OUT
-LOD0_TRIS, LOD1_TRIS = 1500, 420
+LOD0_TRIS, LOD1_TRIS = 1500, 650
 MESH_ATLAS = 2048                    # baked at 2x, shipped at this size
 MESH_COLS, MESH_ROWS = 6, 4          # 24 cells, 341 x 512 px each
 IMP_CELL = (64, 128)                 # px per impostor cell
@@ -224,7 +224,9 @@ def build_meshes(cast):
         built.append({"f": f, "mesh": mesh, "lod1": lod1, "rig": rig, "cell": cell})
         log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris")
     save(albedo, OUT / "fan_albedo.png", (MESH_ATLAS, MESH_ATLAS))
-    save(mask, OUT / "fan_mask.png", (MESH_ATLAS // 2, MESH_ATLAS // 2))
+    # Full size: a half-size mask upscaled on load missed edge texels, and near
+    # fans came out with white wedges and sawtooth sleeves.
+    save(mask, OUT / "fan_mask.png", (MESH_ATLAS, MESH_ATLAS))
     return built, albedo, mask
 
 
@@ -495,7 +497,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
         },
         "textures": {
             "fanAlbedo": {"file": "fan_albedo.png", "size": [MESH_ATLAS, MESH_ATLAS], "colorspace": "srgb"},
-            "fanMask": {"file": "fan_mask.png", "size": [MESH_ATLAS // 2, MESH_ATLAS // 2], "colorspace": "linear"},
+            "fanMask": {"file": "fan_mask.png", "size": [MESH_ATLAS, MESH_ATLAS], "colorspace": "linear"},
             "impostorAlbedo": impostor["albedo"], "impostorMask": impostor["mask"], "impostorNormal": impostor["normal"],
             "variation": {"file": "variation.png", "size": [256, 256], "colorspace": "linear",
                           "channels": {"r": "animation phase 0..1", "g": "fan index (i+0.5)/24", "b": "tint jitter", "a": "pose bias"}},

@@ -32,12 +32,12 @@ Club colour is never baked in. Clothing that takes a club colour carries a
 
 | File | What | Budget |
 |---|---|---|
-| `fanNN.usdz` / `.glb` | skinned LOD0 (~1500 tris) + LOD1 (~420 tris), 20-joint skeleton, 10 clips | per fan |
+| `fanNN.usdz` / `.glb` | skinned LOD0 (~1500 tris) + LOD1 (~650 tris), 20-joint skeleton, 10 clips | per fan |
 | `lod0_poses.usdz` / `.glb` | every fan's LOD0 frozen in each of the 6 impostor poses, static | 216k tris on disk, not drawn at once |
 | `lod1_poses.usdz` / `.glb` | the same at LOD1 | 60k tris on disk |
 | `fan_albedo.png` | mesh UV atlas, 2048², 6 x 4 fan cells, faces at 1.75x texel density | 16 MB RGBA in GPU |
-| `fan_mask.png` | tint mask, 1024² | composed on load, not kept |
-| `impostor_albedo.png` | 2560x2304: 8 fan blocks per row, 5 views x 6 poses, 64x128 px cells | 23.6 MB RGBA |
+| `fan_mask.png` | tint mask, 2048² (full size: a half mask left white wedges on near fans) | composed on load, not kept |
+| `impostor_albedo.png` | 2560x2304: 8 fan blocks per row, 5 views x 6 poses, 64x128 px cells, each cell two neighbours at 0.503 m seat pitch | 23.6 MB RGBA |
 | `impostor_mask.png` | 1280x1152 | composed on load, not kept |
 | `impostor_normal.png` | 1280x1152, view space, +Z toward the viewer | 5.9 MB |
 | `variation.png` | 256² per-seat phase, fan index (no shared 3-neighbours), tint jitter, pose bias | 0.3 MB |
@@ -59,12 +59,14 @@ Fans move by group, never per fan on the CPU (docs/ART_BIBLE.md):
 - **Near** (a few rows around the wearer): LOD0 pose meshes merged per group. A
   group swaps which merged pose mesh it shows.
 - **Mid** (to ~12 yd): LOD1 pose meshes, the same way.
-- **Far**: one quad per fan, cut from the view the fan is seen at, merged per
-  slice of the bowl. A group changes pose by moving its material's texture
-  transform down one atlas row.
+- **Far**: one quad per pair of neighbouring seats, cut from the view the pair
+  is seen at, merged per section-aligned slice of the bowl in two interleaved
+  variants. A group changes pose by moving its material's texture transform
+  down one atlas row, and its edge is a section's aisle.
 
-At the actor's default rings (24 LOD0, 140 LOD1, the rest cards) the crowd draws
-about 36k + 59k tris of mesh plus 2 tris a card, in 4 + 4 + 24 draw parts.
+At the actor's default rings (16 LOD0, 55 LOD1, the rest paired cards) a
+sold-out bowl of about 50k seats draws roughly 24k + 36k tris of mesh plus
+2 tris per pair: about 110k tris in 34 draw parts.
 
 Axes: both exports are +Y up with fans facing +Z, metres, origin on the floor
 under the pelvis. Seated, the pelvis sits 0.30 m behind and 0.52 m above the
