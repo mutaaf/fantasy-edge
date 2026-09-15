@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 
-from . import colors
+from . import colors, text as words
 from .league import LOGO, RULES
 
 DELAYED = {"STATUS_DELAYED", "STATUS_RAIN_DELAY"}
@@ -22,15 +22,6 @@ def _int(v, default=None):
         return int(float(str(v).strip()))
     except (TypeError, ValueError):
         return default
-
-
-def clean_play_text(text: str) -> str:
-    """ESPN's play text for a reader: no leading clock, no formation, no jersey
-    numbers. "(00:25) No Huddle-Shotgun #12 C.Creel pass" -> "C.Creel pass".
-    One owner, so a tile's last play and a drive's plays read the same."""
-    text = re.sub(r"^\(\d+:\d+\)\s*", "", text or "")
-    text = re.sub(r"^(No Huddle-)?(Shotgun|Pistol|Under Center|No Huddle)\s*", "", text)
-    return re.sub(r"#\d+ ", "", text).strip()
 
 
 def status_of(status: dict) -> dict:
@@ -91,6 +82,8 @@ def team_record(comp: dict) -> dict:
         "abbr": (t.get("abbreviation") or "").upper(),
         "name": t.get("displayName") or t.get("name") or "",
         "location": t.get("location") or t.get("shortDisplayName") or "",
+        "shortName": words.short_name(t.get("location") or t.get("shortDisplayName") or "",
+                                      t.get("shortDisplayName"), (t.get("abbreviation") or "").upper()),
         "color": "#" + (t.get("color") or "666666").upper(),
         "alternateColor": "#" + (t.get("alternateColor") or "666666").upper(),
         "logo": t.get("logo") or ((t.get("logos") or [{}])[0].get("href")) or LOGO.format(id=tid),
@@ -132,8 +125,10 @@ def game_record(event: dict) -> dict:
     last_play = None
     # The last play is shown only while the game is on: at halftime or in a
     # delay it is stale, and after the final the result says more.
-    if situation and last.get("text"):
-        last_play = {"text": clean_play_text(last["text"]), "type": (last.get("type") or {}).get("text") or "",
+    readable = words.play(last.get("text"))
+    # A last play that is only a clock or a tackler cleans to nothing: no line.
+    if situation and readable:
+        last_play = {"text": readable, "type": (last.get("type") or {}).get("text") or "",
                      "scoring": bool(_int(last.get("scoreValue"), 0))}
 
     broadcasts = [n for b in comp.get("broadcasts") or [] for n in b.get("names") or []]

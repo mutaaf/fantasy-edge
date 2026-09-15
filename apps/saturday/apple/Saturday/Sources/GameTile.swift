@@ -143,29 +143,29 @@ struct TeamRow: View {
     private var hasBall: Bool { game.situation?.possession == side.id }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             TeamChip(abbr: side.abbr, fill: side.fill, hatch: side.hatch,
-                     width: size == .compact ? 52 : 62, height: size == .compact ? 24 : 28,
+                     width: size == .compact ? 52 : 58, height: size == .compact ? 24 : 28,
                      fontSize: size == .compact ? 15 : 17)
             if let rank = side.rank {
                 Text("#\(rank)").font(Typeface.sans(12, .semibold)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             if size == .regular {
-                Text(side.location).font(Typeface.sans(15, .medium)).lineLimit(1)
+                TeamName(location: side.location, shortName: side.shortName, font: Typeface.sans(15, .medium))
                     .foregroundStyle(lost ? .secondary : .primary)
+                    .layoutPriority(1)
+            } else {
+                Spacer(minLength: 4)
             }
-            Spacer(minLength: 4)
-            ZStack {
-                if hasBall {
-                    Image(systemName: Glyph.possession).font(.system(size: 13))
-                        .transition(reduceMotion ? .opacity : .push(from: side.id == game.away.id ? .bottom : .top))
-                        .accessibilityLabel("has the ball")
-                }
+            if hasBall {
+                Image(systemName: Glyph.possession).font(.system(size: 13))
+                    .transition(reduceMotion ? .opacity : .push(from: side.id == game.away.id ? .bottom : .top))
+                    .accessibilityLabel("has the ball")
             }
-            .frame(width: 16)
-            .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.8), value: hasBall)
             if game.status.state == "pre" {
                 Text(side.record).font(Typeface.sans(13)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: true, vertical: false)
             } else {
                 Text(side.score.map(String.init) ?? "–")
                     .font(Typeface.display(size == .compact ? 26 : 38, .heavy))
@@ -174,6 +174,7 @@ struct TeamRow: View {
                     .foregroundStyle(lost ? .secondary : .primary)
                     // The scoring side's number sits in the light for the hold.
                     .shadow(color: Tokens.lightBank.opacity(scored?.kind == .score ? 0.85 : 0), radius: 12)
+                    .fixedSize(horizontal: true, vertical: false)
                     .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.5, dampingFraction: 0.7), value: side.score)
             }
             if isFinal {
@@ -181,5 +182,6 @@ struct TeamRow: View {
                     .opacity(lost ? 0 : 1).accessibilityLabel(lost ? "" : "winner")
             }
         }
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.8), value: hasBall)
     }
 }

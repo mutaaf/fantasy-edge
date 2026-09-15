@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import re
 
-from .parse import _int, clean_play_text as _clean, status_of, team_record
+from . import text as words
+from .parse import _int, status_of, team_record
 
 TURNOVER_RESULTS = {"Fumble", "Interception", "Downs", "Turnover on Downs", "Blocked Punt", "Blocked FG"}
 
@@ -21,7 +22,7 @@ def _play(pl: dict) -> dict:
     st, en = pl.get("start") or {}, pl.get("end") or {}
     return {
         "id": str(pl.get("id") or ""),
-        "text": _clean(pl.get("text") or ""),
+        "text": words.play(pl.get("text")),
         "type": (pl.get("type") or {}).get("text", ""),
         "clock": (pl.get("clock") or {}).get("displayValue", ""),
         "period": (pl.get("period") or {}).get("number", 0),
@@ -67,7 +68,7 @@ def game_from_summary(event: str, data: dict) -> dict:
             "id": str(d.get("id") or ""),
             "team": ((d.get("team") or {}).get("abbreviation") or "").upper(),
             "description": d.get("description") or "",
-            "result": result,
+            "result": words.result(result),
             "scored": bool(d.get("isScore")),
             "turnover": result in TURNOVER_RESULTS,
             "current": bool(current) and str(d.get("id")) == str(current.get("id")) and not st["completed"],
@@ -108,7 +109,7 @@ def game_from_summary(event: str, data: dict) -> dict:
         "winProbability": wp,
         "winProbabilitySource": "ESPN",
         "scoringPlays": [{
-            "text": sp.get("text") or "",
+            "text": words.play(sp.get("text")),
             "clock": (sp.get("clock") or {}).get("displayValue", ""),
             "period": (sp.get("period") or {}).get("number", 0),
             "team": ((sp.get("team") or {}).get("abbreviation") or "").upper(),

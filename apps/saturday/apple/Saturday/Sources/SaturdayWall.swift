@@ -272,7 +272,7 @@ private struct PadWall: View {
                 }
                 .padding(.vertical)
             }
-            .frame(width: 420)
+            .frame(width: 380)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     WallHeader(slate: slate, compact: true)

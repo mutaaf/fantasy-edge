@@ -44,11 +44,9 @@ class Slate(unittest.TestCase):
         self.assertEqual(g["situation"]["yardsToGoal"], 17)
         self.assertTrue(g["flags"]["redZone"])
 
-    def test_play_text_reads_without_clock_formation_or_numbers(self):
-        self.assertEqual(parse.clean_play_text("(00:25) No Huddle-Shotgun #12 C.Creel pass complete"), "C.Creel pass complete")
-        self.assertEqual(parse.clean_play_text("(02:16) #91 C.Heimbach punt 52 yards"), "C.Heimbach punt 52 yards")
-        self.assertEqual(parse.clean_play_text("Timeout Texas, clock 01:38"), "Timeout Texas, clock 01:38")
-        self.assertFalse(self.games[OSU_TEX]["lastPlay"]["text"].startswith("("))
+    def test_the_last_play_on_a_tile_is_already_readable(self):
+        text = self.games[OSU_TEX]["lastPlay"]["text"]
+        self.assertNotRegex(text, r"[#()]|clock \d")
 
     def test_yards_to_goal_counts_from_the_side_the_ball_is_on(self):
         self.assertEqual(parse.yards_to_goal("1st & 10 at OSU 19", "OSU"), 81)

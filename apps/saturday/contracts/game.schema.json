@@ -84,7 +84,9 @@
             "type": "string"
           },
           "result": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^#()]*$",
+            "description": "Sentence case, from cfb/text.py."
           },
           "scored": {
             "type": "boolean"
@@ -151,7 +153,9 @@
         ],
         "properties": {
           "text": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^#()]*$",
+            "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
           },
           "clock": {
             "type": "string"
@@ -277,7 +281,9 @@
           "type": "string"
         },
         "text": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[^#()]*$",
+          "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
         },
         "type": {
           "type": "string"

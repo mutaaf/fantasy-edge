@@ -333,7 +333,10 @@
           "description": "ESPN's last play on the scoreboard; null before kickoff, at halftime, in a delay and after the final",
           "properties": {
             "text": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^#()]*$",
+              "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
             },
             "type": {
               "type": "string"

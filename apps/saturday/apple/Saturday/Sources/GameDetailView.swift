@@ -120,7 +120,7 @@ struct GameDetailView: View {
             Text([d.venue, store.game(gameID)?.tv, store.slate?.clock.map { "Replay · \($0.label)" }].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                 .font(Typeface.sans(14)).foregroundStyle(.secondary)
             if let last = d.lastPlay, !d.status.completed {
-                Label { Text(last.text).lineLimit(2) } icon: { Image(systemName: last.scoring ? Glyph.score : "text.alignleft") }
+                Label { Text(last.text).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: last.scoring ? Glyph.score : "text.alignleft") }
                     .font(Typeface.sans(14, .medium))
                     .contentTransition(.opacity)
                     .animation(.easeInOut(duration: 0.3), value: last.id)
@@ -163,17 +163,36 @@ private struct ScoreSide: View {
     private var names: some View {
         VStack(alignment: mirrored ? .trailing : .leading, spacing: 2) {
             HStack(spacing: 6) {
-                if let r = team.rank { Text("#\(r)").font(Typeface.display(20, .bold)).foregroundStyle(.secondary) }
-                Text(team.location).font(Typeface.sans(19, .semibold)).lineLimit(1)
+                if let r = team.rank { Text("#\(r)").font(Typeface.display(20, .bold)).foregroundStyle(.secondary).fixedSize(horizontal: true, vertical: false) }
+                TeamName(location: team.location, shortName: team.shortName, font: Typeface.sans(19, .semibold), fills: false)
+                    .layoutPriority(1)
             }
-            Text(([team.record] + (team.linescores.isEmpty ? [] : ["by quarter " + team.linescores.map(String.init).joined(separator: " ")])).joined(separator: " · "))
-                .monospacedDigit()
-                .font(Typeface.sans(13)).foregroundStyle(.secondary).lineLimit(1)
+            ViewThatFits(in: .horizontal) {
+                Text(([team.record] + (quarters.map { [$0] } ?? [])).joined(separator: " · "))
+                    .fixedSize(horizontal: true, vertical: false)
+                // Overtime adds a column per period: quarters move to their own
+                // line as one unit rather than breaking mid-row or being cut.
+                VStack(alignment: mirrored ? .trailing : .leading, spacing: 0) {
+                    Text(team.record)
+                    // The digits alone, kept whole: a phone has room for six periods, not the label.
+                    if !team.linescores.isEmpty {
+                        Text(team.linescores.map(String.init).joined(separator: " "))
+                            .fixedSize(horizontal: true, vertical: false)
+                            .accessibilityLabel("by quarter " + team.linescores.map(String.init).joined(separator: ", "))
+                    }
+                }
+            }
+            .font(Typeface.sans(13)).foregroundStyle(.secondary).monospacedDigit()
         }
+    }
+
+    private var quarters: String? {
+        team.linescores.isEmpty ? nil : "by quarter " + team.linescores.map(String.init).joined(separator: " ")
     }
 
     private var score: some View {
         Text(team.score.map(String.init) ?? "–").font(Typeface.display(64, .black)).monospacedDigit()
+            .fixedSize(horizontal: true, vertical: false)
             .contentTransition(.numericText())
             .animation(.spring(response: 0.5, dampingFraction: 0.7), value: team.score)
     }
@@ -299,7 +318,7 @@ private struct BoxColumn: View {
                     TeamChip(abbr: l.team, fill: l.team == detail.away.abbr ? (detail.away.fill ?? "#666666") : (detail.home.fill ?? "#666666"), width: 44, height: 20, fontSize: 13)
                     Text(l.name).font(Typeface.sans(14, .semibold))
                     Spacer()
-                    Text(l.line).font(Typeface.sans(14)).foregroundStyle(.secondary).lineLimit(1)
+                    Text(l.line).font(Typeface.sans(14)).foregroundStyle(.secondary).fixedSize(horizontal: true, vertical: false)
                 }
             }
         }

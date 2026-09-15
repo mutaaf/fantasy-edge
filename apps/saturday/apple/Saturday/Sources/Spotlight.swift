@@ -36,7 +36,7 @@ struct SpotlightCard: View {
             if let last = game.lastPlay {
                 Text(last.text)
                     .font(Typeface.sans(compact ? 14 : 15)).foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .contentTransition(.opacity)
                     .animation(.easeInOut(duration: 0.3), value: last.text)
             }
@@ -49,7 +49,7 @@ struct SpotlightCard: View {
                 FieldBar(game: game, height: compact ? 24 : 34)
             }
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 14) { buttons }
+                HStack(spacing: 10) { buttons }
                 VStack(alignment: .leading, spacing: 10) { buttons }
             }
             .font(Typeface.sans(17, .semibold))
@@ -91,10 +91,9 @@ private struct BigTeam: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     if let rank = side.rank {
-                        Text("#\(rank)").font(Typeface.display(22, .bold)).foregroundStyle(.secondary)
+                        Text("#\(rank)").font(Typeface.display(22, .bold)).foregroundStyle(.secondary).fixedSize(horizontal: true, vertical: false)
                     }
-                    Text(side.location).font(Typeface.sans(compact ? 18 : 22, .semibold)).lineLimit(1)
-                        .minimumScaleFactor(0.75)
+                    TeamName(location: side.location, shortName: side.shortName, font: Typeface.sans(compact ? 18 : 22, .semibold), fills: false)
                 }
                 Text(side.record).font(Typeface.sans(14)).foregroundStyle(.secondary)
             }
@@ -118,13 +117,27 @@ struct SectionHeading: View {
     var size: CGFloat = 26
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(title).font(Typeface.serif(size))
+        // Beside the title when it fits, under it when it does not; never cut.
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(title).font(Typeface.serif(size)).fixedSize(horizontal: true, vertical: false)
+                over.fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Typeface.serif(size))
+                over.fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder private var over: some View {
+        if !overline.isEmpty {
             Text(overline.uppercased())
                 .font(Typeface.sans(12, .semibold)).tracking(1.6)
                 .foregroundStyle(.secondary)
-                .lineLimit(1)
         }
-        .accessibilityAddTraits(.isHeader)
     }
 }

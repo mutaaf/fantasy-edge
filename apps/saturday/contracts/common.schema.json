@@ -65,6 +65,7 @@
         "abbr",
         "name",
         "location",
+        "shortName",
         "color",
         "logo",
         "rank",
@@ -114,6 +115,11 @@
         "fill": {
           "type": "string",
           "pattern": "^#[0-9A-F]{6}$"
+        },
+        "shortName": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What to draw when location does not fit: at most 14 characters where ESPN or the shortening rules allow, never longer than location, never just the abbreviation. Chosen on the server."
         }
       },
       "description": "fill is the chip colour, already normalised so white text clears 4.5:1. Clients draw it, never compute it."

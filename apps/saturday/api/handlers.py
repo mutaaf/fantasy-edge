@@ -147,7 +147,7 @@ def teams(source: Source) -> dict:
     for g in parse.slate_records(source.scoreboard()):
         for side in ("away", "home"):
             t = g[side]
-            seen.setdefault(t["id"], {k: t[k] for k in ("id", "abbr", "name", "location", "color",
+            seen.setdefault(t["id"], {k: t[k] for k in ("id", "abbr", "name", "location", "shortName", "color",
                                                           "alternateColor", "logo", "conferenceId", "rank", "record")}
                             # a directory chip is the team's own colour; the away-gives-way
                             # swap only applies inside one matchup

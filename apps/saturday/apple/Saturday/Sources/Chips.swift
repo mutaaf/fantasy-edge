@@ -124,17 +124,52 @@ struct FieldBar: View {
 /// ink text. No system accent colour anywhere; colour belongs to chips.
 struct PillButtonStyle: ButtonStyle {
     var primary = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    /// A phone gets less padding, so two pills share a row instead of stacking.
+    private var horizontalPadding: CGFloat {
+        #if os(visionOS)
+        22
+        #else
+        sizeClass == .compact ? 15 : 22
+        #endif
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Typeface.sans(17, .semibold))
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
-            .padding(.horizontal, 22)
+            .padding(.horizontal, horizontalPadding)
             .frame(minHeight: Tokens.target)
             .foregroundStyle(primary ? Color.black : Color.primary)
             .background(primary ? Color.white.opacity(configuration.isPressed ? 0.75 : 0.92) : Color.white.opacity(configuration.isPressed ? 0.2 : 0.12), in: Capsule())
             .contentShape(.hoverEffect, Capsule())
             .hoverEffect()
+    }
+}
+
+/// A team's name at whatever length fits: the full location, else the short
+/// name the API chose for it. Choosing between two shipped strings by width is
+/// layout; neither string is made up here. Truncation is the last resort, and
+/// on the short name only.
+struct TeamName: View {
+    let location: String
+    let shortName: String
+    var font: Font
+    /// In a tile row the name takes the room between chip and score; beside a
+    /// rank in a header it hugs its text so the rank stays next to it.
+    var fills = true
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Text(location).fixedSize(horizontal: true, vertical: false)
+            Text(shortName).fixedSize(horizontal: true, vertical: false)
+            Text(shortName).minimumScaleFactor(0.8)
+        }
+        .font(font)
+        .lineLimit(1)
+        .frame(maxWidth: fills ? .infinity : nil, alignment: .leading)
+        .accessibilityLabel(location)
     }
 }

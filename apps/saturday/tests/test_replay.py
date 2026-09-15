@@ -191,6 +191,33 @@ class WholeNight(unittest.TestCase):
             self.assertEqual(CONTRACTS.validate(c, "stream.schema.json"), [])
         self.assertEqual(self.events[-1][0], "end")
 
+    def test_every_display_name_has_a_short_form_on_every_frame(self):
+        for s in self.named("slate"):
+            for g in s["games"]:
+                for side in (g["away"], g["home"]):
+                    short = side["shortName"]
+                    self.assertTrue(short, (side["location"], s["asOf"]))
+                    self.assertLessEqual(len(short), len(side["location"]), side["location"])
+                    if side["location"].upper() != side["abbr"].upper():
+                        self.assertNotEqual(short.upper(), side["abbr"].upper(), side["location"])
+        for d in self.named("game"):
+            for side in (d["away"], d["home"]):
+                self.assertTrue(side["shortName"])
+
+    def test_no_raw_espn_text_reaches_a_payload_all_night(self):
+        raw = r"[#()]|clock \d|^(Shotgun|No Huddle)|\b(1ST DOWN|TOUCHDOWN|NO GOOD|GOOD|KICK|PENALTY|NO PLAY)\b"
+        for s in self.named("slate"):
+            for g in s["games"]:
+                if g["lastPlay"]:
+                    self.assertNotRegex(g["lastPlay"]["text"], raw)
+        for d in self.named("game"):
+            for drive in d["drives"]:
+                self.assertNotRegex(drive["result"], raw)
+                for p in drive["plays"]:
+                    self.assertNotRegex(p["text"], raw)
+            for sp in d["scoringPlays"]:
+                self.assertNotRegex(sp["text"], raw)
+
     def test_every_tile_is_drawn_exactly_once_on_every_frame(self):
         for s in self.named("slate"):
             placed = [g for sec in s["sections"] for g in sec["games"]] + ([s["spotlight"]] if s["spotlight"] else [])

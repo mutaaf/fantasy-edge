@@ -47,6 +47,8 @@ tests/               fixtures come from tools/make_fixtures.py
 - **A change's `id` is its frame, game, kind and team.** Clients animate an id once; never re-derive whether something changed on a client.
 - **Times a person reads are ET, from the server.** Every change carries `time` ("9:14 PM ET") and the replay clock carries `label`; a client that formats `at` in the device's zone shows a Central-time Mac an hour off.
 - **History always includes the previous frame**, however old: the recorder's 25-minute gap is still a comparison.
+- **ESPN text is cleaned on the server, once, in `cfb/text.py`.** Play, last-play and scoring text lose the clock prefix, formation, jersey numbers, parentheticals and ALL-CAPS tags ("(C. Hawkins KICK)" becomes "C. Hawkins kick"). The contracts forbid `#` and parentheses in those fields, and `tests/test_text.py` runs every string in the capture through it. A client never cleans or trims text.
+- **Every team carries `shortName`, chosen on the server.** Clients draw `location` and fall back to `shortName` only when it does not fit (`TeamName`, by width). Never truncate a name when a shorter one was shipped.
 - **Every heuristic carries a non-empty caveat.** The leverage order is hand-weighted; report the caveat with it.
 - **Never hand-edit `project.pbxproj`.** Run `make project`.
 - **Text is system ink; colour goes on chips.** Every state has a glyph as well as a colour. Targets are ≥60 pt on visionOS and ≥44 pt on iOS.

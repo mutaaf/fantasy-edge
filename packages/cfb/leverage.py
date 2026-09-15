@@ -103,7 +103,7 @@ SECTIONS = (
     ("rankedLive", "Ranked, live", "Top 25 in progress"),
     ("live", "Everything else", "Also live"),
     ("upcoming", "Coming up", "Not yet kicked off"),
-    ("finals", "Tonight so far", "Upsets, overtime and one-score finishes first"),
+    ("finals", "Tonight so far", "Upsets and close finishes first"),
 )
 
 

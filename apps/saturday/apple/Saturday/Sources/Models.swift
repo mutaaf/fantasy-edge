@@ -68,6 +68,8 @@ struct Side: Decodable, Hashable {
     let abbr: String
     let name: String
     let location: String
+    /// The server's fallback when `location` does not fit; see `TeamName`.
+    let shortName: String
     let color: String
     let logo: String
     let rank: Int?
@@ -132,6 +134,7 @@ struct DetailTeam: Decodable, Hashable {
     let abbr: String
     let name: String
     let location: String
+    let shortName: String
     let rank: Int?
     let record: String
     let score: Int?
