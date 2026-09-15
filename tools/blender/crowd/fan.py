@@ -21,6 +21,8 @@ from mathutils import Matrix, Vector
 
 TINTED = (0.86, 0.86, 0.86)          # luminance a club colour is multiplied into
 HEAD_SCALE = 1.08                    # crowd heads read a touch large, as they do in any stand
+SUBSURF = 1                          # body smoothing; 2 only for hero renders
+SPHERE = (16, 10)                    # head and shell sphere segments at runtime density
 
 
 def hex_rgb(h: str):
@@ -120,8 +122,8 @@ def _skin_mesh(name, verts, edges, radii, root=0):
         v.radius = radii[i]
     me.skin_vertices[0].data[root].use_root = True
     sub = ob.modifiers.new("sub", "SUBSURF")
-    sub.levels = 2
-    sub.render_levels = 2
+    sub.levels = SUBSURF
+    sub.render_levels = SUBSURF
     _apply_all(ob)
     return ob
 
@@ -195,7 +197,7 @@ def head(f: dict, J: dict[str, Vector]):
     c = (J["head"] + J["head_top"]) / 2 + Vector((0, -0.010, -0.030)) * k
     hs = HEAD_SCALE
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=20, v_segments=12, radius=1.0)
+    bmesh.ops.create_uvsphere(bm, u_segments=SPHERE[0], v_segments=SPHERE[1], radius=1.0)
     for v in bm.verts:
         x, y, z = v.co
         sx = 0.083 if z > -0.1 else 0.083 * (0.78 + 0.22 * (1 + z))     # jaw narrows
@@ -221,7 +223,9 @@ def head(f: dict, J: dict[str, Vector]):
     return ob, c
 
 
-def _shell(name, centre, k, scale, keep, deform=None, segments=20, rings=12):
+def _shell(name, centre, k, scale, keep, deform=None, segments=None, rings=None):
+    segments = segments or SPHERE[0]
+    rings = rings or SPHERE[1]
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=segments, v_segments=rings, radius=1.0)
     kill = [v for v in bm.verts if not keep(v.co)]
@@ -238,9 +242,6 @@ def _shell(name, centre, k, scale, keep, deform=None, segments=20, rings=12):
     bpy.context.scene.collection.objects.link(ob)
     for p in me.polygons:
         p.use_smooth = True
-    sol = ob.modifiers.new("thick", "SOLIDIFY")
-    sol.thickness = 0.006 * k
-    _apply_all(ob)
     return ob
 
 

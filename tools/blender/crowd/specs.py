@@ -96,6 +96,11 @@ def cast(seed: int = SEED, count: int = COUNT) -> list[dict]:
             # Drawn from its own stream so adding scarves did not reshuffle the cast.
             "scarf": random.Random(seed + 7919 * i).random() < (0.45 if top in ("jacket", "hoodie", "pullover") else 0.2),
         })
+    # A sign is loud: in a real stand a few people hold one, not a fifth of
+    # them. Keep the first two, hand the rest a phone or nothing.
+    signs = [f for f in fans if f["accessory"] == "sign"]
+    for n, f in enumerate(signs[2:]):
+        f["accessory"] = "phone" if n % 2 == 0 else "none"
     return fans
 
 

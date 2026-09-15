@@ -112,11 +112,11 @@
    "gltf": "fan00.glb",
    "lod0": {
     "mesh": "fan00",
-    "triangles": 1492
+    "triangles": 1496
    },
    "lod1": {
     "mesh": "fan00_lod1",
-    "triangles": 417
+    "triangles": 415
    },
    "uvCell": [
     0.002,
@@ -189,7 +189,7 @@
    },
    "lod1": {
     "mesh": "fan01_lod1",
-    "triangles": 417
+    "triangles": 419
    },
    "uvCell": [
     0.16867,
@@ -262,7 +262,7 @@
    },
    "lod1": {
     "mesh": "fan02_lod1",
-    "triangles": 416
+    "triangles": 418
    },
    "uvCell": [
     0.33533,
@@ -331,11 +331,11 @@
    "gltf": "fan03.glb",
    "lod0": {
     "mesh": "fan03",
-    "triangles": 1489
+    "triangles": 1494
    },
    "lod1": {
     "mesh": "fan03_lod1",
-    "triangles": 415
+    "triangles": 414
    },
    "uvCell": [
     0.502,
@@ -408,7 +408,7 @@
    },
    "lod1": {
     "mesh": "fan04_lod1",
-    "triangles": 417
+    "triangles": 419
    },
    "uvCell": [
     0.66867,
@@ -481,7 +481,7 @@
    },
    "lod1": {
     "mesh": "fan05_lod1",
-    "triangles": 417
+    "triangles": 418
    },
    "uvCell": [
     0.83533,
@@ -550,11 +550,11 @@
    "gltf": "fan06.glb",
    "lod0": {
     "mesh": "fan06",
-    "triangles": 1497
+    "triangles": 1498
    },
    "lod1": {
     "mesh": "fan06_lod1",
-    "triangles": 416
+    "triangles": 419
    },
    "uvCell": [
     0.002,
@@ -623,11 +623,11 @@
    "gltf": "fan07.glb",
    "lod0": {
     "mesh": "fan07",
-    "triangles": 1499
+    "triangles": 1500
    },
    "lod1": {
     "mesh": "fan07_lod1",
-    "triangles": 416
+    "triangles": 419
    },
    "uvCell": [
     0.16867,
@@ -700,7 +700,7 @@
    },
    "lod1": {
     "mesh": "fan08_lod1",
-    "triangles": 412
+    "triangles": 419
    },
    "uvCell": [
     0.33533,
@@ -773,7 +773,7 @@
    },
    "lod1": {
     "mesh": "fan09_lod1",
-    "triangles": 413
+    "triangles": 418
    },
    "uvCell": [
     0.502,
@@ -846,7 +846,7 @@
    },
    "lod1": {
     "mesh": "fan10_lod1",
-    "triangles": 417
+    "triangles": 419
    },
    "uvCell": [
     0.66867,
@@ -919,7 +919,7 @@
    },
    "lod1": {
     "mesh": "fan11_lod1",
-    "triangles": 417
+    "triangles": 419
    },
    "uvCell": [
     0.83533,
@@ -988,11 +988,11 @@
    "gltf": "fan12.glb",
    "lod0": {
     "mesh": "fan12",
-    "triangles": 1490
+    "triangles": 1496
    },
    "lod1": {
     "mesh": "fan12_lod1",
-    "triangles": 416
+    "triangles": 411
    },
    "uvCell": [
     0.002,
@@ -1061,11 +1061,11 @@
    "gltf": "fan13.glb",
    "lod0": {
     "mesh": "fan13",
-    "triangles": 1492
+    "triangles": 1496
    },
    "lod1": {
     "mesh": "fan13_lod1",
-    "triangles": 417
+    "triangles": 415
    },
    "uvCell": [
     0.16867,
@@ -1138,7 +1138,7 @@
    },
    "lod1": {
     "mesh": "fan14_lod1",
-    "triangles": 414
+    "triangles": 416
    },
    "uvCell": [
     0.33533,
@@ -1207,11 +1207,11 @@
    "gltf": "fan15.glb",
    "lod0": {
     "mesh": "fan15",
-    "triangles": 1498
+    "triangles": 1500
    },
    "lod1": {
     "mesh": "fan15_lod1",
-    "triangles": 416
+    "triangles": 417
    },
    "uvCell": [
     0.502,
@@ -1280,7 +1280,7 @@
    "gltf": "fan16.glb",
    "lod0": {
     "mesh": "fan16",
-    "triangles": 1496
+    "triangles": 1500
    },
    "lod1": {
     "mesh": "fan16_lod1",
@@ -1357,7 +1357,7 @@
    },
    "lod1": {
     "mesh": "fan17_lod1",
-    "triangles": 418
+    "triangles": 419
    },
    "uvCell": [
     0.83533,
@@ -1430,7 +1430,7 @@
    },
    "lod1": {
     "mesh": "fan18_lod1",
-    "triangles": 416
+    "triangles": 419
    },
    "uvCell": [
     0.002,
@@ -1493,17 +1493,17 @@
    "club": true,
    "hat": "visor",
    "hair": "short",
-   "accessory": "sign",
+   "accessory": "phone",
    "paint": "half",
    "model": "fan19.usdz",
    "gltf": "fan19.glb",
    "lod0": {
     "mesh": "fan19",
-    "triangles": 1490
+    "triangles": 1494
    },
    "lod1": {
     "mesh": "fan19_lod1",
-    "triangles": 416
+    "triangles": 414
    },
    "uvCell": [
     0.16867,
@@ -1566,17 +1566,17 @@
    "club": true,
    "hat": "none",
    "hair": "curly",
-   "accessory": "sign",
+   "accessory": "none",
    "paint": "cheek",
    "model": "fan20.usdz",
    "gltf": "fan20.glb",
    "lod0": {
     "mesh": "fan20",
-    "triangles": 1498
+    "triangles": 1500
    },
    "lod1": {
     "mesh": "fan20_lod1",
-    "triangles": 414
+    "triangles": 418
    },
    "uvCell": [
     0.33533,
@@ -1639,13 +1639,13 @@
    "club": false,
    "hat": "visor",
    "hair": "short",
-   "accessory": "sign",
+   "accessory": "phone",
    "paint": "none",
    "model": "fan21.usdz",
    "gltf": "fan21.glb",
    "lod0": {
     "mesh": "fan21",
-    "triangles": 1490
+    "triangles": 1494
    },
    "lod1": {
     "mesh": "fan21_lod1",
@@ -1718,11 +1718,11 @@
    "gltf": "fan22.glb",
    "lod0": {
     "mesh": "fan22",
-    "triangles": 1492
+    "triangles": 1496
    },
    "lod1": {
     "mesh": "fan22_lod1",
-    "triangles": 416
+    "triangles": 414
    },
    "uvCell": [
     0.66867,

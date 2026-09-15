@@ -33,7 +33,8 @@ def assemble(f: dict, mode: str = "lit"):
         F.paint_flat(hr, F.hex_rgb(f["hair_colour"])); parts.append((hr, None, "head"))
     ht = F.hat(f, c)
     if ht:
-        F.paint_flat(ht, F.TINTED, (0, 1, 0) if f["hat"] == "beanie" else (1, 0, 0)); parts.append((ht, None, "head"))
+        # Hats wear the club's primary: a stand of white beanies reads as snow.
+        F.paint_flat(ht, F.TINTED, (1, 0, 0)); parts.append((ht, None, "head"))
     sc = F.scarf(f, J)
     if sc:
         F.paint_scarf(sc, f); parts.append((sc, None, "chest"))
