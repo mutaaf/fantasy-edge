@@ -158,6 +158,7 @@ extension SceneSpec {
             public let viewsYaw: [Double]
             public let scale: PerMode<Double>
             public let alphaCutoff: Double
+            public let pairOffsetMetres: Double
         }
 
         public struct CrowdRings: Decodable, Equatable, Sendable {
@@ -178,13 +179,19 @@ extension SceneSpec {
             public let metresPerYard: Double
             public let seed: UInt64
             public let fill: Double
-            public let seatsPerRow: PerMode<Int>
+            public let seatPitchYards: PerMode<Double>
             public let clearance: Clearance
             public let rings: CrowdRings
             public let slices: Int
+            public let cardVariants: Int
+            public let sliceJitter: Double
             public let secondary: String
             public let shirtShade: [Double]
             public let rawShare: Double
+            public let neutralShare: Double
+            public let neutrals: [String]
+            public let desaturate: [Double]
+            public let cardContrast: Double
             public let tint: CrowdTint
             public let roughness: Double
             public let standingShare: Double

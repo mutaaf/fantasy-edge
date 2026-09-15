@@ -44,6 +44,15 @@ IMP_WORLD = (1.2, 2.4)               # metres a cell covers, pivot at bottom cen
 IMP_POSES = ["sit", "sit_b", "stand", "clap_b", "cheer_a", "groan"]
 IMP_VIEWS = [0, 45, 90, 135, 180]    # yaw of the fan relative to the viewer; 225..315 mirror 135..45
 IMP_ELEVATION = 12.0                 # degrees the camera looks down on a fan
+# A far card is two neighbours, not one fan: seats are 0.55 yd (0.503 m) on
+# centre, and one fan per card at that density would double the crowd's
+# triangles. Cell p holds fan p on the left and pair_mate(p) on the right.
+PAIR_OFFSET = 0.2515                 # metres from the cell centre to each fan
+PAIR_STEP = 7                        # pair_mate(p) = (7p + 11) mod 24: a permutation with no fixed point
+
+
+def pair_mate(p, n=24):
+    return (PAIR_STEP * p + 11) % n
 BAKE_SCALE = 2
 
 
@@ -227,9 +236,13 @@ def finalise_materials(built, albedo):
             ob.data.materials.append(mat)
             for p in ob.data.polygons:
                 p.material_index = 0
-            for name in [a.name for a in ob.data.color_attributes] + ["owner_is_body", "owner_bone"]:
+            # Decimation leaves collapsed edges marked sharp, and in the stadium
+            # every fan came out faceted. At crowd scale soft beats crisp.
+            for name in [a.name for a in ob.data.color_attributes] + ["owner_is_body", "owner_bone", "sharp_face", "sharp_edge"]:
                 if name in ob.data.attributes:
                     ob.data.attributes.remove(ob.data.attributes[name])
+            for p in ob.data.polygons:
+                p.use_smooth = True
     return mat
 
 
@@ -338,8 +351,6 @@ def render_impostors(built, albedo, mask):
     d = Vector((0, math.cos(p), -math.sin(p)))
     cam.location = Vector((0, 0, zc)) - d * 50
     cam.rotation_euler = (math.radians(90) - p, 0, 0)
-    for i, b in enumerate(built):
-        b["rig"].location = ((i - (n - 1) / 2) * IMP_WORLD[0], 0, 0)
     mats = {
         "albedo": emission_material("imp_albedo", albedo),
         "mask": emission_material("imp_mask", mask),
@@ -353,28 +364,55 @@ def render_impostors(built, albedo, mask):
     atlas_h = math.ceil(n / per_row) * block[1]
     atlas = {k: np.zeros((atlas_h, atlas_w, 4), dtype=np.float32) for k in mats}
     tmp = pathlib.Path(bpy.app.tempdir or "/tmp") / "crowd_imp.png"
+    inverse = {pair_mate(c, n): c for c in range(n)}
+    centre = lambda c: (c - (n - 1) / 2) * IMP_WORLD[0]
+
+    def shoot(key):
+        sc.render.filepath = str(tmp)
+        bpy.ops.render.render(write_still=True)
+        img = bpy.data.images.load(str(tmp), check_existing=False)
+        px = np.array(img.pixels[:], dtype=np.float32).reshape(ch_px, n * cw_px, 4)
+        bpy.data.images.remove(img)
+        return px
+
     for pi, pose in enumerate(IMP_POSES):
         for b in built:
             P.apply_pose(b["rig"], pose, b["f"]["height"])
         for vi, yaw in enumerate(IMP_VIEWS):
+            th = math.radians(yaw)
             for b in built:
-                b["rig"].rotation_euler = (0, 0, math.radians(yaw))
+                b["rig"].rotation_euler = (0, 0, th)
                 b["lod1"].hide_render = True
                 b["mesh"].hide_render = False
-            bpy.context.view_layer.update()
-            for key, mat in mats.items():
-                sc.view_settings.view_transform = "Standard" if key == "albedo" else "Raw"
-                for b in built:
-                    b["mesh"].material_slots[0].material = mat
-                sc.render.filepath = str(tmp)
-                bpy.ops.render.render(write_still=True)
-                img = bpy.data.images.load(str(tmp), check_existing=False)
-                px = np.array(img.pixels[:], dtype=np.float32).reshape(ch_px, n * cw_px, 4)
-                bpy.data.images.remove(img)
+            layers = {}
+            # Each fan is rendered twice a view: as the left member of its own
+            # cell, then as the right member of its mate's cell, and the two
+            # passes are laid over each other nearest-first.
+            for side in (-1, 1):
+                for i, b in enumerate(built):
+                    c = i if side < 0 else inverse[i]
+                    b["rig"].location = (centre(c) + side * PAIR_OFFSET * math.cos(th),
+                                         side * PAIR_OFFSET * math.sin(th), 0)
+                bpy.context.view_layer.update()
+                for key, mat in mats.items():
+                    sc.view_settings.view_transform = "Standard" if key == "albedo" else "Raw"
+                    for b in built:
+                        b["mesh"].material_slots[0].material = mat
+                    layers[(side, key)] = shoot(key)
+            # Smaller y is nearer the camera: that side goes on top.
+            near_side = -1 if (-1 * math.sin(th)) < (1 * math.sin(th)) else 1
+            if abs(math.sin(th)) < 1e-6:
+                near_side = -1
+            far_side = -near_side
+            for key in mats:
+                top, bottom = layers[(near_side, key)], layers[(far_side, key)]
+                a = top[..., 3:4]
+                comp = np.empty_like(top)
+                comp[..., :3] = top[..., :3] * a + bottom[..., :3] * (1 - a)
+                comp[..., 3:4] = a + bottom[..., 3:4] * (1 - a)
                 for i in range(n):
                     bx, by = (i % per_row) * block[0], (i // per_row) * block[1]
-                    cell = px[:, i * cw_px:(i + 1) * cw_px]
-                    # atlas rows are stored top-down in the manifest; numpy rows here are bottom-up
+                    cell = comp[:, i * cw_px:(i + 1) * cw_px]
                     y0 = atlas_h - (by + (pi + 1) * ch_px)
                     atlas[key][y0:y0 + ch_px, bx + vi * cw_px:bx + (vi + 1) * cw_px] = cell
             log(f"impostor {pose} yaw {yaw}")
@@ -434,6 +472,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
             "lod1": {"mesh": f"{f['id']}_lod1", "triangles": R.triangles(b["lod1"])},
             "uvCell": [round(x0, 5), round(y0, 5), round(w, 5), round(h, 5)],
             "impostorBlock": [(i % layout["per_row"]) * layout["block_px"][0], (i // layout["per_row"]) * layout["block_px"][1]],
+            "impostorMate": built[pair_mate(i, len(built))]["f"]["id"],
             "usdClips": b.get("usd_ranges", {}),
         })
     k = 1.0
@@ -463,6 +502,8 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
         },
         "impostor": {
             "cellPx": list(IMP_CELL), "worldSize": list(IMP_WORLD), "pivot": "bottom centre",
+            "pair": {"about": "Each cell holds two neighbours: the block's fan left of centre, its mate right, each offsetMetres from the centre along the seat row (rotated with the view). Tint the left half of a cell as one fan and the right half as the other.",
+                     "offsetMetres": PAIR_OFFSET, "mate": f"({PAIR_STEP} * index + 11) mod 24"},
             "poses": IMP_POSES, "viewsYawDeg": IMP_VIEWS, "mirror": {"225": 135, "270": 90, "315": 45},
             "elevationDeg": IMP_ELEVATION,
             "layout": {**layout, "cell": "column = view index, row = pose index, both from the block's top-left"},

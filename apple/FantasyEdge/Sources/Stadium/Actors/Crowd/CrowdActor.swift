@@ -94,7 +94,7 @@ final class CrowdActor: StadiumActor {
 
         var rng = CrowdRng(s: C.seed)
         let shape = s.bowl.shape
-        let perRow = C.seatsPerRow.value(tabletop: c.tabletop)
+        let pitch = C.seatPitchYards.value(tabletop: c.tabletop)
         let yard = Float(1 / C.metresPerYard)
         let cardScale = Float(C.impostor.scale.value(tabletop: c.tabletop))
         let cw = Float(C.impostor.worldMetres[0]) * yard * cardScale
@@ -104,17 +104,21 @@ final class CrowdActor: StadiumActor {
         let wearerSeats = (s.presentation.stadium.seats ?? []).map { SceneMath.local(x: $0.x, y: $0.y, z: $0.z) }
         let clear = Float(C.clearance.radius), clearHeight = Float(C.clearance.height)
 
-        struct Placed { let fan: Int; let base: SIMD3<Float>; let facing: SIMD3<Float>; let away: Bool; let slice: Int; let dist: Float }
+        struct Placed { let fan: Int; let base: SIMD3<Float>; let facing: SIMD3<Float>; let away: Bool; let slice: Int; let variant: Int; let dist: Float; let row: Int; let seat: Int }
         var placed: [Placed] = []
+        var rowId = 0
         for tier in c.tiers {
             let rows = c.look.bowl.rows[tier.name] ?? 20
             let step = c.tabletop ? 2 : 1
             for r in stride(from: 0, to: rows, by: step) {
                 let row = SceneMath.row(tier, r, of: rows)
                 let m = row.front + (row.back - row.front) * 0.45
-                let (angles, _) = SceneMath.evenAngles(shape, offset: m, count: perRow)
+                // Seats at the scene's pitch, so a far card of two neighbours lines up with its seats.
+                let (_, ringLength) = SceneMath.evenAngles(shape, offset: m, count: 1, resolution: 360)
+                let (angles, _) = SceneMath.evenAngles(shape, offset: m, count: max(1, Int(ringLength / pitch)))
                 var previous = -1
-                for t in angles {
+                rowId += 1
+                for (seatIndex, t) in angles.enumerated() {
                     guard rng.next() < C.fill else { continue }
                     if c.cut(t, t) { continue }
                     let p = SceneMath.bowlPoint(shape, offset: m, angle: t)
@@ -130,9 +134,11 @@ final class CrowdActor: StadiumActor {
                     let side = SIMD3<Float>(-Float(n.y), 0, Float(n.x))
                     let jitter = Float(rng.next() - 0.5) * Float(C.sideJitter) * 2
                     let base = SIMD3(Float(p.x), Float(row.tread), Float(p.z)) + side * jitter
-                    let slice = min(slices - 1, Int(t / (2 * .pi) * Double(slices)))
+                    let edge = (rng.next() - 0.5) * C.sliceJitter
+                    let slice = (Int((t / (2 * .pi) * Double(slices) + edge).rounded(.down)) + slices) % slices
                     placed.append(Placed(fan: fan, base: base, facing: SIMD3(Float(n.x), 0, Float(n.y)),
-                                         away: isAway, slice: slice, dist: simd_distance(base, seat)))
+                                         away: isAway, slice: slice, variant: Int(rng.next() * Double(max(1, C.cardVariants))),
+                                         dist: simd_distance(base, seat), row: rowId, seat: seatIndex))
                 }
             }
         }
@@ -153,19 +159,29 @@ final class CrowdActor: StadiumActor {
         struct NearKey: Hashable { let ring: Ring; let away: Bool; let phase: Int }
         var near: [NearKey: [Placed]] = [:]
         // Cards: one quad per fan, grouped by slice and side.
-        struct CardKey: Hashable { let slice: Int; let away: Bool }
+        struct CardKey: Hashable { let slice: Int; let away: Bool; let variant: Int }
         var cards: [CardKey: MeshBuilder] = [:]
         let atlas = kit.impostorSize
         let cell = SIMD2<Float>(Float(C.impostor.cellPixels[0]), Float(C.impostor.cellPixels[1]))
         let blockW = Float(C.impostor.cellPixels[0] * C.impostor.blockCells[0])
         let blockH = Float(C.impostor.cellPixels[1] * C.impostor.blockCells[1])
         cardRowV = cell.y / Float(atlas.height)
+        // Far fans sit in pairs of neighbours on one card: two seats, two triangles.
+        var consumed = Set<Int>()
         for (i, f) in placed.enumerated() {
+            if consumed.contains(i) { continue }
             switch ringOf[i] {
             case .lod0, .lod1:
                 near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % 2), default: []].append(f)
             case .card:
-                let toViewer = simd_normalize(SIMD3(seat.x - f.base.x, 0, seat.z - f.base.z) + SIMD3(0, 0, 1e-6))
+                var centre = f.base
+                if i + 1 < placed.count, ringOf[i + 1] == .card, placed[i + 1].row == f.row, placed[i + 1].seat == f.seat + 1 {
+                    centre = (f.base + placed[i + 1].base) / 2
+                    consumed.insert(i + 1)
+                    fans += 1
+                    counts[.card, default: 0] += 1
+                }
+                let toViewer = simd_normalize(SIMD3(seat.x - centre.x, 0, seat.z - centre.z) + SIMD3(0, 0, 1e-6))
                 let right = simd_normalize(simd_cross(-toViewer, SIMD3<Float>(0, 1, 0)))
                 // Which way the fan faces as the wearer sees it: 0 toward, +90 to the wearer's right.
                 let yaw = atan2(simd_dot(f.facing, right), simd_dot(f.facing, toViewer)) * 180 / .pi
@@ -181,13 +197,14 @@ final class CrowdActor: StadiumActor {
                 let vTop = 1 - (by + 0.5) / Float(atlas.height)
                 let vBottom = 1 - (by + cell.y - 0.5) / Float(atlas.height)
                 let (ul, ur) = mirrored ? (u1, u0) : (u0, u1)
-                let a = f.base - right * (cw / 2), b = f.base + right * (cw / 2)
+                let a = centre - right * (cw / 2), b = centre + right * (cw / 2)
                 let up = SIMD3<Float>(0, ch, 0)
-                var mb = cards[CardKey(slice: f.slice, away: f.away)] ?? MeshBuilder()
+                let ck = CardKey(slice: f.slice, away: f.away, variant: f.variant)
+                var mb = cards[ck] ?? MeshBuilder()
                 mb.quad(a, b, b + up, a + up,
                         uv: (SIMD2(ul, vBottom), SIMD2(ur, vBottom), SIMD2(ur, vTop), SIMD2(ul, vTop)),
                         normal: toViewer)
-                cards[CardKey(slice: f.slice, away: f.away)] = mb
+                cards[ck] = mb
             }
             fans += 1
             counts[ringOf[i], default: 0] += 1
@@ -218,8 +235,8 @@ final class CrowdActor: StadiumActor {
             g.pose = 0
             groups.append(g)
         }
-        for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.away ? 1 : 0) < ($1.key.slice, $1.key.away ? 1 : 0) }) {
-            guard let res = mb.resource("crowd.cards.\(key.slice)") else { continue }
+        for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.away ? 1 : 0, $0.key.variant) < ($1.key.slice, $1.key.away ? 1 : 0, $1.key.variant) }) {
+            guard let res = mb.resource("crowd.cards.\(key.slice).\(key.variant)") else { continue }
             var mat = PhysicallyBasedMaterial()
             mat.baseColor = .init(tint: .white, texture: .init(key.away ? dress.cardAway : dress.cardHome))
             if let normal { mat.normal = .init(texture: .init(normal)) }
@@ -227,9 +244,9 @@ final class CrowdActor: StadiumActor {
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
             mat.faceCulling = .none
             let e = ModelEntity(mesh: res, materials: [mat])
-            e.name = "crowd.cards.\(key.slice).\(key.away ? "away" : "home")"
+            e.name = "crowd.cards.\(key.slice).\(key.variant).\(key.away ? "away" : "home")"
             root.addChild(e)
-            var h = UInt64(key.slice * 7919 + (key.away ? 104_729 : 0)) &+ C.seed
+            var h = UInt64(key.slice * 7919 + key.variant * 3571 + (key.away ? 104_729 : 0)) &+ C.seed
             h ^= h >> 17
             let phase = Double(h % 997) / 997
             groups.append(Group(entity: e, ring: .card, away: key.away, slice: key.slice, material: mat,
@@ -471,23 +488,23 @@ final class CrowdKit {
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Layout.blocks(perRow: C.impostor.blocksPerRow,
                                        w: C.impostor.cellPixels[0] * C.impostor.blockCells[0],
-                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1])
-        let shade = (Float(C.shirtShade[0]), Float(C.shirtShade[1]))
-        func make(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout) -> CGImage? {
-            Self.tint(a, m, chip: chip, raw: raw, secondary: secondary, fans: C.fans, rawShare: Float(C.rawShare),
-                      shade: shade, layout: layout, divisor: 4)
+                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1],
+                                       cellW: C.impostor.cellPixels[0])
+        _ = secondary
+        func make(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, away: Bool, card: Bool) -> CGImage? {
+            Self.tint(a, m, chip: chip, raw: raw, palette: Palette(C, salt: away ? 2 : 1, card: card), layout: layout, divisor: 4)
         }
         let plain = plainDress()
-        let d = Dress(fanHome: StadiumText.texture(make(fanAlbedo, fanMask, home, homeRaw, fanLayout)) ?? plain.fanHome,
-                      fanAway: StadiumText.texture(make(fanAlbedo, fanMask, away, awayRaw, fanLayout)) ?? plain.fanAway,
-                      cardHome: StadiumText.texture(make(cardAlbedo, cardMask, home, homeRaw, cardLayout)) ?? plain.cardHome,
-                      cardAway: StadiumText.texture(make(cardAlbedo, cardMask, away, awayRaw, cardLayout)) ?? plain.cardAway)
+        let d = Dress(fanHome: StadiumText.texture(make(fanAlbedo, fanMask, home, homeRaw, fanLayout, away: false, card: false)) ?? plain.fanHome,
+                      fanAway: StadiumText.texture(make(fanAlbedo, fanMask, away, awayRaw, fanLayout, away: true, card: false)) ?? plain.fanAway,
+                      cardHome: StadiumText.texture(make(cardAlbedo, cardMask, home, homeRaw, cardLayout, away: false, card: true)) ?? plain.cardHome,
+                      cardAway: StadiumText.texture(make(cardAlbedo, cardMask, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway)
         quick[key] = d
         return d
     }
 
     private static func key(_ s: SceneSpec, _ C: SceneSpec.Look.CrowdLook) -> String {
-        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)"
+        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
     }
 
     func cachedDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress? {
@@ -514,21 +531,23 @@ final class CrowdKit {
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Layout.blocks(perRow: C.impostor.blocksPerRow,
                                        w: C.impostor.cellPixels[0] * C.impostor.blockCells[0],
-                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1])
-        let fans = C.fans, rawShare = Float(C.rawShare)
-        let shade = (Float(C.shirtShade[0]), Float(C.shirtShade[1]))
+                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1],
+                                       cellW: C.impostor.cellPixels[0])
+        _ = secondary
+        let homeFan = Palette(C, salt: 1, card: false), awayFan = Palette(C, salt: 2, card: false)
+        let homeCard = Palette(C, salt: 1, card: true), awayCard = Palette(C, salt: 2, card: true)
+        let started = Date()
         Task.detached(priority: .userInitiated) {
-            func tint(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, _ half: Bool) -> CGImage? {
-                CrowdKit.tint(a, m, chip: chip, raw: raw, secondary: secondary, fans: fans, rawShare: rawShare,
-                              shade: shade, layout: layout, divisor: half ? 2 : 1)
+            func tint(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, _ half: Bool, _ p: Palette) -> CGImage? {
+                CrowdKit.tint(a, m, chip: chip, raw: raw, palette: p, layout: layout, divisor: half ? 2 : 1)
             }
             // The away section is always across the bowl, so its copies are
             // composed at half size: it keeps the crowd inside its 60 MB.
             let images = Images(
-                fanHome: tint(src.fanAlbedo, src.fanMask, home, homeRaw, fanLayout, false),
-                fanAway: tint(src.fanAlbedo, src.fanMask, away, awayRaw, fanLayout, true),
-                cardHome: tint(src.cardAlbedo, src.cardMask, home, homeRaw, cardLayout, false),
-                cardAway: tint(src.cardAlbedo, src.cardMask, away, awayRaw, cardLayout, true))
+                fanHome: tint(src.fanAlbedo, src.fanMask, home, homeRaw, fanLayout, false, homeFan),
+                fanAway: tint(src.fanAlbedo, src.fanMask, away, awayRaw, fanLayout, true, awayFan),
+                cardHome: tint(src.cardAlbedo, src.cardMask, home, homeRaw, cardLayout, false, homeCard),
+                cardAway: tint(src.cardAlbedo, src.cardMask, away, awayRaw, cardLayout, true, awayCard))
             await MainActor.run {
                 let plain = self.plainDress()
                 let d = Dress(fanHome: StadiumText.texture(images.fanHome) ?? plain.fanHome,
@@ -536,6 +555,7 @@ final class CrowdKit {
                               cardHome: StadiumText.texture(images.cardHome) ?? plain.cardHome,
                               cardAway: StadiumText.texture(images.cardAway) ?? plain.cardAway)
                 Self.dressCache[key] = d
+                StadiumLog.log.notice("[stadium] crowd dress composed in \(String(format: "%.2f", Date().timeIntervalSince(started))) s")
                 done(d)
             }
         }
@@ -544,13 +564,17 @@ final class CrowdKit {
     /// Where each fan's pixels are in an atlas.
     enum Layout: Sendable {
         case grid(cols: Int, rows: Int)
-        case blocks(perRow: Int, w: Int, h: Int)
+        /// Impostor blocks whose cells hold two fans: `cellW` px wide, fan on the left half, mate on the right.
+        case blocks(perRow: Int, w: Int, h: Int, cellW: Int)
+
+        /// How many independently dressed people the atlas holds per fan block.
+        var people: Int { if case .blocks = self { return 2 } else { return 1 } }
 
         func rect(_ fan: Int, width: Int, height: Int) -> (x: Int, y: Int, w: Int, h: Int) {
             switch self {
             case .grid(let cols, let rows):
                 return (fan % cols * width / cols, fan / cols * height / rows, width / cols, height / rows)
-            case .blocks(let perRow, let w, let h):
+            case .blocks(let perRow, let w, let h, _):
                 return (fan % perRow * w, fan / perRow * h, w, h)
             }
         }
@@ -568,30 +592,96 @@ final class CrowdKit {
 
     /// albedo x chip through the mask. Each fan gets its own shade of the
     /// chip, and some wear the raw club colour, so a section is mottled.
+    /// How a side dresses: which fans wear neutrals, and how far each club colour wanders.
+    struct Palette: Sendable {
+        let secondary: SIMD4<Float>
+        let fans: Int
+        let rawShare: Float
+        let shade: (Float, Float)
+        let neutralShare: Float
+        let neutrals: [SIMD4<Float>]
+        let desaturate: (Float, Float)
+        /// 1 keeps the kit's contrast; less pulls each fan toward its own mean.
+        let contrast: Float
+        let salt: UInt64
+
+        init(_ C: SceneSpec.Look.CrowdLook, salt: UInt64, card: Bool) {
+            secondary = SceneMath.rgba(C.secondary)
+            fans = C.fans
+            rawShare = Float(C.rawShare)
+            shade = (Float(C.shirtShade[0]), Float(C.shirtShade[1]))
+            neutralShare = Float(C.neutralShare)
+            neutrals = C.neutrals.map { SceneMath.rgba($0) }
+            desaturate = (Float(C.desaturate[0]), Float(C.desaturate[1]))
+            contrast = card ? Float(C.cardContrast) : 1
+            self.salt = salt
+        }
+    }
+
     nonisolated static func tint(_ albedo: CGImage, _ mask: CGImage, chip: SIMD4<Float>, raw: SIMD4<Float>,
-                                 secondary: SIMD4<Float>, fans: Int, rawShare: Float, shade: (Float, Float),
-                                 layout: Layout, divisor k: Int) -> CGImage? {
+                                 palette P: Palette, layout: Layout, divisor k: Int) -> CGImage? {
         let W = albedo.width / k, H = albedo.height / k
         guard let (out, o) = rgba(albedo, width: W, height: H),
               let (maskContext, m) = rgba(mask, width: W, height: H) else { return nil }
         // `m` points into the mask context's memory: keep the context alive
         // for the whole loop, or Swift frees it after its last named use.
         withExtendedLifetime(maskContext) {
-        for fan in 0..<fans {
-            var h = UInt64(fan * 2654435761 + 97)
+        let people = layout.people
+        var cellW = 0
+        if case .blocks(_, _, _, let w) = layout { cellW = w / k }
+        for person in 0..<(P.fans * people) {
+            let fan = person / people
+            // In a pair cell: is pixel column x on this person's half?
+            let mine: (Int, Int) -> Bool = { x, x0 in
+                people == 1 || cellW <= 0 || (((x - x0) % cellW) < cellW / 2) == (person % people == 0)
+            }
+            // Salted per side, so the home and away stands put neutrals on different fans.
+            var h = UInt64(person) &* 2654435761 &+ 97 &+ P.salt &* 40503
             h ^= h >> 13
+            h = h &* 0x9E3779B97F4A7C15
+            h ^= h >> 29
             let r1 = Float(h % 1000) / 1000, r2 = Float((h / 1000) % 1000) / 1000
-            let colour = (r2 < rawShare ? raw : chip) * (shade.0 + (shade.1 - shade.0) * r1)
+            let r3 = Float((h / 1_000_000) % 1000) / 1000, r4 = Float((h / 1_000_000_000) % 1000) / 1000
+            let wearsNeutral = r3 < P.neutralShare && !P.neutrals.isEmpty
+            var colour = wearsNeutral ? P.neutrals[Int(r4 * Float(P.neutrals.count)) % P.neutrals.count]
+                                      : (r2 < P.rawShare ? raw : chip)
+            colour *= P.shade.0 + (P.shade.1 - P.shade.0) * r1
+            if !wearsNeutral {
+                let d = P.desaturate.0 + (P.desaturate.1 - P.desaturate.0) * r4
+                let l = colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722
+                colour = colour + (SIMD4(l, l, l, colour.w) - colour) * d
+            }
+            let secondary = P.secondary
             var (x0, y0, w, h0) = layout.rect(fan, width: W * k, height: H * k)
             x0 /= k; y0 /= k; w /= k; h0 /= k
+            // Far cards: this fan's mean colour, to pull its flecks toward.
+            var mean = SIMD3<Float>.zero, n: Float = 0
+            if P.contrast < 1 {
+                for y in stride(from: max(0, y0), to: min(H, y0 + h0), by: 2) {
+                    for x in stride(from: max(0, x0), to: min(W, x0 + w), by: 2) where mine(x, x0) {
+                        let i = (y * W + x) * 4
+                        let a = Float(o[i + 3]) / 255
+                        guard a > 0.5 else { continue }
+                        mean += SIMD3(Float(o[i]), Float(o[i + 1]), Float(o[i + 2])) / (255 * a); n += 1
+                    }
+                }
+                mean /= max(1, n)
+            }
             for y in max(0, y0)..<min(H, y0 + h0) {
-                for x in max(0, x0)..<min(W, x0 + w) {
+                for x in max(0, x0)..<min(W, x0 + w) where mine(x, x0) {
                     let i = (y * W + x) * 4
                     let a = Float(o[i + 3]) / 255
                     guard a > 0.004 else { continue }
                     let mr = Float(m[i]) / 255, mg = Float(m[i + 1]) / 255, mb = Float(m[i + 2]) / 255
-                    guard mr + mg + mb > 0.004 else { continue }
                     var c = SIMD3(Float(o[i]), Float(o[i + 1]), Float(o[i + 2])) / (255 * a)
+                    if P.contrast < 1 { c = mean + (c - mean) * P.contrast }
+                    guard mr + mg + mb > 0.004 else {
+                        if P.contrast < 1 {
+                            let v = simd_clamp(c, .zero, SIMD3(repeating: 1)) * a * 255
+                            o[i] = UInt8(v.x); o[i + 1] = UInt8(v.y); o[i + 2] = UInt8(v.z)
+                        }
+                        continue
+                    }
                     let p = SIMD3(colour.x, colour.y, colour.z), s = SIMD3(secondary.x, secondary.y, secondary.z)
                     c = c * (SIMD3(repeating: 1) + (p - 1) * mr) * (SIMD3(repeating: 1) + (s - 1) * mg)
                     c = c + (p * 0.86 - c) * mb
