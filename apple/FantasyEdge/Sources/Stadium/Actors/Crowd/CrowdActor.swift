@@ -107,7 +107,48 @@ final class CrowdActor: StadiumActor {
         struct Placed { let fan: Int; let base: SIMD3<Float>; let facing: SIMD3<Float>; let away: Bool; let slice: Int; let variant: Int; let dist: Float; let row: Int; let seat: Int }
         var placed: [Placed] = []
         var rowId = 0
-        for tier in c.tiers {
+        // Every seat Bowl built, when the scene carries them: fans sit exactly in
+        // Bowl's chairs, pairs never straddle an aisle, and a group's edge is a
+        // section's edge, so a pose change lands where a real stand changes.
+        let drawn = Set(c.tiers.map(\.name))
+        if !c.tabletop, let seating = s.bowl.seating {
+            for tierSeats in seating.tiers where drawn.contains(tierSeats.tier) {
+                let sections = tierSeats.sections ?? []
+                for row in tierSeats.rows {
+                    let ring = SceneMath.Ring(shape, offset: row.feet)
+                    var previous = -1
+                    for (runIndex, run) in row.runs.enumerated() where run.count == 2 {
+                        rowId += 1
+                        for k in 0..<Int(run[1]) {
+                            guard rng.next() < C.fill else { continue }
+                            let spot = SceneMath.seat(row, run: runIndex, k: k, shape: shape, ring: ring)
+                            let p = spot.position
+                            if wearerSeats.contains(where: { w in
+                                hypot(p.x - w.x, p.z - w.z) < clear && abs(p.y - w.y) < clearHeight
+                            }) { continue }
+                            let isAway = away.map { a in (a.side == "far" ? p.z < 0 : p.z > 0) && Double(p.x) >= a.fromX - 50 } ?? false
+                            var fan = Int(rng.next() * Double(C.fans)) % C.fans
+                            if fan == previous { fan = (fan + 1 + Int(rng.next() * Double(C.fans - 1))) % C.fans }
+                            previous = fan
+                            let fraction = ((run[0] + Double(k) * row.pitch) / max(1e-6, row.length))
+                                .truncatingRemainder(dividingBy: 1)
+                            let section = sections.firstIndex { sec in
+                                sec.to <= 1 ? (fraction >= sec.from && fraction < sec.to)
+                                            : (fraction >= sec.from || fraction < sec.to - 1)
+                            } ?? Int(fraction * Double(max(1, sections.count)))
+                            let slice = sections.isEmpty ? Int(fraction * Double(slices)) % slices
+                                                         : section * slices / sections.count
+                            placed.append(Placed(fan: fan, base: p, facing: SIMD3(Float(spot.facing.x), 0, Float(spot.facing.y)),
+                                                 away: isAway, slice: slice,
+                                                 variant: Int(rng.next() * Double(max(1, C.cardVariants))),
+                                                 dist: simd_distance(p, seat), row: rowId, seat: k))
+                        }
+                    }
+                }
+            }
+        }
+        let seated = !placed.isEmpty
+        for tier in c.tiers where !seated {
             let rows = c.look.bowl.rows[tier.name] ?? 20
             let step = c.tabletop ? 2 : 1
             for r in stride(from: 0, to: rows, by: step) {

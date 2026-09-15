@@ -10,8 +10,8 @@ public enum StadiumShots {
     public struct Shot: Sendable {
         public let tabletop: Bool
         public let seat: String?
-        /// Degrees to turn the view right, and to tilt the world: the debug
-        /// pivot tilts the world, not the eye, so a negative pitch looks up.
+        /// Degrees to turn the viewer's head right, and to look up. The world
+        /// stays level; see `StadiumSpaceView`.
         public let yaw: Float
         public let pitch: Float
     }
@@ -19,14 +19,14 @@ public enum StadiumShots {
     // SHOTS-BEGIN
     public static let all: [String: Shot] = [
         "tabletop": Shot(tabletop: true, seat: nil, yaw: 0, pitch: 0),
-        "bowl-wide": Shot(tabletop: false, seat: "upper", yaw: 0, pitch: 6),
-        "field-level": Shot(tabletop: false, seat: "field", yaw: 0, pitch: 0),
-        "crowd-closeup": Shot(tabletop: false, seat: "club", yaw: 34, pitch: 16),
-        "lights-haze": Shot(tabletop: false, seat: "club", yaw: 8, pitch: -22),
-        "sky-dome": Shot(tabletop: false, seat: "club", yaw: 0, pitch: -50),
+        "bowl-wide": Shot(tabletop: false, seat: "upper", yaw: 0, pitch: -8),
+        "field-level": Shot(tabletop: false, seat: "field", yaw: 0, pitch: 4),
+        "crowd-closeup": Shot(tabletop: false, seat: "club", yaw: 55, pitch: -10),
+        "lights-haze": Shot(tabletop: false, seat: "club", yaw: 10, pitch: 24),
+        "sky-dome": Shot(tabletop: false, seat: "club", yaw: 0, pitch: 55),
         "td-moment": Shot(tabletop: false, seat: "club", yaw: 30, pitch: 0),
-        "redzone-trails": Shot(tabletop: false, seat: "club", yaw: 22, pitch: 4),
-        "sideline-props": Shot(tabletop: false, seat: "endzone", yaw: 0, pitch: 4),
+        "redzone-trails": Shot(tabletop: false, seat: "club", yaw: 22, pitch: -8),
+        "sideline-props": Shot(tabletop: false, seat: "endzone", yaw: 0, pitch: -4),
     ]
     // SHOTS-END
 

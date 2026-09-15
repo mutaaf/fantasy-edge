@@ -39,6 +39,9 @@ class CrowdKitTest(unittest.TestCase):
         self.assertEqual(block, M["impostor"]["layout"]["block_px"])
         self.assertEqual(C["impostor"]["blockCells"], [len(C["impostor"]["viewsYaw"]), len(C["poses"])])
         self.assertEqual(C["fanGrid"][0] * C["fanGrid"][1], C["fans"])
+        self.assertAlmostEqual(C["impostor"]["pairOffsetMetres"], M["impostor"]["pair"]["offsetMetres"])
+        # Two neighbours at the scene's seat pitch: offset is half a seat.
+        self.assertAlmostEqual(C["impostor"]["pairOffsetMetres"] * 2, C["seatPitchYards"]["stadium"] * C["metresPerYard"], places=2)
 
     def test_the_atlas_holds_every_fan(self):
         C, M = self.C, self.M
@@ -56,13 +59,13 @@ class CrowdKitTest(unittest.TestCase):
 
     def test_rings_fit_the_crowd_budget(self):
         """ART_BIBLE: crowd 120k triangles. Near meshes plus two per card must fit
-        with a sold-out bowl of cards (the stadium places about 32k fans)."""
+        with a sold-out bowl: Bowl seats about 50k, and far cards hold two each."""
         C, M = self.C, self.M
         r = C["rings"]
         self.assertLess(r["lod0Yards"], r["lod1Yards"])
         lod0 = max(f["lod0"]["triangles"] for f in M["fans"])
         lod1 = max(f["lod1"]["triangles"] for f in M["fans"])
-        cards = 33000 * 2
+        cards = (50_000 // 2) * 2
         self.assertLessEqual(r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + cards, 120_000)
 
     def test_the_cast_covers_every_variety_axis(self):
