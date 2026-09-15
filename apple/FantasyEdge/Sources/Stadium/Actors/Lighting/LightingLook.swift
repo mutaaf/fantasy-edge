@@ -85,6 +85,9 @@ extension SceneSpec.Look {
         public let lensGain: Double
         public let glowGain: Double
         public let beamGain: Double
+        public let beamGainMax: Double
+        public let hazeGainMax: Double
+        public let fieldWashGain: Double
     }
 
     public struct LightingWash: Decodable, Equatable, Sendable {
