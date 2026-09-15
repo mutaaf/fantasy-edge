@@ -41,6 +41,10 @@ extension SceneSpec.Look {
         public let roughness: Double
         public let threshold: Double
         public let endZoneOpacity: Double
+        /// The border and end lines: off-white, duller than the grass, more grass through.
+        public let border: String
+        public let borderRoughness: Double
+        public let borderGrassCut: Double
         /// How strongly blades show through paint and lettering.
         public let grassThrough: Double
     }

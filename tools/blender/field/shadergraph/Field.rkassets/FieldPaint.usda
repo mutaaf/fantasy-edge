@@ -27,6 +27,12 @@ def Xform "Root"
     #   TileYards    (float)   turf tile size in object units
     #   UseMask      (float)   1 reads Mask, 0 treats every texel as inside (lettering)
     #   Roughness    (float)
+    #   BorderColor, BorderRoughness, BorderGrassCut
+    #                (color3, float, float) the same three outside the field of
+    #                play - the white border and the end lines - so the widest
+    #                paint is the dullest and lets the most grass through
+    #   HalfWidth    (float)   half the field's width in object units
+    #   HalfLength   (float)   half its length with the end zones (60 yd)
     def Material "FieldPaint"
     {
         asset inputs:Mask = @./textures/placeholder_mask.png@
@@ -42,6 +48,11 @@ def Xform "Root"
         float inputs:TileYards = 0.4374
         float inputs:UseMask = 1
         float inputs:Roughness = 0.84
+        color3f inputs:BorderColor = (0.78, 0.78, 0.74)
+        float inputs:BorderRoughness = 0.98
+        float inputs:BorderGrassCut = 0.5
+        float inputs:HalfWidth = 26.667
+        float inputs:HalfLength = 60
 
         token outputs:mtlx:surface.connect = </Root/FieldPaint/Surface.outputs:out>
 
@@ -49,7 +60,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_realitykit_pbr_surfaceshader"
             color3f inputs:baseColor.connect = </Root/FieldPaint/Base.outputs:out>
-            float inputs:roughness.connect = </Root/FieldPaint.inputs:Roughness>
+            float inputs:roughness.connect = </Root/FieldPaint/Rough.outputs:out>
             float inputs:specular = 0.2
             float inputs:opacity.connect = </Root/FieldPaint/Coverage.outputs:out>
             float inputs:opacityThreshold = 0.5
@@ -181,7 +192,7 @@ def Xform "Root"
         def Shader "GrassHigh"
         {
             uniform token info:id = "ND_add_float"
-            float inputs:in1.connect = </Root/FieldPaint.inputs:GrassCut>
+            float inputs:in1.connect = </Root/FieldPaint/Cut.outputs:out>
             float inputs:in2.connect = </Root/FieldPaint.inputs:GrassSoft>
             float outputs:out
         }
@@ -190,7 +201,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_smoothstep_float"
             float inputs:in.connect = </Root/FieldPaint/BreakupSample.outputs:out>
-            float inputs:low.connect = </Root/FieldPaint.inputs:GrassCut>
+            float inputs:low.connect = </Root/FieldPaint/Cut.outputs:out>
             float inputs:high.connect = </Root/FieldPaint/GrassHigh.outputs:out>
             float outputs:out
         }
@@ -203,10 +214,84 @@ def Xform "Root"
             color3f outputs:out
         }
 
+        def Shader "AbsX"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/FieldPaint/Split.outputs:outx>
+            float outputs:out
+        }
+
+        def Shader "AbsZ"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/FieldPaint/Split.outputs:outz>
+            float outputs:out
+        }
+
+        def Shader "PastEnd"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldPaint/AbsX.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:HalfLength>
+            float outputs:out
+        }
+
+        def Shader "PastSide"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldPaint/AbsZ.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:HalfWidth>
+            float outputs:out
+        }
+
+        def Shader "Outside"
+        {
+            uniform token info:id = "ND_max_float"
+            float inputs:in1.connect = </Root/FieldPaint/PastEnd.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/PastSide.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "InBorder"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldPaint/Outside.outputs:out>
+            float inputs:low = -0.02
+            float inputs:high = 0.08
+            float outputs:out
+        }
+
+        def Shader "PaintColor"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/FieldPaint.inputs:BorderColor>
+            color3f inputs:bg.connect = </Root/FieldPaint.inputs:Color>
+            float inputs:mix.connect = </Root/FieldPaint/InBorder.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "Rough"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/FieldPaint.inputs:BorderRoughness>
+            float inputs:bg.connect = </Root/FieldPaint.inputs:Roughness>
+            float inputs:mix.connect = </Root/FieldPaint/InBorder.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Cut"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/FieldPaint.inputs:BorderGrassCut>
+            float inputs:bg.connect = </Root/FieldPaint.inputs:GrassCut>
+            float inputs:mix.connect = </Root/FieldPaint/InBorder.outputs:out>
+            float outputs:out
+        }
+
         def Shader "Base"
         {
             uniform token info:id = "ND_mix_color3"
-            color3f inputs:fg.connect = </Root/FieldPaint.inputs:Color>
+            color3f inputs:fg.connect = </Root/FieldPaint/PaintColor.outputs:out>
             color3f inputs:bg.connect = </Root/FieldPaint/Blades.outputs:out>
             float inputs:mix.connect = </Root/FieldPaint/Carry.outputs:out>
             color3f outputs:out
