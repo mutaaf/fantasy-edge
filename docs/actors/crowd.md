@@ -248,3 +248,55 @@ Before: `crowd-iter9/s-crowd-closeup.png`, `s-td-moment.png`, `crowd-iter10/s-cr
 - **Budget:** 141.7k triangles, 36 draw parts, 0 shadow casters. 44,855 fans:
   16 LOD0, 32 LOD1, 150 LOD2, 44,657 cards.
 - **Gates:** `make test` 530, `verify_scene`, `contrast_check`.
+
+## Round 3 (MakeHuman bodies, and a dress in two seconds)
+
+Before: `integration-10/s-crowd-closeup{,-clubLevel,-upper}.png`, `s-bowl-wide.png`, `s-td-moment-t*.png`, on `ab6d05a`.
+
+### Pass 1: the dress, `crowd-r3-1` to `crowd-r3-3`
+
+- **25 s to dress a crowd:** measured 24.8–26.0 s at integration-10, and 33–35 s on the perf branch. The detached task was
+  not waiting on the main actor; `tint` itself was slow. Under the harness's -Onone build a per-texel loop of SIMD
+  values, closures and `CGContext` draws cost that, and six `straightPadded` passes over the 6 MP card atlas were
+  most of it.
+- **Fix:**
+  - Padding is not per matchup, so it moved offline: `tools/blender/crowd/pad_atlas.py` grows each figure's colour
+    24 texels into the transparent albedo (12 in the mask), run by `build.py` after the impostors.
+  - `CrowdKit.pixels` reads the decoded PNG's bytes in place, no copy. visionOS's ImageIO hands an alpha PNG over
+    premultiplied (macOS hands the same file straight), so padding does not survive decode there: `tint` fills a
+    card's transparent texels with that person's own tinted mean instead, which is what the mips need.
+  - `tint` is scalar Float over raw buffers, the base copy is one `update(from:)` a row, and people are composed
+    in parallel with `concurrentPerform`: each texel belongs to one person's rect or half-cell, so writes never overlap.
+- **Measured:** `crowd dress composed in 1.97–2.42 s` (decode 0.01–0.30, tint 1.63–2.05, textures 0.07), in the
+  Debug harness on the simulator. Release on device will be faster; the log line now splits the four stages.
+
+### Pass 2: MakeHuman fans in the kit, `crowd-r3-4`
+
+- **Integrated:** `build.py` builds MPFB bodies through `mh.assemble` (`--scripted` keeps the old procedural fans).
+  The whole kit rebuilds in 17 min.
+- **Heights:** MPFB's height macro is gender-dependent. The body is probed and scaled to the cast's height about the floor,
+  rig included. A test holds every fan to the cast.
+- **Hats:** `fan.hat` built at k = 1 and stretched per axis onto the measured cranium (temples, front and back of the
+  skull, brows to scalp). Before, they floated a hand's width high and a size too big.
+- **Scarves:** a new loop from the body's own cross-section under the neck, dipping to the breastbone and kept 8.5 cm
+  under the chin; tails drape off whatever the fan wears. MakeHuman's neck bone sits 2 cm under the chin, and the old
+  scarf covered faces.
+- **Props:** turned from the kit's hanging-hand frame into the right wrist's, anchored at the fist, not the open fingertip.
+- **Suits:** `female_sportsuit01` (crop top) and `female_casualsuit02` (dress) are gone; women wear
+  `female_casualsuit01` and `male_casualsuit02/04`. A test fails if either returns.
+- **Faces:** MakeHuman eyes and `teeth_base`, with jaw and finger posing. The scripted mouth disc is only for scripted fans.
+- **Twins:** no fan repeats within four seats along a row or in the three seats directly ahead. Seated near-ring fans
+  alternate `sit` and `sit_b`, so a row is not one posture copied.
+- **Licences:** `assets/LICENSES.md` records the MakeHuman pack, its sha256 and every asset a fan wears; the manifest
+  lists each fan's assets and a test matches them.
+- **Budget:** 144.3k triangles, 36 draw parts, 0 shadow casters (LOD0 2,400, LOD1 650, LOD2 250; rings unchanged at 16/32/150).
+  44,892 fans.
+- **Gates:** `make test` 545 OK, `verify_scene` 15 scenes and 59,515 assertions OK, `contrast_check` OK, xcodebuild no new warnings.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r3-4/s-crowd-closeup.png` | Bake smears: pale blotches on some faces and square patches on shirts where the LOD0 UV repack bled across islands. |
+| `crowd-r3-4/s-crowd-closeup-clubLevel.png` | Signs and foam fingers still read as flat grey-brown boards at 3 m. |
+| `crowd-r3-4/s-crowd-closeup-upper.png` | The nearest fan's hands float over the rail in front instead of resting on their thighs. |
+| `crowd-r3-4/s-bowl-wide.png` | Unchanged from integration-10: far stands read, but the near celebrating row is still low-poly at the frame edge. |
+| `crowd-r3-4/s-td-moment-t0.5.png`, `-t5.1.png` | Cheering arms read well; the raised foam fingers are cartoon-sized next to MakeHuman hands. |

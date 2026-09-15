@@ -139,6 +139,10 @@ def apply_pose(rig, pose_name: str, height: float, fan_index=None):
     base.update({k: v for k, v in over.items() if not k.endswith(".R")})
     dirs = _mirror(base)
     dirs.update({k: v for k, v in over.items() if k.endswith(".R")})
+    if rig.get("mpfb"):
+        import mh
+        mh.apply_pose(rig, dirs, pose.get("hips"), height, pose_name)
+        return
     k = height / 1.75
     for pb in rig.pose.bones:
         pb.matrix_basis = Matrix.Identity(4)
@@ -168,8 +172,10 @@ def apply_pose(rig, pose_name: str, height: float, fan_index=None):
 
 def key_pose(rig, frame: int):
     for pb in rig.pose.bones:
-        pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
-        if pb.name == "hips":
+        # MPFB's fingers and jaw are posed in Euler; everything else in quaternions.
+        pb.keyframe_insert("rotation_quaternion" if pb.rotation_mode == "QUATERNION" else "rotation_euler",
+                           frame=frame, group=pb.name)
+        if pb.name in ("hips", "root"):              # the scripted rig's pelvis, MPFB's
             pb.keyframe_insert("location", frame=frame, group=pb.name)
 
 
