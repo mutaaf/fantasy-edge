@@ -222,3 +222,29 @@ Before: `crowd-iter9/s-crowd-closeup.png`, `s-td-moment.png`, `crowd-iter10/s-cr
     celebrating.
 - **Cues:** on `StadiumShared.crowdCues` (the director's move). A test holds
   them to the stadium's own blackboard.
+
+### Passes 3-6: `crowd-r2-6` to `crowd-r2-11`, on `e16a834`
+
+- **Far stands dark khaki:**
+  - The dressed impostor atlas was premultiplied, so every transparent texel
+    was black and far mips averaged figures with it. Colour now pads six
+    texels out, as straight alpha.
+  - Cards 100 m from the lamps sat about four stops under the field, so they
+    now emit a chip-coloured flood spill (`impostor.floodFill` 0.06). A
+    textured emissive read grey, and 0.45 went white.
+  - Result: `s-bowl-wide.png` reads Chicago blue and Minnesota purple.
+- **Fan shadows:** off (`castShadows` false), as a cost fix. The black
+  treads were Bowl's geometry facing away from the floods.
+- **Floating near fans:** measured with `tools/blender/crowd/seat_fit.py`
+  against Bowl's pan.
+  - The lift was `pelvisMetres * (1 - scale)`, which only equals the target
+    when the token is 0.52, so hips sank 4.7 cm into the pan and thighs rode
+    over the armrests.
+  - The lift is now `pelvisMetres - kitPelvisMetres * scale`. At 0.565, hips
+    meet the pan within ±3 cm for every build.
+  - Shots: `s-crowd-closeup-{club,clubLevel,upper}.png`.
+- **Touchdown:** the celebration holds at 0.5, 5.1 and 8.5 s
+  (`s-td-moment-t*.png`), then settles over 2.5–5 s.
+- **Budget:** 141.7k triangles, 36 draw parts, 0 shadow casters. 44,855 fans:
+  16 LOD0, 32 LOD1, 150 LOD2, 44,657 cards.
+- **Gates:** `make test` 530, `verify_scene`, `contrast_check`.
