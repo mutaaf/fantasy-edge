@@ -40,3 +40,30 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - Contact-shadow decals follow Lighting's contract (a stand-in texture at the same spec, `actors/sideline/textures/shadow_props.png`, to repoint at `visual.lighting.response.propShadowDecal` when that merges).
 
 (critique appended below after the shots)
+
+**Critique (`field-iter2`):**
+- Field 10 parts. Sideline 15.
+- The fifty-yard line drew as two lines, and a seam crossed the border at midfield. Cause: mip generation treats the half texture as wrapping. Fixed in iteration 3 with a yard of padding.
+- The net now shows, but it read as chain-link.
+- End-zone paint was flat and over-saturated.
+
+## Iteration 3 (`field-iter3`, merged with Lighting at `26e632d`)
+- **Changes:** half textures padded past midfield; wear drawn over the paint; nets at 0.55 opacity; end zones at 0.8 opacity; shadows now use Lighting's `shadow_multi.png` through base-colour alpha.
+- **Critique:**
+  - The fifty is a single line and the seam is gone.
+  - Turf reads as floodlit grass under the merged lighting.
+  - The wear over the paint was too strong: the white border and the numerals turned grey-beige.
+  - Tabletop sideline showed only 2 parts. LOD2 meshes export as `bench__prop_steel_002`, and the `_002` suffix hid every palette key.
+
+## Iteration 4 (`field-iter4`)
+- **Changes:** Blender's numeric suffix is stripped from mesh names (the exporter now also frees mesh datablocks between LODs); wear scaled to 0.5.
+- **Numbers:**
+  - Stadium: field 10 parts / 1.1k triangles; sideline 15 parts / 20.6k triangles.
+  - Tabletop: field 10 / 0.95k; sideline 15 / 2.9k.
+  - Field textures as the headset loads them: 38.2 MB (RGBA with mips), budget 40.
+- **Remaining gaps, ranked:**
+  1. Paint is flat grey-white under the floodlights, with no grass breakup. The breakup texture needs a second UV set or a Shader Graph material; neither is authorable headlessly (Lighting hit the same wall).
+  2. The baked shell slices are unused on the headset. Field-level grass is a normal map, not blades.
+  3. The NFL's 6 ft white border fills the lower frame of `field-level` as a clean slab.
+  4. Broadcast still owns its old chains entity, so there may be two chain sets. It needs a Wave 2 check.
+  5. Gestures, reduce motion and frame time are unverified: simulator stills only.

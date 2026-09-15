@@ -78,14 +78,20 @@ def main():
     files = sorted(p for p in FIELD.rglob("*") if p.is_file() and p.name != "manifest.json" and p.name != "README.md"
                    and not p.name.startswith("."))
     entries = [entry(p) for p in files]
-    loaded = {  # what one field in one stadium actually binds at once
-        "natural": [e for e in entries if e["path"].startswith("turf/natural/") and "shell" not in e["path"]],
-        "shellsNearField": [e for e in entries if "natural_shell" in e["path"]],
-        "perLeague": [e for e in entries if e["path"].startswith(("markings/nfl/", "maps/nfl/")) and e["path"].endswith(".png")],
-        "decals": [e for e in entries if e["path"].startswith("maps/divots")],
+    headset = {"turf/natural/turf_natural_with_albedo.png", "turf/natural/turf_natural_with_normal.png",
+               "turf/natural/turf_natural_against_normal.png", "turf/natural/turf_natural_with_roughness.png",
+               "markings/nfl/paint_white_half.png", "markings/nfl/paint_yellow_half.png",
+               "maps/nfl/variation_opacity.png"}
+    loaded = {  # what the visionOS field binds (design/tokens.json visual.field)
+        "headset": [e for e in entries if e["path"] in headset],
+        # the fuller set a shader-capable client (web, Android) may bind instead
+        "fullShaderPath": [e for e in entries if e["path"].startswith(("turf/natural/", "markings/nfl/paint_sdf",
+                                                                        "maps/nfl/field_maps", "maps/nfl/mow", "maps/divots"))
+                           and "shell" not in e["path"]],
     }
     budget = {k: round(sum(e.get("gpuMB", 0) for e in v), 2) for k, v in loaded.items()}
-    budget["total"] = round(sum(budget.values()), 2)
+    # RGBA with a full mip chain, the way StadiumAssets counts it
+    budget["headsetAsLoaded"] = round(sum(e["width"] * e["height"] * 16 / 3 / 1e6 for e in loaded["headset"]), 2)
     manifest = {
         "actor": "field",
         "units": {"textures": "0.40 m turf tile; field-space maps in yards over the markings canvas"},

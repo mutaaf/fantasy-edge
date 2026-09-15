@@ -503,11 +503,9 @@
   "gpuBudgetMB": {
     "field": 40,
     "measuredUncompressed": {
-      "decals": 2.45,
-      "natural": 24.11,
-      "perLeague": 16.79,
-      "shellsNearField": 2.8,
-      "total": 46.15
+      "fullShaderPath": 39.4,
+      "headset": 17.92,
+      "headsetAsLoaded": 38.18
     }
   },
   "leagues": [

@@ -731,7 +731,10 @@ def build(name: str) -> dict:
                                "meshes": [o.name for o in parts],
                                "files": [stem.with_suffix(".usdz").name, stem.with_suffix(".glb").name]}
         for o in [anchor] + parts:
+            data = o.data
             bpy.data.objects.remove(o)
+            if data is not None and data.users == 0:
+                bpy.data.meshes.remove(data)      # or the next LOD's meshes export as `_002`
     return record
 
 

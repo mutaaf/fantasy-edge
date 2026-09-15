@@ -110,14 +110,17 @@ final class SidelineActor: StadiumActor {
             }
         }
 
-        if !shadows.isEmpty, let decal = c.assets.texture("sideline.propShadow") {
+        if !shadows.isEmpty, let decal = c.assets.texture("lighting.propShadowDecal") ?? c.assets.texture("sideline.propShadow") {
             // Lighting's contract (docs/actors/lighting-sky.md): black, the
             // decal as opacity, scaled by the shared contact occlusion, under
             // the paint, never additive.
+            // Lighting's decal is RGBA: black colour, the shadow in alpha. A
+            // base colour texture's alpha is what a transparent PBR surface
+            // takes its coverage from, scaled here by the shared occlusion.
             var m = PhysicallyBasedMaterial()
-            m.baseColor = .init(tint: .black)
+            m.baseColor = .init(tint: .black, texture: StadiumLook.clamped(decal))
             m.roughness = .init(floatLiteral: 1)
-            m.blending = .transparent(opacity: .init(scale: Float(V.shadow.strength), texture: StadiumLook.clamped(decal)))
+            m.blending = .transparent(opacity: .init(floatLiteral: Float(V.shadow.strength)))
             let e = shadows.entity("sideline.shadows", m)
             StadiumLook.ground(e, order: 2)
             fixed.addChild(e)
@@ -198,7 +201,9 @@ final class SidelineActor: StadiumActor {
         let turn = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
         for (partName, mesh) in parts {
             if let only, !only(partName) { continue }
-            let material = String(partName.split(separator: "__").last ?? "")
+            // Blender suffixes a repeated mesh name (`_002`); the palette key is the name without it.
+            var material = String(partName.split(separator: "__").last ?? "")
+            if let r = material.range(of: #"_\d{3}$"#, options: .regularExpression) { material.removeSubrange(r) }
             guard let entry = V.palette[material] else { continue }
             // Every team-tinted surface wears the same chip, so a club's pads,
             // bench backs, tents and cooler lids are one mesh, not four.

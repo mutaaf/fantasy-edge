@@ -132,7 +132,7 @@ final class FieldActor: StadiumActor {
             m.baseColor = .init(tint: StadiumLook.color(T.wearTint))
             m.roughness = .init(floatLiteral: 0.95)
             m.specular = .init(floatLiteral: Float(T.specular))
-            m.blending = .transparent(opacity: .init(texture: StadiumLook.clamped(tex)))
+            m.blending = .transparent(opacity: .init(scale: Float(T.wearStrength), texture: StadiumLook.clamped(tex)))
             return m
         }
         for (entity, hex, template) in [(white, P.white, V.perLeague.paintWhite), (yellow, P.yellow, V.perLeague.paintYellow)] {

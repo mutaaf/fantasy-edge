@@ -30,6 +30,8 @@ extension SceneSpec.Look {
         public let stripeRoughness: [Double]
         public let surroundTint: String
         public let wearTint: String
+        /// Scales the wear map; it also lies over the paint.
+        public let wearStrength: Double
         public let specular: Double
     }
 
