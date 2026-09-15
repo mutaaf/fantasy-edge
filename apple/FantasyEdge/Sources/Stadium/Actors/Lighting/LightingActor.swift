@@ -85,7 +85,7 @@ final class LightingActor: StadiumActor {
         buildRigs(c)
         buildGlows(c)
         buildBeams(c)
-        if !tabletop { buildHaze(c) }
+        if !tabletop { buildHaze(c); buildFill(c) }
         buildFloods(c)
     }
 
@@ -438,6 +438,45 @@ final class LightingActor: StadiumActor {
     private func hazeMaterial(_ c: StadiumContext, gain: Double) -> UnlitMaterial {
         let H = c.look.lighting.haze
         return StadiumLook.glow(H.color, opacity: H.opacity * gain, texture: c.assets.texture("lighting.haze"), tile: true)
+    }
+
+    // MARK: concourse fill
+
+    /// The back of the upper deck's guard wall faces the seats, away from
+    /// every flood, and the night probe gives a vertical face almost nothing:
+    /// it rendered near-black under Bowl's LED strip. Real stadiums fill it from the
+    /// concourse and the vomitories behind. That light is drawn as a band
+    /// just in front of the wall face and a glow in each tunnel mouth, unlit
+    /// and additive - one draw, no light, no shadow. The band's geometry
+    /// mirrors Bowl's guard wall (`visual.lighting.fill`, checked against
+    /// tools/blender/bowl/structure.py by a test).
+    private func buildFill(_ c: StadiumContext) {
+        let F = c.look.lighting.fill, s = c.spec
+        var mesh = MeshBuilder()
+        let segments = 128
+        let off = F.wallOffsetYards + F.standOffYards       // on the seats' side of the face
+        let y0 = Float(F.wallRise[0]), y1 = Float(F.wallRise[1])
+        let repeats = Float(max(1, F.repeatsAround))
+        for k in 0..<segments {
+            let t0 = Double(k) / Double(segments) * 2 * .pi, t1 = Double(k + 1) / Double(segments) * 2 * .pi
+            let p0 = SceneMath.bowlPoint(s.bowl.shape, offset: off, angle: t0)
+            let p1 = SceneMath.bowlPoint(s.bowl.shape, offset: off, angle: t1)
+            let u0 = Float(k) / Float(segments) * repeats, u1 = Float(k + 1) / Float(segments) * repeats
+            mesh.quad(SIMD3(Float(p0.x), y0, Float(p0.z)), SIMD3(Float(p1.x), y0, Float(p1.z)),
+                      SIMD3(Float(p1.x), y1, Float(p1.z)), SIMD3(Float(p0.x), y1, Float(p0.z)),
+                      uv: (SIMD2(u0, 1), SIMD2(u1, 1), SIMD2(u1, 0), SIMD2(u0, 0)))
+        }
+        for tunnel in s.bowl.tunnels ?? [] {
+            // A tunnel mouth at x, under the end-zone stands, facing the field.
+            let x = Float(tunnel.x - 50)
+            let towardField: Float = x < 0 ? 1 : -1
+            let w = Float(tunnel.width * F.tunnelScale) / 2, h = Float(tunnel.height * F.tunnelScale)
+            let face = x + towardField * Float(F.standOffYards)
+            mesh.quad(SIMD3(face, 0, -w), SIMD3(face, 0, w), SIMD3(face, h, w), SIMD3(face, h, -w),
+                      uv: (SIMD2(0, 1), SIMD2(repeats / 8, 1), SIMD2(repeats / 8, 0), SIMD2(0, 0)))
+        }
+        let material = StadiumLook.glow(F.color, opacity: F.opacity, texture: c.assets.texture("lighting.fill"), tile: true)
+        root.addChild(mesh.entity("rim.concourseFill", material))
     }
 
     // MARK: floods

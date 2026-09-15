@@ -45,6 +45,27 @@ class LightingSky(unittest.TestCase):
         self.assertLessEqual(peak(s["beamGain"], s["beamGainMax"]), s["beamGainMax"])
         self.assertLessEqual(peak(s["beamGain"], s["hazeGainMax"]), s["hazeGainMax"])
 
+    def test_concourse_fill_sits_on_bowls_guard_wall(self):
+        """The fill band lies on the seat-facing back of Bowl's guard wall, from
+        the walkway to the LED strip under the cap. Bowl owns that geometry in
+        its Blender script; if it moves, the fill must too."""
+        import re
+        src = (ROOT / "tools" / "blender" / "bowl" / "structure.py").read_text()
+        m = re.search(r"lip_m, lip_under, lip_top = ([\d.]+), ([\d.]+), ([\d.]+)", src)
+        self.assertIsNotNone(m, "structure.py no longer states the upper deck's lip")
+        lip_m, lip_top = float(m.group(1)), float(m.group(3))
+        g = re.search(r"wall_f, wall_b, cap = lip_m \+ [\d.]+, lip_m \+ ([\d.]+), lip_top \+ ([\d.]+)", src)
+        self.assertIsNotNone(g, "structure.py no longer states the guard wall")
+        self.assertIn("cap - 0.16", src, "the LED strip under the cap moved")
+        upper = next(t for t in sc.BOWL["tiers"] if t["name"] == "upper")
+        rows = TOKENS["visual"]["bowl"]["rows"]["upper"]
+        walk = upper["rise"][0] + (upper["rise"][1] - upper["rise"][0]) / rows
+        fill = TOKENS["visual"]["lighting"]["fill"]
+        self.assertAlmostEqual(fill["wallOffsetYards"], lip_m + float(g.group(1)), places=3)
+        self.assertAlmostEqual(fill["wallRise"][0], walk, places=2)
+        self.assertAlmostEqual(fill["wallRise"][1], lip_top + float(g.group(2)) - 0.16, places=3)
+        self.assertLess(fill["opacity"], 0.5, "a fill, not a light source")
+
     def test_every_lighting_and_sky_file_is_shipped(self):
         for actor in ("lighting", "sky"):
             section = TOKENS["visual"][actor]
