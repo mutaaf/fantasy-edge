@@ -45,6 +45,7 @@
 		770FCF86FE336604E3721B03 /* Stadium/Actors/Broadcast/BroadcastActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */; };
 		51F8A1D857F3B088B1B46DA1 /* Stadium/Actors/Broadcast/BroadcastLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */; };
 		9FBF718B262E1C42E4EB992B /* Stadium/Actors/Crowd/CrowdActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */; };
+		4EF5D83B071F6FA6F48F0494 /* Stadium/Actors/Crowd/CrowdCues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */; };
 		E3E7FA03681625C04AD02F85 /* Stadium/Actors/Crowd/CrowdLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */; };
 		634917B7DE6B870E928A434D /* Stadium/Actors/Experience/ExperienceActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */; };
 		B6FD6962EC9352499B7EB2E4 /* Stadium/Actors/Experience/ExperienceLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */; };
@@ -120,6 +121,7 @@
 		84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastActor.swift; sourceTree = "<group>"; };
 		0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastLook.swift; sourceTree = "<group>"; };
 		A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdActor.swift; sourceTree = "<group>"; };
+		2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdCues.swift; sourceTree = "<group>"; };
 		AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdLook.swift; sourceTree = "<group>"; };
 		EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/ExperienceActor.swift; sourceTree = "<group>"; };
 		A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/ExperienceLook.swift; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 				84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */,
 				0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */,
 				A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */,
+				2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */,
 				AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */,
 				EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */,
 				A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */,
@@ -355,6 +358,7 @@
 				770FCF86FE336604E3721B03 /* Stadium/Actors/Broadcast/BroadcastActor.swift in Sources */,
 				51F8A1D857F3B088B1B46DA1 /* Stadium/Actors/Broadcast/BroadcastLook.swift in Sources */,
 				9FBF718B262E1C42E4EB992B /* Stadium/Actors/Crowd/CrowdActor.swift in Sources */,
+				4EF5D83B071F6FA6F48F0494 /* Stadium/Actors/Crowd/CrowdCues.swift in Sources */,
 				E3E7FA03681625C04AD02F85 /* Stadium/Actors/Crowd/CrowdLook.swift in Sources */,
 				634917B7DE6B870E928A434D /* Stadium/Actors/Experience/ExperienceActor.swift in Sources */,
 				B6FD6962EC9352499B7EB2E4 /* Stadium/Actors/Experience/ExperienceLook.swift in Sources */,

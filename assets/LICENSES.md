@@ -3,6 +3,20 @@
 Every file under `assets/` is CC0 or original to this repository. Each actor
 appends its own section.
 
+## Crowd (`assets/actors/crowd/`)
+
+**Original: no third-party inputs, no downloads.** Every file is produced by
+`tools/blender/crowd/*.py` (Blender 5.2.1, procedural skin-modifier bodies,
+primitive props, node-based face and fabric detail). There are no
+third-party models, textures, scans or likenesses. Released with the
+repository.
+
+| Files | Made by |
+|---|---|
+| `fan*.{usdz,glb}`, `lod{0,1}_poses.{usdz,glb}` | `build.py` (skeleton and bodies in `fan.py`, `rig.py`; poses in `poses.py`) |
+| `fan_albedo.png`, `fan_mask.png`, `impostor_{albedo,mask,normal}.png`, `variation.png`, `manifest.json` | `build.py` |
+| `review/*.png` | `lineup.py`, `pose_review.py` (critique renders) |
+
 ## Lighting and sky (`assets/actors/lighting/`, `assets/actors/sky/`)
 
 **Original: no third-party inputs, no downloads.** Every file is produced by
@@ -36,3 +50,5 @@ committed), then packed into each `.usdz` and `.glb`.
 Seat plastic, seat bands, stair nosing, soffit panels and the lit interiors
 (suites, press box, concourse glow) are generated with numpy in
 `tools/blender/bowl/textures.py`: original, no third-party content.
+
+Blender itself (GPL) is a build tool only; its output is not covered by the GPL.

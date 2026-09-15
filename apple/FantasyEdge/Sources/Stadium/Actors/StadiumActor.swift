@@ -104,6 +104,10 @@ final class StadiumShared {
     /// The field-goal net behind the end nearest `endX` sways, `strength` 0..1,
     /// until `until`. Written by Moments on a kick through, read by Sideline.
     var netSway: (endX: Double, strength: Double, until: Double)?
+    /// What the crowd has been asked to do, and until when. Written through
+    /// `stand`, `sit` and `groan` (Actors/Crowd/CrowdCues.swift), read by Crowd.
+    /// It lives on the blackboard so a new stadium starts with none.
+    var crowdCues: [CrowdCue] = []
     /// Sound is off. Written by the composer, read by Audio.
     var muted = false
 }
