@@ -1,0 +1,60 @@
+integration-11-perf: stadium performance pass (perf/integration-11 on immersive/quality @ c637059)
+
+Measured in the visionOS 26.5 simulator (cloned "AVP perf-i11"), Debug build, with -stadiumStats,
+on a machine running other agents' builds at the same time. Counts are exact. Timings are the
+simulator's and carry that load: the ratios transfer, the absolute seconds need a Vision Pro.
+Frame time was not measured and cannot be here (docs/ART_BIBLE.md, Budget).
+
+Before: this branch's instrumentation on c637059's loader, beams and bowl (before/stats-raw.txt).
+After:  the same shots on this branch (after/stats-raw.txt, plus five seats of bowl-wide).
+
+LOAD (stadium, per launch, ranges over the shots)
+                                          before            after
+  asset prepare total                     7.5 - 13.8 s      1.8 - 4.3 s
+    textures, probe, sound                1.2 - 2.4 s       1.1 - 4.3 s   (now concurrent with models)
+    models (47 .usdz)                     6.2 - 12.0 s      1.8 - 4.3 s
+  open -> assets ready (stadium)          8.4 - 12.5 s      2.3 - 7.2 s
+  open -> assets ready (tabletop)         8.0 - 16.2 s      2.9 - 4.6 s
+  build, all actors (stadium)             1.25 - 4.4 s      1.7 - 5.7 s   (crowd build is 97% of it; not this pass's)
+    build.bowl                            0.002 s           0.03 s        (flattens bands + fills once)
+    build.lighting                        0.03 s            0.03 - 0.04 s
+    build.sky                             0.01 s            0.01 s
+  open -> first tick (stadium)            12.6 - 14.0 s     7.1 - 9.0 s
+  open -> first tick (tabletop)           19.7 s            9.1 s
+  crowd dress composed (Crowd's, async)   24.9 - 42.5 s     33.0 - 35.2 s (not touched; varies with machine load)
+  shader graph materials (4)              0.3 - 9.8 s each  loaded on demand after build, unchanged
+  main-thread tick, 120-frame mean        0.24 - 0.29 ms    0.30 - 0.43 ms (simulator noise; no per-frame work added)
+
+BEAM OVERDRAW (screens of fill from the seat, cap visual.lighting.beams.overdrawCapScreens)
+  The integration-10 log priced a crossed pair at 0.7 of its area at the beam's mid-point
+  distance; it read 1.96-1.99 from the high seats and silently dropped beams to stay under 2.0.
+  The estimate is now per triangle at each triangle's own distance and facing. Both columns
+  below use that one estimate, so they compare; the old log's numbers do not.
+  seat          crossed pairs, all beams   seat-facing, kept      kept
+  club          1.02                       0.63                   20/20
+  upper         0.76                       0.46                   20/20
+  clubLevel     0.93                       0.56                   20/20
+  pressBox      0.93                       0.61                   20/20
+  sideline      1.06                       0.70                   20/20
+  endzone       2.85                       0.97                   18/20
+  cap           2.0                        1.2
+
+DRAW COST (stadium, idle; mid-moment counts in after/stats-raw.txt)
+                                          before            after
+  stadium draw parts                      101               97
+  stadium triangles                       234.0 - 237.6k    233.9 - 237.6k
+  stadium models                          87                83
+  bowl draw parts (club seat)             20                16            (bands + 4 inactive fills merged; pressBox 9)
+  bowl triangles                          53.0 - 59.7k      53.0 - 59.7k  (budget 62k; unchanged, see report)
+  lighting draw parts / triangles         12 / 9,588        12 / 9,508
+  sky draw parts / triangles              3 / 4,800         3 / 4,800
+  shadow casters                          1 idle and mid-moment: Sideline's decal, opted in on purpose (SidelineActor.swift:187)
+                                          broadcast at touchdown +0.5/3/6 s: 0 before and after on this base. Integration-10's
+                                          4 were trails built on the frame clock, captured before c637059 opted them out per frame.
+  texture memory (estimate)               ~70 MB            ~67 MB        (sky.clouds without mips)
+
+TABLETOP
+                                          before            after         budget
+  draw parts                              72                72            110
+  triangles                               24.2k             24.2k         80k
+  (the tabletop keeps crossed beam quads: it is walked round, so there is no seat to face)
