@@ -127,3 +127,14 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - **Albedo:** lines at 0.80 sRGB (`#CDCDC6`), border and end lines `#C4C4BA`. Border roughness is 0.98, above any grass, and its grass cut is 0.44 against 0.37 on the lines. The graph finds the border from object position (`HalfWidth`, `HalfLength`).
 - **Result:** at field level (`field-sg6`) the border reads as worn off-white over grass rather than a grey slab. From the club seat (`field-sg5` `redzone-trails`) the lines sit in the turf.
 - **Load path:** all three materials load via `Entity(contentsOf:)`, one material per `.reality` (Field, Shells, Sideline). They're not consolidated yet; that works unchanged under the director's by-name loader.
+
+## Worn paint and grazing turf (integration-9 verdict)
+- **Border read as speckled gravel.** The old breakup was the turf height map (0.8 mm texels, soil included) plus a speck term, sampled again 7× coarser: salt and pepper at every scale, with soil black showing through white.
+- **Paint now wears in two bands** (`FieldPaint.usda`):
+  - `paint_blades.png` (turf tile): blade height from the baked shell slices. A blade shows where it stands above the cut, coloured by the turf, so what comes through is whole blades, evenly spread. Border cut 0.38, lines 0.55 (lower lets more through).
+  - `paint_wear.png` (6 yd tile, `make_field_maps.py -- paint_wear_maps`): broad thin patches plus cleat scuffs. It lowers the cut (`WearDepth`), thins the colour toward `ThinColor`, and pulls the edge in a little. It is what still varies at a graze, after the blade texels mip away.
+  - The salt-and-pepper speck and the coarse resample are gone. The baked mask's scuffs drop from 12 in to 5 in and its edge noise to about half an inch, so edges are crisp and slightly soft.
+- **Turf picked from shots: grazing sheen, not shells** (`Turf.rkassets/TurfSheen.usda`, `shaderGraph.materials.turfSheen`):
+  - As the view flattens, soil gaps (low in the ORM height) fill toward `SideColor` and blades take `SheenColor`, per-stripe `visual.field.turf.stripeSheen`. The stripe tint goes on last, so mowing stripes still read at a graze. Normals and baked occlusion as before.
+  - Covers the surround and both stripes, so parts are unchanged (Field 10). Tabletop keeps the PBR turf. Shells stay disabled: they cover only the near patch, and the sheen reads from every seat.
+- **Shots:** `.work/shots/field-turf4` from the field, sideline and club seats.

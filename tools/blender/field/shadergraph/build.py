@@ -9,6 +9,7 @@ right one (docs/SHADERGRAPH.md). Outputs:
   assets/actors/field/shadergraph/Field.reality         FieldPaint
   assets/actors/sideline/shadergraph/Sideline.reality   NetFresnel
   assets/actors/field/shadergraph/Shells.reality        FieldShells
+  assets/actors/field/shadergraph/Turf.reality          TurfSheen
 
 realitytool does not validate node ids; grep the app log for [shadergraph]
 and shoot after any change.
@@ -23,7 +24,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 PACKAGES = {"Field": ROOT / "assets/actors/field/shadergraph/Field.reality",
             "Sideline": ROOT / "assets/actors/sideline/shadergraph/Sideline.reality",
-            "Shells": ROOT / "assets/actors/field/shadergraph/Shells.reality"}
+            "Shells": ROOT / "assets/actors/field/shadergraph/Shells.reality",
+            "Turf": ROOT / "assets/actors/field/shadergraph/Turf.reality"}
 
 
 def main() -> int:

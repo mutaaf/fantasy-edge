@@ -46,7 +46,9 @@ final class FieldActor: StadiumActor {
         var surround = MeshBuilder()
         surround.floor(x0: K.x0, x1: K.x1, z0: -(half + (K.y1 - f.width)), z1: half + (K.y1 - f.width),
                        y: -0.03, tile: tile)
-        add(surround.entity("turf.surround", turf(T.surroundTint, T.stripeRoughness[0], albedo, rough, normals[0], T)), order: 0)
+        let surroundEntity = surround.entity("turf.surround", turf(T.surroundTint, T.stripeRoughness[0], albedo, rough, normals[0], T))
+        add(surroundEntity, order: 0)
+        var turfTargets = [(surroundEntity, T.surroundTint, T.stripeRoughness[0], T.surroundSheen, "turfWithNormal")]
 
         // Stripes: the same blades, combed with the mower and against it.
         var stripes = [MeshBuilder(), MeshBuilder()]
@@ -59,8 +61,12 @@ final class FieldActor: StadiumActor {
         for k in 0..<2 {
             let m = turf(T.stripeTint[k % T.stripeTint.count], T.stripeRoughness[k % T.stripeRoughness.count],
                          albedo, rough, normals[k], T)
-            add(stripes[k].entity("turf.stripe.\(k)", m), order: 1)
+            let e = stripes[k].entity("turf.stripe.\(k)", m)
+            add(e, order: 1)
+            turfTargets.append((e, T.stripeTint[k % T.stripeTint.count], T.stripeRoughness[k % T.stripeRoughness.count],
+                                T.stripeSheen[k % T.stripeSheen.count], k == 0 ? "turfWithNormal" : "turfAgainstNormal"))
         }
+        if !c.tabletop { upgradeTurf(c, turfTargets) }
 
         // Wear and macro tone, over the whole canvas, from the league's map.
         var wear = MeshBuilder()
@@ -220,7 +226,8 @@ final class FieldActor: StadiumActor {
         let halfWidth = c.spec.field.width / 2, halfLength = c.spec.field.length / 2 + c.spec.field.endZone
         Task { @MainActor in
             guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
-                  let breakup = await self.texture(V.shaderTextures.breakup, semantic: .raw),
+                  let blades = await self.texture(V.shaderTextures.blades, semantic: .raw),
+                  let wear = await self.texture(V.shaderTextures.wear, semantic: .raw),
                   let turf else {
                 StadiumLog.log.error("[shadergraph] field paint unavailable; keeping the texture paint")
                 return
@@ -239,7 +246,8 @@ final class FieldActor: StadiumActor {
                 StadiumShaderGraph.set(&m, "HalfLength", halfLength)
                 StadiumShaderGraph.set(&m, "UseMask", masked ? 1.0 : 0.0)
                 do {
-                    try m.setParameter(name: "Breakup", value: .textureResource(breakup))
+                    try m.setParameter(name: "Blades", value: .textureResource(blades))
+                    try m.setParameter(name: "Wear", value: .textureResource(wear))
                     try m.setParameter(name: "Turf", value: .textureResource(turf))
                     if let maskPath, let mask = await self.texture(maskPath, semantic: .color) {
                         try m.setParameter(name: "Mask", value: .textureResource(mask))
@@ -254,6 +262,43 @@ final class FieldActor: StadiumActor {
                 entity.isEnabled = true
             }
             StadiumLog.log.notice("[shadergraph] field paint on \(targets.count) meshes")
+        }
+    }
+
+    /// Swap the turf onto the Shader Graph turf (tools/blender/field/shadergraph/
+    /// Turf.rkassets/TurfSheen.usda) when it loads: the same tile, normals and
+    /// tints, plus the grazing-angle fill and sheen that give it depth from
+    /// field level. The PBR turf stays if it does not.
+    private func upgradeTurf(_ c: StadiumContext, _ targets: [(ModelEntity, String, Double, Double, String)]) {
+        let V = c.look.field
+        guard let spec = c.spec.shaderGraph?.materials?[V.turfMaterial],
+              let albedoPath = V.assets["turfAlbedo"] else { return }
+        Task { @MainActor in
+            guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
+                  let albedo = await self.texture(albedoPath, semantic: .color),
+                  let orm = await self.texture(V.shaderTextures.turfOrm, semantic: .raw) else {
+                StadiumLog.log.error("[shadergraph] turf sheen unavailable; keeping the PBR turf")
+                return
+            }
+            for (entity, tint, roughness, sheen, normalKey) in targets {
+                guard let normalPath = V.assets[normalKey],
+                      let normal = await self.texture(normalPath, semantic: .raw) else { continue }
+                var m = base
+                for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+                StadiumShaderGraph.set(&m, "Tint", tint)
+                StadiumShaderGraph.set(&m, "Roughness", roughness)
+                StadiumShaderGraph.set(&m, "Sheen", sheen)
+                do {
+                    try m.setParameter(name: "Albedo", value: .textureResource(albedo))
+                    try m.setParameter(name: "Normal", value: .textureResource(normal))
+                    try m.setParameter(name: "Orm", value: .textureResource(orm))
+                } catch {
+                    StadiumLog.log.error("[shadergraph] turf texture: \(error.localizedDescription, privacy: .public)")
+                    return
+                }
+                entity.model?.materials = [m]
+            }
+            StadiumLog.log.notice("[shadergraph] turf sheen on \(targets.count) meshes")
         }
     }
 
