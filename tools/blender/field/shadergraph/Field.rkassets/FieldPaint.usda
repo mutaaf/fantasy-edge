@@ -7,7 +7,11 @@
 
 def Xform "Root"
 {
-    # Paint on grass, worn the way field paint wears. A painted marking's signed
+    # Paint on grass, worn the way field paint wears. Paint coats the blades
+    # rather than replacing them: its colour is multiplied by the turf's own
+    # light-dark detail (luma over its mean, CoatDetail of it) and the surface
+    # keeps the turf's blade normals, so a white line still has every blade's
+    # relief in it. A painted marking's signed
     # distance field (uv0) is cut at Edge: a crisp, slightly soft edge, moved a
     # little by the blades and in larger, slower waves by the wear. Inside the
     # paint two things let the grass show:
@@ -25,6 +29,10 @@ def Xform "Root"
     #   Blades       (asset)   blade height per turf texel, raw, tiles with the turf
     #   Wear         (asset)   paint wear 0 intact..1 scuffed, raw, tiles every WearYards
     #   Turf         (asset)   turf albedo, tiles with the turf
+    #   Normal       (asset)   turf tangent-space normal, raw, tiles with the turf
+    #   NormalScale  (float)   blade normal strength under the paint
+    #   CoatDetail   (float)   0 flat paint .. 1 the full turf luma detail
+    #   TurfLuma     (float)   the turf albedo's mean linear luma
     #   Color        (color3)  paint colour
     #   GrassTint    (color3)  multiplies the turf where blades show through
     #   ThinColor    (color3)  what worn-thin paint drifts toward
@@ -34,10 +42,15 @@ def Xform "Root"
     #   WearJitter   (float)   how far the wear pulls the edge in
     #   GrassCut     (float)   blade height above which a blade shows, intact paint
     #   GrassSoft    (float)   blend width of a blade
-    #   WearDepth    (float)   how far full wear lowers the cut
+    #   WearDepth    (float)   how far full wear lowers the cut: wear only
+    #                changes how many blade tips come through, never paints a
+    #                solid green patch, so keep Cut - WearDepth well above 0
     #   ThinBase     (float)   paint thinness everywhere
     #   Thin         (float)   extra thinness at full wear
     #   TileYards    (float)   turf tile size in object units
+    #   BladeYards   (float)   tile the blade-through reads the blades on; larger
+    #                than the turf tile so a tip is a few texels wide and still
+    #                there after the mips a grazing view takes
     #   WearYards    (float)   wear tile size in object units
     #   UseMask      (float)   1 reads Mask, 0 treats every texel as inside (lettering)
     #   Roughness    (float)
@@ -53,6 +66,10 @@ def Xform "Root"
         asset inputs:Blades = @./textures/placeholder_breakup.png@
         asset inputs:Wear = @./textures/placeholder_breakup.png@
         asset inputs:Turf = @./textures/placeholder_turf.png@
+        asset inputs:Normal = @./textures/placeholder_turf.png@
+        float inputs:NormalScale = 1
+        float inputs:CoatDetail = 0.8
+        float inputs:TurfLuma = 0.163
         color3f inputs:Color = (0.9, 0.9, 0.88)
         color3f inputs:GrassTint = (1, 1, 1)
         color3f inputs:ThinColor = (0.45, 0.5, 0.4)
@@ -66,6 +83,7 @@ def Xform "Root"
         float inputs:ThinBase = 0.08
         float inputs:Thin = 0.35
         float inputs:TileYards = 0.4374
+        float inputs:BladeYards = 1.3
         float inputs:WearYards = 6
         float inputs:UseMask = 1
         float inputs:Roughness = 0.84
@@ -83,6 +101,7 @@ def Xform "Root"
             color3f inputs:baseColor.connect = </Root/FieldPaint/Base.outputs:out>
             float inputs:roughness.connect = </Root/FieldPaint/Rough.outputs:out>
             float inputs:specular = 0.2
+            float3 inputs:normal.connect = </Root/FieldPaint/TangentNormal.outputs:out>
             float inputs:opacity.connect = </Root/FieldPaint/Coverage.outputs:out>
             float inputs:opacityThreshold = 0.5
             token outputs:out
@@ -126,6 +145,22 @@ def Xform "Root"
             float2 outputs:out
         }
 
+        def Shader "BladeUV"
+        {
+            uniform token info:id = "ND_divide_vector2FA"
+            float2 inputs:in1.connect = </Root/FieldPaint/Ground.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:BladeYards>
+            float2 outputs:out
+        }
+
+        def Shader "TurfAtBlade"
+        {
+            uniform token info:id = "ND_image_color3"
+            asset inputs:file.connect = </Root/FieldPaint.inputs:Turf>
+            float2 inputs:texcoord.connect = </Root/FieldPaint/BladeUV.outputs:out>
+            color3f outputs:out
+        }
+
         def Shader "WearUV"
         {
             uniform token info:id = "ND_divide_vector2FA"
@@ -148,7 +183,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_image_float"
             asset inputs:file.connect = </Root/FieldPaint.inputs:Blades>
-            float2 inputs:texcoord.connect = </Root/FieldPaint/TileUV.outputs:out>
+            float2 inputs:texcoord.connect = </Root/FieldPaint/BladeUV.outputs:out>
             float outputs:out
         }
 
@@ -352,7 +387,7 @@ def Xform "Root"
         def Shader "BladeColor"
         {
             uniform token info:id = "ND_multiply_color3"
-            color3f inputs:in1.connect = </Root/FieldPaint/TurfSample.outputs:out>
+            color3f inputs:in1.connect = </Root/FieldPaint/TurfAtBlade.outputs:out>
             color3f inputs:in2.connect = </Root/FieldPaint.inputs:GrassTint>
             color3f outputs:out
         }
@@ -382,11 +417,159 @@ def Xform "Root"
             color3f outputs:out
         }
 
+        def Shader "TurfSplit"
+        {
+            uniform token info:id = "ND_separate3_color3"
+            color3f inputs:in.connect = </Root/FieldPaint/TurfSample.outputs:out>
+            float outputs:outr
+            float outputs:outg
+            float outputs:outb
+        }
+
+        def Shader "LumaR"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/TurfSplit.outputs:outr>
+            float inputs:in2 = 0.2126
+            float outputs:out
+        }
+
+        def Shader "LumaG"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/TurfSplit.outputs:outg>
+            float inputs:in2 = 0.7152
+            float outputs:out
+        }
+
+        def Shader "LumaB"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/TurfSplit.outputs:outb>
+            float inputs:in2 = 0.0722
+            float outputs:out
+        }
+
+        def Shader "LumaRG"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldPaint/LumaR.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/LumaG.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Luma"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldPaint/LumaRG.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/LumaB.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "LumaRatio"
+        {
+            uniform token info:id = "ND_divide_float"
+            float inputs:in1.connect = </Root/FieldPaint/Luma.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:TurfLuma>
+            float outputs:out
+        }
+
+        def Shader "LumaClamped"
+        {
+            uniform token info:id = "ND_clamp_float"
+            float inputs:in.connect = </Root/FieldPaint/LumaRatio.outputs:out>
+            float inputs:low = 0.3
+            float inputs:high = 1.5
+            float outputs:out
+        }
+
+        def Shader "Coat"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/FieldPaint/LumaClamped.outputs:out>
+            float inputs:bg = 1
+            float inputs:mix.connect = </Root/FieldPaint.inputs:CoatDetail>
+            float outputs:out
+        }
+
+        def Shader "Coated"
+        {
+            uniform token info:id = "ND_multiply_color3FA"
+            color3f inputs:in1.connect = </Root/FieldPaint/Thinned.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/Coat.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "NormalSample"
+        {
+            uniform token info:id = "ND_image_vector3"
+            asset inputs:file.connect = </Root/FieldPaint.inputs:Normal>
+            float2 inputs:texcoord.connect = </Root/FieldPaint/TileUV.outputs:out>
+            float3 outputs:out
+        }
+
+        def Shader "NormalDoubled"
+        {
+            uniform token info:id = "ND_multiply_vector3FA"
+            float3 inputs:in1.connect = </Root/FieldPaint/NormalSample.outputs:out>
+            float inputs:in2 = 2
+            float3 outputs:out
+        }
+
+        def Shader "NormalCentred"
+        {
+            uniform token info:id = "ND_subtract_vector3FA"
+            float3 inputs:in1.connect = </Root/FieldPaint/NormalDoubled.outputs:out>
+            float inputs:in2 = 1
+            float3 outputs:out
+        }
+
+        def Shader "NormalSplit"
+        {
+            uniform token info:id = "ND_separate3_vector3"
+            float3 inputs:in.connect = </Root/FieldPaint/NormalCentred.outputs:out>
+            float outputs:outx
+            float outputs:outy
+            float outputs:outz
+        }
+
+        def Shader "NormalX"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/NormalSplit.outputs:outx>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:NormalScale>
+            float outputs:out
+        }
+
+        def Shader "NormalY"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/NormalSplit.outputs:outy>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:NormalScale>
+            float outputs:out
+        }
+
+        def Shader "NormalScaled"
+        {
+            uniform token info:id = "ND_combine3_vector3"
+            float inputs:in1.connect = </Root/FieldPaint/NormalX.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/NormalY.outputs:out>
+            float inputs:in3.connect = </Root/FieldPaint/NormalSplit.outputs:outz>
+            float3 outputs:out
+        }
+
+        def Shader "TangentNormal"
+        {
+            uniform token info:id = "ND_normalize_vector3"
+            float3 inputs:in.connect = </Root/FieldPaint/NormalScaled.outputs:out>
+            float3 outputs:out
+        }
+
         def Shader "Base"
         {
             uniform token info:id = "ND_mix_color3"
             color3f inputs:fg.connect = </Root/FieldPaint/BladeColor.outputs:out>
-            color3f inputs:bg.connect = </Root/FieldPaint/Thinned.outputs:out>
+            color3f inputs:bg.connect = </Root/FieldPaint/Coated.outputs:out>
             float inputs:mix.connect = </Root/FieldPaint/Through.outputs:out>
             color3f outputs:out
         }

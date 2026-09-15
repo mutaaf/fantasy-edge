@@ -762,15 +762,16 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertLess(net["grazingOpacity"], net["minOpacity"])
 
     def test_field_paint_is_paint_not_white(self):
-        """Under the field floods pure white albedo reads as a flat grey slab.
-        Painted lines sit at field-paint albedo (0.75-0.85 sRGB), the border a
-        touch darker, and the border is duller than any grass so it never
-        catches a specular highlight, with more grass let through it."""
+        """Pure white albedo blows out under the floods, and grey paint reads
+        as concrete. Lines sit at chalky field-paint albedo (0.80-0.88 sRGB)
+        and the border a touch below them, still off-white (0.75-0.85). The
+        border is duller than any grass so it never catches a specular
+        highlight, and lets more grass through."""
         def srgb(h):
             h = h.lstrip("#")
             return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
         p = self.final["visual"]["field"]["paint"]
-        for key, lo, hi in (("white", 0.75, 0.85), ("border", 0.58, 0.75)):
+        for key, lo, hi in (("white", 0.80, 0.88), ("border", 0.75, 0.85)):
             for ch in srgb(p[key]):
                 self.assertGreaterEqual(ch, lo, key)
                 self.assertLessEqual(ch, hi, key)
