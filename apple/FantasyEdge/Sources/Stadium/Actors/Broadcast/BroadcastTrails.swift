@@ -96,9 +96,14 @@ final class BroadcastTrails {
         entities.removeAll()
         let look = c.look.broadcast.trail
         var historyCore = MeshBuilder(), historyHalo = MeshBuilder()
+        var historyLowered = false
         for (index, id) in order.enumerated() {
-            guard let arc = arcs[id] else { continue }
+            guard var arc = arcs[id] else { continue }
             let age = order.count - 1 - index
+            if age > 0, let lowered = Self.lowered(arc, c) {
+                arc = lowered
+                if age >= max(1, look.age.individual) { historyLowered = true }
+            }
             let g = geometry(arc, age: age, c)
             if age < max(1, look.age.individual) {
                 let e = entity(arc, geometry: g, c)
@@ -111,15 +116,36 @@ final class BroadcastTrails {
         }
         if !historyCore.isEmpty {
             let colour = c.spec.palette[look.age.historyColor] ?? "#C9CCD1"
+            let ghost = historyLowered ? min(look.age.historyOpacity, look.lowSeat.historyOpacity) : look.age.historyOpacity
             let holder = Entity()
             holder.name = "trail.history"
             holder.addChild(historyHalo.entity("trail.history.halo",
-                StadiumLook.glow(colour, opacity: look.haloOpacity * look.age.historyOpacity, texture: c.assets.texture("broadcast.trailHalo"))))
+                StadiumLook.glow(colour, opacity: look.haloOpacity * ghost, texture: c.assets.texture("broadcast.trailHalo"))))
             holder.addChild(historyCore.entity("trail.history.core",
-                StadiumLook.glow(colour, opacity: look.coreOpacity * look.age.historyOpacity, texture: c.assets.texture("broadcast.trailCore"))))
+                StadiumLook.glow(colour, opacity: look.coreOpacity * ghost, texture: c.assets.texture("broadcast.trailCore"))))
             entities["history"] = holder
             root.addChild(holder)
         }
+    }
+
+    /// A play already done, laid lower for a seat whose eye is below its
+    /// flight. From the field or the front rows every pass of a drive stands
+    /// up over the far stands, and five of them read as a wall of wire arches
+    /// rather than a drive. The newest play keeps its real height - that is
+    /// the one being watched, and the one the ball flew - and the ones before
+    /// it lie down to `lowSeat.apexOverEye` of the eye's height (never under
+    /// `minApexYards`), where they read as the drive's path along the grass.
+    /// Where the eye is already above the flights, nothing changes. Nil when
+    /// the arc keeps its height.
+    static func lowered(_ arc: SceneSpec.Arc, _ c: StadiumContext) -> SceneSpec.Arc? {
+        guard let seat = c.shared.seat, !c.tabletop else { return nil }
+        let rule = c.look.broadcast.trail.lowSeat
+        let cap = max(rule.minApexYards, Double(seat.y) * rule.apexOverEye)
+        guard arc.apex > cap else { return nil }
+        return SceneSpec.Arc(id: arc.id, style: arc.style, shape: arc.shape, type: arc.type, fromX: arc.fromX,
+                             toX: arc.toX, lane: arc.lane, apex: cap, color: arc.color, dash: arc.dash,
+                             seconds: arc.seconds, duration: arc.duration, side: arc.side, text: arc.text,
+                             period: arc.period, clock: arc.clock, down: arc.down, distance: arc.distance)
     }
 
     private struct Geometry {

@@ -138,8 +138,23 @@ class TestBroadcastLook(unittest.TestCase):
         self.assertEqual(far["id"], "endzone", "the farthest seat moved; check the rule still bites")
         self.assertGreaterEqual(minutes, look["legibility"]["minArcMinutes"],
                                 f"board text subtends {minutes:.1f}' from {far['id']} at {d:.0f} yd")
-        self.assertLess(look["scorebugShare"] + look["smallTextShare"] * 1.25 * look["lines"], 1.0,
-                        "scorebug and last play must fit the board's height")
+        self.assertLess(look["scorebugShare"] + look["downShare"] + look["smallTextShare"] * 1.25 * look["lines"] + 0.085,
+                        1.0, "score, down strip and last play (with their padding) must fit the board's height")
+        self.assertLess(2 * look["sideShare"], 0.8, "the clock needs the middle of the board")
+
+    def test_the_ribbon_segment_holds_its_crawl(self):
+        """A crawl longer than its segment is cut mid-word where the segment
+        repeats ("2ND & 6 A"). At full size the two chips, the clock and a
+        long down, in the heavy face at about 0.6 em per capital, fit; the
+        renderer narrows toward `fitFloor` before it drops a word."""
+        r = self.look["ribbon"]
+        rise = self.scene["bowl"]["ribbon"]["rise"][1] - self.scene["bowl"]["ribbon"]["rise"][0]
+        heights = round(r["segmentYards"] / rise)
+        text = r["textShare"] * 0.82
+        chips = 0.5 + 2 * (1.7 + 0.3 + 0.8) + 2 * 2 * r["textShare"] * 0.62
+        tail = sum(len(p) * text * 0.6 + 0.9 for p in ("11:00 - 4TH", "4TH & 10 AT MIN 46"))
+        self.assertLessEqual(chips + tail, heights, f"crawl {chips + tail:.1f} heights in a {heights}-height segment")
+        self.assertTrue(0.6 <= r["fitFloor"] < 1.0)
 
     def visibility(self, seat):
         """BroadcastHorizon.visibility, restated."""
@@ -186,6 +201,23 @@ class TestBroadcastLook(unittest.TestCase):
         tail = self.look["trail"]["tail"]
         self.assertTrue(0 <= tail["opacity"] < 1, "a trail is faint at the snap and full where the ball came down")
         self.assertEqual(len(self.look["trail"]["tabletopView"]), 3)
+
+    def test_done_plays_lie_down_under_a_low_eye_and_stand_from_the_stands(self):
+        """BroadcastTrails.lowered, restated: a play already done flies no
+        higher than `apexOverEye` of the eye (never under `minApexYards`).
+        From the field seat a drive's passes stop standing over the far stands
+        as a wall of arches; from the club seat an ordinary 20-yard pass is
+        already under the eye and keeps the height the scene gave it."""
+        rule = self.look["trail"]["lowSeat"]
+        eye = self.tokens["visual"]["experience"]["camera"]["eyeMeters"] / 0.9144
+        seats = {s["id"]: s for s in self.scene["presentation"]["stadium"]["seats"]}
+        cap = lambda sid: max(rule["minApexYards"], (seats[sid]["y"] + eye) * rule["apexOverEye"])
+        pass20 = sc.apex("pass", 20, self.tokens)
+        self.assertLess(cap("field"), pass20 / 3, "a done pass lies along the grass from the field seat")
+        self.assertLessEqual(cap("field"), 2.0)
+        for sid in ("club", "clubLevel", "upper", "pressBox"):
+            self.assertGreaterEqual(cap(sid), pass20, f"{sid} sees a 20-yard pass at its real height")
+        self.assertTrue(0 < rule["historyOpacity"] <= self.look["trail"]["age"]["historyOpacity"])
 
     def test_the_footballs_ship_for_both_codes_within_budget(self):
         manifest = json.loads((ROOT / "assets/actors/broadcast/manifest.json").read_text())

@@ -150,3 +150,14 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - **Near blades:** `Detail` is the blade map loaded without mips on the turf tile. It lightens tips and darkens bases about its mean (`DetailGain`), and the blade normals strengthen to `NearNormalScale`. Both fade by |n·v| (`NearStart`..`NearEnd`), which from a field-level eye is eye height over distance, so it is a distance fade using only nodes already proven. Far away the layer is weighted to zero before missing mips could shimmer.
 - **Wear:** 90 small scuffs instead of 150; `WearDepth` 0.2 and `TipStrength` 0.6, so a tip is part grass, part paint.
 - **Shots:** `.work/shots/field-edge2`: field, sideline and a 1 m close-up (`round.sh … closeup`, field seat at pitch −38). The close-up shows single white blades. At 3-5 m from the field seat the border still reads as fine grain rather than blades: that is the limit of one texture sample at a graze without anisotropic filtering.
+
+## Integration-11 polish (`docs/lookdev/integration-11-polish/`, before in `before/`)
+- **The field seat's "gravel" was the NFL border, not the surround.** The seat is 4.5 yd off the sideline, so the 2 yd border fills the bottom of `field-level` and the surround is out of frame. At a graze the grain came from the paint graph's per-texel terms, not the turf-through overlay: `grassThrough` 0.85 → 0.3 changed nothing measurable, so it stays at 0.85.
+  - **Changed (`shaderGraph.materials.fieldPaint`):** `NormalScale` 1.0 → 0.3, `NearNormalScale` 2.0 → 0.3, `CoatDetail` 0.5 → 0.06, `DetailGain` 1.2 → 0.15, `TipStrength` 0.6 → 0.4. Border `#D2D3CB` → `#D8D8D0`, the top of its 0.75–0.85 test band.
+  - **Result:** a 1000×500 crop of the border (field seat, 4K) goes from salt-and-pepper granite to a smooth, worn off-white band.
+- **Net (`visual.sideline.net`, `netFresnel.Color`):** from the end-zone seat the net was a white grid across the whole view. Cord colour `#D2D2CC` → `#A9ACA4`. `minOpacity` stays at the 0.35 floor `test_a_net_is_visible_face_on` holds; at 0.22 it read as a haze, so the floor is the next lever if the director agrees.
+- **Budget:** field 10 parts / 1.1k triangles; sideline 15 / 20.8k. Tabletop field 10 / 954; sideline 15 / 2.9k. Unchanged.
+- **Worst thing left:**
+  - `field-level`: the border is now clean but lit a flat mid-grey from this seat. It reads as a smooth painted slab rather than bright paint on grass. The value is the floods behind the wearer, so this needs Lighting's near-field fill, not more albedo.
+  - `sideline-props`: the net grid still reads over the whole field from behind the posts at its 0.35 face-on floor.
+  - `redzone-trails`: the far half's turf carries a hard diagonal light-pool edge. That is Lighting's floods, not the stripe.

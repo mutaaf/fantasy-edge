@@ -149,9 +149,32 @@ class Layout(unittest.TestCase):
                 with self.subTest(seat=seat["id"], panel=name):
                     self.assertLessEqual(abs(slot["yaw"]), layout["maxSideDegrees"])
                     self.assertLessEqual(below_degrees(slot), layout["maxBelowDegrees"] + 1e-6)
-                    if not slot["folded"]:
-                        box = sc.panel_box(slot, layout["panelSizes"][name], layout["pointsPerMeter"])
-                        self.assertFalse(sc.box_overlaps(box, poly), f"{name} covers the field from {seat['id']}")
+                    # Open, the whole panel; folded, its tab - the upper deck's
+                    # controls pill once fell back onto the fifty.
+                    size = layout["panelSizes"]["tab" if slot["folded"] else name]
+                    box = sc.panel_box(slot, size, layout["pointsPerMeter"])
+                    self.assertFalse(sc.box_overlaps(box, poly), f"{name} covers the field from {seat['id']}")
+                    board = sc.video_board_points(seat, built["bowl"]["videoBoard"], eye, mpy)
+                    self.assertFalse(sc.points_in_box(box, board), f"{name} covers the video board from {seat['id']}")
+
+    def test_the_board_test_sees_a_panel_over_the_board(self):
+        """From behind the home end zone the board is dead ahead a little
+        above the eye: a panel there covers it, and one low at the side does not."""
+        built = sc.build({})
+        seat = next(s for s in built["presentation"]["stadium"]["seats"] if s["id"] == "endzone")
+        eye = EXPERIENCE["camera"]["eyeMeters"]
+        board = sc.video_board_points(seat, built["bowl"]["videoBoard"], eye, 0.9144)
+        self.assertTrue(board, "the board faces the end-zone seat")
+        yaws, belows = [p[0] for p in board], [p[1] for p in board]
+        size = EXPERIENCE["layout"]["panelSizes"]["drive"]
+        ppm = EXPERIENCE["layout"]["pointsPerMeter"]
+        mid = (min(belows) + max(belows)) / 2
+        on = {"yaw": (min(yaws) + max(yaws)) / 2, "distance": 1.25, "height": -1.25 * math.tan(math.radians(mid))}
+        off = {"yaw": -30.0, "distance": 1.25, "height": -0.5}
+        self.assertTrue(sc.points_in_box(sc.panel_box(on, size, ppm), board))
+        self.assertFalse(sc.points_in_box(sc.panel_box(off, size, ppm), board))
+        behind = {"x": 200.0, "y": 20.0, "z": 0.0, "lookAt": {"x": 50.0, "y": 0.0, "z": 0.0}}
+        self.assertEqual(sc.video_board_points(behind, built["bowl"]["videoBoard"], eye, 0.9144), [])
 
     def test_the_silhouette_test_sees_a_panel_over_the_field(self):
         """The overlap check itself: the old fixed drive slot from the press box

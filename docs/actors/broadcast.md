@@ -121,3 +121,23 @@ the banner 2048x560 plus its mask while a moment shows, the ribbon crawl,
 the horizon band and label. Counted from the build, not measured in the
 simulator: `-stadiumStats` reports at build time, before a drive arrives
 (4 parts, 3.7k triangles then).
+
+## Integration-11 polish (`docs/lookdev/integration-11-polish/`, before in `before/`)
+- **Trails from low seats (`trail.lowSeat`):** from the field seat a drive's passes stood over the far stands as five grey wire arches (`before/s-field-level.png`).
+  - **Rule:** a play already done now flies no higher than `apexOverEye` 0.8 of the eye's height (never under `minApexYards` 1.5), in `BroadcastTrails.lowered`. The newest play and the live flight keep the scene's apex, and a lowered history ghost draws at `historyOpacity` 0.2.
+  - **Where it applies:** from the club (eye 13.5 yd) and every seat above, a 20-yard pass (10 yd apex) is untouched, which `test_done_plays_lie_down_under_a_low_eye_and_stand_from_the_stands` holds. From the field seat the wall is gone.
+- **Ribbon clipping:** the crawl ran past its 36 yd segment, so every repeat cut the down to "2ND & 6 A".
+  - **Fix:** `segmentYards` 36 → 60, and the crawl now measures itself, narrowing the clock and down toward `fitFloor` 0.72 before dropping RED ZONE. `test_the_ribbon_segment_holds_its_crawl` checks a long down fits at full size.
+  - **Shots:** the red-zone crawl reads whole in `s-redzone-trails.png` and `s-field-level.png`.
+- **Video board:** now a scoreboard first.
+  - **Score:** each club is a `sideShare` 0.3 block, its abbreviation on a darker third and the score filling the rest at 0.86 of a `scorebugShare` 0.42 band. The clock is 0.56 of the band high, with the quarter under it.
+  - **Down strip:** full width, `downShare` 0.15; it turns red with "RED ZONE" inside the 20.
+  - **Last play and drive:** the last play is two lines behind a bar in its trail colour (the "LAST PLAY" header cost a line). The drive diagram stays at the right.
+  - **Legibility:** smallest text unchanged at 0.12 of the height, 18′ from the end-zone seat.
+- **Geometry not changed:** the face is Bowl's 36×13.5 yd, baked into Bowl's model. From the club seat it subtends about 14° and sits 69° off the seat's forward, so it is a glance, not a view. A larger board is a Bowl and director change: about 54×20 yd on the same parapet, `centre.y` about 60.
+- **Scorebug yield:** verified unchanged. `scorebugHidden` is true only at `endzone`, where the board is dead ahead. From every other preset the board is more than 35° off forward, so the glass scorebug and the board are never both straight ahead.
+- **Budget:** `-stadiumStats` counts at build time: 5 parts / 4.4k triangles (tabletop 4 / 4.4k). The drive trails are unchanged in count, per the table above: 24 of 25 parts during a moment.
+- **Worst thing left:**
+  - `crowd-closeup`: the board is legible but small in frame; its size is the limit now, not its layout.
+  - `field-level`: the newest pass still stands full height at the right edge, alone, which is the intent. The ribbon is too oblique from field level to read at all.
+  - `redzone-trails`: the three newest passes from the club seat are thin and bright, but the ghosted one is hard to tell from the stands behind it.

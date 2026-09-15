@@ -598,6 +598,63 @@ def field_silhouette(seat: dict, field: dict, eye_meters: float, meters_per_yard
     return out
 
 
+def _projector(seat: dict, eye_meters: float, meters_per_yard: float):
+    """A function taking a point in field yards to (yaw degrees, + right;
+    degrees below the eye, + down) for the seated wearer facing lookAt."""
+    ex, ez = seat["x"], seat["z"]
+    ey = seat["y"] + eye_meters / meters_per_yard
+    fx, fz = seat["lookAt"]["x"] - ex, seat["lookAt"]["z"] - ez
+    n = math.hypot(fx, fz) or 1.0
+    fx, fz = fx / n, fz / n
+    rx, rz = -fz, fx
+
+    def project(px: float, py: float, pz: float) -> tuple[float, float]:
+        dx, dz = px - ex, pz - ez
+        ahead, right = dx * fx + dz * fz, dx * rx + dz * rz
+        return (math.degrees(math.atan2(right, ahead)), math.degrees(math.atan2(ey - py, math.hypot(dx, dz))))
+    return project
+
+
+def video_board_points(seat: dict, board: dict | None, eye_meters: float, meters_per_yard: float,
+                       across: int = 13, up: int = 6) -> list[tuple[float, float]]:
+    """The video board's face as the seated wearer sees it: a grid of
+    (yaw, below) points dense enough that a panel covering any of it holds
+    one. Empty when the face is turned away - its back is only a truss."""
+    if not board:
+        return []
+    cx, cy, cz = board["centre"]
+    nx, nz = board["facing"][0], board["facing"][2]
+    if nx * (seat["x"] - cx) + nz * (seat["z"] - cz) <= 0:
+        return []
+    h = math.hypot(nx, nz) or 1.0
+    rx, rz = -nz / h, nx / h
+    w, ht = board["size"]
+    project = _projector(seat, eye_meters, meters_per_yard)
+    return [project(cx + rx * w * (i / (across - 1) - 0.5), cy + ht * (j / (up - 1) - 0.5),
+                    cz + rz * w * (i / (across - 1) - 0.5))
+            for i in range(across) for j in range(up)]
+
+
+def ribbon_points(seat: dict, field: dict, ribbon: dict | None, eye_meters: float, meters_per_yard: float,
+                  samples: int = 900) -> list[tuple[float, float]]:
+    """The ribbon board all the way round the upper deck's fascia, as
+    (yaw, below) points at its bottom, middle and top, only where it is in
+    front of the wearer."""
+    if not ribbon:
+        return []
+    shape = {**BOWL["shape"], "halfLength": field["length"] / 2 + field["endZone"], "halfWidth": field["width"] / 2}
+    project = _projector(seat, eye_meters, meters_per_yard)
+    r0, r1 = ribbon["rise"]
+    out = []
+    for k in range(samples):
+        x, z = bowl_point(shape, ribbon["offset"], 2 * math.pi * k / samples)
+        for y in (r0, (r0 + r1) / 2, r1):
+            yaw, below = project(x + 50, y, z)
+            if abs(yaw) < 90:
+                out.append((yaw, below))
+    return out
+
+
 def _inside(pt: tuple[float, float], poly: list[tuple[float, float]]) -> bool:
     x, y = pt
     inside = False
@@ -630,6 +687,11 @@ def box_overlaps(box: tuple[float, float, float, float], poly: list[tuple[float,
     return any(_inside(g, poly) for g in grid)
 
 
+def points_in_box(box: tuple[float, float, float, float], points: list[tuple[float, float]]) -> bool:
+    y0, y1, b0, b1 = box
+    return any(y0 <= p[0] <= y1 and b0 <= p[1] <= b1 for p in points)
+
+
 def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float) -> dict:
     """Where each side panel and the controls go from this seat, and whether
     they start folded.
@@ -642,6 +704,12 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
     and folds by default when there is none - the folded tab is placed the same
     way. Every client lays panels out from this, not from its own guess."""
     poly = field_silhouette(seat, field, eye_meters, meters_per_yard)
+    # The video board carries the score, so a panel may never sit on it. The
+    # ribbon only repeats what the scorebug says: a panel over it costs
+    # `ribbonCost` degrees of movement, so it moves off when a place nearby
+    # is free and stays when the only alternative is folding.
+    board = video_board_points(seat, BOWL.get("videoBoard"), eye_meters, meters_per_yard)
+    ribbon = ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
     search = layout["search"]
     step, margin = search["stepDegrees"], search["marginDegrees"]
     out = {}
@@ -657,14 +725,17 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
         belows = list(_frange(layout["maxBelowDegrees"], top, -step))
         default_below = math.degrees(math.atan2(-base["height"], d))
 
-        def place(size):
+        def place(size, yaws=yaws, belows=belows):
             best = None
             for yaw in yaws:
                 for below in belows:
                     slot = {"yaw": yaw, "distance": d, "height": round(-d * math.tan(math.radians(below)), 3)}
-                    if box_overlaps(panel_box(slot, size, layout["pointsPerMeter"], margin), poly):
+                    box = panel_box(slot, size, layout["pointsPerMeter"], margin)
+                    if box_overlaps(box, poly) or points_in_box(box, board):
                         continue
                     cost = abs(below - default_below) + 2 * abs(yaw - base["yaw"])
+                    if points_in_box(box, ribbon):
+                        cost += search["ribbonCost"]
                     if best is None or cost < best[0]:
                         best = (cost, slot)
             return best[1] if best else None
@@ -673,7 +744,14 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
         if open_slot:
             out[name] = {**open_slot, "folded": False}
         else:
-            tab = place(layout["panelSizes"]["tab"])
+            # A folded tab is small enough to go anywhere in the comfort
+            # window. Held to its panel's own search it fell back to its
+            # default slot, which from the upper deck put the controls pill
+            # on the fifty-yard line.
+            tab = place(layout["panelSizes"]["tab"]) or place(
+                layout["panelSizes"]["tab"],
+                yaws=sorted(_frange(-layout["maxSideDegrees"], layout["maxSideDegrees"], step), key=lambda a: abs(a - base["yaw"])),
+                belows=list(_frange(layout["maxBelowDegrees"], search["highestBelowDegrees"], -step)))
             out[name] = {**(tab or {"yaw": base["yaw"], "distance": d, "height": base["height"]}), "folded": True}
     out["scorebugHidden"] = board_carries_score(seat, BOWL.get("videoBoard"), layout["scorebugYield"])
     return out
