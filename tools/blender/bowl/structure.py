@@ -64,6 +64,8 @@ def materials():
         "stair": C.material("bowl_stair", albedo="stair_albedo.jpg", roughness=0.85, color=(1, 1, 1, 1)),
         "seat_plastic": SEAT.materials()["seat_plastic"],
         "seat_hardware": SEAT.materials()["seat_hardware"],
+        "plaque": C.material("bowl_seat_plaque", albedo="seat_numbers.png", roughness=0.35, metallic=0.8,
+                             color=(1, 1, 1, 1)),
         "table_trim": C.material("bowl_table_trim", albedo="table_trim_albedo.jpg", roughness=0.9, color=(1, 1, 1, 1)),
     }
 
@@ -230,10 +232,10 @@ def stands_rows(b: C.Builder, tier_name: str) -> None:
                 x, z = kit.bowl_point(d, ta)
                 h = tr + rise_step * k / STEPS[tier_name]
                 P = lambda lat, y: (x + tan[0] * lat, y, z + tan[2] * lat)
+                # the dark anti-slip front only: the yellow edge read as a
+                # bright stripe down every aisle from across the bowl
                 oquad(b, (P(-half, tr), P(half, tr), P(half, h), P(-half, h)), (nx, 0, nz), "trim",
-                      band_uv("nosing", 0, kit.AISLE / TRIM_U_YARDS["nosing"], 0.0, 1.0))
-                oquad(b, (P(-half, h), P(half, h), P(half, h + 0.001), P(-half, h + 0.001)), (0, 1, 0), "trim",
-                      band_uv("tread", 0, 0.2, 0.2, 0.3))
+                      band_uv("nosing", 0, kit.AISLE / TRIM_U_YARDS["nosing"], 0.0, 0.5))
 
 
 def vomitories(b: C.Builder, tier_name: str) -> None:
@@ -346,9 +348,17 @@ def team_tunnels(b: C.Builder) -> None:
               "trim", band_uv("tread", 0, 1.5))
         oquad(b, (Q(wall_m, -half, h), Q(wall_m, half, h), Q(end, half, h), Q(end, -half, h)), (0, -1, 0), "trim",
               band_uv("soffit", 0, 1.2, 0, 1))
+        # padded walls at the mouth, then the corridor's light coming on
+        # toward the end, so the arch reads as a deep lit tunnel, not a box
+        mid = wall_m + (end - wall_m) * 0.4
         for side in (-1, 1):
-            oquad(b, (Q(wall_m, side * half, 0), Q(end, side * half, 0), Q(end, side * half, h), Q(wall_m, side * half, h)),
-                  (-tan[0] * side, 0, -tan[2] * side), "trim", band_uv("padding", 0, 4.0, 0, 1))
+            oquad(b, (Q(wall_m, side * half, 0), Q(mid, side * half, 0), Q(mid, side * half, h), Q(wall_m, side * half, h)),
+                  (-tan[0] * side, 0, -tan[2] * side), "trim", band_uv("padding", 0, 1.6, 0, 1))
+            for k in range(4):
+                ma, mb = mid + (end - mid) * k / 4, mid + (end - mid) * (k + 1) / 4
+                oquad(b, (Q(ma, side * half, 0), Q(mb, side * half, 0), Q(mb, side * half, h), Q(ma, side * half, h)),
+                      (-tan[0] * side, 0, -tan[2] * side), "interiors",
+                      atlas_uv("glow", 0, 4, 0.05 + 0.2 * k, 0.05 + 0.2 * (k + 1)))
         oquad(b, (Q(end, -half, 0), Q(end, half, 0), Q(end, half, h), Q(end, -half, h)), (nx, 0, nz), "interiors",
               atlas_uv("glow", 0, 16))
         arch_m = wall_m - 0.5
@@ -493,7 +503,10 @@ def band_quads(b: C.Builder, row_floor: float, m_feet: float, ts, material="band
     for i in range(len(ts) - 1):
         ta, tb = ts[i], ts[i + 1]
         nin = inward3(m_feet, ta)
-        u0, u1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
+        # Each row slides its texture by a different fraction of a tile, so
+        # seat columns do not line up row over row into a sawtooth.
+        off = (row_floor * 1.618) % 1.0
+        u0, u1 = ul[i] / (8 * kit.SEAT_PITCH) + off, ul[i + 1] / (8 * kit.SEAT_PITCH) + off
         oquad(b, (pt(m_feet - LIP, ta, row_floor + 0.05), pt(m_feet - LIP, tb, row_floor + 0.05),
                   pt(m_feet + 0.3, tb, row_floor + BAND_TOP), pt(m_feet + 0.3, ta, row_floor + BAND_TOP)),
               C._norm((nin[0], 0.6, nin[2])), material, ((u0, 0), (u1, 0), (u1, 1), (u0, 1)))
@@ -542,6 +555,36 @@ def far_bands(regions) -> dict[str, C.Builder]:
                     ts = sample(base, ta, tb)
                     band_quads(out[owner], rw["tread"], rp["feet"], ts)
     return out
+
+
+def seat_number(rp, s) -> int:
+    """A seat's number within its run, 1-based, as its plaque shows it."""
+    for first, count in rp["runs"]:
+        k = round((s - first) / rp["pitch"])
+        if 0 <= k < count:
+            return k + 1
+    return 1
+
+
+def plaque(b: C.Builder, x, y, z, yaw, number: int) -> None:
+    """The aluminium plate on the back of a chair, numbered for the row
+    behind: 8 x 3.5 cm, 0.79 m up, on the back face of the shell."""
+    Y = kit.YARD
+    fx, fz = math.sin(yaw), math.cos(yaw)
+    rx, rz = fz, -fx
+    back = -0.296 / Y
+    cx, cz = x + fx * back, z + fz * back
+    cy = y + 0.79 / Y
+    hw, hh = 0.04 / Y, 0.0175 / Y
+    n = max(0, min(99, number))
+    cu, cv = n % 10, n // 10
+    u0, u1 = cu / 10, (cu + 1) / 10
+    v0, v1 = 1 - (cv + 1) / 10, 1 - cv / 10
+
+    def P(lat, up):
+        return (cx + rx * lat, cy + up, cz + rz * lat)
+    oquad(b, (P(hw, -hh), P(-hw, -hh), P(-hw, hh), P(hw, hh)), (-fx, 0, -fz), "plaque",
+          ((u0, v0), (u1, v0), (u1, v1), (u0, v1)))
 
 
 def near_patch(reg) -> C.Builder:
@@ -606,6 +649,7 @@ def near_patch(reg) -> C.Builder:
                             band_quads(b, tr, rp["feet"], sample(base, ring.angle(band_from), ring.angle(s - rp["pitch"] / 2)))
                             band_from = None
                         b.extend_placed(lod0 if d <= LOD0_RADIUS else lod1, yaw, (x, tr, z))
+                        plaque(b, x, tr, z, yaw, seat_number(rp, s))
                     elif band_from is None:
                         band_from = s - rp["pitch"] / 2
                 s += rp["pitch"]

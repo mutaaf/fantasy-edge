@@ -59,12 +59,12 @@
    "usdz": "actors/bowl/stands.usdz",
    "glb": "actors/bowl/stands.glb",
    "objects": {
-    "stands": 35446
+    "stands": 28888
    },
    "parts": {
     "stands": 6
    },
-   "triangles": 35446,
+   "triangles": 28888,
    "materials": [
     "bowl_concrete",
     "bowl_glass",
@@ -74,8 +74,8 @@
     "bowl_trim"
    ],
    "bytes": {
-    "usdz": 5507176,
-    "glb": 5719564
+    "usdz": 5087465,
+    "glb": 5260508
    },
    "about": "The whole bowl's structure in one entity."
   },
@@ -142,25 +142,26 @@
    "usdz": "actors/bowl/near.usdz",
    "glb": "actors/bowl/near.glb",
    "objects": {
-    "near_club": 22472,
-    "near_endzone": 22396,
-    "near_upper": 20240
+    "near_club": 22886,
+    "near_endzone": 22710,
+    "near_upper": 20636
    },
    "parts": {
-    "near_club": 4,
-    "near_endzone": 4,
-    "near_upper": 4
+    "near_club": 5,
+    "near_endzone": 5,
+    "near_upper": 5
    },
-   "triangles": 65108,
+   "triangles": 66232,
    "materials": [
     "bowl_seat_band",
+    "bowl_seat_plaque",
     "bowl_stair",
     "seat_hardware.001",
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 4424808,
-    "glb": 4809844
+    "usdz": 5070850,
+    "glb": 5464388
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },

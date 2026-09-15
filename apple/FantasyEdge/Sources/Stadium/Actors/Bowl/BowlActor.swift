@@ -101,10 +101,23 @@ final class BowlActor: StadiumActor {
         guard want != activePreset else { return }
         activePreset = want
         for (id, e) in near {
-            if id == want { if e.parent == nil { root.addChild(e) } } else { e.removeFromParent() }
+            if id == want { if e.parent == nil { attach(e) } } else { e.removeFromParent() }
         }
         for (id, e) in fills {
-            if id == want { e.removeFromParent() } else if e.parent == nil { root.addChild(e) }
+            if id == want { e.removeFromParent() } else if e.parent == nil { attach(e) }
+        }
+    }
+
+    /// Image-based light does not inherit, and the composer points models at
+    /// the probe once, after build - so a piece held off-stage then would come
+    /// in unlit, as the black ledge along the bottom of `bowl-wide` did. It
+    /// takes the receiver the stands already carry.
+    private func attach(_ e: Entity) {
+        root.addChild(e)
+        guard let receiver = Self.descendants(of: root)
+            .lazy.compactMap({ $0.components[ImageBasedLightReceiverComponent.self] }).first else { return }
+        for node in Self.descendants(of: e) where node.components.has(ModelComponent.self) {
+            node.components.set(receiver)
         }
     }
 

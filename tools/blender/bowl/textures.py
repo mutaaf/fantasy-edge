@@ -308,8 +308,40 @@ def stair_sheet() -> None:
     edge = (np.arange(int(H * 0.4)) >= int(H * 0.4 * 0.72))[:, None]
     chips = fbm(int(H * 0.4), W, 30, 63, 3) > 0.66
     front = np.where((edge & ~chips)[:, :, None], np.array([0.74, 0.60, 0.16]) * (0.85 + 0.15 * grit[:, :, None]), front)
-    img = np.concatenate([front, tread * 0.9], axis=0)
+    img = np.concatenate([front, tread * 0.55], axis=0)
     save(img, "stair_albedo.jpg", jpeg=True)
+
+
+SEGMENTS = {0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg",
+            7: "abc", 8: "abcdefg", 9: "abcdfg"}
+
+
+def seat_numbers() -> None:
+    """Seat plaques: 00-99 in a 10 x 10 grid of dark stamped digits on brushed
+    aluminium, cell (n % 10, n // 10) counted from the top left."""
+    S, cell = 1024, 102
+    img = np.full((S, S, 3), 0.72, np.float32)
+    img += (fbm(S, S, 256, 71, 1)[:, :, None] - 0.5) * 0.06
+    ink = np.array([0.08, 0.08, 0.09], np.float32)
+
+    def digit(y0, x0, w, h, d):
+        t = max(3, int(w * 0.22))
+        segs = {"a": (y0, x0, y0 + t, x0 + w), "d": (y0 + h - t, x0, y0 + h, x0 + w),
+                "g": (y0 + h // 2 - t // 2, x0, y0 + h // 2 + t // 2 + 1, x0 + w),
+                "f": (y0, x0, y0 + h // 2, x0 + t), "b": (y0, x0 + w - t, y0 + h // 2, x0 + w),
+                "e": (y0 + h // 2, x0, y0 + h, x0 + t), "c": (y0 + h // 2, x0 + w - t, y0 + h, x0 + w)}
+        for name in SEGMENTS[d]:
+            r0, c0, r1, c1 = segs[name]
+            img[r0:r1, c0:c1] = ink
+
+    for n in range(100):
+        row, col = n // 10, n % 10
+        top, left = row * cell, col * cell
+        w, h = 22, 44
+        cx = left + cell // 2
+        digit(top + (cell - h) // 2, cx - w - 4, w, h, n // 10)
+        digit(top + (cell - h) // 2, cx + 4, w, h, n % 10)
+    save(img[::-1], "seat_numbers.png")
 
 
 def seat_maps(S: int = 256) -> None:
@@ -382,5 +414,6 @@ def build() -> dict:
     tileables()
     stair_sheet()
     seat_maps()
+    seat_numbers()
     interiors()
     return credits

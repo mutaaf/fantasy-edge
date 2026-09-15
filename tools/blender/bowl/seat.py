@@ -176,7 +176,6 @@ def seat(detail: int, up: bool) -> C.Builder:
         b.tube([P(-0.22, 0.44, -0.17), P(0.22, 0.44, -0.17)], 0.011 * M, "seat_hardware", sides=5)
         b.tube([P(-0.2415, 0.50, -0.235), P(0.2415, 0.50, -0.235)], 0.013 * M, "seat_hardware", sides=5)
         standard(b, 0)
-        plaque(b)
     elif detail == 1:
         shell(b, back_surface, 3, 3, 0.01, "seat_plastic", solid=True, rim=False)
         shell(b, lambda u, v: pan_surface(u, v, up), 3, 2, 0.01, "seat_plastic", solid=True, rim=False)

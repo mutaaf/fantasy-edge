@@ -56,6 +56,40 @@ The tests in `tests/test_bowl.py` cover:
      - `field-level` came out as a flat blue and grey frame. The camera sat against geometry that is not yet identified: the wall glass or the Sideline boards. It is the next thing to chase.
      - `crowd-closeup` rendered only attachments: the simulator was starved at a load average of about 860, so this is not a finding.
 
+5. **Director's round** (fixes; shots in `lookdev/it5-*`, see below).
+   - **Gates:**
+     - `verify_scene.swift`: 15 scenes, 23,376 assertions, OK.
+     - `contrast_check.py`: OK.
+   - **`field-level` was a wall of bench, not a bowl bug.**
+     - The `field` seat put the eye at +4.5 yd from the sideline, 0.7 yd behind the home bench back (benches stand at +3.8, with a 0.65 yd back).
+     - The seat moves to +1.8, on the sideline in front of the bench. That is Experience's preset in `scene.py`, changed here because it blocked the shot; flagged for Experience.
+   - **The black ledge was unlit geometry.**
+     - The composer points models at the image-based light once, after build.
+     - The near patch for `upper` was attached a frame later, when Experience published the seat, so it never received the probe and rendered black.
+     - `BowlActor.attach` now copies the stands' receiver onto anything it swaps in.
+     - Chairs in the foreground carry stamped aluminium seat-number plaques: a 00–99 atlas, numbered per run. That adds one draw part per near patch.
+   - **Sawtooth bands:** each row now slides its seat texture by a golden-ratio fraction of a tile.
+   - **Pale aisles:**
+     - Step fronts use only the dark anti-slip part of the nosing. Its yellow edge had drawn a bright stripe down every aisle.
+     - Close stair tops are 40% darker.
+   - **Tunnel arch:** the corridor is padded at the mouth, then lit in four steps of rising glow toward the end, so it reads as depth rather than a black box.
+   - **Tabletop upper deck: blocked by the volume.**
+     - At `presentation.tabletop.metersPerYard` 0.0045, the upper deck's inner edge (42 yd out) is already 0.918 m across, and its outer edge 1.17 m, against a 0.9 × 0.6 m volume.
+     - Even a fascia ring clips.
+     - This needs Experience to change the table scale, or accept a lower-bowl model.
+
+## Notes for other actors
+
+- **Crowd:** in `bowl-wide`, the upper-deck fans read as vertical stripes, one per section, because the colour mix restarts at each section edge. Seat fans from `bowl.seating` runs with a noise field continuous across sections, so aisles break the rows but not the pattern.
+- **Broadcast:** ribbon text on the fascia is about 6 px tall and aliased from the upper seat. Proposal for `visual.broadcast.ribbon`:
+  - A minimum glyph height of 1.1 yd (≈0.3° at 70 yd) on the 2.6 yd band.
+  - At most one message per 40 yd of ribbon, with no condensed faces.
+  - Text mipmapped from a 4× atlas.
+  - The bowl keeps the band at 2.6 yd (`bowl.ribbon.rise`).
+- **Experience:**
+  - The `field` seat moved in front of the home bench (see iteration 5).
+  - The upper deck cannot fit the tabletop volume at the current scale.
+
 ## Next
 
 - Diagnose the `field-level` frame, and trim the upper near region.
