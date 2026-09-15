@@ -153,7 +153,7 @@ final class FieldActor: StadiumActor {
     }
 
     private func turf(_ tint: String, _ roughness: Double, _ albedo: TextureResource?, _ roughMap: TextureResource?,
-                      _ normal: TextureResource?, _ T: SceneSpec.Look.Turf) -> PhysicallyBasedMaterial {
+                      _ normal: TextureResource?, _ T: SceneSpec.Look.FieldTurf) -> PhysicallyBasedMaterial {
         var m = StadiumLook.turf(tint: tint, roughness: roughness, albedo: albedo, roughnessMap: roughMap, normal: normal)
         m.specular = .init(floatLiteral: Float(T.specular))
         return m
@@ -164,7 +164,7 @@ final class FieldActor: StadiumActor {
     /// With `half`, UVs address the half texture: the left half directly and
     /// the right half through the half turn (x, y) -> (100 - x, width - y).
     private func canvasQuad(_ b: inout MeshBuilder, x0: Double, x1: Double, lift: Double,
-                            canvas K: SceneSpec.Look.Canvas, width: Double, half: Bool, turned: Bool = false) {
+                            canvas K: SceneSpec.Look.FieldCanvas, width: Double, half: Bool, turned: Bool = false) {
         let yz = { (y: Double) in width / 2 - y }
         let uv = { (x: Double, y: Double) -> SIMD2<Float> in
             guard half else {

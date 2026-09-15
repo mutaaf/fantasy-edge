@@ -14,7 +14,7 @@ while [ -z "$SLOT" ]; do
   done
   [ -z "$SLOT" ] && sleep 20
 done
-python3 tools/lookdev.py --device "$UDID" --out "$OUT" --port 8804 --only $SHOTS
+python3 tools/lookdev.py --device "$UDID" --out "$OUT" --port 8804 --settle "${SETTLE:-9}" --only $SHOTS
 xcrun simctl shutdown "$UDID" 2>/dev/null
 lsof -ti tcp:8804 | xargs kill 2>/dev/null
 rm -rf "$SLOT"

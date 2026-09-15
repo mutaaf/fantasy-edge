@@ -626,9 +626,14 @@ class TestSceneGeometry(unittest.TestCase):
         import re
 
         root = pathlib.Path(__file__).resolve().parents[1]
-        src = (root / "apple/FantasyEdge/Sources/Stadium/SceneLook.swift").read_text()
-        block = src.split("// LOOK-BEGIN", 1)[1].split("// LOOK-END", 1)[0]
-        swift = set(re.findall(r"public let (\w+):", block)) - {"stadium", "tabletop"}
+        stadium = root / "apple/FantasyEdge/Sources/Stadium"
+        files = [stadium / "SceneLook.swift"] + sorted(stadium.glob("Actors/*/*Look.swift"))
+        self.assertEqual(len(files), 11, "SceneLook.swift plus one <Actor>Look.swift per actor")
+        swift = set()
+        for f in files:
+            block = f.read_text().split("// LOOK-BEGIN", 1)[1].split("// LOOK-END", 1)[0]
+            swift |= set(re.findall(r"public let (\w+):", block))
+        swift -= {"stadium", "tabletop"}
 
         def keys(node):
             out = set()

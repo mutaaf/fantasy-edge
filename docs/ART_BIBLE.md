@@ -301,7 +301,7 @@ python3 tools/lookdev.py --device <your simulator udid> --out .work/shots/<actor
 | `bowl-wide` | upper deck, midfield, slightly down | a normal snap | Bowl, Crowd, Lighting, Sky |
 | `field-level` | home sideline, field level | red-zone snap | Field, Sideline, Experience |
 | `crowd-closeup` | club seat, turned 62° toward the side stands | a normal snap | Crowd, Bowl |
-| `lights-haze` | club seat, looking up at the far rim (pitch -22: the debug pivot tilts the world) | a normal snap | Lighting, Sky |
+| `lights-haze` | club seat, looking up at the far rim | a normal snap | Lighting, Sky |
 | `sky-dome` | club seat, looking high | a normal snap | Sky |
 | `td-moment` | club seat, turned toward the scoring end | the Bears pick-six at 1x | Moments, Crowd, Lighting, Broadcast, Audio |
 | `redzone-trails` | club seat, turned toward the red zone | red-zone snap | Broadcast, Field |

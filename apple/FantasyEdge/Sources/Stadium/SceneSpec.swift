@@ -324,7 +324,55 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let height: Double
     }
 
+    /// A seating section, by arc-length fraction of its tier's middle ring.
+    public struct SeatingSection: Decodable, Equatable, Sendable {
+        public let id: String
+        public let from: Double
+        public let to: Double
+        public let side: String?
+        public let vomitory: Bool?
+    }
+
+    /// A row's seats as runs: `[firstArc, count]`, `pitch` yards apart along
+    /// the ring at offset `feet`, walked from angle 0. See `SceneMath.seat`.
+    public struct SeatingRow: Decodable, Equatable, Sendable {
+        public let row: Int
+        public let floor: Double
+        public let feet: Double
+        public let length: Double
+        public let pitch: Double
+        public let seats: Int
+        public let runs: [[Double]]
+    }
+
+    public struct SeatingAccessible: Decodable, Equatable, Sendable {
+        public let row: Int
+        public let arc: Double
+        public let length: Double
+    }
+
+    public struct SeatingTier: Decodable, Equatable, Sendable {
+        public let tier: String
+        public let sections: [SeatingSection]?
+        public let rows: [SeatingRow]
+        public let accessible: [SeatingAccessible]?
+    }
+
+    /// Every seat in the bowl (`bowl.seating`, from Bowl). Unknown keys are
+    /// ignored and the config keys are optional while Bowl iterates.
+    public struct Seating: Decodable, Equatable, Sendable {
+        public let pitch: Double
+        public let total: Int
+        public let tiers: [SeatingTier]
+        public let aisle: Double?
+        public let feetDepth: Double?
+        public let tunnelClear: Double?
+        public let startAngle: Double?
+    }
+
     public struct Bowl: Decodable, Equatable, Sendable {
+        /// Absent on scenes older than Bowl's seat-by-seat layout.
+        public let seating: Seating?
         public let shape: Shape
         public let tiers: [Tier]
         public let rimLights: RimLights
