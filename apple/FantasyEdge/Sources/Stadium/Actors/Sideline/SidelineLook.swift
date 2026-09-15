@@ -71,6 +71,16 @@ extension SceneSpec.Look {
         public let maxDegrees: Double
         public let frequency: Double
         public let decaySeconds: Double
+        /// How much of the swing is in the net's own plane (sideways), the part
+        /// a viewer behind the goal sees.
+        public let lateralShare: Double
+    }
+
+    public struct NetLook: Decodable, Equatable, Sendable {
+        /// Opacity a net keeps seen face-on.
+        public let minOpacity: Double
+        /// Opacity seen edge-on.
+        public let grazingOpacity: Double
     }
 
     public struct SidelineLook: Decodable, Equatable, Sendable {
@@ -88,6 +98,7 @@ extension SceneSpec.Look {
         public let sway: NetSway
         /// shaderGraph.materials id the nets use when it loads.
         public let netMaterial: String
+        public let net: NetLook
     }
 }
 

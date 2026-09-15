@@ -33,6 +33,10 @@ def Xform "Root"
     #                paint is the dullest and lets the most grass through
     #   HalfWidth    (float)   half the field's width in object units
     #   HalfLength   (float)   half its length with the end zones (60 yd)
+    #   CoarseScale  (float)   a second breakup sample on a tile this many times
+    #                larger, mixed in by CoarseMix: at a grazing angle the fine
+    #                sample mips to its mean and the paint goes flat grey; the
+    #                coarse one still varies where the fine one has averaged out
     def Material "FieldPaint"
     {
         asset inputs:Mask = @./textures/placeholder_mask.png@
@@ -53,6 +57,8 @@ def Xform "Root"
         float inputs:BorderGrassCut = 0.5
         float inputs:HalfWidth = 26.667
         float inputs:HalfLength = 60
+        float inputs:CoarseScale = 7
+        float inputs:CoarseMix = 0.5
 
         token outputs:mtlx:surface.connect = </Root/FieldPaint/Surface.outputs:out>
 
@@ -123,6 +129,39 @@ def Xform "Root"
             float outputs:out
         }
 
+        def Shader "CoarseYards"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint.inputs:TileYards>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:CoarseScale>
+            float outputs:out
+        }
+
+        def Shader "CoarseUV"
+        {
+            uniform token info:id = "ND_divide_vector2FA"
+            float2 inputs:in1.connect = </Root/FieldPaint/Ground.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/CoarseYards.outputs:out>
+            float2 outputs:out
+        }
+
+        def Shader "CoarseSample"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file.connect = </Root/FieldPaint.inputs:Breakup>
+            float2 inputs:texcoord.connect = </Root/FieldPaint/CoarseUV.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "BreakupMixed"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/FieldPaint/CoarseSample.outputs:out>
+            float inputs:bg.connect = </Root/FieldPaint/BreakupSample.outputs:out>
+            float inputs:mix.connect = </Root/FieldPaint.inputs:CoarseMix>
+            float outputs:out
+        }
+
         def Shader "TurfSample"
         {
             uniform token info:id = "ND_image_color3"
@@ -143,7 +182,7 @@ def Xform "Root"
         def Shader "Centred"
         {
             uniform token info:id = "ND_subtract_float"
-            float inputs:in1.connect = </Root/FieldPaint/BreakupSample.outputs:out>
+            float inputs:in1.connect = </Root/FieldPaint/BreakupMixed.outputs:out>
             float inputs:in2 = 0.5
             float outputs:out
         }
@@ -200,7 +239,7 @@ def Xform "Root"
         def Shader "Carry"
         {
             uniform token info:id = "ND_smoothstep_float"
-            float inputs:in.connect = </Root/FieldPaint/BreakupSample.outputs:out>
+            float inputs:in.connect = </Root/FieldPaint/BreakupMixed.outputs:out>
             float inputs:low.connect = </Root/FieldPaint/Cut.outputs:out>
             float inputs:high.connect = </Root/FieldPaint/GrassHigh.outputs:out>
             float outputs:out
