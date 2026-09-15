@@ -120,8 +120,9 @@ def make_textures():
     n = 256
     y, x = np.mgrid[0:n, 0:n] / n * 12.0                 # 12 cells per repeat
     fx, fy = np.abs(np.mod(x, 1) - 0.5), np.abs(np.mod(y, 1) - 0.5)
-    strand = np.clip(1 - np.minimum(fx, fy) / 0.06, 0, 1) ** 1.5
-    knots = np.clip(1 - np.hypot(fx - 0.5, fy - 0.5) / 0.12, 0, 1)
+    # thin cord: about 6% of each cell, so a mip of the net averages to air
+    strand = np.clip(1 - np.minimum(fx, fy) / 0.03, 0, 1) ** 1.5
+    knots = np.clip(1 - np.hypot(fx - 0.5, fy - 0.5) / 0.06, 0, 1)
     a = np.clip(strand + knots, 0, 1)
     common.write_png(TEX / "net.png", np.stack([np.full_like(a, 0.92), np.full_like(a, 0.92), np.full_like(a, 0.9), a], axis=2))
     # the same coverage as one grey channel: a renderer that merges props into

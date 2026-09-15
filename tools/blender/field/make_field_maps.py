@@ -226,7 +226,7 @@ def engine_maps(league: str):
     # the sideline is where the chain crew, cameras and substitutes walk all night
     band = np.exp(-0.5 * (np.minimum(np.abs(Y + 2.0), np.abs(Y - W - 2.0)) / 3.0) ** 2)
     grime = band * (0.55 + 0.45 * fbm(X, Y, [0.8, 2.5, 6.0], 91))
-    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1) + 0.45 * grime, 0, 0.8)
+    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1) + 0.22 * grime, 0, 0.8)
     common.write_png(common.FIELD_OUT / "maps" / league / "variation_opacity.png", srgb(opacity))
 
 
