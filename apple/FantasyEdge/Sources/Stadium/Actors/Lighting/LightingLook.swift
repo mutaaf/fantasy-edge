@@ -17,6 +17,8 @@ extension SceneSpec.Look {
         public let shadows: Int
         public let tabletopLumens: Double
         public let tabletopReach: Double
+        public let color: String
+        public let aimZ: [Double]
     }
 
     public struct Rim: Decodable, Equatable, Sendable {
@@ -24,23 +26,84 @@ extension SceneSpec.Look {
         public let farSideMaxZ: Double
         public let lampYards: SceneSpec.PerMode<[Double]>
         public let heightAbove: SceneSpec.PerMode<Double>
-        public let poleYards: Double
-        public let glowYards: SceneSpec.PerMode<Double>
-        public let glowOpacity: Double
-        public let hazeLength: SceneSpec.PerMode<Double>
-        public let hazeRadius: Double
-        public let hazeOpacity: Double
-        public let coreGlowScale: Double
-        public let coreGlowOpacity: Double
-        public let hazeStartScale: Double
+        /// How wide the bank model is authored, so it scales to `lampYards`.
+        public let modelWidthYards: Double
+    }
+
+    public struct LightingBank: Decodable, Equatable, Sendable {
+        public let housing: String
+        public let housingRoughness: Double
+        public let housingMetallic: Double
+        public let steel: String
+        public let steelRoughness: Double
+        public let steelMetallic: Double
+        public let lensColor: String
+        public let lensGain: Double
+        public let faceGain: Double
+    }
+
+    public struct LightingGlow: Decodable, Equatable, Sendable {
+        public let coreYards: SceneSpec.PerMode<Double>
+        public let haloYards: SceneSpec.PerMode<Double>
+        public let bloomYards: SceneSpec.PerMode<Double>
+        public let coreOpacity: Double
+        public let haloOpacity: Double
+        public let bloomOpacity: Double
+        public let liftYards: Double
+        public let color: String
+        public let spillYards: [Double]
+        public let spillForwardYards: Double
+        public let spillDropYards: Double
+        public let spillOpacity: Double
+    }
+
+    public struct LightingBeams: Decodable, Equatable, Sendable {
+        public let perBank: Int
+        public let fanYards: Double
+        public let lengthYards: SceneSpec.PerMode<Double>
+        public let startWidthYards: Double
+        public let endWidthYards: Double
+        public let opacity: SceneSpec.PerMode<Double>
+        public let color: String
+        public let overdrawCapScreens: Double
+        public let dustOpacity: SceneSpec.PerMode<Double>
+        public let dustTileYards: Double
+        public let dustScrollPerSecond: Double
+    }
+
+    public struct LightingHaze: Decodable, Equatable, Sendable {
+        public let heights: [Double]
+        public let inner: Double
+        public let outer: Double
+        public let repeatsAround: Double
+        public let opacity: Double
+        public let color: String
+    }
+
+    public struct LightingStrobe: Decodable, Equatable, Sendable {
+        public let lensGain: Double
+        public let glowGain: Double
+        public let beamGain: Double
+    }
+
+    public struct LightingWash: Decodable, Equatable, Sendable {
+        public let glowTint: Double
+        public let beamTint: Double
     }
 
     public struct LightingLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
         public let probeIntensityExponent: Double
+        public let probeOnTabletop: Bool
         public let flood: Flood
         public let rim: Rim
+        public let bank: LightingBank
+        public let glow: LightingGlow
+        public let beams: LightingBeams
+        public let haze: LightingHaze
+        public let strobe: LightingStrobe
+        public let wash: LightingWash
     }
 }
 

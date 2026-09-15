@@ -236,8 +236,12 @@ BOWL = {
     "concourse": {"inner": 36.0, "outer": 42.0, "color": "bowl.concourse"},
     # Light banks just beyond the outermost tier a renderer draws - the upper
     # deck in the stadium, the lower on the tabletop - `beyondOuter` yards out.
-    # How high above that tier's top they stand is look.light.rim.heightAbove.
-    "rimLights": {"count": 10, "beyondOuter": 1.0, "side": "far", "color": "rim.light"},
+    # How high above that tier's top they stand is visual.lighting.rim.heightAbove.
+    # side "all": a real bowl is lit from every side, so banks stand all the
+    # way round; the ones facing the seats (z <= farSideMaxZ) carry the
+    # detailed model and the beams, the rest the cheap one. "far" draws only
+    # the banks facing the seats.
+    "rimLights": {"count": 16, "beyondOuter": 1.0, "side": "all", "color": "rim.light"},
     # The stands' front wall, lined with LED boards, short of the first row;
     # the ribbon board on the upper deck's fascia, all the way round; the
     # press box in the far concourse; tunnels under each end zone.

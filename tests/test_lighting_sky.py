@@ -1,0 +1,56 @@
+"""Lighting and sky: the contract their assets and tokens keep for every client."""
+import json
+import pathlib
+import unittest
+
+from fantasyedge import scene as sc
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+TOKENS = json.loads((ROOT / "design" / "tokens.json").read_text())
+
+
+class LightingSky(unittest.TestCase):
+    def test_banks_stand_all_the_way_round(self):
+        rim = sc.BOWL["rimLights"]
+        self.assertIn(rim["side"], ("all", "far"))
+        self.assertGreaterEqual(rim["count"], 8)
+        self.assertEqual(rim["count"] % 2, 0, "banks are placed k*pi/(count/2); an odd count skews the bowl")
+
+    def test_blender_mirror_matches_the_scene(self):
+        src = (ROOT / "tools" / "blender" / "lighting" / "common.py").read_text()
+        self.assertIn(f'RIM = {{"count": {sc.BOWL["rimLights"]["count"]},', src)
+        for tier in sc.BOWL["tiers"]:
+            self.assertIn(f'"inner": {tier["inner"]}, "outer": {tier["outer"]}', src)
+
+    def test_additive_light_has_an_overdraw_cap(self):
+        beams = TOKENS["visual"]["lighting"]["beams"]
+        self.assertGreater(beams["overdrawCapScreens"], 0)
+        self.assertLessEqual(beams["overdrawCapScreens"], 3.0, "additive beams past three screens will not hold 90 fps")
+        for mode in ("stadium", "tabletop"):
+            self.assertLess(beams["opacity"][mode], 1.0)
+
+    def test_every_lighting_and_sky_file_is_shipped(self):
+        for actor in ("lighting", "sky"):
+            section = TOKENS["visual"][actor]
+            for rel in list(section["assets"].values()) + list(section["models"].values()):
+                self.assertTrue((ROOT / "assets" / rel).is_file(), f"{actor}: assets/{rel} missing")
+        for rel in TOKENS["visual"]["lighting"]["response"]["probeSources"].values():
+            self.assertTrue((ROOT / "assets" / rel).is_file(), rel)
+
+    def test_probes_ship_at_the_level_the_headset_expects(self):
+        manifest = json.loads((ROOT / "assets" / "actors" / "lighting" / "manifest.json").read_text())
+        for pid in ("stadium_night", "stadium_dusk", "tabletop_room"):
+            probe = manifest["probes"][pid]
+            self.assertEqual(len(probe["sh9"]), 9)
+            self.assertLessEqual(probe["peak"], probe["clamp"])
+            if pid.startswith("stadium"):
+                self.assertAlmostEqual(probe["belowHorizonMean"], probe["referenceBelowMean"], places=3)
+
+    def test_lighting_is_inside_its_texture_budget(self):
+        section = TOKENS["visual"]["lighting"]
+        runtime = sum((ROOT / "assets" / rel).stat().st_size for rel in section["assets"].values())
+        self.assertLess(runtime / 1e6, 20.0, "visual.lighting assets over the art bible's 20 MB")
+
+
+if __name__ == "__main__":
+    unittest.main()
