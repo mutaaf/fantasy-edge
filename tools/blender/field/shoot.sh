@@ -16,7 +16,7 @@ while [ -z "$SLOT" ]; do
   [ -z "$SLOT" ] && sleep 20
 done
 python3 tools/lookdev.py --device "$UDID" --out "$OUT" --port 8804 --settle "${SETTLE:-9}" \
-  --seat="${SEAT:-}" --suffix="${SUFFIX:-}" $EXTRA_ARGS --only $SHOTS
+  --seat="${SEAT:-}" --suffix="${SUFFIX:-}" --extra="${LAUNCH:-}" $EXTRA_ARGS --only $SHOTS
 xcrun simctl spawn "$UDID" log show --last 30m --style compact \
   --predicate 'subsystem == "com.mutaaf.fantasyedge"' 2>/dev/null | grep -i "shadergraph\|field:\|sideline:" > "$OUT/shadergraph${SUFFIX:-}.log"
 xcrun simctl shutdown "$UDID" 2>/dev/null

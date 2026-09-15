@@ -32,6 +32,20 @@ def Xform "Root"
     #   Normal       (asset)   turf tangent-space normal, raw, tiles with the turf
     #   NormalScale  (float)   blade normal strength under the paint
     #   CoatDetail   (float)   0 flat paint .. 1 the full turf luma detail
+    #   Detail       (asset)   blade height again, loaded without mips: the
+    #                near layer, so the nearest metres keep single blades
+    #   DetailGain   (float)   how far a blade's height lightens (tip) or
+    #                darkens (base) the paint near the eye, about DetailMean
+    #   DetailMean   (float)   the blade map's mean, so the layer averages to 1
+    #   NearStart, NearEnd (float)  |n.v| over which the near layer and the
+    #                near normal fade in. From a seat at field level |n.v| is
+    #                eye height over distance, so this is a distance fade:
+    #                the ground a metre or two away looks down steeply
+    #   NearNormalScale (float) blade normal strength at the eye's feet
+    #   EdgeFeather  (float)   distance units inside the edge over which the
+    #                paint thins into the grass: a clean line, softly painted
+    #   TipStrength  (float)   how much of a blade tip through the paint is
+    #                grass; the rest is paint caught on it
     #   TurfLuma     (float)   the turf albedo's mean linear luma
     #   Color        (color3)  paint colour
     #   GrassTint    (color3)  multiplies the turf where blades show through
@@ -70,6 +84,14 @@ def Xform "Root"
         float inputs:NormalScale = 1
         float inputs:CoatDetail = 0.8
         float inputs:TurfLuma = 0.163
+        asset inputs:Detail = @./textures/placeholder_breakup.png@
+        float inputs:DetailGain = 1.2
+        float inputs:DetailMean = 0.32
+        float inputs:NearStart = 0.3
+        float inputs:NearEnd = 0.7
+        float inputs:NearNormalScale = 2
+        float inputs:EdgeFeather = 0.03
+        float inputs:TipStrength = 0.7
         color3f inputs:Color = (0.9, 0.9, 0.88)
         color3f inputs:GrassTint = (1, 1, 1)
         color3f inputs:ThinColor = (0.45, 0.5, 0.4)
@@ -98,7 +120,7 @@ def Xform "Root"
         def Shader "Surface"
         {
             uniform token info:id = "ND_realitykit_pbr_surfaceshader"
-            color3f inputs:baseColor.connect = </Root/FieldPaint/Base.outputs:out>
+            color3f inputs:baseColor.connect = </Root/FieldPaint/Final.outputs:out>
             float inputs:roughness.connect = </Root/FieldPaint/Rough.outputs:out>
             float inputs:specular = 0.2
             float3 inputs:normal.connect = </Root/FieldPaint/TangentNormal.outputs:out>
@@ -496,7 +518,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_multiply_color3FA"
             color3f inputs:in1.connect = </Root/FieldPaint/Thinned.outputs:out>
-            float inputs:in2.connect = </Root/FieldPaint/Coat.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/CoatNear.outputs:out>
             color3f outputs:out
         }
 
@@ -537,7 +559,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_multiply_float"
             float inputs:in1.connect = </Root/FieldPaint/NormalSplit.outputs:outx>
-            float inputs:in2.connect = </Root/FieldPaint.inputs:NormalScale>
+            float inputs:in2.connect = </Root/FieldPaint/NormalNear.outputs:out>
             float outputs:out
         }
 
@@ -545,7 +567,7 @@ def Xform "Root"
         {
             uniform token info:id = "ND_multiply_float"
             float inputs:in1.connect = </Root/FieldPaint/NormalSplit.outputs:outy>
-            float inputs:in2.connect = </Root/FieldPaint.inputs:NormalScale>
+            float inputs:in2.connect = </Root/FieldPaint/NormalNear.outputs:out>
             float outputs:out
         }
 
@@ -570,7 +592,161 @@ def Xform "Root"
             uniform token info:id = "ND_mix_color3"
             color3f inputs:fg.connect = </Root/FieldPaint/BladeColor.outputs:out>
             color3f inputs:bg.connect = </Root/FieldPaint/Coated.outputs:out>
-            float inputs:mix.connect = </Root/FieldPaint/Through.outputs:out>
+            float inputs:mix.connect = </Root/FieldPaint/TipAmount.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "TipAmount"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/Through.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:TipStrength>
+            float outputs:out
+        }
+
+        def Shader "Geometric"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            string inputs:space = "world"
+            float3 outputs:out
+        }
+
+        def Shader "View"
+        {
+            uniform token info:id = "ND_realitykit_viewdirection_vector3"
+            float3 outputs:out
+        }
+
+        def Shader "Facing"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/FieldPaint/Geometric.outputs:out>
+            float3 inputs:in2.connect = </Root/FieldPaint/View.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FacingAbs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/FieldPaint/Facing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "NearFade"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldPaint/FacingAbs.outputs:out>
+            float inputs:low.connect = </Root/FieldPaint.inputs:NearStart>
+            float inputs:high.connect = </Root/FieldPaint.inputs:NearEnd>
+            float outputs:out
+        }
+
+        def Shader "NormalNear"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/FieldPaint.inputs:NearNormalScale>
+            float inputs:bg.connect = </Root/FieldPaint.inputs:NormalScale>
+            float inputs:mix.connect = </Root/FieldPaint/NearFade.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "DetailSample"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file.connect = </Root/FieldPaint.inputs:Detail>
+            float2 inputs:texcoord.connect = </Root/FieldPaint/TileUV.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "DetailCentred"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldPaint/DetailSample.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:DetailMean>
+            float outputs:out
+        }
+
+        def Shader "DetailScaled"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/DetailCentred.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:DetailGain>
+            float outputs:out
+        }
+
+        def Shader "DetailNear"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/DetailScaled.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/NearFade.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "DetailShade"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldPaint/DetailNear.outputs:out>
+            float inputs:in2 = 1
+            float outputs:out
+        }
+
+        def Shader "DetailClamped"
+        {
+            uniform token info:id = "ND_clamp_float"
+            float inputs:in.connect = </Root/FieldPaint/DetailShade.outputs:out>
+            float inputs:low = 0.35
+            float inputs:high = 1.5
+            float outputs:out
+        }
+
+        def Shader "CoatNear"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldPaint/Coat.outputs:out>
+            float inputs:in2.connect = </Root/FieldPaint/DetailClamped.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FeatherHigh"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldPaint.inputs:Edge>
+            float inputs:in2.connect = </Root/FieldPaint.inputs:EdgeFeather>
+            float outputs:out
+        }
+
+        def Shader "Inside"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldPaint/Distance.outputs:out>
+            float inputs:low.connect = </Root/FieldPaint.inputs:Edge>
+            float inputs:high.connect = </Root/FieldPaint/FeatherHigh.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "EdgeGrass"
+        {
+            uniform token info:id = "ND_multiply_color3"
+            color3f inputs:in1.connect = </Root/FieldPaint/TurfSample.outputs:out>
+            color3f inputs:in2.connect = </Root/FieldPaint.inputs:GrassTint>
+            color3f outputs:out
+        }
+
+        def Shader "EdgeMix"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg = 1
+            float inputs:bg = 0.55
+            float inputs:mix.connect = </Root/FieldPaint/Inside.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Final"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/FieldPaint/Base.outputs:out>
+            color3f inputs:bg.connect = </Root/FieldPaint/EdgeGrass.outputs:out>
+            float inputs:mix.connect = </Root/FieldPaint/EdgeMix.outputs:out>
             color3f outputs:out
         }
     }

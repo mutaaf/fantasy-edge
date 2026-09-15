@@ -307,10 +307,10 @@ def paint_wear_maps():
 
     r = common.rng(313)
     keep = np.ones_like(X)
-    for _ in range(150):
+    for _ in range(90):
         cx, cy = r.random() * WEAR_YARDS, r.random() * WEAR_YARDS
         angle = r.choice([0.0, np.pi / 2]) + r.normal(0, 0.35)
-        length, width = r.uniform(0.06, 0.16), r.uniform(0.04, 0.1)
+        length, width = r.uniform(0.04, 0.1), r.uniform(0.03, 0.06)
         dx = (X - cx + WEAR_YARDS / 2) % WEAR_YARDS - WEAR_YARDS / 2
         dy = (Y - cy + WEAR_YARDS / 2) % WEAR_YARDS - WEAR_YARDS / 2
         u = dx * np.cos(angle) + dy * np.sin(angle)

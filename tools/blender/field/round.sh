@@ -9,7 +9,10 @@ tools/blender/field/xcbuild.sh "$UDID" "$LOG"
 grep -q "BUILD SUCCEEDED" "$LOG" || { grep -m8 "error:" "$LOG"; exit 1; }
 rm -rf "$OUT"
 for seat in "$@"; do
-  if [ "$seat" = "field" ]; then
+  if [ "$seat" = "closeup" ]; then
+    # the field seat looking down at the border a metre or two away
+    SETTLE=20 SEAT=field SUFFIX=-closeup LAUNCH="-stadiumPitch -38" tools/blender/field/shoot.sh "$UDID" "$OUT" field-level
+  elif [ "$seat" = "field" ]; then
     SETTLE=20 SEAT= SUFFIX= tools/blender/field/shoot.sh "$UDID" "$OUT" field-level
   else
     SETTLE=20 SEAT="$seat" SUFFIX="-$seat" tools/blender/field/shoot.sh "$UDID" "$OUT" field-level

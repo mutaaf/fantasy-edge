@@ -228,6 +228,7 @@ final class FieldActor: StadiumActor {
             guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
                   let blades = await self.texture(V.shaderTextures.blades, semantic: .raw),
                   let wear = await self.texture(V.shaderTextures.wear, semantic: .raw),
+                  let detail = await self.texture(V.shaderTextures.blades, semantic: .raw, mips: false),
                   let normalPath = V.assets["turfWithNormal"],
                   let normal = await self.texture(normalPath, semantic: .raw),
                   let turf else {
@@ -250,6 +251,9 @@ final class FieldActor: StadiumActor {
                 do {
                     try m.setParameter(name: "Blades", value: .textureResource(blades))
                     try m.setParameter(name: "Wear", value: .textureResource(wear))
+                    // the near layer: single blades at the eye's feet, faded out
+                    // by the graph before the missing mips could shimmer
+                    try m.setParameter(name: "Detail", value: .textureResource(detail))
                     // paint coats the blades: their relief stays under it
                     try m.setParameter(name: "Normal", value: .textureResource(normal))
                     try m.setParameter(name: "Turf", value: .textureResource(turf))
@@ -356,12 +360,12 @@ final class FieldActor: StadiumActor {
         }
     }
 
-    private func texture(_ rel: String, semantic: TextureResource.Semantic) async -> TextureResource? {
-        let key = semantic == .raw ? rel + "#raw" : rel
+    private func texture(_ rel: String, semantic: TextureResource.Semantic, mips: Bool = true) async -> TextureResource? {
+        let key = (semantic == .raw ? rel + "#raw" : rel) + (mips ? "" : "#nomips")
         if let hit = textures[key] { return hit }
         guard let folder = StadiumAssets.folder else { return nil }
         var options = TextureResource.CreateOptions(semantic: semantic)
-        options.mipmapsMode = .allocateAndGenerateAll
+        options.mipmapsMode = mips ? .allocateAndGenerateAll : .none
         guard let tex = try? await TextureResource(contentsOf: folder.appendingPathComponent(rel), options: options) else {
             StadiumLog.log.error("[stadium] field: \(rel) failed to load")
             return nil

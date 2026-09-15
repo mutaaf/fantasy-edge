@@ -144,3 +144,9 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - **Value:** lines `#DADAD3`, border `#D2D3CB` (test bands 0.80-0.88 and 0.75-0.85 sRGB). At the field seat the border measures ~5× the turf's luma (it was 2×) without clipping. The fallback colour and texture paint read the same tokens.
 - **Wear:** green blade tips, not blobs. The blade mask is read on a 1.3 yd tile (`BladeYards`), so a tip survives the mips at a graze. The wear map only lowers the cut (`WearDepth` 0.3), which changes tip density in clusters; nothing goes solid green.
 - **Shots:** `.work/shots/field-coat3`.
+
+## Edge, near blades, quieter wear (integration-10a verdict: stucco)
+- **Edge:** the baked mask's edge noise is down to about 0.2 in, and its scuffs to 1.5 in, and the graph's blade and wear pushes to 0.004 and 0.006. The seam is straight. Because the paint is a cutout, the soft falloff is in colour: over `EdgeFeather` inside the edge, paint runs from 55% to full over the turf.
+- **Near blades:** `Detail` is the blade map loaded without mips on the turf tile. It lightens tips and darkens bases about its mean (`DetailGain`), and the blade normals strengthen to `NearNormalScale`. Both fade by |n·v| (`NearStart`..`NearEnd`), which from a field-level eye is eye height over distance, so it is a distance fade using only nodes already proven. Far away the layer is weighted to zero before missing mips could shimmer.
+- **Wear:** 90 small scuffs instead of 150; `WearDepth` 0.2 and `TipStrength` 0.6, so a tip is part grass, part paint.
+- **Shots:** `.work/shots/field-edge2`: field, sideline and a 1 m close-up (`round.sh … closeup`, field seat at pitch −38). The close-up shows single white blades. At 3-5 m from the field seat the border still reads as fine grain rather than blades: that is the limit of one texture sample at a graze without anisotropic filtering.
