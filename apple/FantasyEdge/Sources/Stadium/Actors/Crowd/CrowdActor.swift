@@ -304,6 +304,8 @@ final class CrowdActor: StadiumActor {
             if let normal { mat.normal = .init(texture: .init(normal)) }
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
+            mat.emissiveColor = .init(color: .white, texture: .init(key.away ? dress.cardAway : dress.cardHome))
+            mat.emissiveIntensity = Float(C.impostor.floodFill)
             mat.faceCulling = .none
             let e = ModelEntity(mesh: res, materials: [mat])
             e.name = "crowd.cards.\(key.slice).\(key.variant).\(key.away ? "away" : "home")"
@@ -338,6 +340,9 @@ final class CrowdActor: StadiumActor {
                 self.redress(d)
             }
         }
+        if !C.castShadows {
+            for g in groups { g.entity.components.set(DynamicLightShadowComponent(castsShadow: false)) }
+        }
         StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
     }
 
@@ -345,6 +350,7 @@ final class CrowdActor: StadiumActor {
         for g in groups {
             let t: TextureResource = g.ring == .card ? (g.away ? d.cardAway : d.cardHome) : (g.away ? d.fanAway : d.fanHome)
             g.material.baseColor.texture = .init(t)
+            if g.ring == .card { g.material.emissiveColor.texture = .init(t) }
             g.entity.model?.materials = [g.material]
         }
     }
@@ -454,6 +460,7 @@ final class CrowdActor: StadiumActor {
             if bright != g.brightness {
                 g.brightness = bright
                 g.material.baseColor.tint = UIColor(white: CGFloat(bright), alpha: 1)
+                if g.ring == .card { g.material.emissiveIntensity = Float(C.impostor.floodFill * bright) }
                 g.entity.model?.materials = [g.material]
             }
         }

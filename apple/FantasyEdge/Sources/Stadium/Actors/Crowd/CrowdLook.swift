@@ -39,6 +39,8 @@ extension SceneSpec.Look {
         public let scale: SceneSpec.PerMode<Double>
         public let alphaCutoff: Double
         public let pairOffsetMetres: Double
+        public let floodFill: Double
+        public let floodFillAbout: String
     }
 
     public struct CrowdRings: Decodable, Equatable, Sendable {
@@ -95,6 +97,8 @@ extension SceneSpec.Look {
         public let cardContrast: Double
         public let tint: CrowdTint
         public let roughness: Double
+        public let castShadows: Bool
+        public let castShadowsAbout: String
         public let standingShare: Double
         public let idleSeconds: [Double]
         public let waveSeconds: Double
