@@ -122,3 +122,8 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - It ships disabled (`visual.field.shells.enabled` false) until that's solved.
 - **Loads:** all three load via `Entity(contentsOf:)`, each from its own `.reality`, because `StadiumShaderGraph` takes the first material in a file.
 - **Parts:** Field 10 (11 with shells), Sideline 15.
+
+## Paint albedo (`6a5640e`)
+- **Albedo:** lines at 0.80 sRGB (`#CDCDC6`), border and end lines `#C4C4BA`. Border roughness is 0.98, above any grass, and its grass cut is 0.44 against 0.37 on the lines. The graph finds the border from object position (`HalfWidth`, `HalfLength`).
+- **Result:** at field level (`field-sg6`) the border reads as worn off-white over grass rather than a grey slab. From the club seat (`field-sg5` `redzone-trails`) the lines sit in the turf.
+- **Load path:** all three materials load via `Entity(contentsOf:)`, one material per `.reality` (Field, Shells, Sideline). They're not consolidated yet; that works unchanged under the director's by-name loader.

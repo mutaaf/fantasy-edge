@@ -216,6 +216,8 @@ final class FieldActor: StadiumActor {
         guard let spec = c.spec.shaderGraph?.materials?[V.paintMaterial] else { return }
         let targets = paintTargets
         let turf = c.assets.texture("field.turfAlbedo")
+        let P = V.paint
+        let halfWidth = c.spec.field.width / 2, halfLength = c.spec.field.length / 2 + c.spec.field.endZone
         Task { @MainActor in
             guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
                   let breakup = await self.texture(V.shaderTextures.breakup, semantic: .raw),
@@ -226,7 +228,15 @@ final class FieldActor: StadiumActor {
             for (entity, hex, masked, maskPath) in targets {
                 var m = base
                 for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+                // real field paint, not white: its albedo, roughness and how much
+                // grass the border lets through live in visual.field.paint
                 StadiumShaderGraph.set(&m, "Color", hex)
+                StadiumShaderGraph.set(&m, "Roughness", P.roughness)
+                StadiumShaderGraph.set(&m, "BorderColor", P.border)
+                StadiumShaderGraph.set(&m, "BorderRoughness", P.borderRoughness)
+                StadiumShaderGraph.set(&m, "BorderGrassCut", P.borderGrassCut)
+                StadiumShaderGraph.set(&m, "HalfWidth", halfWidth)
+                StadiumShaderGraph.set(&m, "HalfLength", halfLength)
                 StadiumShaderGraph.set(&m, "UseMask", masked ? 1.0 : 0.0)
                 do {
                     try m.setParameter(name: "Breakup", value: .textureResource(breakup))
