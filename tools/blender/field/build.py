@@ -124,6 +124,9 @@ def make_textures():
     knots = np.clip(1 - np.hypot(fx - 0.5, fy - 0.5) / 0.12, 0, 1)
     a = np.clip(strand + knots, 0, 1)
     common.write_png(TEX / "net.png", np.stack([np.full_like(a, 0.92), np.full_like(a, 0.92), np.full_like(a, 0.9), a], axis=2))
+    # the same coverage as one grey channel: a renderer that merges props into
+    # one material per palette entry cuts the net out with this, not with alpha
+    common.write_png(TEX / "net_mask.png", a)
     # quilted pad vinyl: stitched panels with a soft sheen
     n = 256
     y, x = np.mgrid[0:n, 0:n] / n

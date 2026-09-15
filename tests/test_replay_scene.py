@@ -571,6 +571,54 @@ class TestSceneGeometry(unittest.TestCase):
             b = rules["props"]["benches"]
             self.assertAlmostEqual(b["fromX"] + b["toX"], 100.0)
 
+    def test_end_zone_names_fit_their_clearance_and_read_the_right_way(self):
+        """Each club's name sits inside its end zone four feet clear of every
+        line (NCAA 1-2-1-d), and reads un-mirrored from the field of play with
+        its tops toward the end line. The glyph layout a client applies is
+        checked here, corner by corner, so no client has to trust it."""
+        import json as _json
+        art = self.final["field"]["art"]
+        self.assertIsNotNone(art, "assets/actors/field/fonts/glyphs.json is missing")
+        font = _json.loads((pathlib.Path(sc.__file__).resolve().parent.parent / "assets" / art["glyphs"]).read_text())
+        f = self.final["field"]
+        clear, gl = 4 / 3, 8 / 36
+        for z in art["endZones"]:
+            width = sc.text_width(z["text"], font, art["tracking"])
+            (ox, oz), (ax, az), (ux, uz), cap = z["origin"], z["along"], z["up"], z["capHeight"]
+            corners = [(ox + (a * ax + b * ux) * cap, oz + (a * az + b * uz) * cap)
+                       for a in (0, width) for b in (0, 1)]
+            if z["side"] == "home":
+                lo, hi = -f["endZone"] + clear, -gl - clear
+            else:
+                lo, hi = f["length"] + gl + clear, f["length"] + f["endZone"] - clear
+            for x, zz in corners:
+                self.assertGreaterEqual(x, lo - 1e-6)
+                self.assertLessEqual(x, hi + 1e-6)
+                self.assertLessEqual(abs(zz), f["width"] / 2 - clear + 1e-6)
+            # un-mirrored seen from above: along x up has the orientation of
+            # the viewer's right x forward, which is -1 in (x, z)
+            self.assertAlmostEqual(ax * uz - az * ux, -1.0)
+            # tops toward the end line
+            self.assertEqual(ux, -1.0 if z["side"] == "home" else 1.0)
+        mid = art["midfield"]
+        self.assertEqual(mid["center"], [50.0, 0.0])
+        self.assertLess(mid["inner"], mid["outer"])
+        self.assertLessEqual(mid["outer"], f["width"] / 2 - 15.0 + 1e-6, "NFL midfield art stays inside the numerals")
+
+    def test_pylons_stand_where_each_book_puts_them(self):
+        """NFL: the four goal-line corners and two on each end line at the
+        hashes. College adds the end-line corners and sets the hash pylons
+        three feet off the end line (1-2-6)."""
+        for league, count in (("nfl", 8), ("college-football", 12)):
+            rules = sc.RULES[league]
+            spots = sc.pylon_spots(rules["field"], league, rules["props"]["pylon"]["size"])
+            self.assertEqual(len(spots), count, league)
+            self.assertEqual(len({tuple(s) for s in spots}), count)
+            # symmetric under a half turn about midfield
+            turned = {(round(100 - x, 3), round(-z, 3)) for x, z in spots}
+            self.assertEqual(turned, {(round(x, 3), round(z, 3)) for x, z in spots})
+        self.assertEqual(len(self.final["field"]["props"]["pylon"]["at"]), 8)
+
     def test_every_look_field_the_renderer_reads_is_in_the_tokens(self):
         """The visionOS renderer may only read appearance through SceneLook.swift.
         Every `let` there must be a key the tokens carry under `look`, so no
@@ -587,6 +635,9 @@ class TestSceneGeometry(unittest.TestCase):
             if isinstance(node, dict):
                 for k, v in node.items():
                     out.add(k)
+                    out |= keys(v)
+            elif isinstance(node, list):
+                for v in node:
                     out |= keys(v)
             return out
 

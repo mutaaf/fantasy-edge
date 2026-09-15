@@ -69,34 +69,53 @@ extension SceneSpec {
 
         // MARK: field
 
+        public struct PerLeague: Decodable, Equatable, Sendable {
+            public let paintWhite: String
+            public let paintYellow: String
+            public let variation: String
+        }
+
+        public struct Canvas: Decodable, Equatable, Sendable {
+            public let x0: Double
+            public let x1: Double
+            public let y0: Double
+            public let y1: Double
+            public let halfX1: Double
+        }
+
         public struct Turf: Decodable, Equatable, Sendable {
             public let tileYards: Double
             public let stripeTint: [String]
             public let stripeRoughness: [Double]
             public let surroundTint: String
-            public let normalScale: Double
-            public let paintOpacity: Double
-            public let endZonePaintOpacity: Double
-            public let paintRoughness: Double
+            public let wearTint: String
+            public let specular: Double
         }
 
-        public struct Lines: Decodable, Equatable, Sendable {
-            public let tenWidth: Double
-            public let fiveWidth: Double
-            public let hashWidth: Double
-            public let hashLength: Double
-            public let border: Double
-            public let numberHeight: Double
-            public let numberInset: Double
-            public let endZoneTextHeight: Double
-            public let lift: Double
+        public struct Paint: Decodable, Equatable, Sendable {
+            public let white: String
+            public let yellow: String
+            public let roughness: Double
+            public let threshold: Double
+            public let endZoneOpacity: Double
+        }
+
+        public struct Lift: Decodable, Equatable, Sendable {
+            public let wear: Double
+            public let endZone: Double
+            public let ring: Double
+            public let paint: Double
+            public let art: Double
         }
 
         public struct FieldLook: Decodable, Equatable, Sendable {
             public let assets: [String: String]
             public let models: [String: String]
+            public let perLeague: PerLeague
+            public let canvas: Canvas
             public let turf: Turf
-            public let lines: Lines
+            public let paint: Paint
+            public let lift: Lift
         }
 
         // MARK: sideline
@@ -106,10 +125,54 @@ extension SceneSpec {
             public let panelYards: Double
         }
 
+        public struct PropMaterial: Decodable, Equatable, Sendable {
+            public let color: String
+            public let roughness: Double
+            public let metallic: Double
+            /// "team": the club whose side the prop stands on wears it.
+            public let tint: String?
+            /// An asset id whose grey channel cuts the surface out (nets).
+            public let mask: String?
+        }
+
+        public struct LodSuffix: Decodable, Equatable, Sendable {
+            public let stadium: String
+            public let tabletop: String
+        }
+
+        public struct BenchRow: Decodable, Equatable, Sendable {
+            public let count: Int
+            public let spacing: Double
+        }
+
+        public struct Placement: Decodable, Equatable, Sendable {
+            public let model: String
+            /// Yards along the line from the team area's centre (sideline) or
+            /// across the field from its centre (end line).
+            public let along: Double
+            /// Yards beyond the sideline or end line.
+            public let offset: Double
+        }
+
+        public struct ChainCrew: Decodable, Equatable, Sendable {
+            public let set: String
+            public let box: String
+            public let ground: String
+            public let offset: Double
+            public let boxOffset: Double
+        }
+
         public struct SidelineLook: Decodable, Equatable, Sendable {
             public let assets: [String: String]
             public let models: [String: String]
             public let boards: Boards
+            public let palette: [String: PropMaterial]
+            public let lodSuffix: LodSuffix
+            public let metresPerYard: Double
+            public let benches: BenchRow
+            public let dressing: [Placement]
+            public let endLine: [Placement]
+            public let chains: ChainCrew
         }
 
         // MARK: bowl

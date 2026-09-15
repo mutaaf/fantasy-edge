@@ -1,84 +1,236 @@
 import RealityKit
 import simd
 
-/// The sideline: goal posts, pylons, benches and the LED boards along the
-/// front wall. The chains live with the broadcast package because they move
-/// with the ball. Reads `field.props` and `visual.sideline`.
+/// The sideline: goal posts, pylons, benches, the team-area dressing, the
+/// end-line nets and camera towers, the chain crew, and the LED boards along
+/// the front wall. Reads `field.props`, `visual.sideline` and the models
+/// exported by tools/blender/field/build.py.
+///
+/// A loaded model is never drawn as itself. Its meshes are named
+/// `<prop>__<material>`, and every placed copy is baked into one merged mesh
+/// per palette entry (team-tinted entries once per club), so the whole
+/// sideline costs one draw part per material however many props stand on it.
+/// The chain crew moves when the line to gain does, so it is a second, small
+/// merge rebuilt then.
+///
+/// Draw parts: static palette ~10, chain crew ~4, boards 1.
 @MainActor
 final class SidelineActor: StadiumActor {
     let name = "sideline"
     let root = Entity()
 
-    init() { root.name = "actor.sideline" }
+    private let fixed = Entity()
+    private let crew = Entity()
+    private var crewKey = ""
+    /// Model geometry in model metres, by model id then material key.
+    private var geometry: [String: [String: MeshBuilder]] = [:]
+
+    init() {
+        root.name = "actor.sideline"
+        fixed.name = "sideline.fixed"
+        crew.name = "sideline.crew"
+    }
 
     func build(_ c: StadiumContext) {
         clear()
-        let s = c.spec
-        buildProps(s)
+        fixed.children.removeAll()
+        crew.children.removeAll()
+        crewKey = ""
+        root.addChild(fixed)
+        root.addChild(crew)
+        buildProps(c)
         buildBoards(c)
+        apply(c, previous: nil)
     }
 
-    private func buildProps(_ s: SceneSpec) {
+    func apply(_ c: StadiumContext, previous: SceneSpec?) {
+        buildCrew(c)
+    }
+
+    // MARK: props
+
+    private struct Bin {
+        var mesh = MeshBuilder()
+        let material: String
+        let side: String?
+    }
+
+    private func buildProps(_ c: StadiumContext) {
+        let s = c.spec, V = c.look.sideline
         guard let p = s.field.props else { return }
-        let f = s.field, half = f.width / 2, pal = s.palette
+        let f = s.field, half = f.width / 2
+        let college = s.league == "college-football"
+        var bins: [String: Bin] = [:]
 
-        var pylons = MeshBuilder()
-        let ps = Float(p.pylon.size / 2)
-        for x in [-f.endZone, 0, f.length, f.length + f.endZone] {
-            for z in [-half, half] {
-                let c = SceneMath.local(x: x, y: 0, z: z)
-                pylons.box(min: c + SIMD3(-ps, 0, -ps), max: c + SIMD3(ps, Float(p.pylon.height), ps))
+        func place(_ model: String, x: Double, z: Double, yaw: Float, side: String) {
+            add(model, c, at: SceneMath.local(x: x, y: 0, z: z), yaw: yaw, side: side, into: &bins)
+        }
+
+        // Toward the field is model -Z. On the home sideline (z > 0) the field
+        // lies toward -z, so no turn; on the away sideline a half turn.
+        let sides: [(String, Double, Float)] = [("home", 1, 0), ("away", -1, .pi)]
+
+        // Goal posts on the end lines, pylons where the book puts them.
+        let goal = college ? "goalpost_college" : "goalpost_nfl"
+        place(goal, x: -f.endZone, z: 0, yaw: -.pi / 2, side: "home")
+        place(goal, x: f.length + f.endZone, z: 0, yaw: .pi / 2, side: "away")
+        let pylon = college ? "pylon_college" : "pylon_nfl"
+        for spot in p.pylon.at ?? [] where spot.count == 2 {
+            place(pylon, x: spot[0], z: spot[1], yaw: 0, side: spot[0] < 50 ? "home" : "away")
+        }
+
+        // Each club's team area: benches down its middle, the dressing around them.
+        let centre = (p.benches.fromX + p.benches.toX) / 2
+        for (side, sign, yaw) in sides {
+            let n = V.benches.count
+            for k in 0..<n {
+                let x = centre + (Double(k) - Double(n - 1) / 2) * V.benches.spacing
+                place("bench", x: x, z: sign * (half + p.benches.offset), yaw: yaw, side: side)
+            }
+            for d in V.dressing {
+                // Mirror `along` on the away side, so the half turn holds.
+                place(d.model, x: centre + sign * d.along, z: sign * (half + d.offset), yaw: yaw, side: side)
             }
         }
-        root.addChild(pylons.entity("pylons", StadiumLook.solid(pal[p.pylon.color] ?? "#FF6A13", roughness: 0.5)))
-
-        // Goal posts: base behind the end line, a gooseneck forward, crossbar,
-        // uprights. They cast the only dynamic shadows in the stadium.
-        let g = p.goalpost
-        var posts = MeshBuilder()
-        var pads = MeshBuilder()
-        for (xe, dir) in [(-f.endZone, -1.0), (f.length + f.endZone, 1.0)] {
-            let xb = xe + dir * g.baseBehind
-            let bar = Float(g.crossbar)
-            var neck: [SIMD3<Float>] = [SceneMath.local(x: xb, y: 0, z: 0), SceneMath.local(x: xb, y: g.crossbar - 1.4, z: 0)]
-            for k in 1...10 {
-                let t = Double(k) / 10
-                let px = xb + (xe - xb) * t * t
-                let py = (g.crossbar - 1.4) + 1.4 * sin(t * .pi / 2)
-                neck.append(SceneMath.local(x: px, y: py, z: 0))
+        // Behind each end line: nets and camera towers, facing the field.
+        for (side, xe, dir, yaw) in [("home", -f.endZone, -1.0, Float(-Double.pi / 2)),
+                                     ("away", f.length + f.endZone, 1.0, Float(Double.pi / 2))] {
+            for d in V.endLine {
+                place(d.model, x: xe + dir * d.offset, z: -dir * d.along, yaw: yaw, side: side)
             }
-            posts.tube(neck, radius: Float(g.radius.base), sides: 10)
-            let w = f.goalPostWidth / 2
-            posts.tube([SceneMath.local(x: xe, y: g.crossbar, z: -w - 0.05), SceneMath.local(x: xe, y: g.crossbar, z: w + 0.05)],
-                       radius: Float(g.radius.crossbar), sides: 10)
-            for z in [-w, w] {
-                posts.tube([SceneMath.local(x: xe, y: g.crossbar, z: z),
-                            SceneMath.local(x: xe, y: g.crossbar + g.uprightAbove, z: z)], radius: Float(g.radius.upright), sides: 8)
-            }
-            let base = SceneMath.local(x: xb, y: 0, z: 0)
-            let pw = Float(g.padWidth / 2)
-            pads.box(min: base + SIMD3(-pw, 0, -pw), max: base + SIMD3(pw, min(bar - 1.6, Float(g.padHeight)), pw))
         }
-        let postEntity = posts.entity("goalposts", StadiumLook.solid(pal[g.color] ?? "#F2C21B", roughness: 0.32,
-                                                                     metallic: 0.15, cull: false))
-        postEntity.components.set(DynamicLightShadowComponent(castsShadow: true))
-        root.addChild(postEntity)
-        root.addChild(pads.entity("goalpost.pads", StadiumLook.solid(pal[p.benches.color] ?? "#23272E", roughness: 0.8)))
 
-        // Benches, each club's on its own sideline, a chip-coloured back.
-        let b = p.benches
-        for (team, sign) in [(s.teams.home, 1.0), (s.teams.away, -1.0)] {
-            var seat = MeshBuilder(), back = MeshBuilder()
-            let z = sign * (half + b.offset)
-            seat.box(min: SceneMath.local(x: b.fromX, y: 0, z: z - b.depth / 2),
-                     max: SceneMath.local(x: b.toX, y: b.height, z: z + b.depth / 2))
-            let bz = Float(sign * b.depth / 2)
-            back.box(min: SceneMath.local(x: b.fromX, y: b.height, z: z) + SIMD3(0, 0, bz - 0.06),
-                     max: SceneMath.local(x: b.toX, y: b.height + b.backHeight, z: z) + SIMD3(0, 0, bz + 0.06))
-            root.addChild(seat.entity("bench.\(team.abbr)", StadiumLook.solid(pal[b.color] ?? "#23272E", roughness: 0.6)))
-            root.addChild(back.entity("bench.back.\(team.abbr)", StadiumLook.solid(team.chip, roughness: 0.55)))
+        for (key, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
+            let e = bin.mesh.entity("sideline.\(key)", material(bin.material, side: bin.side, c))
+            if bin.material == "prop_gold" {
+                e.components.set(DynamicLightShadowComponent(castsShadow: true))
+            }
+            fixed.addChild(e)
         }
     }
+
+    /// The chain set on the chain crew's sideline, its forward rod on the line
+    /// to gain; the down box at the ball with the down showing; the college
+    /// ground markers at the line to gain on both sidelines.
+    private func buildCrew(_ c: StadiumContext) {
+        let s = c.spec, V = c.look.sideline
+        guard let p = s.field.props else { return }
+        let gain = s.lasers.first { $0.kind == "lineToGain" }?.x
+        let scrimmage = s.lasers.first { $0.kind == "scrimmage" }?.x
+        let down = s.status.down ?? 0
+        let key = "\(gain ?? -1)|\(scrimmage ?? -1)|\(down)|\(s.league)"
+        guard key != crewKey else { return }
+        crewKey = key
+        crew.children.removeAll()
+        guard let gain, let scrimmage else { return }
+
+        let half = s.field.width / 2
+        let sign: Double = p.chains.side == "home" ? 1 : -1
+        let yaw: Float = sign > 0 ? 0 : .pi
+        let side = p.chains.side
+        let forward = gain >= scrimmage ? 1.0 : -1.0
+        var bins: [String: Bin] = [:]
+        let z = sign * (half + V.chains.offset)
+        add(V.chains.set, c, at: SceneMath.local(x: gain - forward * 5, y: 0, z: z), yaw: yaw, side: side, into: &bins)
+        add(V.chains.box, c, at: SceneMath.local(x: scrimmage, y: 0, z: sign * (half + V.chains.boxOffset)), yaw: yaw,
+            side: side, into: &bins, only: { part in
+                // the box carries four digit sets; show the down being played
+                !part.hasPrefix("down_") || part.hasPrefix("down_\(max(1, min(4, down)))__")
+            })
+        if s.league == "college-football" {
+            for (gs, gy) in [(1.0, Float(0)), (-1.0, Float.pi)] {
+                add(V.chains.ground, c, at: SceneMath.local(x: gain, y: 0, z: gs * (half + 0.5)), yaw: gy,
+                    side: side, into: &bins)
+            }
+        }
+        for (k, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
+            crew.addChild(bin.mesh.entity("crew.\(k)", material(bin.material, side: bin.side, c)))
+        }
+    }
+
+    // MARK: models into merged meshes
+
+    private func add(_ id: String, _ c: StadiumContext, at position: SIMD3<Float>, yaw: Float, side: String,
+                     into bins: inout [String: Bin], only: ((String) -> Bool)? = nil) {
+        let V = c.look.sideline
+        let modelId = id + (c.tabletop ? V.lodSuffix.tabletop : V.lodSuffix.stadium)
+        guard let parts = parts(modelId, c) else { return }
+        let scale = Float(1 / V.metresPerYard)
+        let turn = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+        for (partName, mesh) in parts {
+            if let only, !only(partName) { continue }
+            let material = String(partName.split(separator: "__").last ?? "")
+            guard let entry = V.palette[material] else { continue }
+            let tinted = entry.tint == "team"
+            let key = tinted ? "\(material)@\(side)" : material
+            var bin = bins[key] ?? Bin(material: material, side: tinted ? side : nil)
+            var moved = mesh
+            moved.positions = mesh.positions.map { position + turn.act($0 * scale) }
+            moved.normals = mesh.normals.map { turn.act($0) }
+            bin.mesh.append(moved)
+            bins[key] = bin
+        }
+    }
+
+    /// A model's meshes, flattened into its own metres, keyed by mesh name.
+    private func parts(_ modelId: String, _ c: StadiumContext) -> [String: MeshBuilder]? {
+        if let hit = geometry[modelId] { return hit }
+        guard let model = c.assets.model("sideline.\(modelId)") else { return nil }
+        var out: [String: MeshBuilder] = [:]
+        func visit(_ e: Entity) {
+            if let mc = e.components[ModelComponent.self] {
+                let named = e.name.contains("__") ? e.name : (e.parent?.name ?? e.name)
+                let toModel = e.transformMatrix(relativeTo: model)
+                var b = out[named] ?? MeshBuilder()
+                let contents = mc.mesh.contents
+                for inst in contents.instances {
+                    guard let m = contents.models[inst.model] else { continue }
+                    let t = toModel * inst.transform
+                    let n3 = simd_float3x3(SIMD3(t.columns.0.x, t.columns.0.y, t.columns.0.z),
+                                           SIMD3(t.columns.1.x, t.columns.1.y, t.columns.1.z),
+                                           SIMD3(t.columns.2.x, t.columns.2.y, t.columns.2.z))
+                    for part in m.parts {
+                        let pos = part.positions.elements
+                        guard !pos.isEmpty else { continue }
+                        let nrm = part.normals?.elements
+                        let uv = part.textureCoordinates?.elements
+                        let idx = part.triangleIndices?.elements ?? Array(0..<UInt32(pos.count))
+                        let base = UInt32(b.positions.count)
+                        for (k, p) in pos.enumerated() {
+                            let w = t * SIMD4(p, 1)
+                            b.positions.append(SIMD3(w.x, w.y, w.z))
+                            let n = nrm.map { simd_normalize(n3 * $0[k]) } ?? SIMD3(0, 1, 0)
+                            b.normals.append(n)
+                            b.uvs.append(uv.map { $0[k] } ?? .zero)
+                        }
+                        b.indices += idx.map { $0 + base }
+                    }
+                }
+                out[named] = b
+            }
+            for child in e.children { visit(child) }
+        }
+        visit(model)
+        geometry[modelId] = out
+        return out
+    }
+
+    private func material(_ key: String, side: String?, _ c: StadiumContext) -> any Material {
+        let V = c.look.sideline
+        guard let entry = V.palette[key] else { return StadiumLook.solid("#808080") }
+        var hex = entry.color
+        if entry.tint == "team", let side {
+            hex = side == "away" ? c.spec.teams.away.chip : c.spec.teams.home.chip
+        }
+        var m = StadiumLook.solid(hex, roughness: entry.roughness, metallic: entry.metallic, cull: entry.mask == nil)
+        if let mask = entry.mask, let tex = c.assets.texture("sideline.\(mask)") {
+            m.blending = .transparent(opacity: .init(texture: StadiumLook.repeating(tex)))
+            m.opacityThreshold = 0.5
+        }
+        return m
+    }
+
+    // MARK: boards
 
     /// LED boards on the face of the stands' front wall, all the way round.
     private func buildBoards(_ c: StadiumContext) {
