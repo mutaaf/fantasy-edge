@@ -35,7 +35,7 @@ def main():
         out = WORK / p
         with zipfile.ZipFile(z) as zf:
             zf.extractall(out)
-        doomed = []
+        scanned = []
         for f in sorted(out.rglob("*")):
             if f.suffix.lower() not in LICENSED:
                 continue
@@ -45,17 +45,35 @@ def main():
             # System assets carry no license line; each file's header states the release instead.
             if not lic and re.search(r"(?i)this asset was explicitly released as CC0", text):
                 lic = "CC0 (explicit release header)"
+            scanned.append((f, lic))
+        cc0 = lambda lic: bool(re.fullmatch(r"(?i)cc-?0(\s*1\.0)?|creative commons zero.*|cc-?0 .*", lic))
+        # An asset is its directory. Its primary file (.mhclo, .proxy, .mhskin...) carries the
+        # licence; a .mhmat with no licence field of its own is that asset's material and
+        # inherits the primary's CC0. A material with no CC0 primary beside it (a community
+        # skin) stays rejected, and so does any file naming a licence that is not CC0.
+        primary_cc0 = {f.parent for f, lic in scanned if f.suffix.lower() != ".mhmat" and cc0(lic)}
+        doomed_dirs, doomed = set(), []
+        for f, lic in scanned:
             entry = {"pack": p, "zipSha256": sha, "file": str(f.relative_to(WORK)), "license": lic}
-            if re.fullmatch(r"(?i)cc0(\s*1\.0)?|creative commons zero.*|cc0 .*", lic):
+            if not cc0(lic) and not lic and f.suffix.lower() == ".mhmat" and f.parent in primary_cc0:
+                entry["license"] = "CC0 (asset's material; inherits " + next(
+                    g.name for g, l in scanned if g.parent == f.parent and g.suffix.lower() != ".mhmat" and cc0(l)) + ")"
+            if cc0(entry["license"]) or entry["license"].startswith("CC0 ("):
                 accepted.append(entry)
             else:
                 rejected.append(entry)
                 doomed.append(f)
-        # Remove rejected assets (and same-stem data beside them) after the scan, so the kit cannot load them.
+                if f.parent not in primary_cc0:
+                    doomed_dirs.add(f.parent)
+        # Remove rejected assets after the scan, so the kit cannot load them: whole directories
+        # with no CC0 primary, and single rejected files elsewhere.
+        import shutil
+        for d in doomed_dirs:
+            if d.exists() and d != out:
+                shutil.rmtree(d)
         for f in doomed:
-            for sib in f.parent.glob(f.stem + ".*"):
-                if sib.exists():
-                    sib.unlink()
+            if f.exists():
+                f.unlink()
     (ROOT / ".work/crowd/mh_assets.json").write_text(json.dumps({"accepted": accepted, "rejected": rejected}, indent=1))
     print(f"accepted {len(accepted)} CC0 assets, rejected {len(rejected)}")
     for r in rejected[:20]:

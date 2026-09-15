@@ -139,6 +139,10 @@ def apply_pose(rig, pose_name: str, height: float, fan_index=None):
     base.update({k: v for k, v in over.items() if not k.endswith(".R")})
     dirs = _mirror(base)
     dirs.update({k: v for k, v in over.items() if k.endswith(".R")})
+    if rig.get("mpfb"):
+        import mh
+        mh.apply_pose(rig, dirs, pose.get("hips"), height, pose_name)
+        return
     k = height / 1.75
     for pb in rig.pose.bones:
         pb.matrix_basis = Matrix.Identity(4)
