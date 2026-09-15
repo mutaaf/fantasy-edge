@@ -138,3 +138,9 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - As the view flattens, soil gaps (low in the ORM height) fill toward `SideColor` and blades take `SheenColor`, per-stripe `visual.field.turf.stripeSheen`. The stripe tint goes on last, so mowing stripes still read at a graze. Normals and baked occlusion as before.
   - Covers the surround and both stripes, so parts are unchanged (Field 10). Tabletop keeps the PBR turf. Shells stay disabled: they cover only the near patch, and the sheen reads from every seat.
 - **Shots:** `.work/shots/field-turf4` from the field, sideline and club seats.
+
+## Paint coats the grass (border read as concrete with moss)
+- **Coat, don't replace:** paint colour × `mix(1, turf luma / TurfLuma, CoatDetail)`, and the paint surface takes the turf's blade normals (`Normal`, `NormalScale`). Every blade keeps its relief in white; roughness stays above the grass.
+- **Value:** lines `#DADAD3`, border `#D2D3CB` (test bands 0.80-0.88 and 0.75-0.85 sRGB). At the field seat the border measures ~5× the turf's luma (it was 2×) without clipping. The fallback colour and texture paint read the same tokens.
+- **Wear:** green blade tips, not blobs. The blade mask is read on a 1.3 yd tile (`BladeYards`), so a tip survives the mips at a graze. The wear map only lowers the cut (`WearDepth` 0.3), which changes tip density in clusters; nothing goes solid green.
+- **Shots:** `.work/shots/field-coat3`.

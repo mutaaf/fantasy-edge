@@ -228,6 +228,8 @@ final class FieldActor: StadiumActor {
             guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
                   let blades = await self.texture(V.shaderTextures.blades, semantic: .raw),
                   let wear = await self.texture(V.shaderTextures.wear, semantic: .raw),
+                  let normalPath = V.assets["turfWithNormal"],
+                  let normal = await self.texture(normalPath, semantic: .raw),
                   let turf else {
                 StadiumLog.log.error("[shadergraph] field paint unavailable; keeping the texture paint")
                 return
@@ -248,6 +250,8 @@ final class FieldActor: StadiumActor {
                 do {
                     try m.setParameter(name: "Blades", value: .textureResource(blades))
                     try m.setParameter(name: "Wear", value: .textureResource(wear))
+                    // paint coats the blades: their relief stays under it
+                    try m.setParameter(name: "Normal", value: .textureResource(normal))
                     try m.setParameter(name: "Turf", value: .textureResource(turf))
                     if let maskPath, let mask = await self.texture(maskPath, semantic: .color) {
                         try m.setParameter(name: "Mask", value: .textureResource(mask))
