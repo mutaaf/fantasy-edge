@@ -53,6 +53,7 @@ final class LightingActor: StadiumActor {
     private var dustOffset: Float = 0
     private var dustTick: Double = 0
     private var glowSeat: SIMD3<Float>?
+    private var beamSeat: SIMD3<Float>?
     private var applied = (gain: -1.0, wash: -1.0, away: false)
 
     init() { root.name = "actor.lighting" }
@@ -66,6 +67,7 @@ final class LightingActor: StadiumActor {
         floods.removeAll()
         glowLayers.removeAll(); billboards.removeAll()
         glowSeat = nil
+        beamSeat = nil
         applied = (-1, -1, false)
         let s = c.spec, V = c.look.lighting, lights = s.bowl.rimLights
         let tabletop = c.tabletop
@@ -299,11 +301,44 @@ final class LightingActor: StadiumActor {
     // MARK: beams
 
     private func buildBeams(_ c: StadiumContext) {
-        let Bm = c.look.lighting.beams, t = c.tabletop
         let seat = c.shared.seat ?? defaultSeat(c)
+        guard let layout = layoutBeams(c, seat: seat) else { return }
+        let e = layout.beams.entity("rim.beams", beamMaterial(c, gain: 1, tint: nil))
+        root.addChild(e)
+        beams = e
+        beamSeat = seat
+        if c.assets.texture("lighting.beamDust") != nil, !layout.dust.isEmpty {
+            let d = layout.dust.entity("rim.beamDust", dustMaterial(c, gain: 1, tint: nil))
+            root.addChild(d)
+            dust = d
+        }
+        loadBeamGraph(c)
+    }
+
+    /// Re-lay the beams for a new seat: each quad turns to the wearer, and the
+    /// overdraw cap is held from where they now sit, not from the build's seat.
+    private func relayBeams(_ c: StadiumContext, seat: SIMD3<Float>) {
+        beamSeat = seat
+        guard let beams, let layout = layoutBeams(c, seat: seat) else { return }
+        for (entity, mesh) in [(beams, layout.beams), (dust, layout.dust)] {
+            guard let entity, var model = entity.model else { continue }
+            if let resource = mesh.resource(entity.name) {
+                model.mesh = resource
+                entity.model = model
+            }
+        }
+    }
+
+    /// The shafts from the banks the seat faces, as one quad each turned about
+    /// its own axis toward `seat`, cut to where the beam texture has light
+    /// (`beams.facing.trimU`). A crossed pair drew the same shaft with a second
+    /// quad whose graph faded it edge-on: fill paid for light nobody saw.
+    private func layoutBeams(_ c: StadiumContext, seat: SIMD3<Float>) -> (beams: MeshBuilder, dust: MeshBuilder)? {
+        let Bm = c.look.lighting.beams, t = c.tabletop
         let length = Float(Bm.lengthYards.value(tabletop: t))
         let widthScale: Float = t ? 0.5 : 1
-        struct Beam { let from: SIMD3<Float>; let to: SIMD3<Float>; let w0: Float; let w1: Float; let cover: Double }
+        let trim = Float(max(0, min(0.45, Bm.facing.trimU)))
+        struct Beam { let from: SIMD3<Float>; let to: SIMD3<Float>; let w0: Float; let w1: Float; let cover: Double; let crossed: Double }
         var all: [Beam] = []
         for bank in banks where bank.front {
             let side = simd_normalize(simd_cross(SIMD3<Float>(0, 1, 0), bank.facing))
@@ -333,19 +368,19 @@ final class LightingActor: StadiumActor {
                 let from = bank.position + (end - bank.position) * tStart
                 let wFull0 = Float(Bm.startWidthYards) * widthScale, w1 = Float(Bm.endWidthYards) * widthScale
                 let w0 = wFull0 + (w1 - wFull0) * tStart
-                let mid = (from + end) / 2
-                let area = Double(simd_length(end - from) * (w0 + w1) / 2)
-                let d2 = Double(max(1, simd_length_squared(mid - seat)))
-                // Two crossed quads, about 0.7 of their area facing the eye;
-                // a headset's field of view is about 2.4 steradians.
-                let cover = 2 * 0.7 * area / d2 / 2.4
-                all.append(Beam(from: from, to: end, w0: w0, w1: w1, cover: cover))
+                let crossed = Self.crossedQuads(from: from, to: end, w0: w0, w1: w1)
+                    .reduce(0) { $0 + Self.screens($1, eye: seat) }
+                let cover = t
+                    ? crossed * Double(1 - 2 * trim)
+                    : Self.screens(Self.facingQuad(from: from, to: end, w0: w0, w1: w1, trim: trim, eye: seat), eye: seat)
+                all.append(Beam(from: from, to: end, w0: w0, w1: w1, cover: cover, crossed: crossed))
             }
         }
         // Keep the nearest-to-the-field-centre beams; drop the rest past the cap.
         var kept: [Beam] = []
-        var screens = 0.0
+        var screens = 0.0, crossedAll = 0.0
         for b in all.sorted(by: { simd_length($0.to) < simd_length($1.to) }) {
+            crossedAll += b.crossed
             if screens + b.cover > Bm.overdrawCapScreens && !kept.isEmpty { continue }
             kept.append(b)
             screens += b.cover
@@ -353,30 +388,71 @@ final class LightingActor: StadiumActor {
         var mesh = MeshBuilder(), dustMesh = MeshBuilder()
         let dustTile = Float(max(1, Bm.dustTileYards))
         for b in kept {
-            let axis = simd_normalize(b.to - b.from)
-            var a = simd_cross(axis, SIMD3<Float>(0, 1, 0))
-            a = simd_length(a) < 1e-4 ? SIMD3(1, 0, 0) : simd_normalize(a)
-            let bb = simd_normalize(simd_cross(axis, a))
-            for across in [a, bb] {
-                let p0 = b.from - across * b.w0 / 2, p1 = b.from + across * b.w0 / 2
-                let p2 = b.to + across * b.w1 / 2, p3 = b.to - across * b.w1 / 2
-                // v = 1 at the lamp: the beam texture's top row is the throat.
-                mesh.quad(p0, p1, p2, p3, uv: (SIMD2(0, 1), SIMD2(1, 1), SIMD2(1, 0), SIMD2(0, 0)))
-                let v = simd_distance(b.from, b.to) / dustTile
-                dustMesh.quad(p0, p1, p2, p3, uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, v), SIMD2(0, v)))
+            // The table is walked round, so there is no seat to face: it keeps the crossed pair.
+            let quads = t ? Self.crossedQuads(from: b.from, to: b.to, w0: b.w0 * (1 - 2 * trim), w1: b.w1 * (1 - 2 * trim))
+                          : [Self.facingQuad(from: b.from, to: b.to, w0: b.w0, w1: b.w1, trim: trim, eye: seat)]
+            // v = 1 at the lamp: the beam texture's top row is the throat.
+            let u0 = trim, u1 = 1 - trim
+            let v = simd_distance(b.from, b.to) / dustTile
+            for q in quads {
+                mesh.quad(q.0, q.1, q.2, q.3, uv: (SIMD2(u0, 1), SIMD2(u1, 1), SIMD2(u1, 0), SIMD2(u0, 0)))
+                dustMesh.quad(q.0, q.1, q.2, q.3, uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, v), SIMD2(u0, v)))
             }
         }
-        StadiumLog.log.notice("[stadium] lighting beams \(kept.count)/\(all.count), overdraw ≈ \(String(format: "%.2f", screens)) screens (cap \(Bm.overdrawCapScreens))")
-        guard !mesh.isEmpty else { return }
-        let e = mesh.entity("rim.beams", beamMaterial(c, gain: 1, tint: nil))
-        root.addChild(e)
-        beams = e
-        if c.assets.texture("lighting.beamDust") != nil, !dustMesh.isEmpty {
-            let d = dustMesh.entity("rim.beamDust", dustMaterial(c, gain: 1, tint: nil))
-            root.addChild(d)
-            dust = d
+        let line = "[stadium] lighting beams \(kept.count)/\(all.count), overdraw ≈ \(String(format: "%.2f", screens)) screens "
+            + "(cap \(Bm.overdrawCapScreens); all \(all.count) as crossed pairs ≈ \(String(format: "%.2f", crossedAll)))"
+        StadiumLog.log.notice("\(line, privacy: .public)")
+        return mesh.isEmpty ? nil : (mesh, dustMesh)
+    }
+
+    typealias Quad = (SIMD3<Float>, SIMD3<Float>, SIMD3<Float>, SIMD3<Float>)
+
+    /// A shaft's quad turned about its axis toward `eye` at each end, so a
+    /// long beam faces the wearer along its whole length; `trim` of the width
+    /// comes off each side, where the texture is dark.
+    static func facingQuad(from: SIMD3<Float>, to: SIMD3<Float>, w0: Float, w1: Float, trim: Float, eye: SIMD3<Float>) -> Quad {
+        let axis = simd_normalize(to - from)
+        func across(_ p: SIMD3<Float>) -> SIMD3<Float> {
+            let a = simd_cross(axis, eye - p)
+            if simd_length(a) > 1e-4 { return simd_normalize(a) }
+            let fallback = simd_cross(axis, SIMD3<Float>(0, 1, 0))
+            return simd_length(fallback) > 1e-4 ? simd_normalize(fallback) : SIMD3(1, 0, 0)
         }
-        loadBeamGraph(c)
+        let keep = 1 - 2 * trim
+        let a0 = across(from) * (w0 * keep / 2), a1 = across(to) * (w1 * keep / 2)
+        return (from - a0, from + a0, to + a1, to - a1)
+    }
+
+    /// The crossed pair: the tabletop's geometry, and the log's comparison.
+    static func crossedQuads(from: SIMD3<Float>, to: SIMD3<Float>, w0: Float, w1: Float) -> [Quad] {
+        let axis = simd_normalize(to - from)
+        var a = simd_cross(axis, SIMD3<Float>(0, 1, 0))
+        a = simd_length(a) < 1e-4 ? SIMD3(1, 0, 0) : simd_normalize(a)
+        let bb = simd_normalize(simd_cross(axis, a))
+        func quad(_ across: SIMD3<Float>) -> Quad {
+            let h0: SIMD3<Float> = across * (w0 / 2)
+            let h1: SIMD3<Float> = across * (w1 / 2)
+            return (from - h0, from + h0, to + h1, to - h1)
+        }
+        return [quad(a), quad(bb)]
+    }
+
+    /// Screens of fill a quad costs from `eye`: its area turned toward the eye
+    /// over distance squared (steradians), per the ~2.4 sr a headset sees.
+    /// Two triangles, each measured at its own centroid, since a beam spans
+    /// from a few yards to a hundred.
+    static func screens(_ q: Quad, eye: SIMD3<Float>) -> Double {
+        func tri(_ a: SIMD3<Float>, _ b: SIMD3<Float>, _ c: SIMD3<Float>) -> Double {
+            let n = simd_cross(b - a, c - a)
+            let area = simd_length(n) / 2
+            guard area > 1e-6 else { return 0 }
+            let centre = (a + b + c) / 3
+            let toEye = eye - centre
+            let d2 = max(1, simd_length_squared(toEye))
+            let facing = abs(simd_dot(simd_normalize(n), simd_normalize(toEye)))
+            return Double(area * facing / d2) / 2.4
+        }
+        return tri(q.0, q.1, q.2) + tri(q.0, q.2, q.3)
     }
 
     private func loadBeamGraph(_ c: StadiumContext) {
@@ -405,7 +481,8 @@ final class LightingActor: StadiumActor {
         guard var m = beamGraph, let beams else { return }
         let G = c.look.lighting.beams.shader
         StadiumShaderGraph.set(&m, "Color", tint ?? G.color)
-        StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * gain * elevationScale(c))
+        StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * facingScale(c, shader: true)
+                               * gain * elevationScale(c))
         StadiumShaderGraph.set(&m, "DustRepeat", G.dustRepeat)
         StadiumShaderGraph.set(&m, "DustSpeed", c.reduceMotion ? 0.0 : G.dustSpeed)
         StadiumShaderGraph.set(&m, "DustFloor", G.dustFloor)
@@ -417,7 +494,8 @@ final class LightingActor: StadiumActor {
 
     private func dustMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
         let Bm = c.look.lighting.beams
-        var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * gain * elevationScale(c),
+        var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * facingScale(c, shader: false)
+                                 * gain * elevationScale(c),
                                  texture: c.assets.texture("lighting.beamDust"), tile: true)
         m.textureCoordinateTransform.offset = SIMD2(0, dustOffset)
         return m
@@ -458,10 +536,18 @@ final class LightingActor: StadiumActor {
         return 1 + (E.minScale - 1) * smooth
     }
 
+    /// A seat-facing quad stands in for a crossed pair; the table keeps the pair.
+    private func facingScale(_ c: StadiumContext, shader: Bool) -> Double {
+        guard !c.tabletop else { return 1 }
+        let F = c.look.lighting.beams.facing
+        return shader ? F.shaderOpacityScale : F.fallbackOpacityScale
+    }
+
     private func beamMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
         let Bm = c.look.lighting.beams
         let colour = tint ?? Bm.color
-        return StadiumLook.glow(colour, opacity: Bm.opacity.value(tabletop: c.tabletop) * gain * elevationScale(c),
+        return StadiumLook.glow(colour, opacity: Bm.opacity.value(tabletop: c.tabletop) * facingScale(c, shader: false)
+                                * gain * elevationScale(c),
                                 texture: c.assets.texture("lighting.beam"))
     }
 
@@ -579,6 +665,7 @@ final class LightingActor: StadiumActor {
         }
         if !c.tabletop, let seat = c.shared.seat, glowSeat.map({ simd_distance($0, seat) > 0.5 }) ?? true {
             relayGlows(c, seat: seat)
+            if beamSeat.map({ simd_distance($0, seat) > 0.5 }) ?? true { relayBeams(c, seat: seat) }
             applied = (-1, -1, false)
             if beamGraph == nil { beams?.model?.materials = [beamMaterial(c, gain: 1, tint: nil)] }
         }
