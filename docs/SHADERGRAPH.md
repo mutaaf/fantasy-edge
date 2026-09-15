@@ -27,7 +27,16 @@ Use `tools/shadergraph/Materials.rkassets/Fresnel.usda` as the template:
 
 - **One `def Material`.** Its `inputs:` are the parameters, and `outputs:mtlx:surface.connect` points at a surface shader.
 - **One `def Shader` per node.** Set `uniform token info:id = "ND_…"`, typed `inputs:` (literal, or `.connect = </path.outputs:out>`), and a typed `outputs:out`.
-- **A bound mesh in the file** (the `Preview` sphere). The fallback loader reads the material off a model, and compilation keeps only materials that are used.
+- **A bound mesh named `<Material>Preview`** (`FresnelPreview` for `/Root/Fresnel`). The loader finds a material by the mesh bound to it, because RealityKit keeps no material name. Compilation also drops any material no mesh uses. A file holding a single graph material may keep a mesh called plain `Preview`.
+
+### One file per actor, as many materials as it needs
+
+This is the canonical layout. Lighting's `Beams.reality` is the model.
+
+- **Where it lives:** an actor's graphs go in its own `tools/blender/<actor>/shadergraph/<Name>.rkassets` and compile to `assets/actors/<actor>/<Name>.reality`. That keeps the actor's merges off everyone else's files.
+- **Several materials:** put them in that one `.usda`, each with its own `<Material>Preview` mesh. The loader opens each file once.
+- **Shared materials:** `tools/shadergraph/Materials.rkassets` holds only materials more than one actor uses, such as `Fresnel`. The director owns it.
+- **Tokens:** `file` names the `.reality`, and `prim` names the material (`/Root/<Material>`).
 - **Material inputs are the parameters `setParameter(name:)` sees.** `inputs:Opacity` is set with `"Opacity"`.
 
 ### Node ids used and compiled
@@ -51,6 +60,8 @@ Add a row to the table above once a node has rendered in a shot.
 - **Compilation does not validate.** `realitytool compile` accepted the package silently and printed nothing. A wrong `info:id`, a type mismatch or a broken connection compiles, then fails at load.
 - **Check the load in the log.** After any change, grep the app log for `[shadergraph]`, and shoot it.
 - **A material bound to no mesh is compiled out.**
+- **Several graph materials in one file and no `<Material>Preview` mesh:** the loader refuses to guess. It logs the mesh names it did find and returns nil, so the actor draws its fallback.
+- **No scene depth.** RealityKit's MaterialX has no scene-depth input, so there is no true soft-particle or depth fade where a beam or sprite meets geometry. Fade by view angle (as `Beam` does) or by distance from the camera instead.
 - **Model the named API as unsupported.** `ShaderGraphMaterial(named:from:in:)` looks for the scene inside Reality Composer Pro content that Xcode compiled into a Swift package bundle, not in a loose `.reality`. `StadiumShaderGraph` tries it first and logs which path loaded. On this project's generated Xcode target, expect the fallback: `Entity(contentsOf:)` on the `.reality`, then read the material off the model.
 
 ## Tokens and the portable fallback
@@ -94,6 +105,6 @@ Every Shader Graph material has an entry under `shaderGraph.materials` in `desig
 |---|---|
 | Field | Paint grass breakup |
 | Sideline | Net view-angle falloff, a direct use of `Fresnel` |
-| Lighting | Beam dust, currently a UV scroll |
+| Lighting | Adopted at a4c96e6: `Beam` in `assets/actors/lighting/Beams.reality` (dust on built-in time, view-angle falloff); the UV scroll stays as the fallback |
 | Crowd | Animated impostors, via the geometry modifier |
 | Moments | Particle sprites |
