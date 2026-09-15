@@ -4,9 +4,11 @@ import simd
 
 /// The broadcast package drawn into the stadium: the drive's flight trails,
 /// the ball that flies them, the beacon over it, the line of scrimmage and
-/// the line to gain, the chains, the ribbon board on the fascia and the
-/// win-probability horizon. Reads the scene's drives, ball, lasers and
-/// win probability, and `visual.broadcast`.
+/// the line to gain painted in light with the down-and-distance tag beside
+/// them, the ribbon board's crawl and the win-probability horizon.
+/// Reads the scene's drives, ball, lasers and win probability, and
+/// `visual.broadcast`. The parts live beside this file: BroadcastTrails,
+/// BroadcastHorizon, BroadcastBoards (ribbon and tag) and BroadcastFlight.
 @MainActor
 final class BroadcastActor: StadiumActor {
     let name = "broadcast"
@@ -14,136 +16,79 @@ final class BroadcastActor: StadiumActor {
     private(set) var tabletop = false
     let ball = ModelEntity()
     private let beacon = Entity()
-    private let drive = Entity()
     private let lines = Entity()
-    private let chains = Entity()
-    private let horizon = Entity()
-    private var trails: [String: (core: ModelEntity, halo: ModelEntity, style: String, color: String)] = [:]
-    private var lastTrail: String?
+    private let tag = ModelEntity()
+    private let trails = BroadcastTrails()
+    private let horizon = BroadcastHorizon()
+    private let ribbon = BroadcastRibbon()
     private var laserEntities: [String: Entity] = [:]
-    private var chainParts: (scrimmage: Entity, gain: Entity, link: ModelEntity)?
-    private var horizonKey = ""
     private var beaconKey = ""
-    private var spin: Float = 0
+    private var tagKey = ""
 
-    private let ribbonBand = Entity()
-    private var ribbon: TextureResource?
-    private var ribbonKey = ""
     private var driveID = ""
     private var motion = PlayMotion()
-    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double)?
+    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double, manner: BallFlight.Manner)?
 
     init() {
         root.name = "actor.broadcast"
-        [drive, lines, chains, horizon, beacon, ball, ribbonBand].forEach { root.addChild($0) }
+        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root].forEach { root.addChild($0) }
         ball.isEnabled = false
         beacon.isEnabled = false
-        chains.isEnabled = false
+        tag.isEnabled = false
     }
 
-    // MARK: static parts, built with the stadium
+    // MARK: the ball
 
-    private func buildBall(_ s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets) {
-        // The football: a prolate spheroid in pebbled leather.
-        var b = MeshBuilder()
-        let L = Float(look.broadcast.ball.lengthYards / 2), R = Float(look.broadcast.ball.widthYards / 2)
-        let profile: [(Float, Float)] = (0...20).map { i in
-            let x = -L + 2 * L * Float(i) / 20
-            let r = R * (max(0, 1 - (x / L) * (x / L))).squareRoot()
-            return (x, max(0.002, r))
-        }
-        b.lathe(profile, sides: 24)
-        var leather = PhysicallyBasedMaterial()
-        if let t = assets.texture("broadcast.football") {
-            leather.baseColor = .init(tint: .white, texture: StadiumLook.clamped(t))
-        } else {
-            leather.baseColor = .init(tint: StadiumLook.color(look.broadcast.ball.color))
-        }
-        leather.roughness = .init(floatLiteral: Float(look.broadcast.ball.roughness))
-        leather.faceCulling = .none
-        if let mesh = b.resource("football") { ball.model = ModelComponent(mesh: mesh, materials: [leather]) }
-        // A soft light on the ball, so at fifty yards you can still find it.
+    private func buildBall(_ c: StadiumContext) {
+        let s = c.spec, look = c.look.broadcast.ball
         ball.children.removeAll()
-        let scale = Float(look.broadcast.ball.scale.value(tabletop: tabletop))
-        let glowSize = Float(look.broadcast.ball.glow.yards.value(tabletop: tabletop)) / max(1e-3, scale)
+        ball.model = nil
+        let key = s.league == "college-football" ? "broadcast.footballCollege" : "broadcast.footballNFL"
+        if let model = c.assets.model(key) {
+            // Authored in metres with its long axis on +x and laces up.
+            model.scale = SIMD3(repeating: Float(1 / look.modelMetersPerYard))
+            model.name = "football"
+            ball.addChild(model)
+        } else {
+            // Without the asset: the old lathed spheroid, so the ball is never missing.
+            var b = MeshBuilder()
+            let L = Float(look.lengthYards / 2), R = Float(look.widthYards / 2)
+            let profile: [(Float, Float)] = (0...20).map { i in
+                let x = -L + 2 * L * Float(i) / 20
+                return (x, max(0.002, R * (max(0, 1 - (x / L) * (x / L))).squareRoot()))
+            }
+            b.lathe(profile, sides: 24)
+            var leather = PhysicallyBasedMaterial()
+            if let t = c.assets.texture("broadcast.football") {
+                leather.baseColor = .init(tint: .white, texture: StadiumLook.clamped(t))
+            } else {
+                leather.baseColor = .init(tint: StadiumLook.color(look.color))
+            }
+            leather.roughness = .init(floatLiteral: Float(look.roughness))
+            leather.faceCulling = .none
+            if let mesh = b.resource("football") { ball.model = ModelComponent(mesh: mesh, materials: [leather]) }
+        }
+        // A soft light on the ball, so at fifty yards you can still find it.
+        let scale = Float(look.scale.value(tabletop: tabletop))
+        let glowSize = Float(look.glow.yards.value(tabletop: tabletop)) / max(1e-3, scale)
         let glow = ModelEntity(mesh: .generatePlane(width: glowSize, height: glowSize),
-                               materials: [StadiumLook.glow(s.palette["beacon"] ?? "#BFE3FF", opacity: look.broadcast.ball.glow.opacity,
-                                                            texture: assets.texture("broadcast.glow"))])
+                               materials: [StadiumLook.glow(s.palette["beacon"] ?? "#BFE3FF", opacity: look.glow.opacity,
+                                                            texture: c.assets.texture("broadcast.glow"))])
+        glow.name = "football.glow"
         glow.components.set(BillboardComponent())
         ball.addChild(glow)
-        ball.scale = SIMD3(repeating: Float(look.broadcast.ball.scale.value(tabletop: tabletop)))
-        ball.components.set(GroundingShadowComponent(castsShadow: true))
+        ball.scale = SIMD3(repeating: scale)
     }
 
-    // MARK: the drive
+    // MARK: lines, tag, beacon
 
-    func clearDrive() {
-        drive.children.removeAll()
-        trails.removeAll()
-        lastTrail = nil
-    }
-
-    func hasTrail(_ id: String) -> Bool { trails[id] != nil }
-
-    /// Lay a play's trail down. The newest is bright; the rest of the drive
-    /// ghosts behind it.
-    func addTrail(_ arc: SceneSpec.Arc, spec s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets,
-                  seat: SIMD3<Float>?) {
-        guard trails[arc.id] == nil else { return }
-        let colour = s.palette[arc.color] ?? "#FFFFFF"
-        var core = look.broadcast.trail.core.value(tabletop: tabletop)
-        if let seat, !tabletop {
-            core *= SceneMath.nearSeatScale(SceneMath.samples(arc, count: 32), seat: seat, rule: look.broadcast.trail.nearSeat)
-        }
-        let emphasis = arc.style == "score"
-        var coreB = MeshBuilder(), haloB = MeshBuilder()
-        let pieces = SceneMath.dashes(arc, count: 64)
-        let total = Float(pieces.count)
-        for (i, piece) in pieces.enumerated() {
-            let lo = Float(i) / total, hi = Float(i + 1) / total
-            coreB.tube(piece, radius: Float(core * (emphasis ? look.broadcast.trail.scoreEmphasis.core : 1)), sides: 8, uRange: lo...hi)
-        }
-        haloB.tube(SceneMath.samples(arc, count: 64), radius: Float(core * look.broadcast.trail.haloScale * (emphasis ? look.broadcast.trail.scoreEmphasis.halo : 1)), sides: 8)
-        let holder = Entity()
-        holder.name = "trail.\(arc.id)"
-        let coreE = coreB.entity("trail.core", StadiumLook.glow(colour, opacity: 1, texture: assets.texture("broadcast.trail")))
-        let haloE = haloB.entity("trail.halo", StadiumLook.glow(colour, opacity: look.broadcast.trail.haloOpacity * (emphasis ? look.broadcast.trail.scoreEmphasis.halo : 1),
-                                                                texture: assets.texture("broadcast.trail")))
-        holder.addChild(haloE)
-        holder.addChild(coreE)
-        drive.addChild(holder)
-        if let last = lastTrail, let prev = trails[last] {
-            let ghost = look.broadcast.trail.ghostOpacity
-            let c = s.palette[prev.color] ?? "#FFFFFF"
-            prev.core.model?.materials = [StadiumLook.glow(c, opacity: ghost, texture: assets.texture("broadcast.trail"))]
-            prev.halo.model?.materials = [StadiumLook.glow(c, opacity: look.broadcast.trail.haloOpacity * ghost, texture: assets.texture("broadcast.trail"))]
-        }
-        trails[arc.id] = (coreE, haloE, arc.style, arc.color)
-        lastTrail = arc.id
-    }
-
-    /// Put the ball at a point on an arc, nose along its flight, spinning.
-    func placeBall(on arc: SceneSpec.Arc, at t: Double, dt: Double, look: SceneSpec.Look) {
-        ball.isEnabled = true
-        let p = SceneMath.point(on: arc, at: t)
-        let q = SceneMath.point(on: arc, at: min(1, t + 0.02))
-        let back = SceneMath.point(on: arc, at: max(0, t - 0.02))
-        var dir = q - back
-        if simd_length(dir) < 1e-5 { dir = SIMD3(Float(arc.toX >= arc.fromX ? 1 : -1), 0, 0) }
-        spin += Float(look.broadcast.ball.spinPerSecond * dt) * 2 * .pi
-        let aim = simd_quatf(from: SIMD3(1, 0, 0), to: simd_normalize(dir))
-        ball.orientation = aim * simd_quatf(angle: spin, axis: SIMD3(1, 0, 0))
-        ball.position = p + SIMD3(0, Float(look.broadcast.ball.liftYards) * 0.25, 0)
-    }
-
-    // MARK: lines, beacon, chains
-
-    func settle(_ s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets, animated: Bool) {
+    func settle(_ c: StadiumContext, animated: Bool) {
+        let s = c.spec, look = c.look
         let duration = animated ? 0.35 : 0
         guard let b = s.ball else {
             ball.isEnabled = false
             beacon.isEnabled = false
-            chains.isEnabled = false
+            tag.isEnabled = false
             for (_, e) in laserEntities { e.isEnabled = false }
             return
         }
@@ -159,7 +104,7 @@ final class BroadcastActor: StadiumActor {
             beacon.children.removeAll()
             let w = Float(look.broadcast.beacon.width.value(tabletop: tabletop))
             let colour = s.palette[b.beacon.color] ?? "#BFE3FF"
-            let material = StadiumLook.glow(colour, opacity: look.broadcast.beacon.opacity, texture: assets.texture("broadcast.beam"))
+            let material = StadiumLook.glow(colour, opacity: look.broadcast.beacon.opacity, texture: c.assets.texture("broadcast.beam"))
             for k in 0..<2 {
                 var q = MeshBuilder()
                 let a = Float(k) * .pi / 2
@@ -175,129 +120,85 @@ final class BroadcastActor: StadiumActor {
         let want = Dictionary(uniqueKeysWithValues: s.lasers.map { ($0.kind, $0) })
         for (kind, e) in laserEntities where want[kind] == nil { e.isEnabled = false }
         for (kind, laser) in want {
-            let e = laserEntities[kind] ?? makeLaser(laser, s: s, look: look, assets: assets)
+            let e = laserEntities[kind] ?? makeLine(laser, c)
             laserEntities[kind] = e
             e.isEnabled = true
             move(e, to: SceneMath.local(x: laser.x, y: look.broadcast.laser.lift), duration: duration)
         }
-
-        if let props = s.field.props, let scrimmage = want["scrimmage"] {
-            let parts = chainParts ?? makeChains(s, props: props, look: look)
-            chainParts = parts
-            chains.isEnabled = true
-            let z = (props.chains.side == "away" ? -1 : 1) * (s.field.width / 2 + props.chains.offset)
-            move(parts.scrimmage, to: SceneMath.local(x: scrimmage.x, z: z), duration: duration)
-            if let gain = want["lineToGain"] {
-                parts.gain.isEnabled = true
-                parts.link.isEnabled = true
-                move(parts.gain, to: SceneMath.local(x: gain.x, z: z), duration: duration)
-                let lo = min(scrimmage.x, gain.x), len = abs(gain.x - scrimmage.x)
-                parts.link.scale = SIMD3(Float(max(0.01, len)), 1, 1)
-                move(parts.link, to: SceneMath.local(x: lo, y: props.chains.poleHeight * 0.85, z: z), duration: duration)
-            } else {
-                parts.gain.isEnabled = false
-                parts.link.isEnabled = false
-            }
-        } else {
-            chains.isEnabled = false
-        }
+        // The physical chains and down box are Sideline's; Broadcast only paints.
+        placeTag(c, scrimmage: want["scrimmage"], gain: want["lineToGain"], duration: duration)
     }
 
-    private func makeLaser(_ laser: SceneSpec.Laser, s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets) -> Entity {
+    /// A line in light on the grass: feathered, broken by blades, sorted
+    /// after the paint so it never flickers through it.
+    private func makeLine(_ laser: SceneSpec.Laser, _ c: StadiumContext) -> Entity {
+        let s = c.spec, look = c.look.broadcast.laser
         let holder = Entity()
-        holder.name = "laser.\(laser.kind)"
+        holder.name = "line.\(laser.kind)"
         let colour = s.palette[laser.color] ?? "#FFD400"
         let half = s.field.width / 2
+        let tex = c.assets.texture("broadcast.line")
         var core = MeshBuilder(), glow = MeshBuilder()
-        core.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.broadcast.laser.width, y: 0, tile: 1)
-        glow.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.broadcast.laser.glowWidth, y: -0.002, tile: 1)
-        let c = core.entity("laser.core", StadiumLook.emissive(colour, scale: 1))
-        let g = glow.entity("laser.glow", StadiumLook.glow(colour, opacity: look.broadcast.laser.glowOpacity, texture: assets.texture("broadcast.paint"), tile: true))
+        core.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.width, y: 0, tile: 2)
+        glow.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.glowWidth, y: -0.002, tile: 2)
+        var paint = UnlitMaterial(applyPostProcessToneMap: false)
+        if let tex {
+            let t = StadiumLook.repeating(tex)
+            paint.color = .init(tint: StadiumLook.color(colour), texture: t)
+            paint.blending = .transparent(opacity: .init(scale: Float(look.opacity), texture: t))
+        } else {
+            paint.color = .init(tint: StadiumLook.color(colour))
+            paint.blending = .transparent(opacity: .init(floatLiteral: Float(look.opacity)))
+        }
+        paint.writesDepth = false
+        paint.faceCulling = .none
+        let g = glow.entity("line.glow", StadiumLook.glow(colour, opacity: look.glowOpacity, texture: tex, tile: true))
+        let p = core.entity("line.paint", paint)
         StadiumLook.ground(g, order: 4)
-        StadiumLook.ground(c, order: 5)
+        StadiumLook.ground(p, order: 5)
         holder.addChild(g)
-        holder.addChild(c)
+        holder.addChild(p)
         lines.addChild(holder)
         return holder
     }
 
-    private func makeChains(_ s: SceneSpec, props: SceneSpec.Props, look: SceneSpec.Look)
-        -> (scrimmage: Entity, gain: Entity, link: ModelEntity) {
-        let colour = s.palette[props.chains.color] ?? "#FF6A13"
-        let material = StadiumLook.solid(colour, roughness: 0.5)
-        func pole(_ name: String) -> Entity {
-            var p = MeshBuilder()
-            let h = Float(props.chains.poleHeight), w = Float(props.chains.markerWidth / 2)
-            p.box(min: SIMD3(-0.04, 0, -0.04), max: SIMD3(0.04, h, 0.04))
-            p.box(min: SIMD3(-w, h - 0.15, -0.05), max: SIMD3(w, h + 0.25, 0.05))
-            let e = p.entity(name, material)
-            chains.addChild(e)
-            return e
+    /// "3RD & 6" painted on the far half of the field beside the line of
+    /// scrimmage, reading toward whoever is watching.
+    private func placeTag(_ c: StadiumContext, scrimmage: SceneSpec.Laser?, gain: SceneSpec.Laser?, duration: Double) {
+        let s = c.spec, look = c.look.broadcast.laser.tag
+        let text = s.status.downDistance.components(separatedBy: " at ").first ?? ""
+        guard let scrimmage, !text.isEmpty else {
+            tag.isEnabled = false
+            return
         }
-        var link = MeshBuilder()
-        link.box(min: SIMD3(0, -0.02, -0.02), max: SIMD3(1, 0.02, 0.02))
-        let l = link.entity("chains.link", StadiumLook.solid("#B8B4AE", roughness: 0.4, metallic: 0.8))
-        chains.addChild(l)
-        return (pole("chains.scrimmage"), pole("chains.gain"), l)
-    }
-
-    // MARK: horizon
-
-    func updateHorizon(_ s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets) {
-        let key = "\(s.winProbability.series.count)|\(s.winProbability.series.last ?? -1)"
-        guard key != horizonKey else { return }
-        horizonKey = key
-        horizon.children.removeAll()
-        let pts = SceneMath.horizon(s.winProbability)
-        guard pts.count > 1 else { return }
-        let h = s.winProbability.horizon
-        let thick = Float(look.broadcast.horizon.thickness.value(tabletop: tabletop))
-        let ink = s.palette["ink"] ?? "#F7F6F2"
-        var ribbon = MeshBuilder()
-        for i in 0..<(pts.count - 1) {
-            let a = pts[i], b = pts[i + 1]
-            let up = SIMD3<Float>(0, thick / 2, 0)
-            ribbon.quad(a - up, b - up, b + up, a + up,
-                        uv: (SIMD2(0.5, 0), SIMD2(0.5, 0), SIMD2(0.5, 1), SIMD2(0.5, 1)), normal: SIMD3(0, 0, 1))
+        let h = Float(look.heightYards.value(tabletop: tabletop))
+        let eye = c.shared.seat.flatMap { tabletop ? nil : $0 }
+        let viewZ: Float = eye.map { $0.z >= 0 ? 1 : -1 } ?? 1
+        let k = "\(text)|\(h)|\(viewZ)"
+        if k != tagKey, let img = BroadcastGraphics.tag(text, look: look), let tex = StadiumText.texture(img) {
+            tagKey = k
+            let w = h * Float(img.width) / Float(max(1, img.height))
+            var m = UnlitMaterial(applyPostProcessToneMap: false)
+            let t = StadiumLook.clamped(tex)
+            m.color = .init(tint: .white, texture: t)
+            m.blending = .transparent(opacity: .init(scale: Float(look.opacity), texture: t))
+            m.writesDepth = false
+            m.faceCulling = .none
+            // Lying on the grass: text runs along +x, its top points away from the seat.
+            var q = MeshBuilder()
+            let up = SIMD3<Float>(0, 0, -viewZ) * (h / 2), right = SIMD3<Float>(viewZ, 0, 0) * (w / 2)
+            q.quad(-right - up, right - up, right + up, -right + up,
+                   uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1)), normal: SIMD3(0, 1, 0))
+            if let mesh = q.resource("tag") { tag.model = ModelComponent(mesh: mesh, materials: [m]) }
+            StadiumLook.ground(tag, order: 6)
+            tag.name = "line.tag"
         }
-        horizon.addChild(ribbon.entity("horizon.line", StadiumLook.glow(ink, opacity: look.broadcast.horizon.opacity, texture: assets.texture("broadcast.glow"))))
-        // The area between even and the line, in the colour of whoever it favours.
-        let mid = Float((h.y0 + h.y1) / 2)
-        var homeFill = MeshBuilder(), awayFill = MeshBuilder()
-        let series = s.winProbability.series
-        for i in 0..<(pts.count - 1) {
-            let a = pts[i], b = pts[i + 1]
-            let favoursHome = (series[i] + series[i + 1]) / 2 >= 0.5
-            let quadA = SIMD3(a.x, mid, a.z), quadB = SIMD3(b.x, mid, b.z)
-            if favoursHome == (s.winProbability.side == "home") {
-                homeFill.quad(quadA, quadB, b, a, normal: SIMD3(0, 0, 1))
-            } else {
-                awayFill.quad(quadA, quadB, b, a, normal: SIMD3(0, 0, 1))
-            }
-        }
-        let fill = look.broadcast.horizon.fillOpacity
-        horizon.addChild(homeFill.entity("horizon.fill.home", StadiumLook.glow(s.teams.home.chip, opacity: fill, texture: nil)))
-        horizon.addChild(awayFill.entity("horizon.fill.away", StadiumLook.glow(s.teams.away.chip, opacity: fill, texture: nil)))
-        // Say what it is: the club at the top rail is the one the line climbs toward.
-        let size = CGFloat(look.broadcast.horizon.labelHeight.value(tabletop: tabletop))
-        let labelMaterial = StadiumLook.glow(ink, opacity: look.broadcast.horizon.labelOpacity, texture: nil)
-        let top = s.winProbability.side == "home" ? s.teams.home : s.teams.away
-        let bottom = s.winProbability.side == "home" ? s.teams.away : s.teams.home
-        for (text, y) in [(top.abbr, h.y1), (bottom.abbr, h.y0), ("WIN PROBABILITY", (h.y0 + h.y1) / 2)] {
-            let mesh = MeshResource.generateText(text, extrusionDepth: 0.01, font: .systemFont(ofSize: size, weight: .bold),
-                                                 containerFrame: .zero, alignment: .right, lineBreakMode: .byClipping)
-            let label = ModelEntity(mesh: mesh, materials: [labelMaterial])
-            let bounds = mesh.bounds
-            label.position = SceneMath.local(x: h.x0, y: y, z: h.z) - SIMD3(bounds.max.x + Float(size) * 0.8, bounds.center.y, 0)
-            horizon.addChild(label)
-        }
-        var rails = MeshBuilder()
-        for y in [h.y0, (h.y0 + h.y1) / 2, h.y1] {
-            let a = SceneMath.local(x: h.x0, y: y, z: h.z), b = SceneMath.local(x: h.x1, y: y, z: h.z)
-            let up = SIMD3<Float>(0, thick * 0.12, 0)
-            rails.quad(a - up, b - up, b + up, a + up, normal: SIMD3(0, 0, 1))
-        }
-        horizon.addChild(rails.entity("horizon.rails", StadiumLook.glow(ink, opacity: look.broadcast.horizon.railOpacity, texture: nil)))
+        let ahead = gain.map { $0.x >= scrimmage.x ? 1.0 : -1.0 } ?? 1.0
+        let z = -Double(viewZ) * (s.field.width / 2 - look.fromSideline)
+        let wYards = Double(tag.model?.mesh.bounds.extents.x ?? 0)
+        let x = scrimmage.x + ahead * (look.aheadYards + wYards / 2)
+        tag.isEnabled = true
+        move(tag, to: SceneMath.local(x: x, y: c.look.broadcast.laser.lift * 2, z: z), duration: duration)
     }
 
     private func move(_ e: Entity, to at: SIMD3<Float>, duration: Double) {
@@ -315,43 +216,45 @@ final class BroadcastActor: StadiumActor {
 extension BroadcastActor {
     func build(_ c: StadiumContext) {
         tabletop = c.tabletop
-        clearDrive()
+        trails.clear()
+        horizon.clear()
         motion.reset()
         driveID = ""
         flight = nil
-        horizonKey = ""
         beaconKey = ""
+        tagKey = ""
         laserEntities.values.forEach { $0.removeFromParent() }
         laserEntities.removeAll()
-        chainParts.map { [$0.scrimmage, $0.gain, $0.link].forEach { $0.removeFromParent() } }
-        chainParts = nil
-        buildBall(c.spec, look: c.look, assets: c.assets)
-        buildRibbon(c)
+        buildBall(c)
+        ribbon.build(c)
     }
 
     func apply(_ c: StadiumContext, previous: SceneSpec?) {
-        let s = c.spec, look = c.look
         updateDrive(c, previous: previous)
-        updateHorizon(s, look: look, assets: c.assets)
-        if let tex = ribbon {
-            let k = StadiumText.ribbonKey(s)
-            if k != ribbonKey {
-                ribbonKey = k
-                StadiumText.updateRibbon(tex, s, look: look)
-            }
-        }
-        if flight == nil { settle(s, look: look, assets: c.assets, animated: !c.reduceMotion) }
+        horizon.update(c)
+        ribbon.apply(c, previous: previous)
+        if flight == nil { settle(c, animated: !c.reduceMotion) }
+    }
+
+    func moment(_ event: StadiumEvent, _ c: StadiumContext) {
+        ribbon.moment(event, c)
     }
 
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
+        ribbon.update(frame, c)
         guard var f = flight else { return }
         f.elapsed += frame.dt
         let t = min(1, f.elapsed / f.duration)
         // Ease the flight: quick off the snap, settling into the catch.
         let eased = 1 - pow(1 - t, c.spec.motion.flightEase ?? 1.6)
-        placeBall(on: f.arc, at: eased, dt: frame.dt, look: c.look)
+        let look = c.look.broadcast.ball
+        let pose = BallFlight.pose(f.arc, t: eased, elapsed: c.reduceMotion ? 0 : f.elapsed, manner: f.manner,
+                                   flight: look.flight, lift: Float(look.liftYards) * 0.25)
+        ball.isEnabled = true
+        ball.position = pose.position
+        ball.orientation = pose.orientation
         if t >= 1 {
-            addTrail(f.arc, spec: c.spec, look: c.look, assets: c.assets, seat: c.shared.seat)
+            trails.add(f.arc, c)
             flight = nil
             startNextFlight(c)
         } else {
@@ -359,13 +262,17 @@ extension BroadcastActor {
         }
     }
 
+    func hasTrail(_ id: String) -> Bool { trails.has(id) }
+
     /// Lay the drive again from scratch - after a seat change, say.
     func redrawDrive(_ c: StadiumContext) {
-        clearDrive()
+        trails.clear()
         motion.reset()
         driveID = ""
         flight = nil
+        tagKey = ""
         updateDrive(c, previous: nil)
+        settle(c, animated: false)
     }
 
     // MARK: the drive
@@ -373,7 +280,7 @@ extension BroadcastActor {
     private func updateDrive(_ c: StadiumContext, previous: SceneSpec?) {
         let s = c.spec
         guard let drive = s.shownDrive else {
-            clearDrive()
+            trails.clear()
             motion.reset()
             driveID = ""
             flight = nil
@@ -390,14 +297,14 @@ extension BroadcastActor {
                 && s.drives.firstIndex(where: { $0.id == drive.id }) == (p.drives.firstIndex(where: { $0.id == driveID }) ?? -2) + 1
         } ?? false
         if drive.id != driveID || lostAPlay {
-            clearDrive()
+            trails.clear()
             motion.reset()
             flight = nil
             driveID = drive.id
             let initial = !nextDrive
             _ = motion.arrive(drive, initial: initial)
             if initial {
-                for arc in drive.arcs { addTrail(arc, spec: s, look: c.look, assets: c.assets, seat: c.shared.seat) }
+                trails.set(drive.arcs, c)
                 return
             }
         } else {
@@ -409,50 +316,14 @@ extension BroadcastActor {
     private func startNextFlight(_ c: StadiumContext) {
         guard flight == nil else { return }
         guard let (arc, seconds) = motion.next(reduceMotion: c.reduceMotion, floor: c.spec.motion.floorSeconds) else {
-            settle(c.spec, look: c.look, assets: c.assets, animated: !c.reduceMotion)
+            settle(c, animated: !c.reduceMotion)
             return
         }
         if seconds <= 0 {
-            addTrail(arc, spec: c.spec, look: c.look, assets: c.assets, seat: c.shared.seat)
+            trails.add(arc, c)
             startNextFlight(c)
         } else {
-            flight = (arc, 0, seconds)
+            flight = (arc, 0, seconds, BallFlight.manner(arc, c.look.broadcast.ball.flight))
         }
-    }
-
-    // MARK: the ribbon board
-
-    /// The ribbon board all the way round the upper deck's fascia, showing
-    /// the score and the down. Stadium only: the table has no upper deck.
-    private func buildRibbon(_ c: StadiumContext) {
-        ribbonBand.children.removeAll()
-        ribbon = nil
-        ribbonKey = ""
-        let s = c.spec, tiers = c.tiers
-        guard let band = s.bowl.ribbon, tiers.count > 1 else { return }
-        let shape = s.bowl.shape
-        let S = c.look.broadcast.ribbon.segments
-        let angles = (0...S).map { Double($0) / Double(S) * 2 * .pi }
-        var mesh = MeshBuilder()
-        var run: Float = 0
-        let segment = Float(c.look.broadcast.ribbon.segmentYards)
-        for k in 0..<S {
-            let r0 = SceneMath.bowlPoint(shape, offset: band.offset, angle: angles[k])
-            let r1 = SceneMath.bowlPoint(shape, offset: band.offset, angle: angles[k + 1])
-            let seg = Float(hypot(r1.x - r0.x, r1.z - r0.z))
-            let v0 = run / segment, v1 = (run + seg) / segment
-            run += seg
-            let rb = Float(band.rise[0]), rt = Float(band.rise[1])
-            // v runs up the image, so the text reads upright.
-            mesh.quad(SIMD3(Float(r0.x), rb, Float(r0.z)), SIMD3(Float(r1.x), rb, Float(r1.z)),
-                      SIMD3(Float(r1.x), rt, Float(r1.z)), SIMD3(Float(r0.x), rt, Float(r0.z)),
-                      uv: (SIMD2(v0, 0), SIMD2(v1, 0), SIMD2(v1, 1), SIMD2(v0, 1)))
-        }
-        let tex = StadiumText.texture(StadiumText.ribbonImage(s, look: c.look))
-        ribbon = tex
-        ribbonKey = StadiumText.ribbonKey(s)
-        let material: any Material = tex.map { StadiumLook.emissive("#FFFFFF", scale: 1.0, texture: $0) }
-            ?? StadiumLook.emissive(s.palette[band.color] ?? "#05060A")
-        ribbonBand.addChild(mesh.entity("ribbon", material))
     }
 }
