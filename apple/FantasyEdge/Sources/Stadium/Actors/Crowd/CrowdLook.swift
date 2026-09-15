@@ -11,6 +11,7 @@ extension SceneSpec.Look {
     public struct CrowdTint: Decodable, Equatable, Sendable {
         public let normal: Double
         public let dim: Double
+        public let meshDim: Double
         public let bright: Double
     }
 
@@ -38,6 +39,8 @@ extension SceneSpec.Look {
         public let scale: SceneSpec.PerMode<Double>
         public let alphaCutoff: Double
         public let pairOffsetMetres: Double
+        public let floodFill: Double
+        public let floodFillAbout: String
     }
 
     public struct CrowdRings: Decodable, Equatable, Sendable {
@@ -45,6 +48,7 @@ extension SceneSpec.Look {
         public let lod1Yards: Double
         public let lod2Yards: Double
         public let ditherYards: Double
+        public let minCardYards: Double
         public let lod0Max: Int
         public let lod1Max: Int
         public let lod2Max: Int
@@ -57,7 +61,13 @@ extension SceneSpec.Look {
         public let standForwardMetres: Double
         public let cardForwardMetres: Double
         public let pelvisMetres: Double
+        public let kitPelvisMetres: Double
         public let referenceHeightMetres: Double
+    }
+
+    public struct CrowdLuma: Decodable, Equatable, Sendable {
+        public let min: Double
+        public let max: Double
     }
 
     public struct CrowdLook: Decodable, Equatable, Sendable {
@@ -84,15 +94,19 @@ extension SceneSpec.Look {
         public let neutralShare: Double
         public let neutrals: [String]
         public let desaturate: [Double]
+        public let clubLuma: CrowdLuma
         public let cardContrast: Double
         public let tint: CrowdTint
         public let roughness: Double
+        public let castShadows: Bool
+        public let castShadowsAbout: String
         public let standingShare: Double
         public let idleSeconds: [Double]
         public let waveSeconds: Double
         public let waveWidth: Double
         public let surgeHz: Double
         public let groanSeconds: Double
+        public let settleSeconds: [Double]
         public let thirdDownStand: Bool
         public let sideJitter: Double
     }

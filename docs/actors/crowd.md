@@ -166,3 +166,85 @@ Review renders: `assets/actors/crowd/review/lineup_*.png`, `poses_*.png`.
 - **Gap:** in the steep upper deck, shins came out in front of the
   chair backs one row down. A 0.20 m forward shift put knees past the tread
   edge. It is now 0.10 m, and cards 0.11 m. Verified in `crowd-iter10/s-crowd-closeup_upper.png`: fans sit back in their chairs. One fan at the deck-edge aisle still shows shoes below the pans.
+
+## Round 2 (the art director's critique of `crowd-iter9`)
+
+Before: `crowd-iter9/s-crowd-closeup.png`, `s-td-moment.png`, `crowd-iter10/s-crowd-closeup_upper.png`.
+
+### Pass 1: `crowd-r2-1/` and `crowd-r2-2/`
+
+- **Faceted mannequins:** weighted smooth normals, LOD0 at about 2,400
+  triangles, and warm AO baked from the full body (strength 0.6, cavities
+  toward red-brown). The review render (`review/kit_tinted_sit.png`) reads
+  soft. In the headset shots silhouettes still facet within about 1.5 m.
+- **Stiff T-arms:** the cheer and clap slots are filled per fan from
+  families of real gestures: V with bent elbows, fists pumping, clapping
+  overhead, a high-five lean, leaning over the row, one arm punching.
+  `crowd-r2-2/s-td-moment.png` shows a section celebrating in different
+  ways (`review/kit_tinted_cheer_a.png`).
+- **Blank faces:** 9× the head texels, brow sockets, a nose shadow, heavier
+  brows, and a mouth disc. The cheer pose drops it open (2.6×), clapping
+  opens it slightly, and at rest it is a slit.
+- **Props:** towels drape and swing three ways, and signs are 22 mm boards
+  with block lettering. Beanies no longer cover the eyes.
+- **Dark sections:** the crowd's own albedo. Chips are solved to about 0.16
+  relative luminance for white text; times 0.86 cloth and the shade, that
+  came to about 0.12 linear. Club colours now lift into `clubLuma` (sRGB
+  luma 0.5–0.7) before tinting. Lighting unchanged.
+- **Shoes below the pans:** the tread in front of those seats is cut
+  (vomitory or accessible). The fans are at the right height, so this was
+  routed to Bowl.
+- **Budget:** rings rebalanced (16 LOD0, 32 LOD1, 150 LOD2, and never a card
+  within 5.5 yd). Measured 141.3k triangles, 36 parts.
+- **Gap:** white blotches on some shirts and pale fingertips. Decimation moves
+  elbows and fists further than the 4 cm bake reach, so those texels were
+  never baked. Reach widened to 10 cm in pass 2.
+
+### Pass 2: `crowd-r2-4/`, on `aba0503` (Bowl's tread fix, the cues on the blackboard)
+
+- **Near fans went black under the field goal's purple strobe:** the
+  crowd's fault, not Lighting's. The non-scoring side's lit meshes were
+  multiplied by the cards' 0.3 dim. Now meshes dim to 0.75
+  (`tint.meshDim`) and cards to 0.55. `s-td-moment-t4-fg.png` reads.
+- **Khaki-grey far crowd:** the club luma lift turns near fans and cards
+  club blue (`s-crowd-closeup.png`). The far stands still read tan at t0.5,
+  from khaki trousers on 1 fan in 5 and warm AO. Trousers move to denim and
+  black, neutralShare drops to 0.24 and desaturation to 0–0.2 (pass 3).
+- **Seats on stilts over a void:** with Bowl's `2daced9` merged, the
+  club-seat close-up shows tread under the seats.
+- **Touchdown stands then sits:** two causes.
+  - The scene's section tint ends with the moment (`momentSeconds` 6). The
+    scoring side now keeps celebrating, and each group sits at its own
+    point over `settleSeconds` 2.5–5 s.
+  - At t0.5 and t8.5 the side stood with arms down. Moments now calls
+    `shared.stand` on a touchdown, and that cue replaced the celebration.
+    Stand and clap cues no longer override a side that is already
+    celebrating.
+- **Cues:** on `StadiumShared.crowdCues` (the director's move). A test holds
+  them to the stadium's own blackboard.
+
+### Passes 3-6: `crowd-r2-6` to `crowd-r2-11`, on `e16a834`
+
+- **Far stands dark khaki:**
+  - The dressed impostor atlas was premultiplied, so every transparent texel
+    was black and far mips averaged figures with it. Colour now pads six
+    texels out, as straight alpha.
+  - Cards 100 m from the lamps sat about four stops under the field, so they
+    now emit a chip-coloured flood spill (`impostor.floodFill` 0.06). A
+    textured emissive read grey, and 0.45 went white.
+  - Result: `s-bowl-wide.png` reads Chicago blue and Minnesota purple.
+- **Fan shadows:** off (`castShadows` false), as a cost fix. The black
+  treads were Bowl's geometry facing away from the floods.
+- **Floating near fans:** measured with `tools/blender/crowd/seat_fit.py`
+  against Bowl's pan.
+  - The lift was `pelvisMetres * (1 - scale)`, which only equals the target
+    when the token is 0.52, so hips sank 4.7 cm into the pan and thighs rode
+    over the armrests.
+  - The lift is now `pelvisMetres - kitPelvisMetres * scale`. At 0.565, hips
+    meet the pan within ±3 cm for every build.
+  - Shots: `s-crowd-closeup-{club,clubLevel,upper}.png`.
+- **Touchdown:** the celebration holds at 0.5, 5.1 and 8.5 s
+  (`s-td-moment-t*.png`), then settles over 2.5–5 s.
+- **Budget:** 141.7k triangles, 36 draw parts, 0 shadow casters. 44,855 fans:
+  16 LOD0, 32 LOD1, 150 LOD2, 44,657 cards.
+- **Gates:** `make test` 530, `verify_scene`, `contrast_check`.

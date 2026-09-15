@@ -61,6 +61,9 @@ final class CrowdActor: StadiumActor {
     private var sectionSlices: [String: Set<Int>] = [:]
     private var cardRowV: Float = 0
     private var generation = 0
+    /// The side whose moment just ended, and when: it settles back into its seats over `settleSeconds`.
+    private var lastScoring: (away: Bool, ended: Double)?
+    private var previousTint: String?
 
     init() { root.name = "actor.crowd" }
 
@@ -201,6 +204,9 @@ final class CrowdActor: StadiumActor {
                 if d < C.rings.lod0Yards && n0 < C.rings.lod0Max { ringOf[i] = .lod0; n0 += 1 }
                 else if d < C.rings.lod1Yards && n1 < C.rings.lod1Max { ringOf[i] = .lod1; n1 += 1 }
                 else if d < C.rings.lod2Yards && n2 < C.rings.lod2Max { ringOf[i] = .lod2; n2 += 1 }
+                // Never a card within arm's reach of the wearer, whatever the caps say:
+                // a magnified card beside you is worse than a few thousand triangles.
+                else if Double(placed[i].dist) < C.rings.minCardYards { ringOf[i] = .lod2; n2 += 1 }
             }
         }
 
@@ -272,7 +278,8 @@ final class CrowdActor: StadiumActor {
                     // Into Bowl's chair: forward of its origin, pelvis on the pan whatever the fan's height.
                     let forward = Float(seated ? C.chair.sitForwardMetres : C.chair.standForwardMetres) * yard
                     let scale = kit.height(f.fan) / Float(C.chair.referenceHeightMetres)
-                    let lift = seated ? Float(C.chair.pelvisMetres) * (1 - scale) * yard : 0
+                    // The kit seats a 1.75 m fan's pelvis at kitPelvisMetres; scaled by height, then lifted to the pan.
+                    let lift = seated ? (Float(C.chair.pelvisMetres) - Float(C.chair.kitPelvisMetres) * scale) * yard : 0
                     mb.append(src.placed(at: f.base + f.facing * forward + SIMD3(0, lift, 0), facing: f.facing, scale: yard))
                 }
                 if let res = mb.resource("crowd.\(key.ring).\(pi)") { meshes.append(res) }
@@ -298,6 +305,11 @@ final class CrowdActor: StadiumActor {
             if let normal { mat.normal = .init(texture: .init(normal)) }
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
+            // Spill in the club's colour, not the texture's: an emissive texture read grey here,
+            // and at a hundred metres the albedo carries the mottle anyway.
+            let spill = SceneMath.rgba(key.away ? s.bowl.crowd.away : s.bowl.crowd.home)
+            mat.emissiveColor = .init(color: UIColor(red: CGFloat(spill.x), green: CGFloat(spill.y), blue: CGFloat(spill.z), alpha: 1))
+            mat.emissiveIntensity = Float(C.impostor.floodFill)
             mat.faceCulling = .none
             let e = ModelEntity(mesh: res, materials: [mat])
             e.name = "crowd.cards.\(key.slice).\(key.variant).\(key.away ? "away" : "home")"
@@ -331,6 +343,9 @@ final class CrowdActor: StadiumActor {
                 guard let self, self.generation == token else { return }
                 self.redress(d)
             }
+        }
+        if !C.castShadows {
+            for g in groups { g.entity.components.set(DynamicLightShadowComponent(castsShadow: false)) }
         }
         StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
     }
@@ -371,6 +386,9 @@ final class CrowdActor: StadiumActor {
         let surge = c.shared.surge.flatMap { time < $0.until ? $0 : nil }
         let cues = CrowdCues.live(c.shared, at: time)
         let tintSide = s.bowl.sectionTint.side
+        if previousTint != nil, tintSide == nil { lastScoring = (previousTint == "away", time) }
+        if tintSide != nil { lastScoring = nil }
+        previousTint = tintSide
         // Third down: the defence's crowd gets up.
         var standingSide: Bool? = nil
         if C.thirdDownStand, s.status.state == "in", s.status.down == 3, let offense = s.status.possession {
@@ -383,7 +401,13 @@ final class CrowdActor: StadiumActor {
             var pose: Int
             // The scene says whose section is lit: that side is on its feet for as
             // long as the moment lasts, not only while Moments' surge peaks.
-            let scoring = tintSide.map { ($0 == "away") == g.away }
+            var scoring = tintSide.map { ($0 == "away") == g.away }
+            // After the moment: the scoring side keeps celebrating, each group
+            // sitting down at its own point in settleSeconds, not all on one frame.
+            if scoring == nil, let last = lastScoring, last.away == g.away {
+                let settle = C.settleSeconds[0] + (C.settleSeconds[1] - C.settleSeconds[0]) * g.phase
+                if time - last.ended < settle { scoring = true }
+            }
             if c.reduceMotion {
                 pose = scoring == true ? stand : (g.standing ? stand : sit)
             } else {
@@ -420,7 +444,11 @@ final class CrowdActor: StadiumActor {
                 case .sections(let ids): return g.ring == .card && ids.contains { sectionSlices[$0]?.contains(g.slice) ?? false }
                 }
             }
-            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }) {
+            // A stand or clap cue must not calm a side that is already celebrating:
+            // Moments stands the scoring section on a touchdown too.
+            let celebrating = scoring == true && !c.reduceMotion
+            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }),
+               !(celebrating && (cue.kind == .stand || cue.kind == .clap)) {
                 let beat = Int(((time + g.phase * 2) * C.surgeHz).rounded(.down))
                 switch cue.kind {
                 case .groan: pose = groan
@@ -430,10 +458,12 @@ final class CrowdActor: StadiumActor {
                 }
             }
             setPose(g, pose)
-            let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : C.tint.dim } ?? C.tint.normal
+            let dim = g.ring == .card ? C.tint.dim : C.tint.meshDim
+            let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : dim } ?? C.tint.normal
             if bright != g.brightness {
                 g.brightness = bright
                 g.material.baseColor.tint = UIColor(white: CGFloat(bright), alpha: 1)
+                if g.ring == .card { g.material.emissiveIntensity = Float(C.impostor.floodFill * bright) }
                 g.entity.model?.materials = [g.material]
             }
         }
@@ -612,7 +642,7 @@ final class CrowdKit {
     }
 
     private static func key(_ s: SceneSpec, _ C: SceneSpec.Look.CrowdLook) -> String {
-        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
+        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.clubLuma)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
     }
 
     func cachedDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress? {
@@ -688,6 +718,53 @@ final class CrowdKit {
         }
     }
 
+    /// Unpremultiply, grow colour into transparent texels `passes` times, and
+    /// wrap it as a straight-alpha image (CGContext cannot hold one; CGImage can).
+    nonisolated static func straightPadded(_ o: UnsafeMutablePointer<UInt8>, width W: Int, height H: Int, passes: Int) -> CGImage? {
+        let n = W * H
+        var rgb = [Float](repeating: 0, count: n * 3)
+        var alpha = [UInt8](repeating: 0, count: n)
+        var known = [Bool](repeating: false, count: n)
+        for i in 0..<n {
+            let a = o[i * 4 + 3]
+            alpha[i] = a
+            guard a > 0 else { continue }
+            let k = 255 / Float(a)
+            rgb[i * 3] = Float(o[i * 4]) * k; rgb[i * 3 + 1] = Float(o[i * 4 + 1]) * k; rgb[i * 3 + 2] = Float(o[i * 4 + 2]) * k
+            known[i] = true
+        }
+        for _ in 0..<passes {
+            var next = known
+            for y in 0..<H {
+                for x in 0..<W {
+                    let i = y * W + x
+                    guard !known[i] else { continue }
+                    var sum = SIMD3<Float>.zero, c: Float = 0
+                    for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                        let nx = x + dx, ny = y + dy
+                        guard nx >= 0, ny >= 0, nx < W, ny < H else { continue }
+                        let j = ny * W + nx
+                        guard known[j] else { continue }
+                        sum += SIMD3(rgb[j * 3], rgb[j * 3 + 1], rgb[j * 3 + 2]); c += 1
+                    }
+                    guard c > 0 else { continue }
+                    rgb[i * 3] = sum.x / c; rgb[i * 3 + 1] = sum.y / c; rgb[i * 3 + 2] = sum.z / c
+                    next[i] = true
+                }
+            }
+            known = next
+        }
+        var bytes = [UInt8](repeating: 0, count: n * 4)
+        for i in 0..<n {
+            bytes[i * 4] = UInt8(min(255, rgb[i * 3])); bytes[i * 4 + 1] = UInt8(min(255, rgb[i * 3 + 1]))
+            bytes[i * 4 + 2] = UInt8(min(255, rgb[i * 3 + 2])); bytes[i * 4 + 3] = alpha[i]
+        }
+        guard let provider = CGDataProvider(data: Data(bytes) as CFData) else { return nil }
+        return CGImage(width: W, height: H, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: W * 4,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
     nonisolated private static func rgba(_ img: CGImage, width: Int, height: Int) -> (CGContext, UnsafeMutablePointer<UInt8>)? {
         guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                                   space: CGColorSpaceCreateDeviceRGB(),
@@ -709,6 +786,7 @@ final class CrowdKit {
         let neutralShare: Float
         let neutrals: [SIMD4<Float>]
         let desaturate: (Float, Float)
+        let luma: (Float, Float)
         /// 1 keeps the kit's contrast; less pulls each fan toward its own mean.
         let contrast: Float
         let salt: UInt64
@@ -721,6 +799,7 @@ final class CrowdKit {
             neutralShare = Float(C.neutralShare)
             neutrals = C.neutrals.map { SceneMath.rgba($0) }
             desaturate = (Float(C.desaturate[0]), Float(C.desaturate[1]))
+            luma = (Float(C.clubLuma.min), Float(C.clubLuma.max))
             contrast = card ? Float(C.cardContrast) : 1
             self.salt = salt
         }
@@ -755,6 +834,11 @@ final class CrowdKit {
                                       : (r2 < P.rawShare ? raw : chip)
             colour *= P.shade.0 + (P.shade.1 - P.shade.0) * r1
             if !wearsNeutral {
+                // Into the club luma band first, so the shade below still mottles within it.
+                let y = max(1e-4, colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722)
+                let target = min(P.luma.1, max(P.luma.0, y))
+                let lift = target / y
+                colour = SIMD4(min(1, colour.x * lift), min(1, colour.y * lift), min(1, colour.z * lift), colour.w)
                 let d = P.desaturate.0 + (P.desaturate.1 - P.desaturate.0) * r4
                 let l = colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722
                 colour = colour + (SIMD4(l, l, l, colour.w) - colour) * d
@@ -799,6 +883,12 @@ final class CrowdKit {
             }
         }
         }
+        // Cards are cut out by alpha and seen at 100 m through small mips. In a
+        // premultiplied bitmap every transparent texel is black, so the mips
+        // averaged each figure with its black surround and far stands went
+        // dark. Pad figure colour into the transparent texels and hand over
+        // straight alpha, so a mip averages people with people.
+        if case .blocks = layout { return straightPadded(o, width: W, height: H, passes: 6) }
         return out.makeImage()
     }
 }

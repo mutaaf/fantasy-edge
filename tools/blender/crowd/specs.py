@@ -20,7 +20,8 @@ COUNT = 24
 SKIN = ["#F2C9AC", "#E3B08F", "#CD966F", "#B27A55", "#955F3E", "#784A30", "#5B3825", "#43291C"]
 HAIR = {"black": "#1B1714", "dark_brown": "#35261D", "brown": "#634630", "auburn": "#77391F",
         "blonde": "#B7985F", "grey": "#8E8A84", "white": "#D6D2CA"}
-PANTS = {"jeans": "#3B4B68", "dark_jeans": "#262F45", "khaki": "#9A896A", "black": "#232427", "grey": "#5D6065"}
+# A night crowd is mostly denim and black; khaki at 1 in 5 turned whole stands tan at distance.
+PANTS = {"jeans": "#3B4B68", "dark_jeans": "#262F45", "mid_jeans": "#34405A", "black": "#232427", "grey": "#5D6065"}
 SHOES = {"white": "#E4E4E0", "black": "#1D1D1F", "grey": "#85888C"}
 NEUTRAL_TOP = {"navy": "#1F2A3E", "black": "#1E1F22", "heather": "#8C8F94", "olive": "#4E5238", "cream": "#D9D2C1"}
 

@@ -34,7 +34,7 @@ def main():
         for row, f in enumerate(picks):
             mesh, rig, _ = R.assemble(f)
             rig.location = ((col - (len(SHOW) - 1) / 2) * 1.05, 0.3 * (col % 2), (len(picks) - 1 - row) * 2.35)
-            P.apply_pose(rig, pose, f["height"])
+            P.apply_pose(rig, pose, f["height"], cast.index(f))
     lights()
     sc = bpy.context.scene
     common.review_render(common.REVIEW / "poses_front.png", 3000, 2250, (0, -40, 4.6), (math.radians(90), 0, 0),
