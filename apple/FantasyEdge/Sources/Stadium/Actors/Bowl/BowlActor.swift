@@ -58,12 +58,20 @@ final class BowlActor: StadiumActor {
             for (prefix, into) in [("near_", \BowlActor.near), ("fill_", \BowlActor.fills)] {
                 let source = prefix == "near_" ? patches : far
                 for piece in Self.descendants(of: source) where piece.name.hasPrefix(prefix) {
+                    // USD nests a mesh under an Xform of the same name; take the outermost.
+                    if let parent = piece.parent, parent.name.hasPrefix(prefix) { continue }
                     let id = String(piece.name.dropFirst(prefix.count))
+                    // The file's Y-up conversion lives on the prims above the
+                    // piece. Carry the piece's whole transform relative to the
+                    // model root into the holder, or it lands rotated a quarter
+                    // turn - the dark ramp across `crowd-closeup`.
+                    let local = piece.transformMatrix(relativeTo: source)
                     let holder = Entity()
                     holder.name = piece.name
                     holder.scale = SIMD3(repeating: scale)
                     piece.removeFromParent()
                     holder.addChild(piece)
+                    piece.setTransformMatrix(local, relativeTo: holder)
                     self[keyPath: into][id] = holder
                 }
             }
