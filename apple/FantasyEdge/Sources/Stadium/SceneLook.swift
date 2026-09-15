@@ -1,7 +1,7 @@
 import Foundation
 
 // The scene's `look`: every visual-only number the renderer reads, decoded
-// from `design/tokens.json` as the API embeds it.
+// from `design/tokens.json` as the API embeds it, one section per actor.
 //
 // This file is the renderer's whole vocabulary of appearance. A size, an
 // opacity, a light's lumens or a crowd's density that is not a field here is
@@ -9,6 +9,9 @@ import Foundation
 // it reads every `let` between the markers below and fails if tokens.json does
 // not carry the same key, so a web or Android renderer can always reach the
 // value the headset used.
+//
+// Each actor owns its section (docs/ART_BIBLE.md). A specialist adds fields to
+// their own struct and their own block of tokens.json, and nothing else.
 
 // LOOK-BEGIN
 
@@ -21,29 +24,50 @@ extension SceneSpec {
     }
 
     public struct Look: Decodable, Equatable, Sendable {
-        public let assets: [String: String]
-        public let camera: Camera
-        public let turf: Turf
-        public let lines: Lines
-        public let light: Light
-        public let sky: Sky
+        public let experience: ExperienceLook
+        public let field: FieldLook
+        public let sideline: SidelineLook
         public let bowl: BowlLook
         public let crowd: CrowdLook
-        public let trail: Trail
-        public let ball: BallLook
-        public let beacon: BeaconLook
-        public let laser: LaserLook
-        public let horizon: HorizonLook
-        public let ribbon: RibbonLook
-        public let baseplate: Baseplate
-        public let moment: MomentLook
+        public let lighting: LightingLook
+        public let sky: SkyLook
+        public let broadcast: BroadcastLook
+        public let moments: MomentsLook
         public let audio: AudioLook
-        public let tabletop: TabletopLook
+
+        // MARK: experience
 
         public struct Camera: Decodable, Equatable, Sendable {
             public let eyeMeters: Double
             public let seatFadeSeconds: Double
         }
+
+        public struct Baseplate: Decodable, Equatable, Sendable {
+            public let marginScale: Double
+            public let thicknessMeters: Double
+            public let rimOpacity: Double
+            public let rimRadiusYards: Double
+        }
+
+        public struct Cutaway: Decodable, Equatable, Sendable {
+            public let side: String
+            public let from: Double
+            public let to: Double
+        }
+
+        public struct TabletopLook: Decodable, Equatable, Sendable {
+            public let cutaway: Cutaway
+        }
+
+        public struct ExperienceLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let camera: Camera
+            public let baseplate: Baseplate
+            public let tabletop: TabletopLook
+        }
+
+        // MARK: field
 
         public struct Turf: Decodable, Equatable, Sendable {
             public let tileYards: Double
@@ -67,6 +91,96 @@ extension SceneSpec {
             public let endZoneTextHeight: Double
             public let lift: Double
         }
+
+        public struct FieldLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let turf: Turf
+            public let lines: Lines
+        }
+
+        // MARK: sideline
+
+        public struct Boards: Decodable, Equatable, Sendable {
+            public let brightness: Double
+            public let panelYards: Double
+        }
+
+        public struct SidelineLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let boards: Boards
+        }
+
+        // MARK: bowl
+
+        public struct BowlLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let rows: [String: Int]
+            public let segments: Int
+            public let aisleEvery: Int
+            public let aisleYards: Double
+            public let railYards: Double
+            public let railRadius: Double
+            public let wallTopBand: Double
+            public let aisleOffset: Int
+        }
+
+        // MARK: crowd
+
+        public struct Atlas: Decodable, Equatable, Sendable {
+            public let columns: Int
+            public let rows: Int
+            public let armsUpFromRow: Int
+            public let cellPixels: [Int]
+        }
+
+        public struct Shirts: Decodable, Equatable, Sendable {
+            public let team: Double
+            public let neutral: Double
+            public let dark: Double
+        }
+
+        public struct CrowdTint: Decodable, Equatable, Sendable {
+            public let normal: Double
+            public let dim: Double
+            public let bright: Double
+        }
+
+        public struct Clearance: Decodable, Equatable, Sendable {
+            public let radius: Double
+            public let height: Double
+        }
+
+        public struct CrowdLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let seed: UInt64
+            public let fill: Double
+            public let seatsPerRow: PerMode<Int>
+            public let fanYards: PerMode<[Double]>
+            public let atlas: Atlas
+            public let shirts: Shirts
+            public let skin: [String]
+            public let hair: [String]
+            public let slices: Int
+            public let bobYards: Double
+            public let surgeYards: Double
+            public let waveSeconds: Double
+            public let tint: CrowdTint
+            public let standingShare: Double
+            public let scaleJitter: Double
+            public let sideJitter: Double
+            public let clearance: Clearance
+            public let bobHz: Double
+            public let surgeHz: Double
+            public let waveWidth: Double
+            public let shirtShade: [Double]
+            public let rawShare: Double
+        }
+
+        // MARK: lighting
 
         public struct Flood: Decodable, Equatable, Sendable {
             public let count: Int
@@ -95,78 +209,26 @@ extension SceneSpec {
             public let hazeStartScale: Double
         }
 
-        public struct Light: Decodable, Equatable, Sendable {
+        public struct LightingLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
             public let probeIntensityExponent: Double
             public let flood: Flood
             public let rim: Rim
         }
 
-        public struct Sky: Decodable, Equatable, Sendable {
+        // MARK: sky
+
+        public struct SkyLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
             public let radiusYards: Double
             public let domeHeight: Double
             public let domeOpacity: Double
             public let domeColor: String
         }
 
-        public struct BowlLook: Decodable, Equatable, Sendable {
-            public let rows: [String: Int]
-            public let segments: Int
-            public let aisleEvery: Int
-            public let aisleYards: Double
-            public let railYards: Double
-            public let railRadius: Double
-            public let wallTopBand: Double
-            public let aisleOffset: Int
-        }
-
-        public struct Atlas: Decodable, Equatable, Sendable {
-            public let columns: Int
-            public let rows: Int
-            public let armsUpFromRow: Int
-            public let cellPixels: [Int]
-        }
-
-        public struct Shirts: Decodable, Equatable, Sendable {
-            public let team: Double
-            public let neutral: Double
-            public let dark: Double
-        }
-
-        public struct CrowdTint: Decodable, Equatable, Sendable {
-            public let normal: Double
-            public let dim: Double
-            public let bright: Double
-        }
-
-        public struct Clearance: Decodable, Equatable, Sendable {
-            public let radius: Double
-            public let height: Double
-        }
-
-        public struct CrowdLook: Decodable, Equatable, Sendable {
-            public let seed: UInt64
-            public let fill: Double
-            public let seatsPerRow: PerMode<Int>
-            public let fanYards: PerMode<[Double]>
-            public let atlas: Atlas
-            public let shirts: Shirts
-            public let skin: [String]
-            public let hair: [String]
-            public let slices: Int
-            public let bobYards: Double
-            public let surgeYards: Double
-            public let waveSeconds: Double
-            public let tint: CrowdTint
-            public let standingShare: Double
-            public let scaleJitter: Double
-            public let sideJitter: Double
-            public let clearance: Clearance
-            public let bobHz: Double
-            public let surgeHz: Double
-            public let waveWidth: Double
-            public let shirtShade: [Double]
-            public let rawShare: Double
-        }
+        // MARK: broadcast
 
         public struct NearSeat: Decodable, Equatable, Sendable {
             public let yards: Double
@@ -187,6 +249,11 @@ extension SceneSpec {
             public let scoreEmphasis: Emphasis
         }
 
+        public struct BallGlow: Decodable, Equatable, Sendable {
+            public let yards: PerMode<Double>
+            public let opacity: Double
+        }
+
         public struct BallLook: Decodable, Equatable, Sendable {
             public let lengthYards: Double
             public let widthYards: Double
@@ -196,11 +263,6 @@ extension SceneSpec {
             public let color: String
             public let roughness: Double
             public let glow: BallGlow
-        }
-
-        public struct BallGlow: Decodable, Equatable, Sendable {
-            public let yards: PerMode<Double>
-            public let opacity: Double
         }
 
         public struct BeaconLook: Decodable, Equatable, Sendable {
@@ -224,29 +286,26 @@ extension SceneSpec {
             public let labelOpacity: Double
         }
 
-        public struct Cutaway: Decodable, Equatable, Sendable {
-            public let side: String
-            public let from: Double
-            public let to: Double
-        }
-
-        public struct TabletopLook: Decodable, Equatable, Sendable {
-            public let cutaway: Cutaway
-        }
-
         public struct RibbonLook: Decodable, Equatable, Sendable {
             public let heightPixels: Int
             public let segmentYards: Double
+            public let segments: Int
         }
 
-        public struct Baseplate: Decodable, Equatable, Sendable {
-            public let marginScale: Double
-            public let thicknessMeters: Double
-            public let rimOpacity: Double
-            public let rimRadiusYards: Double
+        public struct BroadcastLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
+            public let trail: Trail
+            public let ball: BallLook
+            public let beacon: BeaconLook
+            public let laser: LaserLook
+            public let horizon: HorizonLook
+            public let ribbon: RibbonLook
         }
 
-        public struct MomentLook: Decodable, Equatable, Sendable {
+        // MARK: moments
+
+        public struct MomentsLook: Decodable, Equatable, Sendable {
             public let celebrate: [String]
             public let strobeHz: Double
             public let fireworks: Int
@@ -257,7 +316,11 @@ extension SceneSpec {
             public let fireworksSeconds: Double
         }
 
+        // MARK: audio
+
         public struct AudioLook: Decodable, Equatable, Sendable {
+            public let assets: [String: String]
+            public let models: [String: String]
             public let bedGain: Double
             public let roarGain: Double
             public let groanGain: Double
@@ -270,12 +333,27 @@ extension SceneSpec {
 // LOOK-END
 
 extension SceneSpec.Look {
+    /// Every section's asset map, keyed by actor, for the loader.
+    public var assetSections: [(String, [String: String])] {
+        [("experience", experience.assets), ("field", field.assets), ("sideline", sideline.assets),
+         ("bowl", bowl.assets), ("crowd", crowd.assets), ("lighting", lighting.assets),
+         ("sky", sky.assets), ("broadcast", broadcast.assets), ("audio", audio.assets)]
+    }
+
+    /// Every section's model map (`.usdz` for Apple, a `.glb` sibling for the
+    /// web and Android), keyed by actor.
+    public var modelSections: [(String, [String: String])] {
+        [("experience", experience.models), ("field", field.models), ("sideline", sideline.models),
+         ("bowl", bowl.models), ("crowd", crowd.models), ("lighting", lighting.models),
+         ("sky", sky.models), ("broadcast", broadcast.models), ("audio", audio.models)]
+    }
+
     /// The look the app bundles, for a 1.0 server that sends none. It is the
     /// same tokens.json file, so there is still one source.
     public static func bundled(_ bundle: Bundle = .main) -> SceneSpec.Look? {
         guard let url = bundle.url(forResource: "tokens", withExtension: "json"),
               let data = try? Data(contentsOf: url) else { return nil }
-        struct Tokens: Decodable { let look: SceneSpec.Look }
-        return try? JSONDecoder().decode(Tokens.self, from: data).look
+        struct Tokens: Decodable { let visual: SceneSpec.Look }
+        return try? JSONDecoder().decode(Tokens.self, from: data).visual
     }
 }
