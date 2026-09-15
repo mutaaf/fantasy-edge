@@ -47,7 +47,7 @@ OUT_PPY = 16                 # texels per yard shipped
 HALF_PAD_YARDS = 1.0         # the half textures run this far past midfield
 # How far a hard scuff eats into paint. Under 36 in (half the NFL border) it
 # thins and pits a line but never tears through the border.
-SCUFF_INCHES = 12.0
+SCUFF_INCHES = 1.5
 SDF_RANGE_IN = 12.0          # inches of distance either side of an edge
 FONT_FILE = common.FIELD_OUT / "fonts" / "Graduate-Regular.ttf"
 GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&.'-?"
@@ -478,7 +478,7 @@ def paint_wear(xs, ys, geo_hash=None):
     symmetric and the half texture still holds all of it.
     """
     X, Y = np.meshgrid(xs, ys)
-    edge = (_value_noise(X, Y, 0.09, 71) - 0.5) * 2 * (1.0 * IN) + (_value_noise(X, Y, 0.35, 72) - 0.5) * 2 * (0.8 * IN)
+    edge = (_value_noise(X, Y, 0.09, 71) - 0.5) * 2 * (0.15 * IN) + (_value_noise(X, Y, 0.35, 72) - 0.5) * 2 * (0.25 * IN)
     band = np.exp(-0.5 * (np.minimum(np.abs(Y + 1.0), np.abs(Y - W - 1.0)) / 2.2) ** 2)      # sidelines and border
     middle = np.exp(-0.5 * ((Y - W / 2) / 9.0) ** 2) * (0.5 + 0.5 * np.exp(-0.5 * ((X - 50) / 25) ** 2))
     traffic = np.clip(band + 0.7 * middle, 0, 1)

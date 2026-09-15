@@ -158,6 +158,29 @@ struct VerifyScene {
             expect(abs(s - max(look.broadcast.trail.nearSeat.minScale, 5 / look.broadcast.trail.nearSeat.yards)) < 1e-6,
                    "\(name): a trail 5 yards from the seat should thin to \(5 / look.broadcast.trail.nearSeat.yards), not \(s)")
 
+            // ---- goal kicks: the ball crosses the posts' plane as the text says ----
+            if let post = spec.field.props?.goalpost {
+                for arc in spec.drives.flatMap(\.arcs) where arc.type.lowercased().contains("field goal") {
+                    let text = arc.text.lowercased()
+                    guard !text.contains("blocked"), arc.toX != arc.fromX else { continue }
+                    let plane = arc.toX > arc.fromX ? spec.field.length + spec.field.endZone : -spec.field.endZone
+                    let t = (plane - arc.fromX) / (arc.toX - arc.fromX)
+                    guard t > 0, t < 1 else {
+                        expect(text.contains("short"), "\(name): kick \(arc.id) never reaches the posts")
+                        continue
+                    }
+                    let kickFlight = look.broadcast.ball.flight
+                    let p = BallFlight.pose(arc, t: t, elapsed: 0, manner: BallFlight.manner(arc, kickFlight), flight: kickFlight, lift: 0).position
+                    let half = Float(spec.field.goalPostWidth / 2)
+                    if text.contains("good") && !text.contains("no good") {
+                        expect(abs(p.z) < half && p.y > Float(post.crossbar),
+                               "\(name): good kick \(arc.id) crosses the posts at z \(p.z), y \(p.y)")
+                    } else if text.contains("wide") {
+                        expect(abs(p.z) > half, "\(name): wide kick \(arc.id) goes between the uprights")
+                    }
+                }
+            }
+
             // ---- the ball: BallFlight against every arc of the game ----
             let flight = look.broadcast.ball.flight
             for arc in spec.drives.flatMap(\.arcs) {

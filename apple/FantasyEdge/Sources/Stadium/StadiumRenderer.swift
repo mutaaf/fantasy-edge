@@ -95,6 +95,8 @@ public final class StadiumRenderer {
         }
         for actor in actors { actor.apply(c, previous: previous) }
         dispatchEvents(c)
+        // Trails, banners and flags an actor adds after build would cast by default.
+        optOutOfShadows(world)
     }
 
     private func prepare(_ look: SceneSpec.Look) {
@@ -161,7 +163,8 @@ public final class StadiumRenderer {
     /// otherwise, so ~45k fans and every seat once cast into Lighting's single
     /// shadow. Casting is opt-in: an actor that wants a shadow (Sideline's
     /// goalposts) sets `DynamicLightShadowComponent(castsShadow: true)` itself,
-    /// and anything it adds after build must set the component too.
+    /// and the composer repeats the pass on every scene, so pieces added after
+    /// build are caught within one update.
     private func optOutOfShadows(_ e: Entity) {
         for child in e.children {
             if child.components.has(ModelComponent.self), !child.components.has(DynamicLightShadowComponent.self) {

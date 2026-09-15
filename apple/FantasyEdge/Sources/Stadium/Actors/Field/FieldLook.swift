@@ -33,6 +33,10 @@ extension SceneSpec.Look {
         /// Scales the wear map; it also lies over the paint.
         public let wearStrength: Double
         public let specular: Double
+        /// How much sheen a grazing blade takes on the turf graph, per stripe
+        /// (with the mower, against it) and on the surround.
+        public let stripeSheen: [Double]
+        public let surroundSheen: Double
     }
 
     public struct FieldPaint: Decodable, Equatable, Sendable {
@@ -58,8 +62,12 @@ extension SceneSpec.Look {
     }
 
     public struct FieldShaderTextures: Decodable, Equatable, Sendable {
-        /// Paint breakup at 512 px, read raw (linear), for the paint graph.
-        public let breakup: String
+        /// Blade height on the turf tile, raw, for the paint graph's blade-through.
+        public let blades: String
+        /// Low-frequency paint wear, raw, on the paint graph's wear tile.
+        public let wear: String
+        /// The turf's packed occlusion, roughness and height, raw, for the turf graph.
+        public let turfOrm: String
     }
 
     public struct FieldShells: Decodable, Equatable, Sendable {
@@ -91,6 +99,8 @@ extension SceneSpec.Look {
         public let lift: FieldLift
         /// shaderGraph.materials id the paint and lettering use when it loads.
         public let paintMaterial: String
+        /// shaderGraph.materials id the turf uses when it loads.
+        public let turfMaterial: String
         public let shaderTextures: FieldShaderTextures
         public let shells: FieldShells
     }

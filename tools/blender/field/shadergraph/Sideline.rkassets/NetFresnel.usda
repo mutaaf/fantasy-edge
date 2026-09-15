@@ -7,24 +7,28 @@
 
 def Xform "Root"
 {
-    # A net: its cord mask (uv0, the model's own repeats) times a view-angle
-    # falloff. Seen flat-on from the stands the net faces the eye and nearly
-    # vanishes; seen at a grazing angle, or up close where the cords resolve,
-    # it reads. Unlit, like the fine cord it is under floodlights.
+    # A net: its cord mask (uv0, the model's own repeats), brightened by
+    # CordGain so a mipped, distant net still averages to a readable mesh, times
+    # an opacity that is FaceOpacity where the net faces the eye - behind the
+    # goal, the view that matters most - and falls toward GrazingOpacity as the
+    # net turns edge-on. Unlit, like fine cord under floodlights.
     #
-    # Parameters (tokens: shaderGraph.materials.netFresnel):
-    #   Mask     (asset)   cord coverage, grey
-    #   Color    (color3)  cord colour
-    #   Opacity  (float)   peak opacity
-    #   Floor    (float)   fraction of Opacity kept when facing the eye
-    #   Power    (float)   falloff exponent
+    # Parameters (tokens: shaderGraph.materials.netFresnel; the two opacities
+    # come from visual.sideline.net):
+    #   Mask            (asset)   cord coverage, grey
+    #   Color           (color3)  cord colour
+    #   FaceOpacity     (float)   opacity seen face-on (the minimum a net keeps)
+    #   GrazingOpacity  (float)   opacity seen edge-on
+    #   Power           (float)   how quickly it moves from face-on to grazing
+    #   CordGain        (float)   multiplies the mask before clamping to 1
     def Material "NetFresnel"
     {
         asset inputs:Mask = @./textures/placeholder_net.png@
         color3f inputs:Color = (0.8, 0.8, 0.78)
-        float inputs:Opacity = 0.8
-        float inputs:Floor = 0.08
+        float inputs:FaceOpacity = 0.45
+        float inputs:GrazingOpacity = 0.12
         float inputs:Power = 1.6
+        float inputs:CordGain = 2.5
 
         token outputs:mtlx:surface.connect = </Root/NetFresnel/Surface.outputs:out>
 
@@ -92,25 +96,34 @@ def Xform "Root"
         def Shader "Lifted"
         {
             uniform token info:id = "ND_mix_float"
-            float inputs:fg = 1
-            float inputs:bg.connect = </Root/NetFresnel.inputs:Floor>
+            float inputs:fg.connect = </Root/NetFresnel.inputs:GrazingOpacity>
+            float inputs:bg.connect = </Root/NetFresnel.inputs:FaceOpacity>
             float inputs:mix.connect = </Root/NetFresnel/Falloff.outputs:out>
             float outputs:out
         }
 
-        def Shader "Scaled"
+        def Shader "CordGained"
         {
             uniform token info:id = "ND_multiply_float"
-            float inputs:in1.connect = </Root/NetFresnel/Lifted.outputs:out>
-            float inputs:in2.connect = </Root/NetFresnel.inputs:Opacity>
+            float inputs:in1.connect = </Root/NetFresnel/Cord.outputs:out>
+            float inputs:in2.connect = </Root/NetFresnel.inputs:CordGain>
+            float outputs:out
+        }
+
+        def Shader "CordClamped"
+        {
+            uniform token info:id = "ND_clamp_float"
+            float inputs:in.connect = </Root/NetFresnel/CordGained.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 1
             float outputs:out
         }
 
         def Shader "Final"
         {
             uniform token info:id = "ND_multiply_float"
-            float inputs:in1.connect = </Root/NetFresnel/Scaled.outputs:out>
-            float inputs:in2.connect = </Root/NetFresnel/Cord.outputs:out>
+            float inputs:in1.connect = </Root/NetFresnel/Lifted.outputs:out>
+            float inputs:in2.connect = </Root/NetFresnel/CordClamped.outputs:out>
             float outputs:out
         }
     }

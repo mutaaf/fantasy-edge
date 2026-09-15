@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 import simd
 
@@ -44,6 +45,10 @@ final class BroadcastTrails {
     private(set) var order: [String] = []
     private var arcs: [String: SceneSpec.Arc] = [:]
     private var entities: [String: Entity] = [:]
+    /// Kicks laid while watching, and when: they fade to `kick.restOpacity`.
+    private var kicks: [String: (born: Double, colour: String, core: Double, halo: Double)] = [:]
+    /// Kicks that have finished fading: a rebuild keeps them at rest.
+    private var rested: Set<String> = []
 
     init() { root.name = "broadcast.trails" }
 
@@ -52,9 +57,13 @@ final class BroadcastTrails {
 
     func clear() {
         root.children.removeAll()
+        live = nil
+        liveDrawn = -1
         order.removeAll()
         arcs.removeAll()
         entities.removeAll()
+        kicks.removeAll()
+        rested.removeAll()
     }
 
     /// Lay a play down and re-age the drive behind it.
@@ -62,6 +71,7 @@ final class BroadcastTrails {
         guard arcs[arc.id] == nil else { return }
         arcs[arc.id] = arc
         order.append(arc.id)
+        if arc.shape == "kick" { kicks[arc.id] = (c.shared.time, "", 0, 0) }
         rebuild(c)
     }
 
@@ -129,6 +139,18 @@ final class BroadcastTrails {
         }
         let a = Double(age)
         g.fade = age == 0 ? 1 : max(look.age.minOpacity, pow(look.age.decay, a))
+        // Seen along its own length - a kick from behind the posts - a trail
+        // stands up as a streak. Thin it and fade it toward a subtle core.
+        // Only arcs that stand up can streak: runs and penalties hug the grass,
+        // and read foreshortened, not end-on, from the sideline seats.
+        if let seat = c.shared.seat, !c.tabletop, look.edge.shapes.contains(arc.shape) {
+            // A kick stands tall, so it fades over a steeper range than a play along the grass.
+            let rule = arc.shape == "kick" ? SceneSpec.Look.TrailEdge(fullDegrees: look.kick.fullDegrees,
+                goneDegrees: look.kick.goneDegrees, minOpacity: look.edge.minOpacity, minScale: look.edge.minScale) : look.edge
+            let seen = Self.sideOn(arc, seat: seat, edge: rule)
+            g.fade *= look.edge.minOpacity + (1 - look.edge.minOpacity) * seen
+            width *= look.edge.minScale + (1 - look.edge.minScale) * seen
+        }
         width *= age == 0 ? 1 : max(look.age.minScale, pow(look.age.thin, a))
         let core = Float(width * (g.emphasis ? look.scoreEmphasis.core : 1))
         let halo = Float(width * look.haloScale * (g.emphasis ? look.scoreEmphasis.halo : 1))
@@ -147,6 +169,12 @@ final class BroadcastTrails {
     private func entity(_ arc: SceneSpec.Arc, geometry g: Geometry, _ c: StadiumContext) -> Entity {
         let look = c.look.broadcast.trail
         let colour = c.spec.palette[arc.color] ?? "#FFFFFF"
+        var g = g
+        if rested.contains(arc.id) { g.fade *= look.kick.restOpacity }
+        if let k = kicks[arc.id] {
+            kicks[arc.id] = (k.born, colour, look.coreOpacity * g.fade,
+                             look.haloOpacity * g.fade * (g.emphasis ? look.scoreEmphasis.halo : 1))
+        }
         let holder = Entity()
         holder.name = "trail.\(arc.id)"
         holder.addChild(g.halo.entity("trail.halo",
@@ -155,6 +183,98 @@ final class BroadcastTrails {
         holder.addChild(g.core.entity("trail.core",
             StadiumLook.glow(colour, opacity: look.coreOpacity * g.fade, texture: c.assets.texture("broadcast.trailCore"))))
         return holder
+    }
+
+    /// Kicks just laid fade to a rest level over `kick.fadeSeconds`, so the
+    /// flight reads while it happens and does not stand over the posts after.
+    /// Reduce motion lands them at rest at once.
+    func update(_ c: StadiumContext) {
+        guard !kicks.isEmpty, !Self.holdTrails else { return }
+        let rule = c.look.broadcast.trail.kick
+        for (id, k) in kicks {
+            guard let holder = entities[id], holder.children.count == 2, !k.colour.isEmpty else { continue }
+            let t = c.reduceMotion ? 1 : min(1, (c.shared.time - k.born) / max(0.05, rule.fadeSeconds))
+            let f = 1 - (1 - rule.restOpacity) * t
+            if let halo = holder.children[0] as? ModelEntity {
+                halo.model?.materials = [StadiumLook.glow(k.colour, opacity: k.halo * f, texture: c.assets.texture("broadcast.trailHalo"))]
+            }
+            if let core = holder.children[1] as? ModelEntity {
+                core.model?.materials = [StadiumLook.glow(k.colour, opacity: k.core * f, texture: c.assets.texture("broadcast.trailCore"))]
+            }
+            if t >= 1 { kicks[id] = nil; rested.insert(id) }
+        }
+    }
+
+    private var live: Entity?
+    private var liveDrawn: Double = -1
+
+    /// The play in the air, drawn behind the ball as far as it has flown, so
+    /// a trail grows with the flight instead of appearing only on landing.
+    /// Redrawn at most every `live.intervalSeconds`; `clearLive` when it lands.
+    func grow(_ arc: SceneSpec.Arc, to t: Double, _ c: StadiumContext) {
+        let look = c.look.broadcast.trail
+        guard c.shared.time - liveDrawn >= look.live.intervalSeconds || t >= 1 else { return }
+        liveDrawn = c.shared.time
+        live?.removeFromParent()
+        let u = max(0.02, min(1, t))
+        let n = max(4, Int(48 * u))
+        let pts = (0...n).map { SceneMath.point(on: arc, at: u * Double($0) / Double(n)) }
+        var width = look.core.value(tabletop: c.tabletop)
+        var fade = look.live.opacity
+        if let seat = c.shared.seat, !c.tabletop, look.edge.shapes.contains(arc.shape) {
+            let rule = arc.shape == "kick" ? SceneSpec.Look.TrailEdge(fullDegrees: look.kick.fullDegrees,
+                goneDegrees: look.kick.goneDegrees, minOpacity: look.edge.minOpacity, minScale: look.edge.minScale) : look.edge
+            let seen = Self.sideOn(arc, seat: seat, edge: rule)
+            fade *= look.edge.minOpacity + (1 - look.edge.minOpacity) * seen
+            width *= look.edge.minScale + (1 - look.edge.minScale) * seen
+        }
+        let view = Self.view(c)
+        var core = MeshBuilder(), halo = MeshBuilder()
+        core.facingStrip(pts, halfWidth: Float(width) / 2, view: view)
+        halo.facingStrip(pts, halfWidth: Float(width * look.haloScale) / 2, view: view)
+        let colour = c.spec.palette[arc.color] ?? "#FFFFFF"
+        let holder = Entity()
+        holder.name = "trail.live"
+        holder.addChild(halo.entity("trail.live.halo", StadiumLook.glow(colour, opacity: look.haloOpacity * fade,
+                                                                         texture: c.assets.texture("broadcast.trailHalo"))))
+        holder.addChild(core.entity("trail.live.core", StadiumLook.glow(colour, opacity: look.coreOpacity * fade,
+                                                                         texture: c.assets.texture("broadcast.trailCore"))))
+        root.addChild(holder)
+        live = holder
+    }
+
+    func clearLive() {
+        live?.removeFromParent()
+        live = nil
+        liveDrawn = -1
+    }
+
+    /// Look-dev only: `-trailHold` freezes a kick's fade so a shot taken when
+    /// the moment fires still sees the trail at full strength. Never in release.
+    static let holdTrails: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-trailHold")
+        #else
+        return false
+        #endif
+    }()
+
+    /// How side-on a seat sees an arc, 0...1: the mean angle between each
+    /// piece of the arc and the sightline to it, mapped from
+    /// `edge.goneDegrees` (0, end-on) to `edge.fullDegrees` (1).
+    nonisolated static func sideOn(_ arc: SceneSpec.Arc, seat: SIMD3<Float>, edge: SceneSpec.Look.TrailEdge) -> Double {
+        let n = 32
+        var total = 0.0
+        for i in 0..<n {
+            let p = SceneMath.point(on: arc, at: Double(i) / Double(n))
+            let q = SceneMath.point(on: arc, at: Double(i + 1) / Double(n))
+            let t = q - p, d = seat - (p + q) / 2
+            let tl = simd_length(t), dl = simd_length(d)
+            guard tl > 1e-5, dl > 1e-5 else { total += 90; continue }
+            total += acos(Double(min(1, abs(simd_dot(t, d)) / (tl * dl)))) * 180 / .pi
+        }
+        let deg = total / Double(n)
+        return max(0, min(1, (deg - edge.goneDegrees) / max(1e-6, edge.fullDegrees - edge.goneDegrees)))
     }
 
     /// The direction a strip faces at a point: the wearer's eyes in the

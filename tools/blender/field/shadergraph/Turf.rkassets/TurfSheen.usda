@@ -1,0 +1,292 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    # Turf that has depth at a grazing angle. Top-down, the baked tile is blades
+    # over dark soil; seen low across the field the blades hide the soil and
+    # their sides catch the floodlights. So as the view flattens (1 - |n.v|,
+    # raised to SheenPower) the soil gaps (low in the height map) fill toward
+    # SideColor and the blades take a share of SheenColor; the stripe tint goes
+    # on last, so the mowing stripes still read at a graze. At field level that
+    # is also a distance cue: the ground a few yards off is already grazing, the
+    # ground at your feet is not. The blades' normals, scaled by NormalScale,
+    # and the baked occlusion keep the near turf from reading flat.
+    #
+    # Parameters (tokens: shaderGraph.materials.turfSheen; Tint, Roughness and
+    # Sheen are per stripe, from visual.field.turf):
+    #   Albedo       (asset)   turf albedo, uv0 tiles
+    #   Normal       (asset)   tangent-space normal (with or against the mower)
+    #   Orm          (asset)   R occlusion, G roughness, B blade height, raw
+    #   Tint         (color3)  stripe tint
+    #   Roughness    (float)   multiplies the roughness map
+    #   Sheen        (float)   how much SheenColor a fully grazing blade takes
+    #   SheenColor   (color3)  blades lit from the side
+    #   SideColor    (color3)  what fills the soil gaps seen low
+    #   SheenPower   (float)   how late in the flattening the sheen comes in
+    #   FillStrength (float)   how completely the gaps fill at a full graze
+    #   NormalScale  (float)   blade normal strength
+    #   Specular     (float)
+    def Material "TurfSheen"
+    {
+        asset inputs:Albedo = @./textures/placeholder_turf.png@
+        asset inputs:Normal = @./textures/placeholder_turf.png@
+        asset inputs:Orm = @./textures/placeholder_turf.png@
+        color3f inputs:Tint = (1, 1, 1)
+        float inputs:Roughness = 0.95
+        float inputs:Sheen = 0.2
+        color3f inputs:SheenColor = (0.4, 0.48, 0.25)
+        color3f inputs:SideColor = (0.15, 0.27, 0.06)
+        float inputs:SheenPower = 3
+        float inputs:FillStrength = 0.8
+        float inputs:NormalScale = 1.5
+        float inputs:Specular = 0.18
+
+        token outputs:mtlx:surface.connect = </Root/TurfSheen/Surface.outputs:out>
+
+        def Shader "Surface"
+        {
+            uniform token info:id = "ND_realitykit_pbr_surfaceshader"
+            color3f inputs:baseColor.connect = </Root/TurfSheen/Tinted.outputs:out>
+            float inputs:roughness.connect = </Root/TurfSheen/Rough.outputs:out>
+            float inputs:specular.connect = </Root/TurfSheen.inputs:Specular>
+            float inputs:ambientOcclusion.connect = </Root/TurfSheen/Occlusion.outputs:out>
+            float3 inputs:normal.connect = </Root/TurfSheen/TangentNormal.outputs:out>
+            token outputs:out
+        }
+
+        def Shader "UV"
+        {
+            uniform token info:id = "ND_texcoord_vector2"
+            float2 outputs:out
+        }
+
+        def Shader "AlbedoSample"
+        {
+            uniform token info:id = "ND_image_color3"
+            asset inputs:file.connect = </Root/TurfSheen.inputs:Albedo>
+            float2 inputs:texcoord.connect = </Root/TurfSheen/UV.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "OrmSample"
+        {
+            uniform token info:id = "ND_image_color3"
+            asset inputs:file.connect = </Root/TurfSheen.inputs:Orm>
+            float2 inputs:texcoord.connect = </Root/TurfSheen/UV.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "OrmSplit"
+        {
+            uniform token info:id = "ND_separate3_color3"
+            color3f inputs:in.connect = </Root/TurfSheen/OrmSample.outputs:out>
+            float outputs:outr
+            float outputs:outg
+            float outputs:outb
+        }
+
+        def Shader "Occlusion"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg = 1
+            float inputs:bg.connect = </Root/TurfSheen/OrmSplit.outputs:outr>
+            float inputs:mix = 0.35
+            float outputs:out
+        }
+
+        def Shader "NormalSample"
+        {
+            uniform token info:id = "ND_image_vector3"
+            asset inputs:file.connect = </Root/TurfSheen.inputs:Normal>
+            float2 inputs:texcoord.connect = </Root/TurfSheen/UV.outputs:out>
+            float3 outputs:out
+        }
+
+        def Shader "NormalDoubled"
+        {
+            uniform token info:id = "ND_multiply_vector3FA"
+            float3 inputs:in1.connect = </Root/TurfSheen/NormalSample.outputs:out>
+            float inputs:in2 = 2
+            float3 outputs:out
+        }
+
+        def Shader "NormalCentred"
+        {
+            uniform token info:id = "ND_subtract_vector3FA"
+            float3 inputs:in1.connect = </Root/TurfSheen/NormalDoubled.outputs:out>
+            float inputs:in2 = 1
+            float3 outputs:out
+        }
+
+        def Shader "NormalSplit"
+        {
+            uniform token info:id = "ND_separate3_vector3"
+            float3 inputs:in.connect = </Root/TurfSheen/NormalCentred.outputs:out>
+            float outputs:outx
+            float outputs:outy
+            float outputs:outz
+        }
+
+        def Shader "NormalX"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/NormalSplit.outputs:outx>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:NormalScale>
+            float outputs:out
+        }
+
+        def Shader "NormalY"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/NormalSplit.outputs:outy>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:NormalScale>
+            float outputs:out
+        }
+
+        def Shader "NormalScaled"
+        {
+            uniform token info:id = "ND_combine3_vector3"
+            float inputs:in1.connect = </Root/TurfSheen/NormalX.outputs:out>
+            float inputs:in2.connect = </Root/TurfSheen/NormalY.outputs:out>
+            float inputs:in3.connect = </Root/TurfSheen/NormalSplit.outputs:outz>
+            float3 outputs:out
+        }
+
+        def Shader "TangentNormal"
+        {
+            uniform token info:id = "ND_normalize_vector3"
+            float3 inputs:in.connect = </Root/TurfSheen/NormalScaled.outputs:out>
+            float3 outputs:out
+        }
+
+        def Shader "Geometric"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            string inputs:space = "world"
+            float3 outputs:out
+        }
+
+        def Shader "View"
+        {
+            uniform token info:id = "ND_realitykit_viewdirection_vector3"
+            float3 outputs:out
+        }
+
+        def Shader "Facing"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/TurfSheen/Geometric.outputs:out>
+            float3 inputs:in2.connect = </Root/TurfSheen/View.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Abs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/TurfSheen/Facing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Edge"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/TurfSheen/Abs.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Grazing"
+        {
+            uniform token info:id = "ND_power_float"
+            float inputs:in1.connect = </Root/TurfSheen/Edge.outputs:out>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:SheenPower>
+            float outputs:out
+        }
+
+        def Shader "Gap"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/TurfSheen/OrmSplit.outputs:outb>
+            float outputs:out
+        }
+
+        def Shader "GapGrazing"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/Gap.outputs:out>
+            float inputs:in2.connect = </Root/TurfSheen/Grazing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FillAmount"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/GapGrazing.outputs:out>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:FillStrength>
+            float outputs:out
+        }
+
+        def Shader "FillClamped"
+        {
+            uniform token info:id = "ND_clamp_float"
+            float inputs:in.connect = </Root/TurfSheen/FillAmount.outputs:out>
+            float inputs:low = 0
+            float inputs:high = 1
+            float outputs:out
+        }
+
+        def Shader "Filled"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/TurfSheen.inputs:SideColor>
+            color3f inputs:bg.connect = </Root/TurfSheen/AlbedoSample.outputs:out>
+            float inputs:mix.connect = </Root/TurfSheen/FillClamped.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "SheenAmount"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/Grazing.outputs:out>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:Sheen>
+            float outputs:out
+        }
+
+        def Shader "Sheened"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/TurfSheen.inputs:SheenColor>
+            color3f inputs:bg.connect = </Root/TurfSheen/Filled.outputs:out>
+            float inputs:mix.connect = </Root/TurfSheen/SheenAmount.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "Tinted"
+        {
+            uniform token info:id = "ND_multiply_color3"
+            color3f inputs:in1.connect = </Root/TurfSheen/Sheened.outputs:out>
+            color3f inputs:in2.connect = </Root/TurfSheen.inputs:Tint>
+            color3f outputs:out
+        }
+
+        def Shader "Rough"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/TurfSheen/OrmSplit.outputs:outg>
+            float inputs:in2.connect = </Root/TurfSheen.inputs:Roughness>
+            float outputs:out
+        }
+    }
+
+    def Sphere "Preview"
+    {
+        rel material:binding = </Root/TurfSheen>
+        double radius = 0.1
+    }
+}

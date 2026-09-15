@@ -380,8 +380,6 @@ final class CrowdActor: StadiumActor {
         let C = c.look.crowd, s = c.spec
         let time = frame.time
         let index = { (name: String) in C.poses.firstIndex(of: name) ?? 0 }
-        let sit = index("sit"), sitB = index("sit_b"), stand = index("stand")
-        let clap = index("clap_b"), cheer = index("cheer_a"), groan = index("groan")
 
         let surge = c.shared.surge.flatMap { time < $0.until ? $0 : nil }
         let cues = CrowdCues.live(c.shared, at: time)
@@ -395,68 +393,24 @@ final class CrowdActor: StadiumActor {
             standingSide = offense == "home"          // away defending: the away section stands
         }
         let slices = Double(max(1, C.slices))
-        let wavePhase = (time / max(1, C.waveSeconds)).truncatingRemainder(dividingBy: 2.5)
 
         for g in groups {
-            var pose: Int
-            // The scene says whose section is lit: that side is on its feet for as
-            // long as the moment lasts, not only while Moments' surge peaks.
-            var scoring = tintSide.map { ($0 == "away") == g.away }
-            // After the moment: the scoring side keeps celebrating, each group
-            // sitting down at its own point in settleSeconds, not all on one frame.
-            if scoring == nil, let last = lastScoring, last.away == g.away {
-                let settle = C.settleSeconds[0] + (C.settleSeconds[1] - C.settleSeconds[0]) * g.phase
-                if time - last.ended < settle { scoring = true }
-            }
-            if c.reduceMotion {
-                pose = scoring == true ? stand : (g.standing ? stand : sit)
-            } else {
-                // Idle: sit, shift, sit - each group on its own clock.
-                let span = C.idleSeconds[0] + (C.idleSeconds[1] - C.idleSeconds[0]) * g.phase
-                let beat = Int((time / span + g.phase * 7).rounded(.down))
-                pose = g.standing ? (beat % 3 == 0 ? clap : stand) : (beat % 2 == 0 ? sit : sitB)
-                if let standingSide, g.away == standingSide { pose = stand }
-                if g.ring == .card, wavePhase < 1 {
-                    let a = (Double(g.slice) + 0.5) / slices
-                    let d = min(abs(a - wavePhase), 1 - abs(a - wavePhase))
-                    if d < C.waveWidth { pose = cheer } else if d < C.waveWidth * 2 { pose = stand }
-                }
-                if let scoring {
-                    if scoring {
-                        // Peak while Moments surges, then a sustained celebration at half pace.
-                        let peak = surge.map { $0.away == g.away } ?? false
-                        let rate = peak ? C.surgeHz : C.surgeHz * 0.5
-                        let beat = Int(((time + g.phase * 3) * rate).rounded(.down))
-                        pose = peak ? [cheer, cheer, clap, cheer][beat % 4] : [stand, cheer, clap, stand, cheer][beat % 5]
-                    } else {
-                        // The other side sinks back into its seats.
-                        pose = g.phase < 0.3 ? groan : (g.phase < 0.6 ? sitB : sit)
-                    }
-                } else if let surge, g.away == surge.away {
-                    let beat = Int(((time + g.phase) * C.surgeHz).rounded(.down))
-                    pose = [cheer, clap, cheer, stand][beat % 4]
-                }
-            }
-            // Cues from the blackboard win while they last: the strongest that reaches this group.
-            let reaching = cues.filter { cue in
+            let reaching: [CrowdChoreography.CueKind] = cues.compactMap { cue in
+                let hits: Bool
                 switch cue.target {
-                case .side(let side): return (side == "away") == g.away
-                case .sections(let ids): return g.ring == .card && ids.contains { sectionSlices[$0]?.contains(g.slice) ?? false }
+                case .side(let side): hits = (side == "away") == g.away
+                case .sections(let ids): hits = g.ring == .card && ids.contains { sectionSlices[$0]?.contains(g.slice) ?? false }
                 }
+                return hits ? CrowdChoreography.CueKind(rawValue: cue.kind.rawValue) : nil
             }
-            // A stand or clap cue must not calm a side that is already celebrating:
-            // Moments stands the scoring section on a touchdown too.
-            let celebrating = scoring == true && !c.reduceMotion
-            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }),
-               !(celebrating && (cue.kind == .stand || cue.kind == .clap)) {
-                let beat = Int(((time + g.phase * 2) * C.surgeHz).rounded(.down))
-                switch cue.kind {
-                case .groan: pose = groan
-                case .sit: pose = g.phase < 0.5 ? sit : sitB
-                case .stand: pose = c.reduceMotion ? stand : (beat % 7 == 0 ? cheer : stand)
-                case .clap: pose = c.reduceMotion ? stand : (beat % 2 == 0 ? clap : stand)
-                }
-            }
+            let decided = CrowdChoreography.pose(.init(
+                away: g.away, isCard: g.ring == .card, phase: g.phase, standing: g.standing, slice: g.slice,
+                slices: Int(slices), time: time, reduceMotion: c.reduceMotion, tintSide: tintSide,
+                lastScoringAway: lastScoring?.away, lastScoringEnded: lastScoring?.ended ?? 0,
+                settleSeconds: (C.settleSeconds[0], C.settleSeconds[1]), surgeAway: surge?.away,
+                standingSideAway: standingSide, idleSeconds: (C.idleSeconds[0], C.idleSeconds[1]),
+                waveSeconds: C.waveSeconds, waveWidth: C.waveWidth, surgeHz: C.surgeHz, cues: reaching))
+            let pose = index(decided.rawValue)
             setPose(g, pose)
             let dim = g.ring == .card ? C.tint.dim : C.tint.meshDim
             let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : dim } ?? C.tint.normal

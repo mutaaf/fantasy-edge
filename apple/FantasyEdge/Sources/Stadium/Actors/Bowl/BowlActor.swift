@@ -127,6 +127,11 @@ final class BowlActor: StadiumActor {
     /// takes the receiver the stands already carry.
     private func attach(_ e: Entity) {
         root.addChild(e)
+        // Shadow casting is opt-in and the composer only marks what exists at
+        // build; a near patch or fill swapped in later marks itself.
+        for node in Self.descendants(of: e) where node.components.has(ModelComponent.self) {
+            node.components.set(DynamicLightShadowComponent(castsShadow: false))
+        }
         guard let receiver = Self.descendants(of: root)
             .lazy.compactMap({ $0.components[ImageBasedLightReceiverComponent.self] }).first else { return }
         for node in Self.descendants(of: e) where node.components.has(ModelComponent.self) {
@@ -168,6 +173,18 @@ final class BowlActor: StadiumActor {
                 } else if inNear && (n.contains("plaque") || n.contains("stair") || n.contains("seat_hardware")) {
                     pbr.emissiveColor = .init(color: .init(white: 0.55, alpha: 1))
                     pbr.emissiveIntensity = Float(B.nearLift)
+                } else if n.contains("press_room") {
+                    pbr.emissiveIntensity = Float(B.pressRoomLift)
+                } else if n.contains("bowl_glass") {
+                    // USD brings the glass in near-opaque and dark from the far
+                    // seats; state its blend here so rooms behind it read lit.
+                    pbr.blending = .transparent(opacity: .init(floatLiteral: Float(B.glassOpacity)))
+                    pbr.metallic = .init(floatLiteral: 0.15)
+                    pbr.roughness = .init(floatLiteral: 0.04)
+                } else if n.contains("press_desk") {
+                    // desks, chairs and floor: lit by the room's own ceiling strips
+                    pbr.emissiveColor = .init(color: StadiumLook.color("#F0D3AE"))
+                    pbr.emissiveIntensity = Float(B.pressRoomLift) * 0.12
                 } else if n.contains("interiors") {
                     pbr.emissiveIntensity = 3.5
                 }

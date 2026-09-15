@@ -21,7 +21,11 @@ Everything shares the markings canvas (x -16..116, y -14..67.33 yards, top row
       texel of grass carries (blade tips more than soil), used to erode the
       paint edge so lines sit in the grass rather than on it
 
+  turf/natural/paint_blades.png, paint_wear.png   the Shader Graph paint's
+      blade-through and low-frequency wear (paint_wear_maps)
+
     blender -b --factory-startup --python tools/blender/field/make_field_maps.py
+    ... --python tools/blender/field/make_field_maps.py -- paint_wear_maps
 """
 from __future__ import annotations
 
@@ -257,6 +261,68 @@ def grass_through():
     common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_grassthrough.png", srgb(cover))
 
 
+WEAR_YARDS = 6.0
+
+
+def paint_wear_maps():
+    """The two maps the Shader Graph paint wears itself with, both raw linear.
+
+    turf/natural/paint_blades.png   512 px, tiles with the turf: how tall a
+        blade stands at each texel, from the baked shell slices (the tallest
+        slice counts most). Paint lets a blade through where it stands above a
+        cut, so what shows is whole blades, evenly spread, not texel noise.
+    turf/natural/paint_wear.png     512 px, tiles every WEAR_YARDS: low-frequency
+        wear, 0 intact to 1 scuffed thin. Broad thin patches plus cleat scuffs,
+        elongated along and across the field where players plant and turn. It
+        lowers the blade cut and thins the paint colour in coherent patches, and
+        it survives mipping where a blade texel does not.
+    """
+    base = common.FIELD_OUT / "turf" / "natural"
+    slices = [base / f"turf_natural_shell_{k}.png" for k in range(8)]
+    if all(q.exists() for q in slices[:6]):
+        blades = np.zeros((512, 512))
+        weights = [1.0, 0.9, 0.75, 0.55, 0.35, 0.2]
+        for k, w in enumerate(weights):
+            img = common.read_image(slices[k])[..., 0]
+            if img.shape[0] != 512:
+                img = img.reshape(512, img.shape[0] // 512, 512, img.shape[1] // 512).mean(axis=(1, 3))
+            blades += w * img
+        blades /= sum(weights)
+        blades = np.clip(blades / max(1e-6, np.quantile(blades, 0.985)), 0, 1)
+        common.write_png(base / "paint_blades.png", blades)
+
+    n = 512
+    t = (np.arange(n) + 0.5) * WEAR_YARDS / n
+    X, Y = np.meshgrid(t, t)
+    broad = np.zeros_like(X)
+    total = 0.0
+    for k, scale in enumerate((3.0, 1.5, 0.75, 0.375)):
+        w = scale ** 0.8
+        broad += w * value_noise(X, Y, scale, 301 + k, period=int(round(WEAR_YARDS / scale)))
+        total += w
+    broad /= total
+    lo, hi = np.quantile(broad, 0.02), np.quantile(broad, 0.98)
+    broad = (broad - lo) / (hi - lo)
+    thin = smoothstep(0.3, 1.05, broad)
+
+    r = common.rng(313)
+    keep = np.ones_like(X)
+    for _ in range(90):
+        cx, cy = r.random() * WEAR_YARDS, r.random() * WEAR_YARDS
+        angle = r.choice([0.0, np.pi / 2]) + r.normal(0, 0.35)
+        length, width = r.uniform(0.04, 0.1), r.uniform(0.03, 0.06)
+        dx = (X - cx + WEAR_YARDS / 2) % WEAR_YARDS - WEAR_YARDS / 2
+        dy = (Y - cy + WEAR_YARDS / 2) % WEAR_YARDS - WEAR_YARDS / 2
+        u = dx * np.cos(angle) + dy * np.sin(angle)
+        v = -dx * np.sin(angle) + dy * np.cos(angle)
+        keep *= 1 - r.uniform(0.35, 0.9) * np.exp(-0.5 * ((u / length) ** 2 + (v / width) ** 2))
+    scuff = 1 - keep
+    wear = np.clip(0.65 * thin + 0.7 * scuff, 0, 1)
+    common.write_png(base / "paint_wear.png", wear)
+    return {"bladesMean": round(float(blades.mean()), 3) if "blades" in locals() else None,
+            "wearMean": round(float(wear.mean()), 3)}
+
+
 def shell_atlas():
     """The eight natural shell slices at 256 px in a 4 x 2 atlas for the shell
     graph. Cell i (column i % 4, row i // 4, row 0 at the bottom of the image)
@@ -277,6 +343,10 @@ def shell_atlas():
 
 
 def main():
+    only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    if only == ["paint_wear_maps"]:
+        print("MAPS", paint_wear_maps())
+        return
     out = {}
     for league in rules.LEAGUES:
         out[league] = field_maps(league)
@@ -287,6 +357,7 @@ def main():
     shell_atlas()
     divots()
     paint_breakup()
+    out["paintWear"] = paint_wear_maps()
     print("MAPS", out)
 
 

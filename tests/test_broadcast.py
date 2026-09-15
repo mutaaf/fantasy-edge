@@ -162,12 +162,22 @@ class TestBroadcastLook(unittest.TestCase):
         """Experience folds the log at the side, low; unfolded it may not grow
         past a short panel. Rows at their line limits, in DriveLog's points
         (header 30, a one-line play 40, each extra line 17, padding 44), stay
-        under 360 pt - shorter than the panel is wide (460)."""
+        inside the drive panel's footprint in Experience's contract
+        (`visual.experience.layout.panelSizes.drive`)."""
         d = self.look["driveLog"]
+        panel = self.tokens["visual"]["experience"]["layout"]["panelSizes"]["drive"]
         self.assertTrue(1 <= d["rows"] <= 8)
         height = 30 + 44 + 40 * d["rows"] + 17 * ((d["newestLines"] - 1) + (d["olderLines"] - 1) * (d["rows"] - 1))
-        self.assertLessEqual(height, 360, f"unfolded drive log {height} pt")
+        self.assertLessEqual(height, panel["maxHeightPoints"], f"unfolded drive log {height} pt")
         self.assertGreaterEqual(d["newestLines"], d["olderLines"])
+
+    def test_a_play_in_the_air_draws_its_trail_as_it_flies(self):
+        """The live trail must redraw often enough to follow the shortest
+        flight the scene animates, and show at a visible strength."""
+        live = self.look["trail"]["live"]
+        floor = self.tokens["motion"]["floorSeconds"]
+        self.assertGreater(live["opacity"], 0.5)
+        self.assertLessEqual(live["intervalSeconds"], floor / 4, "a floor-length flight gets at least four redraws")
 
     def test_trails_ghost_with_age_and_never_vanish(self):
         age = self.look["trail"]["age"]

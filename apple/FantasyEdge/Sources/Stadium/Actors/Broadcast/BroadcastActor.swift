@@ -251,6 +251,7 @@ extension BroadcastActor {
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         ribbon.update(frame, c)
         banner.update(c)
+        trails.update(c)
         guard var f = flight else { return }
         f.elapsed += frame.dt
         let t = min(1, f.elapsed / f.duration)
@@ -263,15 +264,28 @@ extension BroadcastActor {
         ball.position = pose.position
         ball.orientation = pose.orientation
         if t >= 1 {
+            Self.trace(c, "land \(f.arc.id) at y \(ball.position.y)")
+            trails.clearLive()
             trails.add(f.arc, c)
             flight = nil
             startNextFlight(c)
         } else {
+            // The trail grows behind the ball as far as it has flown.
+            trails.grow(f.arc, to: eased, c)
             flight = f
         }
     }
 
     func hasTrail(_ id: String) -> Bool { trails.has(id) }
+
+    /// Look-dev only (`-trailTrace`, DEBUG builds): what the drive did and when.
+    static func trace(_ c: StadiumContext, _ what: String) {
+        #if DEBUG
+        guard ProcessInfo.processInfo.arguments.contains("-trailTrace") else { return }
+        let line = String(format: "[stadium-trace] t=%.2f ", c.shared.time) + what
+        StadiumLog.log.notice("\(line, privacy: .public)")
+        #endif
+    }
 
     /// Lay the drive again from scratch - after a seat change, say.
     func redrawDrive(_ c: StadiumContext) {
@@ -307,6 +321,7 @@ extension BroadcastActor {
             drive.id != driveID && s.drives.count >= p.drives.count
                 && s.drives.firstIndex(where: { $0.id == drive.id }) == (p.drives.firstIndex(where: { $0.id == driveID }) ?? -2) + 1
         } ?? false
+        Self.trace(c, "scene drive=\(drive.id) shown=\(driveID) arcs=\(drive.arcs.count) last=\(drive.arcs.last?.id ?? "-") lost=\(lostAPlay) next=\(nextDrive) flight=\(flight?.arc.id ?? "-")")
         if drive.id != driveID || lostAPlay {
             trails.clear()
             motion.reset()
@@ -335,6 +350,7 @@ extension BroadcastActor {
             startNextFlight(c)
         } else {
             flight = (arc, 0, seconds, BallFlight.manner(arc, c.look.broadcast.ball.flight))
+            Self.trace(c, "fly \(arc.id) \(arc.type) \(seconds)s")
         }
     }
 }

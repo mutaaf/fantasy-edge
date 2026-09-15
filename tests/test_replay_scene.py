@@ -435,7 +435,10 @@ class TestSceneGeometry(unittest.TestCase):
     def test_lanes_fan_each_drive_symmetrically(self):
         spread = self.final["field"]["width"] * self.tokens["arc"]["laneSpread"]
         for d in self.final["drives"]:
-            lanes = [a["lane"] for a in d["arcs"]]
+            # A field goal or extra point aims at the posts, not a lane
+            # (TestGoalKicks); the rest of the drive fans.
+            lanes = [a["lane"] for a in d["arcs"]
+                     if not any(k in a["type"].lower() for k in ("field goal", "extra point"))]
             if len(lanes) == 1:
                 self.assertEqual(lanes, [0.0])
             elif len(lanes) > 1:
@@ -443,6 +446,93 @@ class TestSceneGeometry(unittest.TestCase):
                 self.assertTrue(all(abs(z) <= spread + 0.001 for z in lanes), lanes)
                 self.assertEqual(lanes, sorted(lanes))
                 self.assertAlmostEqual(lanes[0], -spread, places=2)
+
+    def test_goal_kicks_cross_the_plane_of_the_uprights_as_the_text_says(self):
+        """Every field goal in the three games, at the end line it attacks:
+        a good one between the uprights and over the crossbar with room to
+        spare; a wide one outside the upright on the side the text names,
+        right being the kicker's right."""
+        props = self.final["field"]["props"]["goalpost"]
+        clearance = self.tokens["arc"]["goalKick"].get("minClearanceYards", 1.0)
+        seen = {"good": 0, "wide": 0}
+        for event in (REGULATION, OVERTIME, PICK_SIX):
+            s = SceneAt.at(event, 99999, speed=1.0)
+            f = s["field"]
+            half = f["goalPostWidth"] / 2
+            for a in self.arcs(s):
+                kind, text = a["type"].lower(), a["text"].lower()
+                if "field goal" not in kind or "blocked" in text:
+                    continue
+                attack = 1.0 if a["toX"] > a["fromX"] else -1.0
+                plane = f["length"] + f["endZone"] if attack > 0 else -f["endZone"]
+                self.assertEqual(attack > 0, a["side"] == "home", f"{a['id']}: kicked at the wrong posts")
+                u = (plane - a["fromX"]) / (a["toX"] - a["fromX"])
+                self.assertTrue(0 < u < 1, f"{a['id']}: the arc never reaches the posts")
+                height = a["apex"] * 4 * u * (1 - u)
+                if "good" in text and "no good" not in text:
+                    seen["good"] += 1
+                    self.assertLess(abs(a["lane"]), half, f"{a['id']}: a good kick outside the uprights")
+                    self.assertGreaterEqual(height, props["crossbar"] + clearance,
+                                            f"{a['id']}: a good kick {height:.1f} yd at the posts, under the bar")
+                elif "wide right" in text or "wide left" in text:
+                    seen["wide"] += 1
+                    self.assertGreater(abs(a["lane"]), half, f"{a['id']}: a wide kick between the uprights")
+                    right = 1.0 if "wide right" in text else -1.0
+                    self.assertGreater(a["lane"] * right * attack, 0, f"{a['id']}: wide on the wrong side")
+        self.assertGreater(seen["good"], 3)
+        self.assertGreaterEqual(seen["wide"], 2)
+
+    def test_trails_fade_end_on_and_stay_whole_side_on(self):
+        """BroadcastTrails.sideOn, restated: field goals seen from behind the
+        end zone fade toward their subtle core; from the club seat every field
+        goal and every play of the game stays whole."""
+        look = self.tokens["visual"]["broadcast"]["trail"]
+        edge, kick = look["edge"], look["kick"]
+        eye = self.tokens["visual"]["experience"]["camera"]["eyeMeters"] / 0.9144
+        self.assertTrue(0 < edge["minOpacity"] < 1 and 0 < edge["minScale"] < 1)
+        self.assertTrue(0 <= kick["restOpacity"] < 1 and kick["fadeSeconds"] > 0)
+
+        def side_on(a, seat):
+            e, n, total = (seat["x"] - 50, seat["y"] + eye, seat["z"]), 32, 0.0
+            pt = lambda u: (a["fromX"] + (a["toX"] - a["fromX"]) * u - 50, a["apex"] * 4 * u * (1 - u), a["lane"])
+            for i in range(n):
+                p, q = pt(i / n), pt((i + 1) / n)
+                t = [q[k] - p[k] for k in range(3)]
+                d = [e[k] - (p[k] + q[k]) / 2 for k in range(3)]
+                tl, dl = math.sqrt(sum(c * c for c in t)), math.sqrt(sum(c * c for c in d))
+                total += 90 if tl < 1e-5 else math.degrees(math.acos(min(1, abs(sum(t[k] * d[k] for k in range(3))) / (tl * dl))))
+            deg = total / n
+            rule = kick if a["shape"] == "kick" else edge
+            return max(0.0, min(1.0, (deg - rule["goneDegrees"]) / (rule["fullDegrees"] - rule["goneDegrees"])))
+
+        faded = 0
+        for event in (REGULATION, OVERTIME, PICK_SIX):
+            s = SceneAt.at(event, 99999, speed=1.0)
+            seats = {x["id"]: x for x in s["presentation"]["stadium"]["seats"]}
+            for a in self.arcs(s):
+                if a["shape"] not in edge["shapes"]:
+                    continue
+                self.assertEqual(side_on(a, seats["club"]), 1.0, f"{a['id']} {a['type']}: dimmed from the club seat")
+                if "field goal" in a["type"].lower() and (a["toX"] < a["fromX"]):
+                    # Kicked into the home end, toward the end-zone seat.
+                    self.assertLess(side_on(a, seats["endzone"]), 0.75, f"{a['id']}: a streak from behind the posts")
+                    faded += 1
+        self.assertGreater(faded, 3)
+
+    def test_goal_kick_rules_for_short_blocked_and_the_away_end(self):
+        field = dict(sc.RULES["college-football"]["field"])
+        t = self.tokens
+        short = sc.goal_kick({"type": "Field Goal Missed", "text": "45 yard field goal is No Good, Short"}, 30.0, "home", field, t)
+        self.assertEqual(short["result"], "short")
+        self.assertLess(short["toX"], field["length"] + field["endZone"])
+        self.assertIsNone(sc.goal_kick({"type": "Blocked Field Goal", "text": "BLOCKED"}, 30.0, "home", field, t))
+        self.assertIsNone(sc.goal_kick({"type": "Punt", "text": ""}, 30.0, "home", field, t))
+        away = sc.goal_kick({"type": "Field Goal Missed", "text": "No Good, Wide Right"}, 70.0, "away", field, t)
+        # The away side attacks -x; facing -x the kicker's right is -z.
+        self.assertLess(away["toX"], -field["endZone"])
+        self.assertLess(away["lane"], -field["goalPostWidth"] / 2)
+        xp = sc.goal_kick({"type": "Extra Point Good", "text": "extra point is GOOD"}, 85.0, "home", field, t)
+        self.assertEqual((xp["lane"], xp["result"]), (0.0, "good"))
 
     def test_clock_records_are_never_drawn(self):
         for a in self.arcs(self.final):
@@ -622,7 +712,8 @@ class TestSceneGeometry(unittest.TestCase):
         mats = self.final["shaderGraph"]["materials"]
         for actor, key, usda in (("field", "paintMaterial", "Field.rkassets/FieldPaint.usda"),
                                  ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda"),
-                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda")):
+                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda"),
+                                 ("field", "turfMaterial", "Turf.rkassets/TurfSheen.usda")):
             section = self.final["visual"][actor]
             for part in key.split(".")[:-1]:
                 section = section[part]
@@ -635,33 +726,60 @@ class TestSceneGeometry(unittest.TestCase):
             declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
             runtime = ({"Color", "UseMask", "Roughness", "BorderColor", "BorderRoughness", "BorderGrassCut",
                         "HalfWidth", "HalfLength"} if key == "paintMaterial" else
-                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else set())
+                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else
+                       {"Tint", "Roughness", "Sheen"} if key == "turfMaterial" else
+                       {"FaceOpacity", "GrazingOpacity"})
             self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
             self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
         shells = self.final["visual"]["field"]["shells"]
         self.assertTrue((root / "assets" / shells["atlas"]).is_file())
         self.assertTrue(0 <= shells["firstLayer"] <= shells["lastLayer"] <= 7, "the atlas holds eight layers")
-        breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
-        self.assertTrue(breakup.is_file())
-        self.assertLess(breakup.stat().st_size, 1_000_000)
+        for name, rel in self.final["visual"]["field"]["shaderTextures"].items():
+            tex = root / "assets" / rel
+            self.assertTrue(tex.is_file(), name)
+            self.assertLess(tex.stat().st_size, 4_000_000, name)
+        turf = self.final["visual"]["field"]["turf"]
+        self.assertEqual(len(turf["stripeSheen"]), len(turf["stripeTint"]), "a sheen per stripe")
+
+    def test_the_boundary_is_as_wide_as_each_book_says(self):
+        """NFL: a solid white border six feet (two yards) wide outside the
+        sidelines and end lines (2026 Rule 1 §1 Art.2). NCAA: a 4-inch
+        sideline (1-2-1-a). Measured off the baked markings, not the table."""
+        import json as _json
+        root = pathlib.Path(sc.__file__).resolve().parent.parent / "assets" / "actors" / "field" / "markings"
+        for league, kind, width in (("nfl", "border", 2.0), ("college-football", "sideline", 4 / 36)):
+            prims = _json.loads((root / league / "markings.json").read_text())["primitives"]
+            near = [q for q in prims if q["kind"] == kind and max(y for _, y in q["poly"]) <= 1e-6]
+            self.assertTrue(near, f"{league}: no near {kind}")
+            ys = [y for q in near for _, y in q["poly"]]
+            self.assertAlmostEqual(max(ys) - min(ys), width, places=3, msg=league)
+
+    def test_a_net_is_visible_face_on(self):
+        """Behind the goal a net faces the eye, and a real one reads there as
+        a mesh of cords: it keeps a face-on minimum and only fades edge-on."""
+        net = self.final["visual"]["sideline"]["net"]
+        self.assertGreaterEqual(net["minOpacity"], 0.35)
+        self.assertLess(net["grazingOpacity"], net["minOpacity"])
 
     def test_field_paint_is_paint_not_white(self):
-        """Under the field floods pure white albedo reads as a flat grey slab.
-        Painted lines sit at field-paint albedo (0.75-0.85 sRGB), the border a
-        touch darker, and the border is duller than any grass so it never
-        catches a specular highlight, with more grass let through it."""
+        """Pure white albedo blows out under the floods, and grey paint reads
+        as concrete. Lines sit at chalky field-paint albedo (0.80-0.88 sRGB)
+        and the border a touch below them, still off-white (0.75-0.85). The
+        border is duller than any grass so it never catches a specular
+        highlight, and lets more grass through."""
         def srgb(h):
             h = h.lstrip("#")
             return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
         p = self.final["visual"]["field"]["paint"]
-        for key in ("white", "border"):
+        for key, lo, hi in (("white", 0.80, 0.88), ("border", 0.75, 0.85)):
             for ch in srgb(p[key]):
-                self.assertGreaterEqual(ch, 0.70, key)
-                self.assertLessEqual(ch, 0.85, key)
+                self.assertGreaterEqual(ch, lo, key)
+                self.assertLessEqual(ch, hi, key)
         self.assertLessEqual(max(srgb(p["border"])), max(srgb(p["white"])))
         turf = self.final["visual"]["field"]["turf"]
         self.assertGreaterEqual(p["borderRoughness"], max(turf["stripeRoughness"]))
-        self.assertGreater(p["borderGrassCut"], self.final["shaderGraph"]["materials"]["fieldPaint"]["parameters"]["GrassCut"])
+        # a blade shows where it stands above the cut, so a lower cut lets more through
+        self.assertLess(p["borderGrassCut"], self.final["shaderGraph"]["materials"]["fieldPaint"]["parameters"]["GrassCut"])
 
     def test_pylons_stand_where_each_book_puts_them(self):
         """NFL: the four goal-line corners and two on each end line at the

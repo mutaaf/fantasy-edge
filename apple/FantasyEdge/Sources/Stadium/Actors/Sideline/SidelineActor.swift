@@ -64,7 +64,10 @@ final class SidelineActor: StadiumActor {
         guard let ask = c.shared.netSway, !nets.isEmpty else { return }
         let S = c.look.sideline.sway
         let now = c.shared.time
-        if sway?.until != ask.until { sway = (ask.until, now) }
+        if sway?.until != ask.until {
+            sway = (ask.until, now)
+            StadiumLog.log.notice("[stadium] sideline: net sway at x \(ask.endX, privacy: .public) for \(ask.until - now, privacy: .public)s\(c.reduceMotion ? ", held still (reduce motion)" : "", privacy: .public)")
+        }
         guard let started = sway?.started else { return }
         let net = nets.min { abs($0.endX - ask.endX) < abs($1.endX - ask.endX) }!.entity
         guard now < ask.until, !c.reduceMotion else {
@@ -75,9 +78,13 @@ final class SidelineActor: StadiumActor {
         let t = now - started
         let angle = S.maxDegrees * .pi / 180 * min(1, max(0, ask.strength))
             * exp(-t / S.decaySeconds) * sin(2 * .pi * S.frequency * t)
-        // The net faces the field along x; swinging about z moves its bottom
-        // toward and away from the end line.
-        net.orientation = simd_quatf(angle: Float(angle), axis: SIMD3(0, 0, 1))
+        // The net faces the field along x. It billows about z - its bottom
+        // toward and away from the end line - and sways a share of that about
+        // x, within its own plane, which is the motion that reads from behind
+        // the goal, where the billow is straight toward the eye.
+        let billow = simd_quatf(angle: Float(angle), axis: SIMD3(0, 0, 1))
+        let lateral = simd_quatf(angle: Float(angle * S.lateralShare * cos(.pi * S.frequency * t)), axis: SIMD3(1, 0, 0))
+        net.orientation = billow * lateral
     }
 
     // MARK: props
@@ -230,9 +237,10 @@ final class SidelineActor: StadiumActor {
         }
     }
 
-    /// Nets on the view-angle falloff graph (NetFresnel.usda): nearly gone
-    /// flat-on from the stands, cords at a grazing angle or up close. The
-    /// blended texture material stays if it does not load.
+    /// Nets on the view-angle graph (NetFresnel.usda): a mesh of cords at
+    /// `visual.sideline.net.minOpacity` face-on - behind the goal, the view
+    /// that matters - fading only as the net turns edge-on. The blended
+    /// texture material stays if it does not load.
     private func upgradeNets(_ meshes: [ModelEntity], _ c: StadiumContext) {
         let V = c.look.sideline
         guard !meshes.isEmpty, let spec = c.spec.shaderGraph?.materials?[V.netMaterial],
@@ -243,6 +251,9 @@ final class SidelineActor: StadiumActor {
                 return
             }
             for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+            // a net keeps a face-on minimum; it only fades as it turns edge-on
+            StadiumShaderGraph.set(&m, "FaceOpacity", V.net.minOpacity)
+            StadiumShaderGraph.set(&m, "GrazingOpacity", V.net.grazingOpacity)
             do { try m.setParameter(name: "Mask", value: .textureResource(mask)) } catch {
                 StadiumLog.log.error("[shadergraph] net mask: \(error.localizedDescription, privacy: .public)")
                 return

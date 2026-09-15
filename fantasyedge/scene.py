@@ -569,6 +569,152 @@ PRESENTATION = {
 }
 
 
+def field_silhouette(seat: dict, field: dict, eye_meters: float, meters_per_yard: float,
+                     samples: int = 96) -> list[tuple[float, float]]:
+    """The playing surface's outline, end zones included, as the seated
+    wearer sees it: (yaw degrees, + right; degrees below the eye, + down),
+    with the wearer facing the seat's lookAt. Densely sampled, so a caller can
+    treat it as a polygon in angle space."""
+    ex, ez = seat["x"], seat["z"]
+    ey = seat["y"] + eye_meters / meters_per_yard
+    fx, fz = seat["lookAt"]["x"] - ex, seat["lookAt"]["z"] - ez
+    n = math.hypot(fx, fz) or 1.0
+    fx, fz = fx / n, fz / n
+    # Right-handed with y up: facing (fx, fz), the wearer's right is (-fz, fx).
+    rx, rz = -fz, fx
+    x0, x1 = -field["endZone"], field["length"] + field["endZone"]
+    hw = field["width"] / 2
+    corners = [(x0, -hw), (x1, -hw), (x1, hw), (x0, hw)]
+    out = []
+    for i in range(4):
+        (ax, az), (bx, bz) = corners[i], corners[(i + 1) % 4]
+        for k in range(samples):
+            t = k / samples
+            px, pz = ax + (bx - ax) * t, az + (bz - az) * t
+            dx, dz = px - ex, pz - ez
+            ahead, right = dx * fx + dz * fz, dx * rx + dz * rz
+            out.append((math.degrees(math.atan2(right, ahead)),
+                        math.degrees(math.atan2(ey, math.hypot(dx, dz)))))
+    return out
+
+
+def _inside(pt: tuple[float, float], poly: list[tuple[float, float]]) -> bool:
+    x, y = pt
+    inside = False
+    j = len(poly) - 1
+    for i in range(len(poly)):
+        xi, yi = poly[i]
+        xj, yj = poly[j]
+        if (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / (yj - yi) + xi:
+            inside = not inside
+        j = i
+    return inside
+
+
+def panel_box(slot: dict, size: dict, points_per_meter: float, margin: float = 0.0) -> tuple[float, float, float, float]:
+    """A panel's angular box (yaw0, yaw1, below0, below1) from its slot and
+    its footprint in points (panelSizes). The panel faces the wearer, so its
+    half-extents are the angles its half-width and half-height subtend."""
+    d = slot["distance"]
+    below = math.degrees(math.atan2(-slot["height"], d))
+    hw = math.degrees(math.atan2(size["widthPoints"] / points_per_meter / 2, d)) + margin
+    hh = math.degrees(math.atan2(size["maxHeightPoints"] / points_per_meter / 2, d)) + margin
+    return slot["yaw"] - hw, slot["yaw"] + hw, below - hh, below + hh
+
+
+def box_overlaps(box: tuple[float, float, float, float], poly: list[tuple[float, float]]) -> bool:
+    y0, y1, b0, b1 = box
+    if any(y0 <= p[0] <= y1 and b0 <= p[1] <= b1 for p in poly):
+        return True
+    grid = [(y0 + (y1 - y0) * i / 6, b0 + (b1 - b0) * j / 4) for i in range(7) for j in range(5)]
+    return any(_inside(g, poly) for g in grid)
+
+
+def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float) -> dict:
+    """Where each side panel and the controls go from this seat, and whether
+    they start folded.
+
+    From a lower-bowl seat the field sits in a band below the eye and panels
+    fit under it at the sides; from the upper deck or the press box the field
+    fills the lower view, and the same fixed angles put the drive log over the
+    play. So each panel searches its side for the place nearest its default
+    that stays inside the comfort limits and outside the field's silhouette,
+    and folds by default when there is none - the folded tab is placed the same
+    way. Every client lays panels out from this, not from its own guess."""
+    poly = field_silhouette(seat, field, eye_meters, meters_per_yard)
+    search = layout["search"]
+    step, margin = search["stepDegrees"], search["marginDegrees"]
+    out = {}
+    for name in ("drive", "trailing", "controls"):
+        base = layout["slots"][name]
+        d = base["distance"]
+        side = 0 if base["yaw"] == 0 else math.copysign(1, base["yaw"])
+        yaws = [base["yaw"]] if side == 0 else [
+            side * a for a in _frange(abs(base["yaw"]), search["minSideDegrees"], -step)]
+        # The controls sit dead ahead, so they may not climb into the middle
+        # of the view to dodge the field; folded to the pill instead.
+        top = search["controlsHighestBelowDegrees"] if name == "controls" else search["highestBelowDegrees"]
+        belows = list(_frange(layout["maxBelowDegrees"], top, -step))
+        default_below = math.degrees(math.atan2(-base["height"], d))
+
+        def place(size):
+            best = None
+            for yaw in yaws:
+                for below in belows:
+                    slot = {"yaw": yaw, "distance": d, "height": round(-d * math.tan(math.radians(below)), 3)}
+                    if box_overlaps(panel_box(slot, size, layout["pointsPerMeter"], margin), poly):
+                        continue
+                    cost = abs(below - default_below) + 2 * abs(yaw - base["yaw"])
+                    if best is None or cost < best[0]:
+                        best = (cost, slot)
+            return best[1] if best else None
+
+        open_slot = place(layout["panelSizes"][name])
+        if open_slot:
+            out[name] = {**open_slot, "folded": False}
+        else:
+            tab = place(layout["panelSizes"]["tab"])
+            out[name] = {**(tab or {"yaw": base["yaw"], "distance": d, "height": base["height"]}), "folded": True}
+    out["scorebugHidden"] = board_carries_score(seat, BOWL.get("videoBoard"), layout["scorebugYield"])
+    return out
+
+
+def board_carries_score(seat: dict, board: dict | None, rule: dict) -> bool:
+    """Whether the video board already shows the score legibly from this seat:
+    its face turned toward the wearer, near straight ahead, and wide enough.
+    Then the glass scorebug would only sit in front of it."""
+    if not board:
+        return False
+    cx, cy, cz = board["centre"]
+    ex, ez = seat["x"], seat["z"]
+    to_seat = (ex - cx, ez - cz)
+    if board["facing"][0] * to_seat[0] + board["facing"][2] * to_seat[1] <= 0:
+        return False
+    fx, fz = seat["lookAt"]["x"] - ex, seat["lookAt"]["z"] - ez
+    ahead = math.atan2(fx * (cz - ez) - fz * (cx - ex), fx * (cx - ex) + fz * (cz - ez))
+    if abs(math.degrees(ahead)) > rule["inViewDegrees"]:
+        return False
+    dist = math.hypot(cx - ex, cz - ez, cy - seat["y"])
+    return math.degrees(2 * math.atan2(board["size"][0] / 2, dist)) >= rule["boardMinDegrees"]
+
+
+def _frange(start: float, stop: float, step: float):
+    v = start
+    while (step < 0 and v >= stop - 1e-9) or (step > 0 and v <= stop + 1e-9):
+        yield round(v, 3)
+        v += step
+
+
+def experience_visual(tokens: dict, field: dict) -> dict:
+    """visual.experience with each seat's panel layout worked out for this
+    field: `layout.perSeat[seat id] = {drive, trailing, controls}`."""
+    exp = tokens["visual"]["experience"]
+    eye = exp["camera"]["eyeMeters"]
+    mpy = PRESENTATION["stadium"]["metersPerYard"]
+    per = {s["id"]: seat_panels(s, field, exp["layout"], eye, mpy) for s in PRESENTATION["stadium"]["seats"]}
+    return {**exp, "layout": {**exp["layout"], "perSeat": per}}
+
+
 def load_tokens(path: pathlib.Path | str | None = None) -> dict:
     return json.loads(pathlib.Path(path or TOKENS_PATH).read_text())
 
@@ -721,6 +867,45 @@ def lane(index: int, count: int, width: float, tokens: dict) -> float:
     if count <= 1:
         return 0.0
     return round(-spread + 2 * spread * index / (count - 1), 3)
+
+
+def goal_kick(play: dict, from_x: float, side: str | None, field: dict, tokens: dict) -> dict | None:
+    """Where a field goal or extra point goes: through the uprights or past them.
+
+    ESPN's end yard line for a kick is where the next play starts, not where
+    the ball went, so a made kick drawn from it landed beside the posts. The
+    uprights stand on the end line of the end zone the kicking side attacks
+    (home attacks x = 100, so x = 110). A good kick ends `overshootYards` past
+    that plane on the centre line, and the kick apex formula carries it over
+    the crossbar (a test asserts the clearance). A miss the text calls wide
+    ends `wideYards` outside the upright on that side of the kicker; a short
+    one ends `shortYards` in front of the plane. Returns None for anything
+    else, including blocks, which keep their own lane.
+
+    Facing +x with +y up, the kicker's right is +z.
+    """
+    kind = (play.get("type") or "").lower()
+    if "field goal" not in kind and "extra point" not in kind:
+        return None
+    text = (play.get("text") or "").lower()
+    if "blocked" in text or "blocked" in kind:
+        return None
+    rule = tokens["arc"]["goalKick"]
+    if side is None:
+        side = "home" if from_x >= field["length"] / 2 else "away"
+    attack = 1.0 if side == "home" else -1.0
+    plane = field["length"] + field["endZone"] if side == "home" else -field["endZone"]
+    half = field["goalPostWidth"] / 2
+    if "short" in text:
+        return {"toX": round(plane - attack * rule["shortYards"], 3), "lane": 0.0, "result": "short"}
+    to_x = round(plane + attack * rule["overshootYards"], 3)
+    if "wide right" in text or "wide left" in text:
+        right = 1.0 if "wide right" in text else -1.0
+        return {"toX": to_x, "lane": round(right * attack * (half + rule["wideYards"]), 3),
+                "result": "wideRight" if right > 0 else "wideLeft"}
+    if "no good" in text or "missed" in kind:
+        return {"toX": to_x, "lane": round(attack * (half + rule["wideYards"]), 3), "result": "wide"}
+    return {"toX": to_x, "lane": 0.0, "result": "good"}
 
 
 def _side(team_abbr: str, home: dict, away: dict) -> str | None:
@@ -922,6 +1107,10 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
             x0, x1 = play.get("fromYard"), play.get("toYard")
             if x0 is None or x1 is None:
                 continue
+            side = _side(play.get("team") or drive.get("team", ""), home, away)
+            goal = goal_kick(play, _num(x0), side, field, tokens)
+            if goal:
+                x1 = goal["toX"]
             dist = abs(_num(x1) - _num(x0))
             real = seconds(style, dist, tokens)
             arcs.append({
@@ -929,13 +1118,13 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 "style": style, "shape": shape,
                 "type": play.get("type", ""),
                 "fromX": _num(x0), "toX": _num(x1),
-                "lane": lane(pi, len(plays), width, tokens),
+                "lane": goal["lane"] if goal else lane(pi, len(plays), width, tokens),
                 "apex": apex(shape, dist, tokens),
                 "color": f"arc.{style}",
                 "dash": tokens["arc"]["dash"].get(style),
                 "seconds": real,
                 "duration": duration(real, speed, tokens),
-                "side": _side(play.get("team") or drive.get("team", ""), home, away),
+                "side": side,
                 "text": play.get("text", ""),
                 "period": play.get("period"), "clock": play.get("clock", ""),
                 "down": play.get("down"), "distance": play.get("distance"),
@@ -1102,5 +1291,5 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
         "palette": tokens["color"],
         "shaderGraph": tokens.get("shaderGraph", {}),
         "motion": tokens["motion"],
-        "visual": tokens["visual"],
+        "visual": {**tokens["visual"], "experience": experience_visual(tokens, field)},
     }
