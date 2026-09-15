@@ -47,6 +47,15 @@ public final class StadiumAssets {
     /// Mask images an actor composes itself rather than sampling directly.
     private static let imagesOnly: Set<String> = ["crowd.crowd"]
 
+    /// Textures that are only ever magnified, so a mip chain would be a third
+    /// more memory no sampler reads. The cloud veil wraps 2048 texels round
+    /// 360 degrees, about 6 a degree, and is empty above 69 degrees of
+    /// elevation, where the equirect's rows pinch it to at most 16 a degree:
+    /// still under what the display resolves. The star map is not on this
+    /// list: above about 83 degrees its rows pinch past the display, and a
+    /// star without mips there would shimmer as the head moves.
+    private static let magnifiedOnly: Set<String> = ["sky.clouds"]
+
     public func prepare(_ look: SceneSpec.Look) async {
         if ready { return }
         if let loading { await loading.value; return }
@@ -61,7 +70,15 @@ public final class StadiumAssets {
             ready = true
             return
         }
-        var byPath: [String: TextureResource] = [:]
+        let start = ContinuousClock.now
+        // Every file is started at once and awaited together. The loaders are
+        // main-actor entry points that decode off the main thread, so run one
+        // after another they left the stadium waiting on 47 models in series
+        // (6.2 of 7.5 s in the simulator at integration-11); started together
+        // they share the decoders. Results land in the dictionaries on the
+        // main actor as each finishes, and `ready` waits for all of them.
+        var jobs: [Task<Void, Never>] = []
+        var byPath: [String: [String]] = [:]
         for (actor, section) in look.assetSections {
             for (id, rel) in section.sorted(by: { $0.key < $1.key }) {
                 let key = "\(actor).\(id)"
@@ -69,32 +86,48 @@ public final class StadiumAssets {
                 switch url.pathExtension.lowercased() {
                 case "png":
                     if Self.imagesOnly.contains(key) {
-                        if let img = Self.image(url) { images[key] = img; bytes += img.width * img.height * 4 }
+                        jobs.append(Task { @MainActor in
+                            let img = await Task.detached(priority: .userInitiated) { Self.image(url) }.value
+                            if let img { self.images[key] = img; self.bytes += img.width * img.height * 4 }
+                        })
                         continue
                     }
                     // Two actors may name one file; it is loaded once.
-                    if let shared = byPath[rel] {
-                        textures[key] = shared
+                    if byPath[rel] != nil {
+                        byPath[rel]?.append(key)
                         continue
                     }
-                    var options = TextureResource.CreateOptions(semantic: Self.semantic(id))
-                    options.mipmapsMode = .allocateAndGenerateAll
-                    if let t = try? await TextureResource(contentsOf: url, options: options) {
-                        textures[key] = t
-                        byPath[rel] = t
-                        if let img = Self.image(url) { bytes += img.width * img.height * 16 / 3 }
-                    }
+                    byPath[rel] = [key]
+                    let semantic = Self.semantic(id)
+                    let mips = !Self.magnifiedOnly.contains(key)
+                    jobs.append(Task { @MainActor in
+                        let one = ContinuousClock.now
+                        var options = TextureResource.CreateOptions(semantic: semantic)
+                        options.mipmapsMode = mips ? .allocateAndGenerateAll : .none
+                        if let t = try? await TextureResource(contentsOf: url, options: options) {
+                            self.textures[key] = t
+                            // The header, not a second decode of the image, gives the size.
+                            if let size = Self.pixelSize(url) { self.bytes += size.width * size.height * (mips ? 16 : 12) / 3 }
+                        }
+                        StadiumTiming.log("asset \(key)", since: one)
+                    })
                 case "hdr", "exr":
-                    if let img = Self.image(url, float: true),
-                       let env = try? await EnvironmentResource(equirectangular: img, withName: key) {
-                        environment = env
-                        bytes += img.width * img.height * 8
-                    }
+                    jobs.append(Task { @MainActor in
+                        let one = ContinuousClock.now
+                        let img = await Task.detached(priority: .userInitiated) { Self.image(url, float: true) }.value
+                        if let img, let env = try? await EnvironmentResource(equirectangular: img, withName: key) {
+                            self.environment = env
+                            self.bytes += img.width * img.height * 8
+                        }
+                        StadiumTiming.log("asset \(key)", since: one)
+                    })
                 case "wav", "caf", "m4a":
                     let loop = id.hasSuffix("Bed")
-                    if let a = try? await AudioFileResource(contentsOf: url, configuration: .init(shouldLoop: loop)) {
-                        audio[key] = a
-                    }
+                    jobs.append(Task { @MainActor in
+                        if let a = try? await AudioFileResource(contentsOf: url, configuration: .init(shouldLoop: loop)) {
+                            self.audio[key] = a
+                        }
+                    })
                 default:
                     continue
                 }
@@ -102,26 +135,48 @@ public final class StadiumAssets {
         }
         // Models: a specialist's `.usdz` (exported from Blender beside its
         // `.glb`), loaded once as a template that actors clone.
+        var modelJobs: [Task<Void, Never>] = []
         for (actor, section) in look.modelSections {
             for (id, rel) in section.sorted(by: { $0.key < $1.key }) {
                 let url = root.appendingPathComponent(rel)
                 guard ["usdz", "usda", "usdc", "reality"].contains(url.pathExtension.lowercased()) else { continue }
-                do {
-                    models["\(actor).\(id)"] = try await Entity(contentsOf: url)
-                } catch {
-                    StadiumLog.log.error("[stadium] model \(actor).\(id) failed to load from \(rel): \(error.localizedDescription)")
-                }
+                modelJobs.append(Task { @MainActor in
+                    let one = ContinuousClock.now
+                    do {
+                        self.models["\(actor).\(id)"] = try await Entity(contentsOf: url)
+                    } catch {
+                        StadiumLog.log.error("[stadium] model \(actor).\(id) failed to load from \(rel): \(error.localizedDescription)")
+                    }
+                    StadiumTiming.log("model \(actor).\(id)", since: one)
+                })
             }
         }
+        for job in jobs { await job.value }
+        for keys in byPath.values where keys.count > 1 {
+            if let t = textures[keys[0]] { for k in keys.dropFirst() { textures[k] = t } }
+        }
+        StadiumTiming.log("assets textures, probe and sound", since: start)
+        let modelsStart = start
+        for job in modelJobs { await job.value }
+        StadiumTiming.log("assets models", since: modelsStart)
+        StadiumTiming.log("assets total", since: start)
         ready = true
         StadiumLog.log.notice("[stadium] models: \(self.models.count)")
         StadiumLog.log.notice("[stadium] assets: \(self.textures.count) textures, \(self.audio.count) sounds, probe \(self.environment == nil ? "missing" : "loaded"), ~\(self.bytes / 1_048_576) MB")
     }
 
-    static func image(_ url: URL, float: Bool = false) -> CGImage? {
+    nonisolated static func image(_ url: URL, float: Bool = false) -> CGImage? {
         let options = [kCGImageSourceShouldAllowFloat: float] as CFDictionary
         guard let src = CGImageSourceCreateWithURL(url as CFURL, options) else { return nil }
         return CGImageSourceCreateImageAtIndex(src, 0, options)
+    }
+
+    /// Width and height from the file's header, without decoding its pixels.
+    nonisolated static func pixelSize(_ url: URL) -> (width: Int, height: Int)? {
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any],
+              let w = props[kCGImagePropertyPixelWidth] as? Int, let h = props[kCGImagePropertyPixelHeight] as? Int else { return nil }
+        return (w, h)
     }
 
     /// A texture by `<actor>.<id>`.

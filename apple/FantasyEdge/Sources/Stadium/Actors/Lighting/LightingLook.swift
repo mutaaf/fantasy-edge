@@ -75,6 +75,13 @@ extension SceneSpec.Look {
         public let minScale: Double
     }
 
+    /// One seat-facing quad per beam in place of a crossed pair.
+    public struct LightingBeamFacing: Decodable, Equatable, Sendable {
+        public let shaderOpacityScale: Double
+        public let fallbackOpacityScale: Double
+        public let trimU: Double
+    }
+
     public struct LightingBeams: Decodable, Equatable, Sendable {
         public let perBank: Int
         public let fanYards: Double
@@ -84,6 +91,7 @@ extension SceneSpec.Look {
         public let opacity: SceneSpec.PerMode<Double>
         public let color: String
         public let overdrawCapScreens: Double
+        public let facing: LightingBeamFacing
         public let startInsideOffsetYards: Double
         public let endHeightYards: SceneSpec.PerMode<Double>
         public let shader: LightingBeamShader

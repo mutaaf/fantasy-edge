@@ -15,8 +15,8 @@ import UIKit
 ///   - near       `near_<preset>`: stairs, rails and modelled chairs in front
 ///                of the wearer.
 ///   - table      the tabletop model, cut away on the home side.
-/// Only what is drawn is attached: the wearer's near patch, every other
-/// preset's fill. A seat change swaps them, so `-stadiumStats` counts exactly
+/// Only what is drawn is attached: the wearer's near patch, and the bands
+/// merged with every other preset's fill. A seat change swaps them, so `-stadiumStats` counts exactly
 /// what is on screen. Without the kit it falls back to `buildProcedural`.
 ///
 /// Publishes to the blackboard: where the press box is, and a point in the
@@ -26,10 +26,17 @@ final class BowlActor: StadiumActor {
     let name = "bowl"
     let root = Entity()
 
-    /// Near patches and fills by preset id, held off-stage until needed.
+    /// Near patches by preset id, held off-stage until needed.
     private var near: [String: Entity] = [:]
-    private var fills: [String: Entity] = [:]
+    /// Every preset's fill, flattened into `seatsFar`'s space. They and the
+    /// bands share one material, so they draw as one merged mesh - the bands
+    /// plus every fill but the wearer's - rebuilt on a seat change. Drawn as
+    /// separate pieces they were five draw parts; merged they are one.
+    private var fills: [String: MeshBuilder] = [:]
+    private var bands = MeshBuilder()
+    private var bandsEntity: ModelEntity?
     private var activePreset: String?
+    private var mergedMaterial: (any Material)?
 
     init() { root.name = "actor.bowl" }
 
@@ -37,6 +44,8 @@ final class BowlActor: StadiumActor {
         clear()
         near = [:]
         fills = [:]
+        bands = MeshBuilder()
+        bandsEntity = nil
         activePreset = nil
         let B = c.look.bowl
         let scale = Float(1 / B.yardMeters)
@@ -53,27 +62,46 @@ final class BowlActor: StadiumActor {
                 e.scale = SIMD3(repeating: scale)
                 dress(e, look: B)
             }
-            // Pull the per-preset pieces out of their templates; keep the
-            // always-drawn remainder (stands, bands) attached.
-            for (prefix, into) in [("near_", \BowlActor.near), ("fill_", \BowlActor.fills)] {
-                let source = prefix == "near_" ? patches : far
-                for piece in Self.descendants(of: source) where piece.name.hasPrefix(prefix) {
-                    // USD nests a mesh under an Xform of the same name; take the outermost.
-                    if let parent = piece.parent, parent.name.hasPrefix(prefix) { continue }
-                    let id = String(piece.name.dropFirst(prefix.count))
-                    // The file's Y-up conversion lives on the prims above the
-                    // piece. Carry the piece's whole transform relative to the
-                    // model root into the holder, or it lands rotated a quarter
-                    // turn - the dark ramp across `crowd-closeup`.
-                    let local = piece.transformMatrix(relativeTo: source)
-                    let holder = Entity()
-                    holder.name = piece.name
-                    holder.scale = SIMD3(repeating: scale)
-                    piece.removeFromParent()
-                    holder.addChild(piece)
-                    piece.setTransformMatrix(local, relativeTo: holder)
-                    self[keyPath: into][id] = holder
-                }
+            // Pull the per-preset pieces out of their templates; the stands
+            // stay attached as they are.
+            for piece in Self.descendants(of: far) where piece.name.hasPrefix("fill_") {
+                if let parent = piece.parent, parent.name.hasPrefix("fill_") { continue }
+                var mesh = MeshBuilder()
+                Self.flatten(piece, into: &mesh, relativeTo: far)
+                fills[String(piece.name.dropFirst("fill_".count))] = mesh
+                piece.removeFromParent()
+            }
+            // What is left of seatsFar is the bands: flatten them beside the
+            // fills and draw the lot as one entity with the bands' material.
+            let bandModels = Self.descendants(of: far).filter { $0.components.has(ModelComponent.self) }
+            let bandMaterial = bandModels.first?.components[ModelComponent.self]?.materials.first
+            for piece in bandModels {
+                Self.flatten(piece, into: &bands, relativeTo: far)
+                piece.removeFromParent()
+            }
+            if let bandMaterial {
+                let merged = ModelEntity()
+                merged.name = "bands.merged"
+                far.addChild(merged)
+                bandsEntity = merged
+                mergedMaterial = bandMaterial
+            }
+            for piece in Self.descendants(of: patches) where piece.name.hasPrefix("near_") {
+                // USD nests a mesh under an Xform of the same name; take the outermost.
+                if let parent = piece.parent, parent.name.hasPrefix("near_") { continue }
+                let id = String(piece.name.dropFirst("near_".count))
+                // The file's Y-up conversion lives on the prims above the
+                // piece. Carry the piece's whole transform relative to the
+                // model root into the holder, or it lands rotated a quarter
+                // turn - the dark ramp across `crowd-closeup`.
+                let local = piece.transformMatrix(relativeTo: patches)
+                let holder = Entity()
+                holder.name = piece.name
+                holder.scale = SIMD3(repeating: scale)
+                piece.removeFromParent()
+                holder.addChild(piece)
+                piece.setTransformMatrix(local, relativeTo: holder)
+                near[id] = holder
             }
             // Debug: `-bowlSkip stands,far,near,fills` leaves pieces out, to find
             // which one draws something in a look-dev shot.
@@ -116,8 +144,46 @@ final class BowlActor: StadiumActor {
         for (id, e) in near {
             if id == want { if e.parent == nil { attach(e) } } else { e.removeFromParent() }
         }
-        for (id, e) in fills {
-            if id == want { e.removeFromParent() } else if e.parent == nil { attach(e) }
+        relayBands(except: want)
+    }
+
+    /// The bands and every fill but `except`'s, as one mesh.
+    private func relayBands(except: String) {
+        guard let bandsEntity, let mergedMaterial else { return }
+        var mesh = bands
+        for (id, fill) in fills.sorted(by: { $0.key < $1.key }) where id != except { mesh.append(fill) }
+        guard let resource = mesh.resource("bands.merged") else { return }
+        if var model = bandsEntity.model {
+            model.mesh = resource
+            bandsEntity.model = model
+        } else {
+            bandsEntity.model = ModelComponent(mesh: resource, materials: [mergedMaterial])
+        }
+    }
+
+    /// Every mesh part under `e`, in `space`'s coordinates, appended to `mesh`.
+    private static func flatten(_ e: Entity, into mesh: inout MeshBuilder, relativeTo space: Entity) {
+        for node in descendants(of: e) {
+            guard let model = node.components[ModelComponent.self] else { continue }
+            let toSpace = node.transformMatrix(relativeTo: space)
+            let contents = model.mesh.contents
+            for instance in contents.instances {
+                guard let m = contents.models[instance.model] else { continue }
+                let xf = toSpace * instance.transform
+                let n3 = simd_float3x3(SIMD3(xf.columns.0.x, xf.columns.0.y, xf.columns.0.z),
+                                       SIMD3(xf.columns.1.x, xf.columns.1.y, xf.columns.1.z),
+                                       SIMD3(xf.columns.2.x, xf.columns.2.y, xf.columns.2.z)).inverse.transpose
+                for part in m.parts {
+                    guard let idx = part.triangleIndices?.elements else { continue }
+                    let pos = part.positions.elements
+                    let base = UInt32(mesh.positions.count)
+                    mesh.positions += pos.map { p in let v = xf * SIMD4(p, 1); return SIMD3(v.x, v.y, v.z) }
+                    mesh.normals += (part.normals?.elements ?? Array(repeating: SIMD3(0, 1, 0), count: pos.count))
+                        .map { simd_normalize(n3 * $0) }
+                    mesh.uvs += part.textureCoordinates?.elements ?? Array(repeating: SIMD2(0, 0), count: pos.count)
+                    mesh.indices += idx.map { $0 + base }
+                }
+            }
         }
     }
 

@@ -26,6 +26,8 @@ enum StadiumShaderGraph {
     static func material(_ prim: String, file: String) async -> ShaderGraphMaterial? {
         let key = "\(file)#\(prim)"
         if let hit = cache[key] { return hit }
+        let start = ContinuousClock.now
+        defer { StadiumTiming.log("shadergraph \(prim)", since: start) }
         let scene = (file as NSString).lastPathComponent
         if let m = try? await ShaderGraphMaterial(named: prim, from: scene, in: .main) {
             cache[key] = m
