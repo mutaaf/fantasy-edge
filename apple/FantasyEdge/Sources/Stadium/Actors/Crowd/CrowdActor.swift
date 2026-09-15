@@ -30,7 +30,7 @@ final class CrowdActor: StadiumActor {
     let name = "crowd"
     let root = Entity()
 
-    enum Ring: Int { case lod0 = 0, lod1 = 1, card = 2 }
+    enum Ring: Int { case lod0 = 0, lod1 = 1, lod2 = 2, card = 3 }
 
     /// A group of fans that move together.
     final class Group {
@@ -188,11 +188,16 @@ final class CrowdActor: StadiumActor {
         var ringOf = [Ring](repeating: .card, count: placed.count)
         if !c.tabletop {
             let order = placed.indices.sorted { placed[$0].dist < placed[$1].dist }
-            var n0 = 0, n1 = 0
+            var n0 = 0, n1 = 0, n2 = 0
             for i in order {
-                let d = Double(placed[i].dist)
+                // Dithered: each fan's ring distance wanders by up to ditherYards,
+                // so a ring's edge is a ragged band, never a line of cards meeting meshes.
+                var hd = UInt64(truncatingIfNeeded: i) &* 0x9E3779B97F4A7C15
+                hd ^= hd >> 31
+                let d = Double(placed[i].dist) + (Double(hd % 1000) / 1000 - 0.5) * 2 * C.rings.ditherYards
                 if d < C.rings.lod0Yards && n0 < C.rings.lod0Max { ringOf[i] = .lod0; n0 += 1 }
                 else if d < C.rings.lod1Yards && n1 < C.rings.lod1Max { ringOf[i] = .lod1; n1 += 1 }
+                else if d < C.rings.lod2Yards && n2 < C.rings.lod2Max { ringOf[i] = .lod2; n2 += 1 }
             }
         }
 
@@ -212,7 +217,7 @@ final class CrowdActor: StadiumActor {
         for (i, f) in placed.enumerated() {
             if consumed.contains(i) { continue }
             switch ringOf[i] {
-            case .lod0, .lod1:
+            case .lod0, .lod1, .lod2:
                 near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % 2), default: []].append(f)
             case .card:
                 var centre = f.base
@@ -300,7 +305,7 @@ final class CrowdActor: StadiumActor {
                 self.redress(d)
             }
         }
-        StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
+        StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
     }
 
     private func redress(_ d: CrowdKit.Dress) {
@@ -348,8 +353,11 @@ final class CrowdActor: StadiumActor {
 
         for g in groups {
             var pose: Int
+            // The scene says whose section is lit: that side is on its feet for as
+            // long as the moment lasts, not only while Moments' surge peaks.
+            let scoring = tintSide.map { ($0 == "away") == g.away }
             if c.reduceMotion {
-                pose = g.standing ? stand : sit
+                pose = scoring == true ? stand : (g.standing ? stand : sit)
             } else {
                 // Idle: sit, shift, sit - each group on its own clock.
                 let span = C.idleSeconds[0] + (C.idleSeconds[1] - C.idleSeconds[0]) * g.phase
@@ -362,13 +370,20 @@ final class CrowdActor: StadiumActor {
                     if d < C.waveWidth { pose = cheer } else if d < C.waveWidth * 2 { pose = stand }
                 }
                 if let groaning, g.away == groaning.away { pose = groan }
-                if let surge {
-                    if g.away == surge.away {
-                        let beat = Int(((time + g.phase) * C.surgeHz).rounded(.down))
-                        pose = [cheer, clap, cheer, stand][beat % 4]
-                    } else if !g.standing {
-                        pose = sit
+                if let scoring {
+                    if scoring {
+                        // Peak while Moments surges, then a sustained celebration at half pace.
+                        let peak = surge.map { $0.away == g.away } ?? false
+                        let rate = peak ? C.surgeHz : C.surgeHz * 0.5
+                        let beat = Int(((time + g.phase * 3) * rate).rounded(.down))
+                        pose = peak ? [cheer, cheer, clap, cheer][beat % 4] : [stand, cheer, clap, stand, cheer][beat % 5]
+                    } else {
+                        // The other side sinks back into its seats.
+                        pose = g.phase < 0.3 ? groan : (g.phase < 0.6 ? sitB : sit)
                     }
+                } else if let surge, g.away == surge.away {
+                    let beat = Int(((time + g.phase) * C.surgeHz).rounded(.down))
+                    pose = [cheer, clap, cheer, stand][beat % 4]
                 }
             }
             setPose(g, pose)
@@ -448,7 +463,7 @@ final class CrowdKit {
               let cm = StadiumAssets.image(folder.appendingPathComponent(C.kit.impostorMask)) else { return nil }
         look = C
         fanAlbedo = fa; fanMask = fm; cardAlbedo = ca; cardMask = cm
-        for id in ["lod0Poses", "lod1Poses"] {
+        for id in ["lod0Poses", "lod1Poses", "lod2Poses"] {
             guard let template = StadiumAssets.shared.model("crowd.\(id)") else { continue }
             collect(template, root: template)
         }
@@ -495,7 +510,7 @@ final class CrowdKit {
     }
 
     func poseMesh(ring: CrowdActor.Ring, fan: Int, pose: String) -> CrowdPoseMesh? {
-        let id = String(format: "fan%02d_lod%d_%@", fan, ring == .lod0 ? 0 : 1, pose)
+        let id = String(format: "fan%02d_lod%d_%@", fan, ring.rawValue, pose)
         return meshes[id]
     }
 

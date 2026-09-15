@@ -328,7 +328,7 @@ def accessory(f: dict, J: dict[str, Vector]):
     if kind == "foam_finger":
         mitt = bmesh.ops.create_cube(bm, size=1.0)
         for v in mitt["verts"]:
-            v.co = Vector((v.co.x * 0.11, v.co.y * 0.05, v.co.z * 0.16)) + Vector((0, 0, -0.02))
+            v.co = Vector((v.co.x * 0.085, v.co.y * 0.04, v.co.z * 0.13)) + Vector((0, 0, -0.02))
         finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.028, radius2=0.022, depth=0.2)
         for v in finger["verts"]:
             v.co += Vector((0.015, 0, -0.17))
@@ -337,7 +337,7 @@ def accessory(f: dict, J: dict[str, Vector]):
         grid = bmesh.ops.create_grid(bm, x_segments=6, y_segments=3, size=1.0)
         for v in grid["verts"]:
             u, w = v.co.x, v.co.y
-            v.co = Vector((w * 0.13, 0.03 * math.sin(u * 3), -0.22 * (u + 1)))
+            v.co = Vector((w * 0.10, 0.025 * math.sin(u * 3), -0.17 * (u + 1)))
         origin = hand + Vector((0, -0.01, 0.01)) * k
     elif kind == "sign":
         board = bmesh.ops.create_cube(bm, size=1.0)
@@ -504,7 +504,7 @@ def paint_prop(ob, kind):
         elif kind == "sign":
             rgb, mask = ((0.93, 0.92, 0.88), (0, 0, 0)) if abs(p.normal.y) > 0.9 else ((0.55, 0.42, 0.28), (0, 0, 0))
         elif kind == "towel":
-            rgb, mask = TINTED, (1, 0, 0)
+            rgb, mask = TINTED, (0, 1, 0)
         else:
             rgb, mask = TINTED, (1, 0, 0)
         _set_face(me, base, tint, p, rgb, mask)

@@ -43,8 +43,11 @@ extension SceneSpec.Look {
     public struct CrowdRings: Decodable, Equatable, Sendable {
         public let lod0Yards: Double
         public let lod1Yards: Double
+        public let lod2Yards: Double
+        public let ditherYards: Double
         public let lod0Max: Int
         public let lod1Max: Int
+        public let lod2Max: Int
     }
 
     public struct CrowdLook: Decodable, Equatable, Sendable {

@@ -52,21 +52,32 @@ class CrowdKitTest(unittest.TestCase):
 
     def test_pose_models_are_declared_and_named_for_each_fan(self):
         models = self.C["models"]
-        for lod in ("lod0", "lod1"):
+        for lod in ("lod0", "lod1", "lod2"):
             rel = models[f"{lod}Poses"]
             self.assertEqual(rel, self.M["poseMeshes"][lod]["model"].join(["actors/crowd/", ""]))
             self.assertTrue((ASSETS / rel).with_suffix(".glb").is_file())
 
     def test_rings_fit_the_crowd_budget(self):
-        """ART_BIBLE: crowd 120k triangles. Near meshes plus two per card must fit
+        """ART_BIBLE: crowd triangles (raised to 150k when Bowl seated 52k). Near meshes plus two per card must fit
         with a sold-out bowl: Bowl seats about 50k, and far cards hold two each."""
         C, M = self.C, self.M
         r = C["rings"]
         self.assertLess(r["lod0Yards"], r["lod1Yards"])
         lod0 = max(f["lod0"]["triangles"] for f in M["fans"])
         lod1 = max(f["lod1"]["triangles"] for f in M["fans"])
+        lod2 = max(f.get("lod2", {"triangles": 250})["triangles"] for f in M["fans"])
         cards = (50_000 // 2) * 2
-        self.assertLessEqual(r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + cards, 120_000)
+        self.assertLess(r["lod1Yards"], r["lod2Yards"])
+        self.assertLessEqual(r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + r["lod2Max"] * lod2 + cards, 150_000)
+
+    def test_mesh_rings_are_stadium_only(self):
+        """The tabletop's crowd budget did not rise with the stadium's: it draws
+        cards only. The ring assignment must stay behind the tabletop guard."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        guard = src.index("if !c.tabletop {\n            let order = placed.indices.sorted")
+        rings = src.index("ringOf[i] = .lod2")
+        self.assertLess(guard, rings)
+        self.assertLess(rings - guard, 1500, "lod rings are assigned inside the stadium-only block")
 
     def test_the_cast_covers_every_variety_axis(self):
         import specs

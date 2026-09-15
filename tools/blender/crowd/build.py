@@ -36,7 +36,7 @@ import rig as R
 import specs
 
 OUT = common.OUT
-LOD0_TRIS, LOD1_TRIS = 1500, 650
+LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 1500, 650, 250
 MESH_ATLAS = 2048                    # baked at 2x, shipped at this size
 MESH_COLS, MESH_ROWS = 6, 4          # 24 cells, 341 x 512 px each
 IMP_CELL = (64, 128)                 # px per impostor cell
@@ -241,8 +241,12 @@ def build_meshes(cast):
         bpy.context.scene.collection.objects.link(lod1)
         lod1.parent = rig
         decimate(lod1, LOD1_TRIS)
-        built.append({"f": f, "mesh": mesh, "lod1": lod1, "rig": rig, "cell": cell})
-        log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris")
+        lod2 = lod1.copy(); lod2.data = lod1.data.copy(); lod2.name = f"{f['id']}_lod2"; lod2.data.name = lod2.name
+        bpy.context.scene.collection.objects.link(lod2)
+        lod2.parent = rig
+        decimate(lod2, LOD2_TRIS)
+        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell})
+        log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, lod2 {R.triangles(lod2)} tris")
     save(albedo, OUT / "fan_albedo.png", (MESH_ATLAS, MESH_ATLAS))
     # Full size: a half-size mask upscaled on load missed edge texels, and near
     # fans came out with white wedges and sawtooth sleeves.
@@ -253,7 +257,7 @@ def build_meshes(cast):
 def finalise_materials(built, albedo):
     mat = runtime_material("crowd_fan", albedo)
     for b in built:
-        for ob in (b["mesh"], b["lod1"]):
+        for ob in (b["mesh"], b["lod1"], b["lod2"]):
             ob.data.materials.clear()
             ob.data.materials.append(mat)
             for p in ob.data.polygons:
@@ -318,7 +322,7 @@ def export_pose_meshes(built, lod):
     dg = bpy.context.evaluated_depsgraph_get()
     for b in built:
         f, rig = b["f"], b["rig"]
-        lod1 = b["lod1"] if lod == 1 else b["mesh"]
+        lod1 = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"]}[lod]
         rig.animation_data.action = None
         for pose in IMP_POSES:
             P.apply_pose(rig, pose, f["height"])
@@ -492,6 +496,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
             "model": f"{f['id']}.usdz", "gltf": f"{f['id']}.glb",
             "lod0": {"mesh": f["id"], "triangles": R.triangles(b["mesh"])},
             "lod1": {"mesh": f"{f['id']}_lod1", "triangles": R.triangles(b["lod1"])},
+            "lod2": {"mesh": f"{f['id']}_lod2", "triangles": R.triangles(b["lod2"])},
             "uvCell": [round(x0, 5), round(y0, 5), round(w, 5), round(h, 5)],
             "impostorBlock": [(i % layout["per_row"]) * layout["block_px"][0], (i // layout["per_row"]) * layout["block_px"][1]],
             "impostorMate": built[pair_mate(i, len(built))]["f"]["id"],
@@ -535,6 +540,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
         "about": "Static meshes of every fan frozen in each impostor pose, for animating near and mid rings by group.",
         "lod0": {"model": "lod0_poses.usdz", "gltf": "lod0_poses.glb", "meshName": "<fanId>_lod0_<pose>"},
         "lod1": {"model": "lod1_poses.usdz", "gltf": "lod1_poses.glb", "meshName": "<fanId>_lod1_<pose>"},
+        "lod2": {"model": "lod2_poses.usdz", "gltf": "lod2_poses.glb", "meshName": "<fanId>_lod2_<pose>"},
         "poses": IMP_POSES},
         "lod": {"lod0Triangles": LOD0_TRIS, "lod1Triangles": LOD1_TRIS,
                 "suggestedRings": {"lod0MaxMetres": 7, "lod1MaxMetres": 16, "impostorBeyondMetres": 16}},
@@ -560,6 +566,7 @@ def main():
     clips = export_fans(built)
     lod1_tris = export_pose_meshes(built, 1)
     lod0_tris = export_pose_meshes(built, 0)
+    export_pose_meshes(built, 2)
     impostor, layout = ({}, {"per_row": 8, "block_px": [0, 0], "atlas_px": [0, 0]})
     if stage in ("all", "impostors"):
         impostor, layout = render_impostors(built, albedo, mask)
