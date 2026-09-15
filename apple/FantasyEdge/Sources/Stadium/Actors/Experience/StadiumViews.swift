@@ -218,7 +218,10 @@ public struct TabletopView: View {
             }
         } attachments: {
             Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
+                // The moment graphic is Broadcast's now, drawn in the world
+                // over the end zone (BroadcastBanner); this glass chip stays
+                // empty so the two never show at once.
+                EmptyView()
             }
         }
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
@@ -487,7 +490,10 @@ public struct StadiumSpaceView<Trailing: View>: View {
             Attachment(id: "trailing") { trailing }
             Attachment(id: "controls") { controls }
             Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
+                // The moment graphic is Broadcast's now, drawn in the world
+                // over the end zone (BroadcastBanner); this glass chip stays
+                // empty so the two never show at once.
+                EmptyView()
             }
         }
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }

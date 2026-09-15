@@ -16,6 +16,45 @@ enum BroadcastGraphics {
         }.cgImage
     }
 
+    /// A picture's alpha as a grey image. A transparent material takes its
+    /// opacity from a texture's colour, not its alpha, so a coloured graphic
+    /// drawn with its own alpha as opacity loses every pixel that is not
+    /// red: the chip under the word disappears and only white survives.
+    static func alphaMask(_ img: CGImage) -> CGImage? {
+        let w = img.width, h = img.height
+        guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w,
+                                  space: CGColorSpaceCreateDeviceGray(),
+                                  bitmapInfo: CGImageAlphaInfo.alphaOnly.rawValue) else { return nil }
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: w, height: h))
+        guard let bytes = ctx.data, let provider = CGDataProvider(data: Data(bytes: bytes, count: w * h) as CFData) else { return nil }
+        return CGImage(width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: w,
+                       space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
+    /// A graphic with real transparency: colour from the picture, opacity
+    /// from its alpha. Never writes depth.
+    static func overlay(_ img: CGImage, opacity: Double) -> UnlitMaterial? {
+        guard let colour = StadiumText.texture(img), let maskImg = alphaMask(img),
+              let mask = try? TextureResource(image: maskImg, options: .init(semantic: .raw)) else { return nil }
+        var m = UnlitMaterial(applyPostProcessToneMap: false)
+        m.color = .init(tint: .white, texture: StadiumLook.clamped(colour))
+        m.blending = .transparent(opacity: .init(scale: Float(opacity), texture: StadiumLook.clamped(mask)))
+        m.writesDepth = false
+        m.faceCulling = .none
+        return m
+    }
+
+    /// Light in the air from a coloured picture: the stadium's glow material
+    /// with the picture's alpha as its opacity.
+    static func light(_ img: CGImage, opacity: Double) -> UnlitMaterial? {
+        guard let colour = StadiumText.texture(img), let maskImg = alphaMask(img),
+              let mask = try? TextureResource(image: maskImg, options: .init(semantic: .raw)) else { return nil }
+        var m = StadiumLook.glow("#FFFFFF", opacity: opacity, texture: colour)
+        m.blending = .transparent(opacity: .init(scale: 1, texture: StadiumLook.clamped(mask)))
+        return m
+    }
+
     /// The ribbon's crawl: both chips and scores, the clock and the down, with
     /// capital letters `textShare` of the board's height (the legibility rule
     /// in `visual.broadcast.ribbon`).

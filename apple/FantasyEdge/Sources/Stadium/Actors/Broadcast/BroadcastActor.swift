@@ -5,10 +5,12 @@ import simd
 /// The broadcast package drawn into the stadium: the drive's flight trails,
 /// the ball that flies them, the beacon over it, the line of scrimmage and
 /// the line to gain painted in light with the down-and-distance tag beside
-/// them, the ribbon board's crawl and the win-probability horizon.
+/// them, the ribbon board's crawl, the moment graphic and the win-probability
+/// horizon.
 /// Reads the scene's drives, ball, lasers and win probability, and
 /// `visual.broadcast`. The parts live beside this file: BroadcastTrails,
-/// BroadcastHorizon, BroadcastBoards (ribbon and tag) and BroadcastFlight.
+/// BroadcastHorizon, BroadcastBoards (ribbon and tag), BroadcastBanner and
+/// BroadcastFlight.
 @MainActor
 final class BroadcastActor: StadiumActor {
     let name = "broadcast"
@@ -21,6 +23,7 @@ final class BroadcastActor: StadiumActor {
     private let trails = BroadcastTrails()
     private let horizon = BroadcastHorizon()
     private let ribbon = BroadcastRibbon()
+    private let banner = BroadcastBanner()
     private var laserEntities: [String: Entity] = [:]
     private var beaconKey = ""
     private var tagKey = ""
@@ -31,7 +34,7 @@ final class BroadcastActor: StadiumActor {
 
     init() {
         root.name = "actor.broadcast"
-        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root].forEach { root.addChild($0) }
+        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root, banner.root].forEach { root.addChild($0) }
         ball.isEnabled = false
         beacon.isEnabled = false
         tag.isEnabled = false
@@ -175,15 +178,10 @@ final class BroadcastActor: StadiumActor {
         let eye = c.shared.seat.flatMap { tabletop ? nil : $0 }
         let viewZ: Float = eye.map { $0.z >= 0 ? 1 : -1 } ?? 1
         let k = "\(text)|\(h)|\(viewZ)"
-        if k != tagKey, let img = BroadcastGraphics.tag(text, look: look), let tex = StadiumText.texture(img) {
+        if k != tagKey, let img = BroadcastGraphics.tag(text, look: look),
+           let m = BroadcastGraphics.overlay(img, opacity: look.opacity) {
             tagKey = k
             let w = h * Float(img.width) / Float(max(1, img.height))
-            var m = UnlitMaterial(applyPostProcessToneMap: false)
-            let t = StadiumLook.clamped(tex)
-            m.color = .init(tint: .white, texture: t)
-            m.blending = .transparent(opacity: .init(scale: Float(look.opacity), texture: t))
-            m.writesDepth = false
-            m.faceCulling = .none
             // Lying on the grass: text runs along +x, its top points away from the seat.
             var q = MeshBuilder()
             let up = SIMD3<Float>(0, 0, -viewZ) * (h / 2), right = SIMD3<Float>(viewZ, 0, 0) * (w / 2)
@@ -202,7 +200,11 @@ final class BroadcastActor: StadiumActor {
     }
 
     private func move(_ e: Entity, to at: SIMD3<Float>, duration: Double) {
-        if duration <= 0 || !e.isEnabled {
+        // An entity not yet in a scene ignores move(to:) without a word: on a
+        // paused replay the first scene arrives before the stadium is on
+        // stage, no second one follows, and the ball sat at the origin - the
+        // fifty - sunk in the grass. Place it outright until there is a scene.
+        if duration <= 0 || !e.isEnabled || e.scene == nil {
             e.position = at
         } else {
             e.move(to: Transform(scale: e.scale, rotation: e.orientation, translation: at),
@@ -218,6 +220,7 @@ extension BroadcastActor {
         tabletop = c.tabletop
         trails.clear()
         horizon.clear()
+        banner.clear()
         motion.reset()
         driveID = ""
         flight = nil
@@ -238,10 +241,12 @@ extension BroadcastActor {
 
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {
         ribbon.moment(event, c)
+        if case .moment(let m) = event { banner.show(m, c) }
     }
 
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         ribbon.update(frame, c)
+        banner.update(c)
         guard var f = flight else { return }
         f.elapsed += frame.dt
         let t = min(1, f.elapsed / f.duration)

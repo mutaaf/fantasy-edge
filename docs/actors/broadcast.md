@@ -43,3 +43,29 @@ Critique (`.work/shots/b1`):
   grounding shadow of a lifted ball. Removed.
 - `td-moment`, `tabletop`: harness timing (black world, API not reachable
   yet); reshoot with a longer settle.
+
+## Iteration 2 (`.work/shots/b2`)
+
+- `bowl-wide`: the horizon band reads as a graphic now, with its label
+  legible; but it runs almost white, and from the upper deck it crosses the
+  glass scorebug. Raised to y 62-86 over z -62 and tinted harder
+  (`tintGain`, lower `inkMix`).
+- `tabletop`: band and percentage read cleanly at table scale.
+- `td-moment`: harness caught the table mid-transition; the director's
+  timing fix (617c4de) merged.
+
+## Iteration 3 (`.work/shots/b3`)
+
+- **TOUCHDOWN is a moment graphic, not a chip.** `BroadcastBanner` hangs a
+  44-yard slab in the scoring side's colour over the end zone it names,
+  wipes it open, holds it for `motion.momentSeconds`, wipes it shut; the
+  ribbon floods with TOUCHDOWN in the same colour. The glass chip in
+  StadiumViews is retired so the two never show together.
+- Found: the slab and the horizon label's chip were invisible - only white
+  survived. A transparent RealityKit material reads opacity from the
+  texture's colour, not its alpha. Every composited graphic now carries a
+  separate alpha mask (`BroadcastGraphics.overlay` / `.light`).
+- Found: a football half-sunk at the fifty. It was the ball, never placed:
+  `move(to:)` on an entity not yet in a scene does nothing, and a paused
+  replay sends one scene before the stadium is on stage. Placed outright
+  until there is a scene.

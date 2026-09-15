@@ -174,7 +174,9 @@ PRESENTATION = {
                 "seat": {k: SEATS[0][k] for k in ("x", "y", "z")},
                 "seats": SEATS, "defaultSeat": SEATS[0]["id"],
                 "bowlTiers": ["lower", "upper"]},
-    "horizon": {"z": -58.0, "y0": 52.0, "y1": 76.0},
+    # Above the rim and its light banks from every seat, clear of the glass
+    # scorebug that sits a little over eye level straight ahead.
+    "horizon": {"z": -62.0, "y0": 62.0, "y1": 86.0},
     "beaconHeight": 22.0,
 }
 

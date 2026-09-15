@@ -122,6 +122,8 @@ extension SceneSpec.Look {
         public let opacity: Double
         public let haloOpacity: Double
         public let inkMix: Double
+        public let tintGain: Double
+        public let smoothing: Double
         public let endFade: Double
         public let textureWidth: Int
         public let marker: HorizonMarker
@@ -151,6 +153,16 @@ extension SceneSpec.Look {
         public let flash: RibbonFlash
     }
 
+    public struct BannerLook: Decodable, Equatable, Sendable {
+        public let widthYards: SceneSpec.PerMode<Double>
+        public let liftYards: SceneSpec.PerMode<Double>
+        public let pixels: [Int]
+        public let inSeconds: Double
+        public let outSeconds: Double
+        public let glowOpacity: Double
+        public let glowScale: Double
+    }
+
     public struct BroadcastLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -160,6 +172,7 @@ extension SceneSpec.Look {
         public let laser: LaserLook
         public let horizon: HorizonLook
         public let ribbon: RibbonLook
+        public let banner: BannerLook
     }
 }
 
