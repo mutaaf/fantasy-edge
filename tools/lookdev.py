@@ -134,18 +134,19 @@ def main() -> None:
                 continue
             at = positions[where]
             simctl("terminate", args.device, BUNDLE, check=False)
-            if where == "touchdown":
-                post(args.port, {"action": "seek", "at": at - 4})
-                post(args.port, {"action": "speed", "speed": 1})
-                post(args.port, {"action": "play"})
-            else:
-                post(args.port, {"action": "seek", "at": at})
-                post(args.port, {"action": "pause"})
+            # The touchdown is held paused a few seconds before the snap until
+            # the stadium has built, then played at 1x: the moment is only an
+            # event if it arrives after the build, and it holds for
+            # motion.momentSeconds, so the shot is taken inside that window.
+            post(args.port, {"action": "seek", "at": at - 3 if where == "touchdown" else at})
+            post(args.port, {"action": "pause"})
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
                    "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra, check=False)
-            # The moment holds for motion.momentSeconds from its snap, 4 s after
-            # launch at 1x: a long settle shoots after it has gone.
-            time.sleep(min(args.settle, 7.0) if where == "touchdown" else args.settle)
+            time.sleep(args.settle)
+            if where == "touchdown":
+                post(args.port, {"action": "speed", "speed": 1})
+                post(args.port, {"action": "play"})
+                time.sleep(6.0)
             shot = args.out / f"{name}{args.suffix}.png"
             simctl("io", args.device, "screenshot", str(shot), check=False)
             subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{name}{args.suffix}.png")],

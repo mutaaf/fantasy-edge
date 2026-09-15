@@ -79,6 +79,24 @@ Remaining critique, ranked:
 - **Budget:** lighting is 11 parts and 9.3k triangles; overdraw is still
   capped at 2.0 screens.
 
+**It 7–10: after the director's merge `50cb09b` (`lighting-it10-shared`).**
+- **Eye-height fix:** the fix put the eyes 1.2 m above the seat floor. I removed the
+  flood `aimZ` offset, which compensated for eyes sitting too low. The near
+  turf is even without it (`lighting-it7/s-rim-far`).
+- **Beam fog** (integration-1, `bowl-wide`): the beams washed the upper deck
+  grey.
+  - Each beam now starts where its ray comes inside the bowl at
+    `beams.startInsideOffsetYards` (4 yd), so no additive light lies across
+    the stands.
+  - Beams stop at `endHeightYards` (9 yd) above the grass.
+  - Beam opacity is 0.32, dust 0.16, spill 0.11.
+  - The haze rings moved up to 58 and 66 yd, above the upper deck's eye line.
+  - The upper deck now keeps its club colour. A faint veil remains over the
+    far lower bowl, where the shafts cross it; that is the intended "barely
+    visible".
+- **Zenith pinch** (`sky-dome`): wind-streaked clouds converged at the dome's
+  pole. They now fade out between 49° and 69° of elevation. The pinch is gone.
+
 ## Contract for Sideline: prop shadows
 
 Only one spot light casts real shadows (the budget allows one), so goal posts,
