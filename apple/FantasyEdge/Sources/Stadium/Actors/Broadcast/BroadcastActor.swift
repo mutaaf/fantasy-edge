@@ -97,8 +97,10 @@ final class BroadcastActor: StadiumActor {
         }
         ball.isEnabled = true
         let rest = SceneMath.local(x: b.x, y: look.broadcast.ball.liftYards * 0.5, z: b.z)
-        move(ball, to: rest, duration: duration)
+        // Orientation first: writing a transform while move(to:) runs cancels
+        // the animation, and the ball stayed wherever it started - the fifty.
         ball.orientation = simd_quatf(angle: 0, axis: SIMD3(0, 1, 0))
+        move(ball, to: rest, duration: simd_distance(ball.position, rest) > 15 ? 0 : duration)
 
         let height = b.beacon.height
         let key = "\(height)|\(b.beacon.color)"

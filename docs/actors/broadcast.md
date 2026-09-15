@@ -69,3 +69,55 @@ Critique (`.work/shots/b1`):
   `move(to:)` on an entity not yet in a scene does nothing, and a paused
   replay sends one scene before the stadium is on stage. Placed outright
   until there is a scene.
+
+## Iteration 4-5 (`.work/shots/b4`, `b5`)
+
+- `td-moment` (b4): TOUCHDOWN is a Bears-blue slab with the scoreline, owning
+  the end zone; the gold pick-six trail sweeps the field. The horizon label
+  finally shows its CHI chip.
+- The horizon still read as a streak where the series spiked: smoothed
+  (`smoothing` 0.035 of the series, now pinned to the model's value) and
+  its thickness swells with the smoothed value, not the raw one.
+- The tag sat on the 40's numeral: moved inside the numbers (15 yd from
+  the sideline) and made taller.
+- Scorebug and drive log (b5): club-washed side panels, the down on its own
+  plate that turns red in the red zone; the drive log dims older plays the
+  way their trails do and prints each gain.
+- `verify_scene.swift` now flies the ball down all 1,422 arcs of the
+  fifteen replayed scenes (spiral nose on the tangent, wobble within its
+  angle, carry tucked, never under the grass).
+
+## Iteration 6-8
+
+- Budget: two draw parts per trail would spend a fifteen-play drive at 30.
+  The newest four plays draw individually; older ones merge into one ghost
+  (2 parts). Beacon cards merged; the lines' invisible glow strip dropped.
+- **Ribbon dropout (integration 4):** Bowl's kit hangs a dark screen at
+  exactly `bowl.ribbon.offset`, tessellated to 0.1 yd; the crawl on the
+  same surface z-fought it into patches. The crawl now stands 0.2 yd toward
+  the field along the fascia normal, cut into 480 segments. Proof:
+  `.work/shots/b8/s-bowl-wide.png`, `s-field-level.png` - continuous all
+  round, against `docs/lookdev/integration-4/s-bowl-wide.png`.
+- Banner drawn to `visual.moments.banner` (Moments' contract): 34° wide at
+  the seat's eye, ≥ 8° tall, 24 yd over the scoring end zone, timeline
+  offset, 4.2 s dwell, 0.35/0.6 s wipe, 1.4° scoreline. No turnover banner:
+  the contract times it never.
+
+## Budget (stadium, a fifteen-play drive, during a moment)
+
+| Part | Draw parts | Triangles |
+|---|---|---|
+| Trails: 4 newest + 1 merged history (core + halo) | 10 | ~4,300 |
+| Horizon: halo, band, marker, label | 4 | ~600 |
+| Football (NFL model: leather + lace) + glow | 3 | ~3,500 |
+| Beacon | 1 | 4 |
+| Lines (scrimmage, line to gain) + tag | 3 | 6 |
+| Ribbon crawl | 1 | 960 |
+| Banner: slab + glow (only during a moment) | 2 | 4 |
+| **Total** | **24 / 25** | **~9.4k / 30k** |
+
+Textures ~9 MB of 20: football 3 x 512² packed, trail/line/marker PNGs,
+the banner 2048x560 plus its mask while a moment shows, the ribbon crawl,
+the horizon band and label. Counted from the build, not measured in the
+simulator: `-stadiumStats` reports at build time, before a drive arrives
+(4 parts, 3.7k triangles then).
