@@ -1,0 +1,1905 @@
+[shadergraph] /Root/Beam loaded from actors/lighting/Beams.reality via Entity(contentsOf:)
+[shadergraph] /Root/FieldPaint loaded from actors/field/shadergraph/Field.reality via Entity(contentsOf:)
+[shadergraph] /Root/NetFresnel loaded from actors/sideline/shadergraph/Sideline.reality via Entity(contentsOf:)
+[shadergraph] /Root/TurfSheen loaded from actors/field/shadergraph/Turf.reality via Entity(contentsOf:)
+[shadergraph] field paint on 3 meshes
+[shadergraph] lighting beams: Shader Graph in use on rim.beams
+[shadergraph] net falloff on 3 meshes
+[shadergraph] turf sheen on 3 meshes
+[stadium-stats] stadium: models 79, draw parts 87, triangles 182694, texture memory ~67 MB
+[stadium-stats] stadium: models 80, draw parts 94, triangles 244663, texture memory ~67 MB
+[stadium-stats] stadium: models 82, draw parts 90, triangles 232168, texture memory ~67 MB
+[stadium-stats] stadium: models 82, draw parts 90, triangles 232296, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 238042, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 238720, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 239560, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 239878, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 240006, texture memory ~67 MB
+[stadium-stats] stadium: models 83, draw parts 97, triangles 240166, texture memory ~67 MB
+[stadium-stats] stadium.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 53048, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 53732, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 54596, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 59672, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 9, triangles 47326, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.broadcast: draw parts 5, triangles 4420, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 33, triangles 144373, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 33, triangles 94750, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144352, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144354, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144370, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144376, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9500, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9508, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20776, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20936, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s: models 104, draw parts 118, triangles 242034, texture memory ~67 MB
+[stadium-stats] stadium@fieldGoal+0.5s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.broadcast: draw parts 27, triangles 6616, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.lighting: draw parts 11, triangles 9468, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium@fieldGoal+0.5s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s: models 102, draw parts 116, triangles 242246, texture memory ~67 MB
+[stadium-stats] stadium@fieldGoal+3.0s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.broadcast: draw parts 25, triangles 6828, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.lighting: draw parts 11, triangles 9468, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.moments: draw parts 0, triangles 0, spot lights 0, emitters 1, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium@fieldGoal+3.0s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s: models 100, draw parts 114, triangles 241136, texture memory ~67 MB
+[stadium-stats] stadium@touchdown+0.5s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.broadcast: draw parts 23, triangles 5718, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.lighting: draw parts 11, triangles 9468, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.moments: draw parts 0, triangles 0, spot lights 0, emitters 1, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium@touchdown+0.5s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s: models 100, draw parts 114, triangles 241368, texture memory ~67 MB
+[stadium-stats] stadium@touchdown+3.0s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.broadcast: draw parts 23, triangles 5950, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.lighting: draw parts 11, triangles 9468, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.moments: draw parts 0, triangles 0, spot lights 0, emitters 4, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium@touchdown+3.0s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s: models 94, draw parts 108, triangles 240504, texture memory ~67 MB
+[stadium-stats] stadium@touchdown+6.0s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.bowl: draw parts 16, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.broadcast: draw parts 17, triangles 4958, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.crowd: draw parts 36, triangles 144344, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.lighting: draw parts 11, triangles 9468, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.sideline: draw parts 15, triangles 20776, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium@touchdown+6.0s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop: models 69, draw parts 72, triangles 24179, texture memory ~67 MB
+[stadium-stats] tabletop.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.bowl: draw parts 3, triangles 2648, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.broadcast: draw parts 4, triangles 4418, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.crowd: draw parts 22, triangles 1746, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.experience: draw parts 6, triangles 2856, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.field: draw parts 10, triangles 954, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.lighting: draw parts 12, triangles 8672, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] tabletop.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2885, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] tabletop.sky: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-timing] asset bowl.concrete: 1.071 s
+[stadium-timing] asset bowl.concrete: 1.104 s
+[stadium-timing] asset bowl.concrete: 1.115 s
+[stadium-timing] asset bowl.concrete: 1.147 s
+[stadium-timing] asset bowl.concrete: 1.223 s
+[stadium-timing] asset bowl.concrete: 1.232 s
+[stadium-timing] asset bowl.concrete: 1.239 s
+[stadium-timing] asset bowl.concrete: 1.272 s
+[stadium-timing] asset bowl.concrete: 1.277 s
+[stadium-timing] asset bowl.concrete: 1.332 s
+[stadium-timing] asset bowl.concrete: 1.338 s
+[stadium-timing] asset bowl.concrete: 1.371 s
+[stadium-timing] asset bowl.concrete: 1.393 s
+[stadium-timing] asset bowl.concrete: 1.406 s
+[stadium-timing] asset bowl.concrete: 1.460 s
+[stadium-timing] asset bowl.concrete: 1.493 s
+[stadium-timing] asset bowl.concrete: 1.545 s
+[stadium-timing] asset bowl.concrete: 2.081 s
+[stadium-timing] asset bowl.seats: 1.071 s
+[stadium-timing] asset bowl.seats: 1.105 s
+[stadium-timing] asset bowl.seats: 1.136 s
+[stadium-timing] asset bowl.seats: 1.147 s
+[stadium-timing] asset bowl.seats: 1.238 s
+[stadium-timing] asset bowl.seats: 1.246 s
+[stadium-timing] asset bowl.seats: 1.248 s
+[stadium-timing] asset bowl.seats: 1.272 s
+[stadium-timing] asset bowl.seats: 1.282 s
+[stadium-timing] asset bowl.seats: 1.326 s
+[stadium-timing] asset bowl.seats: 1.354 s
+[stadium-timing] asset bowl.seats: 1.371 s
+[stadium-timing] asset bowl.seats: 1.405 s
+[stadium-timing] asset bowl.seats: 1.407 s
+[stadium-timing] asset bowl.seats: 1.461 s
+[stadium-timing] asset bowl.seats: 1.495 s
+[stadium-timing] asset bowl.seats: 1.548 s
+[stadium-timing] asset bowl.seats: 2.083 s
+[stadium-timing] asset broadcast.beam: 1.337 s
+[stadium-timing] asset broadcast.beam: 1.347 s
+[stadium-timing] asset broadcast.beam: 1.368 s
+[stadium-timing] asset broadcast.beam: 1.432 s
+[stadium-timing] asset broadcast.beam: 1.466 s
+[stadium-timing] asset broadcast.beam: 1.476 s
+[stadium-timing] asset broadcast.beam: 1.500 s
+[stadium-timing] asset broadcast.beam: 1.528 s
+[stadium-timing] asset broadcast.beam: 1.556 s
+[stadium-timing] asset broadcast.beam: 1.583 s
+[stadium-timing] asset broadcast.beam: 1.609 s
+[stadium-timing] asset broadcast.beam: 1.665 s
+[stadium-timing] asset broadcast.beam: 1.699 s
+[stadium-timing] asset broadcast.beam: 1.751 s
+[stadium-timing] asset broadcast.beam: 1.799 s
+[stadium-timing] asset broadcast.beam: 1.849 s
+[stadium-timing] asset broadcast.beam: 2.092 s
+[stadium-timing] asset broadcast.beam: 2.298 s
+[stadium-timing] asset broadcast.football: 1.347 s
+[stadium-timing] asset broadcast.football: 1.353 s
+[stadium-timing] asset broadcast.football: 1.384 s
+[stadium-timing] asset broadcast.football: 1.433 s
+[stadium-timing] asset broadcast.football: 1.498 s
+[stadium-timing] asset broadcast.football: 1.501 s
+[stadium-timing] asset broadcast.football: 1.510 s
+[stadium-timing] asset broadcast.football: 1.529 s
+[stadium-timing] asset broadcast.football: 1.557 s
+[stadium-timing] asset broadcast.football: 1.611 s
+[stadium-timing] asset broadcast.football: 1.612 s
+[stadium-timing] asset broadcast.football: 1.691 s
+[stadium-timing] asset broadcast.football: 1.706 s
+[stadium-timing] asset broadcast.football: 1.751 s
+[stadium-timing] asset broadcast.football: 1.813 s
+[stadium-timing] asset broadcast.football: 1.850 s
+[stadium-timing] asset broadcast.football: 2.188 s
+[stadium-timing] asset broadcast.football: 2.299 s
+[stadium-timing] asset broadcast.glow: 1.348 s
+[stadium-timing] asset broadcast.glow: 1.368 s
+[stadium-timing] asset broadcast.glow: 1.404 s
+[stadium-timing] asset broadcast.glow: 1.433 s
+[stadium-timing] asset broadcast.glow: 1.498 s
+[stadium-timing] asset broadcast.glow: 1.510 s
+[stadium-timing] asset broadcast.glow: 1.511 s
+[stadium-timing] asset broadcast.glow: 1.553 s
+[stadium-timing] asset broadcast.glow: 1.556 s
+[stadium-timing] asset broadcast.glow: 1.617 s
+[stadium-timing] asset broadcast.glow: 1.633 s
+[stadium-timing] asset broadcast.glow: 1.691 s
+[stadium-timing] asset broadcast.glow: 1.730 s
+[stadium-timing] asset broadcast.glow: 1.766 s
+[stadium-timing] asset broadcast.glow: 1.849 s
+[stadium-timing] asset broadcast.glow: 1.864 s
+[stadium-timing] asset broadcast.glow: 2.189 s
+[stadium-timing] asset broadcast.glow: 2.323 s
+[stadium-timing] asset broadcast.line: 1.348 s
+[stadium-timing] asset broadcast.line: 1.398 s
+[stadium-timing] asset broadcast.line: 1.419 s
+[stadium-timing] asset broadcast.line: 1.434 s
+[stadium-timing] asset broadcast.line: 1.498 s
+[stadium-timing] asset broadcast.line: 1.511 s
+[stadium-timing] asset broadcast.line: 1.531 s
+[stadium-timing] asset broadcast.line: 1.554 s
+[stadium-timing] asset broadcast.line: 1.570 s
+[stadium-timing] asset broadcast.line: 1.618 s
+[stadium-timing] asset broadcast.line: 1.634 s
+[stadium-timing] asset broadcast.line: 1.731 s
+[stadium-timing] asset broadcast.line: 1.755 s
+[stadium-timing] asset broadcast.line: 1.766 s
+[stadium-timing] asset broadcast.line: 1.850 s
+[stadium-timing] asset broadcast.line: 1.865 s
+[stadium-timing] asset broadcast.line: 2.193 s
+[stadium-timing] asset broadcast.line: 2.331 s
+[stadium-timing] asset broadcast.marker: 1.348 s
+[stadium-timing] asset broadcast.marker: 1.398 s
+[stadium-timing] asset broadcast.marker: 1.433 s
+[stadium-timing] asset broadcast.marker: 1.470 s
+[stadium-timing] asset broadcast.marker: 1.499 s
+[stadium-timing] asset broadcast.marker: 1.511 s
+[stadium-timing] asset broadcast.marker: 1.539 s
+[stadium-timing] asset broadcast.marker: 1.554 s
+[stadium-timing] asset broadcast.marker: 1.587 s
+[stadium-timing] asset broadcast.marker: 1.635 s
+[stadium-timing] asset broadcast.marker: 1.644 s
+[stadium-timing] asset broadcast.marker: 1.731 s
+[stadium-timing] asset broadcast.marker: 1.756 s
+[stadium-timing] asset broadcast.marker: 1.770 s
+[stadium-timing] asset broadcast.marker: 1.860 s
+[stadium-timing] asset broadcast.marker: 1.883 s
+[stadium-timing] asset broadcast.marker: 2.194 s
+[stadium-timing] asset broadcast.marker: 2.339 s
+[stadium-timing] asset broadcast.paint: 1.349 s
+[stadium-timing] asset broadcast.paint: 1.399 s
+[stadium-timing] asset broadcast.paint: 1.433 s
+[stadium-timing] asset broadcast.paint: 1.471 s
+[stadium-timing] asset broadcast.paint: 1.499 s
+[stadium-timing] asset broadcast.paint: 1.537 s
+[stadium-timing] asset broadcast.paint: 1.540 s
+[stadium-timing] asset broadcast.paint: 1.569 s
+[stadium-timing] asset broadcast.paint: 1.588 s
+[stadium-timing] asset broadcast.paint: 1.635 s
+[stadium-timing] asset broadcast.paint: 1.645 s
+[stadium-timing] asset broadcast.paint: 1.732 s
+[stadium-timing] asset broadcast.paint: 1.757 s
+[stadium-timing] asset broadcast.paint: 1.770 s
+[stadium-timing] asset broadcast.paint: 1.861 s
+[stadium-timing] asset broadcast.paint: 1.890 s
+[stadium-timing] asset broadcast.paint: 2.194 s
+[stadium-timing] asset broadcast.paint: 2.363 s
+[stadium-timing] asset broadcast.trailCore: 1.377 s
+[stadium-timing] asset broadcast.trailCore: 1.416 s
+[stadium-timing] asset broadcast.trailCore: 1.455 s
+[stadium-timing] asset broadcast.trailCore: 1.474 s
+[stadium-timing] asset broadcast.trailCore: 1.499 s
+[stadium-timing] asset broadcast.trailCore: 1.537 s
+[stadium-timing] asset broadcast.trailCore: 1.546 s
+[stadium-timing] asset broadcast.trailCore: 1.587 s
+[stadium-timing] asset broadcast.trailCore: 1.598 s
+[stadium-timing] asset broadcast.trailCore: 1.636 s
+[stadium-timing] asset broadcast.trailCore: 1.660 s
+[stadium-timing] asset broadcast.trailCore: 1.747 s
+[stadium-timing] asset broadcast.trailCore: 1.757 s
+[stadium-timing] asset broadcast.trailCore: 1.770 s
+[stadium-timing] asset broadcast.trailCore: 1.891 s
+[stadium-timing] asset broadcast.trailCore: 1.893 s
+[stadium-timing] asset broadcast.trailCore: 2.194 s
+[stadium-timing] asset broadcast.trailCore: 2.363 s
+[stadium-timing] asset broadcast.trailHalo: 1.381 s
+[stadium-timing] asset broadcast.trailHalo: 1.414 s
+[stadium-timing] asset broadcast.trailHalo: 1.471 s
+[stadium-timing] asset broadcast.trailHalo: 1.498 s
+[stadium-timing] asset broadcast.trailHalo: 1.499 s
+[stadium-timing] asset broadcast.trailHalo: 1.538 s
+[stadium-timing] asset broadcast.trailHalo: 1.564 s
+[stadium-timing] asset broadcast.trailHalo: 1.587 s
+[stadium-timing] asset broadcast.trailHalo: 1.616 s
+[stadium-timing] asset broadcast.trailHalo: 1.651 s
+[stadium-timing] asset broadcast.trailHalo: 1.683 s
+[stadium-timing] asset broadcast.trailHalo: 1.747 s
+[stadium-timing] asset broadcast.trailHalo: 1.761 s
+[stadium-timing] asset broadcast.trailHalo: 1.781 s
+[stadium-timing] asset broadcast.trailHalo: 1.895 s
+[stadium-timing] asset broadcast.trailHalo: 1.896 s
+[stadium-timing] asset broadcast.trailHalo: 2.195 s
+[stadium-timing] asset broadcast.trailHalo: 2.382 s
+[stadium-timing] asset crowd.impostorNormal: 1.115 s
+[stadium-timing] asset crowd.impostorNormal: 1.131 s
+[stadium-timing] asset crowd.impostorNormal: 1.148 s
+[stadium-timing] asset crowd.impostorNormal: 1.159 s
+[stadium-timing] asset crowd.impostorNormal: 1.281 s
+[stadium-timing] asset crowd.impostorNormal: 1.285 s
+[stadium-timing] asset crowd.impostorNormal: 1.292 s
+[stadium-timing] asset crowd.impostorNormal: 1.298 s
+[stadium-timing] asset crowd.impostorNormal: 1.306 s
+[stadium-timing] asset crowd.impostorNormal: 1.343 s
+[stadium-timing] asset crowd.impostorNormal: 1.407 s
+[stadium-timing] asset crowd.impostorNormal: 1.413 s
+[stadium-timing] asset crowd.impostorNormal: 1.415 s
+[stadium-timing] asset crowd.impostorNormal: 1.432 s
+[stadium-timing] asset crowd.impostorNormal: 1.497 s
+[stadium-timing] asset crowd.impostorNormal: 1.529 s
+[stadium-timing] asset crowd.impostorNormal: 1.591 s
+[stadium-timing] asset crowd.impostorNormal: 2.084 s
+[stadium-timing] asset field.turfAgainstNormal: 0.935 s
+[stadium-timing] asset field.turfAgainstNormal: 0.953 s
+[stadium-timing] asset field.turfAgainstNormal: 0.996 s
+[stadium-timing] asset field.turfAgainstNormal: 1.032 s
+[stadium-timing] asset field.turfAgainstNormal: 1.101 s
+[stadium-timing] asset field.turfAgainstNormal: 1.102 s
+[stadium-timing] asset field.turfAgainstNormal: 1.137 s
+[stadium-timing] asset field.turfAgainstNormal: 1.139 s
+[stadium-timing] asset field.turfAgainstNormal: 1.173 s
+[stadium-timing] asset field.turfAgainstNormal: 1.193 s
+[stadium-timing] asset field.turfAgainstNormal: 1.238 s
+[stadium-timing] asset field.turfAgainstNormal: 1.252 s
+[stadium-timing] asset field.turfAgainstNormal: 1.298 s
+[stadium-timing] asset field.turfAgainstNormal: 1.318 s
+[stadium-timing] asset field.turfAgainstNormal: 1.339 s
+[stadium-timing] asset field.turfAgainstNormal: 1.375 s
+[stadium-timing] asset field.turfAgainstNormal: 1.385 s
+[stadium-timing] asset field.turfAgainstNormal: 1.959 s
+[stadium-timing] asset field.turfAlbedo: 0.990 s
+[stadium-timing] asset field.turfAlbedo: 0.999 s
+[stadium-timing] asset field.turfAlbedo: 1.026 s
+[stadium-timing] asset field.turfAlbedo: 1.059 s
+[stadium-timing] asset field.turfAlbedo: 1.102 s
+[stadium-timing] asset field.turfAlbedo: 1.141 s
+[stadium-timing] asset field.turfAlbedo: 1.143 s
+[stadium-timing] asset field.turfAlbedo: 1.156 s
+[stadium-timing] asset field.turfAlbedo: 1.220 s
+[stadium-timing] asset field.turfAlbedo: 1.260 s
+[stadium-timing] asset field.turfAlbedo: 1.272 s
+[stadium-timing] asset field.turfAlbedo: 1.282 s
+[stadium-timing] asset field.turfAlbedo: 1.349 s
+[stadium-timing] asset field.turfAlbedo: 1.356 s
+[stadium-timing] asset field.turfAlbedo: 1.361 s
+[stadium-timing] asset field.turfAlbedo: 1.399 s
+[stadium-timing] asset field.turfAlbedo: 1.444 s
+[stadium-timing] asset field.turfAlbedo: 1.982 s
+[stadium-timing] asset field.turfRoughness: 1.008 s
+[stadium-timing] asset field.turfRoughness: 1.028 s
+[stadium-timing] asset field.turfRoughness: 1.034 s
+[stadium-timing] asset field.turfRoughness: 1.083 s
+[stadium-timing] asset field.turfRoughness: 1.120 s
+[stadium-timing] asset field.turfRoughness: 1.157 s
+[stadium-timing] asset field.turfRoughness: 1.176 s
+[stadium-timing] asset field.turfRoughness: 1.202 s
+[stadium-timing] asset field.turfRoughness: 1.226 s
+[stadium-timing] asset field.turfRoughness: 1.286 s
+[stadium-timing] asset field.turfRoughness: 1.293 s
+[stadium-timing] asset field.turfRoughness: 1.301 s
+[stadium-timing] asset field.turfRoughness: 1.353 s
+[stadium-timing] asset field.turfRoughness: 1.358 s
+[stadium-timing] asset field.turfRoughness: 1.379 s
+[stadium-timing] asset field.turfRoughness: 1.426 s
+[stadium-timing] asset field.turfRoughness: 1.466 s
+[stadium-timing] asset field.turfRoughness: 1.983 s
+[stadium-timing] asset field.turfWithNormal: 1.032 s
+[stadium-timing] asset field.turfWithNormal: 1.070 s
+[stadium-timing] asset field.turfWithNormal: 1.084 s
+[stadium-timing] asset field.turfWithNormal: 1.089 s
+[stadium-timing] asset field.turfWithNormal: 1.172 s
+[stadium-timing] asset field.turfWithNormal: 1.173 s
+[stadium-timing] asset field.turfWithNormal: 1.211 s
+[stadium-timing] asset field.turfWithNormal: 1.220 s
+[stadium-timing] asset field.turfWithNormal: 1.245 s
+[stadium-timing] asset field.turfWithNormal: 1.308 s
+[stadium-timing] asset field.turfWithNormal: 1.315 s
+[stadium-timing] asset field.turfWithNormal: 1.349 s
+[stadium-timing] asset field.turfWithNormal: 1.361 s
+[stadium-timing] asset field.turfWithNormal: 1.399 s
+[stadium-timing] asset field.turfWithNormal: 1.436 s
+[stadium-timing] asset field.turfWithNormal: 1.443 s
+[stadium-timing] asset field.turfWithNormal: 1.507 s
+[stadium-timing] asset field.turfWithNormal: 2.023 s
+[stadium-timing] asset lighting.beam: 1.116 s
+[stadium-timing] asset lighting.beam: 1.133 s
+[stadium-timing] asset lighting.beam: 1.188 s
+[stadium-timing] asset lighting.beam: 1.190 s
+[stadium-timing] asset lighting.beam: 1.286 s
+[stadium-timing] asset lighting.beam: 1.299 s
+[stadium-timing] asset lighting.beam: 1.304 s
+[stadium-timing] asset lighting.beam: 1.308 s
+[stadium-timing] asset lighting.beam: 1.335 s
+[stadium-timing] asset lighting.beam: 1.364 s
+[stadium-timing] asset lighting.beam: 1.420 s
+[stadium-timing] asset lighting.beam: 1.440 s
+[stadium-timing] asset lighting.beam: 1.465 s
+[stadium-timing] asset lighting.beam: 1.474 s
+[stadium-timing] asset lighting.beam: 1.521 s
+[stadium-timing] asset lighting.beam: 1.546 s
+[stadium-timing] asset lighting.beam: 1.593 s
+[stadium-timing] asset lighting.beam: 2.085 s
+[stadium-timing] asset lighting.beamDust: 1.117 s
+[stadium-timing] asset lighting.beamDust: 1.153 s
+[stadium-timing] asset lighting.beamDust: 1.188 s
+[stadium-timing] asset lighting.beamDust: 1.190 s
+[stadium-timing] asset lighting.beamDust: 1.286 s
+[stadium-timing] asset lighting.beamDust: 1.306 s
+[stadium-timing] asset lighting.beamDust: 1.309 s
+[stadium-timing] asset lighting.beamDust: 1.320 s
+[stadium-timing] asset lighting.beamDust: 1.336 s
+[stadium-timing] asset lighting.beamDust: 1.364 s
+[stadium-timing] asset lighting.beamDust: 1.437 s
+[stadium-timing] asset lighting.beamDust: 1.447 s
+[stadium-timing] asset lighting.beamDust: 1.466 s
+[stadium-timing] asset lighting.beamDust: 1.476 s
+[stadium-timing] asset lighting.beamDust: 1.542 s
+[stadium-timing] asset lighting.beamDust: 1.578 s
+[stadium-timing] asset lighting.beamDust: 1.620 s
+[stadium-timing] asset lighting.beamDust: 2.085 s
+[stadium-timing] asset lighting.bloom: 1.132 s
+[stadium-timing] asset lighting.bloom: 1.154 s
+[stadium-timing] asset lighting.bloom: 1.189 s
+[stadium-timing] asset lighting.bloom: 1.223 s
+[stadium-timing] asset lighting.bloom: 1.304 s
+[stadium-timing] asset lighting.bloom: 1.315 s
+[stadium-timing] asset lighting.bloom: 1.322 s
+[stadium-timing] asset lighting.bloom: 1.343 s
+[stadium-timing] asset lighting.bloom: 1.354 s
+[stadium-timing] asset lighting.bloom: 1.365 s
+[stadium-timing] asset lighting.bloom: 1.438 s
+[stadium-timing] asset lighting.bloom: 1.487 s
+[stadium-timing] asset lighting.bloom: 1.489 s
+[stadium-timing] asset lighting.bloom: 1.504 s
+[stadium-timing] asset lighting.bloom: 1.543 s
+[stadium-timing] asset lighting.bloom: 1.578 s
+[stadium-timing] asset lighting.bloom: 1.622 s
+[stadium-timing] asset lighting.bloom: 2.086 s
+[stadium-timing] asset lighting.face: 1.149 s
+[stadium-timing] asset lighting.face: 1.170 s
+[stadium-timing] asset lighting.face: 1.212 s
+[stadium-timing] asset lighting.face: 1.232 s
+[stadium-timing] asset lighting.face: 1.321 s
+[stadium-timing] asset lighting.face: 1.327 s
+[stadium-timing] asset lighting.face: 1.335 s
+[stadium-timing] asset lighting.face: 1.346 s
+[stadium-timing] asset lighting.face: 1.367 s
+[stadium-timing] asset lighting.face: 1.376 s
+[stadium-timing] asset lighting.face: 1.448 s
+[stadium-timing] asset lighting.face: 1.488 s
+[stadium-timing] asset lighting.face: 1.504 s
+[stadium-timing] asset lighting.face: 1.564 s
+[stadium-timing] asset lighting.face: 1.586 s
+[stadium-timing] asset lighting.face: 1.599 s
+[stadium-timing] asset lighting.face: 1.631 s
+[stadium-timing] asset lighting.face: 2.115 s
+[stadium-timing] asset lighting.fill: 1.151 s
+[stadium-timing] asset lighting.fill: 1.181 s
+[stadium-timing] asset lighting.fill: 1.213 s
+[stadium-timing] asset lighting.fill: 1.260 s
+[stadium-timing] asset lighting.fill: 1.322 s
+[stadium-timing] asset lighting.fill: 1.348 s
+[stadium-timing] asset lighting.fill: 1.350 s
+[stadium-timing] asset lighting.fill: 1.376 s
+[stadium-timing] asset lighting.fill: 1.377 s
+[stadium-timing] asset lighting.fill: 1.396 s
+[stadium-timing] asset lighting.fill: 1.449 s
+[stadium-timing] asset lighting.fill: 1.496 s
+[stadium-timing] asset lighting.fill: 1.510 s
+[stadium-timing] asset lighting.fill: 1.565 s
+[stadium-timing] asset lighting.fill: 1.612 s
+[stadium-timing] asset lighting.fill: 1.631 s
+[stadium-timing] asset lighting.fill: 1.721 s
+[stadium-timing] asset lighting.fill: 2.121 s
+[stadium-timing] asset lighting.glowCore: 1.151 s
+[stadium-timing] asset lighting.glowCore: 1.205 s
+[stadium-timing] asset lighting.glowCore: 1.215 s
+[stadium-timing] asset lighting.glowCore: 1.270 s
+[stadium-timing] asset lighting.glowCore: 1.323 s
+[stadium-timing] asset lighting.glowCore: 1.348 s
+[stadium-timing] asset lighting.glowCore: 1.356 s
+[stadium-timing] asset lighting.glowCore: 1.377 s
+[stadium-timing] asset lighting.glowCore: 1.392 s
+[stadium-timing] asset lighting.glowCore: 1.423 s
+[stadium-timing] asset lighting.glowCore: 1.470 s
+[stadium-timing] asset lighting.glowCore: 1.510 s
+[stadium-timing] asset lighting.glowCore: 1.515 s
+[stadium-timing] asset lighting.glowCore: 1.597 s
+[stadium-timing] asset lighting.glowCore: 1.640 s
+[stadium-timing] asset lighting.glowCore: 1.648 s
+[stadium-timing] asset lighting.glowCore: 1.746 s
+[stadium-timing] asset lighting.glowCore: 2.137 s
+[stadium-timing] asset lighting.glowHalo: 1.165 s
+[stadium-timing] asset lighting.glowHalo: 1.206 s
+[stadium-timing] asset lighting.glowHalo: 1.218 s
+[stadium-timing] asset lighting.glowHalo: 1.294 s
+[stadium-timing] asset lighting.glowHalo: 1.337 s
+[stadium-timing] asset lighting.glowHalo: 1.370 s
+[stadium-timing] asset lighting.glowHalo: 1.377 s
+[stadium-timing] asset lighting.glowHalo: 1.379 s
+[stadium-timing] asset lighting.glowHalo: 1.393 s
+[stadium-timing] asset lighting.glowHalo: 1.468 s
+[stadium-timing] asset lighting.glowHalo: 1.478 s
+[stadium-timing] asset lighting.glowHalo: 1.511 s
+[stadium-timing] asset lighting.glowHalo: 1.515 s
+[stadium-timing] asset lighting.glowHalo: 1.641 s
+[stadium-timing] asset lighting.glowHalo: 1.648 s
+[stadium-timing] asset lighting.glowHalo: 1.649 s
+[stadium-timing] asset lighting.glowHalo: 1.798 s
+[stadium-timing] asset lighting.glowHalo: 2.159 s
+[stadium-timing] asset lighting.haze: 1.190 s
+[stadium-timing] asset lighting.haze: 1.221 s
+[stadium-timing] asset lighting.haze: 1.247 s
+[stadium-timing] asset lighting.haze: 1.294 s
+[stadium-timing] asset lighting.haze: 1.352 s
+[stadium-timing] asset lighting.haze: 1.397 s
+[stadium-timing] asset lighting.haze: 1.401 s
+[stadium-timing] asset lighting.haze: 1.405 s
+[stadium-timing] asset lighting.haze: 1.409 s
+[stadium-timing] asset lighting.haze: 1.476 s
+[stadium-timing] asset lighting.haze: 1.481 s
+[stadium-timing] asset lighting.haze: 1.537 s
+[stadium-timing] asset lighting.haze: 1.549 s
+[stadium-timing] asset lighting.haze: 1.653 s
+[stadium-timing] asset lighting.haze: 1.664 s
+[stadium-timing] asset lighting.haze: 1.678 s
+[stadium-timing] asset lighting.haze: 1.913 s
+[stadium-timing] asset lighting.haze: 2.161 s
+[stadium-timing] asset lighting.lens: 1.234 s
+[stadium-timing] asset lighting.lens: 1.239 s
+[stadium-timing] asset lighting.lens: 1.248 s
+[stadium-timing] asset lighting.lens: 1.304 s
+[stadium-timing] asset lighting.lens: 1.365 s
+[stadium-timing] asset lighting.lens: 1.401 s
+[stadium-timing] asset lighting.lens: 1.402 s
+[stadium-timing] asset lighting.lens: 1.410 s
+[stadium-timing] asset lighting.lens: 1.414 s
+[stadium-timing] asset lighting.lens: 1.500 s
+[stadium-timing] asset lighting.lens: 1.512 s
+[stadium-timing] asset lighting.lens: 1.549 s
+[stadium-timing] asset lighting.lens: 1.565 s
+[stadium-timing] asset lighting.lens: 1.654 s
+[stadium-timing] asset lighting.lens: 1.665 s
+[stadium-timing] asset lighting.lens: 1.683 s
+[stadium-timing] asset lighting.lens: 1.930 s
+[stadium-timing] asset lighting.lens: 2.190 s
+[stadium-timing] asset lighting.probe: 1.438 s
+[stadium-timing] asset lighting.probe: 1.520 s
+[stadium-timing] asset lighting.probe: 1.586 s
+[stadium-timing] asset lighting.probe: 1.614 s
+[stadium-timing] asset lighting.probe: 1.620 s
+[stadium-timing] asset lighting.probe: 1.642 s
+[stadium-timing] asset lighting.probe: 1.650 s
+[stadium-timing] asset lighting.probe: 1.688 s
+[stadium-timing] asset lighting.probe: 1.714 s
+[stadium-timing] asset lighting.probe: 1.739 s
+[stadium-timing] asset lighting.probe: 1.814 s
+[stadium-timing] asset lighting.probe: 1.853 s
+[stadium-timing] asset lighting.probe: 1.869 s
+[stadium-timing] asset lighting.probe: 1.997 s
+[stadium-timing] asset lighting.probe: 2.147 s
+[stadium-timing] asset lighting.probe: 2.153 s
+[stadium-timing] asset lighting.probe: 2.233 s
+[stadium-timing] asset lighting.probe: 2.503 s
+[stadium-timing] asset lighting.spill: 1.235 s
+[stadium-timing] asset lighting.spill: 1.240 s
+[stadium-timing] asset lighting.spill: 1.248 s
+[stadium-timing] asset lighting.spill: 1.320 s
+[stadium-timing] asset lighting.spill: 1.396 s
+[stadium-timing] asset lighting.spill: 1.402 s
+[stadium-timing] asset lighting.spill: 1.411 s
+[stadium-timing] asset lighting.spill: 1.415 s
+[stadium-timing] asset lighting.spill: 1.425 s
+[stadium-timing] asset lighting.spill: 1.501 s
+[stadium-timing] asset lighting.spill: 1.512 s
+[stadium-timing] asset lighting.spill: 1.549 s
+[stadium-timing] asset lighting.spill: 1.582 s
+[stadium-timing] asset lighting.spill: 1.666 s
+[stadium-timing] asset lighting.spill: 1.676 s
+[stadium-timing] asset lighting.spill: 1.709 s
+[stadium-timing] asset lighting.spill: 1.973 s
+[stadium-timing] asset lighting.spill: 2.203 s
+[stadium-timing] asset sideline.netMask: 1.032 s
+[stadium-timing] asset sideline.netMask: 1.070 s
+[stadium-timing] asset sideline.netMask: 1.090 s
+[stadium-timing] asset sideline.netMask: 1.101 s
+[stadium-timing] asset sideline.netMask: 1.201 s
+[stadium-timing] asset sideline.netMask: 1.205 s
+[stadium-timing] asset sideline.netMask: 1.212 s
+[stadium-timing] asset sideline.netMask: 1.221 s
+[stadium-timing] asset sideline.netMask: 1.245 s
+[stadium-timing] asset sideline.netMask: 1.315 s
+[stadium-timing] asset sideline.netMask: 1.316 s
+[stadium-timing] asset sideline.netMask: 1.350 s
+[stadium-timing] asset sideline.netMask: 1.362 s
+[stadium-timing] asset sideline.netMask: 1.405 s
+[stadium-timing] asset sideline.netMask: 1.436 s
+[stadium-timing] asset sideline.netMask: 1.443 s
+[stadium-timing] asset sideline.netMask: 1.510 s
+[stadium-timing] asset sideline.netMask: 2.025 s
+[stadium-timing] asset sideline.propShadow: 1.049 s
+[stadium-timing] asset sideline.propShadow: 1.070 s
+[stadium-timing] asset sideline.propShadow: 1.115 s
+[stadium-timing] asset sideline.propShadow: 1.116 s
+[stadium-timing] asset sideline.propShadow: 1.203 s
+[stadium-timing] asset sideline.propShadow: 1.206 s
+[stadium-timing] asset sideline.propShadow: 1.232 s
+[stadium-timing] asset sideline.propShadow: 1.243 s
+[stadium-timing] asset sideline.propShadow: 1.276 s
+[stadium-timing] asset sideline.propShadow: 1.316 s
+[stadium-timing] asset sideline.propShadow: 1.337 s
+[stadium-timing] asset sideline.propShadow: 1.351 s
+[stadium-timing] asset sideline.propShadow: 1.371 s
+[stadium-timing] asset sideline.propShadow: 1.406 s
+[stadium-timing] asset sideline.propShadow: 1.437 s
+[stadium-timing] asset sideline.propShadow: 1.471 s
+[stadium-timing] asset sideline.propShadow: 1.545 s
+[stadium-timing] asset sideline.propShadow: 2.026 s
+[stadium-timing] asset sky.clouds: 1.281 s
+[stadium-timing] asset sky.clouds: 1.283 s
+[stadium-timing] asset sky.clouds: 1.285 s
+[stadium-timing] asset sky.clouds: 1.348 s
+[stadium-timing] asset sky.clouds: 1.428 s
+[stadium-timing] asset sky.clouds: 1.442 s
+[stadium-timing] asset sky.clouds: 1.448 s
+[stadium-timing] asset sky.clouds: 1.453 s
+[stadium-timing] asset sky.clouds: 1.532 s
+[stadium-timing] asset sky.clouds: 1.549 s
+[stadium-timing] asset sky.clouds: 1.565 s
+[stadium-timing] asset sky.clouds: 1.621 s
+[stadium-timing] asset sky.clouds: 1.702 s
+[stadium-timing] asset sky.clouds: 1.731 s
+[stadium-timing] asset sky.clouds: 1.759 s
+[stadium-timing] asset sky.clouds: 2.014 s
+[stadium-timing] asset sky.clouds: 2.248 s
+[stadium-timing] asset sky.dome: 1.283 s
+[stadium-timing] asset sky.dome: 1.284 s
+[stadium-timing] asset sky.dome: 1.285 s
+[stadium-timing] asset sky.dome: 1.371 s
+[stadium-timing] asset sky.dome: 1.428 s
+[stadium-timing] asset sky.dome: 1.442 s
+[stadium-timing] asset sky.dome: 1.443 s
+[stadium-timing] asset sky.dome: 1.464 s
+[stadium-timing] asset sky.dome: 1.487 s
+[stadium-timing] asset sky.dome: 1.550 s
+[stadium-timing] asset sky.dome: 1.552 s
+[stadium-timing] asset sky.dome: 1.589 s
+[stadium-timing] asset sky.dome: 1.637 s
+[stadium-timing] asset sky.dome: 1.714 s
+[stadium-timing] asset sky.dome: 1.737 s
+[stadium-timing] asset sky.dome: 1.811 s
+[stadium-timing] asset sky.dome: 2.032 s
+[stadium-timing] asset sky.dome: 2.249 s
+[stadium-timing] asset sky.sky: 1.333 s
+[stadium-timing] asset sky.sky: 1.346 s
+[stadium-timing] asset sky.sky: 1.405 s
+[stadium-timing] asset sky.sky: 1.465 s
+[stadium-timing] asset sky.sky: 1.476 s
+[stadium-timing] asset sky.sky: 1.500 s
+[stadium-timing] asset sky.sky: 1.527 s
+[stadium-timing] asset sky.sky: 1.532 s
+[stadium-timing] asset sky.sky: 1.583 s
+[stadium-timing] asset sky.sky: 1.609 s
+[stadium-timing] asset sky.sky: 1.649 s
+[stadium-timing] asset sky.sky: 1.698 s
+[stadium-timing] asset sky.sky: 1.751 s
+[stadium-timing] asset sky.sky: 1.772 s
+[stadium-timing] asset sky.sky: 1.848 s
+[stadium-timing] asset sky.sky: 2.090 s
+[stadium-timing] asset sky.sky: 2.279 s
+[stadium-timing] assets models: 2.280 s
+[stadium-timing] assets models: 2.427 s
+[stadium-timing] assets models: 2.472 s
+[stadium-timing] assets models: 2.486 s
+[stadium-timing] assets models: 2.552 s
+[stadium-timing] assets models: 2.558 s
+[stadium-timing] assets models: 2.602 s
+[stadium-timing] assets models: 2.609 s
+[stadium-timing] assets models: 2.619 s
+[stadium-timing] assets models: 2.702 s
+[stadium-timing] assets models: 2.819 s
+[stadium-timing] assets models: 2.852 s
+[stadium-timing] assets models: 2.941 s
+[stadium-timing] assets models: 2.968 s
+[stadium-timing] assets models: 3.569 s
+[stadium-timing] assets models: 5.929 s
+[stadium-timing] assets textures, probe and sound: 1.442 s
+[stadium-timing] assets textures, probe and sound: 1.523 s
+[stadium-timing] assets textures, probe and sound: 1.589 s
+[stadium-timing] assets textures, probe and sound: 1.617 s
+[stadium-timing] assets textures, probe and sound: 1.624 s
+[stadium-timing] assets textures, probe and sound: 1.645 s
+[stadium-timing] assets textures, probe and sound: 1.653 s
+[stadium-timing] assets textures, probe and sound: 1.692 s
+[stadium-timing] assets textures, probe and sound: 1.717 s
+[stadium-timing] assets textures, probe and sound: 1.742 s
+[stadium-timing] assets textures, probe and sound: 1.817 s
+[stadium-timing] assets textures, probe and sound: 1.856 s
+[stadium-timing] assets textures, probe and sound: 1.873 s
+[stadium-timing] assets textures, probe and sound: 2.001 s
+[stadium-timing] assets textures, probe and sound: 2.151 s
+[stadium-timing] assets textures, probe and sound: 2.157 s
+[stadium-timing] assets textures, probe and sound: 2.236 s
+[stadium-timing] assets textures, probe and sound: 2.506 s
+[stadium-timing] assets total: 2.280 s
+[stadium-timing] assets total: 2.427 s
+[stadium-timing] assets total: 2.472 s
+[stadium-timing] assets total: 2.486 s
+[stadium-timing] assets total: 2.552 s
+[stadium-timing] assets total: 2.558 s
+[stadium-timing] assets total: 2.602 s
+[stadium-timing] assets total: 2.609 s
+[stadium-timing] assets total: 2.619 s
+[stadium-timing] assets total: 2.702 s
+[stadium-timing] assets total: 2.819 s
+[stadium-timing] assets total: 2.852 s
+[stadium-timing] assets total: 2.941 s
+[stadium-timing] assets total: 2.968 s
+[stadium-timing] assets total: 3.569 s
+[stadium-timing] assets total: 5.929 s
+[stadium-timing] look programs: 0.108 s
+[stadium-timing] look programs: 0.110 s
+[stadium-timing] look programs: 0.112 s
+[stadium-timing] look programs: 0.113 s
+[stadium-timing] look programs: 0.114 s
+[stadium-timing] look programs: 0.120 s
+[stadium-timing] look programs: 0.123 s
+[stadium-timing] look programs: 0.127 s
+[stadium-timing] look programs: 0.129 s
+[stadium-timing] look programs: 0.135 s
+[stadium-timing] look programs: 0.151 s
+[stadium-timing] look programs: 0.152 s
+[stadium-timing] look programs: 0.154 s
+[stadium-timing] look programs: 0.155 s
+[stadium-timing] look programs: 0.156 s
+[stadium-timing] look programs: 0.192 s
+[stadium-timing] look programs: 1.087 s
+[stadium-timing] model bowl.near: 0.641 s
+[stadium-timing] model bowl.near: 0.685 s
+[stadium-timing] model bowl.near: 0.699 s
+[stadium-timing] model bowl.near: 0.743 s
+[stadium-timing] model bowl.near: 0.765 s
+[stadium-timing] model bowl.near: 0.806 s
+[stadium-timing] model bowl.near: 0.834 s
+[stadium-timing] model bowl.near: 0.839 s
+[stadium-timing] model bowl.near: 0.841 s
+[stadium-timing] model bowl.near: 0.880 s
+[stadium-timing] model bowl.near: 0.881 s
+[stadium-timing] model bowl.near: 0.890 s
+[stadium-timing] model bowl.near: 0.906 s
+[stadium-timing] model bowl.near: 0.919 s
+[stadium-timing] model bowl.near: 0.933 s
+[stadium-timing] model bowl.near: 0.973 s
+[stadium-timing] model bowl.near: 1.935 s
+[stadium-timing] model bowl.near: 4.256 s
+[stadium-timing] model bowl.seatsFar: 0.528 s
+[stadium-timing] model bowl.seatsFar: 0.544 s
+[stadium-timing] model bowl.seatsFar: 0.555 s
+[stadium-timing] model bowl.seatsFar: 0.575 s
+[stadium-timing] model bowl.seatsFar: 0.605 s
+[stadium-timing] model bowl.seatsFar: 0.621 s
+[stadium-timing] model bowl.seatsFar: 0.652 s
+[stadium-timing] model bowl.seatsFar: 0.655 s
+[stadium-timing] model bowl.seatsFar: 0.689 s
+[stadium-timing] model bowl.seatsFar: 0.708 s
+[stadium-timing] model bowl.seatsFar: 0.711 s
+[stadium-timing] model bowl.seatsFar: 0.717 s
+[stadium-timing] model bowl.seatsFar: 0.725 s
+[stadium-timing] model bowl.seatsFar: 0.733 s
+[stadium-timing] model bowl.seatsFar: 0.747 s
+[stadium-timing] model bowl.seatsFar: 0.772 s
+[stadium-timing] model bowl.seatsFar: 0.981 s
+[stadium-timing] model bowl.seatsFar: 2.547 s
+[stadium-timing] model bowl.stands: 0.647 s
+[stadium-timing] model bowl.stands: 0.684 s
+[stadium-timing] model bowl.stands: 0.743 s
+[stadium-timing] model bowl.stands: 0.764 s
+[stadium-timing] model bowl.stands: 0.794 s
+[stadium-timing] model bowl.stands: 0.848 s
+[stadium-timing] model bowl.stands: 0.856 s
+[stadium-timing] model bowl.stands: 0.876 s
+[stadium-timing] model bowl.stands: 0.885 s
+[stadium-timing] model bowl.stands: 0.905 s
+[stadium-timing] model bowl.stands: 0.926 s
+[stadium-timing] model bowl.stands: 0.953 s
+[stadium-timing] model bowl.stands: 0.955 s
+[stadium-timing] model bowl.stands: 0.972 s
+[stadium-timing] model bowl.stands: 0.973 s
+[stadium-timing] model bowl.stands: 0.974 s
+[stadium-timing] model bowl.stands: 1.940 s
+[stadium-timing] model bowl.stands: 4.256 s
+[stadium-timing] model bowl.table: 0.528 s
+[stadium-timing] model bowl.table: 0.544 s
+[stadium-timing] model bowl.table: 0.577 s
+[stadium-timing] model bowl.table: 0.588 s
+[stadium-timing] model bowl.table: 0.605 s
+[stadium-timing] model bowl.table: 0.623 s
+[stadium-timing] model bowl.table: 0.652 s
+[stadium-timing] model bowl.table: 0.655 s
+[stadium-timing] model bowl.table: 0.707 s
+[stadium-timing] model bowl.table: 0.710 s
+[stadium-timing] model bowl.table: 0.714 s
+[stadium-timing] model bowl.table: 0.718 s
+[stadium-timing] model bowl.table: 0.722 s
+[stadium-timing] model bowl.table: 0.744 s
+[stadium-timing] model bowl.table: 0.755 s
+[stadium-timing] model bowl.table: 0.770 s
+[stadium-timing] model bowl.table: 0.981 s
+[stadium-timing] model bowl.table: 2.546 s
+[stadium-timing] model broadcast.footballCollege: 0.989 s
+[stadium-timing] model broadcast.footballCollege: 1.020 s
+[stadium-timing] model broadcast.footballCollege: 1.025 s
+[stadium-timing] model broadcast.footballCollege: 1.057 s
+[stadium-timing] model broadcast.footballCollege: 1.108 s
+[stadium-timing] model broadcast.footballCollege: 1.178 s
+[stadium-timing] model broadcast.footballCollege: 1.190 s
+[stadium-timing] model broadcast.footballCollege: 1.193 s
+[stadium-timing] model broadcast.footballCollege: 1.208 s
+[stadium-timing] model broadcast.footballCollege: 1.217 s
+[stadium-timing] model broadcast.footballCollege: 1.223 s
+[stadium-timing] model broadcast.footballCollege: 1.304 s
+[stadium-timing] model broadcast.footballCollege: 1.319 s
+[stadium-timing] model broadcast.footballCollege: 1.333 s
+[stadium-timing] model broadcast.footballCollege: 1.335 s
+[stadium-timing] model broadcast.footballCollege: 1.422 s
+[stadium-timing] model broadcast.footballCollege: 2.006 s
+[stadium-timing] model broadcast.footballCollege: 5.889 s
+[stadium-timing] model broadcast.footballNFL: 0.989 s
+[stadium-timing] model broadcast.footballNFL: 1.046 s
+[stadium-timing] model broadcast.footballNFL: 1.047 s
+[stadium-timing] model broadcast.footballNFL: 1.095 s
+[stadium-timing] model broadcast.footballNFL: 1.108 s
+[stadium-timing] model broadcast.footballNFL: 1.212 s
+[stadium-timing] model broadcast.footballNFL: 1.215 s
+[stadium-timing] model broadcast.footballNFL: 1.217 s
+[stadium-timing] model broadcast.footballNFL: 1.219 s
+[stadium-timing] model broadcast.footballNFL: 1.230 s
+[stadium-timing] model broadcast.footballNFL: 1.250 s
+[stadium-timing] model broadcast.footballNFL: 1.303 s
+[stadium-timing] model broadcast.footballNFL: 1.319 s
+[stadium-timing] model broadcast.footballNFL: 1.328 s
+[stadium-timing] model broadcast.footballNFL: 1.335 s
+[stadium-timing] model broadcast.footballNFL: 1.422 s
+[stadium-timing] model broadcast.footballNFL: 2.005 s
+[stadium-timing] model broadcast.footballNFL: 5.889 s
+[stadium-timing] model crowd.lod0Poses: 2.174 s
+[stadium-timing] model crowd.lod0Poses: 2.357 s
+[stadium-timing] model crowd.lod0Poses: 2.388 s
+[stadium-timing] model crowd.lod0Poses: 2.395 s
+[stadium-timing] model crowd.lod0Poses: 2.431 s
+[stadium-timing] model crowd.lod0Poses: 2.435 s
+[stadium-timing] model crowd.lod0Poses: 2.483 s
+[stadium-timing] model crowd.lod0Poses: 2.495 s
+[stadium-timing] model crowd.lod0Poses: 2.521 s
+[stadium-timing] model crowd.lod0Poses: 2.552 s
+[stadium-timing] model crowd.lod0Poses: 2.590 s
+[stadium-timing] model crowd.lod0Poses: 2.638 s
+[stadium-timing] model crowd.lod0Poses: 2.698 s
+[stadium-timing] model crowd.lod0Poses: 2.701 s
+[stadium-timing] model crowd.lod0Poses: 2.734 s
+[stadium-timing] model crowd.lod0Poses: 2.869 s
+[stadium-timing] model crowd.lod0Poses: 3.069 s
+[stadium-timing] model crowd.lod0Poses: 3.474 s
+[stadium-timing] model crowd.lod1Poses: 1.641 s
+[stadium-timing] model crowd.lod1Poses: 1.866 s
+[stadium-timing] model crowd.lod1Poses: 1.943 s
+[stadium-timing] model crowd.lod1Poses: 1.951 s
+[stadium-timing] model crowd.lod1Poses: 1.996 s
+[stadium-timing] model crowd.lod1Poses: 2.036 s
+[stadium-timing] model crowd.lod1Poses: 2.037 s
+[stadium-timing] model crowd.lod1Poses: 2.069 s
+[stadium-timing] model crowd.lod1Poses: 2.086 s
+[stadium-timing] model crowd.lod1Poses: 2.094 s
+[stadium-timing] model crowd.lod1Poses: 2.102 s
+[stadium-timing] model crowd.lod1Poses: 2.188 s
+[stadium-timing] model crowd.lod1Poses: 2.190 s
+[stadium-timing] model crowd.lod1Poses: 2.223 s
+[stadium-timing] model crowd.lod1Poses: 2.338 s
+[stadium-timing] model crowd.lod1Poses: 2.489 s
+[stadium-timing] model crowd.lod1Poses: 2.547 s
+[stadium-timing] model crowd.lod1Poses: 3.129 s
+[stadium-timing] model crowd.lod2Poses: 1.842 s
+[stadium-timing] model crowd.lod2Poses: 2.038 s
+[stadium-timing] model crowd.lod2Poses: 2.049 s
+[stadium-timing] model crowd.lod2Poses: 2.069 s
+[stadium-timing] model crowd.lod2Poses: 2.093 s
+[stadium-timing] model crowd.lod2Poses: 2.097 s
+[stadium-timing] model crowd.lod2Poses: 2.161 s
+[stadium-timing] model crowd.lod2Poses: 2.174 s
+[stadium-timing] model crowd.lod2Poses: 2.188 s
+[stadium-timing] model crowd.lod2Poses: 2.194 s
+[stadium-timing] model crowd.lod2Poses: 2.232 s
+[stadium-timing] model crowd.lod2Poses: 2.236 s
+[stadium-timing] model crowd.lod2Poses: 2.248 s
+[stadium-timing] model crowd.lod2Poses: 2.251 s
+[stadium-timing] model crowd.lod2Poses: 2.407 s
+[stadium-timing] model crowd.lod2Poses: 2.489 s
+[stadium-timing] model crowd.lod2Poses: 2.721 s
+[stadium-timing] model crowd.lod2Poses: 2.991 s
+[stadium-timing] model lighting.bankFar: 0.947 s
+[stadium-timing] model lighting.bankFar: 0.964 s
+[stadium-timing] model lighting.bankFar: 0.968 s
+[stadium-timing] model lighting.bankFar: 1.023 s
+[stadium-timing] model lighting.bankFar: 1.040 s
+[stadium-timing] model lighting.bankFar: 1.152 s
+[stadium-timing] model lighting.bankFar: 1.156 s
+[stadium-timing] model lighting.bankFar: 1.158 s
+[stadium-timing] model lighting.bankFar: 1.164 s
+[stadium-timing] model lighting.bankFar: 1.187 s
+[stadium-timing] model lighting.bankFar: 1.197 s
+[stadium-timing] model lighting.bankFar: 1.219 s
+[stadium-timing] model lighting.bankFar: 1.241 s
+[stadium-timing] model lighting.bankFar: 1.257 s
+[stadium-timing] model lighting.bankFar: 1.272 s
+[stadium-timing] model lighting.bankFar: 1.319 s
+[stadium-timing] model lighting.bankFar: 1.939 s
+[stadium-timing] model lighting.bankFar: 5.094 s
+[stadium-timing] model lighting.bankNear: 0.942 s
+[stadium-timing] model lighting.bankNear: 0.956 s
+[stadium-timing] model lighting.bankNear: 0.959 s
+[stadium-timing] model lighting.bankNear: 1.006 s
+[stadium-timing] model lighting.bankNear: 1.103 s
+[stadium-timing] model lighting.bankNear: 1.119 s
+[stadium-timing] model lighting.bankNear: 1.156 s
+[stadium-timing] model lighting.bankNear: 1.158 s
+[stadium-timing] model lighting.bankNear: 1.159 s
+[stadium-timing] model lighting.bankNear: 1.164 s
+[stadium-timing] model lighting.bankNear: 1.203 s
+[stadium-timing] model lighting.bankNear: 1.219 s
+[stadium-timing] model lighting.bankNear: 1.263 s
+[stadium-timing] model lighting.bankNear: 1.288 s
+[stadium-timing] model lighting.bankNear: 1.318 s
+[stadium-timing] model lighting.bankNear: 1.939 s
+[stadium-timing] model lighting.bankNear: 3.661 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.333 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.349 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.379 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.385 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.421 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.481 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.524 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.543 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.572 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.617 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.644 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.710 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.712 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.740 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.745 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.772 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.908 s
+[stadium-timing] model sideline.ball_bag_lod2: 2.530 s
+[stadium-timing] model sideline.ball_bag: 0.334 s
+[stadium-timing] model sideline.ball_bag: 0.356 s
+[stadium-timing] model sideline.ball_bag: 0.379 s
+[stadium-timing] model sideline.ball_bag: 0.409 s
+[stadium-timing] model sideline.ball_bag: 0.421 s
+[stadium-timing] model sideline.ball_bag: 0.481 s
+[stadium-timing] model sideline.ball_bag: 0.505 s
+[stadium-timing] model sideline.ball_bag: 0.527 s
+[stadium-timing] model sideline.ball_bag: 0.572 s
+[stadium-timing] model sideline.ball_bag: 0.590 s
+[stadium-timing] model sideline.ball_bag: 0.617 s
+[stadium-timing] model sideline.ball_bag: 0.644 s
+[stadium-timing] model sideline.ball_bag: 0.659 s
+[stadium-timing] model sideline.ball_bag: 0.710 s
+[stadium-timing] model sideline.ball_bag: 0.726 s
+[stadium-timing] model sideline.ball_bag: 0.745 s
+[stadium-timing] model sideline.ball_bag: 0.934 s
+[stadium-timing] model sideline.ball_bag: 2.548 s
+[stadium-timing] model sideline.bench_lod2: 0.212 s
+[stadium-timing] model sideline.bench_lod2: 0.248 s
+[stadium-timing] model sideline.bench_lod2: 0.309 s
+[stadium-timing] model sideline.bench_lod2: 0.340 s
+[stadium-timing] model sideline.bench_lod2: 0.348 s
+[stadium-timing] model sideline.bench_lod2: 0.359 s
+[stadium-timing] model sideline.bench_lod2: 0.394 s
+[stadium-timing] model sideline.bench_lod2: 0.408 s
+[stadium-timing] model sideline.bench_lod2: 0.478 s
+[stadium-timing] model sideline.bench_lod2: 0.521 s
+[stadium-timing] model sideline.bench_lod2: 0.543 s
+[stadium-timing] model sideline.bench_lod2: 0.566 s
+[stadium-timing] model sideline.bench_lod2: 0.582 s
+[stadium-timing] model sideline.bench_lod2: 0.590 s
+[stadium-timing] model sideline.bench_lod2: 0.709 s
+[stadium-timing] model sideline.bench_lod2: 0.725 s
+[stadium-timing] model sideline.bench_lod2: 0.786 s
+[stadium-timing] model sideline.bench_lod2: 1.479 s
+[stadium-timing] model sideline.bench: 0.212 s
+[stadium-timing] model sideline.bench: 0.254 s
+[stadium-timing] model sideline.bench: 0.304 s
+[stadium-timing] model sideline.bench: 0.340 s
+[stadium-timing] model sideline.bench: 0.348 s
+[stadium-timing] model sideline.bench: 0.394 s
+[stadium-timing] model sideline.bench: 0.409 s
+[stadium-timing] model sideline.bench: 0.477 s
+[stadium-timing] model sideline.bench: 0.504 s
+[stadium-timing] model sideline.bench: 0.515 s
+[stadium-timing] model sideline.bench: 0.553 s
+[stadium-timing] model sideline.bench: 0.582 s
+[stadium-timing] model sideline.bench: 0.590 s
+[stadium-timing] model sideline.bench: 0.594 s
+[stadium-timing] model sideline.bench: 0.709 s
+[stadium-timing] model sideline.bench: 0.725 s
+[stadium-timing] model sideline.bench: 0.786 s
+[stadium-timing] model sideline.bench: 1.369 s
+[stadium-timing] model sideline.cable_run_lod2: 0.212 s
+[stadium-timing] model sideline.cable_run_lod2: 0.254 s
+[stadium-timing] model sideline.cable_run_lod2: 0.308 s
+[stadium-timing] model sideline.cable_run_lod2: 0.378 s
+[stadium-timing] model sideline.cable_run_lod2: 0.383 s
+[stadium-timing] model sideline.cable_run_lod2: 0.409 s
+[stadium-timing] model sideline.cable_run_lod2: 0.432 s
+[stadium-timing] model sideline.cable_run_lod2: 0.477 s
+[stadium-timing] model sideline.cable_run_lod2: 0.504 s
+[stadium-timing] model sideline.cable_run_lod2: 0.522 s
+[stadium-timing] model sideline.cable_run_lod2: 0.588 s
+[stadium-timing] model sideline.cable_run_lod2: 0.590 s
+[stadium-timing] model sideline.cable_run_lod2: 0.617 s
+[stadium-timing] model sideline.cable_run_lod2: 0.653 s
+[stadium-timing] model sideline.cable_run_lod2: 0.709 s
+[stadium-timing] model sideline.cable_run_lod2: 0.724 s
+[stadium-timing] model sideline.cable_run_lod2: 0.804 s
+[stadium-timing] model sideline.cable_run_lod2: 1.441 s
+[stadium-timing] model sideline.cable_run: 0.212 s
+[stadium-timing] model sideline.cable_run: 0.254 s
+[stadium-timing] model sideline.cable_run: 0.308 s
+[stadium-timing] model sideline.cable_run: 0.340 s
+[stadium-timing] model sideline.cable_run: 0.348 s
+[stadium-timing] model sideline.cable_run: 0.394 s
+[stadium-timing] model sideline.cable_run: 0.408 s
+[stadium-timing] model sideline.cable_run: 0.477 s
+[stadium-timing] model sideline.cable_run: 0.504 s
+[stadium-timing] model sideline.cable_run: 0.514 s
+[stadium-timing] model sideline.cable_run: 0.522 s
+[stadium-timing] model sideline.cable_run: 0.582 s
+[stadium-timing] model sideline.cable_run: 0.595 s
+[stadium-timing] model sideline.cable_run: 0.654 s
+[stadium-timing] model sideline.cable_run: 0.711 s
+[stadium-timing] model sideline.cable_run: 0.725 s
+[stadium-timing] model sideline.cable_run: 0.804 s
+[stadium-timing] model sideline.cable_run: 1.478 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.254 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.271 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.308 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.378 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.408 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.481 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.523 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.528 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.588 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.617 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.625 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.653 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.709 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.740 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.758 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.908 s
+[stadium-timing] model sideline.camera_cart_lod2: 1.478 s
+[stadium-timing] model sideline.camera_cart: 0.271 s
+[stadium-timing] model sideline.camera_cart: 0.279 s
+[stadium-timing] model sideline.camera_cart: 0.308 s
+[stadium-timing] model sideline.camera_cart: 0.378 s
+[stadium-timing] model sideline.camera_cart: 0.409 s
+[stadium-timing] model sideline.camera_cart: 0.438 s
+[stadium-timing] model sideline.camera_cart: 0.493 s
+[stadium-timing] model sideline.camera_cart: 0.524 s
+[stadium-timing] model sideline.camera_cart: 0.543 s
+[stadium-timing] model sideline.camera_cart: 0.589 s
+[stadium-timing] model sideline.camera_cart: 0.599 s
+[stadium-timing] model sideline.camera_cart: 0.619 s
+[stadium-timing] model sideline.camera_cart: 0.653 s
+[stadium-timing] model sideline.camera_cart: 0.663 s
+[stadium-timing] model sideline.camera_cart: 0.709 s
+[stadium-timing] model sideline.camera_cart: 0.758 s
+[stadium-timing] model sideline.camera_cart: 0.804 s
+[stadium-timing] model sideline.camera_cart: 1.480 s
+[stadium-timing] model sideline.chain_set_lod2: 0.287 s
+[stadium-timing] model sideline.chain_set_lod2: 0.348 s
+[stadium-timing] model sideline.chain_set_lod2: 0.378 s
+[stadium-timing] model sideline.chain_set_lod2: 0.397 s
+[stadium-timing] model sideline.chain_set_lod2: 0.432 s
+[stadium-timing] model sideline.chain_set_lod2: 0.481 s
+[stadium-timing] model sideline.chain_set_lod2: 0.506 s
+[stadium-timing] model sideline.chain_set_lod2: 0.528 s
+[stadium-timing] model sideline.chain_set_lod2: 0.530 s
+[stadium-timing] model sideline.chain_set_lod2: 0.571 s
+[stadium-timing] model sideline.chain_set_lod2: 0.589 s
+[stadium-timing] model sideline.chain_set_lod2: 0.616 s
+[stadium-timing] model sideline.chain_set_lod2: 0.654 s
+[stadium-timing] model sideline.chain_set_lod2: 0.709 s
+[stadium-timing] model sideline.chain_set_lod2: 0.711 s
+[stadium-timing] model sideline.chain_set_lod2: 0.774 s
+[stadium-timing] model sideline.chain_set_lod2: 0.877 s
+[stadium-timing] model sideline.chain_set_lod2: 1.478 s
+[stadium-timing] model sideline.chain_set: 0.279 s
+[stadium-timing] model sideline.chain_set: 0.308 s
+[stadium-timing] model sideline.chain_set: 0.378 s
+[stadium-timing] model sideline.chain_set: 0.408 s
+[stadium-timing] model sideline.chain_set: 0.432 s
+[stadium-timing] model sideline.chain_set: 0.481 s
+[stadium-timing] model sideline.chain_set: 0.523 s
+[stadium-timing] model sideline.chain_set: 0.526 s
+[stadium-timing] model sideline.chain_set: 0.543 s
+[stadium-timing] model sideline.chain_set: 0.589 s
+[stadium-timing] model sideline.chain_set: 0.619 s
+[stadium-timing] model sideline.chain_set: 0.632 s
+[stadium-timing] model sideline.chain_set: 0.708 s
+[stadium-timing] model sideline.chain_set: 0.709 s
+[stadium-timing] model sideline.chain_set: 0.712 s
+[stadium-timing] model sideline.chain_set: 0.772 s
+[stadium-timing] model sideline.chain_set: 0.878 s
+[stadium-timing] model sideline.chain_set: 1.479 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.333 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.355 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.397 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.420 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.423 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.493 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.501 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.530 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.546 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.553 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.570 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.622 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.624 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.695 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.710 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.772 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.777 s
+[stadium-timing] model sideline.cooler_station_lod2: 1.474 s
+[stadium-timing] model sideline.cooler_station: 0.287 s
+[stadium-timing] model sideline.cooler_station: 0.349 s
+[stadium-timing] model sideline.cooler_station: 0.397 s
+[stadium-timing] model sideline.cooler_station: 0.406 s
+[stadium-timing] model sideline.cooler_station: 0.432 s
+[stadium-timing] model sideline.cooler_station: 0.502 s
+[stadium-timing] model sideline.cooler_station: 0.506 s
+[stadium-timing] model sideline.cooler_station: 0.530 s
+[stadium-timing] model sideline.cooler_station: 0.547 s
+[stadium-timing] model sideline.cooler_station: 0.589 s
+[stadium-timing] model sideline.cooler_station: 0.623 s
+[stadium-timing] model sideline.cooler_station: 0.651 s
+[stadium-timing] model sideline.cooler_station: 0.708 s
+[stadium-timing] model sideline.cooler_station: 0.709 s
+[stadium-timing] model sideline.cooler_station: 0.711 s
+[stadium-timing] model sideline.cooler_station: 0.774 s
+[stadium-timing] model sideline.cooler_station: 0.866 s
+[stadium-timing] model sideline.cooler_station: 1.479 s
+[stadium-timing] model sideline.down_marker_lod2: 0.401 s
+[stadium-timing] model sideline.down_marker_lod2: 0.421 s
+[stadium-timing] model sideline.down_marker_lod2: 0.466 s
+[stadium-timing] model sideline.down_marker_lod2: 0.503 s
+[stadium-timing] model sideline.down_marker_lod2: 0.523 s
+[stadium-timing] model sideline.down_marker_lod2: 0.536 s
+[stadium-timing] model sideline.down_marker_lod2: 0.546 s
+[stadium-timing] model sideline.down_marker_lod2: 0.553 s
+[stadium-timing] model sideline.down_marker_lod2: 0.563 s
+[stadium-timing] model sideline.down_marker_lod2: 0.581 s
+[stadium-timing] model sideline.down_marker_lod2: 0.610 s
+[stadium-timing] model sideline.down_marker_lod2: 0.616 s
+[stadium-timing] model sideline.down_marker_lod2: 0.665 s
+[stadium-timing] model sideline.down_marker_lod2: 0.666 s
+[stadium-timing] model sideline.down_marker_lod2: 0.773 s
+[stadium-timing] model sideline.down_marker_lod2: 0.785 s
+[stadium-timing] model sideline.down_marker_lod2: 1.493 s
+[stadium-timing] model sideline.down_marker: 0.397 s
+[stadium-timing] model sideline.down_marker: 0.401 s
+[stadium-timing] model sideline.down_marker: 0.423 s
+[stadium-timing] model sideline.down_marker: 0.503 s
+[stadium-timing] model sideline.down_marker: 0.506 s
+[stadium-timing] model sideline.down_marker: 0.514 s
+[stadium-timing] model sideline.down_marker: 0.526 s
+[stadium-timing] model sideline.down_marker: 0.546 s
+[stadium-timing] model sideline.down_marker: 0.571 s
+[stadium-timing] model sideline.down_marker: 0.586 s
+[stadium-timing] model sideline.down_marker: 0.622 s
+[stadium-timing] model sideline.down_marker: 0.624 s
+[stadium-timing] model sideline.down_marker: 0.666 s
+[stadium-timing] model sideline.down_marker: 0.695 s
+[stadium-timing] model sideline.down_marker: 0.740 s
+[stadium-timing] model sideline.down_marker: 0.772 s
+[stadium-timing] model sideline.down_marker: 0.785 s
+[stadium-timing] model sideline.down_marker: 1.496 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.400 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.408 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.468 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.496 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.523 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.545 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.551 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.582 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.597 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.618 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.624 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.676 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.685 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.709 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.739 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.773 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.808 s
+[stadium-timing] model sideline.endzone_platform_lod2: 1.495 s
+[stadium-timing] model sideline.endzone_platform: 0.401 s
+[stadium-timing] model sideline.endzone_platform: 0.408 s
+[stadium-timing] model sideline.endzone_platform: 0.475 s
+[stadium-timing] model sideline.endzone_platform: 0.479 s
+[stadium-timing] model sideline.endzone_platform: 0.496 s
+[stadium-timing] model sideline.endzone_platform: 0.529 s
+[stadium-timing] model sideline.endzone_platform: 0.536 s
+[stadium-timing] model sideline.endzone_platform: 0.545 s
+[stadium-timing] model sideline.endzone_platform: 0.581 s
+[stadium-timing] model sideline.endzone_platform: 0.620 s
+[stadium-timing] model sideline.endzone_platform: 0.624 s
+[stadium-timing] model sideline.endzone_platform: 0.671 s
+[stadium-timing] model sideline.endzone_platform: 0.708 s
+[stadium-timing] model sideline.endzone_platform: 0.710 s
+[stadium-timing] model sideline.endzone_platform: 0.739 s
+[stadium-timing] model sideline.endzone_platform: 0.771 s
+[stadium-timing] model sideline.endzone_platform: 0.827 s
+[stadium-timing] model sideline.endzone_platform: 1.477 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.426 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.523 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.546 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.565 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.571 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.597 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.607 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.608 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.622 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.639 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.652 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.662 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.708 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.723 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.742 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.774 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.934 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 2.548 s
+[stadium-timing] model sideline.fieldgoal_net: 0.455 s
+[stadium-timing] model sideline.fieldgoal_net: 0.522 s
+[stadium-timing] model sideline.fieldgoal_net: 0.545 s
+[stadium-timing] model sideline.fieldgoal_net: 0.565 s
+[stadium-timing] model sideline.fieldgoal_net: 0.571 s
+[stadium-timing] model sideline.fieldgoal_net: 0.603 s
+[stadium-timing] model sideline.fieldgoal_net: 0.607 s
+[stadium-timing] model sideline.fieldgoal_net: 0.621 s
+[stadium-timing] model sideline.fieldgoal_net: 0.631 s
+[stadium-timing] model sideline.fieldgoal_net: 0.642 s
+[stadium-timing] model sideline.fieldgoal_net: 0.670 s
+[stadium-timing] model sideline.fieldgoal_net: 0.681 s
+[stadium-timing] model sideline.fieldgoal_net: 0.723 s
+[stadium-timing] model sideline.fieldgoal_net: 0.743 s
+[stadium-timing] model sideline.fieldgoal_net: 0.774 s
+[stadium-timing] model sideline.fieldgoal_net: 0.933 s
+[stadium-timing] model sideline.fieldgoal_net: 2.537 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.421 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.522 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.536 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.546 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.551 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.576 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.599 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.607 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.621 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.655 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.711 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.725 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.730 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.742 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.754 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.842 s
+[stadium-timing] model sideline.goalpost_college_lod2: 1.496 s
+[stadium-timing] model sideline.goalpost_college: 0.421 s
+[stadium-timing] model sideline.goalpost_college: 0.525 s
+[stadium-timing] model sideline.goalpost_college: 0.546 s
+[stadium-timing] model sideline.goalpost_college: 0.572 s
+[stadium-timing] model sideline.goalpost_college: 0.607 s
+[stadium-timing] model sideline.goalpost_college: 0.608 s
+[stadium-timing] model sideline.goalpost_college: 0.621 s
+[stadium-timing] model sideline.goalpost_college: 0.651 s
+[stadium-timing] model sideline.goalpost_college: 0.653 s
+[stadium-timing] model sideline.goalpost_college: 0.656 s
+[stadium-timing] model sideline.goalpost_college: 0.676 s
+[stadium-timing] model sideline.goalpost_college: 0.708 s
+[stadium-timing] model sideline.goalpost_college: 0.724 s
+[stadium-timing] model sideline.goalpost_college: 0.725 s
+[stadium-timing] model sideline.goalpost_college: 0.755 s
+[stadium-timing] model sideline.goalpost_college: 0.846 s
+[stadium-timing] model sideline.goalpost_college: 1.496 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.421 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.525 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.546 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.570 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.576 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.603 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.607 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.608 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.620 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.651 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.676 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.685 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.709 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.715 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.734 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.755 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.877 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 1.495 s
+[stadium-timing] model sideline.goalpost_nfl: 0.420 s
+[stadium-timing] model sideline.goalpost_nfl: 0.526 s
+[stadium-timing] model sideline.goalpost_nfl: 0.537 s
+[stadium-timing] model sideline.goalpost_nfl: 0.545 s
+[stadium-timing] model sideline.goalpost_nfl: 0.557 s
+[stadium-timing] model sideline.goalpost_nfl: 0.603 s
+[stadium-timing] model sideline.goalpost_nfl: 0.607 s
+[stadium-timing] model sideline.goalpost_nfl: 0.620 s
+[stadium-timing] model sideline.goalpost_nfl: 0.635 s
+[stadium-timing] model sideline.goalpost_nfl: 0.657 s
+[stadium-timing] model sideline.goalpost_nfl: 0.661 s
+[stadium-timing] model sideline.goalpost_nfl: 0.675 s
+[stadium-timing] model sideline.goalpost_nfl: 0.712 s
+[stadium-timing] model sideline.goalpost_nfl: 0.714 s
+[stadium-timing] model sideline.goalpost_nfl: 0.724 s
+[stadium-timing] model sideline.goalpost_nfl: 0.773 s
+[stadium-timing] model sideline.goalpost_nfl: 0.877 s
+[stadium-timing] model sideline.goalpost_nfl: 1.502 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.420 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.522 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.545 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.565 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.602 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.607 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.608 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.621 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.639 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.642 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.676 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.694 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.710 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.717 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.725 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.773 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.878 s
+[stadium-timing] model sideline.ground_marker_lod2: 1.495 s
+[stadium-timing] model sideline.ground_marker: 0.421 s
+[stadium-timing] model sideline.ground_marker: 0.521 s
+[stadium-timing] model sideline.ground_marker: 0.546 s
+[stadium-timing] model sideline.ground_marker: 0.570 s
+[stadium-timing] model sideline.ground_marker: 0.572 s
+[stadium-timing] model sideline.ground_marker: 0.597 s
+[stadium-timing] model sideline.ground_marker: 0.598 s
+[stadium-timing] model sideline.ground_marker: 0.608 s
+[stadium-timing] model sideline.ground_marker: 0.620 s
+[stadium-timing] model sideline.ground_marker: 0.635 s
+[stadium-timing] model sideline.ground_marker: 0.676 s
+[stadium-timing] model sideline.ground_marker: 0.694 s
+[stadium-timing] model sideline.ground_marker: 0.709 s
+[stadium-timing] model sideline.ground_marker: 0.712 s
+[stadium-timing] model sideline.ground_marker: 0.754 s
+[stadium-timing] model sideline.ground_marker: 0.773 s
+[stadium-timing] model sideline.ground_marker: 0.842 s
+[stadium-timing] model sideline.ground_marker: 1.496 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.454 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.523 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.544 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.576 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.602 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.606 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.622 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.638 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.639 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.662 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.670 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.686 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.709 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.734 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.742 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.785 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.895 s
+[stadium-timing] model sideline.heater_fan_lod2: 1.495 s
+[stadium-timing] model sideline.heater_fan: 0.439 s
+[stadium-timing] model sideline.heater_fan: 0.524 s
+[stadium-timing] model sideline.heater_fan: 0.536 s
+[stadium-timing] model sideline.heater_fan: 0.545 s
+[stadium-timing] model sideline.heater_fan: 0.564 s
+[stadium-timing] model sideline.heater_fan: 0.600 s
+[stadium-timing] model sideline.heater_fan: 0.602 s
+[stadium-timing] model sideline.heater_fan: 0.612 s
+[stadium-timing] model sideline.heater_fan: 0.621 s
+[stadium-timing] model sideline.heater_fan: 0.656 s
+[stadium-timing] model sideline.heater_fan: 0.657 s
+[stadium-timing] model sideline.heater_fan: 0.684 s
+[stadium-timing] model sideline.heater_fan: 0.712 s
+[stadium-timing] model sideline.heater_fan: 0.742 s
+[stadium-timing] model sideline.heater_fan: 0.773 s
+[stadium-timing] model sideline.heater_fan: 0.785 s
+[stadium-timing] model sideline.heater_fan: 0.877 s
+[stadium-timing] model sideline.heater_fan: 1.496 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.502 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.529 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.535 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.537 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.600 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.621 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.631 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.655 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.657 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.658 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.663 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.674 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.692 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.712 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.734 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.742 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.979 s
+[stadium-timing] model sideline.kicking_net_lod2: 2.529 s
+[stadium-timing] model sideline.kicking_net: 0.507 s
+[stadium-timing] model sideline.kicking_net: 0.525 s
+[stadium-timing] model sideline.kicking_net: 0.528 s
+[stadium-timing] model sideline.kicking_net: 0.576 s
+[stadium-timing] model sideline.kicking_net: 0.606 s
+[stadium-timing] model sideline.kicking_net: 0.619 s
+[stadium-timing] model sideline.kicking_net: 0.622 s
+[stadium-timing] model sideline.kicking_net: 0.655 s
+[stadium-timing] model sideline.kicking_net: 0.661 s
+[stadium-timing] model sideline.kicking_net: 0.662 s
+[stadium-timing] model sideline.kicking_net: 0.666 s
+[stadium-timing] model sideline.kicking_net: 0.674 s
+[stadium-timing] model sideline.kicking_net: 0.681 s
+[stadium-timing] model sideline.kicking_net: 0.742 s
+[stadium-timing] model sideline.kicking_net: 0.771 s
+[stadium-timing] model sideline.kicking_net: 0.982 s
+[stadium-timing] model sideline.kicking_net: 2.513 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.507 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.523 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.541 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.564 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.606 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.622 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.635 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.638 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.639 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.655 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.656 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.658 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.688 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.711 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.742 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.757 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.906 s
+[stadium-timing] model sideline.medical_tent_lod2: 1.493 s
+[stadium-timing] model sideline.medical_tent: 0.502 s
+[stadium-timing] model sideline.medical_tent: 0.503 s
+[stadium-timing] model sideline.medical_tent: 0.523 s
+[stadium-timing] model sideline.medical_tent: 0.554 s
+[stadium-timing] model sideline.medical_tent: 0.596 s
+[stadium-timing] model sideline.medical_tent: 0.606 s
+[stadium-timing] model sideline.medical_tent: 0.612 s
+[stadium-timing] model sideline.medical_tent: 0.622 s
+[stadium-timing] model sideline.medical_tent: 0.639 s
+[stadium-timing] model sideline.medical_tent: 0.652 s
+[stadium-timing] model sideline.medical_tent: 0.655 s
+[stadium-timing] model sideline.medical_tent: 0.710 s
+[stadium-timing] model sideline.medical_tent: 0.712 s
+[stadium-timing] model sideline.medical_tent: 0.734 s
+[stadium-timing] model sideline.medical_tent: 0.757 s
+[stadium-timing] model sideline.medical_tent: 0.785 s
+[stadium-timing] model sideline.medical_tent: 0.925 s
+[stadium-timing] model sideline.medical_tent: 1.493 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.512 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.521 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.526 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.576 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.604 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.606 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.620 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.624 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.630 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.632 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.651 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.661 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.673 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.697 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.734 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.742 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.933 s
+[stadium-timing] model sideline.pylon_college_lod2: 1.494 s
+[stadium-timing] model sideline.pylon_college: 0.502 s
+[stadium-timing] model sideline.pylon_college: 0.528 s
+[stadium-timing] model sideline.pylon_college: 0.544 s
+[stadium-timing] model sideline.pylon_college: 0.596 s
+[stadium-timing] model sideline.pylon_college: 0.607 s
+[stadium-timing] model sideline.pylon_college: 0.619 s
+[stadium-timing] model sideline.pylon_college: 0.622 s
+[stadium-timing] model sideline.pylon_college: 0.632 s
+[stadium-timing] model sideline.pylon_college: 0.638 s
+[stadium-timing] model sideline.pylon_college: 0.662 s
+[stadium-timing] model sideline.pylon_college: 0.684 s
+[stadium-timing] model sideline.pylon_college: 0.709 s
+[stadium-timing] model sideline.pylon_college: 0.742 s
+[stadium-timing] model sideline.pylon_college: 0.772 s
+[stadium-timing] model sideline.pylon_college: 0.773 s
+[stadium-timing] model sideline.pylon_college: 0.931 s
+[stadium-timing] model sideline.pylon_college: 1.492 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.507 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.528 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.542 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.553 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.604 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.606 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.620 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.639 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.662 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.671 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.674 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.709 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.723 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.742 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.754 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.956 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 1.495 s
+[stadium-timing] model sideline.pylon_nfl: 0.523 s
+[stadium-timing] model sideline.pylon_nfl: 0.527 s
+[stadium-timing] model sideline.pylon_nfl: 0.535 s
+[stadium-timing] model sideline.pylon_nfl: 0.553 s
+[stadium-timing] model sideline.pylon_nfl: 0.604 s
+[stadium-timing] model sideline.pylon_nfl: 0.607 s
+[stadium-timing] model sideline.pylon_nfl: 0.621 s
+[stadium-timing] model sideline.pylon_nfl: 0.631 s
+[stadium-timing] model sideline.pylon_nfl: 0.639 s
+[stadium-timing] model sideline.pylon_nfl: 0.657 s
+[stadium-timing] model sideline.pylon_nfl: 0.661 s
+[stadium-timing] model sideline.pylon_nfl: 0.679 s
+[stadium-timing] model sideline.pylon_nfl: 0.688 s
+[stadium-timing] model sideline.pylon_nfl: 0.743 s
+[stadium-timing] model sideline.pylon_nfl: 0.756 s
+[stadium-timing] model sideline.pylon_nfl: 0.932 s
+[stadium-timing] model sideline.pylon_nfl: 1.495 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.525 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.535 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.544 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.563 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.597 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.606 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.621 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.639 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.661 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.665 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.670 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.676 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.677 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.683 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.734 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.741 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.938 s
+[stadium-timing] model sideline.tablet_station_lod2: 1.501 s
+[stadium-timing] model sideline.tablet_station: 0.528 s
+[stadium-timing] model sideline.tablet_station: 0.535 s
+[stadium-timing] model sideline.tablet_station: 0.541 s
+[stadium-timing] model sideline.tablet_station: 0.549 s
+[stadium-timing] model sideline.tablet_station: 0.596 s
+[stadium-timing] model sideline.tablet_station: 0.600 s
+[stadium-timing] model sideline.tablet_station: 0.622 s
+[stadium-timing] model sideline.tablet_station: 0.639 s
+[stadium-timing] model sideline.tablet_station: 0.661 s
+[stadium-timing] model sideline.tablet_station: 0.662 s
+[stadium-timing] model sideline.tablet_station: 0.673 s
+[stadium-timing] model sideline.tablet_station: 0.708 s
+[stadium-timing] model sideline.tablet_station: 0.711 s
+[stadium-timing] model sideline.tablet_station: 0.733 s
+[stadium-timing] model sideline.tablet_station: 0.742 s
+[stadium-timing] model sideline.tablet_station: 0.754 s
+[stadium-timing] model sideline.tablet_station: 0.938 s
+[stadium-timing] model sideline.tablet_station: 1.494 s
+[stadium-timing] shadergraph /Root/Beam: 1.266 s
+[stadium-timing] shadergraph /Root/Beam: 1.290 s
+[stadium-timing] shadergraph /Root/Beam: 1.753 s
+[stadium-timing] shadergraph /Root/Beam: 1.775 s
+[stadium-timing] shadergraph /Root/Beam: 1.885 s
+[stadium-timing] shadergraph /Root/Beam: 1.893 s
+[stadium-timing] shadergraph /Root/Beam: 10.418 s
+[stadium-timing] shadergraph /Root/Beam: 2.105 s
+[stadium-timing] shadergraph /Root/Beam: 2.250 s
+[stadium-timing] shadergraph /Root/Beam: 2.310 s
+[stadium-timing] shadergraph /Root/Beam: 2.314 s
+[stadium-timing] shadergraph /Root/Beam: 2.527 s
+[stadium-timing] shadergraph /Root/Beam: 2.599 s
+[stadium-timing] shadergraph /Root/Beam: 2.701 s
+[stadium-timing] shadergraph /Root/Beam: 2.774 s
+[stadium-timing] shadergraph /Root/Beam: 3.047 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.049 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.381 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.453 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.504 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.507 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.847 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.893 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.922 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.033 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.051 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.101 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.177 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.268 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.286 s
+[stadium-timing] shadergraph /Root/FieldPaint: 2.500 s
+[stadium-timing] shadergraph /Root/FieldPaint: 9.147 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.151 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.446 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.592 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.626 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.702 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.709 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.993 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.114 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.131 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.151 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.344 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.430 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.465 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.485 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.495 s
+[stadium-timing] shadergraph /Root/NetFresnel: 2.783 s
+[stadium-timing] shadergraph /Root/NetFresnel: 9.647 s
+[stadium-timing] shadergraph /Root/TurfSheen: 0.873 s
+[stadium-timing] shadergraph /Root/TurfSheen: 0.918 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.175 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.274 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.327 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.546 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.661 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.690 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.700 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.762 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.874 s
+[stadium-timing] shadergraph /Root/TurfSheen: 2.063 s
+[stadium-timing] shadergraph /Root/TurfSheen: 2.109 s
+[stadium-timing] shadergraph /Root/TurfSheen: 2.321 s
+[stadium-timing] shadergraph /Root/TurfSheen: 2.677 s
+[stadium-timing] shadergraph /Root/TurfSheen: 7.344 s
+[stadium-timing] stadium apply.audio: 0.000 s
+[stadium-timing] stadium apply.bowl: 0.000 s
+[stadium-timing] stadium apply.broadcast: 0.026 s
+[stadium-timing] stadium apply.broadcast: 0.028 s
+[stadium-timing] stadium apply.broadcast: 0.102 s
+[stadium-timing] stadium apply.broadcast: 0.108 s
+[stadium-timing] stadium apply.broadcast: 0.115 s
+[stadium-timing] stadium apply.broadcast: 0.120 s
+[stadium-timing] stadium apply.broadcast: 0.124 s
+[stadium-timing] stadium apply.broadcast: 0.125 s
+[stadium-timing] stadium apply.broadcast: 0.132 s
+[stadium-timing] stadium apply.broadcast: 0.134 s
+[stadium-timing] stadium apply.broadcast: 0.135 s
+[stadium-timing] stadium apply.broadcast: 0.136 s
+[stadium-timing] stadium apply.broadcast: 0.140 s
+[stadium-timing] stadium apply.broadcast: 0.143 s
+[stadium-timing] stadium apply.crowd: 0.000 s
+[stadium-timing] stadium apply.experience: 0.000 s
+[stadium-timing] stadium apply.field: 0.000 s
+[stadium-timing] stadium apply.lighting: 0.000 s
+[stadium-timing] stadium apply.moments: 0.000 s
+[stadium-timing] stadium apply.sideline: 0.000 s
+[stadium-timing] stadium apply.sky: 0.000 s
+[stadium-timing] stadium assets ready after open: 2.657 s
+[stadium-timing] stadium assets ready after open: 2.808 s
+[stadium-timing] stadium assets ready after open: 2.868 s
+[stadium-timing] stadium assets ready after open: 2.869 s
+[stadium-timing] stadium assets ready after open: 2.914 s
+[stadium-timing] stadium assets ready after open: 2.960 s
+[stadium-timing] stadium assets ready after open: 2.968 s
+[stadium-timing] stadium assets ready after open: 2.972 s
+[stadium-timing] stadium assets ready after open: 2.984 s
+[stadium-timing] stadium assets ready after open: 2.989 s
+[stadium-timing] stadium assets ready after open: 3.033 s
+[stadium-timing] stadium assets ready after open: 3.085 s
+[stadium-timing] stadium assets ready after open: 3.226 s
+[stadium-timing] stadium assets ready after open: 3.325 s
+[stadium-timing] stadium assets ready after open: 3.383 s
+[stadium-timing] stadium assets ready after open: 4.129 s
+[stadium-timing] stadium build total: 3.144 s
+[stadium-timing] stadium build total: 3.287 s
+[stadium-timing] stadium build total: 3.291 s
+[stadium-timing] stadium build total: 3.302 s
+[stadium-timing] stadium build total: 3.309 s
+[stadium-timing] stadium build total: 3.461 s
+[stadium-timing] stadium build total: 3.489 s
+[stadium-timing] stadium build total: 3.593 s
+[stadium-timing] stadium build total: 3.603 s
+[stadium-timing] stadium build total: 3.611 s
+[stadium-timing] stadium build total: 3.622 s
+[stadium-timing] stadium build total: 3.641 s
+[stadium-timing] stadium build total: 3.783 s
+[stadium-timing] stadium build total: 3.818 s
+[stadium-timing] stadium build total: 3.868 s
+[stadium-timing] stadium build total: 4.351 s
+[stadium-timing] stadium build.audio: 0.004 s
+[stadium-timing] stadium build.audio: 0.005 s
+[stadium-timing] stadium build.audio: 0.007 s
+[stadium-timing] stadium build.audio: 0.008 s
+[stadium-timing] stadium build.audio: 0.021 s
+[stadium-timing] stadium build.audio: 0.023 s
+[stadium-timing] stadium build.audio: 0.028 s
+[stadium-timing] stadium build.audio: 0.032 s
+[stadium-timing] stadium build.audio: 0.040 s
+[stadium-timing] stadium build.audio: 0.066 s
+[stadium-timing] stadium build.audio: 0.067 s
+[stadium-timing] stadium build.audio: 0.072 s
+[stadium-timing] stadium build.audio: 0.098 s
+[stadium-timing] stadium build.audio: 0.155 s
+[stadium-timing] stadium build.bowl: 0.030 s
+[stadium-timing] stadium build.bowl: 0.031 s
+[stadium-timing] stadium build.bowl: 0.033 s
+[stadium-timing] stadium build.bowl: 0.034 s
+[stadium-timing] stadium build.bowl: 0.035 s
+[stadium-timing] stadium build.bowl: 0.036 s
+[stadium-timing] stadium build.bowl: 0.037 s
+[stadium-timing] stadium build.bowl: 0.038 s
+[stadium-timing] stadium build.bowl: 0.043 s
+[stadium-timing] stadium build.broadcast: 0.029 s
+[stadium-timing] stadium build.broadcast: 0.033 s
+[stadium-timing] stadium build.broadcast: 0.034 s
+[stadium-timing] stadium build.broadcast: 0.035 s
+[stadium-timing] stadium build.broadcast: 0.038 s
+[stadium-timing] stadium build.broadcast: 0.039 s
+[stadium-timing] stadium build.broadcast: 0.040 s
+[stadium-timing] stadium build.broadcast: 0.042 s
+[stadium-timing] stadium build.broadcast: 0.044 s
+[stadium-timing] stadium build.broadcast: 0.045 s
+[stadium-timing] stadium build.broadcast: 0.047 s
+[stadium-timing] stadium build.broadcast: 0.076 s
+[stadium-timing] stadium build.broadcast: 0.115 s
+[stadium-timing] stadium build.broadcast: 0.134 s
+[stadium-timing] stadium build.crowd: 2.785 s
+[stadium-timing] stadium build.crowd: 2.946 s
+[stadium-timing] stadium build.crowd: 2.963 s
+[stadium-timing] stadium build.crowd: 2.983 s
+[stadium-timing] stadium build.crowd: 3.046 s
+[stadium-timing] stadium build.crowd: 3.190 s
+[stadium-timing] stadium build.crowd: 3.229 s
+[stadium-timing] stadium build.crowd: 3.237 s
+[stadium-timing] stadium build.crowd: 3.326 s
+[stadium-timing] stadium build.crowd: 3.332 s
+[stadium-timing] stadium build.crowd: 3.351 s
+[stadium-timing] stadium build.crowd: 3.371 s
+[stadium-timing] stadium build.crowd: 3.403 s
+[stadium-timing] stadium build.crowd: 3.412 s
+[stadium-timing] stadium build.crowd: 3.542 s
+[stadium-timing] stadium build.crowd: 3.804 s
+[stadium-timing] stadium build.experience: 0.000 s
+[stadium-timing] stadium build.field: 0.033 s
+[stadium-timing] stadium build.field: 0.036 s
+[stadium-timing] stadium build.field: 0.037 s
+[stadium-timing] stadium build.field: 0.038 s
+[stadium-timing] stadium build.field: 0.040 s
+[stadium-timing] stadium build.field: 0.046 s
+[stadium-timing] stadium build.field: 0.049 s
+[stadium-timing] stadium build.field: 0.054 s
+[stadium-timing] stadium build.field: 0.059 s
+[stadium-timing] stadium build.field: 0.062 s
+[stadium-timing] stadium build.field: 0.066 s
+[stadium-timing] stadium build.field: 0.166 s
+[stadium-timing] stadium build.lighting: 0.031 s
+[stadium-timing] stadium build.lighting: 0.032 s
+[stadium-timing] stadium build.lighting: 0.033 s
+[stadium-timing] stadium build.lighting: 0.034 s
+[stadium-timing] stadium build.lighting: 0.035 s
+[stadium-timing] stadium build.lighting: 0.036 s
+[stadium-timing] stadium build.lighting: 0.037 s
+[stadium-timing] stadium build.lighting: 0.038 s
+[stadium-timing] stadium build.lighting: 0.040 s
+[stadium-timing] stadium build.lighting: 0.043 s
+[stadium-timing] stadium build.moments: 0.000 s
+[stadium-timing] stadium build.probeReceivers: 0.002 s
+[stadium-timing] stadium build.probeReceivers: 0.003 s
+[stadium-timing] stadium build.probeReceivers: 0.004 s
+[stadium-timing] stadium build.probeReceivers: 0.005 s
+[stadium-timing] stadium build.probeReceivers: 0.006 s
+[stadium-timing] stadium build.sideline: 0.072 s
+[stadium-timing] stadium build.sideline: 0.078 s
+[stadium-timing] stadium build.sideline: 0.082 s
+[stadium-timing] stadium build.sideline: 0.084 s
+[stadium-timing] stadium build.sideline: 0.086 s
+[stadium-timing] stadium build.sideline: 0.087 s
+[stadium-timing] stadium build.sideline: 0.089 s
+[stadium-timing] stadium build.sideline: 0.090 s
+[stadium-timing] stadium build.sideline: 0.096 s
+[stadium-timing] stadium build.sideline: 0.098 s
+[stadium-timing] stadium build.sideline: 0.099 s
+[stadium-timing] stadium build.sideline: 0.103 s
+[stadium-timing] stadium build.sideline: 0.105 s
+[stadium-timing] stadium build.sideline: 0.153 s
+[stadium-timing] stadium build.sky: 0.011 s
+[stadium-timing] stadium build.sky: 0.012 s
+[stadium-timing] stadium build.sky: 0.013 s
+[stadium-timing] stadium build.sky: 0.014 s
+[stadium-timing] stadium first tick after open: 6.107 s
+[stadium-timing] stadium first tick after open: 6.207 s
+[stadium-timing] stadium first tick after open: 6.253 s
+[stadium-timing] stadium first tick after open: 6.435 s
+[stadium-timing] stadium first tick after open: 6.451 s
+[stadium-timing] stadium first tick after open: 6.589 s
+[stadium-timing] stadium first tick after open: 6.596 s
+[stadium-timing] stadium first tick after open: 6.603 s
+[stadium-timing] stadium first tick after open: 6.627 s
+[stadium-timing] stadium first tick after open: 6.742 s
+[stadium-timing] stadium first tick after open: 6.874 s
+[stadium-timing] stadium first tick after open: 6.905 s
+[stadium-timing] stadium first tick after open: 6.923 s
+[stadium-timing] stadium first tick after open: 6.971 s
+[stadium-timing] stadium first tick after open: 7.878 s
+[stadium-timing] stadium first tick after open: 8.141 s
+[stadium-timing] stadium first update.audio: 0.000 s
+[stadium-timing] stadium first update.audio: 0.001 s
+[stadium-timing] stadium first update.bowl: 0.000 s
+[stadium-timing] stadium first update.broadcast: 0.000 s
+[stadium-timing] stadium first update.crowd: 0.001 s
+[stadium-timing] stadium first update.experience: 0.000 s
+[stadium-timing] stadium first update.field: 0.000 s
+[stadium-timing] stadium first update.lighting: 0.001 s
+[stadium-timing] stadium first update.lighting: 0.002 s
+[stadium-timing] stadium first update.moments: 0.000 s
+[stadium-timing] stadium first update.sideline: 0.000 s
+[stadium-timing] stadium first update.sky: 0.000 s
+[stadium-timing] stadium main-thread tick: 0.256 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.266 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.272 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.274 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.277 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.278 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.279 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.280 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.289 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.290 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.291 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.304 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.306 ms mean over 120 frames
+[stadium-timing] stadium main-thread tick: 0.310 ms mean over 120 frames
+[stadium-timing] tabletop apply.audio: 0.000 s
+[stadium-timing] tabletop apply.bowl: 0.000 s
+[stadium-timing] tabletop apply.broadcast: 0.142 s
+[stadium-timing] tabletop apply.broadcast: 0.153 s
+[stadium-timing] tabletop apply.crowd: 0.000 s
+[stadium-timing] tabletop apply.experience: 0.000 s
+[stadium-timing] tabletop apply.field: 0.000 s
+[stadium-timing] tabletop apply.lighting: 0.000 s
+[stadium-timing] tabletop apply.moments: 0.000 s
+[stadium-timing] tabletop apply.sideline: 0.000 s
+[stadium-timing] tabletop apply.sky: 0.000 s
+[stadium-timing] tabletop assets ready after open: 3.184 s
+[stadium-timing] tabletop assets ready after open: 7.153 s
+[stadium-timing] tabletop build total: 1.768 s
+[stadium-timing] tabletop build total: 1.850 s
+[stadium-timing] tabletop build.audio: 0.001 s
+[stadium-timing] tabletop build.audio: 0.003 s
+[stadium-timing] tabletop build.bowl: 0.000 s
+[stadium-timing] tabletop build.broadcast: 0.012 s
+[stadium-timing] tabletop build.crowd: 1.562 s
+[stadium-timing] tabletop build.crowd: 1.645 s
+[stadium-timing] tabletop build.experience: 0.039 s
+[stadium-timing] tabletop build.field: 0.030 s
+[stadium-timing] tabletop build.field: 0.042 s
+[stadium-timing] tabletop build.lighting: 0.028 s
+[stadium-timing] tabletop build.lighting: 0.029 s
+[stadium-timing] tabletop build.moments: 0.000 s
+[stadium-timing] tabletop build.sideline: 0.078 s
+[stadium-timing] tabletop build.sideline: 0.091 s
+[stadium-timing] tabletop build.sky: 0.000 s
+[stadium-timing] tabletop first tick after open: 5.104 s
+[stadium-timing] tabletop first tick after open: 9.166 s
+[stadium-timing] tabletop first update.audio: 0.000 s
+[stadium-timing] tabletop first update.bowl: 0.000 s
+[stadium-timing] tabletop first update.broadcast: 0.000 s
+[stadium-timing] tabletop first update.crowd: 0.004 s
+[stadium-timing] tabletop first update.crowd: 0.005 s
+[stadium-timing] tabletop first update.experience: 0.000 s
+[stadium-timing] tabletop first update.field: 0.000 s
+[stadium-timing] tabletop first update.lighting: 0.000 s
+[stadium-timing] tabletop first update.moments: 0.000 s
+[stadium-timing] tabletop first update.sideline: 0.000 s
+[stadium-timing] tabletop first update.sky: 0.000 s
+[stadium-timing] tabletop main-thread tick: 0.210 ms mean over 120 frames
+[stadium] assets: 30 textures, 16 sounds, probe loaded, ~67 MB
+[stadium] crowd dress composed in 1.50 s (decode 0.01, tint 1.43, main-actor wait 0.00, textures 0.06)
+[stadium] crowd dress composed in 1.58 s (decode 0.01, tint 1.51, main-actor wait 0.00, textures 0.06)
+[stadium] crowd dress composed in 1.65 s (decode 0.01, tint 1.52, main-actor wait 0.05, textures 0.07)
+[stadium] crowd dress composed in 1.65 s (decode 0.01, tint 1.58, main-actor wait 0.00, textures 0.06)
+[stadium] crowd dress composed in 1.71 s (decode 0.01, tint 1.55, main-actor wait 0.09, textures 0.06)
+[stadium] crowd dress composed in 1.71 s (decode 0.01, tint 1.60, main-actor wait 0.04, textures 0.06)
+[stadium] crowd dress composed in 1.72 s (decode 0.01, tint 1.65, main-actor wait 0.00, textures 0.06)
+[stadium] crowd dress composed in 1.77 s (decode 0.01, tint 1.70, main-actor wait 0.00, textures 0.06)
+[stadium] crowd dress composed in 1.91 s (decode 0.01, tint 1.49, main-actor wait 0.35, textures 0.06)
+[stadium] crowd dress composed in 1.95 s (decode 0.02, tint 1.86, main-actor wait 0.00, textures 0.07)
+[stadium] crowd dress composed in 1.96 s (decode 0.01, tint 1.61, main-actor wait 0.29, textures 0.06)
+[stadium] crowd dress composed in 2.09 s (decode 0.01, tint 1.66, main-actor wait 0.35, textures 0.06)
+[stadium] crowd dress composed in 2.10 s (decode 0.01, tint 1.71, main-actor wait 0.33, textures 0.06)
+[stadium] crowd dress composed in 2.11 s (decode 0.01, tint 1.73, main-actor wait 0.32, textures 0.06)
+[stadium] crowd dress composed in 2.16 s (decode 0.01, tint 1.66, main-actor wait 0.40, textures 0.09)
+[stadium] crowd dress composed in 2.29 s (decode 0.01, tint 1.72, main-actor wait 0.50, textures 0.06)
+[stadium] crowd dress composed in 7.30 s (decode 0.01, tint 1.65, main-actor wait 5.58, textures 0.07)
+[stadium] crowd: 1620 fans, lod0 0, lod1 0, lod2 0, cards 1620, groups 22
+[stadium] crowd: 44892 fans, lod0 0, lod1 18, lod2 141, cards 44733, groups 33
+[stadium] crowd: 44892 fans, lod0 16, lod1 32, lod2 150, cards 44694, groups 33
+[stadium] crowd: 44892 fans, lod0 16, lod1 32, lod2 150, cards 44694, groups 36
+[stadium] lighting beams 0/0, overdraw ≈ 0.00 screens (cap 1.2; all 0 as crossed pairs ≈ 0.00)
+[stadium] lighting beams 18/20, overdraw ≈ 0.97 screens (cap 1.2; all 20 as crossed pairs ≈ 2.85)
+[stadium] lighting beams 20/20, overdraw ≈ 0.46 screens (cap 1.2; all 20 as crossed pairs ≈ 0.76)
+[stadium] lighting beams 20/20, overdraw ≈ 0.56 screens (cap 1.2; all 20 as crossed pairs ≈ 0.93)
+[stadium] lighting beams 20/20, overdraw ≈ 0.61 screens (cap 1.2; all 20 as crossed pairs ≈ 0.93)
+[stadium] lighting beams 20/20, overdraw ≈ 0.62 screens (cap 1.2; all 20 as crossed pairs ≈ 0.92)
+[stadium] lighting beams 20/20, overdraw ≈ 0.63 screens (cap 1.2; all 20 as crossed pairs ≈ 1.02)
+[stadium] lighting beams 20/20, overdraw ≈ 0.70 screens (cap 1.2; all 20 as crossed pairs ≈ 1.06)
+[stadium] models: 47
+[stadium] sideline: net sway at x -5.000000 for 5.988889s

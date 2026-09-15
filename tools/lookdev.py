@@ -127,9 +127,13 @@ def wait_for_build(device: str, since: str, tabletop: bool, timeout: float) -> f
     started = time.monotonic()
     built = "[stadium-stats] tabletop: models" if tabletop else "[stadium-stats] stadium: models"
     needs = [built] if tabletop else [built, "crowd dress composed"]
+    # The crowd used to dress in 25 s, which hid every slower load behind it;
+    # at 2 s a shot could beat the field's Shader Graph paint, which draws
+    # nothing until it swaps in. Wait for it, or for its own fallback.
+    paint = ("[shadergraph] field paint on", "[shadergraph] field paint unavailable")
     while time.monotonic() - started < timeout:
         text = app_log(device, since)
-        if all(n in text for n in needs):
+        if all(n in text for n in needs) and (tabletop or any(p in text for p in paint)):
             return time.monotonic() - started
         time.sleep(2.0)
     print(f"  not built after {timeout:.0f}s; shooting anyway", flush=True)
