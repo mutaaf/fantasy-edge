@@ -48,3 +48,12 @@ def scoreboard_url(dates: str | None = None) -> str:
 
 def summary_url(event: str) -> str:
     return SUMMARY.format(event=event)
+
+# The request budget against ESPN. A Saturday of 60-90 games is one scoreboard
+# request per window for every tile; summaries - the heavy payload - are
+# fetched only for games somebody has open. `sources.Budgeted` enforces it and
+# counts, and the replay test holds a whole recorded night to it.
+BUDGET = {
+    "scoreboardSeconds": 20,
+    "summarySeconds": 15,
+}

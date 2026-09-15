@@ -13,7 +13,11 @@
     "spotlight",
     "sections",
     "leverageCaveat",
-    "games"
+    "games",
+    "clock",
+    "changes",
+    "feed",
+    "changesCaveat"
   ],
   "properties": {
     "version": {
@@ -109,6 +113,35 @@
           }
         }
       }
+    },
+    "clock": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "replay.schema.json#/$defs/frame"
+        }
+      ],
+      "description": "Where a replay stands in its recorded night; null for a live source. A client scrubs by asking for another frame's stamp with ?at=, and never interpolates between frames."
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      },
+      "description": "What changed on the board since the previous scoreboard frame, in wall order. Each id is stable across polls of the same frame, so a client animates a change once."
+    },
+    "feed": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feedItem"
+      },
+      "description": "The whip-around: recent scores, lead changes, finals, upsets and ranked kickoffs across the slate, newest first."
+    },
+    "changesCaveat": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "$defs": {
@@ -124,7 +157,8 @@
         "tv",
         "venue",
         "flags",
-        "leverage"
+        "leverage",
+        "lastPlay"
       ],
       "properties": {
         "id": {
@@ -285,6 +319,143 @@
               "minimum": 1
             }
           }
+        },
+        "lastPlay": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "text",
+            "type",
+            "scoring"
+          ],
+          "description": "ESPN's last play on the scoreboard; null before kickoff, at halftime, in a delay and after the final",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "scoring": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "required": [
+        "id",
+        "game",
+        "kind",
+        "team",
+        "points",
+        "label",
+        "at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "game": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "score",
+            "correction",
+            "lead",
+            "possession",
+            "kickoff",
+            "final",
+            "upset",
+            "redZone",
+            "delay",
+            "resume"
+          ]
+        },
+        "team": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the team the change belongs to: scorer, new leader, new possession, winner"
+        },
+        "points": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "type": "string"
+        }
+      }
+    },
+    "feedItem": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/change"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "away",
+        "home"
+      ],
+      "properties": {
+        "away": {
+          "$ref": "#/$defs/feedSide"
+        },
+        "home": {
+          "$ref": "#/$defs/feedSide"
+        }
+      }
+    },
+    "feedSide": {
+      "type": "object",
+      "required": [
+        "id",
+        "abbr",
+        "rank",
+        "score",
+        "fill",
+        "hatch"
+      ],
+      "description": "the side as it stood when the change happened, not as it stands now",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "abbr": {
+          "type": "string"
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "fill": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        },
+        "hatch": {
+          "type": "boolean"
         }
       }
     }

@@ -119,6 +119,14 @@ def game_record(event: dict) -> dict:
             "redZone": bool(sit_raw.get("isRedZone")) or (ytg is not None and ytg <= RULES["red_zone_yards_to_goal"]),
         }
 
+    last = sit_raw.get("lastPlay") or {}
+    last_play = None
+    # The last play is shown only while the game is on: at halftime or in a
+    # delay it is stale, and after the final the result says more.
+    if situation and last.get("text"):
+        last_play = {"text": last["text"].strip(), "type": (last.get("type") or {}).get("text") or "",
+                     "scoring": bool(_int(last.get("scoreValue"), 0))}
+
     broadcasts = [n for b in comp.get("broadcasts") or [] for n in b.get("names") or []]
     venue = comp.get("venue") or {}
     addr = venue.get("address") or {}
@@ -129,6 +137,7 @@ def game_record(event: dict) -> dict:
         "away": away,
         "home": home,
         "situation": situation,
+        "lastPlay": last_play,
         "tv": broadcasts[0] if broadcasts else None,
         "venue": {"name": venue.get("fullName") or "", "city": addr.get("city") or "", "state": addr.get("state") or ""},
         "neutralSite": bool(comp.get("neutralSite")),

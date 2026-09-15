@@ -7,6 +7,7 @@
     "version",
     "source",
     "replay",
+    "asOf",
     "event",
     "status",
     "home",
@@ -247,6 +248,10 @@
         "object",
         "null"
       ]
+    },
+    "asOf": {
+      "type": "string",
+      "description": "the moment this detail was read at: a replay frame, or now"
     }
   },
   "$defs": {

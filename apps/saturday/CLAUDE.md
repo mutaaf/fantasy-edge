@@ -8,16 +8,16 @@ College football for Apple Vision Pro, iPad and iPhone, with web and Android por
 ## Operating procedure
 
 ```bash
-make test                          # stdlib unittest, no network, under a second
+make test                          # stdlib unittest, no network; replays the whole recorded night in a few seconds
 PYTHONPATH=packages:apps/saturday python3 -m api doctor --json   # exit code + next_command
-make replay                        # API on the recorded 2026-09-12 slate, port 8780
+make replay                        # API on the recorded 2026-09-12 slate, port 8780 (/api/replay, /api/stream)
 make serve                         # API on the test fixtures
 make build-visionos build-ios build-ipad
 ```
 
 `doctor` exit codes: 0 ready, 1 generic, 2 config, 3 credentials, 4 no data. A missing `CFBD_API_KEY` is a warning, not a failure.
 
-Screenshots: launch the app with `-openGame <event id>` to open a game directly.
+Screenshots: launch the app with `-openGame <event id>` to open a game directly, `-replayAt <stamp>` to park the replay on a frame, and `-replayPlay YES -replaySpeed 60` to play it.
 
 ## Layout
 
@@ -42,6 +42,10 @@ tests/               fixtures come from tools/make_fixtures.py
 - **At halftime and in a delay the scoreboard keeps the last down and distance.** `parse.game_record` drops the situation, so no ball is drawn.
 - **ESPN lists the drive in progress in both `previous` and `current`.** Dedupe on id.
 - **An id is only unique inside its source.** Key on `(source, id)`, because ESPN and CFBD ids collide.
+- **A capture's frames are its timestamped scoreboards only.** `20260912-closing-backfill` was fetched the next morning and sorts before every stamp by name; reading it by name put the night's finals on an 8 PM board.
+- **Scores go down.** Six touchdowns came off the board on 2026-09-12 (penalties and reviews; Memphis-Boise State went 31, 37, 31, 38). A drop is a `correction` change, never ignored and never an error.
+- **A change's `id` is its frame, game, kind and team.** Clients animate an id once; never re-derive whether something changed on a client.
+- **History always includes the previous frame**, however old: the recorder's 25-minute gap is still a comparison.
 - **Every heuristic carries a non-empty caveat.** The leverage order is hand-weighted; report the caveat with it.
 - **Never hand-edit `project.pbxproj`.** Run `make project`.
 - **Text is system ink; colour goes on chips.** Every state has a glyph as well as a colour. Targets are ≥60 pt on visionOS and ≥44 pt on iOS.

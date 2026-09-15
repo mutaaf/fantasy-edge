@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "replay.schema.json",
+  "title": "GET /api/replay",
+  "description": "A recorded night as a timeline. Only a replay source answers; a live source returns 404.",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "start",
+    "end",
+    "frames",
+    "gaps",
+    "caveat"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "start": {
+      "type": "string"
+    },
+    "end": {
+      "type": "string"
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/timelineFrame"
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "minutes"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "minutes": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "caveat": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "frame": {
+      "type": "object",
+      "required": [
+        "stamp",
+        "at",
+        "label",
+        "index",
+        "frames",
+        "offsetSeconds",
+        "durationSeconds"
+      ],
+      "properties": {
+        "stamp": {
+          "type": "string",
+          "pattern": "^\\d{8}T\\d{6}Z$",
+          "description": "pass back as ?at= to see this frame"
+        },
+        "at": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "wall-clock time on the East Coast, where a college Saturday is scheduled"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "offsetSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "seconds since the first frame"
+        },
+        "durationSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "seconds from the first frame to the last"
+        }
+      }
+    },
+    "timelineFrame": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/frame"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "marks",
+        "headline"
+      ],
+      "properties": {
+        "marks": {
+          "type": "object",
+          "required": [
+            "scores",
+            "finals",
+            "kickoffs",
+            "upsets"
+          ],
+          "properties": {
+            "scores": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "finals": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "kickoffs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "upsets": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "headline": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "slate.schema.json#/$defs/change"
+            }
+          ],
+          "description": "the frame's most important score, final or upset, by wall order"
+        }
+      }
+    }
+  }
+}

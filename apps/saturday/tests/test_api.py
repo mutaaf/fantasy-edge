@@ -78,7 +78,7 @@ class Capture(unittest.TestCase):
     def test_source_spec(self):
         self.assertEqual(from_spec("fixtures", REPO).label, "fixtures")
         cap = from_spec("capture:data/capture/2026-09-12@20260913T003400Z", REPO)
-        self.assertEqual(cap.at, "20260913T003400Z")
+        self.assertEqual(cap.moment, "20260913T003400Z")
         with self.assertRaises(ValueError):
             from_spec("nope", REPO)
 

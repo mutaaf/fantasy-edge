@@ -48,7 +48,7 @@ def trim_event(ev):
                             for x in c.get("competitors", [])]
         if c.get("situation", {}).get("lastPlay"):
             lp = c["situation"]["lastPlay"]
-            c["situation"] = {**c["situation"], "lastPlay": {k: lp[k] for k in ("id", "text", "type", "statYardage", "end", "team") if k in lp}}
+            c["situation"] = {**c["situation"], "lastPlay": {k: lp[k] for k in ("id", "text", "type", "scoreValue", "statYardage", "end", "team") if k in lp}}
         comps.append(c)
     ev["competitions"] = comps
     return ev
