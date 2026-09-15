@@ -302,18 +302,33 @@ final class LightingActor: StadiumActor {
                 aim.y = 0
                 let dir = simd_normalize(aim - bank.position)
                 var end = bank.position + dir * length
-                if end.y < 0 {                                   // stop at the grass
-                    let k = bank.position.y / max(1e-3, bank.position.y - end.y)
+                // Stop short of the grass: the last yards of a shaft sit at
+                // the height of the far lower bowl, and from the upper deck
+                // they read as fog over those seats, not as light on the turf.
+                let floor = Float(Bm.endHeightYards.value(tabletop: t))
+                if end.y < floor {
+                    let k = (bank.position.y - floor) / max(1e-3, bank.position.y - end.y)
                     end = bank.position + (end - bank.position) * k
                 }
-                let w0 = Float(Bm.startWidthYards) * widthScale, w1 = Float(Bm.endWidthYards) * widthScale
-                let mid = (bank.position + end) / 2
-                let area = Double(simd_length(end - bank.position) * (w0 + w1) / 2)
+                // A shaft only exists over the field. From the lamp to the
+                // bowl's inner edge the beam lies across the stands, and seen
+                // against them additive light turns club colour to grey fog
+                // (integration-1). So the quad starts where the ray crosses
+                // `startInsideOffsetYards` of the bowl, fading in there, and
+                // the lens and its halo carry the light over the seats.
+                let tStart = Self.entry(from: bank.position, to: end, shape: c.spec.bowl.shape,
+                                        offset: Bm.startInsideOffsetYards)
+                guard tStart < 0.9 else { continue }
+                let from = bank.position + (end - bank.position) * tStart
+                let wFull0 = Float(Bm.startWidthYards) * widthScale, w1 = Float(Bm.endWidthYards) * widthScale
+                let w0 = wFull0 + (w1 - wFull0) * tStart
+                let mid = (from + end) / 2
+                let area = Double(simd_length(end - from) * (w0 + w1) / 2)
                 let d2 = Double(max(1, simd_length_squared(mid - seat)))
                 // Two crossed quads, about 0.7 of their area facing the eye;
                 // a headset's field of view is about 2.4 steradians.
                 let cover = 2 * 0.7 * area / d2 / 2.4
-                all.append(Beam(from: bank.position, to: end, w0: w0, w1: w1, cover: cover))
+                all.append(Beam(from: from, to: end, w0: w0, w1: w1, cover: cover))
             }
         }
         // Keep the nearest-to-the-field-centre beams; drop the rest past the cap.
@@ -358,6 +373,25 @@ final class LightingActor: StadiumActor {
                                  texture: c.assets.texture("lighting.beamDust"), tile: true)
         m.textureCoordinateTransform.offset = SIMD2(0, dustOffset)
         return m
+    }
+
+    /// The fraction along `from`→`to` where the ray's ground position first
+    /// comes inside the bowl's superellipse at `offset` yards (0 if it starts
+    /// inside, 1 if it never gets there). Bisection on the shape's own test.
+    static func entry(from: SIMD3<Float>, to: SIMD3<Float>, shape: SceneSpec.Shape, offset: Double) -> Float {
+        func inside(_ t: Float) -> Bool {
+            let p = from + (to - from) * t
+            let a = shape.halfLength + offset, b = shape.halfWidth + offset
+            return pow(abs(Double(p.x)) / a, shape.exponent) + pow(abs(Double(p.z)) / b, shape.exponent) <= 1
+        }
+        if inside(0) { return 0 }
+        if !inside(1) { return 1 }
+        var lo: Float = 0, hi: Float = 1
+        for _ in 0..<20 {
+            let m = (lo + hi) / 2
+            if inside(m) { hi = m } else { lo = m }
+        }
+        return hi
     }
 
     private func beamMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
@@ -409,11 +443,7 @@ final class LightingActor: StadiumActor {
             let e = Entity()
             e.name = "flood.\(i)"
             e.position = bank.position
-            // The banks stand on the far side; aimed at the centre line they
-            // leave the near half a stop dark. Alternate aim depths across the
-            // floods (visual.lighting.flood.aimZ) so both halves read even.
-            let aimZ = flood.aimZ.isEmpty ? 0 : Float(flood.aimZ[i % flood.aimZ.count])
-            e.look(at: SIMD3(0, 0, aimZ), from: bank.position, relativeTo: nil)
+            e.look(at: SIMD3(0, 0, 0), from: bank.position, relativeTo: nil)
             var spot = SpotLightComponent(color: StadiumLook.color(flood.color),
                                           intensity: Float(t ? flood.tabletopLumens : flood.lumens),
                                           innerAngleInDegrees: Float(flood.innerDegrees),
