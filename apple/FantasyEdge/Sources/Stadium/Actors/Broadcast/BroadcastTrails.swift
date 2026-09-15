@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 import simd
 
@@ -56,6 +57,8 @@ final class BroadcastTrails {
 
     func clear() {
         root.children.removeAll()
+        live = nil
+        liveDrawn = -1
         order.removeAll()
         arcs.removeAll()
         entities.removeAll()
@@ -186,7 +189,7 @@ final class BroadcastTrails {
     /// flight reads while it happens and does not stand over the posts after.
     /// Reduce motion lands them at rest at once.
     func update(_ c: StadiumContext) {
-        guard !kicks.isEmpty else { return }
+        guard !kicks.isEmpty, !Self.holdTrails else { return }
         let rule = c.look.broadcast.trail.kick
         for (id, k) in kicks {
             guard let holder = entities[id], holder.children.count == 2, !k.colour.isEmpty else { continue }
@@ -201,6 +204,60 @@ final class BroadcastTrails {
             if t >= 1 { kicks[id] = nil; rested.insert(id) }
         }
     }
+
+    private var live: Entity?
+    private var liveDrawn: Double = -1
+
+    /// The play in the air, drawn behind the ball as far as it has flown, so
+    /// a trail grows with the flight instead of appearing only on landing.
+    /// Redrawn at most every `live.intervalSeconds`; `clearLive` when it lands.
+    func grow(_ arc: SceneSpec.Arc, to t: Double, _ c: StadiumContext) {
+        let look = c.look.broadcast.trail
+        guard c.shared.time - liveDrawn >= look.live.intervalSeconds || t >= 1 else { return }
+        liveDrawn = c.shared.time
+        live?.removeFromParent()
+        let u = max(0.02, min(1, t))
+        let n = max(4, Int(48 * u))
+        let pts = (0...n).map { SceneMath.point(on: arc, at: u * Double($0) / Double(n)) }
+        var width = look.core.value(tabletop: c.tabletop)
+        var fade = look.live.opacity
+        if let seat = c.shared.seat, !c.tabletop, look.edge.shapes.contains(arc.shape) {
+            let rule = arc.shape == "kick" ? SceneSpec.Look.TrailEdge(fullDegrees: look.kick.fullDegrees,
+                goneDegrees: look.kick.goneDegrees, minOpacity: look.edge.minOpacity, minScale: look.edge.minScale) : look.edge
+            let seen = Self.sideOn(arc, seat: seat, edge: rule)
+            fade *= look.edge.minOpacity + (1 - look.edge.minOpacity) * seen
+            width *= look.edge.minScale + (1 - look.edge.minScale) * seen
+        }
+        let view = Self.view(c)
+        var core = MeshBuilder(), halo = MeshBuilder()
+        core.facingStrip(pts, halfWidth: Float(width) / 2, view: view)
+        halo.facingStrip(pts, halfWidth: Float(width * look.haloScale) / 2, view: view)
+        let colour = c.spec.palette[arc.color] ?? "#FFFFFF"
+        let holder = Entity()
+        holder.name = "trail.live"
+        holder.addChild(halo.entity("trail.live.halo", StadiumLook.glow(colour, opacity: look.haloOpacity * fade,
+                                                                         texture: c.assets.texture("broadcast.trailHalo"))))
+        holder.addChild(core.entity("trail.live.core", StadiumLook.glow(colour, opacity: look.coreOpacity * fade,
+                                                                         texture: c.assets.texture("broadcast.trailCore"))))
+        root.addChild(holder)
+        live = holder
+    }
+
+    func clearLive() {
+        live?.removeFromParent()
+        live = nil
+        liveDrawn = -1
+    }
+
+    /// Look-dev only: `-trailHold` freezes a kick's fade so a shot taken when
+    /// the moment fires still sees the trail at full strength. Never in release.
+    static let holdTrails: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-trailHold")
+        #else
+        return false
+        #endif
+    }()
 
     /// How side-on a seat sees an arc, 0...1: the mean angle between each
     /// piece of the arc and the sightline to it, mapped from
