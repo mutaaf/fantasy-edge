@@ -152,6 +152,10 @@ def main() -> None:
                     help="which moment td-moment plays in: the pick-six, or the game's first made field goal")
     ap.add_argument("--times", default="",
                     help="comma-separated seconds after the moment appears, one screenshot each (td-moment-t<s>.png)")
+    ap.add_argument("--seat", default="",
+                    help="sit in this preset (any id in presentation.stadium.seats) instead of the shot's own seat")
+    ap.add_argument("--during-moment", action="store_true",
+                    help="play every selected shot through the --moment, not only td-moment")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -176,10 +180,16 @@ def main() -> None:
         positions = {"touchdown": field_goal_second() if args.moment == "fieldGoal" else pick_six_second(),
                      "redzone": red_zone_second(args.port)}
         positions["early"] = positions["redzone"] - 150
+        if args.seat:
+            seats = [x["id"] for x in get(args.port, "/api/replay/scene")["presentation"]["stadium"].get("seats", [])]
+            if args.seat not in seats:
+                raise SystemExit(f"--seat {args.seat}: the scene's seats are {', '.join(seats)}")
         started = time.strftime("%Y-%m-%d %H:%M:%S")
         for name, where in SHOTS.items():
             if args.only and name not in args.only:
                 continue
+            if args.during_moment:
+                where = "touchdown"
             at = positions[where]
             simctl("terminate", args.device, BUNDLE, check=False)
             # The touchdown is held paused a few seconds before the snap until
@@ -190,7 +200,7 @@ def main() -> None:
             post(args.port, {"action": "pause"})
             launched = time.strftime("%Y-%m-%d %H:%M:%S")
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
-                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra.split(), check=False)
+                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *(["-stadiumSeat", args.seat] if args.seat else []), *args.extra.split(), check=False)
             waited = wait_for_build(args.device, launched, name == "tabletop", args.build_timeout)
             time.sleep(args.settle)
             print(f"  {name}: built after {waited:.0f}s", flush=True)
