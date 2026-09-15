@@ -125,8 +125,11 @@ def emission_material(name, img, colorspace_data=False, normal=False):
 
 # ───────────────────────────── uv + bake ─────────────────────────────
 
-def unwrap_into_cell(mesh, cell):
-    """Smart-project, give the head more texels, pack, and move into the atlas cell."""
+def unwrap_into_cell(mesh, cell, face_z=None):
+    """Smart-project, give the head more texels, pack, and move into the atlas cell.
+
+    A scripted fan's head is its own part. An MPFB fan's skin is one part from
+    scalp to toe, so `face_z` picks the skin above the collar instead."""
     bpy.ops.object.select_all(action="DESELECT")
     mesh.select_set(True)
     bpy.context.view_layer.objects.active = mesh
@@ -136,10 +139,11 @@ def unwrap_into_cell(mesh, cell):
     bpy.ops.object.mode_set(mode="OBJECT")
     me = mesh.data
     uv = me.uv_layers.active.data
-    head_slots = {i for i, m in enumerate(me.materials) if m and "_head" in m.name}
+    head_slots = {i for i, m in enumerate(me.materials) if m and ("_head" in m.name or (face_z is not None and "_skin" in m.name))}
     # Faces are what people look at in a stand; they get nine times the area.
     if head_slots:
-        loops = [li for p in me.polygons if p.material_index in head_slots for li in p.loop_indices]
+        loops = [li for p in me.polygons if p.material_index in head_slots
+                 and (face_z is None or (mesh.matrix_world @ p.center).z > face_z) for li in p.loop_indices]
         if loops:
             pts = np.array([uv[li].uv for li in loops])
             c = pts.mean(axis=0)
@@ -319,7 +323,17 @@ def save(img, path, size=None):
 
 # ───────────────────────────── meshes ─────────────────────────────
 
-def build_meshes(cast):
+def mpfb_available() -> bool:
+    try:
+        import mh
+        mh.enable()
+        return (mh.SYS / "skins").is_dir()
+    except Exception as e:
+        log(f"MPFB not available ({e}); building scripted fans")
+        return False
+
+
+def build_meshes(cast, mpfb=True):
     albedo = image("fan_albedo", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "sRGB")
     mask = image("fan_mask", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "Non-Color")
     ao = image("fan_ao", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "Non-Color")
@@ -331,20 +345,26 @@ def build_meshes(cast):
         cell = (col * cw + 0.002, 1 - (row + 1) * ch + 0.002, cw - 0.004, ch - 0.004)
         # Two material variants per part: base albedo and tint mask. The head
         # draws its face procedurally, so both of its variants need the centre.
-        mesh, rig, J = R.assemble(f, mode="base")
-        hc = (J["head"] + J["head_top"]) / 2 + Vector((0, -0.010, -0.030)) * (f["height"] / 1.75)
-        for slot in mesh.material_slots:
-            base_name = slot.material.name.rsplit("_", 1)[0]
-            is_head = base_name == f"{f['id']}_head"
-            common.attr_material(f"{base_name}_tint", hc if is_head else None,
-                                 f["paint"] if is_head else "none", mode="tint")
+        if mpfb:
+            # MakeHuman bodies (tools/blender/crowd/mh.py): tint materials come with the fan.
+            import mh
+            mesh, rig, J, info = mh.assemble(f, i)
+        else:
+            info = None
+            mesh, rig, J = R.assemble(f, mode="base")
+            hc = (J["head"] + J["head_top"]) / 2 + Vector((0, -0.010, -0.030)) * (f["height"] / 1.75)
+            for slot in mesh.material_slots:
+                base_name = slot.material.name.rsplit("_", 1)[0]
+                is_head = base_name == f"{f['id']}_head"
+                common.attr_material(f"{base_name}_tint", hc if is_head else None,
+                                     f["paint"] if is_head else "none", mode="tint")
         # Colour lives on the full-resolution body's faces. Baked after
         # decimation, collars and sleeve stripes smeared across collapsed
         # triangles into white wedges; baked from a full copy they stay crisp.
         hi = mesh.copy(); hi.data = mesh.data.copy(); hi.name = f"{f['id']}_hi"
         bpy.context.scene.collection.objects.link(hi)
         decimate(mesh, LOD0_TRIS)
-        unwrap_into_cell(mesh, cell)
+        unwrap_into_cell(mesh, cell, face_z=J["neck"].z if mpfb else None)
         for mode, img in (("base", albedo), ("tint", mask)):
             swap_materials(mesh, mode)
             swap_materials(hi, mode)
@@ -354,9 +374,11 @@ def build_meshes(cast):
         swap_materials(mesh, "base")
         bake_ao(hi, mesh, ao)
         bpy.data.objects.remove(hi)
-        paint_mouth_patch(albedo, cell)
         soften(mesh)
-        add_mouth(mesh, rig, f, J, cell)
+        if not mpfb:
+            # The scripted head has no mouth; MakeHuman's has lips, teeth and a jaw the poses open.
+            paint_mouth_patch(albedo, cell)
+            add_mouth(mesh, rig, f, J, cell)
         lod1 = mesh.copy(); lod1.data = mesh.data.copy(); lod1.name = f"{f['id']}_lod1"; lod1.data.name = lod1.name
         bpy.context.scene.collection.objects.link(lod1)
         lod1.parent = rig
@@ -367,7 +389,7 @@ def build_meshes(cast):
         lod2.parent = rig
         decimate(lod2, LOD2_TRIS)
         soften(lod2)
-        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell})
+        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell, "info": info})
         log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, lod2 {R.triangles(lod2)} tris")
     # Warm occlusion: cavities go a little red-brown, which reads as skin on
     # skin and as fold shadow on cloth, rather than grey dirt.
@@ -541,6 +563,7 @@ def render_impostors(built, albedo, mask):
             for b in built:
                 b["rig"].rotation_euler = (0, 0, th)
                 b["lod1"].hide_render = True
+                b["lod2"].hide_render = True
                 b["mesh"].hide_render = False
             layers = {}
             # Each fan is rendered twice a view: as the left member of its own
@@ -617,7 +640,11 @@ def variation_map(n_fans, size=256, seed=specs.SEED):
 # ───────────────────────────── manifest ─────────────────────────────
 
 def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
-    joints = [{"name": n, "parent": p} for n, p, *_ in F.BONES]
+    rig0 = built[0]["rig"]
+    if rig0.get("mpfb"):
+        joints = [{"name": b.name, "parent": b.parent.name if b.parent else None} for b in rig0.data.bones]
+    else:
+        joints = [{"name": n, "parent": p} for n, p, *_ in F.BONES]
     fans = []
     for i, b in enumerate(built):
         f = b["f"]
@@ -633,11 +660,17 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
             "impostorBlock": [(i % layout["per_row"]) * layout["block_px"][0], (i // layout["per_row"]) * layout["block_px"][1]],
             "impostorMate": built[pair_mate(i, len(built))]["f"]["id"],
             "usdClips": b.get("usd_ranges", {}),
+            **({"makehuman": {"skin": f"skins/{b['info']['skin']}", "suit": f"clothes/{b['info']['suit']}",
+                              "shoes": f"clothes/{b['info']['shoes']}",
+                              "hair": f"hair/{b['info']['hair']}" if b["info"]["hair"] else None,
+                              "eyes": "eyes/low-poly", "teeth": "teeth/teeth_base",
+                              "builtHeight": round(b["info"]["built"], 3)}} if b.get("info") else {}),
         })
     k = 1.0
     manifest = {
         "version": 1,
         "generator": "tools/blender/crowd/build.py",
+        "bodies": "MakeHuman (MPFB 2.0.17), CC0 assets only; see assets/LICENSES.md" if rig0.get("mpfb") else "scripted skin-modifier bodies (fan.py)",
         "units": "metres",
         "axes": {"gltf": "+Y up, fans face +Z", "usd": "+Y up, fans face +Z (converted on export, same frame as glTF)"},
         "origin": "floor under the pelvis in the standing pose",
@@ -693,7 +726,9 @@ def main():
     if "--only" in a:
         only = int(a[a.index("--only") + 1])
         cast = cast[:only]
-    built, albedo, mask = build_meshes(cast)
+    mpfb = "--scripted" not in a and mpfb_available()
+    log("bodies:", "MPFB" if mpfb else "scripted")
+    built, albedo, mask = build_meshes(cast, mpfb)
     finalise_materials(built, albedo)
     clips = export_fans(built)
     lod1_tris = export_pose_meshes(built, 1)
@@ -702,6 +737,8 @@ def main():
     impostor, layout = ({}, {"per_row": 8, "block_px": [0, 0], "atlas_px": [0, 0]})
     if stage in ("all", "impostors"):
         impostor, layout = render_impostors(built, albedo, mask)
+        import pad_atlas
+        pad_atlas.pad_kit(OUT)
     variation_map(len(cast))
     write_manifest(built, clips, lod1_tris, impostor, layout, cast)
     log("done")

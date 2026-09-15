@@ -42,7 +42,9 @@ MPFB = "bl_ext.user_default.mpfb"
 # height on the body and generates the top's cloth, so logos never show.
 SUITS = {
     "male": ["male_casualsuit01", "male_casualsuit02", "male_casualsuit03", "male_casualsuit04", "male_casualsuit05", "male_casualsuit06"],
-    "female": ["female_casualsuit01", "female_casualsuit02", "female_sportsuit01"],
+    # female_sportsuit01 is a crop top over a bare midriff and female_casualsuit02 a
+    # dress: neither is what a night crowd wears. MakeHuman fits any suit to any body.
+    "female": ["female_casualsuit01", "male_casualsuit02", "male_casualsuit04"],
 }
 SHOES = ["shoes01", "shoes02", "shoes03", "shoes04", "shoes05", "shoes06"]
 HAIR = {
@@ -211,8 +213,176 @@ def _apply_modifiers(ob, keep=("ARMATURE",)):
             ob.modifiers.remove(m)
 
 
+def _verts(obs):
+    """World-space vertices of every object in `obs`."""
+    out = []
+    for ob in obs:
+        W = ob.matrix_world
+        out.extend(W @ v.co for v in ob.data.vertices)
+    return out
+
+
+def scale_to_height(rig, obs, height, target):
+    """MPFB's height macro is gender-dependent (a female at 0.5 is 1.23-2.29 m
+    across the range, a male 1.37-2.43 m), so the cast's height is met by
+    probing the built body and scaling everything about the floor."""
+    s = target / height
+    for ob in obs:
+        ob.data.transform(Matrix.Scale(s, 4))
+    bpy.ops.object.select_all(action="DESELECT")
+    rig.select_set(True)
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.mode_set(mode="EDIT")
+    for eb in rig.data.edit_bones:
+        eb.head *= s
+        eb.tail *= s
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.context.view_layer.update()
+    return s
+
+
+def measure_head(base, bones):
+    """The cranium a hat has to fit: above the brows, clear of the ears."""
+    eye = (bones["eye.L"].head_local + bones["eye.R"].head_local) / 2
+    vs = [v for v in _verts([base]) if v.z > eye.z - 0.01 and abs(v.x) < 0.2]
+    top = max(v.z for v in vs)
+    temple = [v for v in vs if eye.z + 0.03 < v.z < eye.z + 0.065] or vs
+    cranium = [v for v in vs if v.z > eye.z + 0.02]
+    return {
+        "eye": eye, "brow": eye.z + 0.022, "top": top,
+        "rx": max(abs(v.x) for v in temple),
+        "front": min(v.y for v in cranium), "back": max(v.y for v in cranium),
+    }
+
+
+# Crown radii fan.hat builds at k = 1: 0.094, 0.108, 0.112 times HEAD_SCALE, on a centre 0.018 above c.
+_CROWN = (0.094 * F.HEAD_SCALE, 0.108 * F.HEAD_SCALE, 0.112 * F.HEAD_SCALE)
+
+
+def fitted_hat(f, head, hair):
+    """fan.hat's cap, visor or beanie, stretched per axis onto this MPFB head.
+
+    The kit's hats were drawn around the scripted head's centre and scale; on a
+    measured MakeHuman head they floated a hand's width high and a size too
+    big. Built at k = 1 around the origin, then scaled so the crown clears the
+    temples and the back of the skull, and the rim sits at the brows."""
+    ob = F.hat({**f, "height": 1.75}, Vector((0, 0, 0)))
+    if ob is None:
+        return None
+    margin = 0.012 if hair else 0.007
+    sx = (head["rx"] + margin) / _CROWN[0]
+    sy = ((head["back"] - head["front"]) / 2 + margin) / _CROWN[1]
+    # The crown's rim is ~0.020 above c and its top 0.139: rim at the brows, top just over the scalp.
+    sz = (head["top"] + margin - head["brow"]) / (0.018 + _CROWN[2] - 0.020)
+    c = Vector((0.0, (head["front"] + head["back"]) / 2, head["brow"] - 0.020 * sz))
+    for v in ob.data.vertices:
+        v.co = Vector((v.co.x * sx, v.co.y * sy, v.co.z * sz)) + c
+    return ob
+
+
+def fitted_scarf(f, base, suit, bones):
+    """A knit club scarf on this body: a loop resting on the trapezius, dipping
+    to the breastbone in front, and two tails that drape over whatever the fan
+    wears.
+
+    MakeHuman's neck is short: the chin hangs 2 cm above `neck01`'s head, so a
+    loop at the neck bone met the mouth as soon as a pose tipped the head
+    forward. The loop is measured from the body's cross-section just under the
+    neck and kept a hand's width below the chin in front."""
+    if not f.get("scarf"):
+        return None
+    import bmesh
+    n0 = bones["neck01"].head_local
+    chin = bones["jaw"].tail_local
+    body = _verts([base])
+    slab = [v for v in body if abs(v.z - (n0.z - 0.02)) < 0.008 and abs(v.x) < 0.11] or \
+           [v for v in body if abs(v.z - n0.z) < 0.01 and abs(v.x) < 0.11]
+    cy = (min(v.y for v in slab) + max(v.y for v in slab)) / 2
+    rx = max(abs(v.x) for v in slab) + 0.02
+    ry = (max(v.y for v in slab) - min(v.y for v in slab)) / 2 + 0.026
+    back_z = n0.z - 0.004
+    front_z = min(n0.z - 0.055, chin.z - 0.085)
+    cloth = _verts([suit]) if suit else [v for v in body if v.z < front_z]
+    bm = bmesh.new()
+    seg = 18
+    rings = []
+    for h in (0.0, 0.03):
+        ring = []
+        for a in range(seg):
+            t = 2 * math.pi * a / seg
+            back = (math.cos(t) + 1) / 2            # t = 0 behind the neck (+Y), pi in front
+            z = front_z + (back_z - front_z) * back
+            ring.append(bm.verts.new((rx * math.sin(t), cy + ry * math.cos(t) - 0.01 * (1 - back) * (h > 0), z + h)))
+        rings.append(ring)
+    for a in range(seg):
+        b = (a + 1) % seg
+        bm.faces.new((rings[0][a], rings[0][b], rings[1][b], rings[1][a]))
+    for x in (0.034, -0.046):
+        near = [v for v in cloth if abs(v.x - x) < 0.035]
+        column = []
+        z = front_z + 0.02
+        hang = cy - ry + 0.01
+        while z > front_z - 0.32:
+            band = [v.y for v in near if abs(v.z - z) < 0.02]
+            # A tail drapes: it follows the chest out, then falls straight past anything below.
+            if band:
+                hang = min(hang, min(band) - 0.012)
+            column.append((z, hang))
+            z -= 0.03
+        left = [bm.verts.new((x - 0.031, y, z)) for z, y in column]
+        right = [bm.verts.new((x + 0.031, y, z)) for z, y in column]
+        for k in range(len(column) - 1):
+            bm.faces.new((left[k], right[k], right[k + 1], left[k + 1]))
+    me = bpy.data.meshes.new(f"{f['id']}_scarf")
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new(me.name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    sol = ob.modifiers.new("thick", "SOLIDIFY")
+    sol.thickness = 0.011
+    _apply_modifiers(ob, keep=())
+    ob["collar"] = front_z + 0.03
+    return ob
+
+
+def paint_scarf(ob, collar):
+    """Primary on the loop, bars of primary and secondary down the tails."""
+    me = ob.data
+    base, tint = F._corner_attrs(ob)
+    for p in me.polygons:
+        z = (ob.matrix_world @ p.center).z
+        band = int((collar - z) / 0.045)
+        mask = (1, 0, 0) if z > collar - 0.01 or band % 2 == 0 else (0, 1, 0)
+        F._set_face(me, base, tint, p, F.TINTED, mask)
+
+
+def fitted_prop(f, bones):
+    """fan.accessory's prop, held in the right hand's own frame.
+
+    The kit authors a prop around a fingertip with the hand hanging straight
+    down and the fan facing -Y. MakeHuman's rest hand angles forward and out,
+    so the prop is turned from that frame into the wrist's before it is
+    weighted to the wrist, and follows the hand into every pose."""
+    ob = F.accessory({**f, "height": 1.75}, {**F.joints({**f, "height": 1.75}), "hand_end.R": Vector((0, 0, 0))})
+    if ob is None:
+        return None
+    tip = bones["finger3-3.R"].tail_local
+    wrist = bones["wrist.R"].head_local
+    d = (tip - wrist).normalized()
+    # Anchored where the kit's fingertip is, but a fist is a palm shorter than an
+    # open hand: anchoring at the open fingertip left a phone floating past the fist.
+    grip = wrist + (tip - wrist) * 0.55
+    front = Vector((0, -1, 0))
+    front = (front - d * front.dot(d)).normalized()
+    x = front.cross(d)
+    M = Matrix((x, -front, -d)).transposed()          # columns: kit x, kit y, kit z
+    for v in ob.data.vertices:
+        v.co = grip + M @ v.co
+    return ob
+
+
 def assemble(f: dict, index: int):
-    """One MPFB fan. Returns (mesh, rig, J, info) like rig.assemble."""
+    """One MPFB fan at the cast's height. Returns (mesh, rig, J, info) like rig.assemble."""
     HS, TS = enable()
     ident = identity(f, index)
     sex = "female" if ident["female"] else "male"
@@ -229,31 +399,36 @@ def assemble(f: dict, index: int):
     if hair:
         parts["hair"] = HS.add_mhclo_asset(str(SYS / f"hair/{hair}/{hair}.mhclo"), base, asset_type="Hair", subdiv_levels=0)
     parts["eyes"] = HS.add_mhclo_asset(str(SYS / "eyes/low-poly/low-poly.mhclo"), base, asset_type="Eyes", subdiv_levels=0)
+    teeth = SYS / "teeth/teeth_base/teeth_base.mhclo"
+    if teeth.exists():
+        try:
+            parts["teeth"] = HS.add_mhclo_asset(str(teeth), base, asset_type="Teeth", subdiv_levels=0)
+        except Exception as e:                        # an MPFB without a teeth type still builds a fan
+            print("[crowd] no teeth:", e)
 
+    # Bake morphs and masks, so the geometry is what the kit ships.
+    TS.bake_targets(base)
+    for ob in [base, *[p for p in parts.values() if p]]:
+        _apply_modifiers(ob)
+    for ob in [base, *[p for p in parts.values() if p]]:
+        ob.parent = None
+        ob.matrix_world = Matrix.Identity(4)
+
+    # Probe, then scale to the cast's height.
+    built = max(v.z for v in _verts([base]))
+    scale = scale_to_height(rig, [base, *[p for p in parts.values() if p]], built, f["height"])
+    height = f["height"]
     bones = rig.data.bones
-    height = base.dimensions.z
-    k = height / 1.75
-    eyes = {s: rig.matrix_world @ bones[f"eye.{s}"].head_local for s in ("L", "R")}
-    # Joints in the kit's names, for fan.py's hats, scarves and props.
     W = rig.matrix_world
+    eyes = {s: W @ bones[f"eye.{s}"].head_local for s in ("L", "R")}
     J = {
         "head": W @ bones["head"].head_local,
         "neck": W @ bones["neck01"].head_local, "pelvis": W @ bones["root"].head_local,
         "hand_end.R": W @ bones["finger3-3.R"].tail_local, "hand_end.L": W @ bones["finger3-3.L"].tail_local,
         "ankle.L": W @ bones["foot.L"].head_local, "ankle.R": W @ bones["foot.R"].head_local,
     }
-
-    # Bake morphs and masks, so the geometry is what the kit ships.
-    TS.bake_targets(base)
-    for ob in [base, *[p for p in parts.values() if p]]:
-        _apply_modifiers(ob)
-
-    head_verts = [base.matrix_world @ v.co for v in base.data.vertices if (base.matrix_world @ v.co).z > (W @ bones["neck03"].tail_local).z]
-    lo = Vector((min(p.x for p in head_verts), min(p.y for p in head_verts), min(p.z for p in head_verts)))
-    hi = Vector((max(p.x for p in head_verts), max(p.y for p in head_verts), max(p.z for p in head_verts)))
-    head_centre = (lo + hi) / 2
-    J["head_top"] = Vector((head_centre.x, head_centre.y, hi.z))
-    height = hi.z
+    head = measure_head(base, bones)
+    J["head_top"] = Vector((0.0, (head["front"] + head["back"]) / 2, head["top"]))
     k = height / 1.75
     skin_img = _diffuse_image(base.active_material)
     waist = J["pelvis"].z + 0.03 * k
@@ -288,42 +463,36 @@ def assemble(f: dict, index: int):
         for p in ob.data.polygons:
             p.material_index = 0
 
-    # Hats, scarves and props from the kit's own builders, fitted to this head and neck.
+    # Hats, scarves and props: fitted to this head, this neck and chest, this hand.
+    import common
     extras = []
-    c = head_centre + Vector((0, 0, -0.01))
-    ht = F.hat(f, c)
+    ht = fitted_hat(f, head, bool(hair))
     if ht:
-        extras.append((ht, "head", F.TINTED, (1, 0, 0)))
-    sc = F.scarf(f, F.joints(f))
+        F.paint_flat(ht, F.TINTED, (1, 0, 0))
+        extras.append((ht, "head"))
+    sc = fitted_scarf(f, base, parts.get("suit"), bones)
     if sc:
-        sc.location += Vector((0, J["neck"].y - 0.004 * k, J["neck"].z + 0.03 - 1.455 * k))
-        extras.append((sc, "neck01", None, None))
-    pr = F.accessory(f, {**F.joints(f), "hand_end.R": J["hand_end.R"]})
+        paint_scarf(sc, sc["collar"])
+        extras.append((sc, "spine01"))
+    pr = fitted_prop(f, bones)
     if pr:
-        extras.append((pr, "wrist.R", None, None))
-    for ob, bone, rgb, mask in extras:
-        _apply_modifiers(ob)
-        role = ob.name.split("_")[-1]
-        if rgb is not None:
-            F.paint_flat(ob, rgb, mask)
-        elif role == "scarf":
-            F.paint_scarf(ob, f)
-        else:
-            F.paint_prop(ob, ob.get("prop", ""))
-        import common
+        F.paint_prop(pr, pr.get("prop", ""))
+        extras.append((pr, "wrist.R"))
+    for ob, bone in extras:
         ob.data.materials.append(common.attr_material(f"{ob.name}_base", None, "none", mode="base"))
         ob.data.materials.append(common.attr_material(f"{ob.name}_tint", None, "none", mode="tint"))
+
+    # Every part's vertices follow the rig: MPFB parts by their own weights, extras rigidly.
+    mesh = base
+    for ob, bone in extras:
         g = ob.vertex_groups.new(name=bone)
         g.add(list(range(len(ob.data.vertices))), 1.0, "REPLACE")
-
-    # One mesh; two slots per part (base, tint), faces on the base slot.
     objs = [base, *[p for p in parts.values() if p], *[e[0] for e in extras]]
     bpy.ops.object.select_all(action="DESELECT")
     for ob in objs:
         ob.select_set(True)
     bpy.context.view_layer.objects.active = base
     bpy.ops.object.join()
-    mesh = base
     mesh.name = f["id"]
     mesh.data.name = f["id"]
     for m in list(mesh.modifiers):
@@ -332,8 +501,8 @@ def assemble(f: dict, index: int):
     mod.object = rig
     mesh.parent = rig
     mesh.matrix_parent_inverse = rig.matrix_world.inverted()
-    info = {"height": height, "identity": ident, "suit": suit, "shoes": shoes, "hair": hair,
-            "skin": skin_dir.name}
+    info = {"height": height, "built": built, "scale": scale, "identity": ident, "suit": suit, "shoes": shoes,
+            "hair": hair, "skin": skin_dir.name, "head": {k2: (list(v) if isinstance(v, Vector) else v) for k2, v in head.items()}}
     return mesh, rig, J, info
 
 

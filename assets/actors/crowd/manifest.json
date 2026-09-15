@@ -1,6 +1,7 @@
 {
  "version": 1,
  "generator": "tools/blender/crowd/build.py",
+ "bodies": "MakeHuman (MPFB 2.0.17), CC0 assets only; see assets/LICENSES.md",
  "units": "metres",
  "axes": {
   "gltf": "+Y up, fans face +Z",
@@ -21,80 +22,652 @@
    "parent": null
   },
   {
-   "name": "hips",
+   "name": "pelvis.L",
    "parent": "root"
   },
   {
-   "name": "spine",
-   "parent": "hips"
+   "name": "upperleg01.L",
+   "parent": "pelvis.L"
   },
   {
-   "name": "chest",
-   "parent": "spine"
+   "name": "upperleg02.L",
+   "parent": "upperleg01.L"
   },
   {
-   "name": "neck",
-   "parent": "chest"
+   "name": "lowerleg01.L",
+   "parent": "upperleg02.L"
   },
   {
-   "name": "head",
-   "parent": "neck"
-  },
-  {
-   "name": "clavicle.L",
-   "parent": "chest"
-  },
-  {
-   "name": "upperarm.L",
-   "parent": "clavicle.L"
-  },
-  {
-   "name": "forearm.L",
-   "parent": "upperarm.L"
-  },
-  {
-   "name": "hand.L",
-   "parent": "forearm.L"
-  },
-  {
-   "name": "clavicle.R",
-   "parent": "chest"
-  },
-  {
-   "name": "upperarm.R",
-   "parent": "clavicle.R"
-  },
-  {
-   "name": "forearm.R",
-   "parent": "upperarm.R"
-  },
-  {
-   "name": "hand.R",
-   "parent": "forearm.R"
-  },
-  {
-   "name": "thigh.L",
-   "parent": "hips"
-  },
-  {
-   "name": "shin.L",
-   "parent": "thigh.L"
+   "name": "lowerleg02.L",
+   "parent": "lowerleg01.L"
   },
   {
    "name": "foot.L",
-   "parent": "shin.L"
+   "parent": "lowerleg02.L"
   },
   {
-   "name": "thigh.R",
-   "parent": "hips"
+   "name": "toe1-1.L",
+   "parent": "foot.L"
   },
   {
-   "name": "shin.R",
-   "parent": "thigh.R"
+   "name": "toe1-2.L",
+   "parent": "toe1-1.L"
+  },
+  {
+   "name": "toe2-1.L",
+   "parent": "foot.L"
+  },
+  {
+   "name": "toe2-2.L",
+   "parent": "toe2-1.L"
+  },
+  {
+   "name": "toe2-3.L",
+   "parent": "toe2-2.L"
+  },
+  {
+   "name": "toe3-1.L",
+   "parent": "foot.L"
+  },
+  {
+   "name": "toe3-2.L",
+   "parent": "toe3-1.L"
+  },
+  {
+   "name": "toe3-3.L",
+   "parent": "toe3-2.L"
+  },
+  {
+   "name": "toe4-1.L",
+   "parent": "foot.L"
+  },
+  {
+   "name": "toe4-2.L",
+   "parent": "toe4-1.L"
+  },
+  {
+   "name": "toe4-3.L",
+   "parent": "toe4-2.L"
+  },
+  {
+   "name": "toe5-1.L",
+   "parent": "foot.L"
+  },
+  {
+   "name": "toe5-2.L",
+   "parent": "toe5-1.L"
+  },
+  {
+   "name": "toe5-3.L",
+   "parent": "toe5-2.L"
+  },
+  {
+   "name": "pelvis.R",
+   "parent": "root"
+  },
+  {
+   "name": "upperleg01.R",
+   "parent": "pelvis.R"
+  },
+  {
+   "name": "upperleg02.R",
+   "parent": "upperleg01.R"
+  },
+  {
+   "name": "lowerleg01.R",
+   "parent": "upperleg02.R"
+  },
+  {
+   "name": "lowerleg02.R",
+   "parent": "lowerleg01.R"
   },
   {
    "name": "foot.R",
-   "parent": "shin.R"
+   "parent": "lowerleg02.R"
+  },
+  {
+   "name": "toe1-1.R",
+   "parent": "foot.R"
+  },
+  {
+   "name": "toe1-2.R",
+   "parent": "toe1-1.R"
+  },
+  {
+   "name": "toe2-1.R",
+   "parent": "foot.R"
+  },
+  {
+   "name": "toe2-2.R",
+   "parent": "toe2-1.R"
+  },
+  {
+   "name": "toe2-3.R",
+   "parent": "toe2-2.R"
+  },
+  {
+   "name": "toe3-1.R",
+   "parent": "foot.R"
+  },
+  {
+   "name": "toe3-2.R",
+   "parent": "toe3-1.R"
+  },
+  {
+   "name": "toe3-3.R",
+   "parent": "toe3-2.R"
+  },
+  {
+   "name": "toe4-1.R",
+   "parent": "foot.R"
+  },
+  {
+   "name": "toe4-2.R",
+   "parent": "toe4-1.R"
+  },
+  {
+   "name": "toe4-3.R",
+   "parent": "toe4-2.R"
+  },
+  {
+   "name": "toe5-1.R",
+   "parent": "foot.R"
+  },
+  {
+   "name": "toe5-2.R",
+   "parent": "toe5-1.R"
+  },
+  {
+   "name": "toe5-3.R",
+   "parent": "toe5-2.R"
+  },
+  {
+   "name": "spine05",
+   "parent": "root"
+  },
+  {
+   "name": "spine04",
+   "parent": "spine05"
+  },
+  {
+   "name": "spine03",
+   "parent": "spine04"
+  },
+  {
+   "name": "spine02",
+   "parent": "spine03"
+  },
+  {
+   "name": "breast.L",
+   "parent": "spine02"
+  },
+  {
+   "name": "breast.R",
+   "parent": "spine02"
+  },
+  {
+   "name": "spine01",
+   "parent": "spine02"
+  },
+  {
+   "name": "clavicle.L",
+   "parent": "spine01"
+  },
+  {
+   "name": "shoulder01.L",
+   "parent": "clavicle.L"
+  },
+  {
+   "name": "upperarm01.L",
+   "parent": "shoulder01.L"
+  },
+  {
+   "name": "upperarm02.L",
+   "parent": "upperarm01.L"
+  },
+  {
+   "name": "lowerarm01.L",
+   "parent": "upperarm02.L"
+  },
+  {
+   "name": "lowerarm02.L",
+   "parent": "lowerarm01.L"
+  },
+  {
+   "name": "wrist.L",
+   "parent": "lowerarm02.L"
+  },
+  {
+   "name": "finger1-1.L",
+   "parent": "wrist.L"
+  },
+  {
+   "name": "finger1-2.L",
+   "parent": "finger1-1.L"
+  },
+  {
+   "name": "finger1-3.L",
+   "parent": "finger1-2.L"
+  },
+  {
+   "name": "metacarpal1.L",
+   "parent": "wrist.L"
+  },
+  {
+   "name": "finger2-1.L",
+   "parent": "metacarpal1.L"
+  },
+  {
+   "name": "finger2-2.L",
+   "parent": "finger2-1.L"
+  },
+  {
+   "name": "finger2-3.L",
+   "parent": "finger2-2.L"
+  },
+  {
+   "name": "metacarpal2.L",
+   "parent": "wrist.L"
+  },
+  {
+   "name": "finger3-1.L",
+   "parent": "metacarpal2.L"
+  },
+  {
+   "name": "finger3-2.L",
+   "parent": "finger3-1.L"
+  },
+  {
+   "name": "finger3-3.L",
+   "parent": "finger3-2.L"
+  },
+  {
+   "name": "metacarpal3.L",
+   "parent": "wrist.L"
+  },
+  {
+   "name": "finger4-1.L",
+   "parent": "metacarpal3.L"
+  },
+  {
+   "name": "finger4-2.L",
+   "parent": "finger4-1.L"
+  },
+  {
+   "name": "finger4-3.L",
+   "parent": "finger4-2.L"
+  },
+  {
+   "name": "metacarpal4.L",
+   "parent": "wrist.L"
+  },
+  {
+   "name": "finger5-1.L",
+   "parent": "metacarpal4.L"
+  },
+  {
+   "name": "finger5-2.L",
+   "parent": "finger5-1.L"
+  },
+  {
+   "name": "finger5-3.L",
+   "parent": "finger5-2.L"
+  },
+  {
+   "name": "clavicle.R",
+   "parent": "spine01"
+  },
+  {
+   "name": "shoulder01.R",
+   "parent": "clavicle.R"
+  },
+  {
+   "name": "upperarm01.R",
+   "parent": "shoulder01.R"
+  },
+  {
+   "name": "upperarm02.R",
+   "parent": "upperarm01.R"
+  },
+  {
+   "name": "lowerarm01.R",
+   "parent": "upperarm02.R"
+  },
+  {
+   "name": "lowerarm02.R",
+   "parent": "lowerarm01.R"
+  },
+  {
+   "name": "wrist.R",
+   "parent": "lowerarm02.R"
+  },
+  {
+   "name": "finger1-1.R",
+   "parent": "wrist.R"
+  },
+  {
+   "name": "finger1-2.R",
+   "parent": "finger1-1.R"
+  },
+  {
+   "name": "finger1-3.R",
+   "parent": "finger1-2.R"
+  },
+  {
+   "name": "metacarpal1.R",
+   "parent": "wrist.R"
+  },
+  {
+   "name": "finger2-1.R",
+   "parent": "metacarpal1.R"
+  },
+  {
+   "name": "finger2-2.R",
+   "parent": "finger2-1.R"
+  },
+  {
+   "name": "finger2-3.R",
+   "parent": "finger2-2.R"
+  },
+  {
+   "name": "metacarpal2.R",
+   "parent": "wrist.R"
+  },
+  {
+   "name": "finger3-1.R",
+   "parent": "metacarpal2.R"
+  },
+  {
+   "name": "finger3-2.R",
+   "parent": "finger3-1.R"
+  },
+  {
+   "name": "finger3-3.R",
+   "parent": "finger3-2.R"
+  },
+  {
+   "name": "metacarpal3.R",
+   "parent": "wrist.R"
+  },
+  {
+   "name": "finger4-1.R",
+   "parent": "metacarpal3.R"
+  },
+  {
+   "name": "finger4-2.R",
+   "parent": "finger4-1.R"
+  },
+  {
+   "name": "finger4-3.R",
+   "parent": "finger4-2.R"
+  },
+  {
+   "name": "metacarpal4.R",
+   "parent": "wrist.R"
+  },
+  {
+   "name": "finger5-1.R",
+   "parent": "metacarpal4.R"
+  },
+  {
+   "name": "finger5-2.R",
+   "parent": "finger5-1.R"
+  },
+  {
+   "name": "finger5-3.R",
+   "parent": "finger5-2.R"
+  },
+  {
+   "name": "neck01",
+   "parent": "spine01"
+  },
+  {
+   "name": "neck02",
+   "parent": "neck01"
+  },
+  {
+   "name": "neck03",
+   "parent": "neck02"
+  },
+  {
+   "name": "head",
+   "parent": "neck03"
+  },
+  {
+   "name": "jaw",
+   "parent": "head"
+  },
+  {
+   "name": "special04",
+   "parent": "jaw"
+  },
+  {
+   "name": "oris02",
+   "parent": "special04"
+  },
+  {
+   "name": "oris01",
+   "parent": "oris02"
+  },
+  {
+   "name": "oris06.L",
+   "parent": "special04"
+  },
+  {
+   "name": "oris07.L",
+   "parent": "oris06.L"
+  },
+  {
+   "name": "oris06.R",
+   "parent": "special04"
+  },
+  {
+   "name": "oris07.R",
+   "parent": "oris06.R"
+  },
+  {
+   "name": "tongue00",
+   "parent": "jaw"
+  },
+  {
+   "name": "tongue01",
+   "parent": "tongue00"
+  },
+  {
+   "name": "tongue02",
+   "parent": "tongue01"
+  },
+  {
+   "name": "tongue03",
+   "parent": "tongue02"
+  },
+  {
+   "name": "tongue04",
+   "parent": "tongue03"
+  },
+  {
+   "name": "tongue07.L",
+   "parent": "tongue03"
+  },
+  {
+   "name": "tongue07.R",
+   "parent": "tongue03"
+  },
+  {
+   "name": "tongue06.L",
+   "parent": "tongue02"
+  },
+  {
+   "name": "tongue06.R",
+   "parent": "tongue02"
+  },
+  {
+   "name": "tongue05.L",
+   "parent": "tongue01"
+  },
+  {
+   "name": "tongue05.R",
+   "parent": "tongue01"
+  },
+  {
+   "name": "levator02.L",
+   "parent": "head"
+  },
+  {
+   "name": "levator03.L",
+   "parent": "levator02.L"
+  },
+  {
+   "name": "levator04.L",
+   "parent": "levator03.L"
+  },
+  {
+   "name": "levator05.L",
+   "parent": "levator04.L"
+  },
+  {
+   "name": "levator02.R",
+   "parent": "head"
+  },
+  {
+   "name": "levator03.R",
+   "parent": "levator02.R"
+  },
+  {
+   "name": "levator04.R",
+   "parent": "levator03.R"
+  },
+  {
+   "name": "levator05.R",
+   "parent": "levator04.R"
+  },
+  {
+   "name": "special01",
+   "parent": "head"
+  },
+  {
+   "name": "oris04.L",
+   "parent": "special01"
+  },
+  {
+   "name": "oris03.L",
+   "parent": "oris04.L"
+  },
+  {
+   "name": "oris04.R",
+   "parent": "special01"
+  },
+  {
+   "name": "oris03.R",
+   "parent": "oris04.R"
+  },
+  {
+   "name": "oris06",
+   "parent": "special01"
+  },
+  {
+   "name": "oris05",
+   "parent": "oris06"
+  },
+  {
+   "name": "special03",
+   "parent": "head"
+  },
+  {
+   "name": "levator06.L",
+   "parent": "special03"
+  },
+  {
+   "name": "levator06.R",
+   "parent": "special03"
+  },
+  {
+   "name": "special06.L",
+   "parent": "head"
+  },
+  {
+   "name": "special05.L",
+   "parent": "special06.L"
+  },
+  {
+   "name": "eye.L",
+   "parent": "special05.L"
+  },
+  {
+   "name": "orbicularis03.L",
+   "parent": "special05.L"
+  },
+  {
+   "name": "orbicularis04.L",
+   "parent": "special05.L"
+  },
+  {
+   "name": "special06.R",
+   "parent": "head"
+  },
+  {
+   "name": "special05.R",
+   "parent": "special06.R"
+  },
+  {
+   "name": "eye.R",
+   "parent": "special05.R"
+  },
+  {
+   "name": "orbicularis03.R",
+   "parent": "special05.R"
+  },
+  {
+   "name": "orbicularis04.R",
+   "parent": "special05.R"
+  },
+  {
+   "name": "temporalis01.L",
+   "parent": "head"
+  },
+  {
+   "name": "oculi02.L",
+   "parent": "temporalis01.L"
+  },
+  {
+   "name": "oculi01.L",
+   "parent": "oculi02.L"
+  },
+  {
+   "name": "temporalis01.R",
+   "parent": "head"
+  },
+  {
+   "name": "oculi02.R",
+   "parent": "temporalis01.R"
+  },
+  {
+   "name": "oculi01.R",
+   "parent": "oculi02.R"
+  },
+  {
+   "name": "temporalis02.L",
+   "parent": "head"
+  },
+  {
+   "name": "risorius02.L",
+   "parent": "temporalis02.L"
+  },
+  {
+   "name": "risorius03.L",
+   "parent": "risorius02.L"
+  },
+  {
+   "name": "temporalis02.R",
+   "parent": "head"
+  },
+  {
+   "name": "risorius02.R",
+   "parent": "temporalis02.R"
+  },
+  {
+   "name": "risorius03.R",
+   "parent": "risorius02.R"
   }
  ],
  "fans": [
@@ -112,11 +685,11 @@
    "gltf": "fan00.glb",
    "lod0": {
     "mesh": "fan00",
-    "triangles": 2130
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan00_lod1",
-    "triangles": 641
+    "triangles": 647
    },
    "lod2": {
     "mesh": "fan00_lod2",
@@ -174,6 +747,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_male",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes03",
+    "hair": null,
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.999
    }
   },
   {
@@ -190,11 +772,11 @@
    "gltf": "fan01.glb",
    "lod0": {
     "mesh": "fan01",
-    "triangles": 2288
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan01_lod1",
-    "triangles": 649
+    "triangles": 650
    },
    "lod2": {
     "mesh": "fan01_lod2",
@@ -252,6 +834,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/old_asian_male",
+    "suit": "clothes/male_casualsuit01",
+    "shoes": "clothes/shoes04",
+    "hair": "hair/afro01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 2.202
    }
   },
   {
@@ -268,15 +859,15 @@
    "gltf": "fan02.glb",
    "lod0": {
     "mesh": "fan02",
-    "triangles": 2066
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan02_lod1",
-    "triangles": 650
+    "triangles": 646
    },
    "lod2": {
     "mesh": "fan02_lod2",
-    "triangles": 248
+    "triangles": 250
    },
    "uvCell": [
     0.33533,
@@ -330,6 +921,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_caucasian_female",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes05",
+    "hair": "hair/ponytail01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.484
    }
   },
   {
@@ -346,11 +946,11 @@
    "gltf": "fan03.glb",
    "lod0": {
     "mesh": "fan03",
-    "triangles": 2358
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan03_lod1",
-    "triangles": 640
+    "triangles": 647
    },
    "lod2": {
     "mesh": "fan03_lod2",
@@ -408,6 +1008,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_caucasian_female",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes06",
+    "hair": "hair/ponytail01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.467
    }
   },
   {
@@ -424,15 +1033,15 @@
    "gltf": "fan04.glb",
    "lod0": {
     "mesh": "fan04",
-    "triangles": 2260
+    "triangles": 2397
    },
    "lod1": {
     "mesh": "fan04_lod1",
-    "triangles": 649
+    "triangles": 647
    },
    "lod2": {
     "mesh": "fan04_lod2",
-    "triangles": 247
+    "triangles": 250
    },
    "uvCell": [
     0.66867,
@@ -486,6 +1095,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_female",
+    "suit": "clothes/female_casualsuit01",
+    "shoes": "clothes/shoes01",
+    "hair": "hair/long01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.471
    }
   },
   {
@@ -502,11 +1120,11 @@
    "gltf": "fan05.glb",
    "lod0": {
     "mesh": "fan05",
-    "triangles": 2408
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan05_lod1",
-    "triangles": 648
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan05_lod2",
@@ -564,6 +1182,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/old_caucasian_male",
+    "suit": "clothes/male_casualsuit03",
+    "shoes": "clothes/shoes02",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.674
    }
   },
   {
@@ -580,11 +1207,11 @@
    "gltf": "fan06.glb",
    "lod0": {
     "mesh": "fan06",
-    "triangles": 2282
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan06_lod1",
-    "triangles": 647
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan06_lod2",
@@ -642,6 +1269,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_asian_female",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes03",
+    "hair": "hair/short03",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.319
    }
   },
   {
@@ -658,11 +1294,11 @@
    "gltf": "fan07.glb",
    "lod0": {
     "mesh": "fan07",
-    "triangles": 2100
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan07_lod1",
-    "triangles": 650
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan07_lod2",
@@ -720,6 +1356,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_african_female",
+    "suit": "clothes/female_casualsuit01",
+    "shoes": "clothes/shoes04",
+    "hair": "hair/long01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.393
    }
   },
   {
@@ -736,15 +1381,15 @@
    "gltf": "fan08.glb",
    "lod0": {
     "mesh": "fan08",
-    "triangles": 2222
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan08_lod1",
-    "triangles": 650
+    "triangles": 647
    },
    "lod2": {
     "mesh": "fan08_lod2",
-    "triangles": 245
+    "triangles": 249
    },
    "uvCell": [
     0.33533,
@@ -798,6 +1443,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_caucasian_female",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes05",
+    "hair": "hair/short03",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.779
    }
   },
   {
@@ -814,15 +1468,15 @@
    "gltf": "fan09.glb",
    "lod0": {
     "mesh": "fan09",
-    "triangles": 2318
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan09_lod1",
-    "triangles": 649
+    "triangles": 648
    },
    "lod2": {
     "mesh": "fan09_lod2",
-    "triangles": 247
+    "triangles": 249
    },
    "uvCell": [
     0.502,
@@ -876,6 +1530,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/old_african_female",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes06",
+    "hair": "hair/ponytail01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.866
    }
   },
   {
@@ -892,11 +1555,11 @@
    "gltf": "fan10.glb",
    "lod0": {
     "mesh": "fan10",
-    "triangles": 2402
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan10_lod1",
-    "triangles": 649
+    "triangles": 650
    },
    "lod2": {
     "mesh": "fan10_lod2",
@@ -954,6 +1617,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_caucasian_male",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes01",
+    "hair": "hair/short02",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 2.104
    }
   },
   {
@@ -970,7 +1642,7 @@
    "gltf": "fan11.glb",
    "lod0": {
     "mesh": "fan11",
-    "triangles": 2380
+    "triangles": 2397
    },
    "lod1": {
     "mesh": "fan11_lod1",
@@ -978,7 +1650,7 @@
    },
    "lod2": {
     "mesh": "fan11_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.83533,
@@ -1032,6 +1704,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_caucasian_male",
+    "suit": "clothes/male_casualsuit03",
+    "shoes": "clothes/shoes02",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.757
    }
   },
   {
@@ -1048,15 +1729,15 @@
    "gltf": "fan12.glb",
    "lod0": {
     "mesh": "fan12",
-    "triangles": 2408
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan12_lod1",
-    "triangles": 639
+    "triangles": 643
    },
    "lod2": {
     "mesh": "fan12_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.002,
@@ -1110,6 +1791,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_asian_male",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes03",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.693
    }
   },
   {
@@ -1126,15 +1816,15 @@
    "gltf": "fan13.glb",
    "lod0": {
     "mesh": "fan13",
-    "triangles": 2300
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan13_lod1",
-    "triangles": 641
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan13_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.16867,
@@ -1188,6 +1878,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_female",
+    "suit": "clothes/female_casualsuit01",
+    "shoes": "clothes/shoes04",
+    "hair": "hair/short03",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.18
    }
   },
   {
@@ -1204,15 +1903,15 @@
    "gltf": "fan14.glb",
    "lod0": {
     "mesh": "fan14",
-    "triangles": 2330
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan14_lod1",
-    "triangles": 648
+    "triangles": 646
    },
    "lod2": {
     "mesh": "fan14_lod2",
-    "triangles": 247
+    "triangles": 250
    },
    "uvCell": [
     0.33533,
@@ -1266,6 +1965,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_african_female",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes05",
+    "hair": "hair/ponytail01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.638
    }
   },
   {
@@ -1282,15 +1990,15 @@
    "gltf": "fan15.glb",
    "lod0": {
     "mesh": "fan15",
-    "triangles": 2072
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan15_lod1",
-    "triangles": 648
+    "triangles": 650
    },
    "lod2": {
     "mesh": "fan15_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.502,
@@ -1344,6 +2052,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_caucasian_male",
+    "suit": "clothes/male_casualsuit05",
+    "shoes": "clothes/shoes06",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.295
    }
   },
   {
@@ -1360,7 +2077,7 @@
    "gltf": "fan16.glb",
    "lod0": {
     "mesh": "fan16",
-    "triangles": 2408
+    "triangles": 2397
    },
    "lod1": {
     "mesh": "fan16_lod1",
@@ -1422,6 +2139,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_male",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes01",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.339
    }
   },
   {
@@ -1438,7 +2164,7 @@
    "gltf": "fan17.glb",
    "lod0": {
     "mesh": "fan17",
-    "triangles": 1984
+    "triangles": 2397
    },
    "lod1": {
     "mesh": "fan17_lod1",
@@ -1446,7 +2172,7 @@
    },
    "lod2": {
     "mesh": "fan17_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.83533,
@@ -1500,6 +2226,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/old_asian_male",
+    "suit": "clothes/male_casualsuit03",
+    "shoes": "clothes/shoes02",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.661
    }
   },
   {
@@ -1516,11 +2251,11 @@
    "gltf": "fan18.glb",
    "lod0": {
     "mesh": "fan18",
-    "triangles": 2216
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan18_lod1",
-    "triangles": 649
+    "triangles": 650
    },
    "lod2": {
     "mesh": "fan18_lod2",
@@ -1578,6 +2313,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_asian_male",
+    "suit": "clothes/male_casualsuit02",
+    "shoes": "clothes/shoes03",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 2.061
    }
   },
   {
@@ -1594,11 +2338,11 @@
    "gltf": "fan19.glb",
    "lod0": {
     "mesh": "fan19",
-    "triangles": 2408
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan19_lod1",
-    "triangles": 638
+    "triangles": 648
    },
    "lod2": {
     "mesh": "fan19_lod2",
@@ -1656,6 +2400,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_caucasian_female",
+    "suit": "clothes/female_casualsuit01",
+    "shoes": "clothes/shoes04",
+    "hair": "hair/bob02",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.748
    }
   },
   {
@@ -1672,7 +2425,7 @@
    "gltf": "fan20.glb",
    "lod0": {
     "mesh": "fan20",
-    "triangles": 2028
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan20_lod1",
@@ -1734,6 +2487,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_male",
+    "suit": "clothes/male_casualsuit06",
+    "shoes": "clothes/shoes05",
+    "hair": "hair/afro01",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 2.118
    }
   },
   {
@@ -1750,15 +2512,15 @@
    "gltf": "fan21.glb",
    "lod0": {
     "mesh": "fan21",
-    "triangles": 2332
+    "triangles": 2398
    },
    "lod1": {
     "mesh": "fan21_lod1",
-    "triangles": 639
+    "triangles": 647
    },
    "lod2": {
     "mesh": "fan21_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.502,
@@ -1812,6 +2574,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/old_caucasian_male",
+    "suit": "clothes/male_casualsuit05",
+    "shoes": "clothes/shoes06",
+    "hair": "hair/short02",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 2.211
    }
   },
   {
@@ -1828,11 +2599,11 @@
    "gltf": "fan22.glb",
    "lod0": {
     "mesh": "fan22",
-    "triangles": 2404
+    "triangles": 2400
    },
    "lod1": {
     "mesh": "fan22_lod1",
-    "triangles": 645
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan22_lod2",
@@ -1890,6 +2661,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/young_african_male",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes01",
+    "hair": "hair/short04",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.189
    }
   },
   {
@@ -1906,7 +2686,7 @@
    "gltf": "fan23.glb",
    "lod0": {
     "mesh": "fan23",
-    "triangles": 2036
+    "triangles": 2399
    },
    "lod1": {
     "mesh": "fan23_lod1",
@@ -1968,6 +2748,15 @@
      215,
      259
     ]
+   },
+   "makehuman": {
+    "skin": "skins/middleage_african_female",
+    "suit": "clothes/male_casualsuit04",
+    "shoes": "clothes/shoes02",
+    "hair": "hair/short03",
+    "eyes": "eyes/low-poly",
+    "teeth": "teeth/teeth_base",
+    "builtHeight": 1.638
    }
   }
  ],

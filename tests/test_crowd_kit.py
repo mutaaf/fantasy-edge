@@ -128,6 +128,49 @@ class CrowdKitTest(unittest.TestCase):
         self.assertLessEqual(sum(f["accessory"] == "sign" for f in cast), 2, "signs are rare in a real stand")
         self.assertLessEqual(sum(f["accessory"] == "towel" for f in cast), 2, "a stand of towels reads as flags")
 
+    def test_every_makehuman_asset_a_fan_wears_is_licensed(self):
+        """A fan built from a MakeHuman asset the licence page does not list
+        is an asset shipped without a record of its CC0 release."""
+        licences = (ASSETS / "LICENSES.md").read_text()
+        crowd = licences[licences.index("## Crowd"):]
+        crowd = crowd[:crowd.index("\n## ", 5)]
+        worn = {v for f in self.M["fans"] for k, v in f.get("makehuman", {}).items() if isinstance(v, str)}
+        for asset in sorted(worn):
+            kind, name = asset.split("/", 1)
+            if kind == "skins":
+                age, ancestry, sex = name.split("_")
+                self.assertIn(age, crowd); self.assertIn(ancestry, crowd); self.assertIn(sex, crowd)
+                continue
+            listed = f"`{asset}`" in crowd or any(
+                f"`{kind}/{stem}01` … `{kind}/{stem}06`" in crowd and name.startswith(stem)
+                for stem in ("male_casualsuit", "shoes"))
+            self.assertTrue(listed, f"{asset} is worn by a fan but not listed in assets/LICENSES.md")
+
+    def test_no_makehuman_garment_texture_dresses_a_club_top(self):
+        """MakeHuman's system garments carry logos and a makehuman.org
+        watermark. A club top's albedo must be generated cloth: a colour
+        shaded by the garment's normal map, never its diffuse image."""
+        import re
+        src = (ROOT / "tools/blender/crowd/mh.py").read_text()
+        top = re.search(r"top = flat_material\((.*)\)\n", src)
+        self.assertIsNotNone(top, "mh.py builds the top's material in one call")
+        self.assertIn("colour=", top.group(1))
+        self.assertNotIn("image=", top.group(1).replace("shade_from_normal", ""))
+        suits = re.search(r"SUITS = \{(.*?)\n\}", src, re.S).group(1)
+        for gone in ("female_sportsuit01", "female_casualsuit02"):
+            self.assertNotIn(f'"{gone}"', suits, f"{gone} is not what a night crowd wears")
+        for f in self.M["fans"]:
+            if "makehuman" in f:
+                self.assertNotIn(f["makehuman"]["suit"].split("/")[1], ("female_sportsuit01", "female_casualsuit02"))
+
+    def test_fans_are_the_cast_height(self):
+        """MPFB's height macro misses by up to 22 cm; the kit scales to the cast.
+        The chair's lift assumes a fan's pelvis scales with their height."""
+        import specs
+        cast = {f["id"]: f for f in specs.cast()}
+        for f in self.M["fans"]:
+            self.assertAlmostEqual(f["height"], cast[f["id"]]["height"], places=3)
+
 
 if __name__ == "__main__":
     unittest.main()

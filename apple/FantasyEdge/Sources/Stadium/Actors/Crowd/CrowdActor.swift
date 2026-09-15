@@ -119,9 +119,12 @@ final class CrowdActor: StadiumActor {
         if !c.tabletop, let seating = s.bowl.seating {
             for tierSeats in seating.tiers where drawn.contains(tierSeats.tier) {
                 let sections = tierSeats.sections ?? []
+                // Who sits where in the row in front, by run and seat, so nobody has their twin directly ahead.
+                var ahead: [Int: Int] = [:]
                 for row in tierSeats.rows {
                     let ring = SceneMath.Ring(shape, offset: row.feet)
-                    var previous = -1
+                    var recent: [Int] = []
+                    var here: [Int: Int] = [:]
                     for (runIndex, run) in row.runs.enumerated() where run.count == 2 {
                         rowId += 1
                         for k in 0..<Int(run[1]) {
@@ -132,9 +135,20 @@ final class CrowdActor: StadiumActor {
                                 hypot(p.x - w.x, p.z - w.z) < clear && abs(p.y - w.y) < clearHeight
                             }) { continue }
                             let isAway = away.map { a in (a.side == "far" ? p.z < 0 : p.z > 0) && Double(p.x) >= a.fromX - 50 } ?? false
+                            // 24 people and 45,000 seats repeat, but never within four seats along
+                            // the row or the three seats straight ahead: at the club seat a twin beside
+                            // or in front of another is the first thing the eye finds.
+                            let slot = runIndex * 4096 + k
+                            let banned = Set(recent + [ahead[slot - 1], ahead[slot], ahead[slot + 1]].compactMap { $0 })
                             var fan = Int(rng.next() * Double(C.fans)) % C.fans
-                            if fan == previous { fan = (fan + 1 + Int(rng.next() * Double(C.fans - 1))) % C.fans }
-                            previous = fan
+                            var tries = 0
+                            while banned.contains(fan) && tries < C.fans {
+                                fan = (fan + 7) % C.fans
+                                tries += 1
+                            }
+                            recent.append(fan)
+                            if recent.count > 4 { recent.removeFirst() }
+                            here[slot] = fan
                             let fraction = ((run[0] + Double(k) * row.pitch) / max(1e-6, row.length))
                                 .truncatingRemainder(dividingBy: 1)
                             let section = sections.firstIndex { sec in
@@ -150,6 +164,7 @@ final class CrowdActor: StadiumActor {
                                                  dist: simd_distance(p, seat), row: rowId, seat: k))
                         }
                     }
+                    ahead = here
                 }
             }
         }
@@ -274,7 +289,12 @@ final class CrowdActor: StadiumActor {
                 var mb = MeshBuilder()
                 let seated = C.chair.sitPoses.contains(C.poses[pi])
                 for f in list {
-                    guard let src = kit.poseMesh(ring: key.ring, fan: f.fan, pose: C.poses[pi]) else { continue }
+                    // Seated, half the fans take the other seated pose, so a near row is not one posture copied;
+                    // the idle swap still flips every one of them.
+                    var pose = C.poses[pi]
+                    let sits = C.chair.sitPoses
+                    if sits.count == 2, let at = sits.firstIndex(of: pose), (f.fan + f.seat) % 2 == 1 { pose = sits[1 - at] }
+                    guard let src = kit.poseMesh(ring: key.ring, fan: f.fan, pose: pose) else { continue }
                     // Into Bowl's chair: forward of its origin, pelvis on the pan whatever the fan's height.
                     let forward = Float(seated ? C.chair.sitForwardMetres : C.chair.standForwardMetres) * yard
                     let scale = kit.height(f.fan) / Float(C.chair.referenceHeightMetres)
@@ -576,21 +596,18 @@ final class CrowdKit {
         if let d = quick[key] { return d }
         let home = SceneMath.rgba(s.bowl.crowd.home), away = SceneMath.rgba(s.bowl.crowd.away)
         let homeRaw = SceneMath.rgba(s.teams.home.color), awayRaw = SceneMath.rgba(s.teams.away.color)
-        let secondary = SceneMath.rgba(C.secondary)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
-        let cardLayout = Layout.blocks(perRow: C.impostor.blocksPerRow,
-                                       w: C.impostor.cellPixels[0] * C.impostor.blockCells[0],
-                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1],
-                                       cellW: C.impostor.cellPixels[0])
-        _ = secondary
-        func make(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, away: Bool, card: Bool) -> CGImage? {
+        let cardLayout = Self.cardLayout(C)
+        let fa = Self.pixels(fanAlbedo), fm = Self.pixels(fanMask)
+        let ca = Self.pixels(cardAlbedo), cm = Self.pixels(cardMask)
+        func make(_ a: Pixels, _ m: Pixels, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, away: Bool, card: Bool) -> CGImage? {
             Self.tint(a, m, chip: chip, raw: raw, palette: Palette(C, salt: away ? 2 : 1, card: card), layout: layout, divisor: 4)
         }
         let plain = plainDress()
-        let d = Dress(fanHome: StadiumText.texture(make(fanAlbedo, fanMask, home, homeRaw, fanLayout, away: false, card: false)) ?? plain.fanHome,
-                      fanAway: StadiumText.texture(make(fanAlbedo, fanMask, away, awayRaw, fanLayout, away: true, card: false)) ?? plain.fanAway,
-                      cardHome: StadiumText.texture(make(cardAlbedo, cardMask, home, homeRaw, cardLayout, away: false, card: true)) ?? plain.cardHome,
-                      cardAway: StadiumText.texture(make(cardAlbedo, cardMask, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway)
+        let d = Dress(fanHome: StadiumText.texture(make(fa, fm, home, homeRaw, fanLayout, away: false, card: false)) ?? plain.fanHome,
+                      fanAway: StadiumText.texture(make(fa, fm, away, awayRaw, fanLayout, away: true, card: false)) ?? plain.fanAway,
+                      cardHome: StadiumText.texture(make(ca, cm, home, homeRaw, cardLayout, away: false, card: true)) ?? plain.cardHome,
+                      cardAway: StadiumText.texture(make(ca, cm, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway)
         quick[key] = d
         return d
     }
@@ -618,39 +635,44 @@ final class CrowdKit {
         if let d = Self.dressCache[key] { done(d); return }
         let home = SceneMath.rgba(s.bowl.crowd.home), away = SceneMath.rgba(s.bowl.crowd.away)
         let homeRaw = SceneMath.rgba(s.teams.home.color), awayRaw = SceneMath.rgba(s.teams.away.color)
-        let secondary = SceneMath.rgba(C.secondary)
         let src = Sources(fanAlbedo: fanAlbedo, fanMask: fanMask, cardAlbedo: cardAlbedo, cardMask: cardMask)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
-        let cardLayout = Layout.blocks(perRow: C.impostor.blocksPerRow,
-                                       w: C.impostor.cellPixels[0] * C.impostor.blockCells[0],
-                                       h: C.impostor.cellPixels[1] * C.impostor.blockCells[1],
-                                       cellW: C.impostor.cellPixels[0])
-        _ = secondary
+        let cardLayout = Self.cardLayout(C)
         let homeFan = Palette(C, salt: 1, card: false), awayFan = Palette(C, salt: 2, card: false)
         let homeCard = Palette(C, salt: 1, card: true), awayCard = Palette(C, salt: 2, card: true)
         let started = Date()
         Task.detached(priority: .userInitiated) {
-            func tint(_ a: CGImage, _ m: CGImage, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, _ half: Bool, _ p: Palette) -> CGImage? {
-                CrowdKit.tint(a, m, chip: chip, raw: raw, palette: p, layout: layout, divisor: half ? 2 : 1)
-            }
+            let fa = CrowdKit.pixels(src.fanAlbedo), fm = CrowdKit.pixels(src.fanMask)
+            let ca = CrowdKit.pixels(src.cardAlbedo), cm = CrowdKit.pixels(src.cardMask)
+            let decoded = Date()
             // The away section is always across the bowl, so its copies are
             // composed at half size: it keeps the crowd inside its 60 MB.
             let images = Images(
-                fanHome: tint(src.fanAlbedo, src.fanMask, home, homeRaw, fanLayout, false, homeFan),
-                fanAway: tint(src.fanAlbedo, src.fanMask, away, awayRaw, fanLayout, true, awayFan),
-                cardHome: tint(src.cardAlbedo, src.cardMask, home, homeRaw, cardLayout, false, homeCard),
-                cardAway: tint(src.cardAlbedo, src.cardMask, away, awayRaw, cardLayout, true, awayCard))
+                fanHome: CrowdKit.tint(fa, fm, chip: home, raw: homeRaw, palette: homeFan, layout: fanLayout, divisor: 1),
+                fanAway: CrowdKit.tint(fa, fm, chip: away, raw: awayRaw, palette: awayFan, layout: fanLayout, divisor: 2),
+                cardHome: CrowdKit.tint(ca, cm, chip: home, raw: homeRaw, palette: homeCard, layout: cardLayout, divisor: 1),
+                cardAway: CrowdKit.tint(ca, cm, chip: away, raw: awayRaw, palette: awayCard, layout: cardLayout, divisor: 2))
+            let tinted = Date()
             await MainActor.run {
+                let hop = Date()
                 let plain = self.plainDress()
                 let d = Dress(fanHome: StadiumText.texture(images.fanHome) ?? plain.fanHome,
                               fanAway: StadiumText.texture(images.fanAway) ?? plain.fanAway,
                               cardHome: StadiumText.texture(images.cardHome) ?? plain.cardHome,
                               cardAway: StadiumText.texture(images.cardAway) ?? plain.cardAway)
                 Self.dressCache[key] = d
-                StadiumLog.log.notice("[stadium] crowd dress composed in \(String(format: "%.2f", Date().timeIntervalSince(started))) s")
+                let f = { (a: Date, b: Date) in String(format: "%.2f", b.timeIntervalSince(a)) }
+                StadiumLog.log.notice("[stadium] crowd dress composed in \(f(started, Date())) s (decode \(f(started, decoded)), tint \(f(decoded, tinted)), main-actor wait \(f(tinted, hop)), textures \(f(hop, Date())))")
                 done(d)
             }
         }
+    }
+
+    nonisolated static func cardLayout(_ C: SceneSpec.Look.CrowdLook) -> Layout {
+        .blocks(perRow: C.impostor.blocksPerRow,
+                w: C.impostor.cellPixels[0] * C.impostor.blockCells[0],
+                h: C.impostor.cellPixels[1] * C.impostor.blockCells[1],
+                cellW: C.impostor.cellPixels[0])
     }
 
     /// Where each fan's pixels are in an atlas.
@@ -674,59 +696,39 @@ final class CrowdKit {
 
     /// Unpremultiply, grow colour into transparent texels `passes` times, and
     /// wrap it as a straight-alpha image (CGContext cannot hold one; CGImage can).
-    nonisolated static func straightPadded(_ o: UnsafeMutablePointer<UInt8>, width W: Int, height H: Int, passes: Int) -> CGImage? {
-        let n = W * H
-        var rgb = [Float](repeating: 0, count: n * 3)
-        var alpha = [UInt8](repeating: 0, count: n)
-        var known = [Bool](repeating: false, count: n)
-        for i in 0..<n {
-            let a = o[i * 4 + 3]
-            alpha[i] = a
-            guard a > 0 else { continue }
-            let k = 255 / Float(a)
-            rgb[i * 3] = Float(o[i * 4]) * k; rgb[i * 3 + 1] = Float(o[i * 4 + 1]) * k; rgb[i * 3 + 2] = Float(o[i * 4 + 2]) * k
-            known[i] = true
-        }
-        for _ in 0..<passes {
-            var next = known
-            for y in 0..<H {
-                for x in 0..<W {
-                    let i = y * W + x
-                    guard !known[i] else { continue }
-                    var sum = SIMD3<Float>.zero, c: Float = 0
-                    for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
-                        let nx = x + dx, ny = y + dy
-                        guard nx >= 0, ny >= 0, nx < W, ny < H else { continue }
-                        let j = ny * W + nx
-                        guard known[j] else { continue }
-                        sum += SIMD3(rgb[j * 3], rgb[j * 3 + 1], rgb[j * 3 + 2]); c += 1
-                    }
-                    guard c > 0 else { continue }
-                    rgb[i * 3] = sum.x / c; rgb[i * 3 + 1] = sum.y / c; rgb[i * 3 + 2] = sum.z / c
-                    next[i] = true
-                }
-            }
-            known = next
-        }
-        var bytes = [UInt8](repeating: 0, count: n * 4)
-        for i in 0..<n {
-            bytes[i * 4] = UInt8(min(255, rgb[i * 3])); bytes[i * 4 + 1] = UInt8(min(255, rgb[i * 3 + 1]))
-            bytes[i * 4 + 2] = UInt8(min(255, rgb[i * 3 + 2])); bytes[i * 4 + 3] = alpha[i]
-        }
-        guard let provider = CGDataProvider(data: Data(bytes) as CFData) else { return nil }
-        return CGImage(width: W, height: H, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: W * 4,
-                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
-                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    /// An atlas's decoded RGBA bytes, row 0 at the top, read in place.
+    ///
+    /// No copy: at -Onone a byte loop over four atlases cost three seconds
+    /// before a single texel was tinted. visionOS's ImageIO hands a PNG with
+    /// alpha over premultiplied (macOS hands the same file over straight), so
+    /// `premultiplied` says which, and `tint` handles both.
+    struct Pixels: @unchecked Sendable {
+        let width: Int, height: Int
+        let stride: Int
+        let data: CFData
+        let premultiplied: Bool
+        let alpha: Bool
     }
 
-    nonisolated private static func rgba(_ img: CGImage, width: Int, height: Int) -> (CGContext, UnsafeMutablePointer<UInt8>)? {
-        guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
-                                  space: CGColorSpaceCreateDeviceRGB(),
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue),
-              let data = ctx.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
-        ctx.interpolationQuality = .none
-        ctx.draw(img, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return (ctx, data)
+    nonisolated static func pixels(_ img: CGImage) -> Pixels {
+        let W = img.width, H = img.height
+        let info = img.alphaInfo
+        let order = img.bitmapInfo.intersection(.byteOrderMask)
+        let rgbaOrder = order == [] || order == .byteOrder32Big
+        let layouts: [CGImageAlphaInfo] = [.last, .premultipliedLast, .noneSkipLast]
+        if img.bitsPerComponent == 8, img.bitsPerPixel == 32, rgbaOrder, layouts.contains(info),
+           let data = img.dataProvider?.data, CFDataGetLength(data) >= img.bytesPerRow * H {
+            return Pixels(width: W, height: H, stride: img.bytesPerRow, data: data,
+                          premultiplied: info == .premultipliedLast, alpha: info != .noneSkipLast)
+        }
+        StadiumLog.log.notice("[stadium] crowd atlas drawn to a bitmap (alpha \(info.rawValue), \(img.bitsPerPixel) bpp, order \(order.rawValue))")
+        let out = NSMutableData(length: W * H * 4)!
+        if let ctx = CGContext(data: out.mutableBytes, width: W, height: H, bitsPerComponent: 8, bytesPerRow: W * 4,
+                               space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) {
+            ctx.interpolationQuality = .none
+            ctx.draw(img, in: CGRect(x: 0, y: 0, width: W, height: H))
+        }
+        return Pixels(width: W, height: H, stride: W * 4, data: out as CFData, premultiplied: true, alpha: true)
     }
 
     /// albedo x chip through the mask. Each fan gets its own shade of the
@@ -759,23 +761,26 @@ final class CrowdKit {
         }
     }
 
-    nonisolated static func tint(_ albedo: CGImage, _ mask: CGImage, chip: SIMD4<Float>, raw: SIMD4<Float>,
+    /// One side's copy of an atlas, `divisor` times smaller.
+    ///
+    /// Written for a Debug build as much as a Release one: the look-dev
+    /// harness runs -Onone, where SIMD and closures in a per-texel loop cost
+    /// 25 s for four atlases. So the inner loop is scalar Float over raw
+    /// buffers, and fans are composed in parallel - every texel belongs to
+    /// exactly one person's rect (or half of a pair cell), so the writes never
+    /// overlap. Every texel is tinted, transparent ones too, so the padding
+    /// build.py grew around each figure wears the same colour as the figure.
+    nonisolated static func tint(_ albedo: Pixels, _ mask: Pixels, chip: SIMD4<Float>, raw: SIMD4<Float>,
                                  palette P: Palette, layout: Layout, divisor k: Int) -> CGImage? {
         let W = albedo.width / k, H = albedo.height / k
-        guard let (out, o) = rgba(albedo, width: W, height: H),
-              let (maskContext, m) = rgba(mask, width: W, height: H) else { return nil }
-        // `m` points into the mask context's memory: keep the context alive
-        // for the whole loop, or Swift frees it after its last named use.
-        withExtendedLifetime(maskContext) {
+        guard W > 0, H > 0, mask.width > 0, mask.height > 0 else { return nil }
         let people = layout.people
         var cellW = 0
         if case .blocks(_, _, _, let w) = layout { cellW = w / k }
-        for person in 0..<(P.fans * people) {
-            let fan = person / people
-            // In a pair cell: is pixel column x on this person's half?
-            let mine: (Int, Int) -> Bool = { x, x0 in
-                people == 1 || cellW <= 0 || (((x - x0) % cellW) < cellW / 2) == (person % people == 0)
-            }
+        let persons = P.fans * people
+        // Per person: the colour they wear (r, g, b) and whether they are a pair cell's right half.
+        var colours = [Float](repeating: 0, count: persons * 3)
+        for person in 0..<persons {
             // Salted per side, so the home and away stands put neutrals on different fans.
             var h = UInt64(person) &* 2654435761 &+ 97 &+ P.salt &* 40503
             h ^= h >> 13
@@ -797,52 +802,117 @@ final class CrowdKit {
                 let l = colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722
                 colour = colour + (SIMD4(l, l, l, colour.w) - colour) * d
             }
-            let secondary = P.secondary
-            var (x0, y0, w, h0) = layout.rect(fan, width: W * k, height: H * k)
-            x0 /= k; y0 /= k; w /= k; h0 /= k
-            // Far cards: this fan's mean colour, to pull its flecks toward.
-            var mean = SIMD3<Float>.zero, n: Float = 0
-            if P.contrast < 1 {
-                for y in stride(from: max(0, y0), to: min(H, y0 + h0), by: 2) {
-                    for x in stride(from: max(0, x0), to: min(W, x0 + w), by: 2) where mine(x, x0) {
-                        let i = (y * W + x) * 4
-                        let a = Float(o[i + 3]) / 255
-                        guard a > 0.5 else { continue }
-                        mean += SIMD3(Float(o[i]), Float(o[i + 1]), Float(o[i + 2])) / (255 * a); n += 1
-                    }
-                }
-                mean /= max(1, n)
+            colours[person * 3] = colour.x; colours[person * 3 + 1] = colour.y; colours[person * 3 + 2] = colour.z
+        }
+        let sr = P.secondary.x, sg = P.secondary.y, sb = P.secondary.z
+        let contrast = P.contrast
+        let cards = people > 1
+        let AS = albedo.stride, MS = mask.stride, MW = mask.width, MH = mask.height
+        let AW = albedo.width, AH = albedo.height
+        let premultiplied = albedo.premultiplied, opaque = !albedo.alpha
+        var out = [UInt8](repeating: 0, count: W * H * 4)
+        colours.withUnsafeBufferPointer { cols in
+        out.withUnsafeMutableBufferPointer { o in
+            // Disjoint writes from many threads: the pointers cross into
+            // concurrentPerform as one unchecked-Sendable bundle.
+            struct Buffers: @unchecked Sendable {
+                let o: UnsafeMutablePointer<UInt8>, a: UnsafePointer<UInt8>, m: UnsafePointer<UInt8>, c: UnsafePointer<Float>
             }
-            for y in max(0, y0)..<min(H, y0 + h0) {
-                for x in max(0, x0)..<min(W, x0 + w) where mine(x, x0) {
-                    let i = (y * W + x) * 4
-                    let a = Float(o[i + 3]) / 255
-                    guard a > 0.004 else { continue }
-                    let mr = Float(m[i]) / 255, mg = Float(m[i + 1]) / 255, mb = Float(m[i + 2]) / 255
-                    var c = SIMD3(Float(o[i]), Float(o[i + 1]), Float(o[i + 2])) / (255 * a)
-                    if P.contrast < 1 { c = mean + (c - mean) * P.contrast }
-                    guard mr + mg + mb > 0.004 else {
-                        if P.contrast < 1 {
-                            let v = simd_clamp(c, .zero, SIMD3(repeating: 1)) * a * 255
-                            o[i] = UInt8(v.x); o[i + 1] = UInt8(v.y); o[i + 2] = UInt8(v.z)
+            let B = Buffers(o: o.baseAddress!, a: CFDataGetBytePtr(albedo.data), m: CFDataGetBytePtr(mask.data), c: cols.baseAddress!)
+            // Texels outside every person's rect (a grid's rounding remainder) keep the kit's colour.
+            DispatchQueue.concurrentPerform(iterations: H) { y in
+                let oBase = B.o, aBase = B.a
+                let row = aBase + min(AH - 1, y * k) * AS
+                if k == 1 && W <= AW {
+                    // Full size: one library copy a row, not four byte stores a texel at -Onone.
+                    (oBase + y * W * 4).update(from: row, count: W * 4)
+                    return
+                }
+                for x in 0..<W {
+                    let s = min(AW - 1, x * k) * 4, d = (y * W + x) * 4
+                    oBase[d] = row[s]; oBase[d + 1] = row[s + 1]; oBase[d + 2] = row[s + 2]; oBase[d + 3] = opaque ? 255 : row[s + 3]
+                }
+            }
+            DispatchQueue.concurrentPerform(iterations: persons) { person in
+                let oBase = B.o, mBase = B.m, cBase = B.c
+                let fan = person / people
+                let right = person % people != 0
+                var (x0, y0, w, h0) = layout.rect(fan, width: AW, height: AH)
+                x0 /= k; y0 /= k; w /= k; h0 /= k
+                let xs = max(0, x0), xe = min(W, x0 + w), ys = max(0, y0), ye = min(H, y0 + h0)
+                guard xs < xe, ys < ye else { return }
+                let pr = cBase[person * 3], pg = cBase[person * 3 + 1], pb = cBase[person * 3 + 2]
+                // Cards: this person's mean colour, straight. Contrast pulls their flecks
+                // toward it, and it fills the transparent texels around them.
+                var mr0: Float = 0, mg0: Float = 0, mb0: Float = 0
+                if cards {
+                    var n: Float = 0
+                    for y in Swift.stride(from: ys, to: ye, by: 2) {
+                        for x in Swift.stride(from: xs, to: xe, by: 2) {
+                            if cellW > 0 && (((x - x0) % cellW) >= cellW / 2) != right { continue }
+                            let d = (y * W + x) * 4
+                            let a = oBase[d + 3]
+                            guard a > 127 else { continue }
+                            let u: Float = premultiplied ? 255 / Float(a) : 1
+                            mr0 += Float(oBase[d]) * u; mg0 += Float(oBase[d + 1]) * u; mb0 += Float(oBase[d + 2]) * u; n += 1
                         }
-                        continue
                     }
-                    let p = SIMD3(colour.x, colour.y, colour.z), s = SIMD3(secondary.x, secondary.y, secondary.z)
-                    c = c * (SIMD3(repeating: 1) + (p - 1) * mr) * (SIMD3(repeating: 1) + (s - 1) * mg)
-                    c = c + (p * 0.86 - c) * mb
-                    c = simd_clamp(c, .zero, SIMD3(repeating: 1)) * a * 255
-                    o[i] = UInt8(c.x); o[i + 1] = UInt8(c.y); o[i + 2] = UInt8(c.z)
+                    let inv = 1 / (255 * max(1, n))
+                    mr0 *= inv; mg0 *= inv; mb0 *= inv
+                }
+                let inv255: Float = 1 / 255
+                // Premultiplied cards lose every transparent texel's colour; those
+                // are filled after the figure with the figure's own tinted mean.
+                let fill = cards && premultiplied
+                var tr: Float = 0, tg: Float = 0, tb: Float = 0, tn: Float = 0
+                for y in ys..<ye {
+                    let mrow = mBase + min(MH - 1, (y * k) * MH / AH) * MS
+                    for x in xs..<xe {
+                        if cards && cellW > 0 && (((x - x0) % cellW) >= cellW / 2) != right { continue }
+                        let d = (y * W + x) * 4
+                        let a = oBase[d + 3]
+                        if fill && a == 0 { continue }
+                        let mi = min(MW - 1, (x * k) * MW / AW) * 4
+                        var mr = Float(mrow[mi]) * inv255, mg = Float(mrow[mi + 1]) * inv255, mb = Float(mrow[mi + 2]) * inv255
+                        if mask.premultiplied {
+                            let ma = Float(mrow[mi + 3])
+                            if ma > 0 && ma < 255 { mr *= 255 / ma; mg *= 255 / ma; mb *= 255 / ma }
+                        }
+                        let tinted = mr + mg + mb > 0.004
+                        if !tinted && contrast >= 1 && !fill { continue }
+                        let u: Float = premultiplied && a > 0 ? 1 / Float(a) : inv255
+                        var r = Float(oBase[d]) * u, g = Float(oBase[d + 1]) * u, b = Float(oBase[d + 2]) * u
+                        if contrast < 1 {
+                            r = mr0 + (r - mr0) * contrast; g = mg0 + (g - mg0) * contrast; b = mb0 + (b - mb0) * contrast
+                        }
+                        if tinted {
+                            r *= (1 + (pr - 1) * mr) * (1 + (sr - 1) * mg)
+                            g *= (1 + (pg - 1) * mr) * (1 + (sg - 1) * mg)
+                            b *= (1 + (pb - 1) * mr) * (1 + (sb - 1) * mg)
+                            r += (pr * 0.86 - r) * mb; g += (pg * 0.86 - g) * mb; b += (pb * 0.86 - b) * mb
+                        }
+                        r = max(0, min(1, r)); g = max(0, min(1, g)); b = max(0, min(1, b))
+                        if fill && a > 127 { tr += r; tg += g; tb += b; tn += 1 }
+                        oBase[d] = UInt8(r * 255); oBase[d + 1] = UInt8(g * 255); oBase[d + 2] = UInt8(b * 255)
+                    }
+                }
+                if fill && tn > 0 {
+                    let fr = UInt8(tr / tn * 255), fg = UInt8(tg / tn * 255), fb = UInt8(tb / tn * 255)
+                    for y in ys..<ye {
+                        for x in xs..<xe {
+                            if cellW > 0 && (((x - x0) % cellW) >= cellW / 2) != right { continue }
+                            let d = (y * W + x) * 4
+                            if oBase[d + 3] == 0 { oBase[d] = fr; oBase[d + 1] = fg; oBase[d + 2] = fb }
+                        }
+                    }
                 }
             }
         }
         }
-        // Cards are cut out by alpha and seen at 100 m through small mips. In a
-        // premultiplied bitmap every transparent texel is black, so the mips
-        // averaged each figure with its black surround and far stands went
-        // dark. Pad figure colour into the transparent texels and hand over
-        // straight alpha, so a mip averages people with people.
-        if case .blocks = layout { return straightPadded(o, width: W, height: H, passes: 6) }
-        return out.makeImage()
+        guard let provider = CGDataProvider(data: Data(out) as CFData) else { return nil }
+        return CGImage(width: W, height: H, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: W * 4,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: (opaque ? CGImageAlphaInfo.noneSkipLast : CGImageAlphaInfo.last).rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
     }
+
 }

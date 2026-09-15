@@ -5,17 +5,36 @@ appends its own section.
 
 ## Crowd (`assets/actors/crowd/`)
 
-**Original: no third-party inputs, no downloads.** Every file is produced by
-`tools/blender/crowd/*.py` (Blender 5.2.1, procedural skin-modifier bodies,
-primitive props, node-based face and fabric detail). There are no
-third-party models, textures, scans or likenesses. Released with the
-repository.
+**Bodies: MakeHuman, CC0 assets only. Everything else original.** The fans'
+bodies, skins, suits, shoes, hair, eyes and teeth are MakeHuman system assets
+from `makehuman_system_assets_cc0.zip` (sha256 `b542127a8e25547c7c29c19f2d1d2adb9a664c80396ecd694095dbc8028a0107`), each file's own
+header stating its CC0 release, assembled and posed by MPFB 2.0.17 (the
+Blender add-on is a build tool; none of its code ships). Nothing else is
+downloaded. `tools/blender/crowd/fetch_mh_assets.py` keeps an asset only when
+its own licence line is CC0, and deletes the rest before a build can load them.
+
+No MakeHuman texture that could carry a logo reaches the kit: a club top's
+albedo is generated cloth shaded by the garment's normal map, never its
+diffuse image (MakeHuman's system garments carry logos and a watermark). Hats,
+scarves and props are original geometry fitted to each body.
+
+Which MakeHuman assets each fan wears is in `manifest.json` (`fans[].makehuman`);
+`tests/test_crowd_kit.py` fails if one is not listed below.
+
+| MakeHuman asset (`makehuman_system_assets/…`) | Licence |
+|---|---|
+| `skins/{young,middleage,old}_{african,asian,caucasian}_{male,female}` | CC0 |
+| `clothes/male_casualsuit01` … `clothes/male_casualsuit06`, `clothes/female_casualsuit01` | CC0 |
+| `clothes/shoes01` … `clothes/shoes06` | CC0 |
+| `hair/short02`, `hair/short03`, `hair/short04`, `hair/afro01`, `hair/long01`, `hair/ponytail01`, `hair/bob01`, `hair/bob02` | CC0 |
+| `eyes/low-poly`, `teeth/teeth_base` | CC0 |
+| base mesh, targets and the `default` rig (via MPFB) | CC0 |
 
 | Files | Made by |
 |---|---|
-| `fan*.{usdz,glb}`, `lod{0,1}_poses.{usdz,glb}` | `build.py` (skeleton and bodies in `fan.py`, `rig.py`; poses in `poses.py`) |
-| `fan_albedo.png`, `fan_mask.png`, `impostor_{albedo,mask,normal}.png`, `variation.png`, `manifest.json` | `build.py` |
-| `review/*.png` | `lineup.py`, `pose_review.py` (critique renders) |
+| `fan*.{usdz,glb}`, `lod{0,1,2}_poses.{usdz,glb}` | `build.py` (bodies in `mh.py`; fitted hats, scarves, props from `fan.py`; poses in `poses.py`) |
+| `fan_albedo.png`, `fan_mask.png`, `impostor_{albedo,mask,normal}.png`, `variation.png`, `manifest.json` | `build.py`, `pad_atlas.py` |
+| `review/*.png` | `mh_review.py`, `kit_review.py`, `lineup.py`, `pose_review.py` (critique renders) |
 
 ## Lighting and sky (`assets/actors/lighting/`, `assets/actors/sky/`)
 
