@@ -1,0 +1,192 @@
+{
+ "sources": {
+  "concrete_floor_worn_001": {
+   "name": "Concrete Floor Worn 001",
+   "authors": [
+    "Dimitrios Savva",
+    "Rico Cilliers"
+   ],
+   "url": "https://polyhaven.com/a/concrete_floor_worn_001",
+   "license": "CC0 1.0"
+  },
+  "painted_concrete": {
+   "name": "Painted Concrete",
+   "authors": [
+    "Dario Barresi",
+    "Dimitrios Savva"
+   ],
+   "url": "https://polyhaven.com/a/painted_concrete",
+   "license": "CC0 1.0"
+  },
+  "metal_plate": {
+   "name": "Metal Plate",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "url": "https://polyhaven.com/a/metal_plate",
+   "license": "CC0 1.0"
+  },
+  "leather_white": {
+   "name": "Leather White",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "url": "https://polyhaven.com/a/leather_white",
+   "license": "CC0 1.0"
+  }
+ },
+ "seat": [
+  {
+   "seat": "seat_lod0_down",
+   "triangles": 620
+  },
+  {
+   "seat": "seat_lod0_up",
+   "triangles": 620
+  },
+  {
+   "seat": "seat_lod1_down",
+   "triangles": 90
+  },
+  {
+   "seat": "seat_lod2_up",
+   "triangles": 12
+  }
+ ],
+ "structure": [
+  {
+   "name": "stands",
+   "usdz": "actors/bowl/stands.usdz",
+   "glb": "actors/bowl/stands.glb",
+   "objects": {
+    "stands": 33282
+   },
+   "parts": {
+    "stands": 6
+   },
+   "triangles": 33282,
+   "materials": [
+    "bowl_concrete",
+    "bowl_glass",
+    "bowl_interiors",
+    "bowl_screens",
+    "bowl_steel",
+    "bowl_trim"
+   ],
+   "bytes": {
+    "usdz": 5287147,
+    "glb": 5486312
+   },
+   "about": "The whole bowl's structure in one entity."
+  },
+  {
+   "name": "seats_far",
+   "usdz": "actors/bowl/seats_far.usdz",
+   "glb": "actors/bowl/seats_far.glb",
+   "objects": {
+    "bands": 10046,
+    "fill_club": 330,
+    "fill_endzone": 320,
+    "fill_upper": 194
+   },
+   "parts": {
+    "bands": 1,
+    "fill_club": 1,
+    "fill_endzone": 1,
+    "fill_upper": 1
+   },
+   "triangles": 10890,
+   "materials": [
+    "bowl_seat_band"
+   ],
+   "bytes": {
+    "usdz": 705766,
+    "glb": 771000
+   },
+   "about": "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill except the preset the wearer sits in.",
+   "regions": [
+    {
+     "id": "club",
+     "tier": "lower",
+     "angle": 1.5707963267948966,
+     "rows": [
+      5,
+      20
+     ],
+     "reach": 30.0
+    },
+    {
+     "id": "endzone",
+     "tier": "lower",
+     "angle": 3.141592653589793,
+     "rows": [
+      0,
+      10
+     ],
+     "reach": 30.0
+    },
+    {
+     "id": "upper",
+     "tier": "upper",
+     "angle": 1.5707963267948966,
+     "rows": [
+      0,
+      9
+     ],
+     "reach": 30.0
+    }
+   ]
+  },
+  {
+   "name": "near",
+   "usdz": "actors/bowl/near.usdz",
+   "glb": "actors/bowl/near.glb",
+   "objects": {
+    "near_club": 16430,
+    "near_endzone": 17792,
+    "near_upper": 13892
+   },
+   "parts": {
+    "near_club": 6,
+    "near_endzone": 6,
+    "near_upper": 6
+   },
+   "triangles": 48114,
+   "materials": [
+    "bowl_seat_band",
+    "bowl_seat_plaque",
+    "bowl_stair",
+    "bowl_step_light",
+    "seat_hardware.001",
+    "seat_plastic"
+   ],
+   "bytes": {
+    "usdz": 3989684,
+    "glb": 4276384
+   },
+   "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
+  },
+  {
+   "name": "table",
+   "usdz": "actors/bowl/table.usdz",
+   "glb": "actors/bowl/table.glb",
+   "objects": {
+    "table": 1352
+   },
+   "parts": {
+    "table": 3
+   },
+   "triangles": 1352,
+   "materials": [
+    "bowl_screens",
+    "bowl_seat_band",
+    "bowl_table_trim"
+   ],
+   "bytes": {
+    "usdz": 131622,
+    "glb": 138984
+   },
+   "about": "The tabletop bowl: lower tier, stepped, home stands cut away."
+  }
+ ]
+}

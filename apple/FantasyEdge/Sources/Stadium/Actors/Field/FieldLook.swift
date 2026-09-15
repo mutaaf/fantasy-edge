@@ -8,34 +8,59 @@ import Foundation
 // LOOK-BEGIN
 
 extension SceneSpec.Look {
-    public struct Turf: Decodable, Equatable, Sendable {
+    public struct FieldPerLeague: Decodable, Equatable, Sendable {
+        public let paintWhite: String
+        public let paintYellow: String
+        public let variation: String
+    }
+
+    public struct FieldCanvas: Decodable, Equatable, Sendable {
+        public let x0: Double
+        public let x1: Double
+        public let y0: Double
+        public let y1: Double
+        public let halfX1: Double
+        /// The half textures run past midfield to here (mip padding).
+        public let halfTextureX1: Double
+    }
+
+    public struct FieldTurf: Decodable, Equatable, Sendable {
         public let tileYards: Double
         public let stripeTint: [String]
         public let stripeRoughness: [Double]
         public let surroundTint: String
-        public let normalScale: Double
-        public let paintOpacity: Double
-        public let endZonePaintOpacity: Double
-        public let paintRoughness: Double
+        public let wearTint: String
+        /// Scales the wear map; it also lies over the paint.
+        public let wearStrength: Double
+        public let specular: Double
     }
 
-    public struct Lines: Decodable, Equatable, Sendable {
-        public let tenWidth: Double
-        public let fiveWidth: Double
-        public let hashWidth: Double
-        public let hashLength: Double
-        public let border: Double
-        public let numberHeight: Double
-        public let numberInset: Double
-        public let endZoneTextHeight: Double
-        public let lift: Double
+    public struct FieldPaint: Decodable, Equatable, Sendable {
+        public let white: String
+        public let yellow: String
+        public let roughness: Double
+        public let threshold: Double
+        public let endZoneOpacity: Double
+        /// How strongly blades show through paint and lettering.
+        public let grassThrough: Double
+    }
+
+    public struct FieldLift: Decodable, Equatable, Sendable {
+        public let wear: Double
+        public let endZone: Double
+        public let ring: Double
+        public let paint: Double
+        public let art: Double
     }
 
     public struct FieldLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
-        public let turf: Turf
-        public let lines: Lines
+        public let perLeague: FieldPerLeague
+        public let canvas: FieldCanvas
+        public let turf: FieldTurf
+        public let paint: FieldPaint
+        public let lift: FieldLift
     }
 }
 
