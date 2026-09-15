@@ -1,0 +1,14 @@
+[stadium-stats] tabletop.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] tabletop.bowl: draw parts 3, triangles 1352, spot lights 0, emitters 0
+[stadium-stats] tabletop.broadcast: draw parts 2, triangles 962, spot lights 0, emitters 0
+[stadium-stats] tabletop.crowd: draw parts 32, triangles 4096, spot lights 0, emitters 0
+[stadium-stats] tabletop.experience: draw parts 3, triangles 1536, spot lights 0, emitters 0
+[stadium-stats] tabletop.field: draw parts 11, triangles 956, spot lights 0, emitters 0
+[stadium-stats] tabletop.lighting: draw parts 14, triangles 8864, spot lights 4, emitters 0
+[stadium-stats] tabletop.moments: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2879, spot lights 0, emitters 0
+[stadium-stats] tabletop.sky: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] tabletop: models 78, draw parts 80, triangles 20645, texture memory ~67 MB
+[stadium] assets: 26 textures, 4 sounds, probe loaded, ~67 MB
+[stadium] lighting beams 24/24, overdraw ≈ 0.96 screens (cap 2.000000)
+[stadium] models: 42

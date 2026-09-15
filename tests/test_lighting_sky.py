@@ -29,6 +29,22 @@ class LightingSky(unittest.TestCase):
         for mode in ("stadium", "tabletop"):
             self.assertLess(beams["opacity"][mode], 1.0)
 
+    def test_a_strobe_never_fogs_the_stands(self):
+        """Beams and haze are seen against the seats; a touchdown strobe that
+        multiplies them turns both decks grey. Their gain is capped near 1, the
+        lenses and glows pulse above it, and the field takes a wash."""
+        s = TOKENS["visual"]["lighting"]["strobe"]
+        self.assertLessEqual(s["beamGainMax"], 1.25)
+        self.assertLessEqual(s["hazeGainMax"], 1.1)
+        self.assertGreater(s["lensGain"], s["beamGainMax"])
+        self.assertGreater(s["glowGain"], s["hazeGainMax"])
+        self.assertGreater(s["fieldWashGain"], 1.0)
+
+        def peak(gain, cap):          # LightingActor.strobeGain at pulse 1
+            return min(cap, 1 + (gain - 1) * 1.0)
+        self.assertLessEqual(peak(s["beamGain"], s["beamGainMax"]), s["beamGainMax"])
+        self.assertLessEqual(peak(s["beamGain"], s["hazeGainMax"]), s["hazeGainMax"])
+
     def test_every_lighting_and_sky_file_is_shipped(self):
         for actor in ("lighting", "sky"):
             section = TOKENS["visual"][actor]
