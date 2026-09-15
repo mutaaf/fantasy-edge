@@ -360,6 +360,108 @@ def moment_kind(play: dict, points: float) -> str:
     return "score"
 
 
+# ── moments ──
+# What a moment was, beyond its kind, so a client can treat a pick-six
+# differently from a drive that ends in the end zone, and an interception
+# from a fumble. Read from ESPN's play type; the text only settles a turnover
+# whose type does not say (a fumble inside a "Rush").
+
+def moment_detail(play: dict, kind: str) -> str | None:
+    t = (play.get("type") or "").lower()
+    text = (play.get("text") or "").upper()
+    if "interception" in t:
+        return "interception"
+    if "fumble" in t:
+        return "fumble"
+    if "punt return" in t:
+        return "puntReturn"
+    if "kickoff return" in t:
+        return "kickReturn"
+    if "blocked" in t:
+        return "blocked"
+    if kind == "turnover":
+        if "INTERCEPT" in text:
+            return "interception"
+        if "FUMBLE" in text:
+            return "fumble"
+    return None
+
+
+# Cues are the game's other beats: nothing scored, nothing changed hands, but
+# a stadium still reacts - the horn at the end of a quarter, the chime at the
+# two-minute warning, the home crowd rising when the visitors face third down,
+# the rumble as a drive crosses the twenty, the final whistle. They are kept
+# apart from `moments` on purpose: moments stay scores and turnovers, which is
+# what every client already reads them as.
+CUE_TYPES = {"two-minute warning": "twoMinute", "end period": "quarterEnd",
+             "end of half": "halfEnd", "end of regulation": "regulationEnd",
+             "end of game": "final"}
+RED_ZONE = 20.0
+
+
+def _cue(kind: str, cue_id: str, play: dict | None, side: str | None, source: str,
+         detail: str | None = None, sequence: int = -1) -> dict:
+    treatment = kind if kind != "final" else "final" + (detail or "tie")[0].upper() + (detail or "tie")[1:]
+    return {"kind": kind, "id": cue_id, "playId": str((play or {}).get("id", "")),
+            "side": side, "detail": detail, "treatment": treatment, "source": source,
+            "period": (play or {}).get("period"), "clock": (play or {}).get("clock", ""),
+            "sequence": sequence}
+
+
+def build_cues(raw: list[dict], drives_out: list[dict], home: dict, away: dict,
+               field: dict) -> list[dict]:
+    """Every event cue up to this instant, in the order the game played them.
+
+    `raw` is every play record in order, drawn or not. A red-zone crossing is
+    a drawn play whose offence starts outside the twenty and finishes inside
+    it without scoring; home attacks x = length."""
+    order = {str(p.get("id", "")): i for i, p in enumerate(raw)}
+    cues = []
+    for i, p in enumerate(raw):
+        kind = CUE_TYPES.get((p.get("type") or "").strip().lower())
+        if not kind:
+            continue
+        if kind == "final":
+            h, a = _num(home.get("score")), _num(away.get("score"))
+            side = "home" if h > a else "away" if a > h else None
+            detail = {"home": "homeWon", "away": "awayWon", None: "tie"}[side]
+            cues.append(_cue(kind, f"final:{p.get('id', '')}", p, side, "bowl", detail, i))
+        else:
+            cues.append(_cue(kind, f"{kind}:{p.get('id', '')}", p, None, "pa", None, i))
+    length = field["length"]
+    for d in drives_out:
+        for a in d["arcs"]:
+            side, f, t = a["side"], a["fromX"], a["toX"]
+            goal_line = length if side == "home" else 0.0
+            before, after = abs(goal_line - f), abs(goal_line - t)
+            if side in ("home", "away") and before > RED_ZONE >= after > 0 and a["style"] != "score":
+                play = {"id": a["id"], "period": a["period"], "clock": a["clock"]}
+                cues.append(_cue("redZone", f"redZone:{a['id']}", play, side,
+                                 "standsHome" if side == "home" else "standsAway", None,
+                                 order.get(a["id"], -1)))
+    cues.sort(key=lambda c: c["sequence"])
+    return cues
+
+
+def active_cue(cues: list[dict], raw: list[dict], state: str, status: dict) -> dict | None:
+    """The cue for this instant.
+
+    An event cue holds, like a moment, until the game clock moves past it.
+    Failing that, a state cue: the visitors facing third down, which is when
+    a home crowd is at its loudest. It has no play of its own, so its id is
+    the down's own situation and a client plays it once per third down."""
+    if cues:
+        newest = cues[-1]
+        after = raw[newest["sequence"] + 1:] if newest["sequence"] >= 0 else []
+        if all((p.get("period"), p.get("clock")) == (newest["period"], newest["clock"]) for p in after):
+            return newest
+    if state == "in" and status.get("down") == 3 and status.get("possession") == "away":
+        last = raw[-1] if raw else {}
+        return _cue("thirdDown", f"thirdDown:{last.get('id', '')}:{status.get('distance')}", last,
+                    "home", "standsHome", None, len(raw) - 1)
+    return None
+
+
 # ───────────────────────────── the scene ─────────────────────────────
 
 def build(game: dict, league: str = "nfl", speed: float = 1.0,
@@ -375,7 +477,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
     home, away = team_chips(game.get("home") or {}, game.get("away") or {}, band)
     sit = game.get("situation") or {}
 
-    drives_out, moments = [], []
+    drives_out, moments, raw = [], [], []
     prev_home = prev_away = 0.0
     last_ref = None
     raw_drives = game.get("drives") or []
@@ -407,12 +509,15 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
             })
             last_ref = (len(drives_out), len(arcs) - 1)
         for play in (drive.get("plays") or []):
+            raw.append(play)
             h, a = _num(play.get("home"), prev_home), _num(play.get("away"), prev_away)
             if h > prev_home or a > prev_away:
                 scorer = "home" if h - prev_home >= a - prev_away else "away"
                 points = max(h - prev_home, a - prev_away)
-                moments.append({"kind": moment_kind(play, points), "side": scorer,
+                kind = moment_kind(play, points)
+                moments.append({"kind": kind, "side": scorer,
                                 "team": (home if scorer == "home" else away)["abbr"],
+                                "detail": moment_detail(play, kind),
                                 "points": points, "playId": str(play.get("id", "")),
                                 "text": play.get("text", ""),
                                 "period": play.get("period"), "clock": play.get("clock", "")})
@@ -422,6 +527,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 if taker:
                     moments.append({"kind": "turnover", "side": taker,
                                     "team": (home if taker == "home" else away)["abbr"],
+                                    "detail": moment_detail(play, "turnover"),
                                     "points": 0, "playId": str(play.get("id", "")),
                                     "text": play.get("text", ""),
                                     "period": play.get("period"),
@@ -511,6 +617,15 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                            if tint_side else None,
                            "dim": tokens["motion"]["sectionDim"]}
 
+    status = {"state": state, "label": game.get("label", ""),
+              "clock": game.get("clock", ""), "period": game.get("period", 0),
+              "homeScore": home["score"], "awayScore": away["score"],
+              "possession": holder, "down": sit.get("down"),
+              "distance": sit.get("distance"),
+              "downDistance": sit.get("downDistanceText") or "",
+              "redZone": bool(sit.get("isRedZone"))}
+    cues = build_cues(raw, drives_out, home, away, field)
+
     return {
         "version": SCENE_VERSION,
         "kind": "football-scene",
@@ -528,13 +643,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                   "homeEndZone": [-field["endZone"], 0.0],
                   "awayEndZone": [field["length"], field["length"] + field["endZone"]]},
         "teams": {"home": home, "away": away},
-        "status": {"state": state, "label": game.get("label", ""),
-                   "clock": game.get("clock", ""), "period": game.get("period", 0),
-                   "homeScore": home["score"], "awayScore": away["score"],
-                   "possession": holder, "down": sit.get("down"),
-                   "distance": sit.get("distance"),
-                   "downDistance": sit.get("downDistanceText") or "",
-                   "redZone": bool(sit.get("isRedZone"))},
+        "status": status,
         "ball": ball,
         "lasers": lasers,
         "drives": drives_out,
@@ -545,6 +654,9 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                                        "x1": field["length"] + field["endZone"]}},
         "moments": moments,
         "activeMoment": active,
+        # The game's other beats, and the one playing now (see build_cues). Additive; the director bumps the minor version at merge.
+        "cues": cues,
+        "activeCue": active_cue(cues, raw, state, status),
         "bowl": bowl,
         "presentation": PRESENTATION,
         "palette": tokens["color"],
