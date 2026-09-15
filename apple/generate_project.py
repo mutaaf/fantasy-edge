@@ -74,15 +74,15 @@ def main() -> None:
             f'fileRef = {tref} /* tokens.json */; }};')
         group_children.append(f'\t\t\t\t{tref} /* tokens.json */,')
         resources_phase.append(f'\t\t\t\t{tbuild} /* tokens.json in Resources */,')
-    # The stadium's source assets, as a folder reference: `assets/src` copied
-    # into the bundle unchanged, the same bytes the web and Android ports
-    # load. A folder reference keeps its on-disk name, so it lands as `src`.
-    assets = ROOT.parent / "assets" / "src"
-    if assets.is_dir():
-        aref, abuild = oid("fref", "assets/src"), oid("bfile", "assets/src")
+    # The stadium's source assets, as a folder reference: `assets/` copied
+    # into the bundle unchanged, one folder per actor, the same bytes the
+    # web and Android ports load. A folder reference keeps its on-disk name.
+    assets = ROOT.parent / "assets"
+    if (assets / "actors").is_dir():
+        aref, abuild = oid("fref", "assets"), oid("bfile", "assets")
         file_refs.append(
             f'\t\t{aref} /* StadiumAssets */ = {{isa = PBXFileReference; '
-            f'lastKnownFileType = folder; name = StadiumAssets; path = ../assets/src; '
+            f'lastKnownFileType = folder; name = StadiumAssets; path = ../assets; '
             f'sourceTree = SOURCE_ROOT; }};')
         build_files.append(
             f'\t\t{abuild} /* StadiumAssets in Resources */ = {{isa = PBXBuildFile; '

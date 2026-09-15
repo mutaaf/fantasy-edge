@@ -52,20 +52,21 @@ enum StadiumLook {
 
     // MARK: lit surfaces
 
-    static func turf(tint: String, roughness: Double, look: SceneSpec.Look, assets: StadiumAssets) -> PhysicallyBasedMaterial {
+    static func turf(tint: String, roughness: Double, albedo: TextureResource?, roughnessMap: TextureResource?,
+                     normal: TextureResource?) -> PhysicallyBasedMaterial {
         var m = PhysicallyBasedMaterial()
-        if let albedo = assets.texture("turfAlbedo") {
+        if let albedo {
             m.baseColor = .init(tint: color(tint), texture: repeating(albedo))
         } else {
             m.baseColor = .init(tint: color("#2F5A2A"))
         }
-        if let r = assets.texture("turfRoughness") {
-            m.roughness = .init(scale: Float(roughness), texture: repeating(r))
+        if let roughnessMap {
+            m.roughness = .init(scale: Float(roughness), texture: repeating(roughnessMap))
         } else {
             m.roughness = .init(floatLiteral: Float(roughness))
         }
-        if let n = assets.texture("turfNormal") {
-            m.normal = .init(texture: repeating(n))
+        if let normal {
+            m.normal = .init(texture: repeating(normal))
         }
         m.metallic = .init(floatLiteral: 0)
         m.specular = .init(floatLiteral: 0.25)
@@ -73,12 +74,12 @@ enum StadiumLook {
     }
 
     /// Paint on grass: a colour, worn by the paint mask so blades show through.
-    static func paint(_ hex: String, opacity: Double, roughness: Double, assets: StadiumAssets) -> PhysicallyBasedMaterial {
+    static func paint(_ hex: String, opacity: Double, roughness: Double, mask: TextureResource?) -> PhysicallyBasedMaterial {
         var m = PhysicallyBasedMaterial()
         m.baseColor = .init(tint: color(hex))
         m.roughness = .init(floatLiteral: Float(roughness))
         m.metallic = .init(floatLiteral: 0)
-        if let mask = assets.texture("paint") {
+        if let mask {
             m.blending = .transparent(opacity: .init(scale: Float(opacity), texture: repeating(mask)))
         } else {
             m.blending = .transparent(opacity: .init(floatLiteral: Float(opacity)))

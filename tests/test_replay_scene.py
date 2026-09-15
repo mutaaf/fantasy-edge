@@ -540,9 +540,19 @@ class TestSceneGeometry(unittest.TestCase):
             self.assertIn(nfl[key]["color"], self.final["palette"])
         for key in ("wall", "ribbon", "pressBox"):
             self.assertIn(key, self.final["bowl"])
-        root = pathlib.Path(__file__).resolve().parents[1] / "assets" / "src"
-        for name, rel in self.final["look"]["assets"].items():
-            self.assertTrue((root / rel).is_file(), f"{name}: assets/src/{rel} is missing; run tools/make_assets.py")
+        root = pathlib.Path(__file__).resolve().parents[1] / "assets"
+        actors = {"experience", "field", "sideline", "bowl", "crowd", "lighting", "sky",
+                  "broadcast", "moments", "audio"}
+        self.assertEqual(set(self.final["visual"]) - {"about"}, actors,
+                         "visual has one section per stadium actor (docs/ART_BIBLE.md)")
+        for actor, section in self.final["visual"].items():
+            if not isinstance(section, dict):
+                continue
+            for name, rel in section.get("assets", {}).items():
+                self.assertTrue((root / rel).is_file(),
+                                f"{actor}.{name}: assets/{rel} is missing; run tools/make_assets.py")
+                self.assertTrue(rel.startswith(("actors/", "generated/")),
+                                f"{actor}.{name}: assets live under assets/actors/ or assets/generated/")
 
     def test_every_look_field_the_renderer_reads_is_in_the_tokens(self):
         """The visionOS renderer may only read appearance through SceneLook.swift.
@@ -563,10 +573,42 @@ class TestSceneGeometry(unittest.TestCase):
                     out |= keys(v)
             return out
 
-        carried = keys(self.final["look"])
+        carried = keys(self.final["visual"])
         self.assertTrue(swift, "no fields parsed from SceneLook.swift")
         self.assertEqual(swift - carried, set(),
-                         "SceneLook.swift reads these but tokens.json look does not carry them")
+                         "SceneLook.swift reads these but tokens.json visual does not carry them")
+
+    def test_every_model_ships_for_every_client(self):
+        """A model is authored once and exported twice: `.usdz` for the headset
+        and a `.glb` beside it for the web and Android. Neither without the
+        other, and every model a section names exists."""
+        root = pathlib.Path(__file__).resolve().parents[1] / "assets"
+        for f in list(root.rglob("*.usdz")) + list(root.rglob("*.glb")):
+            twin = f.with_suffix(".glb" if f.suffix == ".usdz" else ".usdz")
+            self.assertTrue(twin.is_file(), f"{f.relative_to(root)} has no {twin.suffix} twin")
+        for actor, section in self.final["visual"].items():
+            if isinstance(section, dict):
+                for name, rel in section.get("models", {}).items():
+                    self.assertTrue((root / rel).is_file(), f"{actor}.{name}: assets/{rel} is missing")
+                    self.assertTrue(rel.endswith(".usdz"), f"{actor}.{name}: name the .usdz; the .glb rides beside it")
+
+    def test_the_look_dev_shots_are_one_list(self):
+        """The app's `-shot` names and the harness's must be the same set, so
+        every specialist shoots exactly what the art bible lists."""
+        import re
+        import importlib.util
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        src = (root / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumShots.swift").read_text()
+        block = src.split("// SHOTS-BEGIN", 1)[1].split("// SHOTS-END", 1)[0]
+        swift = set(re.findall(r'"([a-z-]+)": Shot\(', block))
+        spec = importlib.util.spec_from_file_location("lookdev", root / "tools" / "lookdev.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.assertEqual(swift, set(mod.SHOTS))
+        bible = (root / "docs" / "ART_BIBLE.md").read_text()
+        for name in swift:
+            self.assertIn(f"`{name}`", bible, f"docs/ART_BIBLE.md does not list the {name} shot")
 
     def test_the_module_imports_nothing_but_the_standard_library(self):
         tree = ast.parse(pathlib.Path(sc.__file__).read_text())

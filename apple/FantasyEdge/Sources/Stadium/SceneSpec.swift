@@ -38,6 +38,14 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let look: Look?
     public let replayControl: ReplayState?
 
+    enum CodingKeys: String, CodingKey {
+        case version, kind, league, event, source, speed, field, teams, status, ball, lasers, drives
+        case currentDrive, winProbability, moments, activeMoment, bowl, presentation, palette, motion
+        case replayControl
+        /// The contract calls it `visual`; the renderer reads it as its look.
+        case look = "visual"
+    }
+
     public var isReplay: Bool { source == "replay" }
 
     /// The drive a renderer should draw: the one in progress, or the last one

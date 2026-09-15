@@ -424,7 +424,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 MainActor.assumeIsolated { r.tick(event.deltaTime) }
             }
             let args = ProcessInfo.processInfo.arguments
-            if let i = args.firstIndex(of: "-stadiumSeat"), i + 1 < args.count { renderer.sit(args[i + 1]) }
+            if let seat = StadiumShots.argument("-stadiumSeat") { renderer.sit(seat) }
             if args.contains("-stadiumMute") { renderer.setMuted(true) }
             let place: [(String, SIMD3<Float>)] = [
                 // Closer than it was (2.4 m): at that distance the scorebug
