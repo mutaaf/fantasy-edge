@@ -32,6 +32,8 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let bowl: Bowl
     public let presentation: Presentation
     public let palette: [String: String]
+    /// Shader Graph materials and their portable fallbacks (docs/SHADERGRAPH.md).
+    public let shaderGraph: ShaderGraphSpec?
     public let motion: Motion
     /// 1.1: every visual-only number a renderer reads. Nil from a 1.0 server,
     /// in which case the renderer uses `Look.fallback`, a copy of the tokens.
@@ -40,7 +42,7 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case version, kind, league, event, source, speed, field, teams, status, ball, lasers, drives
-        case currentDrive, winProbability, moments, activeMoment, bowl, presentation, palette, motion
+        case currentDrive, winProbability, moments, activeMoment, bowl, presentation, palette, motion, shaderGraph
         case replayControl
         /// The contract calls it `visual`; the renderer reads it as its look.
         case look = "visual"
@@ -488,4 +490,32 @@ public struct ReplayState: Decodable, Equatable, Sendable {
         public let length: Int
         public var id: String { event }
     }
+}
+
+/// A number or a string from tokens: what a Shader Graph parameter is set to.
+public enum TokenValue: Decodable, Equatable, Sendable {
+    case number(Double)
+    case string(String)
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if let n = try? c.decode(Double.self) { self = .number(n) } else { self = .string(try c.decode(String.self)) }
+    }
+
+    public var any: Any {
+        switch self {
+        case .number(let n): return n
+        case .string(let s): return s
+        }
+    }
+}
+
+public struct ShaderGraphSpec: Decodable, Equatable, Sendable {
+    public struct Material: Decodable, Equatable, Sendable {
+        public let file: String
+        public let prim: String
+        public let parameters: [String: TokenValue]
+        public let fallback: [String: TokenValue]
+    }
+    public let materials: [String: Material]?
 }

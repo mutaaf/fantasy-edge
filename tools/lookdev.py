@@ -103,7 +103,7 @@ def main() -> None:
                     default=ROOT / ".work/dd/Build/Products/Debug-xrsimulator/FantasyEdge.app")
     ap.add_argument("--only", nargs="*", choices=sorted(SHOTS))
     ap.add_argument("--settle", type=float, default=9.0)
-    ap.add_argument("--extra", nargs="*", default=[], help="launch arguments after -shot, e.g. -stadiumPitch -40")
+    ap.add_argument("--extra", default="", help="launch arguments after -shot, one quoted string: --extra=\"-stadiumPitch -40\"")
     ap.add_argument("--suffix", default="", help="appended to each shot's file name")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
@@ -141,7 +141,7 @@ def main() -> None:
             post(args.port, {"action": "seek", "at": at - 3 if where == "touchdown" else at})
             post(args.port, {"action": "pause"})
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
-                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra, check=False)
+                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra.split(), check=False)
             time.sleep(args.settle)
             if where == "touchdown":
                 post(args.port, {"action": "speed", "speed": 1})

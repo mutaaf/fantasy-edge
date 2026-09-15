@@ -114,6 +114,41 @@ public final class StadiumRenderer {
         if ProcessInfo.processInfo.arguments.contains("-stadiumStats") {
             StadiumStats.report(actors, label: c.tabletop ? "tabletop" : "stadium", assets: assets)
         }
+        if ProcessInfo.processInfo.arguments.contains("-shaderGraphProof") { shaderGraphProof(c) }
+    }
+
+    /// `-shaderGraphProof`: three spheres over midfield, left to right the
+    /// token-driven Fresnel material, the same with Invert = 1, and the portable
+    /// fallback every client can draw. Proves the Shader Graph pipeline end to end.
+    private func shaderGraphProof(_ c: StadiumContext) {
+        guard let spec = c.spec.shaderGraph?.materials?["fresnel"] else {
+            StadiumLog.log.error("[shadergraph] no shaderGraph.materials.fresnel in the scene")
+            return
+        }
+        let holder = Entity()
+        holder.name = "shadergraph.proof"
+        world.addChild(holder)
+        Task { @MainActor in
+            let sphere = MeshResource.generateSphere(radius: 4)
+            var fallback = UnlitMaterial(color: StadiumLook.color(
+                { if case .string(let s) = spec.fallback["color"] { return s }; return "#FFFFFF" }()))
+            if case .number(let o) = spec.fallback["opacity"] { fallback.blending = .transparent(opacity: .init(floatLiteral: Float(o))) }
+            var materials: [any Material] = [fallback, fallback]
+            if let base = await StadiumShaderGraph.material(spec.prim, file: spec.file) {
+                var normal = base, inverted = base
+                for (k, v) in spec.parameters {
+                    StadiumShaderGraph.set(&normal, k, v.any)
+                    StadiumShaderGraph.set(&inverted, k, v.any)
+                }
+                StadiumShaderGraph.set(&inverted, "Invert", 1.0)
+                materials = [normal, inverted]
+            }
+            for (i, m) in (materials + [fallback]).enumerated() {
+                let e = ModelEntity(mesh: sphere, materials: [m])
+                e.position = SceneMath.local(x: 38 + Double(i) * 12, y: 9, z: 0)
+                holder.addChild(e)
+            }
+        }
     }
 
     private func applyReceivers(_ e: Entity) {

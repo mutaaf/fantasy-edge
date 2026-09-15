@@ -898,6 +898,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
         "bowl": bowl,
         "presentation": PRESENTATION,
         "palette": tokens["color"],
+        "shaderGraph": tokens.get("shaderGraph", {}),
         "motion": tokens["motion"],
         "visual": tokens["visual"],
     }
