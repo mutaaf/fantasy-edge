@@ -61,6 +61,12 @@ extension SceneSpec.Look {
         public let intervalSeconds: Double
     }
 
+    public struct TrailLowSeat: Decodable, Equatable, Sendable {
+        public let apexOverEye: Double
+        public let minApexYards: Double
+        public let historyOpacity: Double
+    }
+
     public struct Trail: Decodable, Equatable, Sendable {
         public let core: SceneSpec.PerMode<Double>
         public let coreOpacity: Double
@@ -74,6 +80,7 @@ extension SceneSpec.Look {
         public let edge: TrailEdge
         public let kick: TrailKick
         public let live: TrailLive
+        public let lowSeat: TrailLowSeat
     }
 
     public struct BallGlow: Decodable, Equatable, Sendable {
@@ -182,6 +189,9 @@ extension SceneSpec.Look {
         public let segments: Int
         public let offset: Double
         public let textShare: Double
+        /// The clock and the down may narrow to this share of their size to
+        /// fit a segment before a word is dropped.
+        public let fitFloor: Double
         public let legibility: RibbonLegibility
         public let scroll: RibbonScroll
         public let flash: RibbonFlash
@@ -205,6 +215,10 @@ extension SceneSpec.Look {
         public let brightness: Double
         public let offset: Double
         public let scorebugShare: Double
+        /// Each club's block across the top, as a share of the board's width.
+        public let sideShare: Double
+        /// The down-and-distance strip under the score, a share of the height.
+        public let downShare: Double
         public let smallTextShare: Double
         public let textShare: Double
         public let lines: Int

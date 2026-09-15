@@ -71,52 +71,79 @@ final class BroadcastVideoBoard {
             ctx.fill(CGRect(origin: .zero, size: size))
             let ink = UIColor(white: 0.97, alpha: 1)
             let small = h * CGFloat(look.smallTextShare)
+            let pad = h * 0.05
+            let rounded = { (size: CGFloat, weight: UIFont.Weight) -> UIFont in
+                let f = UIFont.systemFont(ofSize: size, weight: weight)
+                return f.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: size) } ?? f
+            }
+            /// Draw centred in `rect`, shrinking to fit its width.
+            func centred(_ string: String, _ font: UIFont, _ colour: UIColor, in rect: CGRect) {
+                var t = NSAttributedString(string: string, attributes: [.font: font, .foregroundColor: colour])
+                if t.size().width > rect.width, rect.width > 0 {
+                    let fit = font.withSize(font.pointSize * rect.width / t.size().width)
+                    t = NSAttributedString(string: string, attributes: [.font: fit, .foregroundColor: colour])
+                }
+                let ts = t.size()
+                t.draw(at: CGPoint(x: rect.midX - ts.width / 2, y: rect.midY - ts.height / 2))
+            }
 
-            // The scorebug: each club on its chip, the clock and the down between.
+            // The score, as a stadium board says it: each club a block of its
+            // own colour with the number filling it, the clock between them.
             let bugH = h * CGFloat(look.scorebugShare)
-            func side(_ t: SceneSpec.Team, _ score: Double, x: CGFloat, width: CGFloat, possession: Bool) {
-                let rect = CGRect(x: x, y: 0, width: width, height: bugH)
+            let sideW = w * CGFloat(look.sideShare)
+            func side(_ t: SceneSpec.Team, _ score: Double, x: CGFloat, possession: Bool) {
+                let rect = CGRect(x: x, y: 0, width: sideW, height: bugH)
                 StadiumLook.color(t.chip).setFill()
                 ctx.fill(rect)
-                let abbr = NSAttributedString(string: t.abbr, attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.42, weight: .black),
-                                                                           .foregroundColor: UIColor.white])
-                abbr.draw(at: CGPoint(x: rect.minX + h * 0.04, y: rect.midY - abbr.size().height / 2))
-                let n = NSAttributedString(string: "\(Int(score))", attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.78, weight: .black),
-                                                                                  .foregroundColor: UIColor.white])
-                n.draw(at: CGPoint(x: rect.maxX - n.size().width - h * 0.04, y: rect.midY - n.size().height / 2))
+                UIColor(white: 0, alpha: 0.28).setFill()
+                ctx.fill(CGRect(x: rect.minX, y: rect.minY, width: rect.width * 0.42, height: rect.height))
+                centred(t.abbr, rounded(bugH * 0.34, .black), .white,
+                        in: CGRect(x: rect.minX, y: rect.minY, width: rect.width * 0.42, height: rect.height).insetBy(dx: pad * 0.6, dy: 0))
+                centred("\(Int(score))", rounded(bugH * 0.86, .black), .white,
+                        in: CGRect(x: rect.minX + rect.width * 0.42, y: rect.minY, width: rect.width * 0.58, height: rect.height))
                 if possession {
                     UIColor.white.setFill()
-                    ctx.fill(CGRect(x: rect.minX, y: rect.maxY - h * 0.025, width: rect.width, height: h * 0.025))
+                    ctx.fill(CGRect(x: rect.minX, y: rect.maxY - h * 0.03, width: rect.width, height: h * 0.03))
                 }
             }
-            // Wide enough between the panels for "1ST & 10 AT MIN 13" at the legible size.
-            let sideW = w * 0.27
-            side(s.teams.away, s.status.awayScore, x: 0, width: sideW, possession: s.status.possession == "away")
-            side(s.teams.home, s.status.homeScore, x: w - sideW, width: sideW, possession: s.status.possession == "home")
-            let clock = NSAttributedString(string: s.status.label.uppercased(), attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.36, weight: .heavy),
-                                                                                              .foregroundColor: ink])
-            clock.draw(at: CGPoint(x: w / 2 - clock.size().width / 2, y: bugH * 0.12))
+            side(s.teams.away, s.status.awayScore, x: 0, possession: s.status.possession == "away")
+            side(s.teams.home, s.status.homeScore, x: w - sideW, possession: s.status.possession == "home")
+            // "11:00 - 1st" is the clock over the quarter; "Halftime" stays whole.
+            let centre = CGRect(x: sideW, y: 0, width: w - 2 * sideW, height: bugH).insetBy(dx: pad, dy: 0)
+            let label = s.status.label.uppercased().components(separatedBy: " - ")
+            if label.count == 2 {
+                centred(label[0], rounded(bugH * 0.56, .heavy), ink,
+                        in: CGRect(x: centre.minX, y: 0, width: centre.width, height: bugH * 0.66))
+                centred(label[1], rounded(bugH * 0.26, .bold), ink.withAlphaComponent(0.75),
+                        in: CGRect(x: centre.minX, y: bugH * 0.6, width: centre.width, height: bugH * 0.34))
+            } else {
+                centred(label.joined(), rounded(bugH * 0.36, .heavy), ink, in: centre)
+            }
+
+            // The down strip, the width of the board: what the next snap is.
+            let downH = h * CGFloat(look.downShare)
+            let strip = CGRect(x: 0, y: bugH, width: w, height: downH)
+            (s.status.redZone ? UIColor(red: 0.62, green: 0.1, blue: 0.08, alpha: 1) : UIColor(white: 0.1, alpha: 1)).setFill()
+            ctx.fill(strip)
             if !s.status.downDistance.isEmpty {
-                let dd = NSAttributedString(string: s.status.downDistance.uppercased(),
-                                            attributes: [.font: UIFont.systemFont(ofSize: small, weight: .heavy),
-                                                         .foregroundColor: s.status.redZone ? UIColor(red: 1, green: 0.35, blue: 0.3, alpha: 1) : ink])
-                dd.draw(at: CGPoint(x: w / 2 - dd.size().width / 2, y: bugH * 0.9 - dd.size().height))
+                let words = s.status.redZone ? "\(s.status.downDistance)   ·   RED ZONE" : s.status.downDistance
+                centred(words.uppercased(), rounded(downH * 0.66, .heavy), ink, in: strip.insetBy(dx: pad, dy: 0))
             }
 
             // Under it, left: the last play, in words.
-            let top = bugH + h * 0.05
-            let pad = h * 0.05
+            let top = bugH + downH + h * 0.035
             let split = w * CGFloat(look.textShare)
             let arcs = s.shownDrive?.arcs ?? []
             if let last = arcs.last {
-                let head = NSAttributedString(string: "LAST PLAY", attributes: [.font: UIFont.systemFont(ofSize: small * 0.8, weight: .heavy),
-                                                                                .foregroundColor: ink.withAlphaComponent(0.6), .kern: small * 0.06])
-                head.draw(at: CGPoint(x: pad, y: top))
+                // A bar in the play's own trail colour says "this is the last
+                // play" without spending a line of the board's height on it.
+                StadiumLook.color(s.palette[last.color] ?? "#FFFFFF").setFill()
+                ctx.fill(CGRect(x: pad, y: top + small * 0.1, width: h * 0.018, height: small * 1.25 * CGFloat(look.lines) - small * 0.2))
                 // Word-wrapped, the last visible line truncated: a tail
                 // line-break mode on the paragraph would clip to one line.
                 let words = NSAttributedString(string: Self.plain(last.text), attributes: [
                     .font: UIFont.systemFont(ofSize: small, weight: .bold), .foregroundColor: ink])
-                let box = CGRect(x: pad, y: top + head.size().height + small * 0.2, width: split - pad * 2,
+                let box = CGRect(x: pad + h * 0.05, y: top, width: split - pad * 2 - h * 0.05,
                                  height: small * 1.25 * CGFloat(look.lines))
                 words.draw(with: box, options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], context: nil)
             }

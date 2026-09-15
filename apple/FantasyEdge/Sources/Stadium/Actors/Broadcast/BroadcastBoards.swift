@@ -69,7 +69,25 @@ enum BroadcastGraphics {
             let ink = StadiumLook.color(s.palette[s.bowl.ribbon?.text ?? ""] ?? "#F7F6F2")
             let text = size.height * CGFloat(r.textShare)
             let big = UIFont.systemFont(ofSize: text, weight: .black)
-            let mid = UIFont.systemFont(ofSize: text * 0.82, weight: .heavy)
+            var parts = [s.status.label, s.status.downDistance].filter { !$0.isEmpty }
+            if s.status.redZone { parts.append("RED ZONE") }
+            // The segment repeats round the bowl, so whatever runs past its end
+            // is cut mid-word ("2ND & 6 A"). Measure first: the clock and the
+            // down narrow toward `fitFloor` of their size, and only then does
+            // the red-zone word go (the down turns red on the video board too).
+            let chips = size.height * (0.5 + 2 * (1.7 + 0.3 + 0.8)) + 2 * NSAttributedString(string: "00",
+                attributes: [.font: big]).size().width
+            func tailWidth(_ list: [String], _ scale: CGFloat) -> CGFloat {
+                let f = UIFont.systemFont(ofSize: text * 0.82 * scale, weight: .heavy)
+                return list.reduce(0) { $0 + NSAttributedString(string: $1.uppercased(),
+                    attributes: [.font: f, .kern: text * 0.04 * scale]).size().width + size.height * 0.9 }
+            }
+            let room = size.width - chips
+            var scale: CGFloat = 1
+            while tailWidth(parts, scale) > room, parts.count > 2 || scale > CGFloat(r.fitFloor) {
+                if scale > CGFloat(r.fitFloor) { scale = max(CGFloat(r.fitFloor), scale - 0.04) } else { parts.removeLast() }
+            }
+            let mid = UIFont.systemFont(ofSize: text * 0.82 * scale, weight: .heavy)
             var x: CGFloat = size.height * 0.5
             func chip(_ t: SceneSpec.Team, _ score: Double) {
                 let rect = CGRect(x: x, y: size.height * 0.1, width: size.height * 1.7, height: size.height * 0.8)
@@ -86,15 +104,13 @@ enum BroadcastGraphics {
             }
             chip(s.teams.away, s.status.awayScore)
             chip(s.teams.home, s.status.homeScore)
-            var parts = [s.status.label, s.status.downDistance].filter { !$0.isEmpty }
-            if s.status.redZone { parts.append("RED ZONE") }
             for (i, p) in parts.enumerated() {
                 if i > 0 {
                     let dot = CGRect(x: x - size.height * 0.45, y: size.height * 0.44, width: size.height * 0.12, height: size.height * 0.12)
                     ink.withAlphaComponent(0.6).setFill()
                     UIBezierPath(ovalIn: dot).fill()
                 }
-                let t = NSAttributedString(string: p.uppercased(), attributes: [.font: mid, .foregroundColor: ink, .kern: text * 0.04])
+                let t = NSAttributedString(string: p.uppercased(), attributes: [.font: mid, .foregroundColor: ink, .kern: text * 0.04 * scale])
                 t.draw(at: CGPoint(x: x, y: (size.height - t.size().height) / 2))
                 x += t.size().width + size.height * 0.9
             }

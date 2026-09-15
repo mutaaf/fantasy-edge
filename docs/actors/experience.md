@@ -167,3 +167,15 @@ at every seat in iterations 2 and 3 once several agents were building and
 shooting at once; the shots that rendered were the ones with a longer wait
 (`td-moment` holds 6 s more). Experience's shots now settle 28 s. An earlier
 note here suspected the crowd at the `field` seat; that was this, not a bug.
+
+## Integration-11 polish (`docs/lookdev/integration-11-polish/`, before in `before/`)
+- **Panels avoid the boards, not only the field** (`scene.py` `seat_panels`):
+  - **Video board:** a panel may never cover it. `video_board_points` samples its face (only when it faces the wearer) and the search skips any box holding one.
+  - **Ribbon:** `ribbon_points` samples it all the way round, and a box over it costs `search.ribbonCost` (20°) of movement. It moves off when a nearby place is free and stays when the only alternative is folding.
+  - **Result:** the upper, clubLevel and pressBox side panels rise above the ribbon, where before they sat across it (`before/s-bowl-wide.png`). Club, field, sideline and endzone are unchanged.
+- **Folded tabs no longer fall back onto the field.** A tab with no room in its panel's own search took its default slot, which from the upper deck put the Controls pill on the fifty (`before/s-bowl-wide.png`). A tab now searches the whole comfort window (±30°, 33° below to 12° above). `test_no_open_panel_covers_the_field_from_any_seat` now checks folded tabs, and the board, too; `test_the_board_test_sees_a_panel_over_the_board` checks the check.
+- **Budget:** stadium 0 parts; tabletop 6 parts / 2.9k triangles. Unchanged.
+- **Worst thing left:**
+  - `bowl-wide`: the Controls pill is now off the field but dead ahead over the far lower stands, and the drive log sits up by the rim light banks. Both are inside the limits, but the drive log crosses a bank. From the upper deck the only place off the field and the ribbon is high.
+  - `crowd-closeup`: the Elsewhere tab still floats over the far stands. It is inside the limits and off the field; it is just the only place a tab fits from the club seat.
+  - `tabletop`: unchanged.
