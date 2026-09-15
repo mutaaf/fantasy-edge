@@ -18,7 +18,6 @@ extension SceneSpec.Look {
         public let tabletopLumens: Double
         public let tabletopReach: Double
         public let color: String
-        public let aimZ: [Double]
     }
 
     public struct Rim: Decodable, Equatable, Sendable {
@@ -66,6 +65,8 @@ extension SceneSpec.Look {
         public let opacity: SceneSpec.PerMode<Double>
         public let color: String
         public let overdrawCapScreens: Double
+        public let startInsideOffsetYards: Double
+        public let endHeightYards: SceneSpec.PerMode<Double>
         public let dustOpacity: SceneSpec.PerMode<Double>
         public let dustTileYards: Double
         public let dustScrollPerSecond: Double
