@@ -83,8 +83,11 @@ final class SidelineActor: StadiumActor {
         let centre = (p.benches.fromX + p.benches.toX) / 2
         for (side, sign, yaw) in sides {
             let n = V.benches.count
+            // Benches pair off either side of an open gap at the team area's
+            // middle: the tunnel's mouth, and the field-level seat's sightline.
             for k in 0..<n {
-                let x = centre + (Double(k) - Double(n - 1) / 2) * V.benches.spacing
+                let rank = Double(k / 2)
+                let x = centre + (k % 2 == 0 ? -1 : 1) * (V.benches.centreGap / 2 + (rank + 0.5) * V.benches.spacing)
                 place("bench", x: x, z: sign * (half + p.benches.offset), yaw: yaw, side: side)
             }
             for d in V.dressing {
@@ -161,9 +164,11 @@ final class SidelineActor: StadiumActor {
             if let only, !only(partName) { continue }
             let material = String(partName.split(separator: "__").last ?? "")
             guard let entry = V.palette[material] else { continue }
+            // Every team-tinted surface wears the same chip, so a club's pads,
+            // bench backs, tents and cooler lids are one mesh, not four.
             let tinted = entry.tint == "team"
-            let key = tinted ? "\(material)@\(side)" : material
-            var bin = bins[key] ?? Bin(material: material, side: tinted ? side : nil)
+            let key = tinted ? "team@\(side)" : material
+            var bin = bins[key] ?? Bin(material: tinted ? "tint_team_primary" : material, side: tinted ? side : nil)
             var moved = mesh
             moved.positions = mesh.positions.map { position + turn.act($0 * scale) }
             moved.normals = mesh.normals.map { turn.act($0) }
@@ -224,8 +229,10 @@ final class SidelineActor: StadiumActor {
         }
         var m = StadiumLook.solid(hex, roughness: entry.roughness, metallic: entry.metallic, cull: entry.mask == nil)
         if let mask = entry.mask, let tex = c.assets.texture("sideline.\(mask)") {
+            // Blended, not cut: a cutout net's mips fall under any threshold
+            // and the net vanishes past a few yards; blended it fades to the
+            // haze a real net is from the stands.
             m.blending = .transparent(opacity: .init(texture: StadiumLook.repeating(tex)))
-            m.opacityThreshold = 0.5
         }
         return m
     }

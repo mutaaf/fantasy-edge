@@ -143,6 +143,7 @@ extension SceneSpec {
         public struct BenchRow: Decodable, Equatable, Sendable {
             public let count: Int
             public let spacing: Double
+            public let centreGap: Double
         }
 
         public struct Placement: Decodable, Equatable, Sendable {
