@@ -422,6 +422,17 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let y: Double
         public let z: Double
         public let lookAt: Point
+        /// What the seat picker says about it. Worked out by scene.py so
+        /// every client describes the same seat the same way.
+        public let view: SeatView?
+    }
+
+    public struct SeatView: Decodable, Equatable, Sendable {
+        /// "lower", "upper", "club", "field", "endzone", "pressBox": the picker's groups.
+        public let group: String
+        /// From the nearest edge of the field.
+        public let distanceYards: Double
+        public let heightYards: Double
     }
 
     public struct Tabletop: Decodable, Equatable, Sendable {
@@ -445,7 +456,7 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
             return all.first(where: { $0.id == id })
                 ?? all.first(where: { $0.id == defaultSeat })
                 ?? SeatOption(id: "seat", label: "Seat", x: seat.x, y: seat.y, z: seat.z,
-                              lookAt: Point(x: 50, y: 0, z: 0))
+                              lookAt: Point(x: 50, y: 0, z: 0), view: nil)
         }
     }
 
