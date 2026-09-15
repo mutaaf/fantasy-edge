@@ -98,3 +98,12 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - A distance- or Fresnel-driven fade needs the view vector per fragment, which only Shader Graph provides on visionOS.
   - A baked texture or vertex colour can't depend on the view: PhysicallyBasedMaterial ignores vertex colour, and RealityKit generates the mips, so a mip-aware mask isn't possible either.
   - Left blended at 0.2 opacity with thin cord.
+
+## Hook for Moments: the field-goal net sways
+- **Writing it (Moments):** on a kick through, set `c.shared.netSway = (endX: m.anchorX, strength: 0...1, until: c.shared.time + seconds)`.
+- **Reading it (Sideline):** `update` swings the net behind the end nearest `endX` about its top bar (13.2 m up), a decaying sine: `visual.sideline.sway` has `maxDegrees` 7, `frequency` 0.85 Hz and `decaySeconds` 1.2. When `until` passes, the net returns level and the hook clears itself.
+- **Reduce motion:** the net holds still.
+- **Geometry:** each end's net mesh is its own entity on that pivot; the poles stay in the static merge.
+- **Parts:** the two nets add two. That is paid for by drawing `prop_black` with `prop_dark` (palette `alias`) and the chain crew's steel in its rods' white, so Sideline stays at 15.
+- **`StadiumActor.swift`:** gains the one blackboard field `netSway`. That's a director file, so it's noted for approval.
+- **Verification:** the swing hasn't been shot yet; it needs Moments' field-goal timeline to fire it.

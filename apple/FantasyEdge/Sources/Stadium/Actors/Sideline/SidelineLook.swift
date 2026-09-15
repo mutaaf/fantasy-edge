@@ -21,6 +21,8 @@ extension SceneSpec.Look {
         public let tint: String?
         /// An asset id whose grey channel cuts the surface out (nets).
         public let mask: String?
+        /// Draw with another palette entry instead, sharing its bin.
+        public let alias: String?
         /// Scales the mask, for surfaces that are mostly air.
         public let opacity: Double?
     }
@@ -63,6 +65,14 @@ extension SceneSpec.Look {
         public let lift: Double
     }
 
+    public struct NetSway: Decodable, Equatable, Sendable {
+        public let model: String
+        public let pivotHeightMetres: Double
+        public let maxDegrees: Double
+        public let frequency: Double
+        public let decaySeconds: Double
+    }
+
     public struct SidelineLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -75,6 +85,7 @@ extension SceneSpec.Look {
         public let endLine: [PropPlacement]
         public let chains: SidelineChains
         public let shadow: SidelineShadow
+        public let sway: NetSway
     }
 }
 

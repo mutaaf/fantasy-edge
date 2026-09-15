@@ -20,6 +20,10 @@ final class SidelineActor: StadiumActor {
     let root = Entity()
 
     private let fixed = Entity()
+    /// Each end's field-goal net, on its own pivot at the top bar so a kick
+    /// through can swing it (`shared.netSway`).
+    private var nets: [(endX: Double, entity: Entity)] = []
+    private var sway: (until: Double, started: Double)?
     private let crew = Entity()
     private var crewKey = ""
     /// Model geometry in model metres, by model id then material key.
@@ -40,6 +44,8 @@ final class SidelineActor: StadiumActor {
         clear()
         fixed.children.removeAll()
         crew.children.removeAll()
+        nets = []
+        sway = nil
         crewKey = ""
         root.addChild(fixed)
         root.addChild(crew)
@@ -50,6 +56,28 @@ final class SidelineActor: StadiumActor {
 
     func apply(_ c: StadiumContext, previous: SceneSpec?) {
         buildCrew(c)
+    }
+
+    /// The net swings back and forth about its top bar, decaying, when Moments
+    /// asks. Under reduce motion it holds still.
+    func update(_ frame: StadiumFrame, _ c: StadiumContext) {
+        guard let ask = c.shared.netSway, !nets.isEmpty else { return }
+        let S = c.look.sideline.sway
+        let now = c.shared.time
+        if sway?.until != ask.until { sway = (ask.until, now) }
+        guard let started = sway?.started else { return }
+        let net = nets.min { abs($0.endX - ask.endX) < abs($1.endX - ask.endX) }!.entity
+        guard now < ask.until, !c.reduceMotion else {
+            net.orientation = simd_quatf(angle: 0, axis: SIMD3(0, 0, 1))
+            if now >= ask.until { c.shared.netSway = nil }
+            return
+        }
+        let t = now - started
+        let angle = S.maxDegrees * .pi / 180 * min(1, max(0, ask.strength))
+            * exp(-t / S.decaySeconds) * sin(2 * .pi * S.frequency * t)
+        // The net faces the field along x; swinging about z moves its bottom
+        // toward and away from the end line.
+        net.orientation = simd_quatf(angle: Float(angle), axis: SIMD3(0, 0, 1))
     }
 
     // MARK: props
@@ -106,7 +134,27 @@ final class SidelineActor: StadiumActor {
         for (side, xe, dir, yaw) in [("home", -f.endZone, -1.0, Float(-Double.pi / 2)),
                                      ("away", f.length + f.endZone, 1.0, Float(Double.pi / 2))] {
             for d in V.endLine {
-                place(d.model, x: xe + dir * d.offset, z: -dir * d.along, yaw: yaw, side: side)
+                let x = xe + dir * d.offset, z = -dir * d.along
+                guard d.model == V.sway.model else {
+                    place(d.model, x: x, z: z, yaw: yaw, side: side)
+                    continue
+                }
+                // The net's mesh hangs from its own pivot; its poles stay put.
+                let pivot = SceneMath.local(x: x, y: V.sway.pivotHeightMetres / V.metresPerYard, z: z)
+                var hanging: [String: Bin] = [:]
+                add(d.model, c, at: SceneMath.local(x: x, y: 0, z: z), yaw: yaw, side: side, into: &bins,
+                    only: { !$0.contains("__prop_net") })
+                add(d.model, c, at: SceneMath.local(x: x, y: 0, z: z) - pivot, yaw: yaw, side: side, into: &hanging,
+                    only: { $0.contains("__prop_net") })
+                shadow(d.model, c, x: x, z: z)
+                let holder = Entity()
+                holder.name = "sideline.net.\(side)"
+                holder.position = pivot
+                for (key, bin) in hanging where !bin.mesh.isEmpty {
+                    holder.addChild(bin.mesh.entity("sideline.net.\(side).\(key)", material(bin.material, side: bin.side, c)))
+                }
+                fixed.addChild(holder)
+                nets.append((xe, holder))
             }
         }
 
@@ -156,16 +204,19 @@ final class SidelineActor: StadiumActor {
         let forward = gain >= scrimmage ? 1.0 : -1.0
         var bins: [String: Bin] = [:]
         let z = sign * (half + V.chains.offset)
-        add(V.chains.set, c, at: SceneMath.local(x: gain - forward * 5, y: 0, z: z), yaw: yaw, side: side, into: &bins)
+        // The crew is three parts: its steel links and rod ends draw in the rods' white.
+        let crewMap = ["prop_steel": "prop_white"]
+        add(V.chains.set, c, at: SceneMath.local(x: gain - forward * 5, y: 0, z: z), yaw: yaw, side: side, into: &bins,
+            remap: crewMap)
         add(V.chains.box, c, at: SceneMath.local(x: scrimmage, y: 0, z: sign * (half + V.chains.boxOffset)), yaw: yaw,
             side: side, into: &bins, only: { part in
                 // the box carries four digit sets; show the down being played
                 !part.hasPrefix("down_") || part.hasPrefix("down_\(max(1, min(4, down)))__")
-            })
+            }, remap: crewMap)
         if s.league == "college-football" {
             for (gs, gy) in [(1.0, Float(0)), (-1.0, Float.pi)] {
                 add(V.chains.ground, c, at: SceneMath.local(x: gain, y: 0, z: gs * (half + 0.5)), yaw: gy,
-                    side: side, into: &bins)
+                    side: side, into: &bins, remap: crewMap)
             }
         }
         for (k, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
@@ -193,7 +244,8 @@ final class SidelineActor: StadiumActor {
     // MARK: models into merged meshes
 
     private func add(_ id: String, _ c: StadiumContext, at position: SIMD3<Float>, yaw: Float, side: String,
-                     into bins: inout [String: Bin], only: ((String) -> Bool)? = nil) {
+                     into bins: inout [String: Bin], only: ((String) -> Bool)? = nil,
+                     remap: [String: String] = [:]) {
         let V = c.look.sideline
         let modelId = id + (c.tabletop ? V.lodSuffix.tabletop : V.lodSuffix.stadium)
         guard let parts = parts(modelId, c) else { return }
@@ -204,7 +256,9 @@ final class SidelineActor: StadiumActor {
             // Blender suffixes a repeated mesh name (`_002`); the palette key is the name without it.
             var material = String(partName.split(separator: "__").last ?? "")
             if let r = material.range(of: #"_\d{3}$"#, options: .regularExpression) { material.removeSubrange(r) }
-            guard let entry = V.palette[material] else { continue }
+            guard var entry = V.palette[material] else { continue }
+            if let alias = entry.alias, let target = V.palette[alias] { material = alias; entry = target }
+            if let to = remap[material], let target = V.palette[to] { material = to; entry = target }
             // Every team-tinted surface wears the same chip, so a club's pads,
             // bench backs, tents and cooler lids are one mesh, not four.
             let tinted = entry.tint == "team"
