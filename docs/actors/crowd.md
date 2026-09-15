@@ -132,4 +132,37 @@ Review renders: `assets/actors/crowd/review/lineup_*.png`, `poses_*.png`.
 - **Result:** every fan within reach of a club seat is a lit mesh.
 - **Gap:** five towels raised at once read as rigid flags, so towels are
   capped at two fans.
-- **Upper-deck and ring-boundary shots:** queued for a simulator slot.
+- **Upper-deck and ring-boundary shots:** these moved to iteration 9.
+
+### Iteration 9: `crowd-iter9/` (on Bowl's served seating)
+
+- **Seating:** every stadium fan comes from `bowl.seating` through
+  `SceneMath.Ring` and `SceneMath.seat`: Bowl's seats, each seat's facing,
+  and its row's floor.
+- **Chair fit:** Bowl's chair origin is the feet, with the pan at 0.43 m and
+  the back at z −0.22.
+  - Seated poses move forward and lift shorter fans so every pelvis rests
+    at 0.52 m.
+  - Standing poses step 0.12 m forward of the folded pan.
+  - All of it is in `visual.crowd.chair`.
+- **Hooks for Moments:** `shared.stand(target, until:, clap:)`,
+  `shared.sit(target, until:)` and `shared.groan(side, until:)`, aimed at a side
+  or at seating sections, in `CrowdCues.swift`. Debug builds take
+  `-crowdCue kind:side`.
+- **Measured** (44,982 fans, 16 LOD0, 40 LOD1, 180 LOD2, 44,746 cards, 36 draw parts):
+
+  | Seat | Crowd triangles | Stadium triangles |
+  |---|---|---|
+  | Club (`crowd-closeup`, `td-moment`, `bowl-wide`) | 142.2k | 239.7k |
+  | Upper deck (`crowd-closeup_upper`, `td-moment_upper`, `bowl-wide_upper`) | 142.3k | 237.4k |
+  | Tabletop | 734 (22 parts, cards only) | |
+
+- **Shots:**
+  - `s-crowd-closeup.png`: rows seated in the modelled chairs.
+  - `s-bowl-wide_upper.png`: the far deck full, the deck in front seated row by row.
+  - `s-crowd-closeup_boundary.png`: pitched down across LOD0 → LOD2 → cards. No seam; the dithered band is not visible.
+  - `s-crowd-closeup_cue-{clap,groan,sit}-home.png`, `s-crowd-closeup_cue-stand-away.png`: each hook.
+  - `s-td-moment.png`: the scoring side standing and cheering.
+- **Gap:** in the steep upper deck, shins came out in front of the
+  chair backs one row down. A 0.20 m forward shift put knees past the tread
+  edge. It is now 0.10 m, and cards 0.11 m. Verified in `crowd-iter10/s-crowd-closeup_upper.png`: fans sit back in their chairs. One fan at the deck-edge aisle still shows shoes below the pans.
