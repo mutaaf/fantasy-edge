@@ -34,6 +34,8 @@ SHOTS = {
     "endzone": ("endzone", 0, 0, "early"),         # down the field, beams crossing
     "strobe": ("club", 30, 0, "touchdown"),        # the moment: strobe and wash
     "tabletop": (None, 0, 0, "redzone"),
+    "bowl-wide-club": ("club", 0, -8, "early"),     # bowl-wide's framing from the club seat
+    "bowl-wide-upper": ("upper", 0, -8, "early"),   # the shared preset's seat
 }
 
 
