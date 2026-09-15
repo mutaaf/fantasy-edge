@@ -83,3 +83,8 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - Scuffs weight to the sidelines, the border, the end lines and between the hashes, averaged with their half turn so the field stays symmetric.
   - The variation map adds grime along both sidelines.
 - **Lettering and paint:** a turf overlay (`paint.grass`) lies over all paint and the end-zone names, showing blades only where the turf's paint breakup is low. The lettering now draws under the wear layer. Field: 11 parts; textures as loaded 39.6 MB of 40.
+
+## Iteration 6 (`field-iter6`, director's integration-3 notes)
+- **Border wear:** scuffs cut to 12 in (below half the NFL border's 36 in) and rarer, and the sideline grime halved. `field-level` now shows a ragged edge and grass through the border, with no tearing.
+- **Purple blob:** it was the pop-up medical tent, a 3 m box tinted in the away club's colour. It is dropped from the dressing (medical areas live in the tunnel), so the sideline keeps its 15 parts.
+- **Goal-post net:** thinner cord (6% of each cell) and 0.2 opacity. A cutout can't survive mips at the stands' distance, so the net stays blended; in `td-moment` it now reads as a faint haze behind the far posts, not a sheet.
