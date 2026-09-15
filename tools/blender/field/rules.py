@@ -91,7 +91,9 @@ PAINT = {
         "pylons": {"size": 4 * IN, "height": 18 * IN, "gapUnder": 2 * IN,
                    "endLineHashOffset": 3 * FT,
                    "at": ["goal line x sideline", "end line x sideline", "end line x hash extended"]},  # 1-2-6
-        "goal": {"crossbar": 10 * FT, "width": 18.5 * FT, "uprightAbove": 20 * FT,
+        # the rule only sets a floor (tops at least 30 ft up, 1-2-5-a); posts are
+        # built 30 ft above the bar in practice, and a 20 ft upright looks stunted
+        "goal": {"crossbar": 10 * FT, "width": 18.5 * FT, "uprightAbove": 30 * FT,
                  "uprightTopMinAboveGround": 30 * FT, "style": "slingshot", "color": "gold",
                  "padHeightMin": 6 * FT,
                  "ribbon": {"width": 4 * IN, "length": 42 * IN, "color": "orange"}},   # 1-2-5
@@ -108,7 +110,7 @@ DISCREPANCIES = [
     {"league": "nfl", "key": "props.goalpost.uprightAbove",
      "scene": 10.0, "rule": 35 * FT, "source": "NFL §3 Art.2: uprights extend 35 ft above the crossbar"},
     {"league": "college-football", "key": "props.goalpost.uprightAbove",
-     "scene": 10.0, "rule": 20 * FT, "source": "NCAA 1-2-5-a: uprights at least 30 ft above the ground"},
+     "scene": 10.0, "rule": 30 * FT, "source": "NCAA 1-2-5-a sets tops at least 30 ft up; 30 ft above the bar is standard build"},
 ]
 
 

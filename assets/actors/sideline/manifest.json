@@ -1,0 +1,798 @@
+{
+  "actor": "sideline",
+  "axes": "metres; exported Y-up; origin at the base on the ground; -Z faces the field of play",
+  "budget": {
+    "parts": 15,
+    "textureMB": 20,
+    "triangles": 25000
+  },
+  "lodUse": {
+    "0": "stadium and field level",
+    "1": "far side of the bowl",
+    "2": "tabletop"
+  },
+  "props": {
+    "ball_bag": {
+      "dimensionsMetres": [
+        0.66,
+        0.538,
+        0.54
+      ],
+      "id": "ball_bag",
+      "lods": {
+        "0": {
+          "files": [
+            "ball_bag.usdz",
+            "ball_bag.glb"
+          ],
+          "parts": 2,
+          "triangles": 684
+        },
+        "1": {
+          "files": [
+            "ball_bag_lod1.usdz",
+            "ball_bag_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 306
+        },
+        "2": {
+          "files": [
+            "ball_bag_lod2.usdz",
+            "ball_bag_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 94
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_net"
+      ]
+    },
+    "bean_bag": {
+      "dimensionsMetres": [
+        0.114,
+        0.096,
+        0.048
+      ],
+      "id": "bean_bag",
+      "lods": {
+        "0": {
+          "files": [
+            "bean_bag.usdz",
+            "bean_bag.glb"
+          ],
+          "parts": 1,
+          "triangles": 100
+        },
+        "1": {
+          "files": [
+            "bean_bag_lod1.usdz",
+            "bean_bag_lod1.glb"
+          ],
+          "parts": 1,
+          "triangles": 44
+        },
+        "2": {
+          "files": [
+            "bean_bag_lod2.usdz",
+            "bean_bag_lod2.glb"
+          ],
+          "parts": 1,
+          "triangles": 14
+        }
+      },
+      "materials": [
+        "prop_blue"
+      ]
+    },
+    "bench": {
+      "dimensionsMetres": [
+        7.3,
+        0.375,
+        0.84
+      ],
+      "id": "bench",
+      "lods": {
+        "0": {
+          "files": [
+            "bench.usdz",
+            "bench.glb"
+          ],
+          "parts": 2,
+          "triangles": 792
+        },
+        "1": {
+          "files": [
+            "bench_lod1.usdz",
+            "bench_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 356
+        },
+        "2": {
+          "files": [
+            "bench_lod2.usdz",
+            "bench_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 110
+        }
+      },
+      "materials": [
+        "tint_team_primary",
+        "prop_steel"
+      ]
+    },
+    "cable_run": {
+      "dimensionsMetres": [
+        10.001,
+        0.9,
+        0.05
+      ],
+      "id": "cable_run",
+      "lods": {
+        "0": {
+          "files": [
+            "cable_run.usdz",
+            "cable_run.glb"
+          ],
+          "parts": 2,
+          "triangles": 466
+        },
+        "1": {
+          "files": [
+            "cable_run_lod1.usdz",
+            "cable_run_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 209
+        },
+        "2": {
+          "files": [
+            "cable_run_lod2.usdz",
+            "cable_run_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 65
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_yellow"
+      ]
+    },
+    "camera_cart": {
+      "dimensionsMetres": [
+        0.85,
+        1.23,
+        1.648
+      ],
+      "id": "camera_cart",
+      "lods": {
+        "0": {
+          "files": [
+            "camera_cart.usdz",
+            "camera_cart.glb"
+          ],
+          "parts": 3,
+          "triangles": 436
+        },
+        "1": {
+          "files": [
+            "camera_cart_lod1.usdz",
+            "camera_cart_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 196
+        },
+        "2": {
+          "files": [
+            "camera_cart_lod2.usdz",
+            "camera_cart_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 56
+        }
+      },
+      "materials": [
+        "prop_steel",
+        "prop_dark",
+        "prop_black"
+      ]
+    },
+    "chain_set": {
+      "dimensionsMetres": [
+        9.494,
+        0.07,
+        2.1
+      ],
+      "id": "chain_set",
+      "lods": {
+        "0": {
+          "files": [
+            "chain_set.usdz",
+            "chain_set.glb"
+          ],
+          "parts": 3,
+          "triangles": 576
+        },
+        "1": {
+          "files": [
+            "chain_set_lod1.usdz",
+            "chain_set_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 258
+        },
+        "2": {
+          "files": [
+            "chain_set_lod2.usdz",
+            "chain_set_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 88
+        }
+      },
+      "materials": [
+        "prop_white",
+        "prop_orange",
+        "prop_steel"
+      ]
+    },
+    "cooler_station": {
+      "dimensionsMetres": [
+        2.445,
+        0.76,
+        1.28
+      ],
+      "id": "cooler_station",
+      "lods": {
+        "0": {
+          "files": [
+            "cooler_station.usdz",
+            "cooler_station.glb"
+          ],
+          "parts": 3,
+          "triangles": 652
+        },
+        "1": {
+          "files": [
+            "cooler_station_lod1.usdz",
+            "cooler_station_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 292
+        },
+        "2": {
+          "files": [
+            "cooler_station_lod2.usdz",
+            "cooler_station_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 85
+        }
+      },
+      "materials": [
+        "prop_white",
+        "prop_steel",
+        "prop_blue"
+      ]
+    },
+    "down_marker": {
+      "dimensionsMetres": [
+        0.36,
+        0.36,
+        2.44
+      ],
+      "id": "down_marker",
+      "lods": {
+        "0": {
+          "children": [
+            "down_1.001",
+            "down_2.001",
+            "down_3.001",
+            "down_4.001"
+          ],
+          "files": [
+            "down_marker.usdz",
+            "down_marker.glb"
+          ],
+          "parts": 3,
+          "triangles": 1280
+        },
+        "1": {
+          "children": [
+            "down_1_lod1",
+            "down_2_lod1",
+            "down_3_lod1",
+            "down_4_lod1"
+          ],
+          "files": [
+            "down_marker_lod1.usdz",
+            "down_marker_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 571
+        },
+        "2": {
+          "children": [
+            "down_1_lod2",
+            "down_2_lod2",
+            "down_3_lod2",
+            "down_4_lod2"
+          ],
+          "files": [
+            "down_marker_lod2.usdz",
+            "down_marker_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 172
+        }
+      },
+      "materials": [
+        "prop_white",
+        "prop_orange"
+      ]
+    },
+    "endzone_platform": {
+      "dimensionsMetres": [
+        2.054,
+        2.124,
+        4.016
+      ],
+      "id": "endzone_platform",
+      "lods": {
+        "0": {
+          "files": [
+            "endzone_platform.usdz",
+            "endzone_platform.glb"
+          ],
+          "parts": 2,
+          "triangles": 740
+        },
+        "1": {
+          "files": [
+            "endzone_platform_lod1.usdz",
+            "endzone_platform_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 332
+        },
+        "2": {
+          "files": [
+            "endzone_platform_lod2.usdz",
+            "endzone_platform_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 85
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_steel"
+      ]
+    },
+    "fieldgoal_net": {
+      "dimensionsMetres": [
+        12.314,
+        0.12,
+        13.6
+      ],
+      "id": "fieldgoal_net",
+      "lods": {
+        "0": {
+          "files": [
+            "fieldgoal_net.usdz",
+            "fieldgoal_net.glb"
+          ],
+          "parts": 2,
+          "triangles": 94
+        },
+        "1": {
+          "files": [
+            "fieldgoal_net_lod1.usdz",
+            "fieldgoal_net_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 42
+        },
+        "2": {
+          "files": [
+            "fieldgoal_net_lod2.usdz",
+            "fieldgoal_net_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 10
+        }
+      },
+      "materials": [
+        "prop_net",
+        "prop_steel"
+      ]
+    },
+    "goalpost_college": {
+      "dimensionsMetres": [
+        5.826,
+        2.144,
+        12.231
+      ],
+      "id": "goalpost_college",
+      "lods": {
+        "0": {
+          "files": [
+            "goalpost_college.usdz",
+            "goalpost_college.glb"
+          ],
+          "parts": 3,
+          "triangles": 844
+        },
+        "1": {
+          "files": [
+            "goalpost_college_lod1.usdz",
+            "goalpost_college_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 378
+        },
+        "2": {
+          "files": [
+            "goalpost_college_lod2.usdz",
+            "goalpost_college_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 118
+        }
+      },
+      "materials": [
+        "prop_gold",
+        "prop_orange",
+        "tint_team_primary"
+      ]
+    },
+    "goalpost_nfl": {
+      "dimensionsMetres": [
+        5.826,
+        2.144,
+        13.755
+      ],
+      "id": "goalpost_nfl",
+      "lods": {
+        "0": {
+          "files": [
+            "goalpost_nfl.usdz",
+            "goalpost_nfl.glb"
+          ],
+          "parts": 3,
+          "triangles": 844
+        },
+        "1": {
+          "files": [
+            "goalpost_nfl_lod1.usdz",
+            "goalpost_nfl_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 378
+        },
+        "2": {
+          "files": [
+            "goalpost_nfl_lod2.usdz",
+            "goalpost_nfl_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 118
+        }
+      },
+      "materials": [
+        "prop_gold",
+        "prop_orange",
+        "tint_team_primary"
+      ]
+    },
+    "ground_marker": {
+      "dimensionsMetres": [
+        0.254,
+        0.94,
+        0.012
+      ],
+      "id": "ground_marker",
+      "lods": {
+        "0": {
+          "files": [
+            "ground_marker.usdz",
+            "ground_marker.glb"
+          ],
+          "parts": 1,
+          "triangles": 16
+        },
+        "1": {
+          "files": [
+            "ground_marker_lod1.usdz",
+            "ground_marker_lod1.glb"
+          ],
+          "parts": 1,
+          "triangles": 6
+        },
+        "2": {
+          "files": [
+            "ground_marker_lod2.usdz",
+            "ground_marker_lod2.glb"
+          ],
+          "parts": 1,
+          "triangles": 1
+        }
+      },
+      "materials": [
+        "prop_orange"
+      ]
+    },
+    "heater_fan": {
+      "dimensionsMetres": [
+        0.6,
+        0.65,
+        0.778
+      ],
+      "id": "heater_fan",
+      "lods": {
+        "0": {
+          "files": [
+            "heater_fan.usdz",
+            "heater_fan.glb"
+          ],
+          "parts": 3,
+          "triangles": 400
+        },
+        "1": {
+          "files": [
+            "heater_fan_lod1.usdz",
+            "heater_fan_lod1.glb"
+          ],
+          "parts": 3,
+          "triangles": 180
+        },
+        "2": {
+          "files": [
+            "heater_fan_lod2.usdz",
+            "heater_fan_lod2.glb"
+          ],
+          "parts": 3,
+          "triangles": 52
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_black",
+        "prop_orange"
+      ]
+    },
+    "kicking_net": {
+      "dimensionsMetres": [
+        2.45,
+        1.675,
+        2.397
+      ],
+      "id": "kicking_net",
+      "lods": {
+        "0": {
+          "files": [
+            "kicking_net.usdz",
+            "kicking_net.glb"
+          ],
+          "parts": 2,
+          "triangles": 128
+        },
+        "1": {
+          "files": [
+            "kicking_net_lod1.usdz",
+            "kicking_net_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 56
+        },
+        "2": {
+          "files": [
+            "kicking_net_lod2.usdz",
+            "kicking_net_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 13
+        }
+      },
+      "materials": [
+        "prop_net",
+        "prop_dark"
+      ]
+    },
+    "medical_tent": {
+      "dimensionsMetres": [
+        3.044,
+        2.044,
+        2.575
+      ],
+      "id": "medical_tent",
+      "lods": {
+        "0": {
+          "files": [
+            "medical_tent.usdz",
+            "medical_tent.glb"
+          ],
+          "parts": 2,
+          "triangles": 166
+        },
+        "1": {
+          "files": [
+            "medical_tent_lod1.usdz",
+            "medical_tent_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 74
+        },
+        "2": {
+          "files": [
+            "medical_tent_lod2.usdz",
+            "medical_tent_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 15
+        }
+      },
+      "materials": [
+        "tint_team_secondary",
+        "prop_steel"
+      ]
+    },
+    "penalty_flag": {
+      "dimensionsMetres": [
+        0.524,
+        0.524,
+        0.044
+      ],
+      "id": "penalty_flag",
+      "lods": {
+        "0": {
+          "files": [
+            "penalty_flag.usdz",
+            "penalty_flag.glb"
+          ],
+          "parts": 1,
+          "triangles": 136
+        },
+        "1": {
+          "files": [
+            "penalty_flag_lod1.usdz",
+            "penalty_flag_lod1.glb"
+          ],
+          "parts": 1,
+          "triangles": 61
+        },
+        "2": {
+          "files": [
+            "penalty_flag_lod2.usdz",
+            "penalty_flag_lod2.glb"
+          ],
+          "parts": 1,
+          "triangles": 19
+        }
+      },
+      "materials": [
+        "prop_yellow"
+      ]
+    },
+    "pylon_college": {
+      "dimensionsMetres": [
+        0.108,
+        0.108,
+        0.457
+      ],
+      "id": "pylon_college",
+      "lods": {
+        "0": {
+          "files": [
+            "pylon_college.usdz",
+            "pylon_college.glb"
+          ],
+          "parts": 2,
+          "triangles": 152
+        },
+        "1": {
+          "files": [
+            "pylon_college_lod1.usdz",
+            "pylon_college_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 68
+        },
+        "2": {
+          "files": [
+            "pylon_college_lod2.usdz",
+            "pylon_college_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 16
+        }
+      },
+      "materials": [
+        "prop_orange",
+        "prop_black"
+      ]
+    },
+    "pylon_nfl": {
+      "dimensionsMetres": [
+        0.108,
+        0.108,
+        0.457
+      ],
+      "id": "pylon_nfl",
+      "lods": {
+        "0": {
+          "files": [
+            "pylon_nfl.usdz",
+            "pylon_nfl.glb"
+          ],
+          "parts": 2,
+          "triangles": 108
+        },
+        "1": {
+          "files": [
+            "pylon_nfl_lod1.usdz",
+            "pylon_nfl_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 48
+        },
+        "2": {
+          "files": [
+            "pylon_nfl_lod2.usdz",
+            "pylon_nfl_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 10
+        }
+      },
+      "materials": [
+        "prop_orange",
+        "prop_black"
+      ]
+    },
+    "tablet_station": {
+      "dimensionsMetres": [
+        0.62,
+        0.4,
+        1.128
+      ],
+      "id": "tablet_station",
+      "lods": {
+        "0": {
+          "files": [
+            "tablet_station.usdz",
+            "tablet_station.glb"
+          ],
+          "parts": 2,
+          "triangles": 244
+        },
+        "1": {
+          "files": [
+            "tablet_station_lod1.usdz",
+            "tablet_station_lod1.glb"
+          ],
+          "parts": 2,
+          "triangles": 108
+        },
+        "2": {
+          "files": [
+            "tablet_station_lod2.usdz",
+            "tablet_station_lod2.glb"
+          ],
+          "parts": 2,
+          "triangles": 33
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_black"
+      ]
+    }
+  },
+  "tints": "materials named tint_* take the scene's team chip colours at runtime"
+}

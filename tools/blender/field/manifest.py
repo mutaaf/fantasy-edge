@@ -89,7 +89,7 @@ def main():
     manifest = {
         "actor": "field",
         "units": {"textures": "0.40 m turf tile; field-space maps in yards over the markings canvas"},
-        "canvas": {"x0": -16.0, "x1": 116.0, "y0": -14.0, "y1": 160 / 3 + 14.0,
+        "canvas": {"x0": -16.0, "x1": 116.0, "y0": -(81.375 - 160 / 3) / 2, "y1": 160 / 3 + (81.375 - 160 / 3) / 2,
                    "axes": "x yards from the left goal line, y yards from the near sideline, top row = far edge"},
         "leagues": list(rules.LEAGUES),
         "gpuBudgetMB": {"field": 40, "measuredUncompressed": budget},

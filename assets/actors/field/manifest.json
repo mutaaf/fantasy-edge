@@ -4,8 +4,8 @@
     "axes": "x yards from the left goal line, y yards from the near sideline, top row = far edge",
     "x0": -16.0,
     "x1": 116.0,
-    "y0": -14.0,
-    "y1": 67.33333333333334
+    "y0": -14.020833333333332,
+    "y1": 67.35416666666667
   },
   "discrepanciesWithScene": [
     {
@@ -44,9 +44,9 @@
     {
       "key": "props.goalpost.uprightAbove",
       "league": "college-football",
-      "rule": 6.666666666666666,
+      "rule": 10.0,
       "scene": 10.0,
-      "source": "NCAA 1-2-5-a: uprights at least 30 ft above the ground"
+      "source": "NCAA 1-2-5-a sets tops at least 30 ft up; 30 ft above the bar is standard build"
     }
   ],
   "files": [
@@ -66,21 +66,30 @@
       "role": "Graduate glyph triangles for runtime team lettering"
     },
     {
-      "bytes": 325424,
+      "bytes": 325381,
       "bytesPerTexel": 4,
       "gpuMB": 0.92,
-      "height": 325,
+      "height": 326,
       "path": "maps/college-football/field_maps.png",
       "role": "R macro variation G wear B mow crispness A divot density",
       "width": 528
     },
     {
-      "bytes": 65313,
+      "bytes": 65097,
       "bytesPerTexel": 4,
       "gpuMB": 0.92,
-      "height": 325,
+      "height": 326,
       "path": "maps/college-football/mow_patterns.png",
       "role": "mowing patterns: R 5 yd G 10 yd B checker A diamond",
+      "width": 528
+    },
+    {
+      "bytes": 60382,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.23,
+      "height": 326,
+      "path": "maps/college-football/variation_opacity.png",
+      "role": "",
       "width": 528
     },
     {
@@ -102,53 +111,98 @@
       "width": 512
     },
     {
-      "bytes": 256839,
+      "bytes": 256918,
       "bytesPerTexel": 4,
       "gpuMB": 0.92,
-      "height": 325,
+      "height": 326,
       "path": "maps/nfl/field_maps.png",
       "role": "R macro variation G wear B mow crispness A divot density",
       "width": 528
     },
     {
-      "bytes": 72031,
+      "bytes": 72075,
       "bytesPerTexel": 4,
       "gpuMB": 0.92,
-      "height": 325,
+      "height": 326,
       "path": "maps/nfl/mow_patterns.png",
       "role": "mowing patterns: R 5 yd G 10 yd B checker A diamond",
       "width": 528
     },
     {
-      "bytes": 428809,
+      "bytes": 51970,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.23,
+      "height": 326,
+      "path": "maps/nfl/variation_opacity.png",
+      "role": "",
+      "width": 528
+    },
+    {
+      "bytes": 426964,
       "path": "markings/college-football/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
     {
-      "bytes": 64898,
+      "bytes": 88917,
       "bytesPerTexel": 3,
-      "gpuMB": 10.99,
-      "height": 1301,
+      "gpuMB": 11.0,
+      "height": 1302,
       "path": "markings/college-football/paint_sdf.png",
       "role": "painted markings, signed distance: R white G yellow, 0.5 = edge",
       "width": 2112
     },
     {
-      "bytes": 495803,
+      "bytes": 23392,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.83,
+      "height": 1302,
+      "path": "markings/college-football/paint_white_half.png",
+      "role": "",
+      "width": 1056
+    },
+    {
+      "bytes": 4560,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.83,
+      "height": 1302,
+      "path": "markings/college-football/paint_yellow_half.png",
+      "role": "",
+      "width": 1056
+    },
+    {
+      "bytes": 497146,
       "path": "markings/nfl/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
     {
-      "bytes": 76232,
+      "bytes": 73656,
       "bytesPerTexel": 3,
-      "gpuMB": 10.99,
-      "height": 1301,
+      "gpuMB": 11.0,
+      "height": 1302,
       "path": "markings/nfl/paint_sdf.png",
       "role": "painted markings, signed distance: R white G yellow, 0.5 = edge",
       "width": 2112
     },
     {
-      "bytes": 588,
+      "bytes": 15401,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.83,
+      "height": 1302,
+      "path": "markings/nfl/paint_white_half.png",
+      "role": "",
+      "width": 1056
+    },
+    {
+      "bytes": 8111,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.83,
+      "height": 1302,
+      "path": "markings/nfl/paint_yellow_half.png",
+      "role": "",
+      "width": 1056
+    },
+    {
+      "bytes": 587,
       "path": "turf/natural/bake.json",
       "role": "bake parameters"
     },
@@ -243,7 +297,7 @@
       "width": 512
     },
     {
-      "bytes": 2480307,
+      "bytes": 2513920,
       "bytesPerTexel": 3,
       "gpuMB": 4.19,
       "height": 1024,
@@ -252,7 +306,7 @@
       "width": 1024
     },
     {
-      "bytes": 2776693,
+      "bytes": 2776690,
       "bytesPerTexel": 3,
       "gpuMB": 4.19,
       "height": 1024,
@@ -261,7 +315,16 @@
       "width": 1024
     },
     {
-      "bytes": 2799523,
+      "bytes": 886093,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_occlusion.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 2859386,
       "bytesPerTexel": 3,
       "gpuMB": 4.19,
       "height": 1024,
@@ -270,7 +333,16 @@
       "width": 1024
     },
     {
-      "bytes": 565805,
+      "bytes": 843698,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_roughness.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 575004,
       "bytesPerTexel": 3,
       "gpuMB": 1.05,
       "height": 512,
@@ -279,7 +351,7 @@
       "width": 512
     },
     {
-      "bytes": 639543,
+      "bytes": 639544,
       "bytesPerTexel": 3,
       "gpuMB": 1.05,
       "height": 512,
@@ -288,7 +360,7 @@
       "width": 512
     },
     {
-      "bytes": 694967,
+      "bytes": 701232,
       "bytesPerTexel": 3,
       "gpuMB": 1.05,
       "height": 512,
@@ -329,12 +401,30 @@
       "width": 1024
     },
     {
+      "bytes": 935679,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_occlusion.png",
+      "role": "",
+      "width": 1024
+    },
+    {
       "bytes": 2883450,
       "bytesPerTexel": 3,
       "gpuMB": 4.19,
       "height": 1024,
       "path": "turf/synthetic/turf_synthetic_any_orm.png",
       "role": "synthetic turf ORM",
+      "width": 1024
+    },
+    {
+      "bytes": 761823,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_roughness.png",
+      "role": "",
       "width": 1024
     },
     {
@@ -414,10 +504,10 @@
     "field": 40,
     "measuredUncompressed": {
       "decals": 2.45,
-      "natural": 21.31,
-      "perLeague": 12.83,
+      "natural": 24.11,
+      "perLeague": 16.73,
       "shellsNearField": 2.8,
-      "total": 39.39
+      "total": 46.09
     }
   },
   "leagues": [

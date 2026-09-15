@@ -109,13 +109,15 @@ def grow(variant: str, lean: float, seed: int):
             d = lean + r.normal(0, 0.45 if not worn else 1.3)
             bend = r.uniform(0.25, 0.80) if not worn else r.uniform(0.95, 1.5)
             tw = r.normal(0, 0.35)
-            hue = r.normal(0.300, 0.010)
-            sat = r.uniform(0.62, 0.86)
-            val = r.uniform(0.20, 0.40)
+            hue = r.normal(0.295, 0.010)
+            sat = r.uniform(0.70, 0.92)
+            val = r.uniform(0.22, 0.42)
             if r.random() < (0.03 if not worn else 0.25):          # dry and dead blades
                 hue, sat, val = r.uniform(0.10, 0.16), r.uniform(0.35, 0.55), r.uniform(0.30, 0.48)
             colour = _hsv(hue, sat, val)
-            add((bases[i, 0], bases[i, 1], 0.002), h, w, d, bend, tw, colour, r.uniform(0.48, 0.72))
+            # grass is waxy but not glossy: under floodlights a low roughness
+            # glitters at grazing angles, which reads as frost, not turf
+            add((bases[i, 0], bases[i, 1], 0.002), h, w, d, bend, tw, colour, r.uniform(0.66, 0.88))
     else:                                                             # synthetic turf
         gauge = 0.0095                                                # 3/8 in between tuft rows
         pitch = 0.0105

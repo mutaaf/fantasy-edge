@@ -39,7 +39,9 @@ import numpy as np  # noqa: E402
 
 FT, IN = rules.FT, rules.IN
 W = 160 / 3
-CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -14.0, "y1": W + 14.0}
+# 132 x 81.375 yd: whole texels at 16 per yard (2112 x 1302) and centred on
+# midfield, so a half turn maps texel centres exactly onto texel centres.
+CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -(81.375 - W) / 2, "y1": W + (81.375 - W) / 2}
 HI_PPY = 32                  # texels per yard while rasterising
 OUT_PPY = 16                 # texels per yard shipped
 SDF_RANGE_IN = 12.0          # inches of distance either side of an edge
@@ -119,11 +121,14 @@ class Paint:
             y += dash + gap
 
     def dashed_segment(self, a, b, width, dash, gap, kind, colour, rule):
+        """Dashes centred on the segment, so a segment and its half-turn image
+        dash identically."""
         (ax, ay), (bx, by) = a, b
         length = math.hypot(bx - ax, by - ay)
         ux, uy = (bx - ax) / length, (by - ay) / length
         nx, ny = -uy * width / 2, ux * width / 2
-        t = 0.0
+        count = max(1, int((length + gap) // (dash + gap)))
+        t = (length - (count * dash + (count - 1) * gap)) / 2
         while t < length - 1e-6:
             t1 = min(t + dash, length)
             p0 = (ax + ux * t, ay + uy * t)
@@ -157,6 +162,39 @@ def numeral_triangles(digit: str, font: dict, box_x0: float, base_y: float, heig
                 px, py = 2 * cx - px, 2 * cy - py
             pts.append((px, py))
         out.append(pts)
+    return out
+
+
+# Marks that cross midfield but are not their own half-turn image. A coaching
+# box hatch is a slash on both sidelines, so the one that happens to straddle
+# the fifty would print twice; it is dropped and its neighbours carry the box.
+NOT_SELF_SYMMETRIC = {"coachingBoxHatch"}
+
+
+def symmetrize(p: Paint) -> Paint:
+    """Keep the left half, add its half-turn image, keep self-symmetric marks
+    that cross midfield. The field is then symmetric by construction, which is
+    what lets a renderer ship half the texture."""
+    def pts(it):
+        return it["poly"] if "poly" in it else [q for t in it["triangles"] for q in t]
+
+    def turned(it):
+        rec = dict(it)
+        if "poly" in it:
+            rec["poly"] = [(100 - x, W - y) for x, y in it["poly"]]
+        else:
+            rec["triangles"] = [[(100 - x, W - y) for x, y in t] for t in it["triangles"]]
+        return rec
+    out = Paint()
+    eps = 1e-6
+    for it in p.items:
+        xs = [q[0] for q in pts(it)]
+        if max(xs) <= 50 + eps:
+            out.items += [it, turned(it)]
+        elif min(xs) >= 50 - eps:
+            continue
+        elif it["kind"] not in NOT_SELF_SYMMETRIC:
+            out.items.append(it)
     return out
 
 
@@ -303,7 +341,7 @@ def build(league_name: str, font: dict) -> Paint:
         for x_end, sgn in ((-10, -1), (110, 1)):
             xc = x_end + sgn * y_lim
             p.dashed_segment((xc, -y_lim), (xc, W + y_lim), lim["width"], lim["dash"], gap, "limitLine", "yellow", src + " 1-2-3-a")
-    return p
+    return symmetrize(p)
 
 
 # ───────────────────────────── distance field ─────────────────────────────
@@ -411,13 +449,32 @@ def distance_fields(p: Paint):
 
 
 def encode(p: Paint, league: str):
+    """Write the full RG field, and the half the headset loads.
+
+    A football field is symmetric under a half turn about midfield: every
+    line, numeral, arrow and team-area mark maps onto itself (the "5" left of
+    the fifty on one side is the "5" right of it on the other, upside down).
+    So a renderer needs only x -16..50 and draws the other half rotated,
+    which halves the memory. The half-canvas files are single-channel and
+    sRGB-encoded, so a loader that treats them as colour decodes them straight
+    back to the linear distance and a 0.5 threshold is exact.
+    """
     rng_yd = SDF_RANGE_IN * IN
     fields = distance_fields(p)
     chans = [0.5 + fields[c] / (2 * rng_yd) for c in ("white", "yellow")]
     rg = np.stack(chans + [np.zeros_like(chans[0])], axis=2)[::-1]   # top row = far edge
     out = common.FIELD_OUT / "markings" / league
     common.write_png(out / "paint_sdf.png", rg)
-    return rg
+    half = int(round((50.0 - CANVAS["x0"]) * OUT_PPY))
+    asym = {}
+    for k, c in enumerate(("white", "yellow")):
+        full = rg[..., k]
+        left, right = full[:, :half], full[:, half:]
+        asym[c] = float(np.abs(left - right[::-1, ::-1]).max())
+        assert asym[c] < 0.02, f"{league} {c} paint is not half-turn symmetric ({asym[c]:.3f})"
+        srgb = np.where(left <= 0.0031308, left * 12.92, 1.055 * np.power(np.clip(left, 0, 1), 1 / 2.4) - 0.055)
+        common.write_png(out / f"paint_{c}_half.png", srgb)
+    return rg, asym, half
 
 
 def main():
@@ -425,7 +482,7 @@ def main():
     summary = {}
     for league in rules.LEAGUES:
         p = build(league, font)
-        rg = encode(p, league)
+        rg, asym, half = encode(p, league)
         prims = []
         for it in p.items:
             rec = {"kind": it["kind"], "colour": it["colour"], "rule": it["rule"]}
@@ -443,6 +500,10 @@ def main():
                      "y": "yards from the near sideline, 0..53.333"},
             "canvas": {**CANVAS, "texelsPerYard": OUT_PPY, "width": rg.shape[1], "height": rg.shape[0],
                        "rowOrder": "top row is the far edge (y1)"},
+            "half": {"x0": CANVAS["x0"], "x1": 50.0, "width": half, "height": rg.shape[0],
+                     "encoding": "sRGB-encoded linear distance; decode as colour, threshold 0.5",
+                     "otherHalf": "rotate 180 degrees about (50, 26.667): u' = 1 - u, v' = 1 - v",
+                     "maxAsymmetry": asym},
             "sdf": {"channels": {"r": "white", "g": "yellow"}, "edge": 0.5, "rangeInches": SDF_RANGE_IN,
                     "insideIs": "greater than 0.5"},
             "source": L["paint"]["source"], "discrepancies": [d for d in rules.DISCREPANCIES if d["league"] in (league, "both")],
@@ -450,7 +511,7 @@ def main():
         counts = {}
         for it in p.items:
             counts[it["kind"]] = counts.get(it["kind"], 0) + 1
-        summary[league] = {"primitives": len(p.items), "texture": list(rg.shape[:2]), "byKind": counts}
+        summary[league] = {"primitives": len(p.items), "texture": list(rg.shape[:2]), "asymmetry": asym, "byKind": counts}
     print("MARKINGS", summary)
 
 

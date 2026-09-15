@@ -36,7 +36,7 @@ import rules  # noqa: E402
 import numpy as np  # noqa: E402
 
 W = 160 / 3
-CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -14.0, "y1": W + 14.0}
+CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -(81.375 - W) / 2, "y1": W + (81.375 - W) / 2}
 
 
 def grid(ppy):
@@ -208,11 +208,43 @@ def paint_breakup():
         common.write_png(common.FIELD_OUT / "turf" / variant / "paint_breakup.png", carry)
 
 
+def srgb(x):
+    x = np.clip(x, 0, 1)
+    return np.where(x <= 0.0031308, x * 12.92, 1.055 * np.power(x, 1 / 2.4) - 0.055)
+
+
+def engine_maps(league: str):
+    """Single-channel maps a stock PBR material can bind without a shader.
+
+    variation_opacity.png: how much a dark, worn-olive overlay covers the turf,
+    from wear and the macro map. sRGB-encoded, so a colour-decoding loader gets
+    the linear opacity back.
+    """
+    img = common.read_image(common.FIELD_OUT / "maps" / league / "field_maps.png")
+    macro, wear = img[..., 0], img[..., 1]
+    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1), 0, 0.8)
+    common.write_png(common.FIELD_OUT / "maps" / league / "variation_opacity.png", srgb(opacity))
+
+
+def split_orm():
+    """Roughness and occlusion as their own grey images: a PBR material reads
+    one channel per property, and not the green of a packed ORM."""
+    for variant, stem in (("natural", "turf_natural_with"), ("synthetic", "turf_synthetic_any")):
+        src = common.FIELD_OUT / "turf" / variant / f"{stem}_orm.png"
+        if not src.exists():
+            continue
+        orm = common.read_image(src)
+        common.write_png(common.FIELD_OUT / "turf" / variant / f"{stem}_roughness.png", orm[..., 1])
+        common.write_png(common.FIELD_OUT / "turf" / variant / f"{stem}_occlusion.png", orm[..., 0])
+
+
 def main():
     out = {}
     for league in rules.LEAGUES:
         out[league] = field_maps(league)
         mow_patterns(league)
+        engine_maps(league)
+    split_orm()
     divots()
     paint_breakup()
     print("MAPS", out)
