@@ -143,7 +143,9 @@ def main() -> None:
                 post(args.port, {"action": "pause"})
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
                    "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra, check=False)
-            time.sleep(args.settle)
+            # The moment holds for motion.momentSeconds from its snap, 4 s after
+            # launch at 1x: a long settle shoots after it has gone.
+            time.sleep(min(args.settle, 7.0) if where == "touchdown" else args.settle)
             shot = args.out / f"{name}{args.suffix}.png"
             simctl("io", args.device, "screenshot", str(shot), check=False)
             subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{name}{args.suffix}.png")],
