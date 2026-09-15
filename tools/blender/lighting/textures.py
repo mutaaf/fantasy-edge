@@ -292,7 +292,7 @@ def sky_image(w, h, kind, seed):
     cover = smoothstep(0.50, 0.80, n) * (0.55 + 0.45 * streak)
     cloud = np.zeros((h, w))
     cloud[: h // 2] = cover
-    cloud *= smoothstep(0.03, 0.22, up) * (1 - smoothstep(1.25, 1.5, up))
+    cloud *= smoothstep(0.03, 0.22, up) * (1 - smoothstep(0.85, 1.2, up))
     if kind == "night":
         cloud *= 0.55
         under = np.array([0.009, 0.010, 0.015])
