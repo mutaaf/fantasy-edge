@@ -171,6 +171,14 @@ class TestBroadcastLook(unittest.TestCase):
         self.assertLessEqual(height, panel["maxHeightPoints"], f"unfolded drive log {height} pt")
         self.assertGreaterEqual(d["newestLines"], d["olderLines"])
 
+    def test_a_play_in_the_air_draws_its_trail_as_it_flies(self):
+        """The live trail must redraw often enough to follow the shortest
+        flight the scene animates, and show at a visible strength."""
+        live = self.look["trail"]["live"]
+        floor = self.tokens["motion"]["floorSeconds"]
+        self.assertGreater(live["opacity"], 0.5)
+        self.assertLessEqual(live["intervalSeconds"], floor / 4, "a floor-length flight gets at least four redraws")
+
     def test_trails_ghost_with_age_and_never_vanish(self):
         age = self.look["trail"]["age"]
         self.assertTrue(0 < age["decay"] < 1 and 0 < age["thin"] <= 1)

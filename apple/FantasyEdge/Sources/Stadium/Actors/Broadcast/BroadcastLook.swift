@@ -56,6 +56,11 @@ extension SceneSpec.Look {
         public let goneDegrees: Double
     }
 
+    public struct TrailLive: Decodable, Equatable, Sendable {
+        public let opacity: Double
+        public let intervalSeconds: Double
+    }
+
     public struct Trail: Decodable, Equatable, Sendable {
         public let core: SceneSpec.PerMode<Double>
         public let coreOpacity: Double
@@ -68,6 +73,7 @@ extension SceneSpec.Look {
         public let tabletopView: [Double]
         public let edge: TrailEdge
         public let kick: TrailKick
+        public let live: TrailLive
     }
 
     public struct BallGlow: Decodable, Equatable, Sendable {
