@@ -257,6 +257,25 @@ def grass_through():
     common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_grassthrough.png", srgb(cover))
 
 
+def shell_atlas():
+    """The eight natural shell slices at 256 px in a 4 x 2 atlas for the shell
+    graph. Cell i (column i % 4, row i // 4, row 0 at the bottom of the image)
+    holds the slice for layer i counted up from the ground, which is baked
+    slice 7 - i. Raw linear coverage."""
+    base = common.FIELD_OUT / "turf" / "natural"
+    slices = [base / f"turf_natural_shell_{k}.png" for k in range(8)]
+    if not all(p.exists() for p in slices):
+        return
+    atlas = np.zeros((512, 1024))
+    for i in range(8):
+        img = common.read_image(slices[7 - i])[..., 0]
+        small = img.reshape(256, img.shape[0] // 256, 256, img.shape[1] // 256).mean(axis=(1, 3))
+        col, row = i % 4, i // 4
+        top = (1 - row) * 256                                  # row 0 in the lower half of the image
+        atlas[top:top + 256, col * 256:(col + 1) * 256] = small
+    common.write_png(base / "shell_atlas.png", atlas)
+
+
 def main():
     out = {}
     for league in rules.LEAGUES:
@@ -265,6 +284,7 @@ def main():
         engine_maps(league)
     split_orm()
     grass_through()
+    shell_atlas()
     divots()
     paint_breakup()
     print("MAPS", out)

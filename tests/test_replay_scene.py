@@ -615,17 +615,25 @@ class TestSceneGeometry(unittest.TestCase):
         root = pathlib.Path(sc.__file__).resolve().parent.parent
         mats = self.final["shaderGraph"]["materials"]
         for actor, key, usda in (("field", "paintMaterial", "Field.rkassets/FieldPaint.usda"),
-                                 ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda")):
-            entry = mats[self.final["visual"][actor][key]]
+                                 ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda"),
+                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda")):
+            section = self.final["visual"][actor]
+            for part in key.split(".")[:-1]:
+                section = section[part]
+            entry = mats[section[key.split(".")[-1]]]
             self.assertTrue((root / "assets" / entry["file"]).is_file(), f"{entry['file']}: run tools/blender/field/shadergraph/build.py")
             for k in ("blend", "color", "opacity"):
                 self.assertIn(k, entry["fallback"])
             src = (root / "tools/blender/field/shadergraph" / usda).read_text()
             # the material's own inputs sit at eight spaces; node inputs are deeper
             declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
-            runtime = {"Color", "UseMask"} if actor == "field" else set()
+            runtime = ({"Color", "UseMask"} if key == "paintMaterial" else
+                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else set())
             self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
             self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
+        shells = self.final["visual"]["field"]["shells"]
+        self.assertTrue((root / "assets" / shells["atlas"]).is_file())
+        self.assertTrue(0 <= shells["firstLayer"] <= shells["lastLayer"] <= 7, "the atlas holds eight layers")
         breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
         self.assertTrue(breakup.is_file())
         self.assertLess(breakup.stat().st_size, 1_000_000)

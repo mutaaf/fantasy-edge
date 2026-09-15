@@ -153,6 +153,7 @@ final class FieldActor: StadiumActor {
             m.blending = .transparent(opacity: .init(scale: Float(T.wearStrength), texture: StadiumLook.clamped(tex)))
             return m
         }
+        if !c.tabletop && V.shells.enabled { buildShells(c, maskPath: path(V.perLeague.paintWhite)) }
         paintTargets.append((white, P.white, true, path(V.perLeague.paintWhite)))
         paintTargets.append((yellow, P.yellow, true, path(V.perLeague.paintYellow)))
         upgradePaint(c)
@@ -187,7 +188,8 @@ final class FieldActor: StadiumActor {
     /// With `half`, UVs address the half texture: the left half directly and
     /// the right half through the half turn (x, y) -> (100 - x, width - y).
     private func canvasQuad(_ b: inout MeshBuilder, x0: Double, x1: Double, lift: Double,
-                            canvas K: SceneSpec.Look.FieldCanvas, width: Double, half: Bool, turned: Bool = false) {
+                            canvas K: SceneSpec.Look.FieldCanvas, width: Double, half: Bool, turned: Bool = false,
+                            y0 cy0: Double? = nil, y1 cy1: Double? = nil) {
         let yz = { (y: Double) in width / 2 - y }
         let uv = { (x: Double, y: Double) -> SIMD2<Float> in
             guard half else {
@@ -198,8 +200,11 @@ final class FieldActor: StadiumActor {
         }
         let p = { (x: Double, y: Double) in SceneMath.local(x: x, y: lift, z: yz(y)) }
         // corners in the order MeshBuilder.floor uses, so the quad faces up
-        b.quad(p(x0, K.y0), p(x1, K.y0), p(x1, K.y1), p(x0, K.y1),
-               uv: (uv(x0, K.y0), uv(x1, K.y0), uv(x1, K.y1), uv(x0, K.y1)), normal: SIMD3(0, 1, 0))
+        // canvas y runs from the home sideline (z = width/2) toward the away one
+        let ya = cy0.map { width / 2 - $0 } ?? K.y0, yb = cy1.map { width / 2 - $0 } ?? K.y1
+        let (lo, hi) = (min(ya, yb), max(ya, yb))
+        b.quad(p(x0, lo), p(x1, lo), p(x1, hi), p(x0, hi),
+               uv: (uv(x0, lo), uv(x1, lo), uv(x1, hi), uv(x0, hi)), normal: SIMD3(0, 1, 0))
     }
 
     /// Swap the paint and lettering onto the Shader Graph paint material
@@ -239,6 +244,56 @@ final class FieldActor: StadiumActor {
                 entity.isEnabled = true
             }
             StadiumLog.log.notice("[shadergraph] field paint on \(targets.count) meshes")
+        }
+    }
+
+    /// Shell grass along the home sideline in front of the field-level seat:
+    /// flat layers a few millimetres apart on the Shader Graph shell material
+    /// (FieldShells.usda), each cutting out the blades taller than it. Drawn
+    /// only if the graph loads; from the stands the flat turf is all there is.
+    private func buildShells(_ c: StadiumContext, maskPath: String) {
+        let V = c.look.field, Sh = V.shells, K = V.canvas, L = V.lift
+        guard let spec = c.spec.shaderGraph?.materials?[Sh.material],
+              case .number(let base)? = spec.parameters["BaseYards"],
+              case .number(let step)? = spec.parameters["StepYards"] else { return }
+        let f = c.spec.field, half = f.width / 2
+        var mesh = MeshBuilder()
+        for layer in Sh.firstLayer...Sh.lastLayer {
+            let y = base + Double(layer) * step + L.wear * 0.5
+            for (x0, x1, turned) in [(Sh.fromX, K.halfX1, false), (K.halfX1, Sh.toX, true)] where x1 > x0 {
+                canvasQuad(&mesh, x0: x0, x1: x1, lift: y, canvas: K, width: f.width, half: true, turned: turned,
+                           y0: half - Sh.depth, y1: half)
+            }
+        }
+        let shells = mesh.entity("turf.shells", SimpleMaterial())
+        shells.isEnabled = false
+        add(shells, order: 1)
+        let turf = c.assets.texture("field.turfAlbedo")
+        Task { @MainActor in
+            guard var m = await StadiumShaderGraph.material(spec.prim, file: spec.file),
+                  let atlas = await self.texture(Sh.atlas, semantic: .raw),
+                  let mask = await self.texture(maskPath, semantic: .color), let turf else {
+                StadiumLog.log.error("[shadergraph] shell grass unavailable; flat turf only")
+                return
+            }
+            for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+            // the patch in object units (SceneMath.local: x - 50, z as is)
+            StadiumShaderGraph.set(&m, "PatchX0", Sh.fromX - 50)
+            StadiumShaderGraph.set(&m, "PatchX1", Sh.toX - 50)
+            StadiumShaderGraph.set(&m, "PatchZ0", half - Sh.depth)
+            StadiumShaderGraph.set(&m, "PatchZ1", half)
+            StadiumShaderGraph.set(&m, "PatchFade", Sh.fade)
+            do {
+                try m.setParameter(name: "Atlas", value: .textureResource(atlas))
+                try m.setParameter(name: "Turf", value: .textureResource(turf))
+                try m.setParameter(name: "Mask", value: .textureResource(mask))
+            } catch {
+                StadiumLog.log.error("[shadergraph] shell textures: \(error.localizedDescription, privacy: .public)")
+                return
+            }
+            shells.model?.materials = [m]
+            shells.isEnabled = true
+            StadiumLog.log.notice("[shadergraph] shell grass on \(Sh.lastLayer - Sh.firstLayer + 1) layers")
         }
     }
 
