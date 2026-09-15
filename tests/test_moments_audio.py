@@ -111,6 +111,51 @@ class TestCues(unittest.TestCase):
         self.assertIn("thirdDown", cues)
 
 
+class TestCrowdCues(unittest.TestCase):
+
+    def test_the_final_stands_the_winners_sections_and_sits_the_losers(self):
+        for ev in (T.REGULATION, T.PICK_SIX, T.OVERTIME):
+            s = _Final.of(ev)
+            final = next(c for c in s["cues"] if c["kind"] == "final")
+            fans = sc.fan_sections(s["bowl"])
+            loser = "away" if final["side"] == "home" else "home"
+            self.assertEqual(final["crowd"]["stand"], fans[final["side"]], ev)
+            self.assertEqual(final["crowd"]["sit"], fans[loser], ev)
+
+    def test_every_section_belongs_to_one_club_and_the_visitors_sit_where_the_scene_says(self):
+        s = _Final.of(T.REGULATION)
+        bowl = s["bowl"]
+        fans = sc.fan_sections(bowl)
+        every = [x["id"] for t in bowl["seating"]["tiers"] for x in t.get("sections", [])]
+        self.assertEqual(sorted(fans["home"] + fans["away"]), sorted(every))
+        self.assertTrue(fans["away"], "there is a visitors' section")
+        self.assertGreater(len(fans["home"]), len(fans["away"]), "the home crowd outnumbers the visitors")
+        self.assertEqual(bowl["crowd"]["awaySection"]["side"], "far")
+        for tier in bowl["seating"]["tiers"]:
+            for sec in tier.get("sections", []):
+                if sec["id"] in fans["away"]:
+                    self.assertNotEqual(sec["side"], "home", f"visitors sit across the field, not in {sec}")
+
+    def test_crowd_durations_live_in_tokens(self):
+        M = sc.load_tokens()["visual"]["moments"]
+        t = M["timeline"]
+        self.assertGreater(t["touchdown"]["standSeconds"], 0)
+        self.assertGreater(t["fieldGoal"]["standSeconds"], 0)
+        self.assertGreater(t["turnover"]["groanSeconds"], 0)
+        self.assertGreater(t["turnover"]["standSeconds"], 0, "the side that took the ball jumps up")
+        for kind, step in t.items():
+            for key in ("standSeconds", "groanSeconds"):
+                self.assertTrue(step[key] == -1 or 0 < step[key] <= sc.load_tokens()["motion"]["momentSeconds"] + 0.01,
+                                (kind, key))
+        self.assertEqual(M["cues"]["thirdDown"]["crowd"], "clap")
+        self.assertEqual(M["cues"]["redZone"]["crowd"], "stand")
+        for key in ("finalHomeWon", "finalAwayWon"):
+            self.assertEqual(M["cues"][key]["crowd"], "final")
+        for key, cue in M["cues"].items():
+            self.assertIn(cue["crowd"], ("stand", "clap", "final", "none"), key)
+            self.assertGreater(cue["seconds"], 0, key)
+
+
 class TestMomentDetail(unittest.TestCase):
 
     def test_a_pick_six_says_interception_and_a_punt_return_says_so(self):

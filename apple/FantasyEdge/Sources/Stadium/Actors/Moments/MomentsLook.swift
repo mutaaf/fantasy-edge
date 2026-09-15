@@ -33,6 +33,10 @@ extension SceneSpec.Look {
         public let banner: Double
         public let chime: Double
         public let settle: Double
+        /// How long the side that scored (or took the ball) stands; -1 not at all.
+        public let standSeconds: Double
+        /// How long the side that lost the ball groans; -1 not at all.
+        public let groanSeconds: Double
     }
 
     public struct MomentBurst: Decodable, Equatable, Sendable {
@@ -85,7 +89,7 @@ extension SceneSpec.Look {
     public struct CueTreatment: Decodable, Equatable, Sendable {
         /// A key of visual.audio.assets, or "none".
         public let audio: String
-        /// What the home crowd does: stand, rise, surge, sit, none.
+        /// What the crowd does: stand, clap, final (winners stand, losers sit), none.
         public let crowd: String
         /// A key of bursts, or "none".
         public let burst: String

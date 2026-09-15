@@ -77,7 +77,16 @@ final class MomentsActor: StadiumActor {
         let away = m.side == "away"
 
         if T.surge >= 0 {
-            schedule(now + T.surge) { [c] in c.shared.surge = (away, now + hold) }
+            // The surge still drives Lighting's wash; the crowd itself is
+            // told to stand (the scorers, or the side that took the ball) and
+            // to groan (the side that gave it up) through Crowd's hooks.
+            let side = m.side
+            let other = side == "home" ? "away" : "home"
+            schedule(now + T.surge) { [c] in
+                c.shared.surge = (away, now + hold)
+                if T.standSeconds > 0 { c.shared.stand(.side(side), until: c.shared.time + T.standSeconds) }
+                if T.groanSeconds > 0 { c.shared.groan(other, until: c.shared.time + T.groanSeconds) }
+            }
         }
         if T.strobe >= 0 {
             let seconds = reduced ? (M.reduceMotion.strobe ? T.strobeSeconds : M.reduceMotion.glowSeconds) : T.strobeSeconds
@@ -97,7 +106,10 @@ final class MomentsActor: StadiumActor {
     /// A cue's visual beats: the crowd's part through the blackboard, a
     /// strobe if the treatment asks, a burst (confetti for a home win).
     /// `id` dedupes a cue the server repeats while it holds.
-    func cue(treatment: String, side: String?, id: String?, _ c: StadiumContext) {
+    /// `crowd` is the final cue's `crowd` from the scene: the sections that
+    /// stand and the ones that sit. Without it the final falls back to sides.
+    func cue(treatment: String, side: String?, id: String?,
+             crowd: (stand: [String], sit: [String])? = nil, _ c: StadiumContext) {
         if let id {
             guard id != lastCue else { return }
             lastCue = id
@@ -106,13 +118,23 @@ final class MomentsActor: StadiumActor {
         guard let T = c.look.moments.cues[treatment] else { return }
         let now = c.shared.time
         let reduced = c.reduceMotion
-        // Only a surge exists on the blackboard today; stand, rise and sit
-        // are asked of Crowd in docs/actors/moments-audio.md. Until then they
-        // map to the nearest thing Crowd already does.
+        // The crowd's part, through Crowd's hooks (Actors/Crowd/CrowdCues.swift).
+        // Reduce motion is Crowd's to honour: every cue becomes a still pose.
+        let who = side ?? "home"
         switch T.crowd {
-        case "surge", "stand", "rise":
-            let home = side != "away"
-            c.shared.surge = (!home, now + T.seconds)
+        case "stand":
+            c.shared.stand(.side(who), until: now + T.seconds)
+        case "clap":
+            c.shared.stand(.side(who), until: now + T.seconds, clap: true)
+        case "final":
+            let loser = who == "home" ? "away" : "home"
+            if let crowd, !crowd.stand.isEmpty {
+                c.shared.stand(.sections(crowd.stand), until: .infinity)
+                if !crowd.sit.isEmpty { c.shared.sit(.sections(crowd.sit), until: now + T.seconds) }
+            } else {
+                c.shared.stand(.side(who), until: .infinity)
+                c.shared.sit(.side(loser), until: now + T.seconds)
+            }
         default:
             break
         }

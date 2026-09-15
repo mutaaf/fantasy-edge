@@ -787,6 +787,49 @@ def build_cues(raw: list[dict], drives_out: list[dict], home: dict, away: dict,
     return cues
 
 
+_FANS: dict = {}
+
+
+def fan_sections(bowl: dict) -> dict:
+    """Which `bowl.seating` sections each club's fans fill: the visitors'
+    section is `crowd.awaySection` (a side of the bowl beyond a field x), the
+    home crowd everything else. A section belongs to whoever sits at its
+    middle, on its tier's middle ring. Decided here so no client repeats it."""
+    away = bowl["crowd"]["awaySection"]
+    key = (json.dumps(bowl["shape"], sort_keys=True), json.dumps(away, sort_keys=True),
+           tuple(s["id"] for t in bowl["seating"]["tiers"] for s in t.get("sections", [])))
+    if key in _FANS:
+        return _FANS[key]
+    out = {"home": [], "away": []}
+    for tier in bowl["tiers"]:
+        seats = next((t for t in bowl["seating"]["tiers"] if t["tier"] == tier["name"]), None)
+        if not seats:
+            continue
+        ring = BowlRing(bowl["shape"], (tier["inner"] + tier["outer"]) / 2)
+        for sec in seats.get("sections", []):
+            mid = ((sec["from"] + sec["to"]) / 2) % 1.0
+            x, z = bowl_point(bowl["shape"], ring.m, ring.angle(mid * ring.length))
+            far = z < 0
+            visitors = (far if away["side"] == "far" else not far) and x + 50 >= away["fromX"]
+            out["away" if visitors else "home"].append(sec["id"])
+    _FANS[key] = out
+    return out
+
+
+def dress_final(cues: list[dict], bowl: dict) -> None:
+    """The final's crowd: the winners' sections stand, the losers' sit."""
+    fans = None
+    for c in cues:
+        if c["kind"] != "final":
+            continue
+        fans = fans or fan_sections(bowl)
+        if c["side"] in ("home", "away"):
+            loser = "away" if c["side"] == "home" else "home"
+            c["crowd"] = {"stand": fans[c["side"]], "sit": fans[loser]}
+        else:
+            c["crowd"] = {"stand": [], "sit": []}
+
+
 def active_cue(cues: list[dict], raw: list[dict], state: str, status: dict) -> dict | None:
     """The cue for this instant.
 
@@ -973,6 +1016,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
               "downDistance": sit.get("downDistanceText") or "",
               "redZone": bool(sit.get("isRedZone"))}
     cues = build_cues(raw, drives_out, home, away, field)
+    dress_final(cues, bowl)
 
     return {
         "version": SCENE_VERSION,

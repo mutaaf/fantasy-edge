@@ -117,3 +117,8 @@ Each shell is now born on a small sphere's surface (`radius`), fast (24 yd/s) wi
 - Reduce motion in the simulator.
 - The tabletop miniature burst.
 - Cues end to end, which wait on the composer hook.
+
+### Crowd hooks: `docs/actors/moments-audio/crowd-hooks/`
+`actor/crowd` @ `ac9e77f` is merged. The moment timelines call `stand` (the scorers, or the side that took the ball) and `groan` (the side that gave it up); `shared.surge` stays, for the Lighting wash. Cues call `clap` (third down), `stand` (red zone) and, at the final, `stand(.sections)` for the winners until the end and `sit(.sections)` for the losers. The scene serves those section lists on the final cue (`cues[].crowd`, from `fan_sections`). Durations live in `timeline.*.standSeconds` and `groanSeconds`, and in `cues.*.seconds`.
+- Frames: the touchdown is the real pick-six; the others use `-crowdCue`, because the composer does not dispatch cues yet.
+- `apple/verify_scene.swift`'s header command now also needs `Actors/Field/FieldArtSpec.swift` (after the Field merge). Director.
