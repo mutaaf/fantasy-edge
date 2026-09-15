@@ -53,7 +53,8 @@ def materials():
         "concrete": C.material("bowl_concrete", albedo="concrete_wall_albedo.jpg", normal="concrete_wall_normal.png",
                                orm="concrete_wall_orm.png", color=(1, 1, 1, 1)),
         "steel": C.material("bowl_steel", color=(0.05, 0.053, 0.058, 1), roughness=0.4, metallic=0.7),
-        "glass": C.material("bowl_glass", color=(0.20, 0.24, 0.27, 1), roughness=0.05, metallic=0.1, alpha=0.32,
+        # tinted and a little reflective: rails, suites and the press box glazing
+        "glass": C.material("bowl_glass", color=(0.27, 0.27, 0.25, 1), roughness=0.03, metallic=0.3, alpha=0.24,
                             double_sided=True),
         "interiors": C.material("bowl_interiors", color=(0, 0, 0, 1), emission="interiors_emission.jpg",
                                 emission_strength=3.5),
@@ -72,6 +73,16 @@ def materials():
         "seat_hardware": SEAT.materials()["seat_hardware"],
         "steplight": C.material("bowl_step_light", color=(0, 0, 0, 1), emission="interiors_emission.jpg",
                                 emission_strength=6.0),
+        # The press room lights itself warm (Lighting's concourse #F0D3AE); the
+        # glass in front is tinted and a little reflective.
+        "press_room": C.material("bowl_press_room", color=(0.05, 0.045, 0.04, 1), emission="press_room_emission.jpg",
+                                 emission_strength=1.6, roughness=0.9),
+        "press_desk": C.material("bowl_press_desk", color=(0.23, 0.15, 0.09, 1), roughness=0.45,
+                                 emission_color=(0.94, 0.83, 0.68), emission_strength=0.08),
+        "press_chair": C.material("bowl_press_chair", color=(0.04, 0.04, 0.045, 1), roughness=0.6,
+                                  emission_color=(0.94, 0.83, 0.68), emission_strength=0.03),
+        "press_glass": C.material("bowl_press_glass", color=(0.30, 0.28, 0.24, 1), roughness=0.03, metallic=0.35,
+                                  alpha=0.2, double_sided=True),
         "plaque": C.material("bowl_seat_plaque", albedo="seat_numbers.png", roughness=0.35, metallic=0.8,
                              color=(1, 1, 1, 1)),
         "table_trim": C.material("bowl_table_trim", albedo="table_trim_albedo.jpg", roughness=0.9, color=(1, 1, 1, 1)),
@@ -583,10 +594,15 @@ def press_box(b: C.Builder) -> None:
         # the room: floor, lit back wall, desk line
         oquad(b, (pt(front, ta, y0 + 0.02), pt(front, tb, y0 + 0.02), pt(back, tb, y0 + 0.02), pt(back, ta, y0 + 0.02)),
               (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.2, 0.6))
-        oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, y1), pt(back, ta, y1)), nin, "interiors",
-              atlas_uv("press", u0, u1))
-        oquad(b, (pt(front + 1.2, ta, y0 + 0.9), pt(front + 1.2, tb, y0 + 0.9), pt(front + 1.2, tb, y0 + 1.5),
-                  pt(front + 1.2, ta, y0 + 1.5)), nin, "interiors", atlas_uv("press", u0, u1, 0.3, 0.55))
+        # acoustic back wall, lit ceiling, inner face of the sill
+        oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, y1), pt(back, ta, y1)), nin, "press_room",
+              ((u0 / 12, 0.5), (u1 / 12, 0.5), (u1 / 12, 1.0), (u0 / 12, 1.0)))
+        oquad(b, (pt(front - cant, ta, y1 - 0.01), pt(front - cant, tb, y1 - 0.01), pt(back, tb, y1 - 0.01),
+                  pt(back, ta, y1 - 0.01)), (0, -1, 0), "press_room",
+              ((u0 / 12, 0.25), (u1 / 12, 0.25), (u1 / 12, 0.5), (u0 / 12, 0.5)))
+        oquad(b, (pt(front + 0.02, ta, y0), pt(front + 0.02, tb, y0), pt(front + 0.02, tb, y0 + 0.6),
+                  pt(front + 0.02, ta, y0 + 0.6)), (-nin[0], 0, -nin[2]), "press_desk")
+        press_desk(b, ta, tb, nin, front, y0)
         # roof with an overhang, and its fascia edge
         oquad(b, (pt(front - cant - 0.9, ta, y1 + 0.35), pt(front - cant - 0.9, tb, y1 + 0.35), pt(back + 0.2, tb, y1 + 0.35),
                   pt(back + 0.2, ta, y1 + 0.35)), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.6, 1.0))
@@ -605,7 +621,12 @@ def press_box(b: C.Builder) -> None:
         cc = kit.bowl_point(front - cant, ta)
         oquad(b, ((a[0] - tx, y0 + 0.6, a[1] - tz), (a[0] + tx, y0 + 0.6, a[1] + tz), (cc[0] + tx, y1, cc[1] + tz),
                   (cc[0] - tx, y1, cc[1] - tz)), (nx, 0.2, nz), "steel")
-    # end walls
+    # end walls, inside faces in the room's panel fabric
+    for t in (ts[0], ts[-1]):
+        nx, nz = kit.inward(front, t)
+        side_in = (-nz, 0.0, nx) if t == ts[0] else (nz, 0.0, -nx)
+        oquad(b, (pt(front - cant + 0.02, t, y0), pt(back - 0.02, t, y0), pt(back - 0.02, t, y1),
+                  pt(front - cant + 0.02, t, y1)), side_in, "press_room", ((0, 0.5), (0.4, 0.5), (0.4, 1.0), (0, 1.0)))
     for t in (ts[0], ts[-1]):
         nx, nz = kit.inward(front, t)
         side = (nz, 0.0, -nx) if t == ts[0] else (-nz, 0.0, nx)
@@ -617,6 +638,52 @@ def press_box(b: C.Builder) -> None:
         yaw = math.atan2(nx, nz)
         b.box(pt(front + pb["depth"] / 2, t, (kit.PARAPET["top"] + y0 - 0.5) / 2),
               (0.5, y0 - 0.5 - kit.PARAPET["top"], pb["depth"]), "concrete", yaw=yaw, skip=("top", "bottom"), uv_scale=0.3)
+
+
+PRESS_ROOM = {"deskFront": 0.25, "deskDepth": 0.75, "deskTop": 0.82, "monitorEvery": 1.2,
+              "monitor": (0.62, 0.38), "chairBack": 1.55}
+
+
+def press_desk(b: C.Builder, ta, tb, nin, front, y0) -> None:
+    """One segment of the press room's furniture: the desk run behind the
+    glass, monitors on it facing the seats, and chairs - except where the
+    wearer's own seat is (bowl.pressBox preset, the room's middle)."""
+    R = PRESS_ROOM
+    d0, d1 = front + R["deskFront"], front + R["deskFront"] + R["deskDepth"]
+    top = y0 + R["deskTop"]
+    out = (-nin[0], 0.0, -nin[2])
+    oquad(b, (pt(d0, ta, top), pt(d0, tb, top), pt(d1, tb, top), pt(d1, ta, top)), (0, 1, 0), "press_desk")
+    oquad(b, (pt(d1, ta, y0), pt(d1, tb, y0), pt(d1, tb, top), pt(d1, ta, top)), out, "press_desk")
+    ring = kit.Ring(d0 + 0.2)
+    s0, s1 = ring.arc_at(ta), ring.arc_at(tb)
+    if s1 < s0:
+        s1 += ring.length
+    mid = ring.arc_at(math.pi * 1.5)
+    k = math.ceil(s0 / R["monitorEvery"])
+    while k * R["monitorEvery"] < s1:
+        s = k * R["monitorEvery"]
+        t = ring.angle(s)
+        nx, nz = kit.inward(ring.m, t)
+        tx, tz = nz, -nx
+        w, h = R["monitor"]
+        cx, cz = kit.bowl_point(d0 + 0.25, t)
+        cell = k % 4
+        uv = ((cell / 4, 0.0), ((cell + 1) / 4, 0.0), ((cell + 1) / 4, 0.25), (cell / 4, 0.25))
+        def M(lat, up, back=0.0):
+            return (cx + tx * lat - nx * back, top + 0.08 + up, cz + tz * lat - nz * back)
+        # screen faces the seats (outward); a thin dark shell behind it
+        oquad(b, (M(w / 2, 0), M(-w / 2, 0), M(-w / 2, h), M(w / 2, h)), (-nx, 0, -nz), "press_room", uv)
+        oquad(b, (M(-w / 2, 0, -0.04), M(w / 2, 0, -0.04), M(w / 2, h, -0.04), M(-w / 2, h, -0.04)), (nx, 0, nz),
+              "press_desk")
+        b.tube([M(0, -0.08, -0.02), M(0, 0.0, -0.02)], 0.03, "press_desk", sides=4)
+        # a chair behind every monitor but the wearer's
+        if abs(((s - mid) + ring.length / 2) % ring.length - ring.length / 2) > 0.8:
+            chx, chz = kit.bowl_point(front + R["chairBack"], t)
+            yaw = math.atan2(-nx, -nz)
+            b.box((chx, y0 + 0.48, chz), (0.5, 0.08, 0.5), "press_desk", yaw=yaw, skip=("bottom",))
+            b.box((chx + nx * -0.24, y0 + 0.85, chz + nz * -0.24), (0.5, 0.65, 0.06), "press_desk", yaw=yaw)
+            b.tube([(chx, y0, chz), (chx, y0 + 0.44, chz)], 0.04, "press_desk", sides=4)
+        k += 1
 
 
 def rigs(b: C.Builder) -> None:

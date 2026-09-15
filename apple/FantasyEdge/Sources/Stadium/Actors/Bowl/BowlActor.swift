@@ -173,6 +173,8 @@ final class BowlActor: StadiumActor {
                 } else if inNear && (n.contains("plaque") || n.contains("stair") || n.contains("seat_hardware")) {
                     pbr.emissiveColor = .init(color: .init(white: 0.55, alpha: 1))
                     pbr.emissiveIntensity = Float(B.nearLift)
+                } else if n.contains("press_room") {
+                    pbr.emissiveIntensity = Float(B.pressRoomLift)
                 } else if n.contains("interiors") {
                     pbr.emissiveIntensity = 3.5
                 }
