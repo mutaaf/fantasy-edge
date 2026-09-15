@@ -1,0 +1,41 @@
+{
+  "against": {
+    "albedoMean": [
+      0.1063,
+      0.1814,
+      0.0526
+    ],
+    "blades": 206848
+  },
+  "heightScaleMetres": 0.045,
+  "patchMetres": 0.4,
+  "resolution": 1024,
+  "shellResolution": 512,
+  "with": {
+    "albedoMean": [
+      0.1062,
+      0.1811,
+      0.0525
+    ],
+    "blades": 206848,
+    "shellHeights": [
+      0.0262,
+      0.0227,
+      0.0192,
+      0.0157,
+      0.0122,
+      0.0087,
+      0.0052,
+      0.0017
+    ]
+  },
+  "worn": {
+    "albedoMean": [
+      0.1414,
+      0.1604,
+      0.0673
+    ],
+    "blades": 71152
+  },
+  "wornResolution": 512
+}
