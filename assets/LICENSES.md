@@ -19,3 +19,26 @@ bowl those scripts build. Released with the repository.
 | `sky/env/sky_{night,dusk}.exr`, `sky/textures/*` | `textures.py` |
 
 No logos, marks or recognisable venues: the bowl is the scene's superellipse.
+
+## Audio (`assets/actors/audio/`)
+
+**Original: no recordings, no samples, no downloads.** Every sound is
+synthesised from seeded noise, oscillators and a synthetic stadium impulse
+response by `tools/audio/build.py` (run on Blender's bundled Python for
+numpy; nothing is pip-installed), then encoded with `afconvert` (Apple
+Lossless `.caf`) and `ffmpeg` (Opus `.ogg`). No chants, songs, team
+music, PA voices or brand sounds. Released with the repository.
+
+| Sound | Files | Class |
+|---|---|---|
+| crowd_bed, clap_bed, murmur_bed, wind_bed | `<name>.{caf,ogg}` | looping beds |
+| roar, cheer, groan, sting | `<name>.{caf,ogg}` | crowd reactions |
+| whistle, chime, horn | `<name>.{caf,ogg}` | referee, PA, scoreboard |
+| rumble, defense_swell, final_cheer, exodus, fireworks | `<name>.{caf,ogg}` | cues and moments |
+
+`manifest.json` records each file's length, seed and measured RMS and peak.
+
+## Moments (`assets/actors/moments/`)
+
+No files: particles are RealityKit's default soft sprite, configured from
+`visual.moments.bursts`.
