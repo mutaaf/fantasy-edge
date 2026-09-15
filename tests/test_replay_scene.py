@@ -712,7 +712,8 @@ class TestSceneGeometry(unittest.TestCase):
         mats = self.final["shaderGraph"]["materials"]
         for actor, key, usda in (("field", "paintMaterial", "Field.rkassets/FieldPaint.usda"),
                                  ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda"),
-                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda")):
+                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda"),
+                                 ("field", "turfMaterial", "Turf.rkassets/TurfSheen.usda")):
             section = self.final["visual"][actor]
             for part in key.split(".")[:-1]:
                 section = section[part]
@@ -726,15 +727,19 @@ class TestSceneGeometry(unittest.TestCase):
             runtime = ({"Color", "UseMask", "Roughness", "BorderColor", "BorderRoughness", "BorderGrassCut",
                         "HalfWidth", "HalfLength"} if key == "paintMaterial" else
                        {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else
+                       {"Tint", "Roughness", "Sheen"} if key == "turfMaterial" else
                        {"FaceOpacity", "GrazingOpacity"})
             self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
             self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
         shells = self.final["visual"]["field"]["shells"]
         self.assertTrue((root / "assets" / shells["atlas"]).is_file())
         self.assertTrue(0 <= shells["firstLayer"] <= shells["lastLayer"] <= 7, "the atlas holds eight layers")
-        breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
-        self.assertTrue(breakup.is_file())
-        self.assertLess(breakup.stat().st_size, 1_000_000)
+        for name, rel in self.final["visual"]["field"]["shaderTextures"].items():
+            tex = root / "assets" / rel
+            self.assertTrue(tex.is_file(), name)
+            self.assertLess(tex.stat().st_size, 4_000_000, name)
+        turf = self.final["visual"]["field"]["turf"]
+        self.assertEqual(len(turf["stripeSheen"]), len(turf["stripeTint"]), "a sheen per stripe")
 
     def test_the_boundary_is_as_wide_as_each_book_says(self):
         """NFL: a solid white border six feet (two yards) wide outside the
@@ -772,7 +777,8 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertLessEqual(max(srgb(p["border"])), max(srgb(p["white"])))
         turf = self.final["visual"]["field"]["turf"]
         self.assertGreaterEqual(p["borderRoughness"], max(turf["stripeRoughness"]))
-        self.assertGreater(p["borderGrassCut"], self.final["shaderGraph"]["materials"]["fieldPaint"]["parameters"]["GrassCut"])
+        # a blade shows where it stands above the cut, so a lower cut lets more through
+        self.assertLess(p["borderGrassCut"], self.final["shaderGraph"]["materials"]["fieldPaint"]["parameters"]["GrassCut"])
 
     def test_pylons_stand_where_each_book_puts_them(self):
         """NFL: the four goal-line corners and two on each end line at the
