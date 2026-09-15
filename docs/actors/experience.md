@@ -16,7 +16,7 @@ Walking into a night game, not loading one.
 - **Field kept clear.** Every panel's place is a slot in `visual.experience.layout`, low and to the side.
   - **Rest.** Panels rest at `restOpacity` and come up to `hoverOpacity` when looked at (the system's hover state; the app never learns where you look).
   - **Folding.** The side panels fold to 60-point tabs. The controls fold to a pill after `controls.autoHideSeconds` untouched, and come back on a tap of the pill or a pinch out on the field.
-  - **Moments.** A celebrated moment takes every panel but the scorebug and banner away (fade to `panels.momentOpacity`; with reduce motion they fold instead). They come back `panels.momentReturnSeconds` after the banner goes.
+  - **Moments.** A celebrated moment folds every panel and fades the tabs to `panels.momentOpacity` (reduce motion: folds, no fade), leaving the scorebug and Broadcast's world banner. `panels.momentReturnSeconds` after the banner goes, each panel returns as the wearer had it.
 - **Seats.** Chosen on a map of the bowl drawn from `bowl.shape` and `presentation.stadium.seats`, each a 60-point target. The seat change fades through dark (reduce motion: a cut), and the last seat is remembered.
 - **The table.**
   - **Plinth.** A bevelled stone plinth with a lit rim and a thin edge light in each club's colour, home along the home half, plus a grounding shadow.

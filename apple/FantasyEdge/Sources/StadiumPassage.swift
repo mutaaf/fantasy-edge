@@ -34,6 +34,21 @@ final class StadiumPassage {
 
     func appeared(_ w: Window) { open.insert(w) }
 
+    /// A window that opens while the stadium is up belongs behind it, not in
+    /// the stands. Under load the tabletop the launch opened could finish
+    /// appearing after `enter` had already written down what to close, and it
+    /// sat in the middle of the bowl, win-probability labels and all. Returns
+    /// true when the window should close itself; it comes back on the way out.
+    func appearedInside(_ w: Window) -> Bool {
+        guard inStadium else { return false }
+        saved.insert(w)
+        moving = true
+        defer { moving = false }
+        open.remove(w)
+        log.info("a window appeared inside the stadium; closing it until the way out")
+        return true
+    }
+
     func disappeared(_ w: Window) {
         guard !moving else { return }
         open.remove(w)
@@ -107,9 +122,14 @@ struct TracksWindow: ViewModifier {
     let window: StadiumPassage.Window
     @Environment(StadiumPassage.self) private var passage
 
+    @Environment(\.dismissWindow) private var dismissWindow
+
     func body(content: Content) -> some View {
         content
-            .onAppear { passage.appeared(window) }
+            .onAppear {
+                passage.appeared(window)
+                if passage.appearedInside(window), case .board = window { dismissWindow(id: "board") }
+            }
             .onDisappear { passage.disappeared(window) }
     }
 }

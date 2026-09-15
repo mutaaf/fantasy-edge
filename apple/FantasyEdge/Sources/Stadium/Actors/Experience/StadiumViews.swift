@@ -178,7 +178,7 @@ public struct ReplayControls: View {
 
 // MARK: - the tabletop
 
-/// A game on the table: a volumetric window about 0.9 × 0.4 × 0.6 m.
+/// A game on the table: a volumetric window sized by `presentation.tabletop.volume`.
 ///
 /// The miniature sits on its lit plinth and can be turned and scaled with a
 /// pinch, inside the limits the tokens give, and tipped toward the wearer with
@@ -204,20 +204,13 @@ public struct TabletopView: View {
         self.enterStadium = enterStadium
     }
 
-    @State private var hold = MomentHold()
-
     private var table: SceneSpec.Look.TabletopLook? { ExperienceTokens.tabletop(feed.spec) }
 
     public var body: some View {
-        RealityView { content, attachments in
+        RealityView { content in
             holder.name = "experience.tabletop"
             holder.addChild(renderer.root)
             holder.addChild(gate.root)
-            // The pinch target: the volume itself, so a pinch anywhere on the
-            // model turns or scales it.
-            let volume = feed.spec?.presentation.tabletop.volume ?? [0.9, 0.4, 0.6]
-            holder.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(
-                Float(volume[safe: 0] ?? 0.9), Float(volume[safe: 1] ?? 0.4), Float(volume[safe: 2] ?? 0.6)))]))
             holder.components.set(InputTargetComponent())
             content.add(holder)
             let r = renderer, g = gate
@@ -227,26 +220,14 @@ public struct TabletopView: View {
             gateClock = content.subscribe(to: SceneEvents.Update.self) { event in
                 MainActor.assumeIsolated { g.tick(event.deltaTime) }
             }
-            if let flag = attachments.entity(for: "moment") {
-                flag.position = SIMD3(0, 0.13, 0)
-                content.add(flag)
-            }
-        } update: { _, attachments in
-            // Only the renderer is told; attachments were placed once in
-            // `make` and are only moved here, never re-added.
-            if let spec = feed.spec { renderer.apply(spec, reduceMotion: reduceMotion) }
-            if let flag = attachments.entity(for: "moment") {
-                flag.isEnabled = hold.shown != nil
-                if let m = hold.shown, let spec = feed.spec {
-                    // Over the end zone the score went into, at table scale.
-                    let x = m.anchorX
-                    let s = Float(spec.presentation.tabletop.metersPerYard)
-                    flag.position = SIMD3(Float(x - 50) * s, 0.13, 0)
-                }
-            }
-        } attachments: {
-            Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
+        } update: { _ in
+            guard let spec = feed.spec else { return }
+            renderer.apply(spec, reduceMotion: reduceMotion)
+            // The pinch target is the volume itself, so a pinch anywhere on
+            // the model turns or scales it. Sized once the scene says how big.
+            let v = spec.presentation.tabletop.volume
+            if !holder.components.has(CollisionComponent.self), v.count == 3 {
+                holder.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(Float(v[0]), Float(v[1]), Float(v[2])))]))
             }
         }
         .gesture(MagnifyGesture().targetedToEntity(holder)
@@ -266,10 +247,6 @@ public struct TabletopView: View {
                 place(animated: false)
             }
             .onEnded { _ in gestureYaw = nil })
-        .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
-        .task(id: hold.shown?.playId) {
-            await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
-        }
         #if DEBUG
         // `-arrivalAt <0...1>` freezes the gate part-way open, for a still,
         // once the scene it takes its outline from has arrived.
@@ -392,54 +369,6 @@ public struct TabletopView: View {
     }
 }
 
-extension Array {
-    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
-}
-
-/// TOUCHDOWN, or whatever the moment is, with the play that made it.
-public struct MomentBanner: View {
-    let moment: SceneSpec.Moment
-    let spec: SceneSpec?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var shown = false
-
-    public init(moment: SceneSpec.Moment, spec: SceneSpec?) {
-        self.moment = moment
-        self.spec = spec
-    }
-
-    private var title: String {
-        switch moment.kind {
-        case "touchdown": return "TOUCHDOWN"
-        case "fieldGoal": return "FIELD GOAL"
-        case "safety": return "SAFETY"
-        default: return moment.kind.uppercased()
-        }
-    }
-
-    public var body: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 12) {
-                if let t = spec?.teams.side(moment.side) {
-                    SceneChip(text: t.abbr, fill: t.chip, symbol: nil, hatch: t.hatch)
-                }
-                Text(title).font(.system(size: 64, weight: .black))
-            }
-            Text(moment.text).font(.system(size: 18)).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center).frame(maxWidth: 640)
-        }
-        .padding(28)
-        .glassBackgroundEffect()
-        // A fade and a short rise, never a scale: the attachment is rasterised
-        // at its point size, and scaling it would blur the one word that has
-        // to be crisp. Reduce motion: there from the first frame.
-        .opacity(shown || reduceMotion ? 1 : 0)
-        .offset(y: shown || reduceMotion ? 0 : 24)
-        .onAppear {
-            if reduceMotion { shown = true } else { withAnimation(.easeOut(duration: 0.45)) { shown = true } }
-        }
-    }
-}
 
 /// How long a celebration stays up, independent of the poll.
 ///
@@ -504,29 +433,6 @@ public enum StadiumLayout {
         let flat = (p.x * p.x + p.z * p.z).squareRoot()
         return atan2(eye - p.y, flat) * 180 / .pi
     }
-
-    /// The end zone a side scores into. Home defends x = 0 and attacks 100.
-    public static func endZoneX(scoredBy side: String) -> Double {
-        side == "home" ? 105 : -5
-    }
-
-    /// Where the celebration goes in the stadium: in the direction of the end
-    /// zone the score went into, lifted above the stands' sightline.
-    ///
-    /// Not *at* the end zone. From the fifty that is 50 yards away and 52
-    /// degrees round, where a banner sized to read is a postage stamp and a
-    /// head turned that far misses the field. So it sits on the same bearing,
-    /// held to `maxYaw`, a few metres out.
-    public static func moment(_ m: SceneSpec.Moment, seat: SceneSpec.SeatOption) -> SIMD3<Float> {
-        // The bearing of the scene's anchor as the seated wearer sees it: the
-        // world is turned so the seat faces -z, so turn the anchor the same way.
-        let facing = SIMD3(Float(seat.lookAt.x - seat.x), 0, Float(seat.lookAt.z - seat.z))
-        let turn = simd_quatf(angle: atan2(facing.x, -facing.z), axis: SIMD3(0, 1, 0))
-        let toward = turn.act(SIMD3(Float(m.anchorX - seat.x), 0, Float((m.anchor?.z ?? 0) - seat.z)))
-        let yaw = atan2(toward.x, -toward.z) * 180 / .pi
-        let held = max(-maxYaw, min(maxYaw, yaw))
-        return at(degrees: held, distance: 2.4, height: eye + 0.65)
-    }
 }
 
 /// Seated in a bowl at night, reached from the tabletop.
@@ -564,6 +470,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
     @State private var pickerOpen = false
     @State private var hintShown = false
     @State private var arrived = false
+    @State private var beforeMoment: (drive: Bool, trailing: Bool, controls: Bool)?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `look` is (yaw, pitch) in degrees, zero outside debug captures.
@@ -612,10 +519,6 @@ public struct StadiumSpaceView<Trailing: View>: View {
                     world.addChild(e)
                 }
             }
-            if let moment = attachments.entity(for: "moment") {
-                face(moment, at: StadiumLayout.at(degrees: 0, distance: 3.2, height: StadiumLayout.eye + 0.85))
-                world.addChild(moment)
-            }
             // A pinch out on the field brings the controls back: an invisible
             // target far out ahead, behind every panel.
             if let c = ExperienceTokens.controls(nil)?.revealCatcher {
@@ -653,12 +556,6 @@ public struct StadiumSpaceView<Trailing: View>: View {
             attachments.entity(for: "status")?.isEnabled = !reading
             attachments.entity(for: "picker")?.isEnabled = reading && pickerOpen
             attachments.entity(for: "hint")?.isEnabled = hintShown
-            if let flag = attachments.entity(for: "moment") {
-                flag.isEnabled = hold.shown != nil
-                if let m = hold.shown, let spec = feed.spec {
-                    face(flag, at: StadiumLayout.moment(m, seat: renderer.seat(spec)))
-                }
-            }
         } attachments: {
             Attachment(id: "scorebug") {
                 if let spec = feed.spec { SceneScorebug(spec: spec) }
@@ -696,24 +593,35 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 }
             }
             Attachment(id: "hint") { CrownHint() }
-            Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
-            }
         }
         .gesture(SpatialTapGesture().targetedToEntity(catcher).onEnded { _ in reveal() })
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
         .task(id: hold.shown?.playId) {
             await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
         }
-        // A moment takes the panels away while it is up, and gives them back
-        // `momentReturnSeconds` after it goes.
+        // A moment takes the panels away while it is up: they fold, and the
+        // folded tabs fade out too, so nothing but the scorebug and Broadcast's
+        // banner is between the wearer and the score. `momentReturnSeconds`
+        // after it goes, each panel comes back as the wearer had it.
         .task(id: hold.shown?.playId) {
             if hold.shown != nil {
-                if !yielding { yielding = true; ExperienceEvents.post(.panelsYielded(true)) }
+                guard !yielding else { return }
+                beforeMoment = (driveFolded, trailingFolded, controlsFolded)
+                driveFolded = true
+                trailingFolded = true
+                controlsFolded = true
+                yielding = true
+                ExperienceEvents.post(.panelsYielded(true))
             } else if yielding {
                 try? await Task.sleep(for: .seconds(panels?.momentReturnSeconds ?? 1))
                 guard !Task.isCancelled, hold.shown == nil else { return }
                 yielding = false
+                if let was = beforeMoment {
+                    driveFolded = was.drive
+                    trailingFolded = was.trailing
+                    controlsFolded = was.controls
+                }
+                beforeMoment = nil
                 ExperienceEvents.post(.panelsYielded(false))
             }
         }

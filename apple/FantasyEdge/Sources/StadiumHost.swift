@@ -79,10 +79,16 @@ struct TabletopHost: View {
             }
         }
         .onAppear {
-            passage.appeared(.tabletop(value))
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
+            passage.appeared(.tabletop(value))
+            if passage.appearedInside(.tabletop(value)) { dismissWindow(id: "tabletop", value: value) }
         }
         .onDisappear { passage.disappeared(.tabletop(value)) }
+        // The launch arguments run from whichever window the system restores
+        // first. On a relaunch visionOS can bring back only the tabletop the
+        // last session left open, and with the hook on the board alone the
+        // stadium never opened (once per process either way).
+        .modifier(StadiumLaunchArguments())
         .onChange(of: value) { old, new in
             passage.renamed(from: .tabletop(old), to: .tabletop(new))
             feed.target = new == StadiumHost.replayWindow ? .replay : .live(event: new)
