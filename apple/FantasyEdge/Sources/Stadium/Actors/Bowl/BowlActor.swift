@@ -128,13 +128,28 @@ final class BowlActor: StadiumActor {
     /// an emissive strength, so they are applied here from `visual.bowl`.
     private func dress(_ e: Entity, look B: SceneSpec.Look.BowlLook) {
         let seat = StadiumLook.color(B.seatColor)
+        // The seats in front of the wearer face away from every floodlight on
+        // the far rim, and a night probe alone left them a black ledge along
+        // the bottom of the view. Spill from the concourse behind is carried
+        // as a low self-light on the foreground only (`nearLift`).
+        let lift = StadiumLook.color(B.seatColor, scale: 1)
         for node in Self.descendants(of: e) {
             guard var model = node.components[ModelComponent.self] else { continue }
+            var inNear = false
+            var up: Entity? = node
+            while let u = up { if u.name.hasPrefix("near_") { inNear = true; break }; up = u.parent }
             model.materials = model.materials.map { material in
                 guard var pbr = material as? PhysicallyBasedMaterial else { return material }
                 let n = material.name ?? ""
                 if n.contains("seat_plastic") || n.contains("seat_band") {
                     pbr.baseColor.tint = seat
+                    if inNear {
+                        pbr.emissiveColor = .init(color: lift)
+                        pbr.emissiveIntensity = Float(B.nearLift)
+                    }
+                } else if inNear && (n.contains("plaque") || n.contains("stair") || n.contains("seat_hardware")) {
+                    pbr.emissiveColor = .init(color: .init(white: 0.55, alpha: 1))
+                    pbr.emissiveIntensity = Float(B.nearLift)
                 } else if n.contains("interiors") {
                     pbr.emissiveIntensity = 3.5
                 }
