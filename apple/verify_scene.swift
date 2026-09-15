@@ -15,6 +15,7 @@
 //         apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
 //         apple/FantasyEdge/Sources/Stadium/Actors/*/*Look.swift \
+//         apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldArtSpec.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
 //

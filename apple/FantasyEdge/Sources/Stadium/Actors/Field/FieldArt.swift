@@ -1,53 +1,9 @@
 import Foundation
 import simd
 
-// What the scene says about the painted art that changes per game, and the
-// glyph shapes it is set in. The scene lays it out (fantasyedge/scene.py
-// `field_art`); this file only applies the layout, so the web and Android
-// draw the same letters in the same places.
-
-extension SceneSpec {
-    /// A line of text on the grass. A glyph point (gx, gy), in em units with
-    /// cap height 1, lands at origin + (gx * along + gy * up) * capHeight in
-    /// (x, z) yards.
-    public struct ArtText: Decodable, Equatable, Sendable {
-        public let text: String
-        public let capHeight: Double
-        public let origin: [Double]
-        public let along: [Double]
-        public let up: [Double]
-        public let tint: String
-    }
-
-    public struct EndZoneArt: Decodable, Equatable, Sendable {
-        public let side: String
-        public let text: String
-        public let capHeight: Double
-        public let origin: [Double]
-        public let along: [Double]
-        public let up: [Double]
-        public let tint: String
-
-        var layout: ArtText {
-            ArtText(text: text, capHeight: capHeight, origin: origin, along: along, up: up, tint: tint)
-        }
-    }
-
-    public struct MidfieldArt: Decodable, Equatable, Sendable {
-        public let center: [Double]
-        public let outer: Double
-        public let inner: Double
-        public let tint: String
-        public let text: ArtText?
-    }
-
-    public struct FieldArt: Decodable, Equatable, Sendable {
-        public let glyphs: String
-        public let tracking: Double
-        public let endZones: [EndZoneArt]
-        public let midfield: MidfieldArt
-    }
-}
+// The glyph shapes the field's art is set in, and the one step that applies
+// the scene's layout to them (types in FieldArtSpec.swift), so the web and
+// Android draw the same letters in the same places.
 
 /// The field font: Graduate (SIL OFL 1.1) as triangles, from
 /// assets/actors/field/fonts/glyphs.json.

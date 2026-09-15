@@ -84,7 +84,7 @@
       "width": 528
     },
     {
-      "bytes": 60382,
+      "bytes": 69843,
       "bytesPerTexel": 1,
       "gpuMB": 0.23,
       "height": 326,
@@ -129,7 +129,7 @@
       "width": 528
     },
     {
-      "bytes": 51970,
+      "bytes": 70137,
       "bytesPerTexel": 1,
       "gpuMB": 0.23,
       "height": 326,
@@ -138,12 +138,12 @@
       "width": 528
     },
     {
-      "bytes": 426985,
+      "bytes": 426984,
       "path": "markings/college-football/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
     {
-      "bytes": 88917,
+      "bytes": 2283127,
       "bytesPerTexel": 3,
       "gpuMB": 11.0,
       "height": 1302,
@@ -152,7 +152,7 @@
       "width": 2112
     },
     {
-      "bytes": 23908,
+      "bytes": 915642,
       "bytesPerTexel": 1,
       "gpuMB": 1.86,
       "height": 1302,
@@ -161,7 +161,7 @@
       "width": 1072
     },
     {
-      "bytes": 4611,
+      "bytes": 643745,
       "bytesPerTexel": 1,
       "gpuMB": 1.86,
       "height": 1302,
@@ -170,12 +170,12 @@
       "width": 1072
     },
     {
-      "bytes": 497167,
+      "bytes": 497168,
       "path": "markings/nfl/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
     {
-      "bytes": 73656,
+      "bytes": 1730358,
       "bytesPerTexel": 3,
       "gpuMB": 11.0,
       "height": 1302,
@@ -184,7 +184,7 @@
       "width": 2112
     },
     {
-      "bytes": 15593,
+      "bytes": 766301,
       "bytesPerTexel": 1,
       "gpuMB": 1.86,
       "height": 1302,
@@ -193,7 +193,7 @@
       "width": 1072
     },
     {
-      "bytes": 8185,
+      "bytes": 661388,
       "bytesPerTexel": 1,
       "gpuMB": 1.86,
       "height": 1302,
@@ -214,6 +214,15 @@
       "path": "turf/natural/paint_breakup.png",
       "role": "paint carried per turf texel; perturbs the paint SDF edge",
       "width": 1024
+    },
+    {
+      "bytes": 138871,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/paint_grassthrough.png",
+      "role": "",
+      "width": 512
     },
     {
       "bytes": 2683025,
@@ -503,9 +512,9 @@
   "gpuBudgetMB": {
     "field": 40,
     "measuredUncompressed": {
-      "fullShaderPath": 39.4,
-      "headset": 17.92,
-      "headsetAsLoaded": 38.18
+      "fullShaderPath": 39.75,
+      "headset": 18.27,
+      "headsetAsLoaded": 39.57
     }
   },
   "leagues": [

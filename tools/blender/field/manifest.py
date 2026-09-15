@@ -81,7 +81,7 @@ def main():
     headset = {"turf/natural/turf_natural_with_albedo.png", "turf/natural/turf_natural_with_normal.png",
                "turf/natural/turf_natural_against_normal.png", "turf/natural/turf_natural_with_roughness.png",
                "markings/nfl/paint_white_half.png", "markings/nfl/paint_yellow_half.png",
-               "maps/nfl/variation_opacity.png"}
+               "maps/nfl/variation_opacity.png", "turf/natural/paint_grassthrough.png"}
     loaded = {  # what the visionOS field binds (design/tokens.json visual.field)
         "headset": [e for e in entries if e["path"] in headset],
         # the fuller set a shader-capable client (web, Android) may bind instead

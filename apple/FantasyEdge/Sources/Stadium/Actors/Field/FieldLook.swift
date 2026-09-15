@@ -41,6 +41,8 @@ extension SceneSpec.Look {
         public let roughness: Double
         public let threshold: Double
         public let endZoneOpacity: Double
+        /// How strongly blades show through paint and lettering.
+        public let grassThrough: Double
     }
 
     public struct FieldLift: Decodable, Equatable, Sendable {

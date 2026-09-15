@@ -14,8 +14,8 @@ import simd
 /// arrows, limit and coaching lines - costs two draw parts, and the edge is
 /// exact at any distance because it is a threshold, not a blurred mask.
 ///
-/// Draw parts: surround 1, stripes 2, end zones 2, ring 1, paint 2, wear 1,
-/// lettering 1 - ten.
+/// Draw parts: surround 1, stripes 2, end zones 2, ring 1, paint 2,
+/// lettering 1, grass through the paint 1, wear 1 - eleven.
 @MainActor
 final class FieldActor: StadiumActor {
     let name = "field"
@@ -65,7 +65,7 @@ final class FieldActor: StadiumActor {
         wearEntity.isEnabled = false
         // Over the paint as well as the grass: where the turf is trampled the
         // lines are too, and a line as clean at the hash as at the wall is CG.
-        add(wearEntity, order: 5)
+        add(wearEntity, order: 6)
 
         // End zones: club paint over the grass.
         for (team, x0, x1) in [(s.teams.home, -f.endZone, 0.0), (s.teams.away, f.length, f.length + f.endZone)] {
@@ -110,6 +110,18 @@ final class FieldActor: StadiumActor {
         add(white, order: 4)
         add(yellow, order: 4)
 
+        // Grass through the paint: the turf again, over the paint and the
+        // lettering, shown only where blades stand up through them. Over bare
+        // turf it is turf on turf, so it only reads where there is paint.
+        if let through = a.texture("field.turfGrassThrough") {
+            var over = MeshBuilder()
+            over.floor(x0: K.x0, x1: K.x1, z0: -(half + (K.y1 - f.width)), z1: half + (K.y1 - f.width),
+                       y: L.art + 0.002, tile: tile)
+            var m = turf(T.stripeTint[0], T.stripeRoughness[0], albedo, rough, normals[0], T)
+            m.blending = .transparent(opacity: .init(scale: Float(P.grassThrough), texture: StadiumLook.repeating(through)))
+            add(over.entity("paint.grass", m), order: 5)
+        }
+
         // Lettering: each club's name across its end zone, the home name at midfield.
         if let art = f.art, let font = FieldGlyphs.load(art.glyphs) {
             var letters = MeshBuilder()
@@ -118,7 +130,7 @@ final class FieldActor: StadiumActor {
             var m = PhysicallyBasedMaterial()
             m.baseColor = .init(tint: StadiumLook.color(P.white))
             m.roughness = .init(floatLiteral: Float(P.roughness))
-            add(letters.entity("lettering", m), order: 6)
+            add(letters.entity("lettering", m), order: 4)
         }
 
         // The league's maps, loaded once and then handed to the meshes waiting for them.

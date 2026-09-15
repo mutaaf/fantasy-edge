@@ -444,9 +444,52 @@ def distance_fields(p: Paint):
         else:
             splat_mesh(it["triangles"], field)
 
+    wear = paint_wear(xs, ys, geo_hash=None)
     for c in fields:
-        fields[c] = np.clip(fields[c], -rng_yd, rng_yd)
+        fields[c] = np.clip(fields[c] + wear, -rng_yd, rng_yd)
     return fields
+
+
+def _value_noise(X, Y, scale, seed):
+    r = np.random.default_rng(seed)
+    table = r.random((256, 256))
+    gx, gy = X / scale, Y / scale
+    ix, iy = np.floor(gx).astype(int), np.floor(gy).astype(int)
+    fx, fy = gx - ix, gy - iy
+    ux, uy = fx * fx * (3 - 2 * fx), fy * fy * (3 - 2 * fy)
+    at = lambda i, j: table[j % 256, i % 256]
+    return (at(ix, iy) * (1 - ux) + at(ix + 1, iy) * ux) * (1 - uy) + \
+        (at(ix, iy + 1) * (1 - ux) + at(ix + 1, iy + 1) * ux) * uy
+
+
+def paint_wear(xs, ys, geo_hash=None):
+    """How much each texel's paint has worn, as yards taken off its distance.
+
+    Two things a painted line on a used field has that a clean one does not:
+    a ragged edge where the roller met grass (fine noise, about an inch
+    either way), and scuffed-through patches where players and the chain
+    crew walk - along both sidelines, over the border and between the
+    hashes. Only negative scuffs cut holes, so a thin line thins and breaks
+    where the traffic is, and a six-foot border goes patchy rather than
+    staying a slab. Averaged with its half turn, so the field stays
+    symmetric and the half texture still holds all of it.
+    """
+    X, Y = np.meshgrid(xs, ys)
+    edge = (_value_noise(X, Y, 0.09, 71) - 0.5) * 2 * (1.0 * IN) + (_value_noise(X, Y, 0.35, 72) - 0.5) * 2 * (0.8 * IN)
+    band = np.exp(-0.5 * (np.minimum(np.abs(Y + 1.0), np.abs(Y - W - 1.0)) / 2.2) ** 2)      # sidelines and border
+    middle = np.exp(-0.5 * ((Y - W / 2) / 9.0) ** 2) * (0.5 + 0.5 * np.exp(-0.5 * ((X - 50) / 25) ** 2))
+    traffic = np.clip(band + 0.7 * middle, 0, 1)
+    speck = _value_noise(X, Y, 0.22, 73)
+    patch = _value_noise(X, Y, 1.4, 74)
+    scuff = np.clip((speck - 0.58) / 0.25, 0, 1) * np.clip((patch - 0.35) / 0.4, 0, 1)
+    # graded: a light scuff thins a line by an inch or two, a hard one goes
+    # through even the middle of a six-foot border
+    ends = 0.45 * np.exp(-0.5 * (np.minimum(np.abs(X + 11.0), np.abs(X - 111.0)) / 1.8) ** 2)
+    wear = edge - (scuff ** 2) * np.clip(traffic + ends, 0, 1) * (28.0 * IN)
+    return (wear + wear[::-1, ::-1]) / 2
+
+
+
 
 
 def encode(p: Paint, league: str):

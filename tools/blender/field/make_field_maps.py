@@ -222,7 +222,11 @@ def engine_maps(league: str):
     """
     img = common.read_image(common.FIELD_OUT / "maps" / league / "field_maps.png")
     macro, wear = img[..., 0], img[..., 1]
-    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1), 0, 0.8)
+    X, Y = grid(4)
+    # the sideline is where the chain crew, cameras and substitutes walk all night
+    band = np.exp(-0.5 * (np.minimum(np.abs(Y + 2.0), np.abs(Y - W - 2.0)) / 3.0) ** 2)
+    grime = band * (0.55 + 0.45 * fbm(X, Y, [0.8, 2.5, 6.0], 91))
+    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1) + 0.45 * grime, 0, 0.8)
     common.write_png(common.FIELD_OUT / "maps" / league / "variation_opacity.png", srgb(opacity))
 
 
@@ -238,6 +242,19 @@ def split_orm():
         common.write_png(common.FIELD_OUT / "turf" / variant / f"{stem}_occlusion.png", orm[..., 0])
 
 
+def grass_through():
+    """Where blades stand up through paint: the low-carry texels of the turf's
+    paint breakup, as coverage for a turf overlay drawn over the paint. 512 px,
+    tiling with the turf, sRGB-encoded linear coverage."""
+    src = common.FIELD_OUT / "turf" / "natural" / "paint_breakup.png"
+    if not src.exists():
+        return
+    carry = common.read_image(src)[..., 0]
+    carry = carry.reshape(512, 2, 512, 2).mean(axis=(1, 3)) if carry.shape[0] == 1024 else carry
+    cover = np.clip((0.62 - carry) / 0.3, 0, 1) ** 1.3
+    common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_grassthrough.png", srgb(cover))
+
+
 def main():
     out = {}
     for league in rules.LEAGUES:
@@ -245,6 +262,7 @@ def main():
         mow_patterns(league)
         engine_maps(league)
     split_orm()
+    grass_through()
     divots()
     paint_breakup()
     print("MAPS", out)

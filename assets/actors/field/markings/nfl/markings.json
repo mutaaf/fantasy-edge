@@ -41,7 +41,7 @@
     "height": 1302,
     "maxAsymmetry": {
       "white": 9.99999989481637e-07,
-      "yellow": 2.325917236589703e-14
+      "yellow": 2.3203661214665772e-14
     },
     "otherHalf": "rotate 180 degrees about (50, 26.667): u' = 1 - u, v' = 1 - v",
     "width": 1072,

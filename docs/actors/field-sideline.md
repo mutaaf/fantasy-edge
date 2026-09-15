@@ -67,3 +67,19 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   3. The NFL's 6 ft white border fills the lower frame of `field-level` as a clean slab.
   4. Broadcast still owns its old chains entity, so there may be two chain sets. It needs a Wave 2 check.
   5. Gestures, reduce motion and frame time are unverified: simulator stills only.
+
+## Contract: the chains and the down box belong to Field & Sideline
+- **The sideline actor draws the chain crew.** That is the chain set with its forward rod on `scene.lasers[kind=lineToGain]`, the down box at the scrimmage laser showing `status.down`, and the college ground markers. It rebuilds them when the line to gain, the scrimmage spot or the down changes (`SidelineActor.buildCrew`), on `field.props.chains.side`.
+- **Broadcast must not draw physical chains, down markers or ground markers.** Its old `chains` entity in `BroadcastActor.swift` is to be removed in Wave 2.
+- **Broadcast still owns the light:** the scrimmage and line-to-gain lasers, the beacon and the trails.
+- **Needing the crew's position:** read it from the scene, the same way the sideline actor does. Actors never call each other.
+
+## Iteration 5 (the coordinator's list)
+- **Gates:**
+  - `tools/blender/field/gates.sh` runs `verify_scene.swift` (15 scenes, 23,376 assertions) and `contrast_check.py`. Both pass.
+  - The field-art types moved to `Actors/Field/FieldArtSpec.swift`, with no RealityKit, so the verifier compiles `SceneSpec.swift`.
+- **NFL border slab:**
+  - The paint distance field now bakes in a ragged edge of about 1 in and graded scuffs, which thin a line lightly or punch through the middle of the border.
+  - Scuffs weight to the sidelines, the border, the end lines and between the hashes, averaged with their half turn so the field stays symmetric.
+  - The variation map adds grime along both sidelines.
+- **Lettering and paint:** a turf overlay (`paint.grass`) lies over all paint and the end-zone names, showing blades only where the turf's paint breakup is low. The lettering now draws under the wear layer. Field: 11 parts; textures as loaded 39.6 MB of 40.
