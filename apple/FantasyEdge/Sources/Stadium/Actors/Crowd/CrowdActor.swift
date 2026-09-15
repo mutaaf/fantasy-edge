@@ -435,7 +435,11 @@ final class CrowdActor: StadiumActor {
                 case .sections(let ids): return g.ring == .card && ids.contains { sectionSlices[$0]?.contains(g.slice) ?? false }
                 }
             }
-            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }) {
+            // A stand or clap cue must not calm a side that is already celebrating:
+            // Moments stands the scoring section on a touchdown too.
+            let celebrating = scoring == true && !c.reduceMotion
+            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }),
+               !(celebrating && (cue.kind == .stand || cue.kind == .clap)) {
                 let beat = Int(((time + g.phase * 2) * C.surgeHz).rounded(.down))
                 switch cue.kind {
                 case .groan: pose = groan

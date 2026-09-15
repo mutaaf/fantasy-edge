@@ -199,3 +199,26 @@ Before: `crowd-iter9/s-crowd-closeup.png`, `s-td-moment.png`, `crowd-iter10/s-cr
 - **Gap:** white blotches on some shirts and pale fingertips. Decimation moves
   elbows and fists further than the 4 cm bake reach, so those texels were
   never baked. Reach widened to 10 cm in pass 2.
+
+### Pass 2: `crowd-r2-4/`, on `aba0503` (Bowl's tread fix, the cues on the blackboard)
+
+- **Near fans went black under the field goal's purple strobe:** the
+  crowd's fault, not Lighting's. The non-scoring side's lit meshes were
+  multiplied by the cards' 0.3 dim. Now meshes dim to 0.75
+  (`tint.meshDim`) and cards to 0.55. `s-td-moment-t4-fg.png` reads.
+- **Khaki-grey far crowd:** the club luma lift turns near fans and cards
+  club blue (`s-crowd-closeup.png`). The far stands still read tan at t0.5,
+  from khaki trousers on 1 fan in 5 and warm AO. Trousers move to denim and
+  black, neutralShare drops to 0.24 and desaturation to 0–0.2 (pass 3).
+- **Seats on stilts over a void:** with Bowl's `2daced9` merged, the
+  club-seat close-up shows tread under the seats.
+- **Touchdown stands then sits:** two causes.
+  - The scene's section tint ends with the moment (`momentSeconds` 6). The
+    scoring side now keeps celebrating, and each group sits at its own
+    point over `settleSeconds` 2.5–5 s.
+  - At t0.5 and t8.5 the side stood with arms down. Moments now calls
+    `shared.stand` on a touchdown, and that cue replaced the celebration.
+    Stand and clap cues no longer override a side that is already
+    celebrating.
+- **Cues:** on `StadiumShared.crowdCues` (the director's move). A test holds
+  them to the stadium's own blackboard.
