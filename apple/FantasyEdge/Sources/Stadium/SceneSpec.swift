@@ -406,6 +406,18 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let ribbon: Ribbon?
         public let pressBox: PressBox?
         public let tunnels: [Tunnel]?
+        /// Bowl's LED face behind the east end zone, which Broadcast draws on.
+        /// Optional: absent on scenes from before Bowl built it.
+        public let videoBoard: VideoBoard?
+    }
+
+    /// `bowl.videoBoard`: the face's centre in field yards, the unit
+    /// direction it looks along, and its width x height in yards.
+    public struct VideoBoard: Decodable, Equatable, Sendable {
+        public let centre: [Double]
+        public let facing: [Double]
+        public let size: [Double]
+        public let screen: String
     }
 
     public struct Seat: Decodable, Equatable, Sendable {

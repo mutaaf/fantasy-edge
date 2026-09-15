@@ -86,6 +86,28 @@ class LightingSky(unittest.TestCase):
         for key in ("opacity", "dustOpacity", "dustTileYards", "dustScrollPerSecond", "overdrawCapScreens"):
             self.assertIn(key, beams, f"the UV-scroll fallback needs beams.{key}")
 
+    def test_beams_fade_from_high_seats(self):
+        """From the press box and the upper deck the shafts are seen along
+        their length; they must keep well under full alpha there, and the dust
+        must not be a high-contrast streak pattern."""
+        import math
+        E = TOKENS["visual"]["lighting"]["beams"]["elevationFade"]
+        self.assertLess(E["fromDegrees"], E["toDegrees"])
+        self.assertLessEqual(E["minScale"], 0.5)
+
+        def scale(seat):
+            eye_y = seat["y"] + 1.3
+            dep = math.degrees(math.atan2(eye_y, math.hypot(seat["x"] - 50, seat["z"])))
+            t = max(0.0, min(1.0, (dep - E["fromDegrees"]) / (E["toDegrees"] - E["fromDegrees"])))
+            return 1 + (E["minScale"] - 1) * t * t * (3 - 2 * t)
+        seats = {s["id"]: s for s in sc.SEATS}
+        self.assertLessEqual(scale(seats["pressBox"]), 0.5)
+        self.assertLess(scale(seats["upper"]), scale(seats["club"]))
+        self.assertGreater(scale(seats["field"]), 0.95)
+        sh = TOKENS["visual"]["lighting"]["beams"]["shader"]
+        self.assertLessEqual(sh["dustAmount"], 0.5, "high-contrast dust reads as rain")
+        self.assertGreaterEqual(sh["viewPower"], 2.5, "edge-on quads must fade hard")
+
     def test_every_lighting_and_sky_file_is_shipped(self):
         for actor in ("lighting", "sky"):
             section = TOKENS["visual"][actor]

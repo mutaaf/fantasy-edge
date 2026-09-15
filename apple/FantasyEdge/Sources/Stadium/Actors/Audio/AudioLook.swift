@@ -26,6 +26,7 @@ extension SceneSpec.Look {
         public let maxSources: Int
         public let playWhistle: AudioWhistle
         public let tabletop: AudioTabletop
+        public let experience: AudioExperience
     }
 
     public struct AudioWhistle: Decodable, Equatable, Sendable {
@@ -34,6 +35,28 @@ extension SceneSpec.Look {
         public let every: Int
         /// Seconds after the ball's flight ends.
         public let afterFlight: Double
+    }
+
+    /// How the soundscape follows the wearer in and out (ExperienceEvents).
+    /// Levels in dB on top of the mix, times in seconds.
+    public struct AudioExperience: Decodable, Equatable, Sendable {
+        /// Where the stadium's beds start when it is built, rising over arriveSeconds.
+        public let arrivalStartDb: Double
+        public let arriveSeconds: Double
+        /// The table's swell as the gate rises, and how long it takes.
+        public let gateSwellDb: Double
+        public let gateSwellSeconds: Double
+        /// A seat change: down to seatDuckDb by the dark, hold, back over seatReturnSeconds.
+        public let seatDuckDb: Double
+        public let seatHoldSeconds: Double
+        public let seatReturnSeconds: Double
+        /// Panels yielding to a moment: 0 for no change.
+        public let yieldDb: Double
+        public let yieldSeconds: Double
+        public let leaveFadeSeconds: Double
+        public let silenceDb: Double
+        /// Every ramp's length with reduce motion on: a near-cut, never a sweep.
+        public let reducedSeconds: Double
     }
 
     public struct AudioTabletop: Decodable, Equatable, Sendable {

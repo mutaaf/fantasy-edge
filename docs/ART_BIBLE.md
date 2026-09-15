@@ -313,7 +313,8 @@ The seats are the scene's own (`presentation.stadium.seats`). The club seat is t
 50-yard line in the lower bowl, 24 yd back from the sideline; it is the seat every
 "reads from the stands" criterion means, whatever row an actor brief names.
 
-- **Another seat:** `--extra="-stadiumSeat upper" --suffix=-upper`.
+- **Another seat:** `--seat pressBox --suffix=-pressBox`. Any id in `presentation.stadium.seats` works; the harness refuses one the scene does not have.
+- **Any shot through a moment:** `--during-moment --moment fieldGoal --times 1,4` plays the chosen shots through the kick, for example `sideline-props` for the net sway.
 - **A moment over time:** `--times 0.5,5.1,8.5` takes one frame at each of those seconds after the moment appears.
 - **Budgets mid-moment:** with `-stadiumStats` (always on in the harness) the app counts again 0.5, 3 and 6 s after each moment; `stats.txt` keeps every count, labelled `stadium@touchdown+3s`.
 - **`[shadergraph]` lines** in `stats.txt` say which path loaded each Shader Graph material.

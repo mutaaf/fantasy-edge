@@ -118,6 +118,26 @@ Each shell is now born on a small sphere's surface (`radius`), fast (24 yd/s) wi
 - The tabletop miniature burst.
 - Cues end to end, which wait on the composer hook.
 
+### The way in and out: `visual.audio.experience`
+Audio listens for `ExperienceEvents` and moves one envelope, in dB, over the whole mix. It is applied per frame, and only while it is moving.
+- **Stadium build:** the beds start at `arrivalStartDb` (-24) and rise over `arriveSeconds` (2.5), so a launch straight into a seat is as gentle as the gate.
+- **`gateOpening`:** the table's miniature swells `gateSwellDb` toward the stadium, starting `swellLead` before the space opens.
+- **`arrived`:** the envelope settles to 0, and the wearer's section is re-picked.
+- **`seatChanging`:** the mix ducks to `seatDuckDb` (-36) by the dark, holds `seatHoldSeconds`, and returns over `seatReturnSeconds` with the new seat's section boost.
+- **`panelsYielded`:** `yieldDb`, 0 by default, so nothing changes.
+- **`leaving`:** the mix fades to `silenceDb` over `leaveFadeSeconds`, then the beds pause.
+- **Reduce motion:** every ramp becomes `reducedSeconds` (0.25).
+- **One-shots:** they start at the envelope's current level, so nothing blares through a seat change.
+
+**Unverified:** anything heard, and every transition live, since the simulator runs muted.
+
+### Cues end to end: `docs/actors/moments-audio/cues/`
+These are real scenes from `tools/audio/cue_frames.py`: the replay is parked before the play and played at 1x until the scene's own `activeCue` or `activeMoment` shows, with nothing forced.
+- **`redzone.jpg` (401772510, 425 s), `thirddown.jpg` (680 s):** the Eagles crowd is on its feet. The clap reads as a stand in a still frame.
+- **`turnover.jpg` (401772949, 2300 s, interception):** the Seahawks section that lost the ball, arms up and hands to heads. The ribbon reads TURNOVER.
+- **`final.jpg` (3605 s, `finalHomeWon`):** the winners stand under Eagles-colour confetti over the bowl.
+- **`fieldgoal-t2.0.jpg` (`lookdev --moment fieldGoal --times`):** the ribbon reads FIELD GOAL and the celebration fires. **The net sway is not visible:** the nets are behind the far posts at this distance, too small to see move. It needs a framing near the posts (Sideline).
+
 ### Crowd hooks: `docs/actors/moments-audio/crowd-hooks/`
 `actor/crowd` @ `ac9e77f` is merged. The moment timelines call `stand` (the scorers, or the side that took the ball) and `groan` (the side that gave it up); `shared.surge` stays, for the Lighting wash. Cues call `clap` (third down), `stand` (red zone) and, at the final, `stand(.sections)` for the winners until the end and `sit(.sections)` for the losers. The scene serves those section lists on the final cue (`cues[].crowd`, from `fan_sections`). Durations live in `timeline.*.standSeconds` and `groanSeconds`, and in `cues.*.seconds`.
 - Frames: the touchdown is the real pick-six; the others use `-crowdCue`, because the composer does not dispatch cues yet.

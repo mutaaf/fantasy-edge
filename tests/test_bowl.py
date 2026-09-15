@@ -267,6 +267,24 @@ class BowlSightlines(unittest.TestCase):
                 self.assertGreater(abs(z) - m["headframe"][0] / 2, w / 2 + 0.5, m["id"])
 
 
+class BowlNearStructure(unittest.TestCase):
+    def test_every_seat_preset_in_the_stands_has_its_foreground_built(self):
+        """A seat on a tier needs its own near patch (treads, risers, stairs,
+        rails, chairs) in near.usdz and a fill in seats_far.usdz. The kit reads
+        the presets from scene.SEATS, so a preset added after the last build
+        fails here until tools/blender/bowl/build.py is run again."""
+        s = scene()
+        manifest = json.loads((ROOT / "assets/actors/bowl/manifest.json").read_text())
+        parts = {e["name"]: set(e.get("parts", {})) for e in manifest["structure"]}
+        tiers = s["bowl"]["tiers"]
+        for seat in s["presentation"]["stadium"]["seats"]:
+            on_tier = seat["y"] > 0.5 and any(t["rise"][0] - 0.01 <= seat["y"] <= t["rise"][1] + 0.01 for t in tiers)
+            if seat["id"] == "pressBox" or not on_tier:
+                continue
+            self.assertIn(f"near_{seat['id']}", parts["near"], f"{seat['id']} has no foreground; rebuild the bowl kit")
+            self.assertIn(f"fill_{seat['id']}", parts["seats_far"], seat["id"])
+
+
 class BowlModels(unittest.TestCase):
     def test_declared_bowl_models_exist_with_twins(self):
         tokens = sc.load_tokens()

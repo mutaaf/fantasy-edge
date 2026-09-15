@@ -116,6 +116,7 @@ public final class StadiumRenderer {
         if lighting.root.components.has(ImageBasedLightComponent.self) {
             applyReceivers(world)
         }
+        optOutOfShadows(world)
         if ProcessInfo.processInfo.arguments.contains("-stadiumStats") {
             StadiumStats.report(actors, label: c.tabletop ? "tabletop" : "stadium", assets: assets)
         }
@@ -153,6 +154,20 @@ public final class StadiumRenderer {
                 e.position = SceneMath.local(x: 38 + Double(i) * 12, y: 9, z: 0)
                 holder.addChild(e)
             }
+        }
+    }
+
+    /// A spot light's shadow falls from every model that does not say
+    /// otherwise, so ~45k fans and every seat once cast into Lighting's single
+    /// shadow. Casting is opt-in: an actor that wants a shadow (Sideline's
+    /// goalposts) sets `DynamicLightShadowComponent(castsShadow: true)` itself,
+    /// and anything it adds after build must set the component too.
+    private func optOutOfShadows(_ e: Entity) {
+        for child in e.children {
+            if child.components.has(ModelComponent.self), !child.components.has(DynamicLightShadowComponent.self) {
+                child.components.set(DynamicLightShadowComponent(castsShadow: false))
+            }
+            optOutOfShadows(child)
         }
     }
 
@@ -229,10 +244,11 @@ enum StadiumStats {
     static func report(_ actors: [any StadiumActor], label: String, assets: StadiumAssets) {
         var totals = (models: 0, parts: 0, triangles: 0)
         for actor in actors {
-            var models = 0, parts = 0, triangles = 0, lights = 0, emitters = 0
+            var models = 0, parts = 0, triangles = 0, lights = 0, emitters = 0, casters = 0
             func walk(_ e: Entity) {
                 if let model = e.components[ModelComponent.self] {
                     models += 1
+                    if e.components[DynamicLightShadowComponent.self]?.castsShadow ?? true { casters += 1 }
                     for m in model.mesh.contents.models {
                         for p in m.parts {
                             parts += 1
@@ -249,7 +265,7 @@ enum StadiumStats {
             totals.parts += parts
             totals.triangles += triangles
             let line = "[stadium-stats] \(label).\(actor.name): draw parts \(parts), triangles \(triangles), "
-                + "spot lights \(lights), emitters \(emitters)"
+                + "spot lights \(lights), emitters \(emitters), shadow casters \(casters)"
             StadiumLog.log.notice("\(line, privacy: .public)")
         }
         let line = "[stadium-stats] \(label): models \(totals.models), draw parts \(totals.parts), "

@@ -109,7 +109,14 @@ struct SceneChip: View {
 /// scrubber both read from it.
 public struct DriveLog: View {
     let spec: SceneSpec
-    public init(spec: SceneSpec) { self.spec = spec }
+    let rows: Int
+    /// `rows` defaults to `visual.broadcast.driveLog.rows`; Experience may pass its own.
+    public init(spec: SceneSpec, rows: Int? = nil) {
+        self.spec = spec
+        self.rows = max(1, rows ?? spec.look?.broadcast.driveLog.rows ?? 5)
+    }
+    private var newestLines: Int { spec.look?.broadcast.driveLog.newestLines ?? 2 }
+    private var olderLines: Int { spec.look?.broadcast.driveLog.olderLines ?? 1 }
 
     // Visuals are Broadcast's: the newest play bright, the drive behind it
     // fading the way its trails do, each play's gain on the right.
@@ -124,7 +131,7 @@ public struct DriveLog: View {
                     Spacer()
                     Text("\(d.arcs.count) plays").font(.system(size: 14, weight: .semibold)).foregroundStyle(.secondary)
                 }
-                let shown = Array(d.arcs.suffix(8))
+                let shown = Array(d.arcs.suffix(rows))
                 ForEach(Array(shown.enumerated()), id: \.element.id) { i, arc in
                     let age = shown.count - 1 - i
                     HStack(alignment: .top, spacing: 10) {
@@ -132,7 +139,7 @@ public struct DriveLog: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(label(arc)).font(.system(size: 14, weight: age == 0 ? .heavy : .semibold))
                             Text(arc.text).font(.system(size: 13)).foregroundStyle(.secondary)
-                                .lineLimit(age == 0 ? 3 : 1)
+                                .lineLimit(age == 0 ? newestLines : olderLines)
                         }
                         Spacer(minLength: 8)
                         Text(gain(arc, side: d.side)).font(.system(size: 15, weight: .heavy)).monospacedDigit()

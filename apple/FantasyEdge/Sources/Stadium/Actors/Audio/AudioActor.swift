@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 import simd
 
@@ -27,7 +28,7 @@ import simd
 final class AudioActor: StadiumActor {
     let name = "audio"
     let root = Entity()
-    private var beds: [(entity: Entity, controller: AudioPlaybackController, key: String)] = []
+    private var beds: [(entity: Entity, controller: AudioPlaybackController, key: String, base: Double)] = []
     private var active = 0
     private var muted = false
     private var steps: [(at: Double, run: @MainActor () -> Void)] = []
@@ -39,7 +40,34 @@ final class AudioActor: StadiumActor {
     private var landed = 0
     private var nearBed: Int?
 
-    init() { root.name = "actor.audio" }
+    /// The whole stadium's level on top of the mix, in dB: how the space
+    /// arrives, ducks through a seat change and fades on the way out
+    /// (`visual.audio.experience`). A linear ramp in dB, applied per frame.
+    private struct Ramp {
+        var from: Double, to: Double, start: Double, seconds: Double
+        func value(at t: Double) -> Double {
+            guard seconds > 0 else { return to }
+            let u = max(0, min(1, (t - start) / seconds))
+            return from + (to - from) * u
+        }
+        func done(at t: Double) -> Bool { t >= start + seconds }
+    }
+    private var envelope = Ramp(from: 0, to: 0, start: 0, seconds: 0)
+    private var applied = Double.nan
+    private var pausedByLeave = false
+    private var events: [ExperienceEvent] = []
+    private var observer: NSObjectProtocol?
+
+    init() {
+        root.name = "actor.audio"
+        // Experience posts its beats; Audio scores them on the next frame,
+        // where the context and the frame clock are at hand.
+        observer = NotificationCenter.default.addObserver(forName: ExperienceEvents.name, object: nil,
+                                                          queue: .main) { [weak self] note in
+            guard let event = note.userInfo?["event"] as? ExperienceEvent else { return }
+            MainActor.assumeIsolated { self?.events.append(event) }
+        }
+    }
 
     // MARK: build
 
@@ -51,7 +79,15 @@ final class AudioActor: StadiumActor {
         active = 0
         nearBed = nil
         muted = c.shared.muted
+        pausedByLeave = false
+        applied = .nan
         let A = c.look.audio
+        // The stadium never snaps on: its beds rise from arrivalStartDb, so a
+        // launch straight into a seat is as gentle as walking through the gate.
+        let X = A.experience
+        envelope = c.tabletop ? Ramp(from: 0, to: 0, start: 0, seconds: 0)
+            : Ramp(from: X.arrivalStartDb, to: 0, start: c.shared.time,
+                   seconds: c.reduceMotion ? X.reducedSeconds : X.arriveSeconds)
         root.components.set(ReverbComponent(reverb: .preset(Self.reverbPreset(A.reverb))))
 
         let count = c.tabletop ? A.tabletop.bedEmitters : A.bedEmitters
@@ -73,7 +109,7 @@ final class AudioActor: StadiumActor {
                 root.addChild(e)
                 let controller = e.playAudio(wind)
                 if muted { controller.pause() }
-                beds.append((e, controller, "windBed"))
+                beds.append((e, controller, "windBed", level("windBed", c)))
             }
         }
     }
@@ -86,7 +122,7 @@ final class AudioActor: StadiumActor {
         root.addChild(e)
         let controller = e.playAudio(sound)
         if muted { controller.pause() }
-        beds.append((e, controller, key))
+        beds.append((e, controller, key, level(key, c)))
     }
 
     // MARK: frame
@@ -94,14 +130,90 @@ final class AudioActor: StadiumActor {
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         if c.shared.muted != muted {
             muted = c.shared.muted
-            beds.forEach { muted ? $0.controller.pause() : $0.controller.play() }
+            if !pausedByLeave { beds.forEach { muted ? $0.controller.pause() : $0.controller.play() } }
         }
         if !steps.isEmpty {
             let due = steps.filter { $0.at <= frame.time }
             steps.removeAll { $0.at <= frame.time }
             for step in due { step.run() }
         }
+        if !events.isEmpty {
+            let now = events
+            events.removeAll()
+            for e in now { experience(e, c) }
+        }
         boostNearest(c)
+        applyEnvelope(frame.time, c)
+    }
+
+    // MARK: the way in and out (ExperienceEvents)
+
+    private func experience(_ event: ExperienceEvent, _ c: StadiumContext) {
+        let X = c.look.audio.experience
+        let now = c.shared.time
+        let reduced = c.reduceMotion
+        let current = envelope.value(at: now)
+        switch event {
+        case .gateOpening(let seconds, let swellLead):
+            // Over the table: the miniature swells toward the stadium as the
+            // gate rises. With reduce motion the space opens at once (0 s),
+            // so the level steps instead of sweeping.
+            guard c.tabletop else { return }
+            let lead = max(0, seconds - swellLead)
+            let over = reduced || seconds <= 0 ? X.reducedSeconds : max(X.gateSwellSeconds, swellLead)
+            schedule(now + (reduced ? 0 : lead)) { [weak self, c] in
+                guard let self else { return }
+                self.envelope = Ramp(from: self.envelope.value(at: c.shared.time), to: X.gateSwellDb,
+                                     start: c.shared.time, seconds: over)
+            }
+        case .arrived:
+            guard !c.tabletop else { return }
+            pausedByLeave = false
+            nearBed = nil                       // re-pick the wearer's section
+            envelope = Ramp(from: current, to: 0, start: now, seconds: reduced ? X.reducedSeconds : X.arriveSeconds)
+        case .seatChanging(_, let fadeSeconds):
+            guard !c.tabletop else { return }
+            // Down to near-silence by the time the world is dark, hold, and
+            // come back up; the new seat's section boost is re-picked from
+            // shared.seat as Experience moves it.
+            let down = reduced ? min(X.reducedSeconds, fadeSeconds) : max(0.05, fadeSeconds)
+            envelope = Ramp(from: current, to: X.seatDuckDb, start: now, seconds: down)
+            let back = reduced ? X.reducedSeconds : X.seatReturnSeconds
+            schedule(now + down + X.seatHoldSeconds) { [weak self, c] in
+                guard let self else { return }
+                self.nearBed = nil
+                self.envelope = Ramp(from: X.seatDuckDb, to: 0, start: c.shared.time, seconds: back)
+            }
+        case .panelsYielded(let yielded):
+            guard !c.tabletop, X.yieldDb != 0 else { return }
+            envelope = Ramp(from: current, to: yielded ? X.yieldDb : 0, start: now,
+                            seconds: reduced ? X.reducedSeconds : X.yieldSeconds)
+        case .leaving:
+            guard !c.tabletop else { return }
+            let over = reduced ? X.reducedSeconds : X.leaveFadeSeconds
+            envelope = Ramp(from: current, to: X.silenceDb, start: now, seconds: over)
+            schedule(now + over) { [weak self] in
+                guard let self else { return }
+                self.beds.forEach { $0.controller.pause() }
+                self.pausedByLeave = true
+            }
+        }
+    }
+
+    /// Set every bed's gain to its mix level plus the envelope, only when the
+    /// envelope moved by a tenth of a dB: a settled stadium costs nothing.
+    private func applyEnvelope(_ time: Double, _ c: StadiumContext) {
+        let db = envelope.value(at: time)
+        if !applied.isNaN, abs(db - applied) < 0.1, !(envelope.done(at: time) && db != applied) { return }
+        applied = db
+        for (i, b) in beds.enumerated() {
+            let gain = b.base + (i == nearBed ? c.look.audio.nearBoost : 0) + db
+            if b.key == "windBed" {
+                b.entity.components.set(AmbientAudioComponent(gain: Audio.Decibel(gain)))
+            } else {
+                b.entity.components.set(spatial(gain, c))
+            }
+        }
     }
 
     /// The bed emitter nearest the wearer carries `nearBoost`: the section you
@@ -116,11 +228,8 @@ final class AudioActor: StadiumActor {
         }
         let pick = best.flatMap { $0.1 <= Float(A.nearYards) ? $0.0 : nil }
         guard pick != nearBed else { return }
-        for i in [nearBed, pick].compactMap({ $0 }) where i < beds.count {
-            let boost = i == pick ? A.nearBoost : 0
-            beds[i].entity.components.set(spatial(level("crowdBed", c) + boost, c))
-        }
         nearBed = pick
+        applied = .nan                            // re-apply every bed with the new boost
     }
 
     // MARK: the game
@@ -205,14 +314,14 @@ final class AudioActor: StadiumActor {
 
     private func play(_ key: String, at position: SIMD3<Float>, extra: Double = 0, _ c: StadiumContext) {
         let A = c.look.audio
-        guard !c.shared.muted, !(c.tabletop && !A.tabletop.effects),
+        guard !c.shared.muted, !pausedByLeave, !(c.tabletop && !A.tabletop.effects),
               let sound = c.assets.audio["audio.\(key)"] else { return }
         // One-shots share the source budget with the beds; a whistle or a
         // chime is the first thing dropped when the stadium is already loud.
         guard beds.count + active < A.maxSources else { return }
         let e = Entity()
         e.position = position
-        e.components.set(spatial(level(key, c) + extra, c))
+        e.components.set(spatial(level(key, c) + extra + envelope.value(at: c.shared.time), c))
         root.addChild(e)
         active += 1
         let controller = e.playAudio(sound)

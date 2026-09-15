@@ -261,6 +261,21 @@ class TestSounds(unittest.TestCase):
         self.assertLessEqual(max(self.A["gains"].values()) + self.A["masterGain"], 0.0)
         self.assertLess(self.A["tabletop"]["gain"], -12, "the tabletop is a miniature, not the stadium in the room")
 
+    def test_the_way_in_and_out_is_gentle_and_ordered(self):
+        X = self.A["experience"]
+        self.assertLess(X["arrivalStartDb"], -12, "the stadium rises, it never snaps on")
+        self.assertGreater(X["arriveSeconds"], X["reducedSeconds"])
+        self.assertLessEqual(X["silenceDb"], X["seatDuckDb"] - 12)
+        self.assertLessEqual(X["seatDuckDb"], -24, "a seat change ducks to near-silence")
+        self.assertLessEqual(X["gateSwellDb"] + self.A["tabletop"]["gain"], 0,
+                             "the gate's swell never takes the table above the stadium's own level")
+        for key in ("arriveSeconds", "gateSwellSeconds", "seatReturnSeconds", "yieldSeconds", "leaveFadeSeconds"):
+            self.assertGreater(X[key], 0, key)
+            self.assertLessEqual(X["reducedSeconds"], X[key], f"reduce motion is shorter than {key}")
+        self.assertLessEqual(X["reducedSeconds"], 0.35)
+        self.assertLessEqual(X["yieldDb"], 0)
+        self.assertLessEqual(X["seatHoldSeconds"], 1.0)
+
     def test_audio_fits_its_budget(self):
         total = sum(f.stat().st_size for f in (ASSETS / "actors/audio").iterdir() if f.suffix in (".caf", ".ogg"))
         self.assertLess(total, 30 * 1024 * 1024)
