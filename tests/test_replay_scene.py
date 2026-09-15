@@ -435,7 +435,10 @@ class TestSceneGeometry(unittest.TestCase):
     def test_lanes_fan_each_drive_symmetrically(self):
         spread = self.final["field"]["width"] * self.tokens["arc"]["laneSpread"]
         for d in self.final["drives"]:
-            lanes = [a["lane"] for a in d["arcs"]]
+            # A field goal or extra point aims at the posts, not a lane
+            # (TestGoalKicks); the rest of the drive fans.
+            lanes = [a["lane"] for a in d["arcs"]
+                     if not any(k in a["type"].lower() for k in ("field goal", "extra point"))]
             if len(lanes) == 1:
                 self.assertEqual(lanes, [0.0])
             elif len(lanes) > 1:
@@ -443,6 +446,56 @@ class TestSceneGeometry(unittest.TestCase):
                 self.assertTrue(all(abs(z) <= spread + 0.001 for z in lanes), lanes)
                 self.assertEqual(lanes, sorted(lanes))
                 self.assertAlmostEqual(lanes[0], -spread, places=2)
+
+    def test_goal_kicks_cross_the_plane_of_the_uprights_as_the_text_says(self):
+        """Every field goal in the three games, at the end line it attacks:
+        a good one between the uprights and over the crossbar with room to
+        spare; a wide one outside the upright on the side the text names,
+        right being the kicker's right."""
+        props = self.final["field"]["props"]["goalpost"]
+        clearance = self.tokens["arc"]["goalKick"].get("minClearanceYards", 1.0)
+        seen = {"good": 0, "wide": 0}
+        for event in (REGULATION, OVERTIME, PICK_SIX):
+            s = SceneAt.at(event, 99999, speed=1.0)
+            f = s["field"]
+            half = f["goalPostWidth"] / 2
+            for a in self.arcs(s):
+                kind, text = a["type"].lower(), a["text"].lower()
+                if "field goal" not in kind or "blocked" in text:
+                    continue
+                attack = 1.0 if a["toX"] > a["fromX"] else -1.0
+                plane = f["length"] + f["endZone"] if attack > 0 else -f["endZone"]
+                self.assertEqual(attack > 0, a["side"] == "home", f"{a['id']}: kicked at the wrong posts")
+                u = (plane - a["fromX"]) / (a["toX"] - a["fromX"])
+                self.assertTrue(0 < u < 1, f"{a['id']}: the arc never reaches the posts")
+                height = a["apex"] * 4 * u * (1 - u)
+                if "good" in text and "no good" not in text:
+                    seen["good"] += 1
+                    self.assertLess(abs(a["lane"]), half, f"{a['id']}: a good kick outside the uprights")
+                    self.assertGreaterEqual(height, props["crossbar"] + clearance,
+                                            f"{a['id']}: a good kick {height:.1f} yd at the posts, under the bar")
+                elif "wide right" in text or "wide left" in text:
+                    seen["wide"] += 1
+                    self.assertGreater(abs(a["lane"]), half, f"{a['id']}: a wide kick between the uprights")
+                    right = 1.0 if "wide right" in text else -1.0
+                    self.assertGreater(a["lane"] * right * attack, 0, f"{a['id']}: wide on the wrong side")
+        self.assertGreater(seen["good"], 3)
+        self.assertGreaterEqual(seen["wide"], 2)
+
+    def test_goal_kick_rules_for_short_blocked_and_the_away_end(self):
+        field = dict(sc.RULES["college-football"]["field"])
+        t = self.tokens
+        short = sc.goal_kick({"type": "Field Goal Missed", "text": "45 yard field goal is No Good, Short"}, 30.0, "home", field, t)
+        self.assertEqual(short["result"], "short")
+        self.assertLess(short["toX"], field["length"] + field["endZone"])
+        self.assertIsNone(sc.goal_kick({"type": "Blocked Field Goal", "text": "BLOCKED"}, 30.0, "home", field, t))
+        self.assertIsNone(sc.goal_kick({"type": "Punt", "text": ""}, 30.0, "home", field, t))
+        away = sc.goal_kick({"type": "Field Goal Missed", "text": "No Good, Wide Right"}, 70.0, "away", field, t)
+        # The away side attacks -x; facing -x the kicker's right is -z.
+        self.assertLess(away["toX"], -field["endZone"])
+        self.assertLess(away["lane"], -field["goalPostWidth"] / 2)
+        xp = sc.goal_kick({"type": "Extra Point Good", "text": "extra point is GOOD"}, 85.0, "home", field, t)
+        self.assertEqual((xp["lane"], xp["result"]), (0.0, "good"))
 
     def test_clock_records_are_never_drawn(self):
         for a in self.arcs(self.final):
