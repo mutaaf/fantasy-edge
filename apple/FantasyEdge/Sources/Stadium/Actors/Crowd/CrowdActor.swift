@@ -57,7 +57,8 @@ final class CrowdActor: StadiumActor {
     private(set) var counts: [Ring: Int] = [:]
     private var tint: String? = "unset"
     private var seatKey: SIMD3<Float>?
-    private var groanUntil: (away: Bool, until: Double)?
+    /// Which card slices hold each `bowl.seating` section, for cues aimed at sections.
+    private var sectionSlices: [String: Set<Int>] = [:]
     private var cardRowV: Float = 0
     private var generation = 0
 
@@ -71,6 +72,7 @@ final class CrowdActor: StadiumActor {
         fans = 0
         counts = [:]
         tint = "unset"
+        sectionSlices = [:]
         let s = c.spec, C = c.look.crowd
         guard let kit = CrowdKit.load(C) else {
             StadiumLog.log.error("[stadium] crowd kit missing from the bundle; no fans")
@@ -138,6 +140,7 @@ final class CrowdActor: StadiumActor {
                             } ?? Int(fraction * Double(max(1, sections.count)))
                             let slice = sections.isEmpty ? Int(fraction * Double(slices)) % slices
                                                          : section * slices / sections.count
+                            if section < sections.count { sectionSlices[sections[section].id, default: []].insert(slice) }
                             placed.append(Placed(fan: fan, base: p, facing: SIMD3(Float(spot.facing.x), 0, Float(spot.facing.y)),
                                                  away: isAway, slice: slice,
                                                  variant: Int(rng.next() * Double(max(1, C.cardVariants))),
@@ -221,12 +224,14 @@ final class CrowdActor: StadiumActor {
                 near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % 2), default: []].append(f)
             case .card:
                 var centre = f.base
+                let cardForward = Float(C.chair.cardForwardMetres) * yard
                 if i + 1 < placed.count, ringOf[i + 1] == .card, placed[i + 1].row == f.row, placed[i + 1].seat == f.seat + 1 {
                     centre = (f.base + placed[i + 1].base) / 2
                     consumed.insert(i + 1)
                     fans += 1
                     counts[.card, default: 0] += 1
                 }
+                centre += f.facing * cardForward
                 let toViewer = simd_normalize(SIMD3(seat.x - centre.x, 0, seat.z - centre.z) + SIMD3(0, 0, 1e-6))
                 let right = simd_normalize(simd_cross(-toViewer, SIMD3<Float>(0, 1, 0)))
                 // Which way the fan faces as the wearer sees it: 0 toward, +90 to the wearer's right.
@@ -261,9 +266,14 @@ final class CrowdActor: StadiumActor {
             var meshes: [MeshResource] = []
             for pi in 0..<poses {
                 var mb = MeshBuilder()
+                let seated = C.chair.sitPoses.contains(C.poses[pi])
                 for f in list {
                     guard let src = kit.poseMesh(ring: key.ring, fan: f.fan, pose: C.poses[pi]) else { continue }
-                    mb.append(src.placed(at: f.base, facing: f.facing, scale: yard))
+                    // Into Bowl's chair: forward of its origin, pelvis on the pan whatever the fan's height.
+                    let forward = Float(seated ? C.chair.sitForwardMetres : C.chair.standForwardMetres) * yard
+                    let scale = kit.height(f.fan) / Float(C.chair.referenceHeightMetres)
+                    let lift = seated ? Float(C.chair.pelvisMetres) * (1 - scale) * yard : 0
+                    mb.append(src.placed(at: f.base + f.facing * forward + SIMD3(0, lift, 0), facing: f.facing, scale: yard))
                 }
                 if let res = mb.resource("crowd.\(key.ring).\(pi)") { meshes.append(res) }
             }
@@ -298,6 +308,23 @@ final class CrowdActor: StadiumActor {
             groups.append(Group(entity: e, ring: .card, away: key.away, slice: key.slice, material: mat,
                                 phase: phase, standing: phase < C.standingShare))
         }
+        #if DEBUG
+        // Look-dev: `-crowdCue clap:home` (or stand, sit, groan) holds a cue from the first frame,
+        // so each blackboard hook can be shot before Moments calls it.
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-crowdCue"), i + 1 < args.count {
+            let parts = args[i + 1].split(separator: ":").map(String.init)
+            if parts.count == 2 {
+                switch parts[0] {
+                case "stand": c.shared.stand(.side(parts[1]), until: .infinity)
+                case "clap": c.shared.stand(.side(parts[1]), until: .infinity, clap: true)
+                case "sit": c.shared.sit(.side(parts[1]), until: .infinity)
+                case "groan": c.shared.groan(parts[1], until: .infinity)
+                default: break
+                }
+            }
+        }
+        #endif
         if ready == nil {
             let token = generation
             kit.composeDress(for: s, look: c.look) { [weak self] d in
@@ -328,7 +355,8 @@ final class CrowdActor: StadiumActor {
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {
         guard case .moment(let m) = event, m.kind == "turnover" else { return }
         // The side that gave the ball away groans.
-        groanUntil = (away: m.side == "home", until: c.shared.time + c.look.crowd.groanSeconds)
+        // The side that gave the ball away groans.
+        c.shared.groan(m.side == "home" ? "away" : "home", until: c.shared.time + c.look.crowd.groanSeconds)
     }
 
     // MARK: motion
@@ -341,7 +369,7 @@ final class CrowdActor: StadiumActor {
         let clap = index("clap_b"), cheer = index("cheer_a"), groan = index("groan")
 
         let surge = c.shared.surge.flatMap { time < $0.until ? $0 : nil }
-        let groaning = groanUntil.flatMap { time < $0.until ? $0 : nil }
+        let cues = CrowdCues.live(c.shared, at: time)
         let tintSide = s.bowl.sectionTint.side
         // Third down: the defence's crowd gets up.
         var standingSide: Bool? = nil
@@ -369,7 +397,6 @@ final class CrowdActor: StadiumActor {
                     let d = min(abs(a - wavePhase), 1 - abs(a - wavePhase))
                     if d < C.waveWidth { pose = cheer } else if d < C.waveWidth * 2 { pose = stand }
                 }
-                if let groaning, g.away == groaning.away { pose = groan }
                 if let scoring {
                     if scoring {
                         // Peak while Moments surges, then a sustained celebration at half pace.
@@ -384,6 +411,22 @@ final class CrowdActor: StadiumActor {
                 } else if let surge, g.away == surge.away {
                     let beat = Int(((time + g.phase) * C.surgeHz).rounded(.down))
                     pose = [cheer, clap, cheer, stand][beat % 4]
+                }
+            }
+            // Cues from the blackboard win while they last: the strongest that reaches this group.
+            let reaching = cues.filter { cue in
+                switch cue.target {
+                case .side(let side): return (side == "away") == g.away
+                case .sections(let ids): return g.ring == .card && ids.contains { sectionSlices[$0]?.contains(g.slice) ?? false }
+                }
+            }
+            if let cue = reaching.max(by: { $0.kind.rawValue < $1.kind.rawValue }) {
+                let beat = Int(((time + g.phase * 2) * C.surgeHz).rounded(.down))
+                switch cue.kind {
+                case .groan: pose = groan
+                case .sit: pose = g.phase < 0.5 ? sit : sitB
+                case .stand: pose = c.reduceMotion ? stand : (beat % 7 == 0 ? cheer : stand)
+                case .clap: pose = c.reduceMotion ? stand : (beat % 2 == 0 ? clap : stand)
                 }
             }
             setPose(g, pose)
@@ -447,6 +490,10 @@ final class CrowdKit {
 
     let look: SceneSpec.Look.CrowdLook
     private var meshes: [String: CrowdPoseMesh] = [:]
+    /// Each fan's standing height in metres, from the kit's manifest.
+    private var heights: [Float] = []
+
+    func height(_ fan: Int) -> Float { fan < heights.count ? heights[fan] : Float(look.chair.referenceHeightMetres) }
     private let fanAlbedo: CGImage, fanMask: CGImage, cardAlbedo: CGImage, cardMask: CGImage
     var impostorSize: (width: Int, height: Int) { (cardAlbedo.width, cardAlbedo.height) }
 
@@ -463,6 +510,11 @@ final class CrowdKit {
               let cm = StadiumAssets.image(folder.appendingPathComponent(C.kit.impostorMask)) else { return nil }
         look = C
         fanAlbedo = fa; fanMask = fm; cardAlbedo = ca; cardMask = cm
+        struct Manifest: Decodable { struct Fan: Decodable { let height: Double }; let fans: [Fan] }
+        if let data = try? Data(contentsOf: folder.appendingPathComponent(C.kit.manifest)),
+           let m = try? JSONDecoder().decode(Manifest.self, from: data) {
+            heights = m.fans.map { Float($0.height) }
+        }
         for id in ["lod0Poses", "lod1Poses", "lod2Poses"] {
             guard let template = StadiumAssets.shared.model("crowd.\(id)") else { continue }
             collect(template, root: template)

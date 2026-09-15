@@ -50,6 +50,16 @@ extension SceneSpec.Look {
         public let lod2Max: Int
     }
 
+    /// How a fan sits in Bowl's chair (visual.crowd.chair).
+    public struct CrowdChair: Decodable, Equatable, Sendable {
+        public let sitPoses: [String]
+        public let sitForwardMetres: Double
+        public let standForwardMetres: Double
+        public let cardForwardMetres: Double
+        public let pelvisMetres: Double
+        public let referenceHeightMetres: Double
+    }
+
     public struct CrowdLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -63,6 +73,7 @@ extension SceneSpec.Look {
         public let fill: Double
         public let seatPitchYards: SceneSpec.PerMode<Double>
         public let clearance: Clearance
+        public let chair: CrowdChair
         public let rings: CrowdRings
         public let slices: Int
         public let cardVariants: Int
