@@ -104,7 +104,7 @@
     "bowl_seat_band"
    ],
    "bytes": {
-    "usdz": 709677,
+    "usdz": 709675,
     "glb": 775468
    },
    "about": "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill except the preset the wearer sits in.",
@@ -166,21 +166,22 @@
    "usdz": "actors/bowl/near.usdz",
    "glb": "actors/bowl/near.glb",
    "objects": {
-    "near_club": 16246,
-    "near_endzone": 19342,
-    "near_upper": 13892,
-    "near_sideline": 26474,
-    "near_clubLevel": 12960
+    "near_club": 17294,
+    "near_endzone": 20438,
+    "near_upper": 14572,
+    "near_sideline": 27130,
+    "near_clubLevel": 13844
    },
    "parts": {
-    "near_club": 6,
-    "near_endzone": 6,
-    "near_upper": 6,
-    "near_sideline": 6,
-    "near_clubLevel": 6
+    "near_club": 7,
+    "near_endzone": 7,
+    "near_upper": 7,
+    "near_sideline": 7,
+    "near_clubLevel": 7
    },
-   "triangles": 88914,
+   "triangles": 93278,
    "materials": [
+    "bowl_near_deck",
     "bowl_seat_band",
     "bowl_seat_plaque",
     "bowl_stair",
@@ -189,8 +190,8 @@
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 6582127,
-    "glb": 7129532
+    "usdz": 6862337,
+    "glb": 7438964
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },
