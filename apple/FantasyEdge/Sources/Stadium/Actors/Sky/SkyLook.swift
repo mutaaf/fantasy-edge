@@ -12,9 +12,16 @@ extension SceneSpec.Look {
         public let assets: [String: String]
         public let models: [String: String]
         public let radiusYards: Double
+        public let skyGain: Double
+        public let yawDegrees: Double
+        public let cloudRadiusYards: Double
+        public let cloudColor: String
+        public let cloudOpacity: Double
+        public let cloudDriftDegreesPerMinute: Double
         public let domeHeight: Double
         public let domeOpacity: Double
         public let domeColor: String
+        public let domeInsetYards: Double
     }
 }
 
