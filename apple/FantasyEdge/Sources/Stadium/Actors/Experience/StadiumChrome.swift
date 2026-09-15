@@ -176,6 +176,7 @@ struct SeatPickerView: View {
                 }
             }
         }
+        .fixedSize()
         .padding(22)
         .glassBackgroundEffect()
     }

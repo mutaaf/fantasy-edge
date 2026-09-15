@@ -10,7 +10,7 @@ Owner: the Experience specialist (`actor/experience`). Files:
 
 Walking into a night game, not loading one.
 
-- **Arrival.** The table's "Enter stadium" opens a gate of floodlight over the model: a disc and ring that rise and widen from the centre spot while the table dims to `arrival.tabletopDim`. The space then opens on the Crown dial.
+- **Arrival.** The table's "Enter stadium" raises a curtain of floodlight from the plinth's edge, with a bright lip, widening by `arrival.gateWiden` while the table dims to `arrival.tabletopDim`. The space then opens on the Crown dial.
 - **Head never moved.** Nothing moves the wearer's head. The world turns about them, and only on their own action: a seat change, a pinch on the table.
 - **Crown hint.** The first time the stadium opens on the dial, a hint names the Digital Crown for `crownHintSeconds`, once.
 - **Field kept clear.** Every panel's place is a slot in `visual.experience.layout`, low and to the side.
@@ -98,12 +98,18 @@ Before and after shots are under `.work/shots/experience-*` in the Experience wo
 - **`tabletop_gate`:** the disc read as frosted glass under room light, not as floodlight. Replaced with a curtain along the plinth edge in iteration 3.
 - **`field-level_down` / `_left`:** the controls are too wide (seat label, 300-point segmented control), and the drive log at −30° crowds into them. Iteration 3 narrows the controls and moves the side panels to 1.25 m.
 - **`bowl-wide_picker`:** the map is small, and four seats cluster on the home sideline. Iteration 3 adds a list beside the map.
-- **`field-level*` render black at the `field` seat** (see "Found for other actors").
+- **`field-level*` render black:** the scene was still building when the screenshot fired (see "Look-dev under load").
 
-## Found for other actors
+**Iteration 3 (`experience-it3`, build `4ef314b`, stopped part-way).**
+- **`crowd-closeup_picker`:** the picker lists all seven seats beside the map, each a 60-point row with its height. The panel stretched wider than its content, so it now has a fixed size.
+- **`crowd-closeup_down` / `_ahead`:** the controls are one compact panel (Dial/Full toggle, Leave, fold), and the drive log at −30°, 1.25 m clears them.
+- **Every stadium frame black at a 10 s settle:** re-shooting at 28 s.
 
-**The `field` seat renders black after `dbfe41d`/`ba34aa5`/`a71facc`.**
-- **Evidence:** it rendered in integration 3 (`115620e`) and in Experience iteration 1 (a pre-merge build), and is black in iteration 2 after merging `a71facc`. The `club` and `upper` seats render in the same build.
-- **Not Bowl:** it stays black with `-bowlSkip stands,far,near,fills`.
-- **Suspect:** the crowd change in `ba34aa5` ("back cards for the rows in front"), for a seat that is not on a row.
-- **Handed back:** to the director and Crowd; Experience didn't change crowd code.
+## Look-dev under load
+
+A black stadium with panels showing is the renderer still preparing assets
+(26 textures, the probe, 42 models) when the screenshot fires. It happened
+at every seat in iterations 2 and 3 once several agents were building and
+shooting at once; the shots that rendered were the ones with a longer wait
+(`td-moment` holds 6 s more). Experience's shots now settle 28 s. An earlier
+note here suspected the crowd at the `field` seat; that was this, not a bug.
