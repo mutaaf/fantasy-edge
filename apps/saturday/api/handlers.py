@@ -24,13 +24,6 @@ VERSION = 1
 # How far back the whip-around feed reaches, in seconds of the source's clock.
 FEED_SECONDS = 20 * 60
 
-try:
-    from zoneinfo import ZoneInfo
-    EASTERN = ZoneInfo("America/New_York")
-except Exception:                     # no tz database: a September Saturday is EDT
-    EASTERN = dt.timezone(dt.timedelta(hours=-4), "ET")
-
-
 class NotFound(Exception):
     def __init__(self, message: str, reason: str):
         super().__init__(message)
@@ -50,9 +43,7 @@ def _now_stamp() -> str:
     return dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
-def _eastern(stamp: str) -> str:
-    when = dt.datetime.strptime(stamp, "%Y%m%dT%H%M%SZ").replace(tzinfo=dt.timezone.utc).astimezone(EASTERN)
-    return when.strftime("%-I:%M %p ET")
+_eastern = changes.eastern
 
 
 def positioned(source: Source, at: str | None) -> Source:

@@ -53,14 +53,26 @@ struct SaturdayWall: View {
         }
         #if os(visionOS)
         .ornament(attachmentAnchor: .scene(.bottom), contentAlignment: .top) {
-            HStack(spacing: 4) {
-                filterPicker.pickerStyle(.segmented).frame(width: 560)
-                Button { showSettings = true } label: { Image(systemName: "gearshape") }
-                    .frame(minWidth: Tokens.target, minHeight: Tokens.target)
-                    .accessibilityLabel("Settings")
+            VStack(spacing: 6) {
+                if store.isReplay { ReplayBar().frame(width: 1040) }
+                HStack(spacing: 4) {
+                    filterPicker.pickerStyle(.segmented).frame(width: 560)
+                    Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                        .frame(minWidth: Tokens.target, minHeight: Tokens.target)
+                        .accessibilityLabel("Settings")
+                }
             }
             .padding(8)
             .glassBackgroundEffect()
+        }
+        #else
+        .safeAreaInset(edge: .bottom) {
+            if store.isReplay {
+                ReplayBar()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+                    .padding(.horizontal, sizeClass == .regular ? 24 : 12)
+                    .padding(.bottom, 4)
+            }
         }
         #endif
         .sheet(isPresented: $showSettings) { SettingsSheet() }
@@ -113,16 +125,35 @@ struct SaturdayWall: View {
 // MARK: - shared pieces
 
 private struct WallHeader: View {
+    @Environment(SaturdayStore.self) private var store
     let slate: Slate
+    var compact = false
+
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            Text("SATURDAY").font(Typeface.display(52, .black)).tracking(1)
-            Text(slate.replay ? "Replay · \(slate.asOf)" : "FBS").font(Typeface.serif(24)).foregroundStyle(.secondary)
-            Spacer()
-            CountPill(glyph: Glyph.live, text: "\(slate.counts.live) live", tint: Tokens.liveGlyph)
-            CountPill(glyph: Glyph.delayed, text: "\(slate.counts.pre) to come")
-            CountPill(glyph: Glyph.final, text: "\(slate.counts.post) final")
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 16) { title; Spacer(); pills }
+            VStack(alignment: .leading, spacing: 10) { title; HStack(spacing: 8) { pills } }
         }
+    }
+
+    private var title: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text("SATURDAY").font(Typeface.display(compact ? 40 : 52, .black)).tracking(1)
+            Text(subtitle).font(Typeface.serif(compact ? 19 : 24)).foregroundStyle(.secondary)
+                .contentTransition(.numericText())
+        }
+    }
+
+    private var subtitle: String {
+        if let clock = slate.clock { return "Replay · \(clock.label)" }
+        return store.connection == .streaming ? "FBS · live" : "FBS"
+    }
+
+    @ViewBuilder private var pills: some View {
+        CountPill(glyph: Glyph.live, text: "\(slate.counts.live) live", tint: Tokens.liveGlyph)
+        if slate.counts.delayed > 0 { CountPill(glyph: Glyph.delayed, text: "\(slate.counts.delayed) delayed") }
+        CountPill(glyph: "calendar", text: "\(slate.counts.pre) to come")
+        CountPill(glyph: Glyph.final, text: "\(slate.counts.post) final")
     }
 }
 
@@ -188,8 +219,9 @@ private struct VisionWall: View {
     @Binding var path: NavigationPath
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 20) {
             WallHeader(slate: slate)
+            WhipAround(items: slate.feed) { path.append(Route.game($0)) }
             HStack(alignment: .top, spacing: 32) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
@@ -243,6 +275,8 @@ private struct PadWall: View {
             .frame(width: 420)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    WallHeader(slate: slate, compact: true)
+                    WhipAround(items: slate.feed) { path.append(Route.game($0)) }
                     ForEach(["closeLate", "rankedLive", "live", "upcoming"], id: \.self) { id in
                         if let s = slate.section(id) { SectionBlock(section: s, filter: filter, columns: 2, path: $path) }
                     }
@@ -266,10 +300,12 @@ private struct PhoneWall: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
+                WallHeader(slate: slate, compact: true)
                 if let id = slate.spotlight, let g = store.game(id), filter.keeps(g, favorites: store.favorites) {
                     SpotlightCard(game: g, compact: true, onDetail: { path.append(Route.game(id)) },
                                   onTabletop: { path.append(Route.tabletop(id)) })
                 }
+                WhipAround(items: slate.feed) { path.append(Route.game($0)) }
                 ForEach(slate.sections) { s in
                     SectionBlock(section: s, filter: filter, columns: 1, path: $path)
                 }

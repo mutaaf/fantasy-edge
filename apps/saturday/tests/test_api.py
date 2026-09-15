@@ -119,6 +119,11 @@ class Server(unittest.TestCase):
         self.assertIn("reason", json.loads(body))
         self.assertEqual(self.get("/api/nothing")[0], 404)
 
+    def test_health(self):
+        code, _, body = self.get("/api/health")
+        self.assertEqual(code, 200)
+        self.assertEqual(json.loads(body)["source"], "fixtures")
+
 
 class Doctor(unittest.TestCase):
     def test_offline_ready_warns_about_cfbd_without_failing(self):

@@ -75,8 +75,9 @@ struct StateBadge: View {
         .labelStyle(.titleAndIcon)
         .foregroundStyle(.white)
         .padding(.leading, 7).padding(.trailing, 13).padding(.vertical, 3)
+        .lineLimit(1)
         .background(fill, in: Slant(cut: 6))
-        .fixedSize(horizontal: true, vertical: true)
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -127,6 +128,8 @@ struct PillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Typeface.sans(17, .semibold))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 22)
             .frame(minHeight: Tokens.target)
             .foregroundStyle(primary ? Color.black : Color.primary)

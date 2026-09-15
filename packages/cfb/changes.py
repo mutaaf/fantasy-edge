@@ -16,8 +16,8 @@ from __future__ import annotations
 import datetime as dt
 
 CAVEAT = ("Changes are read by comparing two scoreboard snapshots, about a minute apart on a recording. "
-          "Two scores inside one snapshot arrive together, and a score's kind comes from ESPN's last play "
-          "when that play scored, otherwise from the points alone. Points taken off the board may be a review "
+          "Two scores inside one snapshot arrive together, and a score's kind comes from its points, "
+          "with ESPN's last play deciding only whether two points were a safety or a conversion. Points taken off the board may be a review "
           "or ESPN correcting its own data; the board does not say which.")
 
 # The order a single game's changes are listed in, most important first.
@@ -31,6 +31,23 @@ POINTS_LABEL = {6: "Touchdown", 7: "Touchdown", 8: "Touchdown", 3: "Field goal",
                 1: "Extra point"}
 
 
+try:
+    from zoneinfo import ZoneInfo
+    EASTERN = ZoneInfo("America/New_York")
+except Exception:                     # no tz database: a September Saturday is EDT
+    EASTERN = dt.timezone(dt.timedelta(hours=-4), "ET")
+
+
+def eastern(stamp: str | None) -> str:
+    """A college Saturday is scheduled on the East Coast clock, so every time
+    a client shows reads in it, whatever time zone the device is in."""
+    try:
+        when = dt.datetime.strptime((stamp or "")[:16], "%Y%m%dT%H%M%SZ").replace(tzinfo=dt.timezone.utc)
+    except ValueError:
+        return ""
+    return when.astimezone(EASTERN).strftime("%-I:%M %p ET")
+
+
 def _iso(stamp: str | None) -> str:
     if not stamp:
         return ""
@@ -41,12 +58,17 @@ def _iso(stamp: str | None) -> str:
 
 
 def _score_label(points: int, last: dict | None) -> str:
-    if last and last.get("scoring") and last.get("type"):
-        kind = last["type"]
-        for word, label in (("Touchdown", "Touchdown"), ("Field Goal", "Field goal"), ("Safety", "Safety"),
-                            ("Two-Point", "Two-point try"), ("Extra Point", "Extra point")):
-            if word.lower() in kind.lower() and points in {6, 7, 8, 3, 2, 1}:
-                return label
+    """Six to eight points in one frame is a touchdown, whatever ESPN's last
+    play says: OSU-Texas went 13 to 20 in one frame whose last play was the
+    extra point. The play decides only what the points cannot - whether two
+    points were a safety or a conversion."""
+    if 6 <= points <= 8:
+        return "Touchdown"
+    if points == 3:
+        return "Field goal"
+    kind = (last or {}).get("type", "").lower() if (last or {}).get("scoring") else ""
+    if points == 2:
+        return "Safety" if "safety" in kind else "Two-point try" if "two" in kind else POINTS_LABEL[2]
     return POINTS_LABEL.get(points, f"{points} points")
 
 
@@ -65,7 +87,7 @@ def between(before: dict, after: dict, stamp: str | None) -> list[dict]:
 
     def add(kind, label, team=None, points=None):
         out.append({"id": f"{stamp or 'now'}:{after['id']}:{kind}:{team or '-'}", "game": after["id"], "kind": kind,
-                    "team": team, "points": points, "label": label, "at": at})
+                    "team": team, "points": points, "label": label, "at": at, "time": eastern(stamp)})
 
     if sb["state"] == "in" and sa["state"] == "pre" and not sb["delayed"]:
         add("kickoff", "Kickoff")
@@ -89,7 +111,7 @@ def between(before: dict, after: dict, stamp: str | None) -> list[dict]:
                 add("correction", "Points taken off the board", after[side]["id"], now - was)
         old_lead, new_lead = _leader(before), _leader(after)
         if new_lead and old_lead and new_lead != old_lead:
-            add("lead", "Takes the lead", new_lead)
+            add("lead", "Takes lead", new_lead)
 
     if after["flags"]["upset"] and not before["flags"]["upset"]:
         add("upset", "Upset", _leader(after))

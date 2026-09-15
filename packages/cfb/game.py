@@ -12,14 +12,9 @@ from __future__ import annotations
 
 import re
 
-from .parse import _int, status_of, team_record
+from .parse import _int, clean_play_text as _clean, status_of, team_record
 
 TURNOVER_RESULTS = {"Fumble", "Interception", "Downs", "Turnover on Downs", "Blocked Punt", "Blocked FG"}
-
-
-def _clean(text: str) -> str:
-    text = re.sub(r"^\(\d+:\d+\)\s*(Shotgun\s*)?", "", text or "")
-    return re.sub(r"#\d+ ", "", text).strip()
 
 
 def _play(pl: dict) -> dict:

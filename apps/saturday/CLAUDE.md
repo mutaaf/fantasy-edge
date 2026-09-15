@@ -45,6 +45,7 @@ tests/               fixtures come from tools/make_fixtures.py
 - **A capture's frames are its timestamped scoreboards only.** `20260912-closing-backfill` was fetched the next morning and sorts before every stamp by name; reading it by name put the night's finals on an 8 PM board.
 - **Scores go down.** Six touchdowns came off the board on 2026-09-12 (penalties and reviews; Memphis-Boise State went 31, 37, 31, 38). A drop is a `correction` change, never ignored and never an error.
 - **A change's `id` is its frame, game, kind and team.** Clients animate an id once; never re-derive whether something changed on a client.
+- **Times a person reads are ET, from the server.** Every change carries `time` ("9:14 PM ET") and the replay clock carries `label`; a client that formats `at` in the device's zone shows a Central-time Mac an hour off.
 - **History always includes the previous frame**, however old: the recorder's 25-minute gap is still a comparison.
 - **Every heuristic carries a non-empty caveat.** The leverage order is hand-weighted; report the caveat with it.
 - **Never hand-edit `project.pbxproj`.** Run `make project`.

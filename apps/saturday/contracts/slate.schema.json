@@ -354,7 +354,8 @@
         "team",
         "points",
         "label",
-        "at"
+        "at",
+        "time"
       ],
       "properties": {
         "id": {
@@ -397,6 +398,10 @@
         },
         "at": {
           "type": "string"
+        },
+        "time": {
+          "type": "string",
+          "description": "when it happened on the East Coast clock the slate is scheduled in, e.g. 9:14 PM ET; empty when the source has no stamp. Clients draw it and never reformat at."
         }
       }
     },

@@ -7,35 +7,58 @@ struct GameTile: View {
 
     let game: Game
     var size: Size = .regular
+    @State private var flourish: Change?
 
     private var compact: Bool { size == .compact }
+    private let radius: CGFloat = 22
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 6 : 10) {
-            StatusLine(game: game, fontSize: compact ? 12 : 13)
+            ZStack(alignment: .leading) {
+                // A flourish takes the status line's place for its hold, so
+                // the tile never grows or reflows when something happens.
+                StatusLine(game: game, fontSize: compact ? 12 : 13).opacity(flourish == nil ? 1 : 0)
+                if let flourish {
+                    ChangeBadge(change: flourish, game: game, size: compact ? 11 : 12)
+                        .transition(.asymmetric(insertion: .push(from: .leading), removal: .opacity))
+                }
+            }
             VStack(spacing: compact ? 5 : 8) {
-                TeamRow(game: game, side: game.away, size: size)
-                TeamRow(game: game, side: game.home, size: size)
+                TeamRow(game: game, side: game.away, size: size, scored: scored(game.away))
+                TeamRow(game: game, side: game.home, size: size, scored: scored(game.home))
             }
             if !compact { footer }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, compact ? 10 : 14)
         .frame(maxWidth: .infinity, minHeight: compact ? 100 : 172, alignment: .topLeading)
-        .background(Tokens.plate, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .background(Tokens.plate, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .overlay(alignment: .top) {
+            LightBank(count: compact ? 10 : 14, dot: compact ? 5 : 6, lit: flourish?.kind == .score)
+                .offset(y: -3)
+        }
         .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .strokeBorder(border.color, lineWidth: border.width)
         }
+        .overlay {
+            if game.flags.upset { UpsetSweep(cornerRadius: radius, revealing: flourish?.kind == .upset).padding(1.5) }
+        }
         .opacity(game.flags.delayed ? 0.82 : 1)
-        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .modifier(Flourish(game: game, active: $flourish))
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: radius, style: .continuous))
         .hoverEffect()
         .accessibilityElement(children: .combine)
     }
 
+    private func scored(_ side: Side) -> Change? {
+        guard let flourish, flourish.team == side.id, flourish.kind == .score || flourish.kind == .correction else { return nil }
+        return flourish
+    }
+
     private var border: (color: Color, width: CGFloat) {
         if game.flags.redZone { return (Tokens.redFill, 2) }
-        if game.flags.upset { return (Tokens.goldFill, 2) }
+        if game.flags.upset { return (.clear, 0) }          // drawn by UpsetSweep
         if game.flags.overtime && game.status.state == "in" { return (.secondary, 2) }
         return (.white.opacity(0.1), 1)
     }
@@ -110,10 +133,14 @@ struct TeamRow: View {
     let game: Game
     let side: Side
     var size: GameTile.Size = .regular
+    /// A score or correction for this side that is flourishing right now.
+    var scored: Change? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var other: Side { side.id == game.away.id ? game.home : game.away }
     private var isFinal: Bool { game.status.state == "post" }
     private var lost: Bool { isFinal && (side.score ?? 0) < (other.score ?? 0) }
+    private var hasBall: Bool { game.situation?.possession == side.id }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -128,16 +155,26 @@ struct TeamRow: View {
                     .foregroundStyle(lost ? .secondary : .primary)
             }
             Spacer(minLength: 4)
-            if game.situation?.possession == side.id {
-                Image(systemName: Glyph.possession).font(.system(size: 13)).accessibilityLabel("has the ball")
+            ZStack {
+                if hasBall {
+                    Image(systemName: Glyph.possession).font(.system(size: 13))
+                        .transition(reduceMotion ? .opacity : .push(from: side.id == game.away.id ? .bottom : .top))
+                        .accessibilityLabel("has the ball")
+                }
             }
+            .frame(width: 16)
+            .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.8), value: hasBall)
             if game.status.state == "pre" {
                 Text(side.record).font(Typeface.sans(13)).foregroundStyle(.secondary)
             } else {
                 Text(side.score.map(String.init) ?? "–")
                     .font(Typeface.display(size == .compact ? 26 : 38, .heavy))
                     .monospacedDigit()
+                    .contentTransition(reduceMotion ? .opacity : .numericText(countsDown: (scored?.points ?? 0) < 0))
                     .foregroundStyle(lost ? .secondary : .primary)
+                    // The scoring side's number sits in the light for the hold.
+                    .shadow(color: Tokens.lightBank.opacity(scored?.kind == .score ? 0.85 : 0), radius: 12)
+                    .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.5, dampingFraction: 0.7), value: side.score)
             }
             if isFinal {
                 Image(systemName: "arrowtriangle.left.fill").font(.system(size: 9))

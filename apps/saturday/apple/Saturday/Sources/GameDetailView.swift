@@ -8,8 +8,10 @@ struct GameDetailView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     let gameID: String
     @Binding var path: NavigationPath
-    @State private var detail: GameDetail?
-    @State private var error: String?
+    @State private var flourish: Change?
+
+    private var detail: GameDetail? { store.details[gameID] }
+    private var error: String? { store.detailErrors[gameID] }
 
     var body: some View {
         ScrollView {
@@ -45,7 +47,11 @@ struct GameDetailView: View {
             }
         }
         .navigationTitle(title)
-        .task(id: gameID) { await poll() }
+        // Open while on screen: the stream fetches this game's summary only
+        // while somebody is looking at it.
+        .onAppear { store.openGame(gameID) }
+        .onDisappear { store.closeGame(gameID) }
+        .modifier(OptionalFlourish(game: store.game(gameID), active: $flourish))
     }
 
     /// Three columns need the visionOS window's width; an iPad gets two.
@@ -70,24 +76,18 @@ struct GameDetailView: View {
         return "\(g.away.abbr) at \(g.home.abbr)"
     }
 
-    private func poll() async {
-        while !Task.isCancelled {
-            do {
-                detail = try await store.detail(gameID)
-                error = nil
-            } catch {
-                self.error = SaturdayStore.describe(error, host: store.host)
-            }
-            // A finished game never changes; a live one is re-read with the slate.
-            if detail?.status.completed == true { return }
-            try? await Task.sleep(for: SaturdayStore.interval)
-        }
-    }
-
     @ViewBuilder private func header(_ d: GameDetail) -> some View {
         let slateGame = store.game(gameID)
         let status = VStack(spacing: 6) {
-            Text(d.status.detail.replacingOccurrences(of: " - ", with: " · ")).font(Typeface.display(30, .heavy))
+            ZStack {
+                Text(d.status.detail.replacingOccurrences(of: " - ", with: " · ")).font(Typeface.display(30, .heavy))
+                    .opacity(flourish == nil ? 1 : 0)
+                if let flourish {
+                    ChangeBadge(change: flourish, game: slateGame, size: 17)
+                        .transition(.asymmetric(insertion: .push(from: .bottom), removal: .opacity))
+                }
+            }
+            if flourish?.kind == .score { LightBank(count: 10, dot: 7, lit: true) }
             HStack(spacing: 8) {
                 if slateGame?.flags.redZone == true { StateBadge(text: "Red zone", fill: Tokens.redFill, glyph: Glyph.redZone, size: 13) }
                 if slateGame?.flags.upset == true { StateBadge(text: "Upset", fill: Tokens.goldFill, glyph: Glyph.upset, size: 13) }
@@ -116,8 +116,16 @@ struct GameDetailView: View {
     }
 
     private func meta(_ d: GameDetail) -> some View {
-        Text([d.venue, store.game(gameID)?.tv, d.replay ? "Replay" : nil].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
-            .font(Typeface.sans(14)).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            Text([d.venue, store.game(gameID)?.tv, store.slate?.clock.map { "Replay · \($0.label)" }].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                .font(Typeface.sans(14)).foregroundStyle(.secondary)
+            if let last = d.lastPlay, !d.status.completed {
+                Label { Text(last.text).lineLimit(2) } icon: { Image(systemName: last.scoring ? Glyph.score : "text.alignleft") }
+                    .font(Typeface.sans(14, .medium))
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: last.id)
+            }
+        }
     }
 
     private var actions: some View {
@@ -158,13 +166,16 @@ private struct ScoreSide: View {
                 if let r = team.rank { Text("#\(r)").font(Typeface.display(20, .bold)).foregroundStyle(.secondary) }
                 Text(team.location).font(Typeface.sans(19, .semibold)).lineLimit(1)
             }
-            Text("\(team.record) · \(team.linescores.map(String.init).joined(separator: " · "))")
+            Text(([team.record] + (team.linescores.isEmpty ? [] : ["by quarter " + team.linescores.map(String.init).joined(separator: " ")])).joined(separator: " · "))
+                .monospacedDigit()
                 .font(Typeface.sans(13)).foregroundStyle(.secondary).lineLimit(1)
         }
     }
 
     private var score: some View {
         Text(team.score.map(String.init) ?? "–").font(Typeface.display(64, .black)).monospacedDigit()
+            .contentTransition(.numericText())
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: team.score)
     }
 
     private var favorite: some View {
@@ -184,7 +195,7 @@ private struct DrivesColumn: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            SectionHeading(title: "Drives", overline: "\(detail.drives.count) so far")
+            SectionHeading(title: "Drives", overline: detail.status.completed ? "all \(detail.drives.count)" : "\(detail.drives.count) so far")
             ForEach(Array(detail.drives.enumerated()), id: \.offset) { _, drive in
                 HStack(spacing: 12) {
                     TeamChip(abbr: drive.team, fill: fill(for: drive.team), width: 52, height: 24, fontSize: 15)
@@ -292,5 +303,15 @@ private struct BoxColumn: View {
                 }
             }
         }
+    }
+}
+
+/// A detail view can open before the slate has its game; flourish once it does.
+private struct OptionalFlourish: ViewModifier {
+    let game: Game?
+    @Binding var active: Change?
+
+    func body(content: Content) -> some View {
+        if let game { content.modifier(Flourish(game: game, active: $active)) } else { content }
     }
 }

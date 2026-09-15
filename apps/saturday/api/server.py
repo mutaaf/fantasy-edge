@@ -29,7 +29,7 @@ def _games(query: dict) -> tuple[str, ...]:
     return tuple(g for part in query.get("games", []) for g in part.split(",") if g.isdigit())
 
 
-def _health(src: Source, q: dict) -> dict:
+def _health(src: Source, m, q: dict) -> dict:
     out = {"ok": True, "source": src.label, "replay": bool(src.replay)}
     if isinstance(src, Budgeted):
         out["budget"] = src.report()

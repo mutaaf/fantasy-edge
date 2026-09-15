@@ -24,6 +24,15 @@ def _int(v, default=None):
         return default
 
 
+def clean_play_text(text: str) -> str:
+    """ESPN's play text for a reader: no leading clock, no formation, no jersey
+    numbers. "(00:25) No Huddle-Shotgun #12 C.Creel pass" -> "C.Creel pass".
+    One owner, so a tile's last play and a drive's plays read the same."""
+    text = re.sub(r"^\(\d+:\d+\)\s*", "", text or "")
+    text = re.sub(r"^(No Huddle-)?(Shotgun|Pistol|Under Center|No Huddle)\s*", "", text)
+    return re.sub(r"#\d+ ", "", text).strip()
+
+
 def status_of(status: dict) -> dict:
     """What state a game is in, from ESPN's status block alone."""
     t = status.get("type") or {}
@@ -124,7 +133,7 @@ def game_record(event: dict) -> dict:
     # The last play is shown only while the game is on: at halftime or in a
     # delay it is stale, and after the final the result says more.
     if situation and last.get("text"):
-        last_play = {"text": last["text"].strip(), "type": (last.get("type") or {}).get("text") or "",
+        last_play = {"text": clean_play_text(last["text"]), "type": (last.get("type") or {}).get("text") or "",
                      "scoring": bool(_int(last.get("scoreValue"), 0))}
 
     broadcasts = [n for b in comp.get("broadcasts") or [] for n in b.get("names") or []]

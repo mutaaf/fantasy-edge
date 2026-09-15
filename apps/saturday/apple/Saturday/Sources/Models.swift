@@ -10,10 +10,14 @@ struct Slate: Decodable {
     let asOf: String
     let source: String
     let replay: Bool
+    let clock: ReplayFrame?
     let counts: Counts
     let spotlight: String?
     let sections: [WallSection]
     let leverageCaveat: String
+    let changes: [Change]
+    let feed: [FeedItem]
+    let changesCaveat: String
     let games: [Game]
 
     struct Counts: Decodable, Hashable {
@@ -35,6 +39,7 @@ struct Game: Decodable, Identifiable, Hashable {
     let away: Side
     let home: Side
     let situation: Situation?
+    let lastPlay: LastPlay?
     let tv: String?
     let venue: Venue
     let flags: Flags
@@ -81,6 +86,12 @@ struct Situation: Decodable, Hashable {
     let redZone: Bool
 }
 
+struct LastPlay: Decodable, Hashable {
+    let text: String
+    let type: String
+    let scoring: Bool
+}
+
 struct Venue: Decodable, Hashable {
     let name: String, city: String, state: String
 }
@@ -101,6 +112,7 @@ struct Leverage: Decodable, Hashable {
 struct GameDetail: Decodable {
     let event: String
     let replay: Bool
+    let asOf: String
     let status: GameStatus
     let home: DetailTeam
     let away: DetailTeam
@@ -182,5 +194,83 @@ struct Leader: Decodable, Hashable {
         case "receiving": return "\(pairs["REC"] ?? "0") rec, \(pairs["YDS"] ?? "0") yds"
         default: return stats.prefix(2).joined(separator: " · ")
         }
+    }
+}
+
+// MARK: - changes, the whip-around, and the replay clock
+
+/// Something that happened between two scoreboard frames, decided by the API.
+/// `id` is stable for the frame, so a view animates a change exactly once.
+struct Change: Decodable, Identifiable, Hashable {
+    let id: String
+    let game: String
+    let kind: Kind
+    let team: String?
+    let points: Int?
+    let label: String
+    let at: String
+    let time: String
+
+    enum Kind: String, Decodable {
+        case score, correction, lead, possession, kickoff, final, upset, redZone, delay, resume
+    }
+}
+
+struct FeedItem: Decodable, Identifiable, Hashable {
+    let id: String
+    let game: String
+    let kind: Change.Kind
+    let team: String?
+    let points: Int?
+    let label: String
+    let at: String
+    let time: String
+    let away: FeedSide
+    let home: FeedSide
+
+    struct FeedSide: Decodable, Hashable {
+        let id: String, abbr: String
+        let rank: Int?, score: Int?
+        let fill: String, hatch: Bool
+    }
+}
+
+/// Where a replay stands. A client moves by asking for another frame's stamp;
+/// it never invents a moment between two frames.
+struct ReplayFrame: Decodable, Hashable {
+    let stamp: String
+    let at: String
+    let label: String
+    let index: Int
+    let frames: Int
+    let offsetSeconds: Double
+    let durationSeconds: Double
+}
+
+/// GET /api/replay: the recorded night, one entry per scoreboard frame.
+struct ReplayTimeline: Decodable {
+    let source: String
+    let start: String
+    let end: String
+    let frames: [Frame]
+    let gaps: [Gap]
+    let caveat: String
+
+    struct Frame: Decodable, Hashable, Identifiable {
+        let stamp: String
+        let label: String
+        let index: Int
+        let offsetSeconds: Double
+        let marks: Marks
+        let headline: Change?
+        var id: String { stamp }
+    }
+
+    struct Marks: Decodable, Hashable {
+        let scores: Int, finals: Int, kickoffs: Int, upsets: Int
+    }
+
+    struct Gap: Decodable, Hashable {
+        let from: String, to: String, minutes: Double
     }
 }

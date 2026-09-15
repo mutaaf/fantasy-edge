@@ -82,6 +82,7 @@ class Changes(unittest.TestCase):
         found = [c for c in self.changes_at("20260913T004843Z") if c["game"] == OSU_TEX]
         score = next(c for c in found if c["kind"] == "score")
         self.assertEqual((score["team"], score["points"], score["label"]), (TEXAS, 3, "Field goal"))
+        self.assertEqual(score["time"], "8:48 PM ET", "the slate's clock, not the device's")
 
     def test_kickoff_final_and_delay(self):
         at_0050 = self.changes_at("20260913T005043Z")
@@ -132,6 +133,16 @@ class ChangeRules(unittest.TestCase):
         before, after = self.nudge(OSU_TEX, away__score=17, lastPlay={"text": "x", "type": "Passing Touchdown", "scoring": True})
         (c,) = [c for c in changes.between(before, after, "20260913T003500Z") if c["kind"] == "score"]
         self.assertEqual((c["points"], c["label"]), (7, "Touchdown"))
+
+    def test_a_touchdown_and_its_extra_point_in_one_frame_is_a_touchdown(self):
+        before, after = self.nudge(OSU_TEX, away__score=17, lastPlay={"text": "x", "type": "Extra Point Good", "scoring": True})
+        (c,) = [c for c in changes.between(before, after, "s") if c["kind"] == "score"]
+        self.assertEqual((c["points"], c["label"]), (7, "Touchdown"))
+
+    def test_two_points_asks_the_play(self):
+        before, after = self.nudge(OSU_TEX, home__score=2, lastPlay={"text": "x", "type": "Safety", "scoring": True})
+        (c,) = [c for c in changes.between(before, after, "s") if c["kind"] == "score"]
+        self.assertEqual(c["label"], "Safety")
 
     def test_without_a_scoring_play_the_points_decide(self):
         before, after = self.nudge(OSU_TEX, away__score=13, lastPlay={"text": "Kickoff", "type": "Kickoff", "scoring": False})

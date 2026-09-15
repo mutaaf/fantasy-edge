@@ -10,12 +10,14 @@
 		BB553F1FF36B767511037009 /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */; };
 		358725298EF1C4087866A4C1 /* GameTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005085A5F8E52622CE0F3DE7 /* GameTile.swift */; };
 		D76A75032DA125522FF91F07 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 543988707BD0C2E7F3C73F08 /* Models.swift */; };
+		21D4F1415FFDF86E3B2C5EF6 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8983C17CCDD199BE573934BB /* Motion.swift */; };
 		48505A2124BCF5E523214D6F /* SaturdayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */; };
 		B03E545D897FE5F1BEA08EA6 /* SaturdayStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7187DE9F43439687A479EB6A /* SaturdayStore.swift */; };
 		15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA9051C81335C8D903D40AE /* SaturdayWall.swift */; };
 		13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */; };
 		B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 936D5053E2A50560B42233F7 /* Spotlight.swift */; };
 		C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D4FB59DE7619B0CE12329B /* Tokens.swift */; };
+		E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */; };
 		2DEA3DB01E067F79B332E1D8 /* BigShouldersDisplay.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */; };
 		A47D024D412A5A435FDBF35C /* InstrumentSans.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CBC52927C887C7AB1B22ACDF /* InstrumentSans.ttf */; };
 		5F0795319A6E613848A990AA /* InstrumentSerif-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4560B6D0F453EAFFCF024052 /* InstrumentSerif-Italic.ttf */; };
@@ -28,12 +30,14 @@
 		D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GameDetailView.swift"; path = "Saturday/Sources/GameDetailView.swift"; sourceTree = SOURCE_ROOT; };
 		005085A5F8E52622CE0F3DE7 /* GameTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "GameTile.swift"; path = "Saturday/Sources/GameTile.swift"; sourceTree = SOURCE_ROOT; };
 		543988707BD0C2E7F3C73F08 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Models.swift"; path = "Saturday/Sources/Models.swift"; sourceTree = SOURCE_ROOT; };
+		8983C17CCDD199BE573934BB /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Motion.swift"; path = "Saturday/Sources/Motion.swift"; sourceTree = SOURCE_ROOT; };
 		EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayApp.swift"; path = "Saturday/Sources/SaturdayApp.swift"; sourceTree = SOURCE_ROOT; };
 		7187DE9F43439687A479EB6A /* SaturdayStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayStore.swift"; path = "Saturday/Sources/SaturdayStore.swift"; sourceTree = SOURCE_ROOT; };
 		0CA9051C81335C8D903D40AE /* SaturdayWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayWall.swift"; path = "Saturday/Sources/SaturdayWall.swift"; sourceTree = SOURCE_ROOT; };
 		8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SharedRendererPlaceholder.swift"; path = "Saturday/Sources/SharedRendererPlaceholder.swift"; sourceTree = SOURCE_ROOT; };
 		936D5053E2A50560B42233F7 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Spotlight.swift"; path = "Saturday/Sources/Spotlight.swift"; sourceTree = SOURCE_ROOT; };
 		12D4FB59DE7619B0CE12329B /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Tokens.swift"; path = "Saturday/Sources/Tokens.swift"; sourceTree = SOURCE_ROOT; };
+		7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "WallChrome.swift"; path = "Saturday/Sources/WallChrome.swift"; sourceTree = SOURCE_ROOT; };
 		BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BigShouldersDisplay.ttf"; path = "Saturday/Fonts/BigShouldersDisplay.ttf"; sourceTree = SOURCE_ROOT; };
 		CBC52927C887C7AB1B22ACDF /* InstrumentSans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "InstrumentSans.ttf"; path = "Saturday/Fonts/InstrumentSans.ttf"; sourceTree = SOURCE_ROOT; };
 		4560B6D0F453EAFFCF024052 /* InstrumentSerif-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "InstrumentSerif-Italic.ttf"; path = "Saturday/Fonts/InstrumentSerif-Italic.ttf"; sourceTree = SOURCE_ROOT; };
@@ -66,12 +70,14 @@
 				D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */,
 				005085A5F8E52622CE0F3DE7 /* GameTile.swift */,
 				543988707BD0C2E7F3C73F08 /* Models.swift */,
+				8983C17CCDD199BE573934BB /* Motion.swift */,
 				EA152772D9E4B0B011D05C1D /* SaturdayApp.swift */,
 				7187DE9F43439687A479EB6A /* SaturdayStore.swift */,
 				0CA9051C81335C8D903D40AE /* SaturdayWall.swift */,
 				8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */,
 				936D5053E2A50560B42233F7 /* Spotlight.swift */,
 				12D4FB59DE7619B0CE12329B /* Tokens.swift */,
+				7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -161,12 +167,14 @@
 				BB553F1FF36B767511037009 /* GameDetailView.swift in Sources */,
 				358725298EF1C4087866A4C1 /* GameTile.swift in Sources */,
 				D76A75032DA125522FF91F07 /* Models.swift in Sources */,
+				21D4F1415FFDF86E3B2C5EF6 /* Motion.swift in Sources */,
 				48505A2124BCF5E523214D6F /* SaturdayApp.swift in Sources */,
 				B03E545D897FE5F1BEA08EA6 /* SaturdayStore.swift in Sources */,
 				15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */,
 				13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */,
 				B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */,
 				C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */,
+				E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

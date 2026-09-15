@@ -45,6 +45,12 @@ enum Glyph {
     static let turnover = "xmark"
     static let tabletop = "cube"
     static let stadium = "sportscourt"
+    static let correction = "arrow.uturn.backward"
+    static let lead = "arrow.up.forward"
+    static let kickoff = "figure.american.football"
+    static let resume = "play.fill"
+    static let replay = "backward.end.alt"
+    static let feed = "antenna.radiowaves.left.and.right"
     static let favorite = "star.fill"
     static let notFavorite = "star"
 }
