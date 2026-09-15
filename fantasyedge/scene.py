@@ -525,12 +525,17 @@ SEATS = [
 ]
 
 PRESENTATION = {
-    # The lower bowl reaches 36 yards past the end line, so the tabletop is
-    # sized for the bowl rather than the field: 96 yards either side of
-    # midfield at 4.5 mm is 0.86 m, inside a 0.9 m volume. Sized for the field
-    # alone, the bowl came out 1.28 m across and was clipped by the volume.
-    "tabletop": {"metersPerYard": 0.0045, "volume": [0.9, 0.4, 0.6],
-                 "floor": -0.18, "bowlTiers": ["lower"]},
+    # The table model is sized for the whole two-deck bowl on its plinth, not
+    # the lower bowl alone, which read as a shallow dish: the plinth reaches
+    # (70 + 3) * 1.03 + a 2.4 yard bevel = 77.6 yards past the field, so the
+    # model is 275 yards long and 209 deep. At 4 mm a yard that is
+    # 1.10 x 0.83 m on a 1.12 x 0.45 x 0.86 m volume, and the field is 0.48 m.
+    # Shrinking to fit 0.9 m instead (3.3 mm) left a 0.40 m field; keeping
+    # 4.5 mm needed a 1.25 m volume, wider than the table it sits on.
+    # bowlTiers stays lower-only until Bowl's table model carries the upper
+    # deck; tests/test_experience.py already holds both decks to the volume.
+    "tabletop": {"metersPerYard": 0.004, "volume": [1.12, 0.45, 0.86],
+                 "floor": -0.2, "bowlTiers": ["lower"]},
     # `seat` is the default of `seats`, kept so a 1.0 renderer still sits down.
     "stadium": {"metersPerYard": 0.9144,
                 "seat": {k: SEATS[0][k] for k in ("x", "y", "z")},

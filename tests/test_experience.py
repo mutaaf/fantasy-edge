@@ -107,6 +107,30 @@ class Layout(unittest.TestCase):
         self.assertLessEqual(t["maxScale"], 1.0, "scaled past 1 the bowl is clipped by the volume")
         self.assertLessEqual(t["closerTiltDegrees"], 30.0)
 
+    def test_the_whole_two_deck_bowl_fits_the_table_volume(self):
+        """The table is sized for both decks on their plinth, whichever tiers
+        it draws today, so turning the upper deck on never clips the model."""
+        t = sc.PRESENTATION["tabletop"]
+        base = EXPERIENCE["baseplate"]
+        outer = (max(tier["outer"] for tier in sc.BOWL["tiers"]) + 3) * base["marginScale"] + base["bevelYards"]
+        length = 2 * (60 + outer) * t["metersPerYard"]
+        depth = 2 * (80 / 3 + outer) * t["metersPerYard"]
+        self.assertLessEqual(length, t["volume"][0], "the plinth is wider than the volume")
+        self.assertLessEqual(depth, t["volume"][2], "the plinth is deeper than the volume")
+        top = max(tier["rise"][1] for tier in sc.BOWL["tiers"]) * t["metersPerYard"] + t["floor"]
+        self.assertLessEqual(top, t["volume"][1] / 2, "the upper deck pokes out of the top of the volume")
+        self.assertGreaterEqual(t["floor"] - base["thicknessMeters"], -t["volume"][1] / 2)
+        self.assertGreaterEqual(120 * t["metersPerYard"], 0.45, "a field under 45 cm is too small to read a drive on")
+
+    def test_the_win_probability_horizon_stays_inside_the_table(self):
+        """Placement contract for Broadcast's horizon: on the table it sits
+        inside the volume, behind the far stands and no higher than the
+        volume's top, never floating over the room."""
+        t = sc.PRESENTATION["tabletop"]
+        h = sc.PRESENTATION["horizon"]
+        self.assertLessEqual(abs(h["z"]) * t["metersPerYard"], t["volume"][2] / 2)
+        self.assertLessEqual(h["y1"] * t["metersPerYard"] + t["floor"], t["volume"][1] / 2)
+
     def test_the_scene_carries_the_experience_tokens(self):
         built = sc.build({})
         self.assertEqual(built["visual"]["experience"]["layout"], EXPERIENCE["layout"])

@@ -281,8 +281,10 @@ public struct TabletopView: View {
         // The scorebug rides in the ornament rather than floating in the
         // volume: the win-probability horizon fills the back of the volume
         // at exactly the height a floating scorebug wanted, and the two drew
-        // through each other.
-        .ornament(attachmentAnchor: .scene(.bottomFront)) {
+        // through each other. It hangs below the volume's front edge
+        // (`contentAlignment: .top`) rather than centred on it, where its top
+        // half covered the front of the model.
+        .ornament(attachmentAnchor: .scene(.bottomFront), contentAlignment: .top) {
             HStack(spacing: 12) {
                 if let spec = feed.spec {
                     SceneScorebug(spec: spec)
