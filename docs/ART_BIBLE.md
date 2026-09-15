@@ -116,9 +116,9 @@ numbers to `stats.txt`.
 
 | Actor | Triangles | Draw parts | Texture MB | Other |
 |---|---:|---:|---:|---|
-| Field | 3k | 12 | 40 | 1.1k measured at integration-3 |
-| Sideline | 22k | 15 | 20 | 20.6k measured |
-| Bowl | 60k | 20 | 50 | ~57k measured |
+| Field | 2k | 12 | 40 | 1.1k measured at integration-3 |
+| Sideline | 21k | 15 | 20 | 20.6k measured |
+| Bowl | 62k | 20 | 50 | 57.9–60.3k, 15 parts measured |
 | Crowd | 150k | 45 | 60 | 52,039 seats; LOD2 pose-mesh ring near club seats capped in `visual.crowd.rings`; fans animate by group, never per fan on the CPU |
 | Lighting | 10k | 20 | 20 | ≤ 4 spot lights, ≤ 1 shadow caster |
 | Sky | 5k | 3 | 30 | |
@@ -129,7 +129,7 @@ numbers to `stats.txt`.
 | **Stadium total** | **287k** | **160** | **300** | |
 | **Tabletop total** | **80k** | **110** | shared | |
 
-**Rebalanced at integration-3:** Crowd rises from 120k to 150k triangles, because Bowl now seats 52,039 fans, not 32k, and fans 5–12 yd from a club seat need real meshes, not magnified cards. The extra 30k is measured slack from Field (20k → 3k), Bowl (70k → 60k) and Sideline (25k → 22k). The total stays at 287k. Any actor that needs its slack back goes through the director.
+**Rebalanced at integration-3:** Crowd rises from 120k to 150k triangles, because Bowl now seats 52,039 fans, not 32k, and fans 5–12 yd from a club seat need real meshes, not magnified cards. The extra 30k is measured slack from Field (20k → 2k), Bowl (70k → 62k) and Sideline (25k → 21k); corrected at integration-4 after Bowl measured 60.3k. The total stays at 287k. Any actor that needs its slack back goes through the director.
 
 **Measured at the actor split, iteration 4 of the look pass:**
 - **Stadium:** 113 draw parts, 205k triangles, 32k fans, about 67 MB of
