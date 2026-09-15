@@ -124,6 +124,8 @@ enum StadiumEvent {
     case moment(SceneSpec.Moment)
     /// The offense just crossed the twenty.
     case redZoneEntered
+    /// A game beat that is not a score: the scene's active cue, once per id.
+    case cue(SceneSpec.Cue)
 }
 
 /// A part of the stadium. See the list at the top of this file.

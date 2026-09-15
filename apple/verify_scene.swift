@@ -51,7 +51,7 @@ struct VerifyScene {
         }
         let spec = try JSONDecoder().decode(SceneSpec.self, from: blob)
         let name = URL(fileURLWithPath: path).lastPathComponent
-        expect(spec.version == "1.2", "\(name): unexpected scene version \(spec.version)")
+        expect(spec.version == "1.3", "\(name): unexpected scene version \(spec.version)")
 
         // ---- arcs: the apex formula, drawn ----
         for drive in spec.drives {

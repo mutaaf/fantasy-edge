@@ -43,6 +43,7 @@ public final class StadiumRenderer {
     @ObservationIgnored private var pendingReduceMotion = false
     @ObservationIgnored private var lastMoment: String?
     @ObservationIgnored private var lastRedZone = false
+    @ObservationIgnored private var lastCue: String?
 
     public init(mode: Mode) {
         self.mode = mode
@@ -86,6 +87,7 @@ public final class StadiumRenderer {
             build(c)
             staticKey = key
             lastMoment = next.activeMoment?.playId
+            lastCue = next.activeCue?.id
             lastRedZone = next.status.redZone
         }
         for actor in actors { actor.apply(c, previous: previous) }
@@ -167,6 +169,10 @@ public final class StadiumRenderer {
             for actor in actors { actor.moment(.redZoneEntered, c) }
         }
         lastRedZone = s.status.redZone
+        if let cue = s.activeCue, cue.id != lastCue {
+            lastCue = cue.id
+            for actor in actors { actor.moment(.cue(cue), c) }
+        }
         guard let m = s.activeMoment else {
             lastMoment = nil
             return

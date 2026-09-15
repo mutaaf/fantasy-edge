@@ -29,6 +29,10 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let winProbability: WinProbability
     public let moments: [Moment]
     public let activeMoment: Moment?
+    /// 1.3: the game's other beats - quarter ends, the two-minute warning,
+    /// red-zone crossings, the final - and the one for this instant.
+    public let cues: [Cue]?
+    public let activeCue: Cue?
     public let bowl: Bowl
     public let presentation: Presentation
     public let palette: [String: String]
@@ -42,7 +46,8 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case version, kind, league, event, source, speed, field, teams, status, ball, lasers, drives
-        case currentDrive, winProbability, moments, activeMoment, bowl, presentation, palette, motion, shaderGraph
+        case currentDrive, winProbability, moments, activeMoment, cues, activeCue, bowl, presentation, palette, motion
+        case shaderGraph
         case replayControl
         /// The contract calls it `visual`; the renderer reads it as its look.
         case look = "visual"
@@ -216,6 +221,21 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let horizon: Horizon
     }
 
+    /// A beat that is not a score or a turnover. `treatment` names the
+    /// entry in `visual.moments.cues`; `id` is stable while the cue holds.
+    public struct Cue: Decodable, Equatable, Sendable {
+        public let kind: String
+        public let id: String
+        public let playId: String?
+        public let side: String?
+        public let detail: String?
+        public let treatment: String
+        public let source: String?
+        public let period: Int?
+        public let clock: String?
+        public let sequence: Int?
+    }
+
     public struct Point: Decodable, Equatable, Sendable {
         public let x: Double
         public let y: Double
@@ -234,10 +254,12 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// 1.1: the scene says whether it celebrates, and where its banner,
         /// light and sound go.
         public let anchor: Point?
+        /// 1.3: interception, fumble, puntReturn, kickReturn, blocked, or nil.
+        public let detail: String?
         private let decidedCelebrates: Bool?
 
         enum CodingKeys: String, CodingKey {
-            case kind, side, team, points, playId, text, period, clock, anchor
+            case kind, side, team, points, playId, text, period, clock, anchor, detail
             case decidedCelebrates = "celebrates"
         }
 
