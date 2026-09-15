@@ -1,0 +1,25 @@
+{
+  "any": {
+    "albedoMean": [
+      0.1151,
+      0.2366,
+      0.0815
+    ],
+    "blades": 110691,
+    "shellHeights": [
+      0.0262,
+      0.0227,
+      0.0192,
+      0.0157,
+      0.0122,
+      0.0087,
+      0.0052,
+      0.0017
+    ]
+  },
+  "heightScaleMetres": 0.045,
+  "patchMetres": 0.4,
+  "resolution": 1024,
+  "shellResolution": 512,
+  "wornResolution": 512
+}

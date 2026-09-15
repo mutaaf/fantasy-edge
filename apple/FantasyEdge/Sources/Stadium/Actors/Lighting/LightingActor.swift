@@ -36,6 +36,8 @@ final class LightingActor: StadiumActor {
     private var glowLayers: [ModelEntity] = []   // stadium: merged, seat-facing
     private var billboards: [ModelEntity] = []   // tabletop: one per glow
     private var beams: ModelEntity?
+    private var haze: ModelEntity?
+    private var floods: [(entity: Entity, lumens: Float)] = []
     /// Dust drifting through the beams: the same quads, a tiling texture,
     /// its offset moved along the beam a few times a second. UnlitMaterial's
     /// texture transform (visionOS 2) rather than a Shader Graph, which a
@@ -52,7 +54,8 @@ final class LightingActor: StadiumActor {
 
     func build(_ c: StadiumContext) {
         clear()
-        lenses = nil; faces = nil; beams = nil; dust = nil
+        lenses = nil; faces = nil; beams = nil; dust = nil; haze = nil
+        floods.removeAll()
         glowLayers.removeAll(); billboards.removeAll()
         glowSeat = nil
         applied = (-1, -1, false)
@@ -427,8 +430,14 @@ final class LightingActor: StadiumActor {
                           uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, 1), SIMD2(u0, 1)), normal: SIMD3(0, 1, 0))
             }
         }
-        let material = StadiumLook.glow(H.color, opacity: H.opacity, texture: c.assets.texture("lighting.haze"), tile: true)
-        root.addChild(mesh.entity("rim.haze", material))
+        let e = mesh.entity("rim.haze", hazeMaterial(c, gain: 1))
+        root.addChild(e)
+        haze = e
+    }
+
+    private func hazeMaterial(_ c: StadiumContext, gain: Double) -> UnlitMaterial {
+        let H = c.look.lighting.haze
+        return StadiumLook.glow(H.color, opacity: H.opacity * gain, texture: c.assets.texture("lighting.haze"), tile: true)
     }
 
     // MARK: floods
@@ -453,6 +462,7 @@ final class LightingActor: StadiumActor {
             e.components.set(spot)
             if i < flood.shadows { e.components.set(SpotLightComponent.Shadow()) }
             root.addChild(e)
+            floods.append((e, spot.intensity))
         }
     }
 
@@ -488,7 +498,7 @@ final class LightingActor: StadiumActor {
         if dustMoved && !changed {
             let tint = applied.wash > 0 ? Self.mix(c.look.lighting.beams.color, applied.away ? c.spec.bowl.crowd.away : c.spec.bowl.crowd.home,
                                                    c.look.lighting.wash.beamTint) : nil
-            dust?.model?.materials = [dustMaterial(c, gain: 1 + (c.look.lighting.strobe.beamGain - 1) * applied.gain, tint: tint)]
+            dust?.model?.materials = [dustMaterial(c, gain: Self.strobeGain(c.look.lighting.strobe.beamGain, max: c.look.lighting.strobe.beamGainMax, pulse: applied.gain), tint: tint)]
         }
         guard changed else { return }
         applied = (gain, wash, away)
@@ -499,7 +509,11 @@ final class LightingActor: StadiumActor {
         faces?.model?.materials = [faceMaterial(c, gain: 1 + (S.lensGain - 1) * gain)]
         let glowColour = wash > 0 ? Self.mix(G.color, chip, W.glowTint) : G.color
         for (layer, entity) in zip(layers(c), glowLayers) {
-            entity.model?.materials = [StadiumLook.glow(glowColour, opacity: layer.opacity * (1 + (S.glowGain - 1) * gain),
+            // The spill lies over seats; it pulses no more than the haze may.
+            let layerGain = layer.key == "lighting.spill"
+                ? Self.strobeGain(S.glowGain, max: S.hazeGainMax, pulse: gain)
+                : 1 + (S.glowGain - 1) * gain
+            entity.model?.materials = [StadiumLook.glow(glowColour, opacity: layer.opacity * layerGain,
                                                         texture: c.assets.texture(layer.key))]
         }
         if c.tabletop {
@@ -507,8 +521,26 @@ final class LightingActor: StadiumActor {
             for g in billboards { g.scale = SIMD3(repeating: scale) }
         }
         let beamColour = wash > 0 ? Self.mix(c.look.lighting.beams.color, chip, W.beamTint) : nil
-        beams?.model?.materials = [beamMaterial(c, gain: 1 + (S.beamGain - 1) * gain, tint: beamColour)]
-        dust?.model?.materials = [dustMaterial(c, gain: 1 + (S.beamGain - 1) * gain, tint: beamColour)]
+        // Beams and haze are volume the eye sees against the stands: pulsed
+        // hard they turn both decks to grey fog (integration-2 td-moment).
+        // They are capped; the lenses, the glows and a brief wash of extra
+        // flood on the field carry the strobe instead.
+        let beamGain = Self.strobeGain(S.beamGain, max: S.beamGainMax, pulse: gain)
+        beams?.model?.materials = [beamMaterial(c, gain: beamGain, tint: beamColour)]
+        dust?.model?.materials = [dustMaterial(c, gain: beamGain, tint: beamColour)]
+        haze?.model?.materials = [hazeMaterial(c, gain: Self.strobeGain(S.beamGain, max: S.hazeGainMax, pulse: gain))]
+        let fieldWash = Float(1 + (S.fieldWashGain - 1) * gain)
+        for f in floods {
+            if var spot = f.entity.components[SpotLightComponent.self] {
+                spot.intensity = f.lumens * fieldWash
+                f.entity.components.set(spot)
+            }
+        }
+    }
+
+    /// A strobe multiplier: `1 + (gain - 1) * pulse`, never above `max`.
+    static func strobeGain(_ gain: Double, max cap: Double, pulse: Double) -> Double {
+        min(cap, 1 + (gain - 1) * pulse)
     }
 
     private static func mix(_ a: String, _ b: String, _ t: Double) -> String {

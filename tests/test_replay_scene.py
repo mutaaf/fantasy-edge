@@ -533,8 +533,8 @@ class TestSceneGeometry(unittest.TestCase):
 
     def test_props_follow_the_league_and_look_names_real_assets(self):
         nfl = self.final["field"]["props"]
-        self.assertEqual(nfl["benches"]["fromX"], 32.0)
-        self.assertEqual(sc.RULES["college-football"]["props"]["benches"]["fromX"], 25.0)
+        self.assertEqual(nfl["benches"]["fromX"], 30.0)
+        self.assertEqual(sc.RULES["college-football"]["props"]["benches"]["fromX"], 20.0)
         self.assertAlmostEqual(nfl["goalpost"]["crossbar"] * 3, 10.0, places=2)
         for key in ("goalpost", "pylon", "benches", "chains"):
             self.assertIn(nfl[key]["color"], self.final["palette"])
@@ -553,6 +553,71 @@ class TestSceneGeometry(unittest.TestCase):
                                 f"{actor}.{name}: assets/{rel} is missing; run tools/make_assets.py")
                 self.assertTrue(rel.startswith(("actors/", "generated/")),
                                 f"{actor}.{name}: assets live under assets/actors/ or assets/generated/")
+
+    def test_the_sideline_follows_each_rulebook(self):
+        """Team areas and upright heights come from the 2026 books, not from
+        what looked right: NFL benches between the 30s and uprights 35 ft
+        above the bar; college team areas between the 20s and 30 ft uprights.
+        Both books put the bar 10 ft up and the uprights 18 ft 6 in apart."""
+        nfl, ncaa = sc.RULES["nfl"], sc.RULES["college-football"]
+        self.assertEqual((nfl["props"]["benches"]["fromX"], nfl["props"]["benches"]["toX"]), (30.0, 70.0))
+        self.assertEqual((ncaa["props"]["benches"]["fromX"], ncaa["props"]["benches"]["toX"]), (20.0, 80.0))
+        self.assertAlmostEqual(nfl["props"]["goalpost"]["uprightAbove"] * 3, 35.0, places=3)
+        self.assertAlmostEqual(ncaa["props"]["goalpost"]["uprightAbove"] * 3, 30.0, places=3)
+        for rules in (nfl, ncaa):
+            self.assertAlmostEqual(rules["props"]["goalpost"]["crossbar"] * 3, 10.0, places=2)
+            self.assertAlmostEqual(rules["field"]["goalPostWidth"] * 36, 222.0, delta=0.1)
+            # symmetric about midfield, which the half-canvas paint relies on
+            b = rules["props"]["benches"]
+            self.assertAlmostEqual(b["fromX"] + b["toX"], 100.0)
+
+    def test_end_zone_names_fit_their_clearance_and_read_the_right_way(self):
+        """Each club's name sits inside its end zone four feet clear of every
+        line (NCAA 1-2-1-d), and reads un-mirrored from the field of play with
+        its tops toward the end line. The glyph layout a client applies is
+        checked here, corner by corner, so no client has to trust it."""
+        import json as _json
+        art = self.final["field"]["art"]
+        self.assertIsNotNone(art, "assets/actors/field/fonts/glyphs.json is missing")
+        font = _json.loads((pathlib.Path(sc.__file__).resolve().parent.parent / "assets" / art["glyphs"]).read_text())
+        f = self.final["field"]
+        clear, gl = 4 / 3, 8 / 36
+        for z in art["endZones"]:
+            width = sc.text_width(z["text"], font, art["tracking"])
+            (ox, oz), (ax, az), (ux, uz), cap = z["origin"], z["along"], z["up"], z["capHeight"]
+            corners = [(ox + (a * ax + b * ux) * cap, oz + (a * az + b * uz) * cap)
+                       for a in (0, width) for b in (0, 1)]
+            if z["side"] == "home":
+                lo, hi = -f["endZone"] + clear, -gl - clear
+            else:
+                lo, hi = f["length"] + gl + clear, f["length"] + f["endZone"] - clear
+            for x, zz in corners:
+                self.assertGreaterEqual(x, lo - 1e-6)
+                self.assertLessEqual(x, hi + 1e-6)
+                self.assertLessEqual(abs(zz), f["width"] / 2 - clear + 1e-6)
+            # un-mirrored seen from above: along x up has the orientation of
+            # the viewer's right x forward, which is -1 in (x, z)
+            self.assertAlmostEqual(ax * uz - az * ux, -1.0)
+            # tops toward the end line
+            self.assertEqual(ux, -1.0 if z["side"] == "home" else 1.0)
+        mid = art["midfield"]
+        self.assertEqual(mid["center"], [50.0, 0.0])
+        self.assertLess(mid["inner"], mid["outer"])
+        self.assertLessEqual(mid["outer"], f["width"] / 2 - 15.0 + 1e-6, "NFL midfield art stays inside the numerals")
+
+    def test_pylons_stand_where_each_book_puts_them(self):
+        """NFL: the four goal-line corners and two on each end line at the
+        hashes. College adds the end-line corners and sets the hash pylons
+        three feet off the end line (1-2-6)."""
+        for league, count in (("nfl", 8), ("college-football", 12)):
+            rules = sc.RULES[league]
+            spots = sc.pylon_spots(rules["field"], league, rules["props"]["pylon"]["size"])
+            self.assertEqual(len(spots), count, league)
+            self.assertEqual(len({tuple(s) for s in spots}), count)
+            # symmetric under a half turn about midfield
+            turned = {(round(100 - x, 3), round(-z, 3)) for x, z in spots}
+            self.assertEqual(turned, {(round(x, 3), round(z, 3)) for x, z in spots})
+        self.assertEqual(len(self.final["field"]["props"]["pylon"]["at"]), 8)
 
     def test_every_look_field_the_renderer_reads_is_in_the_tokens(self):
         """The visionOS renderer may only read appearance through SceneLook.swift.
@@ -575,6 +640,9 @@ class TestSceneGeometry(unittest.TestCase):
             if isinstance(node, dict):
                 for k, v in node.items():
                     out.add(k)
+                    out |= keys(v)
+            elif isinstance(node, list):
+                for v in node:
                     out |= keys(v)
             return out
 

@@ -1,0 +1,981 @@
+{
+  "actor": "sideline",
+  "axes": "metres; exported Y-up; origin at the base on the ground; -Z faces the field of play",
+  "budget": {
+    "parts": 15,
+    "textureMB": 20,
+    "triangles": 25000
+  },
+  "lodUse": {
+    "0": "stadium and field level",
+    "1": "far side of the bowl",
+    "2": "tabletop"
+  },
+  "props": {
+    "ball_bag": {
+      "dimensionsMetres": [
+        0.66,
+        0.538,
+        0.54
+      ],
+      "id": "ball_bag",
+      "lods": {
+        "0": {
+          "files": [
+            "ball_bag.usdz",
+            "ball_bag.glb"
+          ],
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
+          "triangles": 684
+        },
+        "1": {
+          "files": [
+            "ball_bag_lod1.usdz",
+            "ball_bag_lod1.glb"
+          ],
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
+          "triangles": 306
+        },
+        "2": {
+          "files": [
+            "ball_bag_lod2.usdz",
+            "ball_bag_lod2.glb"
+          ],
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
+          "triangles": 94
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_net"
+      ]
+    },
+    "bean_bag": {
+      "dimensionsMetres": [
+        0.114,
+        0.096,
+        0.048
+      ],
+      "id": "bean_bag",
+      "lods": {
+        "0": {
+          "files": [
+            "bean_bag.usdz",
+            "bean_bag.glb"
+          ],
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
+          "triangles": 100
+        },
+        "1": {
+          "files": [
+            "bean_bag_lod1.usdz",
+            "bean_bag_lod1.glb"
+          ],
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
+          "triangles": 44
+        },
+        "2": {
+          "files": [
+            "bean_bag_lod2.usdz",
+            "bean_bag_lod2.glb"
+          ],
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
+          "triangles": 14
+        }
+      },
+      "materials": [
+        "prop_blue"
+      ]
+    },
+    "bench": {
+      "dimensionsMetres": [
+        7.3,
+        0.375,
+        0.84
+      ],
+      "id": "bench",
+      "lods": {
+        "0": {
+          "files": [
+            "bench.usdz",
+            "bench.glb"
+          ],
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
+          "triangles": 792
+        },
+        "1": {
+          "files": [
+            "bench_lod1.usdz",
+            "bench_lod1.glb"
+          ],
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
+          "triangles": 356
+        },
+        "2": {
+          "files": [
+            "bench_lod2.usdz",
+            "bench_lod2.glb"
+          ],
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
+          "triangles": 110
+        }
+      },
+      "materials": [
+        "prop_steel",
+        "tint_team_primary"
+      ]
+    },
+    "cable_run": {
+      "dimensionsMetres": [
+        10.001,
+        0.9,
+        0.05
+      ],
+      "id": "cable_run",
+      "lods": {
+        "0": {
+          "files": [
+            "cable_run.usdz",
+            "cable_run.glb"
+          ],
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
+          "triangles": 466
+        },
+        "1": {
+          "files": [
+            "cable_run_lod1.usdz",
+            "cable_run_lod1.glb"
+          ],
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
+          "triangles": 209
+        },
+        "2": {
+          "files": [
+            "cable_run_lod2.usdz",
+            "cable_run_lod2.glb"
+          ],
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
+          "triangles": 65
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_yellow"
+      ]
+    },
+    "camera_cart": {
+      "dimensionsMetres": [
+        0.85,
+        1.23,
+        1.648
+      ],
+      "id": "camera_cart",
+      "lods": {
+        "0": {
+          "files": [
+            "camera_cart.usdz",
+            "camera_cart.glb"
+          ],
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
+          "triangles": 436
+        },
+        "1": {
+          "files": [
+            "camera_cart_lod1.usdz",
+            "camera_cart_lod1.glb"
+          ],
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
+          "triangles": 196
+        },
+        "2": {
+          "files": [
+            "camera_cart_lod2.usdz",
+            "camera_cart_lod2.glb"
+          ],
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
+          "triangles": 56
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_dark",
+        "prop_steel"
+      ]
+    },
+    "chain_set": {
+      "dimensionsMetres": [
+        9.494,
+        0.07,
+        2.1
+      ],
+      "id": "chain_set",
+      "lods": {
+        "0": {
+          "files": [
+            "chain_set.usdz",
+            "chain_set.glb"
+          ],
+          "meshes": [
+            "chain_set__prop_steel",
+            "chain_set__prop_white",
+            "chain_set__prop_orange"
+          ],
+          "triangles": 576
+        },
+        "1": {
+          "files": [
+            "chain_set_lod1.usdz",
+            "chain_set_lod1.glb"
+          ],
+          "meshes": [
+            "chain_set__prop_steel",
+            "chain_set__prop_white",
+            "chain_set__prop_orange"
+          ],
+          "triangles": 258
+        },
+        "2": {
+          "files": [
+            "chain_set_lod2.usdz",
+            "chain_set_lod2.glb"
+          ],
+          "meshes": [
+            "chain_set__prop_white",
+            "chain_set__prop_orange",
+            "chain_set__prop_steel"
+          ],
+          "triangles": 88
+        }
+      },
+      "materials": [
+        "prop_orange",
+        "prop_steel",
+        "prop_white"
+      ]
+    },
+    "cooler_station": {
+      "dimensionsMetres": [
+        2.445,
+        0.76,
+        1.28
+      ],
+      "id": "cooler_station",
+      "lods": {
+        "0": {
+          "files": [
+            "cooler_station.usdz",
+            "cooler_station.glb"
+          ],
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
+          "triangles": 652
+        },
+        "1": {
+          "files": [
+            "cooler_station_lod1.usdz",
+            "cooler_station_lod1.glb"
+          ],
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
+          "triangles": 292
+        },
+        "2": {
+          "files": [
+            "cooler_station_lod2.usdz",
+            "cooler_station_lod2.glb"
+          ],
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
+          "triangles": 85
+        }
+      },
+      "materials": [
+        "prop_blue",
+        "prop_steel",
+        "prop_white"
+      ]
+    },
+    "down_marker": {
+      "dimensionsMetres": [
+        0.36,
+        0.36,
+        2.44
+      ],
+      "id": "down_marker",
+      "lods": {
+        "0": {
+          "files": [
+            "down_marker.usdz",
+            "down_marker.glb"
+          ],
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
+          "triangles": 1280
+        },
+        "1": {
+          "files": [
+            "down_marker_lod1.usdz",
+            "down_marker_lod1.glb"
+          ],
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
+          "triangles": 571
+        },
+        "2": {
+          "files": [
+            "down_marker_lod2.usdz",
+            "down_marker_lod2.glb"
+          ],
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
+          "triangles": 172
+        }
+      },
+      "materials": [
+        "prop_orange",
+        "prop_white"
+      ]
+    },
+    "endzone_platform": {
+      "dimensionsMetres": [
+        2.054,
+        2.124,
+        4.016
+      ],
+      "id": "endzone_platform",
+      "lods": {
+        "0": {
+          "files": [
+            "endzone_platform.usdz",
+            "endzone_platform.glb"
+          ],
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
+          "triangles": 740
+        },
+        "1": {
+          "files": [
+            "endzone_platform_lod1.usdz",
+            "endzone_platform_lod1.glb"
+          ],
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
+          "triangles": 332
+        },
+        "2": {
+          "files": [
+            "endzone_platform_lod2.usdz",
+            "endzone_platform_lod2.glb"
+          ],
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
+          "triangles": 85
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_steel"
+      ]
+    },
+    "fieldgoal_net": {
+      "dimensionsMetres": [
+        12.314,
+        0.12,
+        13.6
+      ],
+      "id": "fieldgoal_net",
+      "lods": {
+        "0": {
+          "files": [
+            "fieldgoal_net.usdz",
+            "fieldgoal_net.glb"
+          ],
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
+          "triangles": 94
+        },
+        "1": {
+          "files": [
+            "fieldgoal_net_lod1.usdz",
+            "fieldgoal_net_lod1.glb"
+          ],
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
+          "triangles": 42
+        },
+        "2": {
+          "files": [
+            "fieldgoal_net_lod2.usdz",
+            "fieldgoal_net_lod2.glb"
+          ],
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
+          "triangles": 10
+        }
+      },
+      "materials": [
+        "prop_net",
+        "prop_steel"
+      ]
+    },
+    "goalpost_college": {
+      "dimensionsMetres": [
+        5.826,
+        2.144,
+        12.231
+      ],
+      "id": "goalpost_college",
+      "lods": {
+        "0": {
+          "files": [
+            "goalpost_college.usdz",
+            "goalpost_college.glb"
+          ],
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
+          "triangles": 844
+        },
+        "1": {
+          "files": [
+            "goalpost_college_lod1.usdz",
+            "goalpost_college_lod1.glb"
+          ],
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
+          "triangles": 378
+        },
+        "2": {
+          "files": [
+            "goalpost_college_lod2.usdz",
+            "goalpost_college_lod2.glb"
+          ],
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
+          "triangles": 118
+        }
+      },
+      "materials": [
+        "prop_gold",
+        "prop_orange",
+        "tint_team_primary"
+      ]
+    },
+    "goalpost_nfl": {
+      "dimensionsMetres": [
+        5.826,
+        2.144,
+        13.755
+      ],
+      "id": "goalpost_nfl",
+      "lods": {
+        "0": {
+          "files": [
+            "goalpost_nfl.usdz",
+            "goalpost_nfl.glb"
+          ],
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
+          "triangles": 844
+        },
+        "1": {
+          "files": [
+            "goalpost_nfl_lod1.usdz",
+            "goalpost_nfl_lod1.glb"
+          ],
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
+          "triangles": 378
+        },
+        "2": {
+          "files": [
+            "goalpost_nfl_lod2.usdz",
+            "goalpost_nfl_lod2.glb"
+          ],
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
+          "triangles": 118
+        }
+      },
+      "materials": [
+        "prop_gold",
+        "prop_orange",
+        "tint_team_primary"
+      ]
+    },
+    "ground_marker": {
+      "dimensionsMetres": [
+        0.254,
+        0.94,
+        0.012
+      ],
+      "id": "ground_marker",
+      "lods": {
+        "0": {
+          "files": [
+            "ground_marker.usdz",
+            "ground_marker.glb"
+          ],
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
+          "triangles": 16
+        },
+        "1": {
+          "files": [
+            "ground_marker_lod1.usdz",
+            "ground_marker_lod1.glb"
+          ],
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
+          "triangles": 6
+        },
+        "2": {
+          "files": [
+            "ground_marker_lod2.usdz",
+            "ground_marker_lod2.glb"
+          ],
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
+          "triangles": 1
+        }
+      },
+      "materials": [
+        "prop_orange"
+      ]
+    },
+    "heater_fan": {
+      "dimensionsMetres": [
+        0.6,
+        0.65,
+        0.778
+      ],
+      "id": "heater_fan",
+      "lods": {
+        "0": {
+          "files": [
+            "heater_fan.usdz",
+            "heater_fan.glb"
+          ],
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
+          "triangles": 400
+        },
+        "1": {
+          "files": [
+            "heater_fan_lod1.usdz",
+            "heater_fan_lod1.glb"
+          ],
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
+          "triangles": 180
+        },
+        "2": {
+          "files": [
+            "heater_fan_lod2.usdz",
+            "heater_fan_lod2.glb"
+          ],
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
+          "triangles": 52
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_dark",
+        "prop_orange"
+      ]
+    },
+    "kicking_net": {
+      "dimensionsMetres": [
+        2.45,
+        1.675,
+        2.397
+      ],
+      "id": "kicking_net",
+      "lods": {
+        "0": {
+          "files": [
+            "kicking_net.usdz",
+            "kicking_net.glb"
+          ],
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
+          "triangles": 128
+        },
+        "1": {
+          "files": [
+            "kicking_net_lod1.usdz",
+            "kicking_net_lod1.glb"
+          ],
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
+          "triangles": 56
+        },
+        "2": {
+          "files": [
+            "kicking_net_lod2.usdz",
+            "kicking_net_lod2.glb"
+          ],
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
+          "triangles": 13
+        }
+      },
+      "materials": [
+        "prop_dark",
+        "prop_net"
+      ]
+    },
+    "medical_tent": {
+      "dimensionsMetres": [
+        3.044,
+        2.044,
+        2.575
+      ],
+      "id": "medical_tent",
+      "lods": {
+        "0": {
+          "files": [
+            "medical_tent.usdz",
+            "medical_tent.glb"
+          ],
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
+          "triangles": 166
+        },
+        "1": {
+          "files": [
+            "medical_tent_lod1.usdz",
+            "medical_tent_lod1.glb"
+          ],
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
+          "triangles": 74
+        },
+        "2": {
+          "files": [
+            "medical_tent_lod2.usdz",
+            "medical_tent_lod2.glb"
+          ],
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
+          "triangles": 15
+        }
+      },
+      "materials": [
+        "prop_steel",
+        "tint_team_secondary"
+      ]
+    },
+    "penalty_flag": {
+      "dimensionsMetres": [
+        0.524,
+        0.524,
+        0.044
+      ],
+      "id": "penalty_flag",
+      "lods": {
+        "0": {
+          "files": [
+            "penalty_flag.usdz",
+            "penalty_flag.glb"
+          ],
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
+          "triangles": 136
+        },
+        "1": {
+          "files": [
+            "penalty_flag_lod1.usdz",
+            "penalty_flag_lod1.glb"
+          ],
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
+          "triangles": 61
+        },
+        "2": {
+          "files": [
+            "penalty_flag_lod2.usdz",
+            "penalty_flag_lod2.glb"
+          ],
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
+          "triangles": 19
+        }
+      },
+      "materials": [
+        "prop_yellow"
+      ]
+    },
+    "pylon_college": {
+      "dimensionsMetres": [
+        0.108,
+        0.108,
+        0.457
+      ],
+      "id": "pylon_college",
+      "lods": {
+        "0": {
+          "files": [
+            "pylon_college.usdz",
+            "pylon_college.glb"
+          ],
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
+          "triangles": 152
+        },
+        "1": {
+          "files": [
+            "pylon_college_lod1.usdz",
+            "pylon_college_lod1.glb"
+          ],
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
+          "triangles": 68
+        },
+        "2": {
+          "files": [
+            "pylon_college_lod2.usdz",
+            "pylon_college_lod2.glb"
+          ],
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
+          "triangles": 16
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_orange"
+      ]
+    },
+    "pylon_nfl": {
+      "dimensionsMetres": [
+        0.108,
+        0.108,
+        0.457
+      ],
+      "id": "pylon_nfl",
+      "lods": {
+        "0": {
+          "files": [
+            "pylon_nfl.usdz",
+            "pylon_nfl.glb"
+          ],
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
+          "triangles": 108
+        },
+        "1": {
+          "files": [
+            "pylon_nfl_lod1.usdz",
+            "pylon_nfl_lod1.glb"
+          ],
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
+          "triangles": 48
+        },
+        "2": {
+          "files": [
+            "pylon_nfl_lod2.usdz",
+            "pylon_nfl_lod2.glb"
+          ],
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
+          "triangles": 10
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_orange"
+      ]
+    },
+    "tablet_station": {
+      "dimensionsMetres": [
+        0.62,
+        0.4,
+        1.128
+      ],
+      "id": "tablet_station",
+      "lods": {
+        "0": {
+          "files": [
+            "tablet_station.usdz",
+            "tablet_station.glb"
+          ],
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
+          "triangles": 244
+        },
+        "1": {
+          "files": [
+            "tablet_station_lod1.usdz",
+            "tablet_station_lod1.glb"
+          ],
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
+          "triangles": 108
+        },
+        "2": {
+          "files": [
+            "tablet_station_lod2.usdz",
+            "tablet_station_lod2.glb"
+          ],
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
+          "triangles": 33
+        }
+      },
+      "materials": [
+        "prop_black",
+        "prop_dark"
+      ]
+    }
+  },
+  "tints": "materials named tint_* take the scene's team chip colours at runtime"
+}
