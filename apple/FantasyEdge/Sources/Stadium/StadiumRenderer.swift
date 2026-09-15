@@ -163,8 +163,8 @@ public final class StadiumRenderer {
     /// otherwise, so ~45k fans and every seat once cast into Lighting's single
     /// shadow. Casting is opt-in: an actor that wants a shadow (Sideline's
     /// goalposts) sets `DynamicLightShadowComponent(castsShadow: true)` itself,
-    /// and the composer repeats the pass on every scene, so pieces added after
-    /// build are caught within one update.
+    /// and the composer repeats the pass after every scene and every frame, so
+    /// pieces added after build never reach a rendered frame casting.
     private func optOutOfShadows(_ e: Entity) {
         for child in e.children {
             if child.components.has(ModelComponent.self), !child.components.has(DynamicLightShadowComponent.self) {
@@ -233,6 +233,9 @@ public final class StadiumRenderer {
         c.shared.time += dt
         let frame = StadiumFrame(dt: dt, time: c.shared.time)
         for actor in actors { actor.update(frame, c) }
+        // Actors rebuild trail meshes on the frame clock; opt them out the
+        // frame they appear. The walk is a few hundred entities.
+        optOutOfShadows(world)
         while let next = statsDue.first, next.at <= c.shared.time {
             statsDue.removeFirst()
             StadiumStats.report(actors, label: next.label, assets: assets)
