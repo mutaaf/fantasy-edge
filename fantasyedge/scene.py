@@ -34,7 +34,7 @@ import json
 import os
 import pathlib
 
-SCENE_VERSION = "1.1"
+SCENE_VERSION = "1.2"
 
 TOKENS_PATH = pathlib.Path(
     os.environ.get("FANTASYEDGE_TOKENS")
@@ -59,18 +59,25 @@ TOKENS_PATH = pathlib.Path(
 
 # ── sideline ──
 
-def _props(bench_from: float, bench_to: float) -> dict:
+def _props(bench_from: float, bench_to: float, upright_above: float) -> dict:
     """The sideline furniture, in yards. Both codes share its shape; where
-    they differ - the team area - is an argument.
+    they differ - the team area and the upright height - is an argument.
 
     The goal post stands on the end line: a base two yards behind it, a
-    gooseneck forward, a crossbar 10 ft up, uprights 30 ft above that, 18 ft
-    6 in apart (field.goalPostWidth)."""
+    gooseneck forward, a crossbar 10 ft up and uprights 18 ft 6 in apart
+    (field.goalPostWidth). The NFL builds its uprights 35 ft above the bar
+    (2026 Rule 1 §3 Art.2); NCAA 1-2-5-a only asks for tops 30 ft off the
+    ground, and college posts are built 30 ft above the bar.
+
+    The benches sit 3.8 yd off the sideline because the bowl's front wall is
+    5.4 yd out. The NFL wants them at least 30 ft 4 in back (field diagram
+    note 1): that needs a wider apron than this bowl has, and is the bowl's
+    change to make, not the benches'."""
     return {
-        "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
+        "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": upright_above,
                      "radius": {"base": 0.13, "crossbar": 0.09, "upright": 0.06},
                      "padHeight": 2.2, "padWidth": 0.7, "color": "prop.goalpost"},
-        "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
+        "pylon": {"size": 4 / 36, "height": 0.5, "color": "prop.pylon"},
         "benches": {"fromX": bench_from, "toX": bench_to, "offset": 3.8,
                     "height": 0.5, "depth": 0.7, "backHeight": 0.65, "color": "prop.bench"},
         # The chain crew works the visitors' sideline.
@@ -87,19 +94,131 @@ RULES = {
                   # 70 ft 9 in in from each sideline; 18 ft 6 in apart.
                   "hashFromSideline": 23.583, "goalPostWidth": 6.167},
         "overtimeSeconds": 600,
-        # Each club's team area between the 32-yard lines, on opposite sidelines.
-        "props": _props(32.0, 68.0),
+        # Benches between the 30-yard lines (field diagram note 8), uprights
+        # 35 ft above the crossbar (Rule 1 §3 Art.2).
+        "props": _props(30.0, 70.0, 35 / 3),
     },
     "college-football": {
         "field": {"length": 100.0, "endZone": 10.0, "width": 160 / 3,
                   # 60 ft in from each sideline; 40 ft apart.
                   "hashFromSideline": 20.0, "goalPostWidth": 6.167},
         "overtimeSeconds": None,
-        # College team areas run between the 25-yard lines.
-        "props": _props(25.0, 75.0),
+        # The team area runs between the 20-yard lines (NCAA 1-2-4-a); posts
+        # are built 30 ft above the crossbar (1-2-5-a sets the 30 ft floor).
+        "props": _props(20.0, 80.0, 10.0),
         "stub": True,
     },
 }
+
+# ── field: painted art and pylon spots ──
+#
+# The markings themselves - lines, hashes, numerals, arrows - are baked from
+# the rulebooks into assets/actors/field/markings by tools/blender/field; the
+# scene only says where the two things that change per game go: each club's
+# name across its end zone and the home club's ring at midfield. Glyph shapes
+# are an asset (fonts/glyphs.json), so a client applies the layout below to
+# them and typesets nothing itself.
+
+GLYPHS_PATH = pathlib.Path(__file__).resolve().parent.parent / "assets" / "actors" / "field" / "fonts" / "glyphs.json"
+_GLYPHS: dict | None = None
+_FT = 1 / 3
+
+
+def _glyphs() -> dict | None:
+    global _GLYPHS
+    if _GLYPHS is None and GLYPHS_PATH.is_file():
+        _GLYPHS = json.loads(GLYPHS_PATH.read_text())
+    return _GLYPHS
+
+
+def text_width(text: str, font: dict, tracking: float = 0.08) -> float:
+    """Width of a line in em units (cap height 1), as a client lays it out:
+    each glyph advances by its ink width plus `tracking`, a space by
+    `font.space`, and unknown characters are skipped."""
+    pen, drawn = 0.0, False
+    for ch in text.upper():
+        if ch == " ":
+            pen += font["space"]
+            continue
+        g = font["glyphs"].get(ch)
+        if not g:
+            continue
+        pen += g["width"] + tracking
+        drawn = True
+    return max(0.0, pen - tracking) if drawn else 0.0
+
+
+def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
+    """Where each club's name and the midfield ring are painted.
+
+    A text layout maps glyph space to the field: a glyph point (gx, gy) in
+    em units lands at origin + (gx * along + gy * up) * capHeight, in (x, z)
+    yards. Each name reads from the field of play with its letters' tops
+    toward the end line; the midfield name reads from the home sideline.
+    Clearance follows NCAA 1-2-1-d, four feet from any line, which never
+    breaks the NFL's Commissioner-approved rule; midfield art stays inside
+    the hashes for college (1-2-1-g-3) and inside the numbers for the NFL.
+    """
+    font = _glyphs()
+    if not font:
+        return None
+    tracking = 0.08
+    w = field["width"]
+    clear = 4 * _FT
+    goal_line = 8 / 36
+    depth = field["endZone"] - goal_line - 2 * clear
+    span = w - 2 * clear
+    zones = []
+    for side, team, x_mid, along, up in (
+            ("home", home, -field["endZone"] / 2 - goal_line / 2, (0.0, -1.0), (-1.0, 0.0)),
+            ("away", away, field["length"] + field["endZone"] / 2 + goal_line / 2, (0.0, 1.0), (1.0, 0.0))):
+        name = (team.get("name") or team.get("abbr") or "").upper()
+        width = text_width(name, font, tracking)
+        if not width:
+            continue
+        cap = min(5.0, depth * 0.78, span * 0.92 / width)
+        # centre: half the width back along `along`, half the cap back along `up`
+        ox = x_mid - (width * cap / 2) * along[0] - (cap / 2) * up[0]
+        oz = 0.0 - (width * cap / 2) * along[1] - (cap / 2) * up[1]
+        zones.append({"side": side, "text": name, "capHeight": round(cap, 4),
+                      "origin": [round(ox, 4), round(oz, 4)], "along": list(along), "up": list(up),
+                      "tint": "white"})
+    hash_in = field["hashFromSideline"]
+    if league == "college-football":
+        half_span = w / 2 - hash_in - 1 * _FT
+    else:
+        half_span = w / 2 - (12.0 + 2.0) - 1.0          # inside the numerals' tops
+    radius = min(8.0, half_span)
+    name = (home.get("name") or home.get("abbr") or "").upper()
+    width = text_width(name, font, tracking)
+    inner = radius * 0.86
+    mid = {"center": [50.0, 0.0], "outer": round(radius, 4), "inner": round(inner, 4), "tint": "home"}
+    if width:
+        cap = min(inner * 0.55, (2 * inner * 0.8) / width)
+        mid["text"] = {"text": name, "capHeight": round(cap, 4),
+                       "origin": [round(50.0 - width * cap / 2, 4), round(cap / 2, 4)],
+                       "along": [1.0, 0.0], "up": [0.0, -1.0], "tint": "white"}
+    return {"glyphs": "actors/field/fonts/glyphs.json", "tracking": tracking,
+            "endZones": zones, "midfield": mid}
+
+
+def pylon_spots(field: dict, league: str, size: float) -> list[list[float]]:
+    """Pylon centres in (x, z) yards, each standing just outside the line it
+    marks, touching its inside edge (NFL Rule 1 §2 Art.3; NCAA 1-2-6)."""
+    half = field["width"] / 2
+    s = size / 2
+    end = field["endZone"]
+    spots = []
+    for z in (-half - s, half + s):
+        spots += [[-s, z], [field["length"] + s, z]]                      # goal line x sideline
+        if league == "college-football":
+            spots += [[-end - s, z], [field["length"] + end + s, z]]      # end line x sideline
+    hash_z = half - field["hashFromSideline"]
+    back = 1.0 if league == "college-football" else 0.0                   # three feet off (1-2-6)
+    for z in (-hash_z, hash_z):
+        spots += [[-end - s - back, z], [field["length"] + end + s + back, z]]
+    return [[round(x, 4), round(z, 4)] for x, z in spots]
+
 
 # Records that are clock rather than football. They are never drawn.
 NOT_A_PLAY = {"timeout", "official timeout", "end period", "end of half",
@@ -494,6 +613,8 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
             lasers.append({"kind": "lineToGain", "x": x + step * _num(dist),
                            "color": "laser.lineToGain"})
 
+    props = json.loads(json.dumps(rules["props"]))
+    props["pylon"]["at"] = pylon_spots(field, league, props["pylon"]["size"])
     wp = [w.get("home") for w in (game.get("winProbability") or [])
           if w.get("home") is not None]
     tint_side = active["side"] if active and active["kind"] != "turnover" else None
@@ -524,7 +645,9 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                  "z": "yards from the centre line, positive toward the home sideline",
                  "y": "yards up"},
         "field": {**field, "league": league, "stripeEvery": 5, "numbersEvery": 10,
-                  "props": json.loads(json.dumps(rules["props"])),
+                  "props": props,
+                  "art": field_art(field, league, home, away),
+                  "markings": f"actors/field/markings/{league}",
                   "homeEndZone": [-field["endZone"], 0.0],
                   "awayEndZone": [field["length"], field["length"] + field["endZone"]]},
         "teams": {"home": home, "away": away},
