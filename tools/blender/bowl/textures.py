@@ -469,8 +469,8 @@ def press_room() -> None:
         mon[:, k * W:k * W + 6] = 0.02
         mon[:6, k * W:(k + 1) * W] = 0.02
         mon[-6:, k * W:(k + 1) * W] = 0.02
-    img[:S // 4] = mon
-    save(img[::-1], "press_room_emission.jpg", jpeg=True)
+    img[:S // 4] = mon[::-1]                  # graphics drawn top-down; the atlas is bottom-up
+    save(img, "press_room_emission.jpg", jpeg=True)
 
 
 def build() -> dict:

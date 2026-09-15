@@ -593,7 +593,7 @@ def press_box(b: C.Builder) -> None:
               C._norm((nin[0], 0.2, nin[2])), "glass")
         # the room: floor, lit back wall, desk line
         oquad(b, (pt(front, ta, y0 + 0.02), pt(front, tb, y0 + 0.02), pt(back, tb, y0 + 0.02), pt(back, ta, y0 + 0.02)),
-              (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.2, 0.6))
+              (0, 1, 0), "press_desk")
         # acoustic back wall, lit ceiling, inner face of the sill
         oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, y1), pt(back, ta, y1)), nin, "press_room",
               ((u0 / 12, 0.5), (u1 / 12, 0.5), (u1 / 12, 1.0), (u0 / 12, 1.0)))
@@ -607,7 +607,15 @@ def press_box(b: C.Builder) -> None:
         oquad(b, (pt(front - cant - 0.9, ta, y1 + 0.35), pt(front - cant - 0.9, tb, y1 + 0.35), pt(back + 0.2, tb, y1 + 0.35),
                   pt(back + 0.2, ta, y1 + 0.35)), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.6, 1.0))
         oquad(b, (pt(front - cant - 0.9, ta, y1), pt(front - cant - 0.9, tb, y1), pt(back, tb, y1), pt(back, ta, y1)),
-              (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+              (0, -1, 0), "press_room", ((u0 / 12, 0.25), (u1 / 12, 0.25), (u1 / 12, 0.5), (u0 / 12, 0.5)))
+        # light lines along the glass head and sill: opaque warm strips that
+        # make the box read as a lit band from the far seats (a translucent
+        # card would cost the bowl a draw part it does not have)
+        oquad(b, (pt(front - cant - 0.02, ta, y1 - 0.22), pt(front - cant - 0.02, tb, y1 - 0.22),
+                  pt(front - cant - 0.02, tb, y1 - 0.02), pt(front - cant - 0.02, ta, y1 - 0.02)),
+              nin, "interiors", atlas_uv("glow", u0, u1, 0.55, 0.95))
+        oquad(b, (pt(front - 0.22, ta, y0 + 0.62), pt(front - 0.22, tb, y0 + 0.62), pt(front - 0.22, tb, y0 + 0.74),
+                  pt(front - 0.22, ta, y0 + 0.74)), nin, "interiors", atlas_uv("glow", u0, u1, 0.55, 0.95))
         oquad(b, (pt(front - cant - 0.9, ta, y1), pt(front - cant - 0.9, tb, y1), pt(front - cant - 0.9, tb, y1 + 0.35),
                   pt(front - cant - 0.9, ta, y1 + 0.35)), nin, "steel")
         # back wall outside
@@ -621,17 +629,18 @@ def press_box(b: C.Builder) -> None:
         cc = kit.bowl_point(front - cant, ta)
         oquad(b, ((a[0] - tx, y0 + 0.6, a[1] - tz), (a[0] + tx, y0 + 0.6, a[1] + tz), (cc[0] + tx, y1, cc[1] + tz),
                   (cc[0] - tx, y1, cc[1] - tz)), (nx, 0.2, nz), "steel")
-    # end walls, inside faces in the room's panel fabric
-    for t in (ts[0], ts[-1]):
+    # end walls: concrete outside, the room's panel fabric inside, a hand's
+    # width apart along the run so neither fights the other
+    for t, sign in ((ts[0], 1.0), (ts[-1], -1.0)):
         nx, nz = kit.inward(front, t)
-        side_in = (-nz, 0.0, nx) if t == ts[0] else (nz, 0.0, -nx)
-        oquad(b, (pt(front - cant + 0.02, t, y0), pt(back - 0.02, t, y0), pt(back - 0.02, t, y1),
-                  pt(front - cant + 0.02, t, y1)), side_in, "press_room", ((0, 0.5), (0.4, 0.5), (0.4, 1.0), (0, 1.0)))
-    for t in (ts[0], ts[-1]):
-        nx, nz = kit.inward(front, t)
-        side = (nz, 0.0, -nx) if t == ts[0] else (-nz, 0.0, nx)
-        oquad(b, (pt(front - cant, t, y0 - 0.5), pt(back + 0.2, t, y0 - 0.5), pt(back + 0.2, t, y1 + 0.35),
-                  pt(front - cant, t, y1 + 0.35)), side, "concrete", ((0, 0), (1.7, 0), (1.7, 1.4), (0, 1.4)))
+        along = (nz * sign, 0.0, -nx * sign)          # into the room along the run
+        def E(m, y, d):
+            x, z = kit.bowl_point(m, t)
+            return (x + along[0] * d, y, z + along[2] * d)
+        oquad(b, (E(front - cant, y0 - 0.5, 0.0), E(back + 0.2, y0 - 0.5, 0.0), E(back + 0.2, y1 + 0.35, 0.0),
+                  E(front - cant, y1 + 0.35, 0.0)), C._scale(along, -1), "concrete", ((0, 0), (1.7, 0), (1.7, 1.4), (0, 1.4)))
+        oquad(b, (E(front - cant + 0.05, y0, 0.12), E(back - 0.05, y0, 0.12), E(back - 0.05, y1, 0.12),
+                  E(front - cant + 0.05, y1, 0.12)), along, "press_room", ((0, 0.5), (0.4, 0.5), (0.4, 1.0), (0, 1.0)))
     # the slab reaches back to the parapet on two stub walls
     for t in (ts[2], ts[8], ts[14]):
         nx, nz = kit.inward(front, t)
@@ -640,7 +649,7 @@ def press_box(b: C.Builder) -> None:
               (0.5, y0 - 0.5 - kit.PARAPET["top"], pb["depth"]), "concrete", yaw=yaw, skip=("top", "bottom"), uv_scale=0.3)
 
 
-PRESS_ROOM = {"deskFront": 0.25, "deskDepth": 0.75, "deskTop": 0.82, "monitorEvery": 1.2,
+PRESS_ROOM = {"deskFront": 0.05, "deskDepth": 0.38, "deskTop": 0.6, "monitorEvery": 1.2,
               "monitor": (0.62, 0.38), "chairBack": 1.55}
 
 
@@ -671,18 +680,33 @@ def press_desk(b: C.Builder, ta, tb, nin, front, y0) -> None:
         uv = ((cell / 4, 0.0), ((cell + 1) / 4, 0.0), ((cell + 1) / 4, 0.25), (cell / 4, 0.25))
         def M(lat, up, back=0.0):
             return (cx + tx * lat - nx * back, top + 0.08 + up, cz + tz * lat - nz * back)
+        off_mid = abs(((s - mid) + ring.length / 2) % ring.length - ring.length / 2)
+        if off_mid < 1.4:
+            k += 1
+            continue
         # screen faces the seats (outward); a thin dark shell behind it
         oquad(b, (M(w / 2, 0), M(-w / 2, 0), M(-w / 2, h), M(w / 2, h)), (-nx, 0, -nz), "press_room", uv)
         oquad(b, (M(-w / 2, 0, -0.04), M(w / 2, 0, -0.04), M(w / 2, h, -0.04), M(-w / 2, h, -0.04)), (nx, 0, nz),
               "press_desk")
         b.tube([M(0, -0.08, -0.02), M(0, 0.0, -0.02)], 0.03, "press_desk", sides=4)
         # a chair behind every monitor but the wearer's
-        if abs(((s - mid) + ring.length / 2) % ring.length - ring.length / 2) > 0.8:
+        # chairs only along the part of the run the box seat can see well; the
+        # rest of the desk reads from outside without them (budget)
+        if off_mid < 12.0:
             chx, chz = kit.bowl_point(front + R["chairBack"], t)
             yaw = math.atan2(-nx, -nz)
-            b.box((chx, y0 + 0.48, chz), (0.5, 0.08, 0.5), "press_desk", yaw=yaw, skip=("bottom",))
-            b.box((chx + nx * -0.24, y0 + 0.85, chz + nz * -0.24), (0.5, 0.65, 0.06), "press_desk", yaw=yaw)
-            b.tube([(chx, y0, chz), (chx, y0 + 0.44, chz)], 0.04, "press_desk", sides=4)
+            # a task chair: star base, gas column, seat, curved back, arms
+            for bx, bz in ((0.28, 0.0), (0.0, 0.28)):
+                b.box((chx, y0 + 0.03, chz), (bx * 2 + 0.05, 0.05, bz * 2 + 0.05), "press_desk", yaw=yaw,
+                      skip=("bottom",))
+            b.tube([(chx, y0 + 0.05, chz), (chx, y0 + 0.44, chz)], 0.035, "press_desk", sides=5)
+            b.box((chx, y0 + 0.48, chz), (0.52, 0.07, 0.5), "press_desk", yaw=yaw, skip=("bottom",))
+            back_at = (chx - nx * -0.27, y0 + 0.86, chz - nz * -0.27)
+            b.box(back_at, (0.48, 0.62, 0.07), "press_desk", yaw=yaw)
+            for side in (-1, 1):
+                ax, az = chx + nz * side * 0.27, chz - nx * side * 0.27
+                b.box((ax, y0 + 0.66, az), (0.05, 0.05, 0.36), "press_desk", yaw=yaw)
+                b.box((ax, y0 + 0.57, az), (0.04, 0.16, 0.04), "press_desk", yaw=yaw, skip=("bottom",))
         k += 1
 
 

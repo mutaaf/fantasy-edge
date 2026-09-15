@@ -175,6 +175,16 @@ final class BowlActor: StadiumActor {
                     pbr.emissiveIntensity = Float(B.nearLift)
                 } else if n.contains("press_room") {
                     pbr.emissiveIntensity = Float(B.pressRoomLift)
+                } else if n.contains("bowl_glass") {
+                    // USD brings the glass in near-opaque and dark from the far
+                    // seats; state its blend here so rooms behind it read lit.
+                    pbr.blending = .transparent(opacity: .init(floatLiteral: Float(B.glassOpacity)))
+                    pbr.metallic = .init(floatLiteral: 0.15)
+                    pbr.roughness = .init(floatLiteral: 0.04)
+                } else if n.contains("press_desk") {
+                    // desks, chairs and floor: lit by the room's own ceiling strips
+                    pbr.emissiveColor = .init(color: StadiumLook.color("#F0D3AE"))
+                    pbr.emissiveIntensity = Float(B.pressRoomLift) * 0.12
                 } else if n.contains("interiors") {
                     pbr.emissiveIntensity = 3.5
                 }

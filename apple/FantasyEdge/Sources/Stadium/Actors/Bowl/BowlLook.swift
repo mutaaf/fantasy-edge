@@ -17,6 +17,7 @@ extension SceneSpec.Look {
         public let nearDeckLift: Double
         public let nearDeckColor: String
         public let pressRoomLift: Double
+        public let glassOpacity: Double
         public let rows: [String: Int]
         public let segments: Int
         public let aisleEvery: Int
