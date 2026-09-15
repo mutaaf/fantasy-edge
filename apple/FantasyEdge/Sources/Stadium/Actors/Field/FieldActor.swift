@@ -24,12 +24,16 @@ final class FieldActor: StadiumActor {
     private var textures: [String: TextureResource] = [:]
     private var loading: Set<String> = []
     private var pending: [(ModelEntity, String, (TextureResource) -> any Material)] = []
+    /// Meshes the Shader Graph paint takes over once it loads: entity, colour,
+    /// whether it reads the markings mask, and that mask's path.
+    private var paintTargets: [(ModelEntity, String, Bool, String?)] = []
 
     init() { root.name = "actor.field" }
 
     func build(_ c: StadiumContext) {
         clear()
         pending.removeAll()
+        paintTargets.removeAll()
         let s = c.spec, V = c.look.field, T = V.turf, P = V.paint, L = V.lift, K = V.canvas
         let a = c.assets
         let f = s.field
@@ -130,7 +134,9 @@ final class FieldActor: StadiumActor {
             var m = PhysicallyBasedMaterial()
             m.baseColor = .init(tint: StadiumLook.color(P.white))
             m.roughness = .init(floatLiteral: Float(P.roughness))
-            add(letters.entity("lettering", m), order: 4)
+            let lettering = letters.entity("lettering", m)
+            add(lettering, order: 4)
+            paintTargets.append((lettering, P.white, false, nil))
         }
 
         // The league's maps, loaded once and then handed to the meshes waiting for them.
@@ -147,6 +153,9 @@ final class FieldActor: StadiumActor {
             m.blending = .transparent(opacity: .init(scale: Float(T.wearStrength), texture: StadiumLook.clamped(tex)))
             return m
         }
+        paintTargets.append((white, P.white, true, path(V.perLeague.paintWhite)))
+        paintTargets.append((yellow, P.yellow, true, path(V.perLeague.paintYellow)))
+        upgradePaint(c)
         for (entity, hex, template) in [(white, P.white, V.perLeague.paintWhite), (yellow, P.yellow, V.perLeague.paintYellow)] {
             want(path(template), for: entity) { tex in
                 var m = PhysicallyBasedMaterial()
@@ -193,6 +202,60 @@ final class FieldActor: StadiumActor {
                uv: (uv(x0, K.y0), uv(x1, K.y0), uv(x1, K.y1), uv(x0, K.y1)), normal: SIMD3(0, 1, 0))
     }
 
+    /// Swap the paint and lettering onto the Shader Graph paint material
+    /// (tools/blender/field/shadergraph/FieldPaint.usda) when it loads: grass
+    /// through the paint and a breakup-driven edge. The texture materials stay
+    /// as they are if it does not, and are what the web and Android draw.
+    private func upgradePaint(_ c: StadiumContext) {
+        let V = c.look.field
+        guard let spec = c.spec.shaderGraph?.materials?[V.paintMaterial] else { return }
+        let targets = paintTargets
+        let turf = c.assets.texture("field.turfAlbedo")
+        Task { @MainActor in
+            guard let base = await StadiumShaderGraph.material(spec.prim, file: spec.file),
+                  let breakup = await self.texture(V.shaderTextures.breakup, semantic: .raw),
+                  let turf else {
+                StadiumLog.log.error("[shadergraph] field paint unavailable; keeping the texture paint")
+                return
+            }
+            for (entity, hex, masked, maskPath) in targets {
+                var m = base
+                for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+                StadiumShaderGraph.set(&m, "Color", hex)
+                StadiumShaderGraph.set(&m, "UseMask", masked ? 1.0 : 0.0)
+                do {
+                    try m.setParameter(name: "Breakup", value: .textureResource(breakup))
+                    try m.setParameter(name: "Turf", value: .textureResource(turf))
+                    if let maskPath, let mask = await self.texture(maskPath, semantic: .color) {
+                        try m.setParameter(name: "Mask", value: .textureResource(mask))
+                    } else if masked {
+                        continue
+                    }
+                } catch {
+                    StadiumLog.log.error("[shadergraph] field paint texture: \(error.localizedDescription, privacy: .public)")
+                    continue
+                }
+                entity.model?.materials = [m]
+                entity.isEnabled = true
+            }
+            StadiumLog.log.notice("[shadergraph] field paint on \(targets.count) meshes")
+        }
+    }
+
+    private func texture(_ rel: String, semantic: TextureResource.Semantic) async -> TextureResource? {
+        let key = semantic == .raw ? rel + "#raw" : rel
+        if let hit = textures[key] { return hit }
+        guard let folder = StadiumAssets.folder else { return nil }
+        var options = TextureResource.CreateOptions(semantic: semantic)
+        options.mipmapsMode = .allocateAndGenerateAll
+        guard let tex = try? await TextureResource(contentsOf: folder.appendingPathComponent(rel), options: options) else {
+            StadiumLog.log.error("[stadium] field: \(rel) failed to load")
+            return nil
+        }
+        textures[key] = tex
+        return tex
+    }
+
     private func want(_ rel: String, for entity: ModelEntity, _ make: @escaping (TextureResource) -> any Material) {
         if let tex = textures[rel] {
             entity.model?.materials = [make(tex)]
@@ -212,6 +275,7 @@ final class FieldActor: StadiumActor {
             }
             self.textures[rel] = tex
             for (e, r, make) in self.pending where r == rel {
+                if e.model?.materials.first is ShaderGraphMaterial { continue }
                 e.model?.materials = [make(tex)]
                 e.isEnabled = true
             }

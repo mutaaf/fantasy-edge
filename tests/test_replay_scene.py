@@ -605,6 +605,31 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertLess(mid["inner"], mid["outer"])
         self.assertLessEqual(mid["outer"], f["width"] / 2 - 15.0 + 1e-6, "NFL midfield art stays inside the numerals")
 
+    def test_field_and_sideline_shader_graphs_are_wired_to_their_tokens(self):
+        """The paint and net graphs are named from visual.field and
+        visual.sideline, compiled, and every scalar or colour input a graph
+        declares is a parameter the tokens set - so a port reimplementing the
+        graph has every number the headset used. Texture inputs are set at
+        runtime from assets the actor names."""
+        import re
+        root = pathlib.Path(sc.__file__).resolve().parent.parent
+        mats = self.final["shaderGraph"]["materials"]
+        for actor, key, usda in (("field", "paintMaterial", "Field.rkassets/FieldPaint.usda"),
+                                 ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda")):
+            entry = mats[self.final["visual"][actor][key]]
+            self.assertTrue((root / "assets" / entry["file"]).is_file(), f"{entry['file']}: run tools/blender/field/shadergraph/build.py")
+            for k in ("blend", "color", "opacity"):
+                self.assertIn(k, entry["fallback"])
+            src = (root / "tools/blender/field/shadergraph" / usda).read_text()
+            # the material's own inputs sit at eight spaces; node inputs are deeper
+            declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
+            runtime = {"Color", "UseMask"} if actor == "field" else set()
+            self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
+            self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
+        breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
+        self.assertTrue(breakup.is_file())
+        self.assertLess(breakup.stat().st_size, 1_000_000)
+
     def test_pylons_stand_where_each_book_puts_them(self):
         """NFL: the four goal-line corners and two on each end line at the
         hashes. College adds the end-line corners and sets the hash pylons

@@ -53,6 +53,11 @@ extension SceneSpec.Look {
         public let art: Double
     }
 
+    public struct FieldShaderTextures: Decodable, Equatable, Sendable {
+        /// Paint breakup at 512 px, read raw (linear), for the paint graph.
+        public let breakup: String
+    }
+
     public struct FieldLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -61,6 +66,9 @@ extension SceneSpec.Look {
         public let turf: FieldTurf
         public let paint: FieldPaint
         public let lift: FieldLift
+        /// shaderGraph.materials id the paint and lettering use when it loads.
+        public let paintMaterial: String
+        public let shaderTextures: FieldShaderTextures
     }
 }
 

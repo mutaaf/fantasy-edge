@@ -173,13 +173,19 @@ final class SidelineActor: StadiumActor {
             StadiumLook.ground(e, order: 2)
             fixed.addChild(e)
         }
+        var netMeshes: [ModelEntity] = []
         for (key, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
             let e = bin.mesh.entity("sideline.\(key)", material(bin.material, side: bin.side, c))
             if bin.material == "prop_gold" {
                 e.components.set(DynamicLightShadowComponent(castsShadow: true))
             }
+            if bin.material == "prop_net" { netMeshes.append(e) }
             fixed.addChild(e)
         }
+        for holder in nets.map(\.entity) {
+            netMeshes += holder.children.compactMap { $0 as? ModelEntity }
+        }
+        upgradeNets(netMeshes, c)
     }
 
     /// The chain set on the chain crew's sideline, its forward rod on the line
@@ -221,6 +227,28 @@ final class SidelineActor: StadiumActor {
         }
         for (k, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
             crew.addChild(bin.mesh.entity("crew.\(k)", material(bin.material, side: bin.side, c)))
+        }
+    }
+
+    /// Nets on the view-angle falloff graph (NetFresnel.usda): nearly gone
+    /// flat-on from the stands, cords at a grazing angle or up close. The
+    /// blended texture material stays if it does not load.
+    private func upgradeNets(_ meshes: [ModelEntity], _ c: StadiumContext) {
+        let V = c.look.sideline
+        guard !meshes.isEmpty, let spec = c.spec.shaderGraph?.materials?[V.netMaterial],
+              let mask = c.assets.texture("sideline.netMask") else { return }
+        Task { @MainActor in
+            guard var m = await StadiumShaderGraph.material(spec.prim, file: spec.file) else {
+                StadiumLog.log.error("[shadergraph] net falloff unavailable; keeping the blended net")
+                return
+            }
+            for (k, v) in spec.parameters { StadiumShaderGraph.set(&m, k, v.any) }
+            do { try m.setParameter(name: "Mask", value: .textureResource(mask)) } catch {
+                StadiumLog.log.error("[shadergraph] net mask: \(error.localizedDescription, privacy: .public)")
+                return
+            }
+            for e in meshes { e.model?.materials = [m] }
+            StadiumLog.log.notice("[shadergraph] net falloff on \(meshes.count) meshes")
         }
     }
 

@@ -251,6 +251,8 @@ def grass_through():
         return
     carry = common.read_image(src)[..., 0]
     carry = carry.reshape(512, 2, 512, 2).mean(axis=(1, 3)) if carry.shape[0] == 1024 else carry
+    # the Shader Graph paint reads carry itself, raw, at the size it can afford
+    common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_breakup_512.png", carry)
     cover = np.clip((0.62 - carry) / 0.3, 0, 1) ** 1.3
     common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_grassthrough.png", srgb(cover))
 
