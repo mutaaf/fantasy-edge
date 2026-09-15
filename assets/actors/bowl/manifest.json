@@ -59,12 +59,12 @@
    "usdz": "actors/bowl/stands.usdz",
    "glb": "actors/bowl/stands.glb",
    "objects": {
-    "stands": 33282
+    "stands": 33782
    },
    "parts": {
     "stands": 6
    },
-   "triangles": 33282,
+   "triangles": 33782,
    "materials": [
     "bowl_concrete",
     "bowl_glass",
@@ -74,8 +74,8 @@
     "bowl_trim"
    ],
    "bytes": {
-    "usdz": 5287147,
-    "glb": 5486312
+    "usdz": 5319148,
+    "glb": 5521320
    },
    "about": "The whole bowl's structure in one entity."
   },
@@ -84,9 +84,9 @@
    "usdz": "actors/bowl/seats_far.usdz",
    "glb": "actors/bowl/seats_far.glb",
    "objects": {
-    "bands": 10046,
+    "bands": 10050,
     "fill_club": 330,
-    "fill_endzone": 320,
+    "fill_endzone": 328,
     "fill_upper": 194
    },
    "parts": {
@@ -95,13 +95,13 @@
     "fill_endzone": 1,
     "fill_upper": 1
    },
-   "triangles": 10890,
+   "triangles": 10902,
    "materials": [
     "bowl_seat_band"
    ],
    "bytes": {
-    "usdz": 705766,
-    "glb": 771000
+    "usdz": 706535,
+    "glb": 771840
    },
    "about": "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill except the preset the wearer sits in.",
    "regions": [
@@ -143,7 +143,7 @@
    "glb": "actors/bowl/near.glb",
    "objects": {
     "near_club": 16430,
-    "near_endzone": 17792,
+    "near_endzone": 19344,
     "near_upper": 13892
    },
    "parts": {
@@ -151,7 +151,7 @@
     "near_endzone": 6,
     "near_upper": 6
    },
-   "triangles": 48114,
+   "triangles": 49666,
    "materials": [
     "bowl_seat_band",
     "bowl_seat_plaque",
@@ -161,8 +161,8 @@
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 3989684,
-    "glb": 4276384
+    "usdz": 4089054,
+    "glb": 4394040
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },

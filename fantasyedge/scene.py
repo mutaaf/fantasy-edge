@@ -265,8 +265,15 @@ BOWL = {
                 "seatsPerSection": {"lower": 24, "upper": 26},
                 "vomitory": {"lower": {"every": 3, "phase": 1, "rows": [11, 16], "width": 3.0},
                              "upper": {"every": 4, "phase": 2, "rows": [7, 11], "width": 3.0}},
-                "accessibleMargin": 1.1, "tunnelClear": 0.9,
+                "accessibleMargin": 1.1, "tunnelClear": 0.25,
                 "startAngle": 1.5707963267948966},
+    # The video board behind the away (east) end zone, standing on the parapet
+    # above the upper deck's sightline from the far sideline. `centre` is the
+    # middle of the LED face in field yards (x from the home goal line); the
+    # face looks along `facing` toward midfield; `size` is width x height in
+    # yards. The bowl builds its frame and truss; Broadcast draws on the face.
+    "videoBoard": {"centre": [182.5, 57.0, 0.0], "facing": [-0.9903, -0.1392, 0.0],
+                   "size": [36.0, 13.5], "screen": "board.base"},
     # The rim the upper tier ends in: a parapet this far out and this high.
     # Light rigs stand on it (`mounts.rim`).
     "parapet": {"offset": 70.6, "top": 47.6},

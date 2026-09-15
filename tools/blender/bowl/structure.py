@@ -370,14 +370,13 @@ def team_tunnels(b: C.Builder) -> None:
         arch_m = wall_m - 0.5
         yaw = math.atan2(nx, nz)
         for side in (-1, 1):
-            b.box(Q(arch_m, side * (half + 0.35), (deck + 1.3) / 2), (0.7, deck + 1.3, 1.1), "steel", yaw=yaw, skip=("bottom",))
-        b.box(Q(arch_m, 0, deck + 0.65), (2 * half + 1.4, 1.3, 1.1), "steel", yaw=yaw, skip=("front",))
-        oquad(b, (Q(arch_m - 0.56, -half - 0.6, deck + 0.05), Q(arch_m - 0.56, half + 0.6, deck + 0.05),
-                  Q(arch_m - 0.56, half + 0.6, deck + 1.25), Q(arch_m - 0.56, -half - 0.6, deck + 1.25)), (nx, 0, nz), "screens")
-        oquad(b, (Q(arch_m - 0.56, -half, h), Q(arch_m - 0.56, half, h), Q(arch_m - 0.56, half, deck),
-                  Q(arch_m - 0.56, -half, deck)), (nx, 0, nz), "trim", band_uv("padding", 0, 2 * half / 3.0, 0, 1))
-        oquad(b, (Q(wall_m + 0.3, -wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 1.3), Q(wall_m + 0.3, wide, deck + 2.3),
-                  Q(wall_m + 0.3, -wide, deck + 2.3)), (nx, 0, nz), "glass")
+            b.box(Q(arch_m, side * (half + 0.35), deck / 2), (0.7, deck, 1.1), "steel", yaw=yaw, skip=("bottom", "top"))
+        oquad(b, (Q(arch_m - 0.56, -half, h), Q(arch_m - 0.56, half, h), Q(arch_m - 0.56, half, deck - 0.05),
+                  Q(arch_m - 0.56, -half, deck - 0.05)), (nx, 0, nz), "screens")
+        top = [Q(wall_m + 0.3, -wide, deck + 0.95), Q(wall_m + 0.3, wide, deck + 0.95)]
+        b.tube(top, 0.04, "steel", sides=5)
+        for lat in (-wide, 0.0, wide):
+            b.tube([Q(wall_m + 0.3, lat, deck), Q(wall_m + 0.3, lat, deck + 0.95)], 0.035, "steel", sides=4)
 
 
 def club(b: C.Builder) -> None:
@@ -435,8 +434,10 @@ def club(b: C.Builder) -> None:
         # The deck's front: a narrow guard wall with a cap, then a walkway at
         # the first row's tread. It was a 2.2 yd slab standing proud of row 1,
         # and from every upper seat it read as a bare grey ledge.
-        wall_f, wall_b, cap = lip_m + 0.9, lip_m + 1.15, lip_top + 1.0
         walk = T["upper"]["rise"][0] + (T["upper"]["rise"][1] - T["upper"]["rise"][0]) / ROWS["upper"]
+        # cap = walk + GUARD["capAboveWalk"] (24.838 + 0.9), stated from the lip so
+        # Lighting's concourse fill can read it (tests/test_lighting_sky.py)
+        wall_f, wall_b, cap = lip_m + 0.9, lip_m + 1.15, lip_top + 0.438
         oquad(b, (pt(lip_m, ta, lip_top), pt(lip_m, tb, lip_top), pt(wall_f, tb, lip_top), pt(wall_f, ta, lip_top)),
               (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.6, 1.0))
         oquad(b, (pt(wall_f, ta, lip_top), pt(wall_f, tb, lip_top), pt(wall_f, tb, cap), pt(wall_f, ta, cap)), nin,
@@ -448,6 +449,8 @@ def club(b: C.Builder) -> None:
         oquad(b, (pt(wall_b + 0.01, ta, cap - 0.16), pt(wall_b + 0.01, tb, cap - 0.16), pt(wall_b + 0.01, tb, cap - 0.08),
                   pt(wall_b + 0.01, ta, cap - 0.08)), (-nin[0], 0, -nin[2]), "interiors",
               atlas_uv("glow", u0, u1, 0.75, 0.8))
+        oquad(b, (pt(wall_f + 0.12, ta, cap), pt(wall_f + 0.12, tb, cap), pt(wall_f + 0.12, tb, cap + GUARD["glass"]),
+                  pt(wall_f + 0.12, ta, cap + GUARD["glass"])), nin, "glass")
         oquad(b, (pt(wall_b, ta, walk), pt(wall_b, tb, walk), pt(T["upper"]["inner"], tb, walk),
                   pt(T["upper"]["inner"], ta, walk)), (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.1, 0.9))
         # mullions behind the glass, columns in the open end concourses
@@ -490,6 +493,11 @@ def club(b: C.Builder) -> None:
                       Q(front, side * bay_half, top)), (tan[0] * side, 0, tan[2] * side), "glass")
     del x0, x1
 
+
+# The upper deck's guard wall: its cap above the first row's tread, and clear
+# glass above that to a 1.1 m guard. Checked by tests/test_bowl.py against the
+# upper preset's sightline to the near sideline.
+GUARD = {"capAboveWalk": 0.9, "glass": 0.3}
 
 PRESS = {"upstand": 37.6, "sill": 20.25, "glassTop": 38.9, "head": 20.95, "desk": 40.6}
 
@@ -598,6 +606,56 @@ def rigs(b: C.Builder) -> None:
         stay_top = F(0.0, 1, -0.6)
         stay_foot = (px - fx * 5.0, base, pz - fz * 5.0)
         b.tube([stay_top, stay_foot], 0.11, "steel", sides=4)
+
+
+def video_board(b: C.Builder) -> None:
+    """The video board, from `bowl.videoBoard`: a dark LED face in a steel
+    frame, a lattice truss behind, and two legs down to the parapet. Broadcast
+    draws on the face; the bowl only builds what holds it up."""
+    vb = kit.SC.BOWL["videoBoard"]
+    cx, cy, cz = vb["centre"]
+    cx -= 50.0                                   # field x to local
+    fx, fy, fz = vb["facing"]
+    w, h = vb["size"]
+    r = C._norm((-fz, 0.0, fx))
+    u = C._norm(C._cross(r, (fx, fy, fz)))
+    if u[1] < 0:
+        u = C._scale(u, -1)
+    n = (fx, fy, fz)
+
+    def F(a, c, d=0.0):
+        return C._add((cx, cy, cz), C._add(C._scale(r, a), C._add(C._scale(u, c), C._scale(n, d))))
+    # face (slot for Broadcast) and a 0.5 yd frame around it, 0.6 deep
+    oquad(b, (F(-w / 2, -h / 2, 0.02), F(w / 2, -h / 2, 0.02), F(w / 2, h / 2, 0.02), F(-w / 2, h / 2, 0.02)), n, "screens")
+    m, d = 0.5, 0.6
+    for (a0, c0, a1, c1) in ((-w / 2 - m, h / 2, w / 2 + m, h / 2 + m), (-w / 2 - m, -h / 2 - m, w / 2 + m, -h / 2),
+                              (-w / 2 - m, -h / 2, -w / 2, h / 2), (w / 2, -h / 2, w / 2 + m, h / 2)):
+        oquad(b, (F(a0, c0, 0.05), F(a1, c0, 0.05), F(a1, c1, 0.05), F(a0, c1, 0.05)), n, "steel")
+    oquad(b, (F(-w / 2 - m, -h / 2 - m, -d), F(w / 2 + m, -h / 2 - m, -d), F(w / 2 + m, h / 2 + m, -d),
+              F(-w / 2 - m, h / 2 + m, -d)), C._scale(n, -1), "trim", band_uv("steel", 0, w / 3, 0, 0.6))
+    for (a0, c0, a1, c1) in ((-w / 2 - m, h / 2 + m, w / 2 + m, h / 2 + m), (-w / 2 - m, -h / 2 - m, w / 2 + m, -h / 2 - m)):
+        oquad(b, (F(a0, c0, 0.05), F(a1, c1, 0.05), F(a1, c1, -d), F(a0, c0, -d)), u if c0 > 0 else C._scale(u, -1), "steel")
+    for a in (-w / 2 - m, w / 2 + m):
+        oquad(b, (F(a, -h / 2 - m, 0.05), F(a, h / 2 + m, 0.05), F(a, h / 2 + m, -d), F(a, -h / 2 - m, -d)),
+              r if a > 0 else C._scale(r, -1), "steel")
+    # truss behind: chords and diagonals
+    R = 0.12
+    for c in (-h / 2, 0.0, h / 2):
+        b.tube([F(-w / 2, c, -1.6), F(w / 2, c, -1.6)], R, "steel", sides=4)
+    bays = 8
+    for k in range(bays + 1):
+        a = -w / 2 + w * k / bays
+        b.tube([F(a, -h / 2, -1.6), F(a, h / 2, -1.6)], R * 0.8, "steel", sides=4)
+        b.tube([F(a, -h / 2, -d), F(a, -h / 2, -1.6)], R * 0.6, "steel", sides=4)
+        if k < bays:
+            a2 = -w / 2 + w * (k + 1) / bays
+            lo, hi = (-h / 2, h / 2) if k % 2 == 0 else (h / 2, -h / 2)
+            b.tube([F(a, lo, -1.6), F(a2, hi, -1.6)], R * 0.6, "steel", sides=4)
+    # legs to the parapet top
+    base = kit.PARAPET["top"]
+    for a in (-w * 0.3, w * 0.3):
+        top = F(a, -h / 2, -1.6)
+        b.tube([top, (top[0] - fx * 2.0, base, top[2] - fz * 2.0)], 0.35, "steel", sides=6)
 
 
 def parapet(b: C.Builder) -> None:
@@ -911,6 +969,7 @@ def build() -> list[dict]:
     parapet(stands)
     mullions_press(stands)
     rigs(stands)
+    video_board(stands)
     emit("stands", [stands], "The whole bowl's structure in one entity.")
 
     bands = far_bands(regions)
