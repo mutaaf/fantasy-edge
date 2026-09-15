@@ -120,6 +120,55 @@ class TestBroadcastLook(unittest.TestCase):
         self.assertGreater(self.look["ribbon"]["offset"], 0.1)
         self.assertLess(self.look["ribbon"]["offset"], 0.5, "far enough off to see a gap from the lower bowl")
 
+    def eyes(self, seat):
+        eye = self.tokens["visual"]["experience"]["camera"]["eyeMeters"] / 0.9144
+        return (seat["x"], seat["y"] + eye, seat["z"])
+
+    def test_the_video_board_reads_from_every_seat(self):
+        """The smallest words on the board (capitals ~0.72 of the font,
+        `smallTextShare` of the board's height) subtend `minArcMinutes` from
+        the seat farthest from it - behind the home end zone."""
+        vb = self.scene["bowl"]["videoBoard"]
+        look = self.look["videoBoard"]
+        cap = vb["size"][1] * look["smallTextShare"] * 0.72
+        seats = self.scene["presentation"]["stadium"]["seats"]
+        far = max(seats, key=lambda s: math.dist(self.eyes(s), tuple(vb["centre"])))
+        d = math.dist(self.eyes(far), tuple(vb["centre"]))
+        minutes = math.degrees(cap / d) * 60
+        self.assertEqual(far["id"], "endzone", "the farthest seat moved; check the rule still bites")
+        self.assertGreaterEqual(minutes, look["legibility"]["minArcMinutes"],
+                                f"board text subtends {minutes:.1f}' from {far['id']} at {d:.0f} yd")
+        self.assertLess(look["scorebugShare"] + look["smallTextShare"] * 1.25 * look["lines"], 1.0,
+                        "scorebug and last play must fit the board's height")
+
+    def visibility(self, seat):
+        """BroadcastHorizon.visibility, restated."""
+        h, edge = self.scene["winProbability"]["horizon"], self.look["horizon"]["edge"]
+        e, total = self.eyes(seat), 0.0
+        for i in range(5):
+            p = (h["x0"] + (h["x1"] - h["x0"]) * i / 4, (h["y0"] + h["y1"]) / 2, h["z"])
+            d = [p[k] - e[k] for k in range(3)]
+            total += math.degrees(math.asin(abs(d[2]) / math.sqrt(sum(c * c for c in d))))
+        deg = total / 5
+        return max(0.0, min(1.0, (deg - edge["goneDegrees"]) / (edge["fullDegrees"] - edge["goneDegrees"])))
+
+    def test_the_horizon_is_gone_edge_on_and_whole_from_the_sidelines(self):
+        seats = {s["id"]: s for s in self.scene["presentation"]["stadium"]["seats"]}
+        self.assertEqual(self.visibility(seats["endzone"]), 0.0, "from behind the end zone the band is a streak")
+        for sid in ("club", "field", "upper", "sideline", "clubLevel"):
+            self.assertEqual(self.visibility(seats[sid]), 1.0, f"{sid} sees the band square on")
+
+    def test_the_drive_log_stays_a_short_panel(self):
+        """Experience folds the log at the side, low; unfolded it may not grow
+        past a short panel. Rows at their line limits, in DriveLog's points
+        (header 30, a one-line play 40, each extra line 17, padding 44), stay
+        under 360 pt - shorter than the panel is wide (460)."""
+        d = self.look["driveLog"]
+        self.assertTrue(1 <= d["rows"] <= 8)
+        height = 30 + 44 + 40 * d["rows"] + 17 * ((d["newestLines"] - 1) + (d["olderLines"] - 1) * (d["rows"] - 1))
+        self.assertLessEqual(height, 360, f"unfolded drive log {height} pt")
+        self.assertGreaterEqual(d["newestLines"], d["olderLines"])
+
     def test_trails_ghost_with_age_and_never_vanish(self):
         age = self.look["trail"]["age"]
         self.assertTrue(0 < age["decay"] < 1 and 0 < age["thin"] <= 1)
