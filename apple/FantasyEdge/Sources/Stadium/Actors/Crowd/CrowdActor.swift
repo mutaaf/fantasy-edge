@@ -278,7 +278,8 @@ final class CrowdActor: StadiumActor {
                     // Into Bowl's chair: forward of its origin, pelvis on the pan whatever the fan's height.
                     let forward = Float(seated ? C.chair.sitForwardMetres : C.chair.standForwardMetres) * yard
                     let scale = kit.height(f.fan) / Float(C.chair.referenceHeightMetres)
-                    let lift = seated ? Float(C.chair.pelvisMetres) * (1 - scale) * yard : 0
+                    // The kit seats a 1.75 m fan's pelvis at kitPelvisMetres; scaled by height, then lifted to the pan.
+                    let lift = seated ? (Float(C.chair.pelvisMetres) - Float(C.chair.kitPelvisMetres) * scale) * yard : 0
                     mb.append(src.placed(at: f.base + f.facing * forward + SIMD3(0, lift, 0), facing: f.facing, scale: yard))
                 }
                 if let res = mb.resource("crowd.\(key.ring).\(pi)") { meshes.append(res) }

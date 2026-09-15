@@ -61,6 +61,7 @@ extension SceneSpec.Look {
         public let standForwardMetres: Double
         public let cardForwardMetres: Double
         public let pelvisMetres: Double
+        public let kitPelvisMetres: Double
         public let referenceHeightMetres: Double
     }
 

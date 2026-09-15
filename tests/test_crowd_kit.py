@@ -102,6 +102,12 @@ class CrowdKitTest(unittest.TestCase):
             self.assertIsNone(re.search(r"static var \w+\s*:\s*\[ObjectIdentifier", src), f"{f.name} keeps cues outside the stadium")
             self.assertNotIn("static var table", src, f.name)
 
+    def test_seated_hips_meet_bowls_pan(self):
+        """seat_fit.py measured the kit: at pelvis 0.52 m the lowest point under
+        the hips sat 4.7 cm into Bowl's pan (0.442 m) on average. The chair's
+        pelvis must stay within 2 cm of 4.5 cm above the kit's, which meets it."""
+        self.assertAlmostEqual(self.C["chair"]["pelvisMetres"] - self.C["chair"]["kitPelvisMetres"], 0.045, delta=0.02)
+
     def test_mesh_rings_are_stadium_only(self):
         """The tabletop's crowd budget did not rise with the stadium's: it draws
         cards only. The ring assignment must stay behind the tabletop guard."""
