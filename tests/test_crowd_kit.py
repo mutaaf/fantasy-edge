@@ -70,6 +70,24 @@ class CrowdKitTest(unittest.TestCase):
         self.assertLess(r["lod1Yards"], r["lod2Yards"])
         self.assertLessEqual(r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + r["lod2Max"] * lod2 + cards, 150_000)
 
+    def test_the_crowd_fills_bowls_seats_at_the_fill_token(self):
+        """Fans come from bowl.seating, one per seat, kept with probability
+        visual.crowd.fill (a sold-out bowl still has the odd empty seat), minus
+        the clearance around the seats a wearer can take. 49,982 seats at 0.9
+        is the 44,982 the stadium logs; the 52,039 before Bowl's seating were
+        the crowd's own rows at seat pitch, with no aisles."""
+        import random
+        C = self.C
+        self.assertGreater(C["fill"], 0.8, "a night game is near sold out")
+        self.assertLessEqual(C["fill"], 1.0)
+        rng = random.Random(1)
+        seats = 49_982
+        kept = sum(rng.random() < C["fill"] for _ in range(seats))
+        self.assertAlmostEqual(kept / seats, C["fill"], delta=0.01)
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        seated = src.index("if !c.tabletop, let seating = s.bowl.seating")
+        self.assertIn("guard rng.next() < C.fill", src[seated:seated + 1200], "fill applies to Bowl's seats")
+
     def test_mesh_rings_are_stadium_only(self):
         """The tabletop's crowd budget did not rise with the stadium's: it draws
         cards only. The ring assignment must stay behind the tabletop guard."""
