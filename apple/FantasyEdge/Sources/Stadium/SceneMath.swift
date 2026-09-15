@@ -87,16 +87,22 @@ public enum SceneMath {
     }
 
     /// Where the renderer's root goes so a seat in the stands is where the
-    /// wearer is, their eyes `eye` metres above the floor of the space.
+    /// wearer is: the seat's floor on the floor of the space, which puts their
+    /// eyes, `eye` metres up, where a seated fan's are.
+    ///
+    /// Until the integration-1 pass this lifted the seat floor to `eye`, so
+    /// the wearer's eyes sat on the tread and every seat looked out from
+    /// inside the row in front of it.
     public static func stadiumRoot(seat: SceneSpec.Seat, metersPerYard s: Double, eye: Double = 1.2) -> SIMD3<Float> {
         let at = local(x: seat.x, y: seat.y, z: seat.z) * Float(s)
-        return SIMD3(-at.x, Float(eye) - at.y, -at.z)
+        return SIMD3(-at.x, -at.y, -at.z)
     }
 
     // MARK: 1.1 - seats, rows, trails
 
-    /// The root transform that puts the wearer in a seat: the seat's floor
-    /// `eye` metres below the eyes, facing the seat's `lookAt` down -z.
+    /// The root transform that puts the wearer in a seat: the seat's floor on
+    /// the space's floor, so the eyes are `eye` metres above it, facing the
+    /// seat's `lookAt` down -z.
     ///
     /// The world turns about the wearer; the wearer never moves. That is the
     /// comfort rule for every seat change.
@@ -109,7 +115,7 @@ public enum SceneMath {
         let yaw = atan2(d.x, -d.z)
         let turn = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
         let scaled = turn.act(at * Float(s))
-        return (SIMD3(-scaled.x, Float(eye) - scaled.y, -scaled.z), turn)
+        return (SIMD3(-scaled.x, -scaled.y, -scaled.z), turn)
     }
 
     /// Row `r` of `rows` on a tier, as the stepped seating is built: the
@@ -150,6 +156,57 @@ public enum SceneMath {
             angles.append((Double(j) + f) / Double(resolution) * 2 * .pi)
         }
         return (angles, total)
+    }
+
+    /// A bowl ring walked by arc length from angle 0 - `BowlRing` in
+    /// scene.py, exactly: the same resolution and the same interpolation, so a
+    /// seat's arc turns into the same angle on every client.
+    public struct Ring: Sendable {
+        public static let resolution = 2880
+        public let offset: Double
+        public let length: Double
+        private let cumulative: [Double]
+
+        public init(_ shape: SceneSpec.Shape, offset m: Double) {
+            offset = m
+            let n = Ring.resolution
+            var cum = [0.0]
+            cum.reserveCapacity(n + 1)
+            var prev = SceneMath.bowlPoint(shape, offset: m, angle: 0)
+            for i in 1...n {
+                let p = SceneMath.bowlPoint(shape, offset: m, angle: 2 * .pi * Double(i) / Double(n))
+                cum.append(cum[i - 1] + hypot(p.x - prev.x, p.z - prev.z))
+                prev = p
+            }
+            cumulative = cum
+            length = cum[n]
+        }
+
+        /// The angle at arc `s` along the ring, wrapped.
+        public func angle(at s: Double) -> Double {
+            let n = Ring.resolution
+            var a = s.truncatingRemainder(dividingBy: length)
+            if a < 0 { a += length }
+            var lo = 0, hi = n
+            while hi - lo > 1 {
+                let mid = (lo + hi) / 2
+                if cumulative[mid] <= a { lo = mid } else { hi = mid }
+            }
+            let span = cumulative[hi] - cumulative[lo]
+            let t0 = 2 * .pi * Double(lo) / Double(n), t1 = 2 * .pi * Double(hi) / Double(n)
+            return t0 + (t1 - t0) * (a - cumulative[lo]) / (span == 0 ? 1e-9 : span)
+        }
+    }
+
+    /// Seat `k` of run `run` in a row: where it is (local yards, feet on its
+    /// tread) and which way it faces (unit x-z, toward the field). Build the
+    /// `ring` once per row with `Ring(shape, offset: row.feet)`.
+    public static func seat(_ row: SceneSpec.SeatingRow, run: Int, k: Int, shape: SceneSpec.Shape,
+                            ring: Ring) -> (position: SIMD3<Float>, facing: SIMD2<Double>, angle: Double) {
+        let first = row.runs[run][0]
+        let t = ring.angle(at: first + Double(k) * row.pitch)
+        let p = bowlPoint(shape, offset: row.feet, angle: t)
+        return (SIMD3(Float(p.x), Float(row.floor), Float(p.z)), inward(shape, offset: row.feet, angle: t), t)
     }
 
     /// Unit vector from a bowl point back toward the field, in the x-z plane.

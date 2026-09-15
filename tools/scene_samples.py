@@ -28,6 +28,35 @@ GAMES = {
 }
 
 
+def write_seat_samples(path: pathlib.Path, scene: dict) -> None:
+    """Where scene.py itself puts a handful of seats, so verify_scene.swift can
+    check SceneMath.seat against it. Nothing is written for a scene without
+    `bowl.seating`."""
+    from fantasyedge import scene as sc
+
+    seating = (scene.get("bowl") or {}).get("seating")
+    if not seating or not hasattr(sc, "BowlRing"):
+        return
+    shape = scene["bowl"]["shape"]
+    samples = []
+    for ti, tier in enumerate(seating["tiers"]):
+        rows = tier["rows"]
+        for ri in sorted({0, len(rows) // 2, len(rows) - 1}):
+            row = rows[ri]
+            if not row["runs"]:
+                continue
+            ring = sc.BowlRing(shape, row["feet"])
+            for run in sorted({0, len(row["runs"]) - 1}):
+                first, count = row["runs"][run]
+                for k in sorted({0, int(count) - 1}):
+                    t = ring.angle(first + k * row["pitch"])
+                    x, z = sc.bowl_point(shape, row["feet"], t)
+                    nx, nz = sc.bowl_inward(shape, row["feet"], t)
+                    samples.append({"tier": ti, "row": ri, "run": run, "k": k, "x": x, "y": row["floor"],
+                                    "z": z, "nx": nx, "nz": nz})
+    path.write_text(json.dumps(samples))
+
+
 def main() -> None:
     out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "/tmp/scenes")
     out.mkdir(parents=True, exist_ok=True)
@@ -51,7 +80,9 @@ def main() -> None:
                 at = rp.play_seconds(play, lengths)
             app.replay_director().seek(at)
             app.replay_director().set_speed(60)
-            (out / f"{event}-{at}.json").write_text(json.dumps(app.replay_scene()))
+            scene = app.replay_scene()
+            (out / f"{event}-{at}.json").write_text(json.dumps(scene))
+            write_seat_samples(out / f"{event}-{at}.seats", scene)
             written += 1
     app.close()
     print(f"wrote {written} scenes to {out}")
