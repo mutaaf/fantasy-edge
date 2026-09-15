@@ -22,7 +22,7 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 **Numbers:** field 10 parts, 1.1k triangles. Sideline 19 parts, 21k triangles.
 
 **Critique:**
-- **Paint:** reads right from row 16. Numerals, arrows and hashes are crisp, and the far numerals read from their own sideline.
+- **Paint:** reads right from the club seat. Numerals, arrows and hashes are crisp, and the far numerals read from their own sideline.
 - **Stripe:** almost invisible from the stands; the normals alone are too subtle under this lighting.
 - **Field-level seat:** it sat behind a bench. Chrome-bright bench legs filled the frame.
 - **Field-goal net:** the poles showed but the net vanished. Cutout mips fall under the threshold.

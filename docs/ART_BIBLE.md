@@ -119,7 +119,7 @@ numbers to `stats.txt`.
 | Field | 2k | 12 | 40 | 1.1k measured at integration-3 |
 | Sideline | 21k | 15 | 20 | 20.6k measured |
 | Bowl | 62k | 20 | 50 | 57.9–60.3k, 15 parts measured |
-| Crowd | 150k | 45 | 60 | 52,039 seats; LOD2 pose-mesh ring near club seats capped in `visual.crowd.rings`; fans animate by group, never per fan on the CPU |
+| Crowd | 150k | 45 | 60 | 44,982 fans in Bowl's 49,982 seats at `visual.crowd.fill` 0.9 (142.3k, 36 parts measured at integration-5); LOD2 pose-mesh ring near club seats capped in `visual.crowd.rings`; fans animate by group, never per fan on the CPU |
 | Lighting | 10k | 20 | 20 | ≤ 4 spot lights, ≤ 1 shadow caster |
 | Sky | 5k | 3 | 30 | |
 | Broadcast | 30k | 25 | 20 | |
@@ -302,12 +302,21 @@ python3 tools/lookdev.py --device <your simulator udid> --out .work/shots/<actor
 | `tabletop` | the table model in the room | red-zone snap | Experience, Broadcast, Crowd at LOD |
 | `bowl-wide` | upper deck, midfield, slightly down | a normal snap | Bowl, Crowd, Lighting, Sky |
 | `field-level` | home sideline, field level | red-zone snap | Field, Sideline, Experience |
-| `crowd-closeup` | club seat, turned 62° toward the side stands | a normal snap | Crowd, Bowl |
+| `crowd-closeup` | club seat, turned 55° toward the side stands, looking down 10° | a normal snap | Crowd, Bowl |
 | `lights-haze` | club seat, looking up at the far rim | a normal snap | Lighting, Sky |
 | `sky-dome` | club seat, looking high | a normal snap | Sky |
-| `td-moment` | club seat, turned toward the scoring end | the Bears pick-six at 1x | Moments, Crowd, Lighting, Broadcast, Audio |
+| `td-moment` | club seat, turned 30° toward the scoring end | the Bears pick-six at 1x (`--moment fieldGoal` for the game's first made kick) | Moments, Crowd, Lighting, Broadcast, Audio |
 | `redzone-trails` | club seat, turned toward the red zone | red-zone snap | Broadcast, Field |
 | `sideline-props` | behind the home end zone | a normal snap | Sideline, Field |
+
+The seats are the scene's own (`presentation.stadium.seats`). The club seat is the
+50-yard line in the lower bowl, 24 yd back from the sideline; it is the seat every
+"reads from the stands" criterion means, whatever row an actor brief names.
+
+- **Another seat:** `--extra="-stadiumSeat upper" --suffix=-upper`.
+- **A moment over time:** `--times 0.5,5.1,8.5` takes one frame at each of those seconds after the moment appears.
+- **Budgets mid-moment:** with `-stadiumStats` (always on in the harness) the app counts again 0.5, 3 and 6 s after each moment; `stats.txt` keeps every count, labelled `stadium@touchdown+3s`.
+- **`[shadergraph]` lines** in `stats.txt` say which path loaded each Shader Graph material.
 
 The app understands the same names on its own (`-shot crowd-closeup`). The
 harness also positions the replay. A test keeps the harness, the app and

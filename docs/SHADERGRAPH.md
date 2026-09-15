@@ -86,7 +86,7 @@ Every Shader Graph material has an entry under `shaderGraph.materials` in `desig
   3. Right: the flat translucent fallback, visibly different.
 
   An unlit colour cannot draw the rim, so the graph compiled, loaded, and took its token parameters.
-- **Still unconfirmed: which load path ran.** The shoot did not capture the app log. The next proof shoot must grep `[shadergraph]` before it shuts the simulator down.
+- **Load path, confirmed at integration-5:** `[shadergraph] /Root/Fresnel loaded from generated/shadergraph/Materials.reality via Entity(contentsOf:)`. As expected, the named API found nothing, so the app loads through the fallback.
 
 ## Who is waiting on this
 
