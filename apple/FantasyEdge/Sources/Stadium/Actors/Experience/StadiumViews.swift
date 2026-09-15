@@ -179,10 +179,24 @@ public struct ReplayControls: View {
 // MARK: - the tabletop
 
 /// A game on the table: a volumetric window about 0.9 × 0.4 × 0.6 m.
+///
+/// The miniature sits on its lit plinth and can be turned and scaled with a
+/// pinch, inside the limits the tokens give, and tipped toward the wearer with
+/// "Look closer". "Enter stadium" opens a gate of floodlight over the table
+/// before the space opens, so the way in is a place rather than a cut.
 public struct TabletopView: View {
     let feed: SceneFeed
     let enterStadium: () -> Void
     @State private var renderer = StadiumRenderer(mode: .tabletop)
+    @State private var holder = Entity()
+    @State private var gate = ArrivalGate()
+    @State private var gateClock: EventSubscription?
+    @State private var scale: Float = 1
+    @State private var gestureScale: Float?
+    @State private var yaw: Float = 0
+    @State private var gestureYaw: Float?
+    @State private var closer = false
+    @State private var entering = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(feed: SceneFeed, enterStadium: @escaping () -> Void) {
@@ -192,17 +206,39 @@ public struct TabletopView: View {
 
     @State private var hold = MomentHold()
 
+    private var table: SceneSpec.Look.TabletopLook? { ExperienceTokens.tabletop(feed.spec) }
+
     public var body: some View {
         RealityView { content, attachments in
-            content.add(renderer.root)
-            let r = renderer
+            holder.name = "experience.tabletop"
+            holder.addChild(renderer.root)
+            holder.addChild(gate.root)
+            // The pinch target: the volume itself, so a pinch anywhere on the
+            // model turns or scales it.
+            let volume = feed.spec?.presentation.tabletop.volume ?? [0.9, 0.4, 0.6]
+            holder.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(
+                Float(volume[safe: 0] ?? 0.9), Float(volume[safe: 1] ?? 0.4), Float(volume[safe: 2] ?? 0.6)))]))
+            holder.components.set(InputTargetComponent())
+            content.add(holder)
+            let r = renderer, g = gate
             renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
                 MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            }
+            gateClock = content.subscribe(to: SceneEvents.Update.self) { event in
+                MainActor.assumeIsolated { g.tick(event.deltaTime) }
             }
             if let flag = attachments.entity(for: "moment") {
                 flag.position = SIMD3(0, 0.13, 0)
                 content.add(flag)
             }
+            #if DEBUG
+            // `-arrivalAt <0...1>` freezes the gate part-way open, for a still.
+            if let p = Double(StadiumShots.argument("-arrivalAt") ?? ""), let arrival = ExperienceTokens.arrival(feed.spec) {
+                prepareGate(arrival)
+                renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
+                gate.open(at: p) {}
+            }
+            #endif
         } update: { _, attachments in
             // Only the renderer is told; attachments were placed once in
             // `make` and are only moved here, never re-added.
@@ -221,6 +257,23 @@ public struct TabletopView: View {
                 if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
             }
         }
+        .gesture(MagnifyGesture().targetedToEntity(holder)
+            .onChanged { value in
+                let base = gestureScale ?? scale
+                if gestureScale == nil { gestureScale = scale }
+                scale = clampScale(base * Float(value.magnification))
+                place(animated: false)
+            }
+            .onEnded { _ in gestureScale = nil })
+        .simultaneousGesture(RotateGesture3D(constrainedToAxis: .y).targetedToEntity(holder)
+            .onChanged { value in
+                let base = gestureYaw ?? yaw
+                if gestureYaw == nil { gestureYaw = yaw }
+                let turn = Float(value.rotation.angle.radians) * (value.rotation.axis.y < 0 ? -1 : 1)
+                yaw = base + turn
+                place(animated: false)
+            }
+            .onEnded { _ in gestureYaw = nil })
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
         .task(id: hold.shown?.playId) {
             await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
@@ -238,18 +291,89 @@ public struct TabletopView: View {
                 }
                 ReplayControls(feed: feed)
                 Button {
-                    enterStadium()
+                    closer.toggle()
+                    place(animated: true)
+                } label: {
+                    Label(closer ? "Step back" : "Look closer",
+                          systemImage: closer ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
+                }
+                .accessibilityHint("Tips the model toward you so the field is easier to read")
+                Button {
+                    arrive()
                 } label: {
                     Label("Enter stadium", systemImage: "sportscourt.fill")
                         .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
                 }
+                .disabled(entering)
+                .accessibilityHint("Opens the stadium around you, seated at your last seat")
             }
             .padding(12)
             .glassBackgroundEffect()
         }
         .task { feed.start() }
-        .onDisappear { feed.stop() }
+        .onDisappear {
+            feed.stop()
+            gate.cancel()
+        }
     }
+
+    private func clampScale(_ s: Float) -> Float {
+        let lo = Float(table?.minScale ?? 1), hi = Float(table?.maxScale ?? 1)
+        return max(lo, min(hi, s))
+    }
+
+    /// The model's pose from the wearer's scale, turn and "Look closer" tilt.
+    /// The wearer never moves; the model does, and only on their gesture.
+    private func place(animated: Bool) {
+        let tilt = closer ? Float(table?.closerTiltDegrees ?? 0) * .pi / 180 : 0
+        var t = holder.transform
+        t.scale = SIMD3(repeating: scale)
+        t.rotation = simd_quatf(angle: tilt, axis: SIMD3(1, 0, 0)) * simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+        let seconds = animated && !reduceMotion ? (table?.closerSeconds ?? 0) : 0
+        if seconds > 0, holder.parent != nil {
+            holder.move(to: t, relativeTo: holder.parent, duration: seconds, timingFunction: .easeInOut)
+        } else {
+            holder.transform = t
+        }
+    }
+
+    private func prepareGate(_ arrival: SceneSpec.Look.Arrival) {
+        let spec = feed.spec
+        gate.build(arrival, color: spec?.palette["baseplate.rim"] ?? "#FFE9C2")
+        let s = Float(spec?.presentation.tabletop.metersPerYard ?? 0.0045)
+        gate.root.scale = SIMD3(repeating: s)
+        gate.root.position = SIMD3(0, Float(spec?.presentation.tabletop.floor ?? -0.18), 0)
+    }
+
+    /// The way in: gate, then the space. Reduce motion opens the space at once.
+    private func arrive() {
+        guard !entering else { return }
+        guard let arrival = ExperienceTokens.arrival(feed.spec), !reduceMotion else {
+            ExperienceEvents.post(.gateOpening(seconds: 0, swellLead: 0))
+            enterStadium()
+            return
+        }
+        entering = true
+        prepareGate(arrival)
+        renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
+        ExperienceEvents.post(.gateOpening(seconds: arrival.gateSeconds, swellLead: arrival.swellLeadSeconds))
+        gate.open {
+            enterStadium()
+            // If the space did not open (another space was up, or the system
+            // refused), the table is still here: give it back its light.
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                gate.cancel()
+                renderer.root.components.remove(OpacityComponent.self)
+                entering = false
+            }
+        }
+    }
+}
+
+extension Array {
+    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
 }
 
 /// TOUCHDOWN, or whatever the moment is, with the play that made it.
@@ -385,16 +509,23 @@ public enum StadiumLayout {
     }
 }
 
-/// Seated at the fifty, in a bowl at night, reached from the tabletop.
+/// Seated in a bowl at night, reached from the tabletop.
 ///
 /// Entered on the Digital Crown's dial, with 100% full a tap away on the
-/// ornament. Everything in the space comes from the scene: no board window, no
+/// controls. Everything in the space comes from the scene: no board window, no
 /// tabletop, and when the scene cannot be read, one small status panel instead
 /// of an empty stand.
+///
+/// The field of play is kept clear. Every panel's place is a slot in
+/// `visual.experience.layout`, low and to the side; panels rest translucent
+/// until looked at, the side panels fold to tabs, the controls fold to a pill
+/// when left alone, and a celebrated moment takes every panel but the
+/// scorebug away until it has been seen.
 public struct StadiumSpaceView<Trailing: View>: View {
     let feed: SceneFeed
     @Binding var immersion: StadiumImmersion
     let look: SIMD2<Float>
+    let trailingTitle: String?
     let leave: () -> Void
     let trailing: Trailing
     @State private var renderer = StadiumRenderer(mode: .stadium)
@@ -404,17 +535,33 @@ public struct StadiumSpaceView<Trailing: View>: View {
     /// eye and capture a side panel or the ornament below head-on.
     @State private var world = Entity()
     @State private var pivot = Entity()
+    @State private var catcher = Entity()
+    @State private var driveFolded = false
+    @State private var trailingFolded = true
+    @State private var controlsFolded = false
+    @State private var touched = 0
+    @State private var yielding = false
+    @State private var pickerOpen = false
+    @State private var hintShown = false
+    @State private var arrived = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `look` is (yaw, pitch) in degrees, zero outside debug captures.
+    /// `trailingTitle` names the right-hand panel's tab; nil when there is
+    /// nothing to show there.
     public init(feed: SceneFeed, immersion: Binding<StadiumImmersion>, look: SIMD2<Float> = .zero,
+                trailingTitle: String? = nil,
                 leave: @escaping () -> Void, @ViewBuilder trailing: () -> Trailing) {
         self.feed = feed
         self._immersion = immersion
         self.look = look
+        self.trailingTitle = trailingTitle
         self.leave = leave
         self.trailing = trailing()
     }
+
+    private var layout: SceneSpec.Look.Layout? { ExperienceTokens.layout(feed.spec) }
+    private var panels: SceneSpec.Look.Panels? { ExperienceTokens.panels(feed.spec) }
 
     public var body: some View {
         RealityView { content, attachments in
@@ -424,23 +571,39 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 MainActor.assumeIsolated { r.tick(event.deltaTime) }
             }
             let args = ProcessInfo.processInfo.arguments
-            if let seat = StadiumShots.argument("-stadiumSeat") { renderer.sit(seat) }
+            // A shot's seat wins; otherwise the seat the wearer last chose.
+            if let seat = StadiumShots.argument("-stadiumSeat") {
+                renderer.sit(seat)
+            } else if let saved = ExperiencePrefs.seat {
+                renderer.sit(saved)
+            }
             if args.contains("-stadiumMute") { renderer.setMuted(true) }
-            let place: [(String, SIMD3<Float>)] = [
-                // Closer than it was (2.4 m): at that distance the scorebug
-                // was a thumbnail under the rim lights.
-                ("scorebug", StadiumLayout.at(degrees: 0, distance: 1.8, height: StadiumLayout.eye + 0.5)),
-                ("status", StadiumLayout.at(degrees: 0, distance: 2.0, height: StadiumLayout.eye + 0.05)),
-                ("drive", StadiumLayout.at(degrees: -StadiumLayout.sideYaw, distance: 1.3, height: StadiumLayout.eye - 0.28)),
-                ("trailing", StadiumLayout.at(degrees: StadiumLayout.sideYaw, distance: 1.3, height: StadiumLayout.eye - 0.28)),
-                ("controls", StadiumLayout.at(degrees: 0, distance: 1.05, height: StadiumLayout.eye - 0.52)),
-                ("moment", StadiumLayout.at(degrees: 0, distance: 3.2, height: StadiumLayout.eye + 0.85)),
-            ]
-            for (id, position) in place {
-                guard let e = attachments.entity(for: id) else { continue }
-                assert(StadiumLayout.below(position) <= StadiumLayout.maxBelow, "\(id) sits too low")
-                face(e, at: position)
-                world.addChild(e)
+            if let slots = layout?.slots {
+                let place: [(String, SceneSpec.Look.Slot)] = [
+                    ("scorebug", slots.scorebug), ("status", slots.status), ("drive", slots.drive),
+                    ("trailing", slots.trailing), ("controls", slots.controls), ("picker", slots.picker),
+                    ("hint", slots.hint),
+                ]
+                for (id, slot) in place {
+                    guard let e = attachments.entity(for: id) else { continue }
+                    let position = StadiumLayout.position(slot)
+                    assert(StadiumLayout.below(position) <= StadiumLayout.maxBelow, "\(id) sits too low")
+                    face(e, at: position)
+                    world.addChild(e)
+                }
+            }
+            if let moment = attachments.entity(for: "moment") {
+                face(moment, at: StadiumLayout.at(degrees: 0, distance: 3.2, height: StadiumLayout.eye + 0.85))
+                world.addChild(moment)
+            }
+            // A pinch out on the field brings the controls back: an invisible
+            // target far out ahead, behind every panel.
+            if let c = ExperienceTokens.controls(nil)?.revealCatcher {
+                catcher.name = "experience.revealCatcher"
+                catcher.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(Float(c.width), Float(c.height), 0.1))]))
+                catcher.components.set(InputTargetComponent())
+                catcher.position = SIMD3(0, StadiumLayout.eye, -Float(c.distance))
+                world.addChild(catcher)
             }
             world.position = SIMD3(0, -StadiumLayout.eye, 0)
             pivot.addChild(world)
@@ -464,10 +627,12 @@ public struct StadiumSpaceView<Trailing: View>: View {
         } update: { _, attachments in
             if let spec = feed.spec { renderer.apply(spec, reduceMotion: reduceMotion) }
             let reading = feed.spec != nil
-            for id in ["scorebug", "drive", "trailing"] {
-                attachments.entity(for: id)?.isEnabled = reading
-            }
+            attachments.entity(for: "scorebug")?.isEnabled = reading
+            attachments.entity(for: "drive")?.isEnabled = reading
+            attachments.entity(for: "trailing")?.isEnabled = reading && trailingTitle != nil
             attachments.entity(for: "status")?.isEnabled = !reading
+            attachments.entity(for: "picker")?.isEnabled = reading && pickerOpen
+            attachments.entity(for: "hint")?.isEnabled = hintShown
             if let flag = attachments.entity(for: "moment") {
                 flag.isEnabled = hold.shown != nil
                 if let m = hold.shown, let spec = feed.spec {
@@ -482,19 +647,78 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 StadiumStatus(message: feed.error)
             }
             Attachment(id: "drive") {
-                if let spec = feed.spec { DriveLog(spec: spec) }
+                if let spec = feed.spec {
+                    FoldablePanel(title: "Drive", symbol: "list.bullet", folded: $driveFolded, yielding: yielding) {
+                        DriveLog(spec: spec)
+                    }
+                    .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
+                }
             }
-            Attachment(id: "trailing") { trailing }
-            Attachment(id: "controls") { controls }
+            Attachment(id: "trailing") {
+                FoldablePanel(title: trailingTitle ?? "More", symbol: "sportscourt", folded: $trailingFolded,
+                              yielding: yielding) { trailing }
+                    .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
+            }
+            Attachment(id: "controls") {
+                Group {
+                    if controlsFolded || (yielding && reduceMotion) {
+                        ControlsPill { reveal() }
+                    } else {
+                        controls
+                    }
+                }
+                .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
+            }
+            Attachment(id: "picker") {
+                if let spec = feed.spec {
+                    SeatPickerView(spec: spec, current: renderer.seat(spec).id, sit: { sit($0) },
+                                   close: { pickerOpen = false; touch() })
+                }
+            }
+            Attachment(id: "hint") { CrownHint() }
             Attachment(id: "moment") {
                 if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
             }
         }
+        .gesture(SpatialTapGesture().targetedToEntity(catcher).onEnded { _ in reveal() })
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
         .task(id: hold.shown?.playId) {
             await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
         }
+        // A moment takes the panels away while it is up, and gives them back
+        // `momentReturnSeconds` after it goes.
+        .task(id: hold.shown?.playId) {
+            if hold.shown != nil {
+                if !yielding { yielding = true; ExperienceEvents.post(.panelsYielded(true)) }
+            } else if yielding {
+                try? await Task.sleep(for: .seconds(panels?.momentReturnSeconds ?? 1))
+                guard !Task.isCancelled, hold.shown == nil else { return }
+                yielding = false
+                ExperienceEvents.post(.panelsYielded(false))
+            }
+        }
+        // The controls fold themselves away when left alone.
+        .task(id: touched) {
+            try? await Task.sleep(for: .seconds(ExperienceTokens.controls(feed.spec)?.autoHideSeconds ?? 8))
+            guard !Task.isCancelled, !pickerOpen else { return }
+            controlsFolded = true
+        }
+        .task { await crownHint() }
         .task { feed.start() }
+        .onChange(of: feed.spec != nil, initial: true) { _, reading in
+            guard reading, !arrived, let spec = feed.spec else { return }
+            arrived = true
+            ExperienceEvents.post(.arrived(seat: renderer.seat(spec).id, full: immersion == .full))
+            if let folded = panels?.startFolded {
+                driveFolded = folded.drive
+                trailingFolded = folded.trailing
+            }
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("-stadiumPicker") { pickerOpen = true }
+            if ProcessInfo.processInfo.arguments.contains("-stadiumUnfold") { driveFolded = false; trailingFolded = false }
+            if ProcessInfo.processInfo.arguments.contains("-stadiumControlsFolded") { controlsFolded = true }
+            #endif
+        }
         .onDisappear { feed.stop() }
     }
 
@@ -505,14 +729,49 @@ public struct StadiumSpaceView<Trailing: View>: View {
         e.look(at: SIMD3(0, StadiumLayout.eye, 0), from: position, relativeTo: world, forward: .positiveZ)
     }
 
-    /// Two rows, so the ornament stays inside the 30-degree panels either
-    /// side of it: the replay on top, where you are and how to leave below.
+    private func touch() { touched &+= 1 }
+
+    private func reveal() {
+        controlsFolded = false
+        touch()
+    }
+
+    /// Change seats: the renderer fades the world down and back (reduce
+    /// motion: a cut), and the choice is remembered for next time.
+    private func sit(_ id: String) {
+        touch()
+        pickerOpen = false
+        guard let spec = feed.spec, id != renderer.seat(spec).id else { return }
+        ExperiencePrefs.seat = id
+        let fade = spec.look?.experience.camera.seatFadeSeconds ?? ExperienceTokens.bundled?.camera.seatFadeSeconds ?? 0.35
+        ExperienceEvents.post(.seatChanging(to: id, fadeSeconds: reduceMotion ? 0 : fade))
+        renderer.sit(id)
+    }
+
+    /// The Crown hint, once, the first time the stadium opens on the dial.
+    private func crownHint() async {
+        guard let arrival = ExperienceTokens.arrival(feed.spec) else { return }
+        #if DEBUG
+        let forced = ProcessInfo.processInfo.arguments.contains("-stadiumHint")
+        #else
+        let forced = false
+        #endif
+        guard forced || (immersion == .dial && !(arrival.crownHintOnce && ExperiencePrefs.crownHintShown)) else { return }
+        ExperiencePrefs.crownHintShown = true
+        hintShown = true
+        try? await Task.sleep(for: .seconds(arrival.crownHintSeconds))
+        hintShown = false
+    }
+
+    /// Two rows, so the controls stay inside the side panels either side of
+    /// them: the replay on top, where you are and how to leave below.
     private var controls: some View {
         VStack(spacing: 8) {
             HStack(spacing: 10) {
                 ReplayControls(feed: feed)
                 if feed.spec?.isReplay == true, let start = feed.replay?.driveStart {
                     Button {
+                        touch()
                         // Just before the snap, so the first play flies.
                         Task { await feed.seek(max(0, start - 1)) }
                     } label: {
@@ -522,19 +781,19 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 }
             }
             HStack(spacing: 12) {
-                if let seats = feed.spec?.presentation.stadium.seats, !seats.isEmpty, let spec = feed.spec {
-                    Menu {
-                        ForEach(seats) { seat in
-                            Button(seat.label) { renderer.sit(seat.id) }
-                        }
+                if let spec = feed.spec, !(spec.presentation.stadium.seats ?? []).isEmpty {
+                    Button {
+                        pickerOpen.toggle()
+                        touch()
                     } label: {
                         Label(renderer.seat(spec).label, systemImage: "chair.lounge")
                             .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
                     }
-                    .accessibilityHint("Moves the stadium around you to another seat")
+                    .accessibilityHint("Opens a map of the stadium to choose another seat")
                 }
                 Button {
                     renderer.setMuted(!renderer.muted)
+                    touch()
                 } label: {
                     Image(systemName: renderer.muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                         .font(.system(size: 20, weight: .semibold)).frame(width: 60, height: 60)
@@ -546,15 +805,27 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 300)
-                Button(action: leave) {
+                .onChange(of: immersion) { _, _ in touch() }
+                Button {
+                    ExperienceEvents.post(.leaving)
+                    leave()
+                } label: {
                     Label("Leave stadium", systemImage: "xmark")
                         .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
                 }
                 .accessibilityHint("Returns to the tabletop and windows you had open")
+                Button {
+                    controlsFolded = true
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 18, weight: .semibold)).frame(width: 60, height: 60)
+                }
+                .accessibilityLabel("Fold the controls")
             }
         }
         .padding(12)
         .glassBackgroundEffect()
+        .simultaneousGesture(TapGesture().onEnded { touch() })
     }
 }
 

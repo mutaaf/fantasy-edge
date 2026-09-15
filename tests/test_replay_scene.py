@@ -508,11 +508,17 @@ class TestSceneGeometry(unittest.TestCase):
         seats = {s["id"]: s for s in st["seats"]}
         self.assertEqual(st["defaultSeat"], "club")
         self.assertEqual({k: st["seat"][k] for k in "xyz"}, {k: seats["club"][k] for k in "xyz"})
-        self.assertEqual(set(seats), {"club", "field", "endzone", "upper"})
+        # The look-dev shots sit in the first four; Experience adds presets
+        # (tests/test_experience.py holds the rest of the list).
+        self.assertLessEqual({"club", "field", "endzone", "upper"}, set(seats))
         tiers = {t["name"]: t for t in self.final["bowl"]["tiers"]}
         half_w, half_l = self.final["field"]["width"] / 2, 60.0
         for s in seats.values():
             self.assertEqual((s["lookAt"]["x"], s["lookAt"]["z"]), (50.0, 0.0))
+            if s["id"] == "pressBox":
+                # Not on a tier: level with the press box glass.
+                self.assertEqual(s["y"], self.final["bowl"]["pressBox"]["rise"][0])
+                continue
             off = max(abs(s["z"]) - half_w, abs(s["x"] - 50) - half_l)
             tier = next((t for t in tiers.values() if t["inner"] <= off <= t["outer"]), None)
             if tier is None:
