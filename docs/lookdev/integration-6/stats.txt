@@ -1,0 +1,88 @@
+[shadergraph] /Root/Beam loaded from actors/lighting/Beams.reality via Entity(contentsOf:)
+[shadergraph] /Root/Fresnel loaded from generated/shadergraph/Materials.reality via Entity(contentsOf:)
+[shadergraph] lighting beams: Shader Graph in use on rim.beams
+[stadium-stats] stadium: models 85, draw parts 91, triangles 226921, texture memory ~71 MB
+[stadium-stats] stadium: models 85, draw parts 96, triangles 240825, texture memory ~71 MB
+[stadium-stats] stadium: models 85, draw parts 96, triangles 243049, texture memory ~71 MB
+[stadium-stats] stadium: models 85, draw parts 96, triangles 243337, texture memory ~71 MB
+[stadium-stats] stadium.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium.bowl: draw parts 10, triangles 44172, spot lights 0, emitters 0
+[stadium-stats] stadium.bowl: draw parts 15, triangles 57870, spot lights 0, emitters 0
+[stadium-stats] stadium.bowl: draw parts 15, triangles 60272, spot lights 0, emitters 0
+[stadium-stats] stadium.broadcast: draw parts 4, triangles 4418, spot lights 0, emitters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 142207, spot lights 0, emitters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 142227, spot lights 0, emitters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 142257, spot lights 0, emitters 0
+[stadium-stats] stadium.experience: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium.field: draw parts 11, triangles 1116, spot lights 0, emitters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9540, spot lights 4, emitters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9588, spot lights 4, emitters 0
+[stadium-stats] stadium.moments: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20776, spot lights 0, emitters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20936, spot lights 0, emitters 0
+[stadium-stats] stadium.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s: models 100, draw parts 111, triangles 244215, texture memory ~71 MB
+[stadium-stats] stadium@touchdown+0.5s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.bowl: draw parts 15, triangles 60272, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.broadcast: draw parts 20, triangles 5664, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.crowd: draw parts 36, triangles 142207, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.field: draw parts 11, triangles 1116, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.lighting: draw parts 11, triangles 9508, spot lights 4, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.moments: draw parts 0, triangles 0, spot lights 0, emitters 1
+[stadium-stats] stadium@touchdown+0.5s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+0.5s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s: models 102, draw parts 113, triangles 244499, texture memory ~71 MB
+[stadium-stats] stadium@touchdown+3.0s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.bowl: draw parts 15, triangles 60272, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.broadcast: draw parts 22, triangles 5948, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.crowd: draw parts 36, triangles 142207, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.field: draw parts 11, triangles 1116, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.lighting: draw parts 11, triangles 9508, spot lights 4, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.moments: draw parts 0, triangles 0, spot lights 0, emitters 4
+[stadium-stats] stadium@touchdown+3.0s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+3.0s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s: models 102, draw parts 113, triangles 244499, texture memory ~71 MB
+[stadium-stats] stadium@touchdown+6.0s.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.bowl: draw parts 15, triangles 60272, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.broadcast: draw parts 22, triangles 5948, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.crowd: draw parts 36, triangles 142207, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.experience: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.field: draw parts 11, triangles 1116, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.lighting: draw parts 11, triangles 9508, spot lights 4, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.moments: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0
+[stadium-stats] stadium@touchdown+6.0s.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0
+[stadium-stats] tabletop: models 68, draw parts 71, triangles 19785, texture memory ~71 MB
+[stadium-stats] tabletop: models 68, draw parts 71, triangles 19803, texture memory ~71 MB
+[stadium-stats] tabletop: models 68, draw parts 71, triangles 19825, texture memory ~71 MB
+[stadium-stats] tabletop.audio: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] tabletop.bowl: draw parts 3, triangles 1352, spot lights 0, emitters 0
+[stadium-stats] tabletop.broadcast: draw parts 3, triangles 3458, spot lights 0, emitters 0
+[stadium-stats] tabletop.crowd: draw parts 22, triangles 734, spot lights 0, emitters 0
+[stadium-stats] tabletop.experience: draw parts 3, triangles 1536, spot lights 0, emitters 0
+[stadium-stats] tabletop.field: draw parts 11, triangles 956, spot lights 0, emitters 0
+[stadium-stats] tabletop.lighting: draw parts 14, triangles 8864, spot lights 4, emitters 0
+[stadium-stats] tabletop.moments: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2885, spot lights 0, emitters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2903, spot lights 0, emitters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2925, spot lights 0, emitters 0
+[stadium-stats] tabletop.sky: draw parts 0, triangles 0, spot lights 0, emitters 0
+[stadium] assets: 31 textures, 16 sounds, probe loaded, ~71 MB
+[stadium] crowd dress composed in 6.38 s
+[stadium] crowd dress composed in 6.52 s
+[stadium] crowd dress composed in 6.55 s
+[stadium] crowd dress composed in 6.62 s
+[stadium] crowd dress composed in 6.65 s
+[stadium] crowd dress composed in 6.92 s
+[stadium] crowd dress composed in 6.93 s
+[stadium] crowd dress composed in 6.97 s
+[stadium] crowd: 44982 fans, lod0 16, lod1 40, lod2 180, cards 44746, groups 36
+[stadium] crowd: 686 fans, lod0 0, lod1 0, lod2 0, cards 686, groups 22
+[stadium] lighting beams 14/20, overdraw ≈ 1.96 screens (cap 2.000000)
+[stadium] lighting beams 20/20, overdraw ≈ 1.06 screens (cap 2.000000)
+[stadium] lighting beams 20/20, overdraw ≈ 1.85 screens (cap 2.000000)
+[stadium] lighting beams 24/24, overdraw ≈ 0.96 screens (cap 2.000000)
+[stadium] models: 47

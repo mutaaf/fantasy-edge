@@ -66,6 +66,26 @@ class LightingSky(unittest.TestCase):
         self.assertAlmostEqual(fill["wallRise"][1], lip_top + float(g.group(2)) - 0.16, places=3)
         self.assertLess(fill["opacity"], 0.5, "a fill, not a light source")
 
+    def test_beam_shader_graph_matches_its_tokens(self):
+        """Every beam shader token is an input on the graph's material, the
+        compiled package ships, and the UV-scroll fallback keeps its numbers
+        for clients without the graph."""
+        import re
+        sh = TOKENS["visual"]["lighting"]["beams"]["shader"]
+        self.assertTrue((ROOT / "assets" / sh["file"]).is_file(), "run tools/blender/lighting/shadergraph.py")
+        usda = (ROOT / "tools/blender/lighting/shadergraph/Beams.rkassets/Beams.usda").read_text()
+        self.assertIn(f'def Material "{sh["prim"].rsplit("/", 1)[-1]}"', usda)
+        inputs = set(re.findall(r"^\s+(?:float|color3f) inputs:([A-Z]\w*) =", usda, re.M))
+        for key in ("color", "opacity", "dustRepeat", "dustSpeed", "dustFloor", "dustAmount", "viewPower", "additive"):
+            self.assertIn(key[0].upper() + key[1:], inputs, f"Beams.usda has no input for beams.shader.{key}")
+        for tex in re.findall(r"@([\w.]+\.png)@", usda):
+            self.assertTrue((ROOT / "tools/blender/lighting/shadergraph/Beams.rkassets" / tex).is_file(), tex)
+        self.assertIn("ND_realitykit_viewdirection_vector3", usda, "the view-angle falloff is the point of the graph")
+        self.assertIn(sh["additive"], (0.0, 1.0)) if isinstance(sh["additive"], int) else self.assertTrue(0 <= sh["additive"] <= 1)
+        beams = TOKENS["visual"]["lighting"]["beams"]
+        for key in ("opacity", "dustOpacity", "dustTileYards", "dustScrollPerSecond", "overdrawCapScreens"):
+            self.assertIn(key, beams, f"the UV-scroll fallback needs beams.{key}")
+
     def test_every_lighting_and_sky_file_is_shipped(self):
         for actor in ("lighting", "sky"):
             section = TOKENS["visual"][actor]

@@ -29,6 +29,10 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let winProbability: WinProbability
     public let moments: [Moment]
     public let activeMoment: Moment?
+    /// 1.3: the game's other beats - quarter ends, the two-minute warning,
+    /// red-zone crossings, the final - and the one for this instant.
+    public let cues: [Cue]?
+    public let activeCue: Cue?
     public let bowl: Bowl
     public let presentation: Presentation
     public let palette: [String: String]
@@ -42,7 +46,8 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case version, kind, league, event, source, speed, field, teams, status, ball, lasers, drives
-        case currentDrive, winProbability, moments, activeMoment, bowl, presentation, palette, motion, shaderGraph
+        case currentDrive, winProbability, moments, activeMoment, cues, activeCue, bowl, presentation, palette, motion
+        case shaderGraph
         case replayControl
         /// The contract calls it `visual`; the renderer reads it as its look.
         case look = "visual"
@@ -216,6 +221,21 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let horizon: Horizon
     }
 
+    /// A beat that is not a score or a turnover. `treatment` names the
+    /// entry in `visual.moments.cues`; `id` is stable while the cue holds.
+    public struct Cue: Decodable, Equatable, Sendable {
+        public let kind: String
+        public let id: String
+        public let playId: String?
+        public let side: String?
+        public let detail: String?
+        public let treatment: String
+        public let source: String?
+        public let period: Int?
+        public let clock: String?
+        public let sequence: Int?
+    }
+
     public struct Point: Decodable, Equatable, Sendable {
         public let x: Double
         public let y: Double
@@ -234,10 +254,12 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// 1.1: the scene says whether it celebrates, and where its banner,
         /// light and sound go.
         public let anchor: Point?
+        /// 1.3: interception, fumble, puntReturn, kickReturn, blocked, or nil.
+        public let detail: String?
         private let decidedCelebrates: Bool?
 
         enum CodingKeys: String, CodingKey {
-            case kind, side, team, points, playId, text, period, clock, anchor
+            case kind, side, team, points, playId, text, period, clock, anchor, detail
             case decidedCelebrates = "celebrates"
         }
 
@@ -400,6 +422,17 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let y: Double
         public let z: Double
         public let lookAt: Point
+        /// What the seat picker says about it. Worked out by scene.py so
+        /// every client describes the same seat the same way.
+        public let view: SeatView?
+    }
+
+    public struct SeatView: Decodable, Equatable, Sendable {
+        /// "lower", "upper", "club", "field", "endzone", "pressBox": the picker's groups.
+        public let group: String
+        /// From the nearest edge of the field.
+        public let distanceYards: Double
+        public let heightYards: Double
     }
 
     public struct Tabletop: Decodable, Equatable, Sendable {
@@ -423,7 +456,7 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
             return all.first(where: { $0.id == id })
                 ?? all.first(where: { $0.id == defaultSeat })
                 ?? SeatOption(id: "seat", label: "Seat", x: seat.x, y: seat.y, z: seat.z,
-                              lookAt: Point(x: 50, y: 0, z: 0))
+                              lookAt: Point(x: 50, y: 0, z: 0), view: nil)
         }
     }
 

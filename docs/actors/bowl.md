@@ -92,6 +92,17 @@ The tests in `tests/test_bowl.py` cover:
    - **Far lower bowl greyness:** that was bowl material. Concrete treads and risers show between fans, and the scan read too pale under floods. Treads are now ×0.62 and risers are painted `#4F4D4A`-equivalent.
    - **Budget:** measured stadium bowl is 57.9–60.3k triangles and 15 draw parts; tabletop is 1,352 and 3. Models are 10.6 MB usdz.
 
+7. **Sightlines from every seat** (`lookdev/it12-seat-*`).
+   - **Upper:** the guard wall's cap sits 0.9 yd above the first row, with clear glass above. The line to the near sideline clears it by 0.22 yd (C-value ≈ 20 cm), and the whole field shows.
+   - **End zone:** the slab was the team tunnel. Its header box and glass stood above the deck, which also sat a row high.
+     - The header moved into the mouth, a low steel rail replaces the glass, and `tunnelClear` is 0.25.
+     - The goal line, the field and the new video board are all in view.
+   - **Club and field:** clear.
+   - **`bowl.videoBoard`:** field-x centre `[182.5, 57, 0]`, facing `[-0.99, -0.14, 0]`, size 36 × 13.5 yd, clear of the rim rigs. The bowl builds the frame, truss and legs; Broadcast owns the face.
+   - **Tests:** `BowlSightlines` pins all three.
+   - Lighting's `fill.wallRise[1]` follows the new cap (25.578).
+   - **Budget:** measured stadium bowl is 44.7k triangles and 10 parts (upper preset).
+
 ## Notes for other actors
 
 - **Crowd:** in `bowl-wide`, the upper-deck fans read as vertical stripes, one per section, because the colour mix restarts at each section edge. Seat fans from `bowl.seating` runs with a noise field continuous across sections, so aisles break the rows but not the pattern.

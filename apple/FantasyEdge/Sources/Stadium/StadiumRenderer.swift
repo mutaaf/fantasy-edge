@@ -43,6 +43,10 @@ public final class StadiumRenderer {
     @ObservationIgnored private var pendingReduceMotion = false
     @ObservationIgnored private var lastMoment: String?
     @ObservationIgnored private var lastRedZone = false
+    @ObservationIgnored private var lastCue: String?
+    /// With -stadiumStats, the frame-clock times at which to count again, and
+    /// what to call the count: mid-moment, when particles and cards are live.
+    @ObservationIgnored private var statsDue: [(at: Double, label: String)] = []
 
     public init(mode: Mode) {
         self.mode = mode
@@ -86,6 +90,7 @@ public final class StadiumRenderer {
             build(c)
             staticKey = key
             lastMoment = next.activeMoment?.playId
+            lastCue = next.activeCue?.id
             lastRedZone = next.status.redZone
         }
         for actor in actors { actor.apply(c, previous: previous) }
@@ -167,6 +172,10 @@ public final class StadiumRenderer {
             for actor in actors { actor.moment(.redZoneEntered, c) }
         }
         lastRedZone = s.status.redZone
+        if let cue = s.activeCue, cue.id != lastCue {
+            lastCue = cue.id
+            for actor in actors { actor.moment(.cue(cue), c) }
+        }
         guard let m = s.activeMoment else {
             lastMoment = nil
             return
@@ -174,6 +183,10 @@ public final class StadiumRenderer {
         guard m.playId != lastMoment else { return }
         lastMoment = m.playId
         for actor in actors { actor.moment(.moment(m), c) }
+        if ProcessInfo.processInfo.arguments.contains("-stadiumStats") {
+            let base = c.tabletop ? "tabletop" : "stadium"
+            statsDue += [0.5, 3, 6].map { (c.shared.time + $0, "\(base)@\(m.kind)+\($0)s") }
+        }
     }
 
     // MARK: seats and sound
@@ -202,6 +215,10 @@ public final class StadiumRenderer {
         c.shared.time += dt
         let frame = StadiumFrame(dt: dt, time: c.shared.time)
         for actor in actors { actor.update(frame, c) }
+        while let next = statsDue.first, next.at <= c.shared.time {
+            statsDue.removeFirst()
+            StadiumStats.report(actors, label: next.label, assets: assets)
+        }
     }
 }
 

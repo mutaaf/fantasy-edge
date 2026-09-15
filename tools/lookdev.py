@@ -80,6 +80,26 @@ def pick_six_second() -> int:
     return int(rp.play_seconds(play, lengths))
 
 
+def field_goal_second() -> int:
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    play = next(p for p in rp._all_plays(summary) if "field goal is GOOD" in (p.get("text") or ""))
+    return int(rp.play_seconds(play, lengths))
+
+
+def wait_for_moment(port: int, kind: str, timeout: float = 20.0) -> float:
+    """Poll the replay until the scene's active moment is `kind`; the time it
+    appeared, or now if it never does."""
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        m = get(port, "/api/replay/scene").get("activeMoment") or {}
+        if m.get("kind") == kind:
+            return time.monotonic()
+        time.sleep(0.1)
+    print(f"no {kind} moment within {timeout}s", flush=True)
+    return time.monotonic()
+
+
 def red_zone_second(port: int) -> int:
     for at in range(300, 3600, 45):
         post(port, {"action": "seek", "at": at})
@@ -94,6 +114,28 @@ def simctl(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(["xcrun", "simctl", *args], capture_output=True, text=True, check=check)
 
 
+def app_log(device: str, since: str) -> str:
+    return subprocess.run(["xcrun", "simctl", "spawn", device, "log", "show", "--start", since, "--style", "compact",
+                           "--predicate", 'subsystem == "com.mutaaf.fantasyedge"'],
+                          capture_output=True, text=True).stdout
+
+
+def wait_for_build(device: str, since: str, tabletop: bool, timeout: float) -> float:
+    """Wait until the launched app says its stadium is built (the -stadiumStats
+    totals line) and, in the stadium, that the crowd has dressed. A fixed delay
+    rendered black worlds under load. Returns the seconds waited."""
+    started = time.monotonic()
+    built = "[stadium-stats] tabletop: models" if tabletop else "[stadium-stats] stadium: models"
+    needs = [built] if tabletop else [built, "crowd dress composed"]
+    while time.monotonic() - started < timeout:
+        text = app_log(device, since)
+        if all(n in text for n in needs):
+            return time.monotonic() - started
+        time.sleep(2.0)
+    print(f"  not built after {timeout:.0f}s; shooting anyway", flush=True)
+    return timeout
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--device", required=True)
@@ -102,9 +144,14 @@ def main() -> None:
     ap.add_argument("--app", type=pathlib.Path,
                     default=ROOT / ".work/dd/Build/Products/Debug-xrsimulator/FantasyEdge.app")
     ap.add_argument("--only", nargs="*", choices=sorted(SHOTS))
-    ap.add_argument("--settle", type=float, default=9.0)
+    ap.add_argument("--settle", type=float, default=4.0, help="seconds to let the scene settle once the app says it is built")
+    ap.add_argument("--build-timeout", type=float, default=60.0, help="longest wait for the built signal")
     ap.add_argument("--extra", default="", help="launch arguments after -shot, one quoted string: --extra=\"-stadiumPitch -40\"")
     ap.add_argument("--suffix", default="", help="appended to each shot's file name")
+    ap.add_argument("--moment", default="touchdown", choices=["touchdown", "fieldGoal"],
+                    help="which moment td-moment plays in: the pick-six, or the game's first made field goal")
+    ap.add_argument("--times", default="",
+                    help="comma-separated seconds after the moment appears, one screenshot each (td-moment-t<s>.png)")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -126,7 +173,8 @@ def main() -> None:
         simctl("install", args.device, str(args.app))
         post(args.port, {"action": "load", "event": PICK_SIX})
         post(args.port, {"action": "pause"})
-        positions = {"touchdown": pick_six_second(), "redzone": red_zone_second(args.port)}
+        positions = {"touchdown": field_goal_second() if args.moment == "fieldGoal" else pick_six_second(),
+                     "redzone": red_zone_second(args.port)}
         positions["early"] = positions["redzone"] - 150
         started = time.strftime("%Y-%m-%d %H:%M:%S")
         for name, where in SHOTS.items():
@@ -140,23 +188,34 @@ def main() -> None:
             # motion.momentSeconds, so the shot is taken inside that window.
             post(args.port, {"action": "seek", "at": at - 3 if where == "touchdown" else at})
             post(args.port, {"action": "pause"})
+            launched = time.strftime("%Y-%m-%d %H:%M:%S")
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
                    "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra.split(), check=False)
+            waited = wait_for_build(args.device, launched, name == "tabletop", args.build_timeout)
             time.sleep(args.settle)
+            print(f"  {name}: built after {waited:.0f}s", flush=True)
+            takes = [("", 0.0)]
             if where == "touchdown":
                 post(args.port, {"action": "speed", "speed": 1})
                 post(args.port, {"action": "play"})
-                time.sleep(6.0)
-            shot = args.out / f"{name}{args.suffix}.png"
-            simctl("io", args.device, "screenshot", str(shot), check=False)
-            subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{name}{args.suffix}.png")],
-                           capture_output=True)
-            logs.append(f"{name}: replay at {at}s ({where}) -> {shot}")
-            print(logs[-1], flush=True)
-        stats = subprocess.run(["xcrun", "simctl", "spawn", args.device, "log", "show", "--start", started,
-                                "--style", "compact", "--predicate", 'subsystem == "com.mutaaf.fantasyedge"'],
-                               capture_output=True, text=True).stdout
-        lines = sorted({line[line.index("[stadium"):] for line in stats.splitlines() if "[stadium" in line})
+                if args.times:
+                    fired = wait_for_moment(args.port, args.moment)
+                    takes = [(f"-t{t}", fired + float(t)) for t in args.times.split(",")]
+                else:
+                    time.sleep(6.0)
+            for tag, due in takes:
+                if due:
+                    time.sleep(max(0.0, due - time.monotonic()))
+                shot = args.out / f"{name}{tag}{args.suffix}.png"
+                simctl("io", args.device, "screenshot", str(shot), check=False)
+                subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{shot.name}")],
+                               capture_output=True)
+                logs.append(f"{name}{tag}: replay at {at}s ({where}) -> {shot}")
+                print(logs[-1], flush=True)
+        stats = app_log(args.device, started)
+        # Per-actor draw counts, and which path loaded each Shader Graph material.
+        lines = sorted({line[line.index(tag):] for line in stats.splitlines()
+                        for tag in ("[stadium", "[shadergraph") if tag in line})
         (args.out / "stats.txt").write_text("\n".join(lines) + "\n")
         (args.out / "shots.txt").write_text("\n".join(logs) + "\n")
     finally:

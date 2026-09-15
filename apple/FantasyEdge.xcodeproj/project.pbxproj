@@ -43,11 +43,19 @@
 		28CB916928BBD60346968206 /* Stadium/Actors/Bowl/BowlLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54CC3691735A753E010860E /* Stadium/Actors/Bowl/BowlLook.swift */; };
 		B92A2E3CED484AAAB425BC46 /* Stadium/Actors/Bowl/BowlProcedural.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB1B5C80B8B5EB20CB15D8E0 /* Stadium/Actors/Bowl/BowlProcedural.swift */; };
 		770FCF86FE336604E3721B03 /* Stadium/Actors/Broadcast/BroadcastActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */; };
+		8B057BF25DE4DEE8B380DF37 /* Stadium/Actors/Broadcast/BroadcastBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B01C4D91E2A731888C505CC /* Stadium/Actors/Broadcast/BroadcastBanner.swift */; };
+		D0408C4E50CBDA8F11383BD3 /* Stadium/Actors/Broadcast/BroadcastBoards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 589F8337BF16A4A870795559 /* Stadium/Actors/Broadcast/BroadcastBoards.swift */; };
+		66395EE290FAD8375EA55771 /* Stadium/Actors/Broadcast/BroadcastFlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 412832588D42EC280AE77FAE /* Stadium/Actors/Broadcast/BroadcastFlight.swift */; };
+		C88A13B718B64A3D2378AB47 /* Stadium/Actors/Broadcast/BroadcastHorizon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45CBD27C77B7DD2B358F674 /* Stadium/Actors/Broadcast/BroadcastHorizon.swift */; };
 		51F8A1D857F3B088B1B46DA1 /* Stadium/Actors/Broadcast/BroadcastLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */; };
+		809C5258FE463B69515A3C76 /* Stadium/Actors/Broadcast/BroadcastTrails.swift in Sources */ = {isa = PBXBuildFile; fileRef = E571ADD7BEB5A5FB08D9EE55 /* Stadium/Actors/Broadcast/BroadcastTrails.swift */; };
 		9FBF718B262E1C42E4EB992B /* Stadium/Actors/Crowd/CrowdActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */; };
+		4EF5D83B071F6FA6F48F0494 /* Stadium/Actors/Crowd/CrowdCues.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */; };
 		E3E7FA03681625C04AD02F85 /* Stadium/Actors/Crowd/CrowdLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */; };
 		634917B7DE6B870E928A434D /* Stadium/Actors/Experience/ExperienceActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */; };
 		B6FD6962EC9352499B7EB2E4 /* Stadium/Actors/Experience/ExperienceLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */; };
+		7F9BAA51D67FCE3A4833863F /* Stadium/Actors/Experience/ExperienceUX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F5F9CC88B2367A659E1A88 /* Stadium/Actors/Experience/ExperienceUX.swift */; };
+		A2B70FB8B399C51F0389F1D7 /* Stadium/Actors/Experience/StadiumChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF68F1849CB902840BD6F033 /* Stadium/Actors/Experience/StadiumChrome.swift */; };
 		22C4DEE4068B4C918C400C08 /* Stadium/Actors/Experience/StadiumShots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1032D9EA3D456FDA8E0889BB /* Stadium/Actors/Experience/StadiumShots.swift */; };
 		A584E86041AF986618736DD9 /* Stadium/Actors/Experience/StadiumViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448251F159537D31500A0AA5 /* Stadium/Actors/Experience/StadiumViews.swift */; };
 		D342577DBEB7F55F0386D036 /* Stadium/Actors/Field/FieldActor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCCE22529BF89D888E64FC8 /* Stadium/Actors/Field/FieldActor.swift */; };
@@ -118,11 +126,19 @@
 		B54CC3691735A753E010860E /* Stadium/Actors/Bowl/BowlLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Bowl/BowlLook.swift; sourceTree = "<group>"; };
 		DB1B5C80B8B5EB20CB15D8E0 /* Stadium/Actors/Bowl/BowlProcedural.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Bowl/BowlProcedural.swift; sourceTree = "<group>"; };
 		84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastActor.swift; sourceTree = "<group>"; };
+		1B01C4D91E2A731888C505CC /* Stadium/Actors/Broadcast/BroadcastBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastBanner.swift; sourceTree = "<group>"; };
+		589F8337BF16A4A870795559 /* Stadium/Actors/Broadcast/BroadcastBoards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastBoards.swift; sourceTree = "<group>"; };
+		412832588D42EC280AE77FAE /* Stadium/Actors/Broadcast/BroadcastFlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastFlight.swift; sourceTree = "<group>"; };
+		C45CBD27C77B7DD2B358F674 /* Stadium/Actors/Broadcast/BroadcastHorizon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastHorizon.swift; sourceTree = "<group>"; };
 		0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastLook.swift; sourceTree = "<group>"; };
+		E571ADD7BEB5A5FB08D9EE55 /* Stadium/Actors/Broadcast/BroadcastTrails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Broadcast/BroadcastTrails.swift; sourceTree = "<group>"; };
 		A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdActor.swift; sourceTree = "<group>"; };
+		2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdCues.swift; sourceTree = "<group>"; };
 		AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Crowd/CrowdLook.swift; sourceTree = "<group>"; };
 		EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/ExperienceActor.swift; sourceTree = "<group>"; };
 		A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/ExperienceLook.swift; sourceTree = "<group>"; };
+		76F5F9CC88B2367A659E1A88 /* Stadium/Actors/Experience/ExperienceUX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/ExperienceUX.swift; sourceTree = "<group>"; };
+		DF68F1849CB902840BD6F033 /* Stadium/Actors/Experience/StadiumChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/StadiumChrome.swift; sourceTree = "<group>"; };
 		1032D9EA3D456FDA8E0889BB /* Stadium/Actors/Experience/StadiumShots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/StadiumShots.swift; sourceTree = "<group>"; };
 		448251F159537D31500A0AA5 /* Stadium/Actors/Experience/StadiumViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Experience/StadiumViews.swift; sourceTree = "<group>"; };
 		5DCCE22529BF89D888E64FC8 /* Stadium/Actors/Field/FieldActor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stadium/Actors/Field/FieldActor.swift; sourceTree = "<group>"; };
@@ -212,11 +228,19 @@
 				B54CC3691735A753E010860E /* Stadium/Actors/Bowl/BowlLook.swift */,
 				DB1B5C80B8B5EB20CB15D8E0 /* Stadium/Actors/Bowl/BowlProcedural.swift */,
 				84CD8448CC8F64B7A1F6A3B8 /* Stadium/Actors/Broadcast/BroadcastActor.swift */,
+				1B01C4D91E2A731888C505CC /* Stadium/Actors/Broadcast/BroadcastBanner.swift */,
+				589F8337BF16A4A870795559 /* Stadium/Actors/Broadcast/BroadcastBoards.swift */,
+				412832588D42EC280AE77FAE /* Stadium/Actors/Broadcast/BroadcastFlight.swift */,
+				C45CBD27C77B7DD2B358F674 /* Stadium/Actors/Broadcast/BroadcastHorizon.swift */,
 				0E8C36C31C645B9BA12C4EB5 /* Stadium/Actors/Broadcast/BroadcastLook.swift */,
+				E571ADD7BEB5A5FB08D9EE55 /* Stadium/Actors/Broadcast/BroadcastTrails.swift */,
 				A14D1FC5BED4167BA9705836 /* Stadium/Actors/Crowd/CrowdActor.swift */,
+				2108153B5FEDEB286A28DEE1 /* Stadium/Actors/Crowd/CrowdCues.swift */,
 				AD28FD0BDA0E1E666C1E16F0 /* Stadium/Actors/Crowd/CrowdLook.swift */,
 				EDE24D4E74701F7496CB279E /* Stadium/Actors/Experience/ExperienceActor.swift */,
 				A3B8BE0C7762DFEDF5F6476A /* Stadium/Actors/Experience/ExperienceLook.swift */,
+				76F5F9CC88B2367A659E1A88 /* Stadium/Actors/Experience/ExperienceUX.swift */,
+				DF68F1849CB902840BD6F033 /* Stadium/Actors/Experience/StadiumChrome.swift */,
 				1032D9EA3D456FDA8E0889BB /* Stadium/Actors/Experience/StadiumShots.swift */,
 				448251F159537D31500A0AA5 /* Stadium/Actors/Experience/StadiumViews.swift */,
 				5DCCE22529BF89D888E64FC8 /* Stadium/Actors/Field/FieldActor.swift */,
@@ -353,11 +377,19 @@
 				28CB916928BBD60346968206 /* Stadium/Actors/Bowl/BowlLook.swift in Sources */,
 				B92A2E3CED484AAAB425BC46 /* Stadium/Actors/Bowl/BowlProcedural.swift in Sources */,
 				770FCF86FE336604E3721B03 /* Stadium/Actors/Broadcast/BroadcastActor.swift in Sources */,
+				8B057BF25DE4DEE8B380DF37 /* Stadium/Actors/Broadcast/BroadcastBanner.swift in Sources */,
+				D0408C4E50CBDA8F11383BD3 /* Stadium/Actors/Broadcast/BroadcastBoards.swift in Sources */,
+				66395EE290FAD8375EA55771 /* Stadium/Actors/Broadcast/BroadcastFlight.swift in Sources */,
+				C88A13B718B64A3D2378AB47 /* Stadium/Actors/Broadcast/BroadcastHorizon.swift in Sources */,
 				51F8A1D857F3B088B1B46DA1 /* Stadium/Actors/Broadcast/BroadcastLook.swift in Sources */,
+				809C5258FE463B69515A3C76 /* Stadium/Actors/Broadcast/BroadcastTrails.swift in Sources */,
 				9FBF718B262E1C42E4EB992B /* Stadium/Actors/Crowd/CrowdActor.swift in Sources */,
+				4EF5D83B071F6FA6F48F0494 /* Stadium/Actors/Crowd/CrowdCues.swift in Sources */,
 				E3E7FA03681625C04AD02F85 /* Stadium/Actors/Crowd/CrowdLook.swift in Sources */,
 				634917B7DE6B870E928A434D /* Stadium/Actors/Experience/ExperienceActor.swift in Sources */,
 				B6FD6962EC9352499B7EB2E4 /* Stadium/Actors/Experience/ExperienceLook.swift in Sources */,
+				7F9BAA51D67FCE3A4833863F /* Stadium/Actors/Experience/ExperienceUX.swift in Sources */,
+				A2B70FB8B399C51F0389F1D7 /* Stadium/Actors/Experience/StadiumChrome.swift in Sources */,
 				22C4DEE4068B4C918C400C08 /* Stadium/Actors/Experience/StadiumShots.swift in Sources */,
 				A584E86041AF986618736DD9 /* Stadium/Actors/Experience/StadiumViews.swift in Sources */,
 				D342577DBEB7F55F0386D036 /* Stadium/Actors/Field/FieldActor.swift in Sources */,
