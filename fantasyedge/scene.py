@@ -494,32 +494,55 @@ def _tier_height(name: str, offset: float) -> float:
 
 
 def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: float,
-          look_at=(50.0, 0.0, 0.0)) -> dict:
+          look_at=(50.0, 0.0, 0.0), floor: float | None = None, group: str = "sideline") -> dict:
     """A place to sit: the floor under the wearer, in field yards, and the
     point the seat faces. Heights come from the bowl, so a seat is always on a
-    row rather than floating in front of one."""
-    y = _tier_height(tier, offset) if tier else 0.0
+    row rather than floating in front of one; `floor` is for the one seat that
+    is not on a tier, the press box.
+
+    `view` is what a seat picker shows before you move: how far the nearest
+    edge of the playing surface (end zones included) is, how high the floor is,
+    and which part of the ground it is in. Worked out here so every client says
+    the same thing about the same seat."""
+    y = floor if floor is not None else (_tier_height(tier, offset) if tier else 0.0)
+    dx = max(-10.0 - x, 0.0, x - 110.0)
+    dz = max(abs(z) - 80 / 3, 0.0)
     return {"id": sid, "label": label, "x": x, "y": y, "z": round(z, 3),
-            "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]}}
+            "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]},
+            "view": {"group": group, "distanceYards": round((dx * dx + dz * dz) ** 0.5, 1),
+                     "heightYards": round(y, 1)}}
 
 
 # ── experience ──
 
 HALF_WIDTH = 80 / 3
 SEATS = [
+    # The first four ids are the look-dev shots' seats; keep them.
     _seat("club", "50-yard line, lower bowl", 50.0, HALF_WIDTH + 24.0, "lower", 24.0),
-    _seat("field", "Field level, home sideline", 50.0, HALF_WIDTH + 4.5, None, 0.0),
-    _seat("endzone", "Behind the home end zone", -24.0, 0.0, "lower", 14.0),
-    _seat("upper", "Upper deck, midfield", 50.0, HALF_WIDTH + 50.0, "upper", 50.0),
+    _seat("field", "Field level, home sideline", 50.0, HALF_WIDTH + 4.5, None, 0.0, group="field"),
+    _seat("endzone", "Behind the home end zone", -24.0, 0.0, "lower", 14.0, group="endzone"),
+    _seat("upper", "Upper deck, midfield", 50.0, HALF_WIDTH + 50.0, "upper", 50.0, group="upper"),
+    _seat("sideline", "Lower bowl, home 30", 30.0, HALF_WIDTH + 12.0, "lower", 12.0),
+    # The last rows of the lower bowl, under the upper deck's overhang: the
+    # club seats of a real ground.
+    _seat("clubLevel", "Club level, midfield", 50.0, HALF_WIDTH + 34.0, "lower", 34.0, group="club"),
+    # On the far side, level with the press box glass, looking across.
+    _seat("pressBox", "Press box, far side", 50.0, -(HALF_WIDTH + BOWL["pressBox"]["offset"] + 1.0), None, 0.0,
+          floor=BOWL["pressBox"]["rise"][0], group="press"),
 ]
 
 PRESENTATION = {
-    # The lower bowl reaches 36 yards past the end line, so the tabletop is
-    # sized for the bowl rather than the field: 96 yards either side of
-    # midfield at 4.5 mm is 0.86 m, inside a 0.9 m volume. Sized for the field
-    # alone, the bowl came out 1.28 m across and was clipped by the volume.
-    "tabletop": {"metersPerYard": 0.0045, "volume": [0.9, 0.4, 0.6],
-                 "floor": -0.18, "bowlTiers": ["lower"]},
+    # The table model is sized for the whole two-deck bowl on its plinth, not
+    # the lower bowl alone, which read as a shallow dish: the plinth reaches
+    # (70 + 3) * 1.03 + a 2.4 yard bevel = 77.6 yards past the field, so the
+    # model is 275 yards long and 209 deep. At 4 mm a yard that is
+    # 1.10 x 0.83 m on a 1.12 x 0.45 x 0.86 m volume, and the field is 0.48 m.
+    # Shrinking to fit 0.9 m instead (3.3 mm) left a 0.40 m field; keeping
+    # 4.5 mm needed a 1.25 m volume, wider than the table it sits on.
+    # bowlTiers stays lower-only until Bowl's table model carries the upper
+    # deck; tests/test_experience.py already holds both decks to the volume.
+    "tabletop": {"metersPerYard": 0.004, "volume": [1.12, 0.45, 0.86],
+                 "floor": -0.2, "bowlTiers": ["lower"]},
     # `seat` is the default of `seats`, kept so a 1.0 renderer still sits down.
     "stadium": {"metersPerYard": 0.9144,
                 "seat": {k: SEATS[0][k] for k in ("x", "y", "z")},

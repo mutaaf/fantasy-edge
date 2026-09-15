@@ -78,6 +78,11 @@ final class ExperienceActor: StadiumActor {
             stage.scale = SIMD3(repeating: Float(t.metersPerYard))
             stage.position = SIMD3(0, Float(t.floor), 0)
             stage.orientation = simd_quatf(angle: 0, axis: SIMD3(0, 1, 0))
+            // The model sits on the table, not over it.
+            if c.look.experience.baseplate.groundingShadow == true,
+               !stage.components.has(GroundingShadowComponent.self) {
+                stage.components.set(GroundingShadowComponent(castsShadow: true))
+            }
             c.shared.seat = nil
         } else {
             let st = s.presentation.stadium
@@ -91,32 +96,54 @@ final class ExperienceActor: StadiumActor {
         }
     }
 
-    /// The table model's plinth: dark glossy stone under the bowl, a lit rim.
+    /// The table model's plinth: dark glossy stone under the bowl, a bevelled
+    /// edge that catches the room's light, a lit rim, and under the bevel a
+    /// thin edge light in each club's colour, home along the home half.
     private func buildBaseplate(_ c: StadiumContext) {
         let s = c.spec, P = c.look.experience.baseplate
         let shape = s.bowl.shape
         let outer = ((c.tiers.last?.outer ?? 36) + 3) * P.marginScale
+        let bevel = P.bevelYards ?? 0
         let yards = Float(P.thicknessMeters / max(1e-6, s.presentation.tabletop.metersPerYard))
         let S = 96
-        var top = MeshBuilder(), band = MeshBuilder()
-        var rim: [SIMD3<Float>] = []
+        var top = MeshBuilder(), band = MeshBuilder(), chamfer = MeshBuilder()
+        var rim: [SIMD3<Float>] = [], homeEdge: [SIMD3<Float>] = [], awayEdge: [SIMD3<Float>] = []
+        let y = Float(-0.05), drop = Float(bevel) * 0.5
         for k in 0..<S {
             let t0 = Double(k) / Double(S) * 2 * .pi, t1 = Double(k + 1) / Double(S) * 2 * .pi
             let a = SceneMath.bowlPoint(shape, offset: outer, angle: t0), b = SceneMath.bowlPoint(shape, offset: outer, angle: t1)
-            let y = Float(-0.05)
+            let A = SceneMath.bowlPoint(shape, offset: outer + bevel, angle: t0)
+            let B = SceneMath.bowlPoint(shape, offset: outer + bevel, angle: t1)
             top.quad(SIMD3(0, y, 0), SIMD3(Float(b.x), y, Float(b.z)), SIMD3(Float(a.x), y, Float(a.z)), SIMD3(0, y, 0),
                      normal: SIMD3(0, 1, 0))
-            band.quad(SIMD3(Float(a.x), y - yards, Float(a.z)), SIMD3(Float(b.x), y - yards, Float(b.z)),
-                      SIMD3(Float(b.x), y, Float(b.z)), SIMD3(Float(a.x), y, Float(a.z)))
+            if bevel > 0 {
+                chamfer.quad(SIMD3(Float(a.x), y, Float(a.z)), SIMD3(Float(b.x), y, Float(b.z)),
+                             SIMD3(Float(B.x), y - drop, Float(B.z)), SIMD3(Float(A.x), y - drop, Float(A.z)))
+            }
+            band.quad(SIMD3(Float(A.x), y - drop - yards, Float(A.z)), SIMD3(Float(B.x), y - drop - yards, Float(B.z)),
+                      SIMD3(Float(B.x), y - drop, Float(B.z)), SIMD3(Float(A.x), y - drop, Float(A.z)))
             rim.append(SIMD3(Float(a.x), y + 0.05, Float(a.z)))
+            // The home sideline is +z; its half of the edge takes the home colour.
+            let edge = SIMD3(Float(A.x), y - drop - yards * 0.5, Float(A.z))
+            if A.z >= 0 { homeEdge.append(edge) } else { awayEdge.append(edge) }
         }
         rim.append(rim[0])
         let stone = s.palette["baseplate"] ?? "#101216"
         root.addChild(top.entity("baseplate.top", StadiumLook.solid(stone, roughness: 0.28, metallic: 0.55, cull: false)))
         root.addChild(band.entity("baseplate.band", StadiumLook.solid(stone, roughness: 0.4, metallic: 0.6, cull: false)))
+        if !chamfer.isEmpty {
+            root.addChild(chamfer.entity("baseplate.bevel", StadiumLook.solid(stone, roughness: 0.18, metallic: 0.75, cull: false)))
+        }
         var ring = MeshBuilder()
         ring.tube(rim, radius: Float(P.rimRadiusYards), sides: 6)
         root.addChild(ring.entity("baseplate.rim", StadiumLook.glow(s.palette["baseplate.rim"] ?? "#FFE9C2",
                                                                     opacity: P.rimOpacity, texture: nil)))
+        if let opacity = P.edgeOpacity {
+            for (pts, team) in [(homeEdge, s.teams.home), (awayEdge, s.teams.away)] where pts.count > 1 {
+                var edge = MeshBuilder()
+                edge.tube(pts, radius: Float(P.rimRadiusYards) * 0.7, sides: 6)
+                root.addChild(edge.entity("baseplate.edge.\(team.abbr)", StadiumLook.glow(team.chip, opacity: opacity, texture: nil)))
+            }
+        }
     }
 }
