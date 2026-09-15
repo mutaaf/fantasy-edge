@@ -88,6 +88,7 @@ class CrowdKitTest(unittest.TestCase):
             self.assertEqual({f[axis] for f in cast}, set(pool), f"every {axis} appears")
         self.assertGreaterEqual(sum(f["scarf"] for f in cast), 3)
         self.assertLessEqual(sum(f["accessory"] == "sign" for f in cast), 2, "signs are rare in a real stand")
+        self.assertLessEqual(sum(f["accessory"] == "towel" for f in cast), 2, "a stand of towels reads as flags")
 
 
 if __name__ == "__main__":

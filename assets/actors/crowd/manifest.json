@@ -198,7 +198,7 @@
    },
    "lod2": {
     "mesh": "fan01_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.16867,
@@ -506,11 +506,11 @@
    },
    "lod1": {
     "mesh": "fan05_lod1",
-    "triangles": 648
+    "triangles": 649
    },
    "lod2": {
     "mesh": "fan05_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.83533,
@@ -1120,7 +1120,7 @@
    "club": false,
    "hat": "cap",
    "hair": "buzz",
-   "accessory": "towel",
+   "accessory": "none",
    "paint": "none",
    "model": "fan13.usdz",
    "gltf": "fan13.glb",
@@ -1432,7 +1432,7 @@
    "club": false,
    "hat": "cap_back",
    "hair": "bald",
-   "accessory": "towel",
+   "accessory": "phone",
    "paint": "none",
    "model": "fan17.usdz",
    "gltf": "fan17.glb",
@@ -1442,7 +1442,7 @@
    },
    "lod1": {
     "mesh": "fan17_lod1",
-    "triangles": 650
+    "triangles": 648
    },
    "lod2": {
     "mesh": "fan17_lod2",
@@ -1680,7 +1680,7 @@
    },
    "lod2": {
     "mesh": "fan20_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.33533,
@@ -1900,7 +1900,7 @@
    "club": true,
    "hat": "cap_back",
    "hair": "bald",
-   "accessory": "towel",
+   "accessory": "none",
    "paint": "stripes",
    "model": "fan23.usdz",
    "gltf": "fan23.glb",

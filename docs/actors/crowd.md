@@ -99,4 +99,37 @@ Review renders: `assets/actors/crowd/review/lineup_*.png`, `poses_*.png`.
 
 - **Changes:** full-size mask, LOD1 at 650 triangles (ring capped at 55),
   cream dropped from the neutrals, secondary darkened to `#CFCBC2`.
-- **Shots:** iteration 6 adds `tabletop` to the shot list.
+- **Result:** 114k triangles, 34 parts. The palette settles.
+- **Gap:** the white wedges survived the full-size mask. They follow
+  decimated triangles, so the real cause is baking colour after decimation.
+- **`td-moment`:** black. The stadium hadn't built before capture; the
+  director has since fixed the harness.
+
+### Iteration 7: `crowd-iter7/`
+
+- **Fixes:**
+  - Albedo and mask bake from a full-resolution copy onto the low-poly UVs
+    (selected to active). `kit_review.py` renders the shipped glTF with the
+    runtime's tint, so a leak shows without a simulator.
+  - The scoring side celebrates for as long as `bowl.sectionTint` names it:
+    peak poses while Moments surges, then a half-pace stand/cheer/clap
+    cycle. The other side sinks into its seats, and a few groan.
+- **Result:** wedges gone, and `td-moment` reads as a stand on its feet.
+- **Gap:** the blocky near fans are cards drawn close. About 400 seats sit
+  within 12 yd of a club seat, and the mesh caps ran out at about 5 yd.
+
+### Iteration 8: `crowd-iter8/`
+
+- **Budget:** raised to 150k with the director's approval, since Bowl seats
+  52k where the old budget assumed 32k.
+- **Fixes:**
+  - LOD2 pose meshes at 250 triangles for the 7–13 yd ring.
+  - Rings dithered ±1.6 yd per fan, so a ring edge is a ragged band.
+  - Towels wear the secondary and shrink.
+- **Measured, club seat:** 151.1k triangles, 36 parts (16 LOD0, 40 LOD1, 190
+  LOD2, 51,793 cards). Over by 1k, so `lod2Max` drops to 180. Tabletop: 734
+  triangles, 22 parts, cards only.
+- **Result:** every fan within reach of a club seat is a lit mesh.
+- **Gap:** five towels raised at once read as rigid flags, so towels are
+  capped at two fans.
+- **Upper-deck and ring-boundary shots:** queued for a simulator slot.

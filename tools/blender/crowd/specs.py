@@ -101,6 +101,10 @@ def cast(seed: int = SEED, count: int = COUNT) -> list[dict]:
     signs = [f for f in fans if f["accessory"] == "sign"]
     for n, f in enumerate(signs[2:]):
         f["accessory"] = "phone" if n % 2 == 0 else "none"
+    # Towels too: raised in a celebration five rigid towels filled the foreground.
+    towels = [f for f in fans if f["accessory"] == "towel"]
+    for n, f in enumerate(towels[2:]):
+        f["accessory"] = "none" if n % 2 == 0 else "phone"
     return fans
 
 
