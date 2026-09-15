@@ -108,14 +108,15 @@ final class BroadcastActor: StadiumActor {
             let w = Float(look.broadcast.beacon.width.value(tabletop: tabletop))
             let colour = s.palette[b.beacon.color] ?? "#BFE3FF"
             let material = StadiumLook.glow(colour, opacity: look.broadcast.beacon.opacity, texture: c.assets.texture("broadcast.beam"))
+            // Two crossed cards in one mesh: one draw part, not two.
+            var q = MeshBuilder()
             for k in 0..<2 {
-                var q = MeshBuilder()
                 let a = Float(k) * .pi / 2
                 let side = SIMD3(cos(a), 0, sin(a)) * (w / 2)
                 let top = SIMD3<Float>(0, Float(height), 0)
                 q.quad(-side, side, side + top, -side + top, uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1)))
-                beacon.addChild(q.entity("beacon.\(k)", material))
             }
+            beacon.addChild(q.entity("beacon", material))
         }
         beacon.isEnabled = true
         move(beacon, to: SceneMath.local(x: b.x, y: 0, z: b.z), duration: duration)
@@ -141,9 +142,10 @@ final class BroadcastActor: StadiumActor {
         let colour = s.palette[laser.color] ?? "#FFD400"
         let half = s.field.width / 2
         let tex = c.assets.texture("broadcast.line")
-        var core = MeshBuilder(), glow = MeshBuilder()
+        // No glow strip under it: a painted line does not glow, and at 10%
+        // it cost a draw part per line for nothing anyone could see.
+        var core = MeshBuilder()
         core.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.width, y: 0, tile: 2)
-        glow.stripe(from: SIMD2(50, -half), to: SIMD2(50, half), width: look.glowWidth, y: -0.002, tile: 2)
         var paint = UnlitMaterial(applyPostProcessToneMap: false)
         if let tex {
             let t = StadiumLook.repeating(tex)
@@ -155,11 +157,8 @@ final class BroadcastActor: StadiumActor {
         }
         paint.writesDepth = false
         paint.faceCulling = .none
-        let g = glow.entity("line.glow", StadiumLook.glow(colour, opacity: look.glowOpacity, texture: tex, tile: true))
         let p = core.entity("line.paint", paint)
-        StadiumLook.ground(g, order: 4)
         StadiumLook.ground(p, order: 5)
-        holder.addChild(g)
         holder.addChild(p)
         lines.addChild(holder)
         return holder

@@ -75,52 +75,85 @@ final class BroadcastTrails {
     }
 
     /// Everything again - after a seat change the strips must face the new eye.
+    ///
+    /// The newest `age.individual` plays are drawn one by one, each in its
+    /// style's colour and faded by its age. Everything older is merged into a
+    /// single ghost in `age.historyColor`: two draw parts for the whole back
+    /// of the drive rather than two per play, which a fifteen-play drive would
+    /// otherwise spend past the actor's budget.
     func rebuild(_ c: StadiumContext) {
         for e in entities.values { e.removeFromParent() }
         entities.removeAll()
+        let look = c.look.broadcast.trail
+        var historyCore = MeshBuilder(), historyHalo = MeshBuilder()
         for (index, id) in order.enumerated() {
             guard let arc = arcs[id] else { continue }
             let age = order.count - 1 - index
-            let e = build(arc, age: age, c)
-            entities[id] = e
-            root.addChild(e)
+            let g = geometry(arc, age: age, c)
+            if age < max(1, look.age.individual) {
+                let e = entity(arc, geometry: g, c)
+                entities[id] = e
+                root.addChild(e)
+            } else {
+                historyCore.append(g.core)
+                historyHalo.append(g.halo)
+            }
+        }
+        if !historyCore.isEmpty {
+            let colour = c.spec.palette[look.age.historyColor] ?? "#C9CCD1"
+            let holder = Entity()
+            holder.name = "trail.history"
+            holder.addChild(historyHalo.entity("trail.history.halo",
+                StadiumLook.glow(colour, opacity: look.haloOpacity * look.age.historyOpacity, texture: c.assets.texture("broadcast.trailHalo"))))
+            holder.addChild(historyCore.entity("trail.history.core",
+                StadiumLook.glow(colour, opacity: look.coreOpacity * look.age.historyOpacity, texture: c.assets.texture("broadcast.trailCore"))))
+            entities["history"] = holder
+            root.addChild(holder)
         }
     }
 
-    private func build(_ arc: SceneSpec.Arc, age: Int, _ c: StadiumContext) -> Entity {
-        let s = c.spec, look = c.look.broadcast.trail
-        let colour = s.palette[arc.color] ?? "#FFFFFF"
-        let emphasis = arc.style == "score"
+    private struct Geometry {
+        var core = MeshBuilder()
+        var halo = MeshBuilder()
+        var fade: Double = 1
+        var emphasis = false
+    }
+
+    private func geometry(_ arc: SceneSpec.Arc, age: Int, _ c: StadiumContext) -> Geometry {
+        let look = c.look.broadcast.trail
+        var g = Geometry()
+        g.emphasis = arc.style == "score"
         var width = look.core.value(tabletop: c.tabletop)
         if let seat = c.shared.seat, !c.tabletop {
             width *= SceneMath.nearSeatScale(SceneMath.samples(arc, count: 32), seat: seat, rule: look.nearSeat)
         }
         let a = Double(age)
-        let fade = age == 0 ? 1 : max(look.age.minOpacity, pow(look.age.decay, a))
+        g.fade = age == 0 ? 1 : max(look.age.minOpacity, pow(look.age.decay, a))
         width *= age == 0 ? 1 : max(look.age.minScale, pow(look.age.thin, a))
-        let core = Float(width * (emphasis ? look.scoreEmphasis.core : 1))
-        let halo = Float(width * look.haloScale * (emphasis ? look.scoreEmphasis.halo : 1))
-
+        let core = Float(width * (g.emphasis ? look.scoreEmphasis.core : 1))
+        let halo = Float(width * look.haloScale * (g.emphasis ? look.scoreEmphasis.halo : 1))
         let view = Self.view(c)
-        var coreB = MeshBuilder(), haloB = MeshBuilder()
         let pieces = SceneMath.dashes(arc, count: 72)
         let total = Float(pieces.count)
         for (i, piece) in pieces.enumerated() {
             let lo = pieces.count == 1 ? 0 : Float(i) / total
             let hi = pieces.count == 1 ? 1 : Float(i + 1) / total
-            coreB.facingStrip(piece, halfWidth: core / 2, view: view, uRange: lo...hi)
+            g.core.facingStrip(piece, halfWidth: core / 2, view: view, uRange: lo...hi)
         }
-        haloB.facingStrip(SceneMath.samples(arc, count: 72), halfWidth: halo / 2, view: view)
+        g.halo.facingStrip(SceneMath.samples(arc, count: 72), halfWidth: halo / 2, view: view)
+        return g
+    }
 
+    private func entity(_ arc: SceneSpec.Arc, geometry g: Geometry, _ c: StadiumContext) -> Entity {
+        let look = c.look.broadcast.trail
+        let colour = c.spec.palette[arc.color] ?? "#FFFFFF"
         let holder = Entity()
         holder.name = "trail.\(arc.id)"
-        let assets = c.assets
-        let haloE = haloB.entity("trail.halo", StadiumLook.glow(colour, opacity: look.haloOpacity * fade * (emphasis ? look.scoreEmphasis.halo : 1),
-                                                                texture: assets.texture("broadcast.trailHalo")))
-        let coreE = coreB.entity("trail.core", StadiumLook.glow(colour, opacity: look.coreOpacity * fade,
-                                                                texture: assets.texture("broadcast.trailCore")))
-        holder.addChild(haloE)
-        holder.addChild(coreE)
+        holder.addChild(g.halo.entity("trail.halo",
+            StadiumLook.glow(colour, opacity: look.haloOpacity * g.fade * (g.emphasis ? look.scoreEmphasis.halo : 1),
+                             texture: c.assets.texture("broadcast.trailHalo"))))
+        holder.addChild(g.core.entity("trail.core",
+            StadiumLook.glow(colour, opacity: look.coreOpacity * g.fade, texture: c.assets.texture("broadcast.trailCore"))))
         return holder
     }
 

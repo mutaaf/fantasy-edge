@@ -28,6 +28,9 @@ extension SceneSpec.Look {
         public let minOpacity: Double
         public let thin: Double
         public let minScale: Double
+        public let individual: Int
+        public let historyColor: String
+        public let historyOpacity: Double
     }
 
     public struct Trail: Decodable, Equatable, Sendable {
@@ -96,8 +99,6 @@ extension SceneSpec.Look {
     public struct LaserLook: Decodable, Equatable, Sendable {
         public let width: Double
         public let opacity: Double
-        public let glowWidth: Double
-        public let glowOpacity: Double
         public let lift: Double
         public let texture: LineTexture
         public let tag: LineTag
