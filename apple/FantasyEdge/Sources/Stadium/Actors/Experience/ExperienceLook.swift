@@ -68,10 +68,45 @@ extension SceneSpec.Look {
         public let hint: Slot
     }
 
+    /// A panel's place from one seat, worked out by scene.py's seat_panels():
+    /// off the field's silhouette where the comfort limits allow, else folded.
+    public struct PanelSlot: Decodable, Equatable, Sendable {
+        public let yaw: Double
+        public let distance: Double
+        public let height: Double
+        public let folded: Bool
+
+        public var slot: Slot { Slot(yaw: yaw, distance: distance, height: height) }
+    }
+
+    public struct SeatPanels: Decodable, Equatable, Sendable {
+        public let drive: PanelSlot
+        public let trailing: PanelSlot
+        public let controls: PanelSlot
+        /// The video board carries the score from this seat; the glass scorebug yields.
+        public let scorebugHidden: Bool
+    }
+
+    /// A panel's footprint contract: exactly this wide, at most this tall.
+    public struct PanelSize: Decodable, Equatable, Sendable {
+        public let widthPoints: Double
+        public let maxHeightPoints: Double
+    }
+
+    public struct PanelSizes: Decodable, Equatable, Sendable {
+        public let drive: PanelSize
+        public let trailing: PanelSize
+        public let controls: PanelSize
+        public let tab: PanelSize
+    }
+
     public struct Layout: Decodable, Equatable, Sendable {
         public let maxSideDegrees: Double
         public let maxBelowDegrees: Double
         public let slots: Slots
+        /// Present on scenes that work panels out per seat; absent, the slots stand.
+        public let perSeat: [String: SeatPanels]?
+        public let panelSizes: PanelSizes?
         public let restOpacity: Double
         public let hoverOpacity: Double
     }

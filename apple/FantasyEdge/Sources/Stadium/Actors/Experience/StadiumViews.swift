@@ -512,6 +512,9 @@ public struct StadiumSpaceView<Trailing: View>: View {
     @State private var hintShown = false
     @State private var arrived = false
     @State private var beforeMoment: (drive: Bool, trailing: Bool, controls: Bool)?
+    /// Which seat the panels were last placed for. A reference, so moving
+    /// them from `update` never writes view state mid-update.
+    @State private var placer = SeatPlacement()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `look` is (yaw, pitch) in degrees, zero outside debug captures.
@@ -589,9 +592,14 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 content.add(head)
             }
         } update: { _, attachments in
-            if let spec = feed.spec { renderer.apply(spec, reduceMotion: reduceMotion) }
+            if let spec = feed.spec {
+                renderer.apply(spec, reduceMotion: reduceMotion)
+                placeForSeat(renderer.seat(spec).id, attachments)
+            }
             let reading = feed.spec != nil
-            attachments.entity(for: "scorebug")?.isEnabled = reading
+            let seatID = feed.spec.map { renderer.seat($0).id }
+            let boardHasScore = seatID.flatMap { layout?.perSeat?[$0]?.scorebugHidden } ?? false
+            attachments.entity(for: "scorebug")?.isEnabled = reading && !boardHasScore
             attachments.entity(for: "drive")?.isEnabled = reading
             attachments.entity(for: "trailing")?.isEnabled = reading && trailingTitle != nil
             attachments.entity(for: "status")?.isEnabled = !reading
@@ -608,13 +616,19 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 if let spec = feed.spec {
                     FoldablePanel(title: "Drive", symbol: "list.bullet", folded: $driveFolded, yielding: yielding) {
                         DriveLog(spec: spec)
+                            .frame(maxHeight: layout?.panelSizes.map { CGFloat($0.drive.maxHeightPoints) }, alignment: .top)
+                            .clipped()
                     }
                     .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
                 }
             }
             Attachment(id: "trailing") {
                 FoldablePanel(title: trailingTitle ?? "More", symbol: "sportscourt", folded: $trailingFolded,
-                              yielding: yielding) { trailing }
+                              yielding: yielding) {
+                    trailing
+                        .frame(maxHeight: layout?.panelSizes.map { CGFloat($0.trailing.maxHeightPoints) }, alignment: .top)
+                        .clipped()
+                }
                     .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
             }
             Attachment(id: "controls") {
@@ -682,6 +696,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 driveFolded = folded.drive
                 trailingFolded = folded.trailing
             }
+            applySeatFolds(renderer.seat(spec).id)
             #if DEBUG
             if ProcessInfo.processInfo.arguments.contains("-stadiumPicker") { pickerOpen = true }
             if ProcessInfo.processInfo.arguments.contains("-stadiumUnfold") { driveFolded = false; trailingFolded = false }
@@ -715,6 +730,27 @@ public struct StadiumSpaceView<Trailing: View>: View {
         let fade = spec.look?.experience.camera.seatFadeSeconds ?? ExperienceTokens.bundled?.camera.seatFadeSeconds ?? 0.35
         ExperienceEvents.post(.seatChanging(to: id, fadeSeconds: reduceMotion ? 0 : fade))
         renderer.sit(id)
+        applySeatFolds(id)
+    }
+
+    /// Move the side panels and the controls to this seat's places. Called
+    /// from `update` on every pass and a no-op until the seat changes; the
+    /// attachments are only moved, never re-added.
+    private func placeForSeat(_ seat: String, _ attachments: RealityViewAttachments) {
+        guard placer.seat != seat, let per = layout?.perSeat?[seat] else { return }
+        placer.seat = seat
+        for (id, p) in [("drive", per.drive), ("trailing", per.trailing), ("controls", per.controls)] {
+            guard let e = attachments.entity(for: id) else { continue }
+            face(e, at: StadiumLayout.position(p.slot))
+        }
+    }
+
+    /// A panel with nowhere off the field from this seat starts folded.
+    private func applySeatFolds(_ seat: String) {
+        guard let per = layout?.perSeat?[seat] else { return }
+        if per.drive.folded { driveFolded = true }
+        if per.trailing.folded { trailingFolded = true }
+        if per.controls.folded { controlsFolded = true }
     }
 
     /// The Crown hint, once, the first time the stadium opens on the dial.
@@ -824,4 +860,10 @@ struct StadiumStatus: View {
         .frame(width: 460, alignment: .leading)
         .glassBackgroundEffect()
     }
+}
+
+/// The seat the stadium's panels are currently laid out for.
+@MainActor
+final class SeatPlacement {
+    var seat: String?
 }
