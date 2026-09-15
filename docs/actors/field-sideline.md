@@ -88,3 +88,13 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - **Border wear:** scuffs cut to 12 in (below half the NFL border's 36 in) and rarer, and the sideline grime halved. `field-level` now shows a ragged edge and grass through the border, with no tearing.
 - **Purple blob:** it was the pop-up medical tent, a 3 m box tinted in the away club's colour. It is dropped from the dressing (medical areas live in the tunnel), so the sideline keeps its 15 parts.
 - **Goal-post net:** thinner cord (6% of each cell) and 0.2 opacity. A cutout can't survive mips at the stands' distance, so the net stays blended; in `td-moment` it now reads as a faint haze behind the far posts, not a sheet.
+
+## Iteration 7
+- **Medical tent restored.**
+  - The canvas and roof are neutral white (`prop_white`) and the frame is `prop_steel`.
+  - Only a 0.22 m valance and a cross on the field-facing wall wear the club's colour (`tint_team_primary`).
+  - All three bins already exist, so the sideline stays at 15 parts.
+- **Net: no view-dependent fade.**
+  - A distance- or Fresnel-driven fade needs the view vector per fragment, which only Shader Graph provides on visionOS.
+  - A baked texture or vertex colour can't depend on the view: PhysicallyBasedMaterial ignores vertex colour, and RealityKit generates the mips, so a mip-aware mask isn't possible either.
+  - Left blended at 0.2 opacity with thin cord.
