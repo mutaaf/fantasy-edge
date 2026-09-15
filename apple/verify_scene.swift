@@ -16,6 +16,7 @@
 //         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
 //         apple/FantasyEdge/Sources/Stadium/Actors/*/*Look.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
+//         apple/FantasyEdge/Sources/Stadium/Actors/Broadcast/BroadcastFlight.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
 //
 // Nothing is synthetic: a scene that does not decode fails, because a
@@ -155,6 +156,43 @@ struct VerifyScene {
             let s = SceneMath.nearSeatScale(near, seat: seatPoint, rule: look.broadcast.trail.nearSeat)
             expect(abs(s - max(look.broadcast.trail.nearSeat.minScale, 5 / look.broadcast.trail.nearSeat.yards)) < 1e-6,
                    "\(name): a trail 5 yards from the seat should thin to \(5 / look.broadcast.trail.nearSeat.yards), not \(s)")
+
+            // ---- the ball: BallFlight against every arc of the game ----
+            let flight = look.broadcast.ball.flight
+            for arc in spec.drives.flatMap(\.arcs) {
+                let manner = BallFlight.manner(arc, flight)
+                for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
+                    let pose = BallFlight.pose(arc, t: t, elapsed: t * arc.duration, manner: manner, flight: flight, lift: 0)
+                    let onArc = SceneMath.point(on: arc, at: t)
+                    expect(pose.position.y >= -1e-4, "\(name): arc \(arc.id) puts the ball under the grass at t \(t)")
+                    expect(abs(pose.position.x - onArc.x) <= 1e-3 && abs(pose.position.z - onArc.z) <= 1e-3,
+                           "\(name): arc \(arc.id) (\(manner)) leaves its line at t \(t)")
+                    let nose = pose.orientation.act(SIMD3<Float>(1, 0, 0))
+                    let laces = pose.orientation.act(SIMD3<Float>(0, 1, 0))
+                    expect(abs(simd_length(nose) - 1) < 1e-3, "\(name): arc \(arc.id) orientation is not a rotation")
+                    let travel: Float = arc.toX >= arc.fromX ? 1 : -1
+                    var tangent = SceneMath.point(on: arc, at: min(1, t + 0.02)) - SceneMath.point(on: arc, at: max(0, t - 0.02))
+                    if simd_length(tangent) < 1e-5 { tangent = SIMD3(travel, 0, 0) }
+                    tangent = simd_normalize(tangent)
+                    switch manner {
+                    case .spiral:
+                        // A spiral points down its flight and never flips end for end.
+                        expect(simd_dot(nose, tangent) > 0.999, "\(name): pass \(arc.id) spiral off its flight at t \(t): nose \(nose)")
+                    case .wobble:
+                        let limit = Float(cos((flight.wobbleDegrees + 0.5) * .pi / 180))
+                        expect(simd_dot(nose, tangent) >= limit, "\(name): wobble \(arc.id) turned more than a wobble at t \(t)")
+                    case .carry:
+                        expect(nose.x * travel > 0.9 && laces.y > 0.9,
+                               "\(name): carry \(arc.id) is not tucked nose-forward, laces up at t \(t)")
+                    case .tumble, .bounce:
+                        break
+                    }
+                    if manner != .bounce {
+                        expect(abs(pose.position.y - onArc.y) <= 0.5,
+                               "\(name): arc \(arc.id) (\(manner)) leaves its height at t \(t)")
+                    }
+                }
+            }
         }
         let tt = spec.presentation.tabletop
         let reach = Float((spec.bowl.shape.halfLength + (spec.bowl.tiers.first?.outer ?? 0)) * tt.metersPerYard)
