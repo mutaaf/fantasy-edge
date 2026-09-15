@@ -408,6 +408,71 @@ def interiors() -> None:
     save(atlas, "interiors_emission.jpg", jpeg=True)
 
 
+def press_room() -> None:
+    """The press box interior, one 1024 atlas, all emissive (the room lights
+    itself; nothing outside reaches in):
+      v 0.50-1.00  acoustic wall: warm fabric panels with shadow grooves
+      v 0.25-0.50  ceiling: acoustic tile with linear light strips
+      v 0.00-0.25  monitors: four stat screens - bars, a line chart, a table,
+                   a field diagram - on dark navy
+    """
+    S = 1024
+    img = np.zeros((S, S, 3), np.float32)
+    warm = np.array([0.94, 0.83, 0.68], np.float32)          # Lighting's concourse #F0D3AE
+    # wall panels
+    H = S // 2
+    y = np.linspace(0, 1, H)[:, None]
+    fabric = 0.62 + 0.06 * (fbm(H, S, 160, 81, 2) - 0.5)
+    panel = np.ones((H, S), np.float32)
+    for k in range(0, S, S // 8):
+        panel[:, max(0, k - 5):k + 5] = 0.45
+    panel[:8, :] = 0.45
+    panel[-8:, :] = 0.45
+    wash = 0.75 + 0.25 * np.exp(-((y - 0.85) / 0.35) ** 2)     # the ceiling light grazes the top
+    img[S - H:] = (fabric * panel * wash)[:, :, None] * warm
+    # ceiling tile with light strips
+    H2 = S // 4
+    tile = np.full((H2, S), 0.35, np.float32)
+    tile[:, ::S // 16] = 0.2
+    tile[::H2 // 4, :] = 0.2
+    for k in (H2 // 4, 3 * H2 // 4):
+        tile[k - 6:k + 6, :] = 1.6
+    img[S // 4:S // 2] = tile[:, :, None] * warm
+    # monitors
+    H3 = S // 4
+    navy = np.array([0.03, 0.05, 0.10], np.float32)
+    mon = np.ones((H3, S, 3), np.float32) * navy
+    W = S // 4
+    rng = np.random.default_rng(83)
+    green, amber, cyan = (np.array(c, np.float32) for c in ((0.2, 0.9, 0.5), (1.0, 0.7, 0.2), (0.3, 0.8, 1.0)))
+    # 0: bar chart
+    for i in range(8):
+        h = int(H3 * (0.2 + 0.6 * rng.random()))
+        mon[H3 - 12 - h:H3 - 12, 16 + i * 28:36 + i * 28] = green * 0.9
+    # 1: line chart
+    xs = np.arange(W)
+    ys = (H3 * (0.5 + 0.3 * np.sin(xs / 18.0) * np.cos(xs / 41.0))).astype(int)
+    for dx in range(-2, 3):
+        mon[np.clip(ys + dx, 0, H3 - 1), W + xs] = cyan
+    # 2: table rows
+    for r in range(10):
+        yy = 18 + r * 23
+        mon[yy:yy + 8, 2 * W + 14:2 * W + 14 + int(W * (0.3 + 0.5 * rng.random()))] = (amber if r % 3 == 0 else 0.6 + navy)
+    # 3: field diagram
+    mon[20:H3 - 20, 3 * W + 14:4 * W - 14] = np.array([0.08, 0.35, 0.14], np.float32)
+    for k in range(11):
+        xx = 3 * W + 14 + k * (W - 28) // 10
+        mon[20:H3 - 20, xx:xx + 2] = 0.85
+    for i in range(4):
+        mon[H3 // 2 - 6:H3 // 2 + 6, 3 * W + 60 + i * 30:3 * W + 72 + i * 30] = amber
+    for k in range(4):                                           # bezels
+        mon[:, k * W:k * W + 6] = 0.02
+        mon[:6, k * W:(k + 1) * W] = 0.02
+        mon[-6:, k * W:(k + 1) * W] = 0.02
+    img[:S // 4] = mon[::-1]                  # graphics drawn top-down; the atlas is bottom-up
+    save(img, "press_room_emission.jpg", jpeg=True)
+
+
 def build() -> dict:
     credits = fetch()
     trim_sheet()
@@ -416,4 +481,5 @@ def build() -> dict:
     seat_maps()
     seat_numbers()
     interiors()
+    press_room()
     return credits
