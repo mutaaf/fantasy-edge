@@ -107,3 +107,18 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 - **Parts:** the two nets add two. That is paid for by drawing `prop_black` with `prop_dark` (palette `alias`) and the chain crew's steel in its rods' white, so Sideline stays at 15.
 - **`StadiumActor.swift`:** gains the one blackboard field `netSway`. That's a director file, so it's noted for approval.
 - **Verification:** the swing hasn't been shot yet; it needs Moments' field-goal timeline to fire it.
+
+## Shader Graph (merged `3e67602`)
+- **Paint (`FieldPaint.usda`, `shaderGraph.materials.fieldPaint`):**
+  - Cuts each distance field at `Edge`, pushed in and out by the turf's paint breakup (512 px, raw), sampled on the turf tile from object position.
+  - Shows the turf's own colour where blades stand up through the paint.
+  - Covers every marking and the end-zone lettering (`UseMask` 0).
+  - The texture materials stay as the fallback, and they are what the web and Android draw.
+- **Nets (`NetFresnel.usda`):** the cord mask times a view-angle falloff (`Floor`, `Power`). They're gone from `td-moment` and `sideline-props`, where they face the eye.
+- **Shells (`FieldShells.usda`):**
+  - Six layers of the eight baked slices in a 4×2 atlas. The layer index is read back from each fragment's height, and blades take the paint.
+  - The patch fades at its edge and costs one part and 24 triangles.
+  - It renders (log: "shell grass on 6 layers"), but from the field-level seat the 24×10 yd patch still reads as a darker rectangle.
+  - It ships disabled (`visual.field.shells.enabled` false) until that's solved.
+- **Loads:** all three load via `Entity(contentsOf:)`, each from its own `.reality`, because `StadiumShaderGraph` takes the first material in a file.
+- **Parts:** Field 10 (11 with shells), Sideline 15.

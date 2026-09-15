@@ -53,6 +53,30 @@ extension SceneSpec.Look {
         public let art: Double
     }
 
+    public struct FieldShaderTextures: Decodable, Equatable, Sendable {
+        /// Paint breakup at 512 px, read raw (linear), for the paint graph.
+        public let breakup: String
+    }
+
+    public struct FieldShells: Decodable, Equatable, Sendable {
+        /// Off until the patch stops reading as a rectangle (docs/actors/field-sideline.md).
+        public let enabled: Bool
+        /// shaderGraph.materials id.
+        public let material: String
+        /// 4 x 2 coverage atlas, raw.
+        public let atlas: String
+        /// The patch, in field yards: x range, and how far in from the home sideline.
+        public let fromX: Double
+        public let toX: Double
+        public let depth: Double
+        /// Blades thin out over this many yards inside the patch edge.
+        public let fade: Double
+        /// Layers drawn, counted up from the ground (the densest bottom ones
+        /// are left to the flat turf).
+        public let firstLayer: Int
+        public let lastLayer: Int
+    }
+
     public struct FieldLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -61,6 +85,10 @@ extension SceneSpec.Look {
         public let turf: FieldTurf
         public let paint: FieldPaint
         public let lift: FieldLift
+        /// shaderGraph.materials id the paint and lettering use when it loads.
+        public let paintMaterial: String
+        public let shaderTextures: FieldShaderTextures
+        public let shells: FieldShells
     }
 }
 

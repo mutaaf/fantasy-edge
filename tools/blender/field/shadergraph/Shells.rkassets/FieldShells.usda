@@ -1,0 +1,366 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    # Shell grass: a stack of flat layers a few millimetres apart, each cutting
+    # out the blades that stand taller than its height. One mesh carries every
+    # layer; the layer a fragment belongs to is read back from its height, and
+    # picks that layer's cell of an atlas of the baked coverage slices. Where
+    # the markings paint the turf, the blades wear the paint.
+    #
+    # Parameters (tokens: shaderGraph.materials.fieldShells):
+    #   Atlas       (asset)   4 x 2 coverage slices, cell i = slice for layer i (0 lowest)
+    #   Turf        (asset)   turf albedo
+    #   Mask        (asset)   the white paint's half-canvas distance field, uv0
+    #   GrassTint   (color3)  multiplies the turf
+    #   PaintColor  (color3)  blades inside paint
+    #   TileYards   (float)   turf tile in object units
+    #   BaseYards   (float)   height of layer 0
+    #   StepYards   (float)   spacing between layers
+    #   Edge        (float)   distance value at the paint's edge
+    #   PatchX0..Z1 (float)   the patch in object units, set from visual.field.shells
+    #   PatchFade   (float)   blades thin out over this distance inside the patch edge
+    def Material "FieldShells"
+    {
+        asset inputs:Atlas = @./textures/placeholder_atlas.png@
+        asset inputs:Turf = @./textures/placeholder_turf.png@
+        asset inputs:Mask = @./textures/placeholder_mask.png@
+        color3f inputs:GrassTint = (1, 1, 1)
+        color3f inputs:PaintColor = (0.9, 0.9, 0.88)
+        float inputs:TileYards = 0.4374
+        float inputs:BaseYards = 0.00186
+        float inputs:StepYards = 0.00383
+        float inputs:Edge = 0.5
+        float inputs:PatchX0 = -12
+        float inputs:PatchX1 = 12
+        float inputs:PatchZ0 = 16
+        float inputs:PatchZ1 = 26.67
+        float inputs:PatchFade = 3
+
+        token outputs:mtlx:surface.connect = </Root/FieldShells/Surface.outputs:out>
+
+        def Shader "Surface"
+        {
+            uniform token info:id = "ND_realitykit_pbr_surfaceshader"
+            color3f inputs:baseColor.connect = </Root/FieldShells/Base.outputs:out>
+            float inputs:roughness = 0.8
+            float inputs:specular = 0.2
+            float inputs:opacity.connect = </Root/FieldShells/Cover.outputs:out>
+            float inputs:opacityThreshold = 0.5
+            token outputs:out
+        }
+
+        def Shader "UV"
+        {
+            uniform token info:id = "ND_texcoord_vector2"
+            float2 outputs:out
+        }
+
+        def Shader "Position"
+        {
+            uniform token info:id = "ND_position_vector3"
+            string inputs:space = "object"
+            float3 outputs:out
+        }
+
+        def Shader "Split"
+        {
+            uniform token info:id = "ND_separate3_vector3"
+            float3 inputs:in.connect = </Root/FieldShells/Position.outputs:out>
+            float outputs:outx
+            float outputs:outy
+            float outputs:outz
+        }
+
+        def Shader "Ground"
+        {
+            uniform token info:id = "ND_combine2_vector2"
+            float inputs:in1.connect = </Root/FieldShells/Split.outputs:outx>
+            float inputs:in2.connect = </Root/FieldShells/Split.outputs:outz>
+            float2 outputs:out
+        }
+
+        def Shader "TileUV"
+        {
+            uniform token info:id = "ND_divide_vector2FA"
+            float2 inputs:in1.connect = </Root/FieldShells/Ground.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells.inputs:TileYards>
+            float2 outputs:out
+        }
+
+        def Shader "Frac"
+        {
+            uniform token info:id = "ND_modulo_vector2FA"
+            float2 inputs:in1.connect = </Root/FieldShells/TileUV.outputs:out>
+            float inputs:in2 = 1
+            float2 outputs:out
+        }
+
+        def Shader "Above"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldShells/Split.outputs:outy>
+            float inputs:in2.connect = </Root/FieldShells.inputs:BaseYards>
+            float outputs:out
+        }
+
+        def Shader "Steps"
+        {
+            uniform token info:id = "ND_divide_float"
+            float inputs:in1.connect = </Root/FieldShells/Above.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells.inputs:StepYards>
+            float outputs:out
+        }
+
+        def Shader "StepsRounded"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldShells/Steps.outputs:out>
+            float inputs:in2 = 0.5
+            float outputs:out
+        }
+
+        def Shader "Layer"
+        {
+            uniform token info:id = "ND_floor_float"
+            float inputs:in.connect = </Root/FieldShells/StepsRounded.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Column"
+        {
+            uniform token info:id = "ND_modulo_float"
+            float inputs:in1.connect = </Root/FieldShells/Layer.outputs:out>
+            float inputs:in2 = 4
+            float outputs:out
+        }
+
+        def Shader "RowRaw"
+        {
+            uniform token info:id = "ND_divide_float"
+            float inputs:in1.connect = </Root/FieldShells/Layer.outputs:out>
+            float inputs:in2 = 4
+            float outputs:out
+        }
+
+        def Shader "Row"
+        {
+            uniform token info:id = "ND_floor_float"
+            float inputs:in.connect = </Root/FieldShells/RowRaw.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Cell"
+        {
+            uniform token info:id = "ND_combine2_vector2"
+            float inputs:in1.connect = </Root/FieldShells/Column.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells/Row.outputs:out>
+            float2 outputs:out
+        }
+
+        def Shader "InCell"
+        {
+            uniform token info:id = "ND_add_vector2"
+            float2 inputs:in1.connect = </Root/FieldShells/Frac.outputs:out>
+            float2 inputs:in2.connect = </Root/FieldShells/Cell.outputs:out>
+            float2 outputs:out
+        }
+
+        def Shader "AtlasUV"
+        {
+            uniform token info:id = "ND_multiply_vector2"
+            float2 inputs:in1.connect = </Root/FieldShells/InCell.outputs:out>
+            float2 inputs:in2 = (0.25, 0.5)
+            float2 outputs:out
+        }
+
+        def Shader "Coverage"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file.connect = </Root/FieldShells.inputs:Atlas>
+            float2 inputs:texcoord.connect = </Root/FieldShells/AtlasUV.outputs:out>
+            string inputs:uaddressmode = "clamp"
+            string inputs:vaddressmode = "clamp"
+            float outputs:out
+        }
+
+        def Shader "FadeX0Hi"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldShells.inputs:PatchX0>
+            float inputs:in2.connect = </Root/FieldShells.inputs:PatchFade>
+            float outputs:out
+        }
+
+        def Shader "FadeX0"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldShells/Split.outputs:outx>
+            float inputs:low.connect = </Root/FieldShells.inputs:PatchX0>
+            float inputs:high.connect = </Root/FieldShells/FadeX0Hi.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FadeZ0Hi"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldShells.inputs:PatchZ0>
+            float inputs:in2.connect = </Root/FieldShells.inputs:PatchFade>
+            float outputs:out
+        }
+
+        def Shader "FadeZ0"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldShells/Split.outputs:outz>
+            float inputs:low.connect = </Root/FieldShells.inputs:PatchZ0>
+            float inputs:high.connect = </Root/FieldShells/FadeZ0Hi.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FadeX1Lo"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldShells.inputs:PatchX1>
+            float inputs:in2.connect = </Root/FieldShells.inputs:PatchFade>
+            float outputs:out
+        }
+
+        def Shader "FadeX1Rise"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldShells/Split.outputs:outx>
+            float inputs:low.connect = </Root/FieldShells/FadeX1Lo.outputs:out>
+            float inputs:high.connect = </Root/FieldShells.inputs:PatchX1>
+            float outputs:out
+        }
+
+        def Shader "FadeX1"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/FieldShells/FadeX1Rise.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FadeZ1Lo"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1.connect = </Root/FieldShells.inputs:PatchZ1>
+            float inputs:in2.connect = </Root/FieldShells.inputs:PatchFade>
+            float outputs:out
+        }
+
+        def Shader "FadeZ1Rise"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldShells/Split.outputs:outz>
+            float inputs:low.connect = </Root/FieldShells/FadeZ1Lo.outputs:out>
+            float inputs:high.connect = </Root/FieldShells.inputs:PatchZ1>
+            float outputs:out
+        }
+
+        def Shader "FadeZ1"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/FieldShells/FadeZ1Rise.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FadeX"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldShells/FadeX0.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells/FadeX1.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FadeZ"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldShells/FadeZ0.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells/FadeZ1.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Fade"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldShells/FadeX.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells/FadeZ.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Cover"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldShells/Coverage.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells/Fade.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "TurfSample"
+        {
+            uniform token info:id = "ND_image_color3"
+            asset inputs:file.connect = </Root/FieldShells.inputs:Turf>
+            float2 inputs:texcoord.connect = </Root/FieldShells/TileUV.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "Blades"
+        {
+            uniform token info:id = "ND_multiply_color3"
+            color3f inputs:in1.connect = </Root/FieldShells/TurfSample.outputs:out>
+            color3f inputs:in2.connect = </Root/FieldShells.inputs:GrassTint>
+            color3f outputs:out
+        }
+
+        def Shader "MaskSample"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file.connect = </Root/FieldShells.inputs:Mask>
+            float2 inputs:texcoord.connect = </Root/FieldShells/UV.outputs:out>
+            string inputs:uaddressmode = "clamp"
+            string inputs:vaddressmode = "clamp"
+            float outputs:out
+        }
+
+        def Shader "EdgeHigh"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/FieldShells.inputs:Edge>
+            float inputs:in2 = 0.01
+            float outputs:out
+        }
+
+        def Shader "Painted"
+        {
+            uniform token info:id = "ND_smoothstep_float"
+            float inputs:in.connect = </Root/FieldShells/MaskSample.outputs:out>
+            float inputs:low.connect = </Root/FieldShells.inputs:Edge>
+            float inputs:high.connect = </Root/FieldShells/EdgeHigh.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Base"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/FieldShells.inputs:PaintColor>
+            color3f inputs:bg.connect = </Root/FieldShells/Blades.outputs:out>
+            float inputs:mix.connect = </Root/FieldShells/Painted.outputs:out>
+            color3f outputs:out
+        }
+    }
+
+    def Sphere "Preview"
+    {
+        rel material:binding = </Root/FieldShells>
+        double radius = 0.1
+    }
+}

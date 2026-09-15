@@ -86,6 +86,8 @@ extension SceneSpec.Look {
         public let chains: SidelineChains
         public let shadow: SidelineShadow
         public let sway: NetSway
+        /// shaderGraph.materials id the nets use when it loads.
+        public let netMaterial: String
     }
 }
 
