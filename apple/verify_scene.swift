@@ -14,6 +14,7 @@
 //     swiftc -o /tmp/verify-scene \
 //         apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
+//         apple/FantasyEdge/Sources/Stadium/Actors/*/*Look.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
 //
@@ -129,15 +130,15 @@ struct VerifyScene {
         let st = spec.presentation.stadium
         let root = SceneMath.stadiumRoot(seat: st.seat, metersPerYard: st.metersPerYard, eye: 1.2)
         let seat = SceneMath.local(x: st.seat.x, y: st.seat.y, z: st.seat.z) * Float(st.metersPerYard)
-        expect(simd_distance(root + seat, SIMD3(0, 1.2, 0)) < 1e-3,
-               "\(name): the seat should land at the wearer's eyes")
+        expect(simd_distance(root + seat, SIMD3(0, 0, 0)) < 1e-3,
+               "\(name): the seat's floor should land on the floor of the space, under the wearer")
         // 1.1: every seat puts the wearer's eyes at the origin, facing its
         // lookAt down -z, with the world turned about them.
         for option in st.seats ?? [] {
             let placed = SceneMath.seatRoot(option, metersPerYard: st.metersPerYard, eye: 1.2)
             let s = placed.orientation.act(SceneMath.local(x: option.x, y: option.y, z: option.z) * Float(st.metersPerYard))
-            expect(simd_distance(placed.position + s, SIMD3(0, 1.2, 0)) < 1e-3,
-                   "\(name): seat \(option.id) does not land at the eyes")
+            expect(simd_distance(placed.position + s, SIMD3(0, 0, 0)) < 1e-3,
+                   "\(name): seat \(option.id)'s floor does not land under the wearer")
             let target = placed.orientation.act(SceneMath.local(x: option.lookAt.x, y: 1.2 / st.metersPerYard,
                                                                 z: option.lookAt.z) * Float(st.metersPerYard))
             let toward = placed.position + target
@@ -159,6 +160,28 @@ struct VerifyScene {
         let reach = Float((spec.bowl.shape.halfLength + (spec.bowl.tiers.first?.outer ?? 0)) * tt.metersPerYard)
         expect(reach * 2 <= Float(tt.volume[0]) + 1e-3,
                "\(name): the tabletop bowl is \(reach * 2) m across, wider than its \(tt.volume[0]) m volume")
+
+        // ---- seats: SceneMath.seat against scene.py's own placement ----
+        let samplesPath = path.replacingOccurrences(of: ".json", with: ".seats")
+        if let seating = spec.bowl.seating, let blob = FileManager.default.contents(atPath: samplesPath) {
+            struct Sample: Decodable { let tier, row, run, k: Int; let x, y, z, nx, nz: Double }
+            for sample in try JSONDecoder().decode([Sample].self, from: blob) {
+                let row = seating.tiers[sample.tier].rows[sample.row]
+                let ring = SceneMath.Ring(spec.bowl.shape, offset: row.feet)
+                let got = SceneMath.seat(row, run: sample.run, k: sample.k, shape: spec.bowl.shape, ring: ring)
+                expect(abs(Double(got.position.x) - sample.x) < 1e-3 && abs(Double(got.position.z) - sample.z) < 1e-3
+                       && abs(Double(got.position.y) - sample.y) < 1e-3,
+                       "\(name): seat \(sample) placed at \(got.position)")
+                expect(abs(got.facing.x - sample.nx) < 1e-3 && abs(got.facing.y - sample.nz) < 1e-3,
+                       "\(name): seat \(sample) faces \(got.facing)")
+            }
+            for tier in seating.tiers {
+                for row in tier.rows {
+                    let seated = row.runs.reduce(0) { $0 + Int($1[1]) }
+                    expect(seated == row.seats, "\(name): \(tier.tier) row \(row.row) runs hold \(seated), not \(row.seats)")
+                }
+            }
+        }
 
         // ---- the ball's queue ----
         if let drive = spec.shownDrive, drive.arcs.count > 2 {

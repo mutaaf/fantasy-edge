@@ -442,12 +442,25 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 face(e, at: position)
                 world.addChild(e)
             }
-            pivot.position = SIMD3(0, StadiumLayout.eye, 0)
             world.position = SIMD3(0, -StadiumLayout.eye, 0)
-            pivot.orientation = simd_quatf(angle: look.y * .pi / 180, axis: SIMD3(1, 0, 0))
-                * simd_quatf(angle: look.x * .pi / 180, axis: SIMD3(0, 1, 0))
             pivot.addChild(world)
-            content.add(pivot)
+            if look == .zero {
+                pivot.position = SIMD3(0, StadiumLayout.eye, 0)
+                content.add(pivot)
+            } else {
+                // A debug capture turns the viewer's head, not the world. The
+                // simulator camera is not at the seated eye the layout assumes,
+                // and turning the world about the assumed eye swung the stands
+                // across the real camera. Anchored to the head, the pivot is
+                // the camera: the seat's eye lands exactly on it, and the
+                // inverse of the head turn is applied to the world, which stays
+                // level. yaw > 0 turns right, pitch > 0 looks up.
+                let head = AnchorEntity(.head, trackingMode: .once)
+                pivot.orientation = simd_quatf(angle: -look.y * .pi / 180, axis: SIMD3(1, 0, 0))
+                    * simd_quatf(angle: look.x * .pi / 180, axis: SIMD3(0, 1, 0))
+                head.addChild(pivot)
+                content.add(head)
+            }
         } update: { _, attachments in
             if let spec = feed.spec { renderer.apply(spec, reduceMotion: reduceMotion) }
             let reading = feed.spec != nil

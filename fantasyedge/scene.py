@@ -378,10 +378,7 @@ def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: fl
 HALF_WIDTH = 80 / 3
 SEATS = [
     _seat("club", "50-yard line, lower bowl", 50.0, HALF_WIDTH + 24.0, "lower", 24.0),
-    # On the sideline in front of the home bench, not behind it: at +4.5 the
-    # eye sat 0.7 yd behind the bench back (benches stand at +3.8) and the
-    # field-level shot was a wall of bench.
-    _seat("field", "Field level, home sideline", 50.0, HALF_WIDTH + 1.8, None, 0.0),
+    _seat("field", "Field level, home sideline", 50.0, HALF_WIDTH + 4.5, None, 0.0),
     _seat("endzone", "Behind the home end zone", -24.0, 0.0, "lower", 14.0),
     _seat("upper", "Upper deck, midfield", 50.0, HALF_WIDTH + 50.0, "upper", 50.0),
 ]

@@ -103,6 +103,8 @@ def main() -> None:
                     default=ROOT / ".work/dd/Build/Products/Debug-xrsimulator/FantasyEdge.app")
     ap.add_argument("--only", nargs="*", choices=sorted(SHOTS))
     ap.add_argument("--settle", type=float, default=9.0)
+    ap.add_argument("--extra", nargs="*", default=[], help="launch arguments after -shot, e.g. -stadiumPitch -40")
+    ap.add_argument("--suffix", default="", help="appended to each shot's file name")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -140,11 +142,11 @@ def main() -> None:
                 post(args.port, {"action": "seek", "at": at})
                 post(args.port, {"action": "pause"})
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
-                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, check=False)
+                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra, check=False)
             time.sleep(args.settle)
-            shot = args.out / f"{name}.png"
+            shot = args.out / f"{name}{args.suffix}.png"
             simctl("io", args.device, "screenshot", str(shot), check=False)
-            subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{name}.png")],
+            subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{name}{args.suffix}.png")],
                            capture_output=True)
             logs.append(f"{name}: replay at {at}s ({where}) -> {shot}")
             print(logs[-1], flush=True)
