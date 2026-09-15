@@ -671,12 +671,164 @@ def _inside(pt: tuple[float, float], poly: list[tuple[float, float]]) -> bool:
 def panel_box(slot: dict, size: dict, points_per_meter: float, margin: float = 0.0) -> tuple[float, float, float, float]:
     """A panel's angular box (yaw0, yaw1, below0, below1) from its slot and
     its footprint in points (panelSizes). The panel faces the wearer, so its
-    half-extents are the angles its half-width and half-height subtend."""
+    half-extents are the angles its half-width and half-height subtend; a slot
+    brought nearer than its legible distance carries `scale` < 1, and draws
+    that much smaller, so it subtends what it would have further out."""
     d = slot["distance"]
+    k = slot.get("scale", 1.0)
     below = math.degrees(math.atan2(-slot["height"], d))
-    hw = math.degrees(math.atan2(size["widthPoints"] / points_per_meter / 2, d)) + margin
-    hh = math.degrees(math.atan2(size["maxHeightPoints"] / points_per_meter / 2, d)) + margin
+    hw = math.degrees(math.atan2(size["widthPoints"] * k / points_per_meter / 2, d)) + margin
+    hh = math.degrees(math.atan2(size["maxHeightPoints"] * k / points_per_meter / 2, d)) + margin
     return slot["yaw"] - hw, slot["yaw"] + hw, below - hh, below + hh
+
+
+def rim_points(seat: dict, mounts: dict | None, eye_meters: float, meters_per_yard: float) -> list[tuple[float, float]]:
+    """Every rim light bank's headframe as the seated wearer sees it: a grid
+    of (yaw, below) points over each frame's face. Mount positions are in the
+    renderer's local yards, midfield at x 0."""
+    if not mounts:
+        return []
+    project = _projector(seat, eye_meters, meters_per_yard)
+    out = []
+    for m in mounts.get("rim", []):
+        x, y, z = m["position"]
+        rx, rz = -m["facing"][2], m["facing"][0]
+        w, h = m["headframe"]
+        for i in range(9):
+            for j in range(5):
+                u, v = w * (i / 8 - 0.5), h * (j / 4 - 0.5)
+                yaw, below = project(x + 50 + rx * u, y + v, z + rz * u)
+                if abs(yaw) < 90:
+                    out.append((yaw, below))
+    return out
+
+
+# What stands within arm's length of a seat, from Bowl's kit (tools/blender/bowl/
+# seat.py and structure.py; tests/test_experience.py holds these to it): a
+# chair's back rises 0.84 m over its tread and 0.3 m behind its feet, an aisle
+# rail is 1.04 yd over the riser it starts from, and the press box's glass
+# leans out 0.7 yd from a sill 0.6 yd over its floor, over a desk as high.
+NEAR = {"chairBackYards": 0.84 / 0.9144, "chairBehindYards": 0.33, "chairHalfWidthYards": 0.25,
+        "railYards": 1.04, "railDepth": 0.06, "reachYards": 5.0,
+        "pressSillYards": 0.6, "pressCantYards": 0.7, "pressDeskFrontYards": 0.05, "pressDeskDepthYards": 0.38}
+
+
+def _ring_angle_of(shape: dict, m: float, x: float, z: float) -> float:
+    """The angle on the ring at offset m nearest the point (x, z), local yards."""
+    best = min(range(1440), key=lambda k: (lambda p: (p[0] - x) ** 2 + (p[1] - z) ** 2)(
+        bowl_point(shape, m, 2 * math.pi * k / 1440)))
+    lo, hi = 2 * math.pi * (best - 1) / 1440, 2 * math.pi * (best + 1) / 1440
+    for _ in range(30):
+        a, b = lo + (hi - lo) / 3, hi - (hi - lo) / 3
+        da = sum((p - q) ** 2 for p, q in zip(bowl_point(shape, m, a), (x, z)))
+        db = sum((p - q) ** 2 for p, q in zip(bowl_point(shape, m, b), (x, z)))
+        lo, hi = (lo, b) if da < db else (a, hi)
+    return (lo + hi) / 2
+
+
+def near_occluders(seat: dict, shape: dict, seating: dict, eye_meters: float,
+                   meters_per_yard: float) -> list[tuple[float, float, float]]:
+    """The solid things within `NEAR.reachYards` in front of a seat, as
+    (yaw, below, flat metres from the eye): chair backs and aisle rails in the
+    rows ahead, the ground at field level, and the press box's glass and desk.
+    A panel further out than one of these, and behind it, is drawn through
+    it - it reads as lying on a chair or standing outside the window - so the
+    dock keeps every panel nearer than whatever it overlaps."""
+    project = _projector(seat, eye_meters, meters_per_yard)
+    ex, ez = seat["x"], seat["z"]
+    ey = seat["y"] + eye_meters / meters_per_yard
+    fx, fz = seat["lookAt"]["x"] - ex, seat["lookAt"]["z"] - ez
+    n = math.hypot(fx, fz) or 1.0
+    fx, fz = fx / n, fz / n
+    reach = NEAR["reachYards"]
+    out: list[tuple[float, float, float]] = []
+
+    def add(px: float, py: float, pz: float) -> None:
+        dx, dz = px - ex, pz - ez
+        flat = math.hypot(dx, dz)
+        if flat < 1e-3 or flat > reach or dx * fx + dz * fz <= 0:
+            return
+        yaw, below = project(px, py, pz)
+        out.append((yaw, below, flat * meters_per_yard))
+
+    lx = ex - 50.0
+    box = BOWL["pressBox"]
+    if abs(seat["y"] - box["rise"][0]) < 1e-6 and ez < 0:
+        # In the press box: the glass from its sill up, leaning out, and the
+        # desk under it, across the run either side of the wearer.
+        y0, y1 = box["rise"]
+        frames = {}
+        for d in (0.0, -NEAR["pressCantYards"], NEAR["pressDeskFrontYards"],
+                  NEAR["pressDeskFrontYards"] + NEAR["pressDeskDepthYards"]):
+            m = box["offset"] + d
+            t = _ring_angle_of(shape, m, lx, ez)
+            frames[d] = (bowl_point(shape, m, t), bowl_inward(shape, m, t))
+        (gx0, gz0), (nx0, nz0) = frames[0.0]
+        (gx1, gz1), _ = frames[-NEAR["pressCantYards"]]
+        sill = y0 + NEAR["pressSillYards"]
+        for k in range(-80, 81):
+            lat = k * 0.05
+            for j in range(41):
+                f = j / 40
+                add(gx0 + (gx1 - gx0) * f + 50 - nz0 * lat, sill + (y1 - sill) * f, gz0 + (gz1 - gz0) * f + nx0 * lat)
+            for d in (NEAR["pressDeskFrontYards"], NEAR["pressDeskFrontYards"] + NEAR["pressDeskDepthYards"]):
+                (x, z), (nx, nz) = frames[d]
+                add(x + 50 - nz * lat, sill, z + nx * lat)
+        return out
+    if seat["y"] < 0.5:
+        # At field level the ground is the only thing near.
+        for i in range(-45, 46):
+            a = math.radians(i)
+            for j in range(1, 41):
+                d = j * reach / 40
+                add(ex + (fx * math.cos(a) - fz * math.sin(a)) * d, 0.0, ez + (fz * math.cos(a) + fx * math.sin(a)) * d)
+        return out
+    tiers = {t["name"]: t for t in BOWL["tiers"]}
+    rows_of = {t["tier"]: t for t in seating["tiers"]}
+    t0 = _ring_angle_of(shape, 0.0, lx, ez)
+    px, pz = bowl_point(shape, 0.0, t0)
+    m_eye = math.hypot(lx - px, ez - pz)
+    for name, tier in tiers.items():
+        plan = rows_of.get(name)
+        if not plan or not (tier["rise"][0] - 0.01 <= seat["y"] <= tier["rise"][1] + 0.01):
+            continue
+        rails: dict[str, list] = {}
+        for rw in plan["rows"]:
+            geo = bowl_row(tier, rw["row"] - 1, len(plan["rows"]))
+            if geo["front"] > m_eye + 1.0 or geo["back"] < m_eye - reach:
+                continue
+            ring = BowlRing(shape, rw["feet"])
+            s_eye = ring.arc_at(_ring_angle_of(shape, rw["feet"], lx, ez))
+            back_h = NEAR["chairBackYards"]
+            for first, count in rw["runs"]:
+                k0 = max(0, math.floor((s_eye - reach - first) / rw["pitch"]))
+                k1 = min(count - 1, math.ceil((s_eye + reach - first) / rw["pitch"]))
+                for k in range(k0, k1 + 1):
+                    t = ring.angle(first + k * rw["pitch"])
+                    x, z = bowl_point(shape, rw["feet"], t)
+                    if math.hypot(x - lx, z - ez) < rw["pitch"] * 0.6:
+                        continue                      # the wearer's own seat
+                    nx, nz = bowl_inward(shape, rw["feet"], t)
+                    bx, bz = x - nx * NEAR["chairBehindYards"], z - nz * NEAR["chairBehindYards"]
+                    w = NEAR["chairHalfWidthYards"]
+                    for li in range(11):
+                        lat = -w + 2 * w * li / 10
+                        for hi in range(6):
+                            add(bx + 50 - nz * lat, rw["floor"] + back_h * (0.5 + 0.5 * hi / 5), bz + nx * lat)
+            # Aisle rails start at each section's edge, at the riser.
+            for sec in plan["sections"]:
+                sa = sec["from"] * ring.length
+                if abs(((sa - s_eye) + ring.length / 2) % ring.length - ring.length / 2) > reach:
+                    continue
+                t = ring.angle(sa)
+                x, z = bowl_point(shape, geo["front"] + (geo["back"] - geo["front"]) * NEAR["railDepth"], t)
+                rails.setdefault(sec["id"], []).append((x + 50, geo["riserFrom"] + NEAR["railYards"], z))
+        for pts in rails.values():
+            for (x0, y0, z0), (x1, y1, z1) in zip(pts, pts[1:]):
+                for q in range(21):
+                    f = q / 20
+                    add(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, z0 + (z1 - z0) * f)
+    return out
 
 
 def box_overlaps(box: tuple[float, float, float, float], poly: list[tuple[float, float]]) -> bool:
@@ -692,69 +844,249 @@ def points_in_box(box: tuple[float, float, float, float], points: list[tuple[flo
     return any(y0 <= p[0] <= y1 and b0 <= p[1] <= b1 for p in points)
 
 
-def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float) -> dict:
-    """Where each side panel and the controls go from this seat, and whether
-    they start folded.
+class ViewGrid:
+    """One seat's view as cells of `RES` degrees, (yaw, below): which hold the
+    field, which hold something a panel must never cover (the video board,
+    the ribbon, the rim light banks), and how near the nearest solid thing in
+    each is. Summed-area tables make a box's question constant-time."""
 
-    From a lower-bowl seat the field sits in a band below the eye and panels
-    fit under it at the sides; from the upper deck or the press box the field
-    fills the lower view, and the same fixed angles put the drive log over the
-    play. So each panel searches its side for the place nearest its default
-    that stays inside the comfort limits and outside the field's silhouette,
-    and folds by default when there is none - the folded tab is placed the same
-    way. Every client lays panels out from this, not from its own guess."""
-    poly = field_silhouette(seat, field, eye_meters, meters_per_yard)
-    # The video board carries the score, so a panel may never sit on it. The
-    # ribbon only repeats what the scorebug says: a panel over it costs
-    # `ribbonCost` degrees of movement, so it moves off when a place nearby
-    # is free and stays when the only alternative is folding.
-    board = video_board_points(seat, BOWL.get("videoBoard"), eye_meters, meters_per_yard)
-    ribbon = ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
-    search = layout["search"]
-    step, margin = search["stepDegrees"], search["marginDegrees"]
+    RES = 0.5
+    YAW = (-50.0, 50.0)
+    BELOW = (-30.0, 45.0)
+
+    def __init__(self, field_poly, hard_points, near_points):
+        r = self.RES
+        self.nx = int((self.YAW[1] - self.YAW[0]) / r)
+        self.ny = int((self.BELOW[1] - self.BELOW[0]) / r)
+        field = [[0] * self.nx for _ in range(self.ny)]
+        # Scanline fill at each row's centre, plus every outline point's cell,
+        # so a sliver thinner than a cell still counts.
+        n = len(field_poly)
+        for j in range(self.ny):
+            yc = self.BELOW[0] + (j + 0.5) * r
+            xs = []
+            for i in range(n):
+                (x1, y1), (x2, y2) = field_poly[i], field_poly[(i + 1) % n]
+                if (y1 > yc) != (y2 > yc):
+                    xs.append(x1 + (yc - y1) * (x2 - x1) / (y2 - y1))
+            xs.sort()
+            for a, b in zip(xs[0::2], xs[1::2]):
+                i0, i1 = max(0, int((a - self.YAW[0]) / r)), min(self.nx - 1, int((b - self.YAW[0]) / r))
+                for i in range(i0, i1 + 1):
+                    field[j][i] = 1
+        for p in field_poly:
+            self._mark(field, p)
+        hard = [[0] * self.nx for _ in range(self.ny)]
+        for p in hard_points:
+            self._mark(hard, p)
+        self.near = [[math.inf] * self.nx for _ in range(self.ny)]
+        for yaw, below, d in near_points:
+            c = self._cell(yaw, below)
+            if c and d < self.near[c[1]][c[0]]:
+                self.near[c[1]][c[0]] = d
+        # A sampled chair or pane leaves gaps between its points; spread each
+        # distance two cells each way so a box between two samples still sees it.
+        spread = {}
+        for j in range(self.ny):
+            for i, d in enumerate(self.near[j]):
+                if d < math.inf:
+                    for jj in range(max(0, j - 2), min(self.ny, j + 3)):
+                        for ii in range(max(0, i - 2), min(self.nx, i + 3)):
+                            if d < spread.get((ii, jj), math.inf):
+                                spread[(ii, jj)] = d
+        for (i, j), d in spread.items():
+            self.near[j][i] = d
+        self.field_sum, self.hard_sum = self._sums(field), self._sums(hard)
+
+    def _cell(self, yaw, below):
+        i, j = int((yaw - self.YAW[0]) / self.RES), int((below - self.BELOW[0]) / self.RES)
+        return (i, j) if 0 <= i < self.nx and 0 <= j < self.ny else None
+
+    def _mark(self, grid, p):
+        c = self._cell(*p)
+        if c:
+            grid[c[1]][c[0]] = 1
+
+    def _sums(self, grid):
+        s = [[0] * (self.nx + 1) for _ in range(self.ny + 1)]
+        for j in range(self.ny):
+            run = 0
+            for i in range(self.nx):
+                run += grid[j][i]
+                s[j + 1][i + 1] = s[j][i + 1] + run
+        return s
+
+    def _range(self, box, margin):
+        y0, y1, b0, b1 = box
+        i0 = max(0, int(math.floor((y0 - margin - self.YAW[0]) / self.RES)))
+        i1 = min(self.nx, int(math.ceil((y1 + margin - self.YAW[0]) / self.RES)))
+        j0 = max(0, int(math.floor((b0 - margin - self.BELOW[0]) / self.RES)))
+        j1 = min(self.ny, int(math.ceil((b1 + margin - self.BELOW[0]) / self.RES)))
+        return i0, i1, j0, j1
+
+    @staticmethod
+    def _count(s, i0, i1, j0, j1):
+        if i1 <= i0 or j1 <= j0:
+            return 0
+        return s[j1][i1] - s[j0][i1] - s[j1][i0] + s[j0][i0]
+
+    def covers_field(self, box, margin):
+        return self._count(self.field_sum, *self._range(box, margin)) > 0
+
+    def covers_hard(self, box, margin):
+        return self._count(self.hard_sum, *self._range(box, margin)) > 0
+
+    def nearest(self, box):
+        i0, i1, j0, j1 = self._range(box, 0.0)
+        return min((self.near[j][i] for j in range(j0, j1) for i in range(i0, i1)), default=math.inf)
+
+
+def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float,
+                mounts: dict | None = None, seating: dict | None = None, shape: dict | None = None) -> dict:
+    """Where every panel goes from this seat: the dock.
+
+    Panels are one anchored layer, laid out by the same rule from every seat
+    rather than each hunting its own gap:
+
+    - **The rail** holds what is always there: the Drive tab on the left, the
+      Controls pill in the middle, the right-hand tab on the right, on one
+      line at one distance. The side tabs stand under the side panels' own
+      yaw, so a panel opens where its tab was. The line sits in the lowest
+      clear band inside the comfort window - under the field's near sideline
+      where there is room - at the height nearest `rail.preferredBelowDegrees`
+      in that band.
+    - **The gallery** holds what the wearer opens. The two side panels open as
+      a mirrored pair, one height and one distance; the controls open centred,
+      as near the pill's height as fits. A panel that needs more room than a
+      band gives moves further out, where it subtends less, up to
+      `gallery.maxDistance`.
+
+    Hard rules, never traded against a cost: off the field's silhouette, the
+    video board, the ribbon and the rim light banks; the whole box inside
+    ±maxSideDegrees and above maxBelowDegrees; off every other element of the
+    dock it could be shown with; and nearer than any chair, rail, ground or
+    glass it overlaps. A place past such a thing is brought in front of it
+    and drawn smaller by `scale`, so it subtends the same angle. A panel with
+    no clear place carries `clear: false` and starts folded.
+
+    Every client lays panels out from this, not from its own guess."""
+    dock = layout["dock"]
+    ppm = layout["pointsPerMeter"]
+    sizes = layout["panelSizes"]
+    max_side, max_below, top = layout["maxSideDegrees"], layout["maxBelowDegrees"], dock["highestBelowDegrees"]
+    hard = (video_board_points(seat, BOWL.get("videoBoard"), eye_meters, meters_per_yard)
+            + ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
+            + rim_points(seat, mounts, eye_meters, meters_per_yard))
+    near = near_occluders(seat, shape, seating, eye_meters, meters_per_yard) if shape and seating else []
+    grid = ViewGrid(field_silhouette(seat, field, eye_meters, meters_per_yard), hard, near)
+
+    def at(yaw, below, distance, scale=1.0):
+        return {"yaw": round(yaw, 3), "distance": round(distance, 3),
+                "height": round(-distance * math.tan(math.radians(below)), 3), "scale": round(scale, 3)}
+
+    def fit(yaw, below, distance, size, avoid=()):
+        slot = at(yaw, below, distance)
+        box = panel_box(slot, size, ppm)
+        # The comfort limits hold the panel's centre, as the art bible states
+        # them; the top of the box stays under highestBelowDegrees.
+        # (heights are rounded to the millimetre, so stay a hair inside).
+        if abs(yaw) > max_side or below > max_below - 0.05 or box[2] < top:
+            return None
+        if grid.covers_field(box, dock["fieldMarginDegrees"]) or grid.covers_hard(box, dock["hardMarginDegrees"]):
+            return None
+        if any(_boxes_overlap(box, other, dock["gapDegrees"]) for other in avoid):
+            return None
+        nearest = grid.nearest(box)
+        if nearest - dock["nearClearanceMeters"] < distance:
+            placed = nearest - dock["nearClearanceMeters"]
+            if placed < dock["minDistance"]:
+                return None
+            slot = at(yaw, below, placed, placed / distance)
+        return slot
+
+    def first(cands, test):
+        for _, args in sorted(cands, key=lambda c: c[0]):
+            s = test(*args)
+            if s:
+                return s
+        return None
+
+    step = dock["stepDegrees"]
+    belows_up = list(_frange(max_below, top, -step))
+    tab = sizes["tab"]
+    rail, gallery, ctl = dock["rail"], dock["gallery"], dock["controls"]
+    side_yaw = rail["sideYawDegrees"]
+    rail_yaws = {"drive": -side_yaw, "controls": 0.0, "trailing": side_yaw}
+
+    # The rail: the lowest band where all three stand on one line.
+    band = []
+    for below in belows_up:
+        slots = {k: fit(y, below, rail["distance"], tab) for k, y in rail_yaws.items()}
+        if all(slots.values()):
+            band.append((below, slots))
+        elif band:
+            break
+    if band:
+        rail_below, tabs = min(band, key=lambda b: abs(b[0] - rail["preferredBelowDegrees"]))
+    else:
+        rail_below, tabs = rail["preferredBelowDegrees"], {}
+        for k, y in rail_yaws.items():
+            cands = [(abs(yy - y) * 2 + abs(b - rail["preferredBelowDegrees"]), (yy, b, rail["distance"], tab))
+                     for yy in _frange(-max_side, max_side, step) for b in belows_up]
+            tabs[k] = first(cands, fit) or at(y, rail_below, rail["distance"])
+    tab_box = {k: panel_box(s, tab, ppm) for k, s in tabs.items()}
+
+    comfy = gallery["comfortableBelowDegrees"]
+
+    def discomfort(below):
+        return (comfy[0] - below) * 1.5 if below < comfy[0] else max(0.0, below - comfy[1])
+
+    distances = list(_frange(gallery["minDistance"], gallery["maxDistance"], gallery["distanceStep"]))
+    yaw_mags = list(_frange(max_side, gallery["minSideDegrees"], -step))
+
+    def side_cost(mag, below, distance):
+        return (gallery["distanceCost"] * (distance / gallery["minDistance"] - 1) + discomfort(below)
+                + gallery["inwardCost"] * (max_side - mag))
+
+    # A side panel, open, hides its own tab but not the pill or the other tab.
+    avoid_for = {"drive": [tab_box["controls"], tab_box["trailing"]],
+                 "trailing": [tab_box["controls"], tab_box["drive"]]}
+
+    def pair(mag, below, distance):
+        left = fit(-mag, below, distance, sizes["drive"], avoid_for["drive"])
+        right = left and fit(mag, below, distance, sizes["trailing"], avoid_for["trailing"])
+        return {"drive": left, "trailing": right} if left and right else None
+
+    side_cands = [(side_cost(m, b, d), (m, b, d)) for m in yaw_mags for b in belows_up for d in distances]
+    opened = first(side_cands, pair)
+    if opened is None:
+        opened = {}
+        for name, sign in (("drive", -1), ("trailing", 1)):
+            opened[name] = first(side_cands, lambda m, b, d, name=name, sign=sign:
+                                 fit(sign * m, b, d, sizes[name], avoid_for[name]))
+
+    # The controls open centred, nearest the pill, clear of whatever is open
+    # or folded either side of them.
+    others = [tab_box["drive"], tab_box["trailing"]] + [
+        panel_box(s, sizes[k], ppm) for k, s in opened.items() if s]
+    ctl_cands = [(abs(b - rail_below) * 0.5 + abs(y) + 4 * (d / ctl["minDistance"] - 1), (y, b, d))
+                 for y in _frange(-ctl["maxYawDegrees"], ctl["maxYawDegrees"], step) for b in belows_up
+                 for d in _frange(ctl["minDistance"], ctl["maxDistance"], gallery["distanceStep"])]
+    opened["controls"] = first(ctl_cands, lambda y, b, d: fit(y, b, d, sizes["controls"], others))
+
     out = {}
     for name in ("drive", "trailing", "controls"):
-        base = layout["slots"][name]
-        d = base["distance"]
-        side = 0 if base["yaw"] == 0 else math.copysign(1, base["yaw"])
-        yaws = [base["yaw"]] if side == 0 else [
-            side * a for a in _frange(abs(base["yaw"]), search["minSideDegrees"], -step)]
-        # The controls sit dead ahead, so they may not climb into the middle
-        # of the view to dodge the field; folded to the pill instead.
-        top = search["controlsHighestBelowDegrees"] if name == "controls" else search["highestBelowDegrees"]
-        belows = list(_frange(layout["maxBelowDegrees"], top, -step))
-        default_below = math.degrees(math.atan2(-base["height"], d))
-
-        def place(size, yaws=yaws, belows=belows):
-            best = None
-            for yaw in yaws:
-                for below in belows:
-                    slot = {"yaw": yaw, "distance": d, "height": round(-d * math.tan(math.radians(below)), 3)}
-                    box = panel_box(slot, size, layout["pointsPerMeter"], margin)
-                    if box_overlaps(box, poly) or points_in_box(box, board):
-                        continue
-                    cost = abs(below - default_below) + 2 * abs(yaw - base["yaw"])
-                    if points_in_box(box, ribbon):
-                        cost += search["ribbonCost"]
-                    if best is None or cost < best[0]:
-                        best = (cost, slot)
-            return best[1] if best else None
-
-        open_slot = place(layout["panelSizes"][name])
-        if open_slot:
-            out[name] = {**open_slot, "folded": False}
-        else:
-            # A folded tab is small enough to go anywhere in the comfort
-            # window. Held to its panel's own search it fell back to its
-            # default slot, which from the upper deck put the controls pill
-            # on the fifty-yard line.
-            tab = place(layout["panelSizes"]["tab"]) or place(
-                layout["panelSizes"]["tab"],
-                yaws=sorted(_frange(-layout["maxSideDegrees"], layout["maxSideDegrees"], step), key=lambda a: abs(a - base["yaw"])),
-                belows=list(_frange(layout["maxBelowDegrees"], search["highestBelowDegrees"], -step)))
-            out[name] = {**(tab or {"yaw": base["yaw"], "distance": d, "height": base["height"]}), "folded": True}
+        place = opened[name]
+        clear = place is not None
+        # Nowhere clear: it starts folded, and opens over its tab if asked.
+        out[name] = {**(place or tabs[name]), "folded": not clear, "clear": clear, "tab": tabs[name]}
     out["scorebugHidden"] = board_carries_score(seat, BOWL.get("videoBoard"), layout["scorebugYield"])
+    out["rail"] = {"below": round(rail_below, 2), "clear": bool(band)}
     return out
+
+
+def _boxes_overlap(a, b, gap: float = 0.0) -> bool:
+    return a[0] - gap < b[1] and b[0] - gap < a[1] and a[2] - gap < b[3] and b[2] - gap < a[3]
 
 
 def board_carries_score(seat: dict, board: dict | None, rule: dict) -> bool:
@@ -789,8 +1121,19 @@ def experience_visual(tokens: dict, field: dict) -> dict:
     exp = tokens["visual"]["experience"]
     eye = exp["camera"]["eyeMeters"]
     mpy = PRESENTATION["stadium"]["metersPerYard"]
-    per = {s["id"]: seat_panels(s, field, exp["layout"], eye, mpy) for s in PRESENTATION["stadium"]["seats"]}
+    key = (json.dumps(field, sort_keys=True, default=str), json.dumps(exp["layout"], sort_keys=True),
+           json.dumps(tokens["visual"]["lighting"]["rim"], sort_keys=True), json.dumps(tokens["visual"]["bowl"]["rows"]))
+    if key not in _PANELS_CACHE:
+        shape = {**BOWL["shape"], "halfLength": field["length"] / 2 + field["endZone"], "halfWidth": field["width"] / 2}
+        mounts = bowl_mounts(shape, tokens["visual"]["lighting"]["rim"])
+        seating = bowl_seating(shape, tokens["visual"]["bowl"]["rows"])
+        _PANELS_CACHE[key] = {s["id"]: seat_panels(s, field, exp["layout"], eye, mpy, mounts, seating, shape)
+                              for s in PRESENTATION["stadium"]["seats"]}
+    per = json.loads(json.dumps(_PANELS_CACHE[key]))
     return {**exp, "layout": {**exp["layout"], "perSeat": per}}
+
+
+_PANELS_CACHE: dict = {}
 
 
 def load_tokens(path: pathlib.Path | str | None = None) -> dict:

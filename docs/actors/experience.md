@@ -13,7 +13,7 @@ Walking into a night game, not loading one.
 - **Arrival.** The table's "Enter stadium" raises a curtain of floodlight from the plinth's edge, with a bright lip, widening by `arrival.gateWiden` while the table dims to `arrival.tabletopDim`. The space then opens on the Crown dial.
 - **Head never moved.** Nothing moves the wearer's head. The world turns about them, and only on their own action: a seat change, a pinch on the table.
 - **Crown hint.** The first time the stadium opens on the dial, a hint names the Digital Crown for `crownHintSeconds`, once.
-- **Field kept clear.** Every panel's place is a slot in `visual.experience.layout`, low and to the side.
+- **Field kept clear.** Every panel's place comes from the dock (see "Panels per seat"): tabs and the pill on one rail, opened panels in the gallery, never on the field, the boards or the lights.
   - **Rest.** Panels rest at `restOpacity` and come up to `hoverOpacity` when looked at (the system's hover state; the app never learns where you look).
   - **Folding.** The side panels fold to 60-point tabs. The controls fold to a pill after `controls.autoHideSeconds` untouched, and come back on a tap of the pill or a pinch out on the field.
   - **Moments.** A celebrated moment folds every panel and fades the tabs to `panels.momentOpacity` (reduce motion: folds, no fade), leaving the scorebug and Broadcast's world banner. `panels.momentReturnSeconds` after the banner goes, each panel returns as the wearer had it.
@@ -68,21 +68,38 @@ Broadcast's drive log (5 rows, at most 360 pt) fits. Its test should read `panel
 
 `layout.perSeat.<seat>.scorebugHidden` is true when `bowl.videoBoard` faces the wearer, sits within `scorebugYield.inViewDegrees` of straight ahead, and subtends at least `boardMinDegrees`. Today that is only the `endzone` seat.
 
-## Panels per seat
+## Panels per seat: the dock
 
-`scene.py`'s `seat_panels()` works out each seat's drive, trailing and controls places.
-- **Search:** from the default slot, it looks for the nearest spot inside the comfort limits (±30°, at most 33° below) whose angular box stays outside the field's projected silhouette (end zones included, plus `search.marginDegrees`).
-- **Controls:** dead ahead, so they never climb above `search.controlsHighestBelowDegrees`.
-- **No room:** a panel starts folded, and its tab is placed the same way.
-- **Output:** the scene carries the result as `visual.experience.layout.perSeat`.
-- **Swift:** moves the attachments when the seat changes and applies the folds.
-- **Test:** `tests/test_experience.py` asserts no open panel overlaps the field from any of the seven presets.
+`scene.py`'s `seat_panels()` lays every panel out as one anchored layer, by the same rule from every seat, rather than letting each panel hunt its own gap. The numbers are `visual.experience.layout.dock`.
 
-| Seat | Drive / trailing below eye | Controls |
-|---|---|---|
-| club, endzone, sideline | about −1° to −4° (just above the eye, over the stands) | low, or folded |
-| upper, clubLevel, pressBox | 1° to 11° | folded |
-| field | 24–25° | 30° |
+- **The rail** holds what is always there: the Drive tab (left, `rail.sideYawDegrees`), the Controls pill (centre) and the right-hand tab, on one line at `rail.distance`. It sits in the lowest clear band inside the comfort window. That is under the field's near sideline where there is room (club, field, endzone, sideline, clubLevel), otherwise between the far sideline and the ribbon (upper, pressBox), at the height nearest `rail.preferredBelowDegrees` in that band.
+- **The gallery** holds what the wearer opens. The side panels open as a mirrored pair at one height and one distance; the controls open centred, as near the pill's height as fits. A panel that needs more room than its band moves further out, where it subtends less, up to `gallery.maxDistance`.
+- **Hard rules, never costs.** A place is refused if its box:
+  - covers the field's silhouette (plus `fieldMarginDegrees`), the video board, the ribbon or a rim light bank (plus `hardMarginDegrees`);
+  - has its centre outside ±30° or below 33°, or its top above `highestBelowDegrees`;
+  - overlaps another dock element that can be on screen with it;
+  - stands further out than a chair back, an aisle rail, the ground or the press box glass inside it. Such a place is brought in front of the obstacle (less `nearClearanceMeters`) and drawn smaller by `scale`, so it subtends the same angle; never nearer than `minDistance`.
+- **Near geometry** is `near_occluders()`, from the scene's own seating plan and Bowl's kit numbers (`NEAR`, held to `tools/blender/bowl/` by a test).
+- **Output.** `layout.perSeat.<seat>.<panel>` is the open place (`yaw`, `distance`, `height`, `scale`), `tab` (the same fields), `folded` (starts folded) and `clear` (it has an open place that obeys every rule), plus `rail` and `scorebugHidden`. A panel with no clear place would start folded and open over its tab only when asked; today every panel is clear from all seven presets, and a test holds that.
+- **Swift** (`StadiumSpaceView.placeDock`) draws each attachment at its tab while folded and at its open place while open, with its scale, and moves it when the seat or the fold changes. Before this it placed each attachment once per seat, so a folded tab sat at the middle of the panel it folded from. That was the floating Elsewhere tab over the stands from the club seat and among the light banks from the upper deck and the press box.
+- **Cost.** The layout solves once per field on a half-degree view grid and is cached. It adds about 1.5 s to the first scene built for a field; every later build reuses it.
+
+| Seat | Rail (below eye, distance) | Side panels open (yaw, below, distance, scale) | Controls open |
+|---|---|---|---|
+| club | 31.5°, 1.25 m | ±30°, 2.5° below, 1.80 m | 0°, 32.5°, 1.50 m |
+| field | 26.0°, 1.25 m | ±30°, 22.0°, 1.35 m | 0°, 26.0°, 0.90 m |
+| endzone | 29.5°, 1.25 m | ±30°, 0.5°, 1.80 m | 0°, 32.0°, 0.95 m |
+| upper | 13.0°, 1.25 m | ±30°, 9.0°, 1.80 m | 0°, 11.5°, 0.90 m |
+| sideline | 29.0°, 1.25 m | left −30°, 1.0° above, 1.60 m; right 30°, 22.0°, 1.86 m ×0.93 | 0°, 31.0°, 0.90 m |
+| clubLevel | 32.5°, 1.25 m | ±30°, 5.0°, 1.80 m | 0°, 7.5°, 0.90 m |
+| pressBox | 17.5°, 0.92 m ×0.74 (inside the glass) | ±30°, 14.5°, 0.96 m ×0.48 | 0°, 16.5°, 0.86 m ×0.90 |
+
+The sideline seat is the one without a mirrored pair: the ribbon dips on its right, so the right panel opens low over the rows in front, nearer than the chairs.
+
+### Contract change for the ports and Broadcast
+
+- **Ports:** `perSeat` panels gain `scale`, `clear` and `tab`, and `rail`. The web and Android ports should draw a folded panel at `tab`, not at the open place, and apply `scale`. `layout.search` is gone; `layout.dock` replaces it.
+- **Broadcast:** `panelSizes.trailing.maxHeightPoints` is now 400, the same as the drive log's, so the side pair opens at one height. The Elsewhere list measures about 394 pt at six rows. `panelSizes.drive` is unchanged.
 
 ### Director: seat previews in `SceneSpec`
 
@@ -179,3 +196,43 @@ note here suspected the crowd at the `field` seat; that was this, not a bug.
   - `bowl-wide`: the Controls pill is now off the field but dead ahead over the far lower stands, and the drive log sits up by the rim light banks. Both are inside the limits, but the drive log crosses a bank. From the upper deck the only place off the field and the ribbon is high.
   - `crowd-closeup`: the Elsewhere tab still floats over the far stands. It is inside the limits and off the field; it is just the only place a tab fits from the club seat.
   - `tabletop`: unchanged.
+
+## Round 4: the dock (`docs/lookdev/experience-r4/`)
+
+**Asked for:** panels that read as a deliberate, anchored layer from every seat, after integration-11 found:
+- pills on the grass (field seat), on a chair in the row in front (sideline) and at the wearer's feet (redzone-trails);
+- the drive panel across the ribbon in both field-goal shots;
+- the controls pill dead ahead and the drive log across a light bank (upper);
+- the Elsewhere tab floating over the stands (club).
+
+**What was wrong:**
+1. **Tabs at the open panel's centre.** The app placed each attachment once per seat, so a folded tab was drawn at the middle of its open place. The Elsewhere panel starts folded, which put its tab above the eye over the stands (club) and among the rim light banks (upper, press box).
+2. **The ribbon was a cost, not a rule.** A panel could pay 20° to stay on it.
+3. **No near geometry.** From the press box the glass is 0.91 m out, and every panel stood outside the window.
+
+**What changed:** the dock above. Tabs have their own places, the ribbon and the light banks are hard rules, and near geometry is modelled and respected.
+
+**Evidence:** placement plots, not renders. `placement/before-<seat>.png` and `placement/after-<seat>.png` draw each seat's view in angle space (yaw across, degrees below the eye down):
+- the field in green, the ribbon in orange, the video board in purple, the rim light banks in yellow, and near geometry in grey;
+- the comfort window dashed;
+- each panel's box as the app draws it: integration-11 with tabs at their panel's slot, then the dock with open panels solid and the rail outlined.
+
+**No simulator shots this round.** Xcode.app was updated to 27.0 at 16:58 today, after integration-11's last build, and its licence has not been accepted. `xcodebuild`, `xcrun simctl`, `/usr/bin/git` and `/usr/bin/make` all refuse to run until someone runs `sudo xcodebuild -license accept`. The gates were run around it:
+- **Tests:** `python3 -m unittest discover -s tests` (what `make test` runs): 556 tests. `test_crowd_choreography` needs `swiftc` and passes with the toolchain's own.
+- **Scene:** `verify_scene` built with the toolchain's `swiftc` against the macOS SDK: 15 scenes, 59,515 assertions OK.
+- **Type-check:** the whole app (78 files) with the toolchain's `swiftc -typecheck` against the visionOS simulator SDK: no errors, no warnings.
+- **Contrast:** `contrast_check` OK.
+- **Not run:** a full `xcodebuild`, and every shot. Both are owed once the licence is accepted.
+
+**Worst thing left, per seat, from the plots:**
+- `club`: the open side panels stand 1.8 m out over the far stands, just under the ribbon, and the rail sits at 31.5°, the height integration-11's redzone-trails framing read as "at your feet". It is one line now, but a render has to say whether that reads as a tray.
+- `field`: the side panels open at 22° below, over the painted border. They are nearer than the ground everywhere, but in a flat screenshot they may still read as lying on the grass.
+- `endzone`: the side panels open level with the eye, 1.8 m out, either side of the video board. They are clear of it, but the board, the scorebug yield and both panels crowd the upper middle of the view.
+- `upper`: the rail sits between the far sideline and the ribbon, so the tabs and pill are always in the middle of the view. There is no clear band under the field from up there.
+- `sideline`: the only seat without a mirrored pair. The ribbon dips on the right, so the right panel opens low over the rows in front (×0.93, nearer than the chairs).
+- `clubLevel`: none found in the plot.
+- `pressBox`: every panel is inside the glass at about 0.9 m and drawn at ×0.48–0.9. It is angularly as legible as at 2 m, but physically small and near in stereo. Needs a device.
+- `tabletop`: unchanged; the tabletop has no dock.
+
+**Found for the director:** the renderer's wearer eye is not Bowl's near-patch eye. `presentation.stadium.seats[].y` is the tier height at the seat's offset, which from the club seat is the tread of the row in front (12.16 yd). Bowl's `structure.presets()` puts the eye on the seat's own row tread plus 1.26 m (14.16 yd against the renderer's 13.47 yd). The near check uses the renderer's eye, since that is where the wearer is, but the modelled "own seat" gap and the chairs around it were cut for Bowl's.
+
