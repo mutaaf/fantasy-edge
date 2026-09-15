@@ -114,6 +114,28 @@ def simctl(*args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(["xcrun", "simctl", *args], capture_output=True, text=True, check=check)
 
 
+def app_log(device: str, since: str) -> str:
+    return subprocess.run(["xcrun", "simctl", "spawn", device, "log", "show", "--start", since, "--style", "compact",
+                           "--predicate", 'subsystem == "com.mutaaf.fantasyedge"'],
+                          capture_output=True, text=True).stdout
+
+
+def wait_for_build(device: str, since: str, tabletop: bool, timeout: float) -> float:
+    """Wait until the launched app says its stadium is built (the -stadiumStats
+    totals line) and, in the stadium, that the crowd has dressed. A fixed delay
+    rendered black worlds under load. Returns the seconds waited."""
+    started = time.monotonic()
+    built = "[stadium-stats] tabletop: models" if tabletop else "[stadium-stats] stadium: models"
+    needs = [built] if tabletop else [built, "crowd dress composed"]
+    while time.monotonic() - started < timeout:
+        text = app_log(device, since)
+        if all(n in text for n in needs):
+            return time.monotonic() - started
+        time.sleep(2.0)
+    print(f"  not built after {timeout:.0f}s; shooting anyway", flush=True)
+    return timeout
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--device", required=True)
@@ -122,7 +144,8 @@ def main() -> None:
     ap.add_argument("--app", type=pathlib.Path,
                     default=ROOT / ".work/dd/Build/Products/Debug-xrsimulator/FantasyEdge.app")
     ap.add_argument("--only", nargs="*", choices=sorted(SHOTS))
-    ap.add_argument("--settle", type=float, default=9.0)
+    ap.add_argument("--settle", type=float, default=4.0, help="seconds to let the scene settle once the app says it is built")
+    ap.add_argument("--build-timeout", type=float, default=60.0, help="longest wait for the built signal")
     ap.add_argument("--extra", default="", help="launch arguments after -shot, one quoted string: --extra=\"-stadiumPitch -40\"")
     ap.add_argument("--suffix", default="", help="appended to each shot's file name")
     ap.add_argument("--moment", default="touchdown", choices=["touchdown", "fieldGoal"],
@@ -165,9 +188,12 @@ def main() -> None:
             # motion.momentSeconds, so the shot is taken inside that window.
             post(args.port, {"action": "seek", "at": at - 3 if where == "touchdown" else at})
             post(args.port, {"action": "pause"})
+            launched = time.strftime("%Y-%m-%d %H:%M:%S")
             simctl("launch", "--terminate-running-process", args.device, BUNDLE,
                    "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *args.extra.split(), check=False)
+            waited = wait_for_build(args.device, launched, name == "tabletop", args.build_timeout)
             time.sleep(args.settle)
+            print(f"  {name}: built after {waited:.0f}s", flush=True)
             takes = [("", 0.0)]
             if where == "touchdown":
                 post(args.port, {"action": "speed", "speed": 1})
@@ -186,9 +212,7 @@ def main() -> None:
                                capture_output=True)
                 logs.append(f"{name}{tag}: replay at {at}s ({where}) -> {shot}")
                 print(logs[-1], flush=True)
-        stats = subprocess.run(["xcrun", "simctl", "spawn", args.device, "log", "show", "--start", started,
-                                "--style", "compact", "--predicate", 'subsystem == "com.mutaaf.fantasyedge"'],
-                               capture_output=True, text=True).stdout
+        stats = app_log(args.device, started)
         # Per-actor draw counts, and which path loaded each Shader Graph material.
         lines = sorted({line[line.index(tag):] for line in stats.splitlines()
                         for tag in ("[stadium", "[shadergraph") if tag in line})
