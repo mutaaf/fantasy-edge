@@ -669,6 +669,36 @@ def export(objs, path_stem: pathlib.Path):
                           meters_per_unit=1.0)
 
 
+def split_by_material(obj, base: str) -> list:
+    """One object per material, named `<base>__<material>`.
+
+    RealityKit keeps prim names from a USD file but not material names, so the
+    name is how the sideline actor knows which palette entry a mesh wears, and
+    merges the whole team area into one mesh per entry.
+    """
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    if len([s for s in obj.material_slots if s.material]) > 1:
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.mesh.separate(type="MATERIAL")
+        bpy.ops.object.mode_set(mode="OBJECT")
+        parts = [o for o in bpy.context.selected_objects]
+    else:
+        parts = [obj]
+    out = []
+    for part in parts:
+        used = {part.data.polygons[i].material_index for i in range(len(part.data.polygons))}
+        slot = part.material_slots[min(used)] if used else part.material_slots[0]
+        key = slot.material.name.split(".")[0]
+        part.name = f"{base}__{key}"
+        part.data.name = part.name
+        out.append(part)
+    return out
+
+
 def build(name: str) -> dict:
     common.reset_scene(engine="BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items] else "CYCLES")
     _MATS.clear()
@@ -676,21 +706,29 @@ def build(name: str) -> dict:
     children = []
     if isinstance(result, tuple):
         result, children = result
-    root = join(result, name)
-    record = {"id": name, "lods": {}, "materials": [s.material.name for s in root.material_slots if s.material],
+    root = join(result, name + "_src")
+    record = {"id": name, "lods": {}, "materials": sorted({s.material.name for s in root.material_slots if s.material}),
               "dimensionsMetres": [round(d, 3) for d in root.dimensions]}
     for lod, ratio in LODS.items():
-        lod_root = lod_copy(root, ratio, f"{name}_lod{lod}" if lod else name)
-        extra = [lod_copy(c, ratio, f"{c.name}" if lod == 0 else f"{c.name}_lod{lod}") for c in children]
-        for c in extra:
-            c.parent = lod_root
-        stem = OUT / (name if lod == 0 else f"{name}_lod{lod}")
-        export([lod_root] + extra, stem)
-        record["lods"][lod] = {"triangles": triangles(lod_root) + sum(triangles(c) for c in extra),
-                               "parts": len(record["materials"]) + (1 if extra else 0),
+        stem_name = name if lod == 0 else f"{name}_lod{lod}"
+        anchor = bpy.data.objects.new(stem_name, None)
+        bpy.context.scene.collection.objects.link(anchor)
+        parts = split_by_material(lod_copy(root, ratio, f"{stem_name}_tmp"), base=name)
+        child_names = []
+        for c in children:
+            base = c.name.split(".")[0]
+            for part in split_by_material(lod_copy(c, ratio, f"{base}_tmp{lod}"), base=base):
+                parts.append(part)
+                child_names.append(part.name)
+        for part in parts:
+            part.parent = anchor
+        stem = OUT / stem_name
+        export([anchor] + parts, stem)
+        record["lods"][lod] = {"triangles": sum(triangles(o) for o in parts),
+                               "meshes": [o.name for o in parts],
                                "files": [stem.with_suffix(".usdz").name, stem.with_suffix(".glb").name]}
-        if extra:
-            record["lods"][lod]["children"] = [c.name for c in extra]
+        for o in [anchor] + parts:
+            bpy.data.objects.remove(o)
     return record
 
 

@@ -533,8 +533,8 @@ class TestSceneGeometry(unittest.TestCase):
 
     def test_props_follow_the_league_and_look_names_real_assets(self):
         nfl = self.final["field"]["props"]
-        self.assertEqual(nfl["benches"]["fromX"], 32.0)
-        self.assertEqual(sc.RULES["college-football"]["props"]["benches"]["fromX"], 25.0)
+        self.assertEqual(nfl["benches"]["fromX"], 30.0)
+        self.assertEqual(sc.RULES["college-football"]["props"]["benches"]["fromX"], 20.0)
         self.assertAlmostEqual(nfl["goalpost"]["crossbar"] * 3, 10.0, places=2)
         for key in ("goalpost", "pylon", "benches", "chains"):
             self.assertIn(nfl[key]["color"], self.final["palette"])
@@ -553,6 +553,23 @@ class TestSceneGeometry(unittest.TestCase):
                                 f"{actor}.{name}: assets/{rel} is missing; run tools/make_assets.py")
                 self.assertTrue(rel.startswith(("actors/", "generated/")),
                                 f"{actor}.{name}: assets live under assets/actors/ or assets/generated/")
+
+    def test_the_sideline_follows_each_rulebook(self):
+        """Team areas and upright heights come from the 2026 books, not from
+        what looked right: NFL benches between the 30s and uprights 35 ft
+        above the bar; college team areas between the 20s and 30 ft uprights.
+        Both books put the bar 10 ft up and the uprights 18 ft 6 in apart."""
+        nfl, ncaa = sc.RULES["nfl"], sc.RULES["college-football"]
+        self.assertEqual((nfl["props"]["benches"]["fromX"], nfl["props"]["benches"]["toX"]), (30.0, 70.0))
+        self.assertEqual((ncaa["props"]["benches"]["fromX"], ncaa["props"]["benches"]["toX"]), (20.0, 80.0))
+        self.assertAlmostEqual(nfl["props"]["goalpost"]["uprightAbove"] * 3, 35.0, places=3)
+        self.assertAlmostEqual(ncaa["props"]["goalpost"]["uprightAbove"] * 3, 30.0, places=3)
+        for rules in (nfl, ncaa):
+            self.assertAlmostEqual(rules["props"]["goalpost"]["crossbar"] * 3, 10.0, places=2)
+            self.assertAlmostEqual(rules["field"]["goalPostWidth"] * 36, 222.0, delta=0.1)
+            # symmetric about midfield, which the half-canvas paint relies on
+            b = rules["props"]["benches"]
+            self.assertAlmostEqual(b["fromX"] + b["toX"], 100.0)
 
     def test_every_look_field_the_renderer_reads_is_in_the_tokens(self):
         """The visionOS renderer may only read appearance through SceneLook.swift.

@@ -59,15 +59,22 @@ TOKENS_PATH = pathlib.Path(
 
 # ── sideline ──
 
-def _props(bench_from: float, bench_to: float) -> dict:
+def _props(bench_from: float, bench_to: float, upright_above: float) -> dict:
     """The sideline furniture, in yards. Both codes share its shape; where
-    they differ - the team area - is an argument.
+    they differ - the team area and the upright height - is an argument.
 
     The goal post stands on the end line: a base two yards behind it, a
-    gooseneck forward, a crossbar 10 ft up, uprights 30 ft above that, 18 ft
-    6 in apart (field.goalPostWidth)."""
+    gooseneck forward, a crossbar 10 ft up and uprights 18 ft 6 in apart
+    (field.goalPostWidth). The NFL builds its uprights 35 ft above the bar
+    (2026 Rule 1 §3 Art.2); NCAA 1-2-5-a only asks for tops 30 ft off the
+    ground, and college posts are built 30 ft above the bar.
+
+    The benches sit 3.8 yd off the sideline because the bowl's front wall is
+    5.4 yd out. The NFL wants them at least 30 ft 4 in back (field diagram
+    note 1): that needs a wider apron than this bowl has, and is the bowl's
+    change to make, not the benches'."""
     return {
-        "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": 10.0,
+        "goalpost": {"baseBehind": 2.0, "crossbar": 3.333, "uprightAbove": upright_above,
                      "radius": {"base": 0.13, "crossbar": 0.09, "upright": 0.06},
                      "padHeight": 2.2, "padWidth": 0.7, "color": "prop.goalpost"},
         "pylon": {"size": 0.111, "height": 0.5, "color": "prop.pylon"},
@@ -87,16 +94,18 @@ RULES = {
                   # 70 ft 9 in in from each sideline; 18 ft 6 in apart.
                   "hashFromSideline": 23.583, "goalPostWidth": 6.167},
         "overtimeSeconds": 600,
-        # Each club's team area between the 32-yard lines, on opposite sidelines.
-        "props": _props(32.0, 68.0),
+        # Benches between the 30-yard lines (field diagram note 8), uprights
+        # 35 ft above the crossbar (Rule 1 §3 Art.2).
+        "props": _props(30.0, 70.0, 35 / 3),
     },
     "college-football": {
         "field": {"length": 100.0, "endZone": 10.0, "width": 160 / 3,
                   # 60 ft in from each sideline; 40 ft apart.
                   "hashFromSideline": 20.0, "goalPostWidth": 6.167},
         "overtimeSeconds": None,
-        # College team areas run between the 25-yard lines.
-        "props": _props(25.0, 75.0),
+        # The team area runs between the 20-yard lines (NCAA 1-2-4-a); posts
+        # are built 30 ft above the crossbar (1-2-5-a sets the 30 ft floor).
+        "props": _props(20.0, 80.0, 10.0),
         "stub": True,
     },
 }

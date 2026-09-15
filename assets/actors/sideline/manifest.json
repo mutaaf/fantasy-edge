@@ -25,7 +25,10 @@
             "ball_bag.usdz",
             "ball_bag.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
           "triangles": 684
         },
         "1": {
@@ -33,7 +36,10 @@
             "ball_bag_lod1.usdz",
             "ball_bag_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
           "triangles": 306
         },
         "2": {
@@ -41,7 +47,10 @@
             "ball_bag_lod2.usdz",
             "ball_bag_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "ball_bag__prop_net",
+            "ball_bag__prop_dark"
+          ],
           "triangles": 94
         }
       },
@@ -63,7 +72,9 @@
             "bean_bag.usdz",
             "bean_bag.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
           "triangles": 100
         },
         "1": {
@@ -71,7 +82,9 @@
             "bean_bag_lod1.usdz",
             "bean_bag_lod1.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
           "triangles": 44
         },
         "2": {
@@ -79,7 +92,9 @@
             "bean_bag_lod2.usdz",
             "bean_bag_lod2.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "bean_bag__prop_blue"
+          ],
           "triangles": 14
         }
       },
@@ -100,7 +115,10 @@
             "bench.usdz",
             "bench.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
           "triangles": 792
         },
         "1": {
@@ -108,7 +126,10 @@
             "bench_lod1.usdz",
             "bench_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
           "triangles": 356
         },
         "2": {
@@ -116,13 +137,16 @@
             "bench_lod2.usdz",
             "bench_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "bench__prop_steel",
+            "bench__tint_team_primary"
+          ],
           "triangles": 110
         }
       },
       "materials": [
-        "tint_team_primary",
-        "prop_steel"
+        "prop_steel",
+        "tint_team_primary"
       ]
     },
     "cable_run": {
@@ -138,7 +162,10 @@
             "cable_run.usdz",
             "cable_run.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
           "triangles": 466
         },
         "1": {
@@ -146,7 +173,10 @@
             "cable_run_lod1.usdz",
             "cable_run_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
           "triangles": 209
         },
         "2": {
@@ -154,7 +184,10 @@
             "cable_run_lod2.usdz",
             "cable_run_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "cable_run__prop_yellow",
+            "cable_run__prop_black"
+          ],
           "triangles": 65
         }
       },
@@ -176,7 +209,11 @@
             "camera_cart.usdz",
             "camera_cart.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
           "triangles": 436
         },
         "1": {
@@ -184,7 +221,11 @@
             "camera_cart_lod1.usdz",
             "camera_cart_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
           "triangles": 196
         },
         "2": {
@@ -192,14 +233,18 @@
             "camera_cart_lod2.usdz",
             "camera_cart_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "camera_cart__prop_black",
+            "camera_cart__prop_steel",
+            "camera_cart__prop_dark"
+          ],
           "triangles": 56
         }
       },
       "materials": [
-        "prop_steel",
+        "prop_black",
         "prop_dark",
-        "prop_black"
+        "prop_steel"
       ]
     },
     "chain_set": {
@@ -215,7 +260,11 @@
             "chain_set.usdz",
             "chain_set.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "chain_set__prop_steel",
+            "chain_set__prop_white",
+            "chain_set__prop_orange"
+          ],
           "triangles": 576
         },
         "1": {
@@ -223,7 +272,11 @@
             "chain_set_lod1.usdz",
             "chain_set_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "chain_set__prop_steel",
+            "chain_set__prop_white",
+            "chain_set__prop_orange"
+          ],
           "triangles": 258
         },
         "2": {
@@ -231,14 +284,18 @@
             "chain_set_lod2.usdz",
             "chain_set_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "chain_set__prop_white",
+            "chain_set__prop_orange",
+            "chain_set__prop_steel"
+          ],
           "triangles": 88
         }
       },
       "materials": [
-        "prop_white",
         "prop_orange",
-        "prop_steel"
+        "prop_steel",
+        "prop_white"
       ]
     },
     "cooler_station": {
@@ -254,7 +311,11 @@
             "cooler_station.usdz",
             "cooler_station.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
           "triangles": 652
         },
         "1": {
@@ -262,7 +323,11 @@
             "cooler_station_lod1.usdz",
             "cooler_station_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
           "triangles": 292
         },
         "2": {
@@ -270,14 +335,18 @@
             "cooler_station_lod2.usdz",
             "cooler_station_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "cooler_station__prop_blue",
+            "cooler_station__prop_white",
+            "cooler_station__prop_steel"
+          ],
           "triangles": 85
         }
       },
       "materials": [
-        "prop_white",
+        "prop_blue",
         "prop_steel",
-        "prop_blue"
+        "prop_white"
       ]
     },
     "down_marker": {
@@ -289,51 +358,54 @@
       "id": "down_marker",
       "lods": {
         "0": {
-          "children": [
-            "down_1.001",
-            "down_2.001",
-            "down_3.001",
-            "down_4.001"
-          ],
           "files": [
             "down_marker.usdz",
             "down_marker.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
           "triangles": 1280
         },
         "1": {
-          "children": [
-            "down_1_lod1",
-            "down_2_lod1",
-            "down_3_lod1",
-            "down_4_lod1"
-          ],
           "files": [
             "down_marker_lod1.usdz",
             "down_marker_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
           "triangles": 571
         },
         "2": {
-          "children": [
-            "down_1_lod2",
-            "down_2_lod2",
-            "down_3_lod2",
-            "down_4_lod2"
-          ],
           "files": [
             "down_marker_lod2.usdz",
             "down_marker_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "down_marker__prop_orange",
+            "down_marker__prop_white",
+            "down_1__prop_black",
+            "down_2__prop_black",
+            "down_3__prop_black",
+            "down_4__prop_black"
+          ],
           "triangles": 172
         }
       },
       "materials": [
-        "prop_white",
-        "prop_orange"
+        "prop_orange",
+        "prop_white"
       ]
     },
     "endzone_platform": {
@@ -349,7 +421,10 @@
             "endzone_platform.usdz",
             "endzone_platform.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
           "triangles": 740
         },
         "1": {
@@ -357,7 +432,10 @@
             "endzone_platform_lod1.usdz",
             "endzone_platform_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
           "triangles": 332
         },
         "2": {
@@ -365,7 +443,10 @@
             "endzone_platform_lod2.usdz",
             "endzone_platform_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "endzone_platform__prop_steel",
+            "endzone_platform__prop_dark"
+          ],
           "triangles": 85
         }
       },
@@ -387,7 +468,10 @@
             "fieldgoal_net.usdz",
             "fieldgoal_net.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
           "triangles": 94
         },
         "1": {
@@ -395,7 +479,10 @@
             "fieldgoal_net_lod1.usdz",
             "fieldgoal_net_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
           "triangles": 42
         },
         "2": {
@@ -403,7 +490,10 @@
             "fieldgoal_net_lod2.usdz",
             "fieldgoal_net_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "fieldgoal_net__prop_steel",
+            "fieldgoal_net__prop_net"
+          ],
           "triangles": 10
         }
       },
@@ -425,7 +515,11 @@
             "goalpost_college.usdz",
             "goalpost_college.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
           "triangles": 844
         },
         "1": {
@@ -433,7 +527,11 @@
             "goalpost_college_lod1.usdz",
             "goalpost_college_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
           "triangles": 378
         },
         "2": {
@@ -441,7 +539,11 @@
             "goalpost_college_lod2.usdz",
             "goalpost_college_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_college__tint_team_primary",
+            "goalpost_college__prop_gold",
+            "goalpost_college__prop_orange"
+          ],
           "triangles": 118
         }
       },
@@ -464,7 +566,11 @@
             "goalpost_nfl.usdz",
             "goalpost_nfl.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
           "triangles": 844
         },
         "1": {
@@ -472,7 +578,11 @@
             "goalpost_nfl_lod1.usdz",
             "goalpost_nfl_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
           "triangles": 378
         },
         "2": {
@@ -480,7 +590,11 @@
             "goalpost_nfl_lod2.usdz",
             "goalpost_nfl_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "goalpost_nfl__tint_team_primary",
+            "goalpost_nfl__prop_gold",
+            "goalpost_nfl__prop_orange"
+          ],
           "triangles": 118
         }
       },
@@ -503,7 +617,9 @@
             "ground_marker.usdz",
             "ground_marker.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
           "triangles": 16
         },
         "1": {
@@ -511,7 +627,9 @@
             "ground_marker_lod1.usdz",
             "ground_marker_lod1.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
           "triangles": 6
         },
         "2": {
@@ -519,7 +637,9 @@
             "ground_marker_lod2.usdz",
             "ground_marker_lod2.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "ground_marker__prop_orange"
+          ],
           "triangles": 1
         }
       },
@@ -540,7 +660,11 @@
             "heater_fan.usdz",
             "heater_fan.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
           "triangles": 400
         },
         "1": {
@@ -548,7 +672,11 @@
             "heater_fan_lod1.usdz",
             "heater_fan_lod1.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
           "triangles": 180
         },
         "2": {
@@ -556,13 +684,17 @@
             "heater_fan_lod2.usdz",
             "heater_fan_lod2.glb"
           ],
-          "parts": 3,
+          "meshes": [
+            "heater_fan__prop_orange",
+            "heater_fan__prop_dark",
+            "heater_fan__prop_black"
+          ],
           "triangles": 52
         }
       },
       "materials": [
-        "prop_dark",
         "prop_black",
+        "prop_dark",
         "prop_orange"
       ]
     },
@@ -579,7 +711,10 @@
             "kicking_net.usdz",
             "kicking_net.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
           "triangles": 128
         },
         "1": {
@@ -587,7 +722,10 @@
             "kicking_net_lod1.usdz",
             "kicking_net_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
           "triangles": 56
         },
         "2": {
@@ -595,13 +733,16 @@
             "kicking_net_lod2.usdz",
             "kicking_net_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "kicking_net__prop_dark",
+            "kicking_net__prop_net"
+          ],
           "triangles": 13
         }
       },
       "materials": [
-        "prop_net",
-        "prop_dark"
+        "prop_dark",
+        "prop_net"
       ]
     },
     "medical_tent": {
@@ -617,7 +758,10 @@
             "medical_tent.usdz",
             "medical_tent.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
           "triangles": 166
         },
         "1": {
@@ -625,7 +769,10 @@
             "medical_tent_lod1.usdz",
             "medical_tent_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
           "triangles": 74
         },
         "2": {
@@ -633,13 +780,16 @@
             "medical_tent_lod2.usdz",
             "medical_tent_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "medical_tent__prop_steel",
+            "medical_tent__tint_team_secondary"
+          ],
           "triangles": 15
         }
       },
       "materials": [
-        "tint_team_secondary",
-        "prop_steel"
+        "prop_steel",
+        "tint_team_secondary"
       ]
     },
     "penalty_flag": {
@@ -655,7 +805,9 @@
             "penalty_flag.usdz",
             "penalty_flag.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
           "triangles": 136
         },
         "1": {
@@ -663,7 +815,9 @@
             "penalty_flag_lod1.usdz",
             "penalty_flag_lod1.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
           "triangles": 61
         },
         "2": {
@@ -671,7 +825,9 @@
             "penalty_flag_lod2.usdz",
             "penalty_flag_lod2.glb"
           ],
-          "parts": 1,
+          "meshes": [
+            "penalty_flag__prop_yellow"
+          ],
           "triangles": 19
         }
       },
@@ -692,7 +848,10 @@
             "pylon_college.usdz",
             "pylon_college.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
           "triangles": 152
         },
         "1": {
@@ -700,7 +859,10 @@
             "pylon_college_lod1.usdz",
             "pylon_college_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
           "triangles": 68
         },
         "2": {
@@ -708,13 +870,16 @@
             "pylon_college_lod2.usdz",
             "pylon_college_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_college__prop_black",
+            "pylon_college__prop_orange"
+          ],
           "triangles": 16
         }
       },
       "materials": [
-        "prop_orange",
-        "prop_black"
+        "prop_black",
+        "prop_orange"
       ]
     },
     "pylon_nfl": {
@@ -730,7 +895,10 @@
             "pylon_nfl.usdz",
             "pylon_nfl.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
           "triangles": 108
         },
         "1": {
@@ -738,7 +906,10 @@
             "pylon_nfl_lod1.usdz",
             "pylon_nfl_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
           "triangles": 48
         },
         "2": {
@@ -746,13 +917,16 @@
             "pylon_nfl_lod2.usdz",
             "pylon_nfl_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "pylon_nfl__prop_black",
+            "pylon_nfl__prop_orange"
+          ],
           "triangles": 10
         }
       },
       "materials": [
-        "prop_orange",
-        "prop_black"
+        "prop_black",
+        "prop_orange"
       ]
     },
     "tablet_station": {
@@ -768,7 +942,10 @@
             "tablet_station.usdz",
             "tablet_station.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
           "triangles": 244
         },
         "1": {
@@ -776,7 +953,10 @@
             "tablet_station_lod1.usdz",
             "tablet_station_lod1.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
           "triangles": 108
         },
         "2": {
@@ -784,13 +964,16 @@
             "tablet_station_lod2.usdz",
             "tablet_station_lod2.glb"
           ],
-          "parts": 2,
+          "meshes": [
+            "tablet_station__prop_black",
+            "tablet_station__prop_dark"
+          ],
           "triangles": 33
         }
       },
       "materials": [
-        "prop_dark",
-        "prop_black"
+        "prop_black",
+        "prop_dark"
       ]
     }
   },
