@@ -508,11 +508,17 @@ class TestSceneGeometry(unittest.TestCase):
         seats = {s["id"]: s for s in st["seats"]}
         self.assertEqual(st["defaultSeat"], "club")
         self.assertEqual({k: st["seat"][k] for k in "xyz"}, {k: seats["club"][k] for k in "xyz"})
-        self.assertEqual(set(seats), {"club", "field", "endzone", "upper"})
+        # The look-dev shots sit in the first four; Experience adds presets
+        # (tests/test_experience.py holds the rest of the list).
+        self.assertLessEqual({"club", "field", "endzone", "upper"}, set(seats))
         tiers = {t["name"]: t for t in self.final["bowl"]["tiers"]}
         half_w, half_l = self.final["field"]["width"] / 2, 60.0
         for s in seats.values():
             self.assertEqual((s["lookAt"]["x"], s["lookAt"]["z"]), (50.0, 0.0))
+            if s["id"] == "pressBox":
+                # Not on a tier: level with the press box glass.
+                self.assertEqual(s["y"], self.final["bowl"]["pressBox"]["rise"][0])
+                continue
             off = max(abs(s["z"]) - half_w, abs(s["x"] - 50) - half_l)
             tier = next((t for t in tiers.values() if t["inner"] <= off <= t["outer"]), None)
             if tier is None:
@@ -604,6 +610,39 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertEqual(mid["center"], [50.0, 0.0])
         self.assertLess(mid["inner"], mid["outer"])
         self.assertLessEqual(mid["outer"], f["width"] / 2 - 15.0 + 1e-6, "NFL midfield art stays inside the numerals")
+
+    def test_field_and_sideline_shader_graphs_are_wired_to_their_tokens(self):
+        """The paint and net graphs are named from visual.field and
+        visual.sideline, compiled, and every scalar or colour input a graph
+        declares is a parameter the tokens set - so a port reimplementing the
+        graph has every number the headset used. Texture inputs are set at
+        runtime from assets the actor names."""
+        import re
+        root = pathlib.Path(sc.__file__).resolve().parent.parent
+        mats = self.final["shaderGraph"]["materials"]
+        for actor, key, usda in (("field", "paintMaterial", "Field.rkassets/FieldPaint.usda"),
+                                 ("sideline", "netMaterial", "Sideline.rkassets/NetFresnel.usda"),
+                                 ("field", "shells.material", "Shells.rkassets/FieldShells.usda")):
+            section = self.final["visual"][actor]
+            for part in key.split(".")[:-1]:
+                section = section[part]
+            entry = mats[section[key.split(".")[-1]]]
+            self.assertTrue((root / "assets" / entry["file"]).is_file(), f"{entry['file']}: run tools/blender/field/shadergraph/build.py")
+            for k in ("blend", "color", "opacity"):
+                self.assertIn(k, entry["fallback"])
+            src = (root / "tools/blender/field/shadergraph" / usda).read_text()
+            # the material's own inputs sit at eight spaces; node inputs are deeper
+            declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
+            runtime = ({"Color", "UseMask"} if key == "paintMaterial" else
+                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else set())
+            self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
+            self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
+        shells = self.final["visual"]["field"]["shells"]
+        self.assertTrue((root / "assets" / shells["atlas"]).is_file())
+        self.assertTrue(0 <= shells["firstLayer"] <= shells["lastLayer"] <= 7, "the atlas holds eight layers")
+        breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
+        self.assertTrue(breakup.is_file())
+        self.assertLess(breakup.stat().st_size, 1_000_000)
 
     def test_pylons_stand_where_each_book_puts_them(self):
         """NFL: the four goal-line corners and two on each end line at the

@@ -45,6 +45,9 @@ CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -(81.375 - W) / 2, "y1": W + (81.375 -
 HI_PPY = 32                  # texels per yard while rasterising
 OUT_PPY = 16                 # texels per yard shipped
 HALF_PAD_YARDS = 1.0         # the half textures run this far past midfield
+# How far a hard scuff eats into paint. Under 36 in (half the NFL border) it
+# thins and pits a line but never tears through the border.
+SCUFF_INCHES = 12.0
 SDF_RANGE_IN = 12.0          # inches of distance either side of an edge
 FONT_FILE = common.FIELD_OUT / "fonts" / "Graduate-Regular.ttf"
 GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&.'-?"
@@ -481,11 +484,11 @@ def paint_wear(xs, ys, geo_hash=None):
     traffic = np.clip(band + 0.7 * middle, 0, 1)
     speck = _value_noise(X, Y, 0.22, 73)
     patch = _value_noise(X, Y, 1.4, 74)
-    scuff = np.clip((speck - 0.58) / 0.25, 0, 1) * np.clip((patch - 0.35) / 0.4, 0, 1)
+    scuff = np.clip((speck - 0.64) / 0.25, 0, 1) * np.clip((patch - 0.40) / 0.4, 0, 1)
     # graded: a light scuff thins a line by an inch or two, a hard one goes
     # through even the middle of a six-foot border
     ends = 0.45 * np.exp(-0.5 * (np.minimum(np.abs(X + 11.0), np.abs(X - 111.0)) / 1.8) ** 2)
-    wear = edge - (scuff ** 2) * np.clip(traffic + ends, 0, 1) * (28.0 * IN)
+    wear = edge - (scuff ** 2) * np.clip(traffic + ends, 0, 1) * (SCUFF_INCHES * IN)
     return (wear + wear[::-1, ::-1]) / 2
 
 

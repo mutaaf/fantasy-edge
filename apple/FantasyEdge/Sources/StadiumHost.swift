@@ -79,10 +79,19 @@ struct TabletopHost: View {
             }
         }
         .onAppear {
-            passage.appeared(.tabletop(value))
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
+            passage.appeared(.tabletop(value))
+            if passage.appearedInside(.tabletop(value)) {
+                dismissWindow(id: "tabletop", value: value)
+                dismissWindow(id: "tabletop")
+            }
         }
         .onDisappear { passage.disappeared(.tabletop(value)) }
+        // The launch arguments run from whichever window the system restores
+        // first. On a relaunch visionOS can bring back only the tabletop the
+        // last session left open, and with the hook on the board alone the
+        // stadium never opened (once per process either way).
+        .modifier(StadiumLaunchArguments())
         .onChange(of: value) { old, new in
             passage.renamed(from: .tabletop(old), to: .tabletop(new))
             feed.target = new == StadiumHost.replayWindow ? .replay : .live(event: new)
@@ -99,21 +108,24 @@ struct StadiumHostSpace: View {
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
 
     var body: some View {
+        // Only games the board has actually read. An unreachable board shows
+        // no tab here rather than an empty panel in the stands.
+        let others = board.slate.filter { $0.event != currentEvent }
+        let rows = feed.spec?.look?.experience.panels?.elsewhereRows
+            ?? SceneSpec.Look.bundled()?.experience.panels?.elsewhereRows ?? 6
         StadiumSpaceView(
             feed: feed,
             immersion: Binding(
                 get: { board.stadiumStyle == .full ? .full : .dial },
                 set: { board.stadiumStyle = $0 == .full ? .full : .progressive }),
             look: Self.look,
+            trailingTitle: others.isEmpty ? nil : "Elsewhere",
             leave: {
                 let passage = passage, open = openWindow, dismiss = dismissImmersiveSpace
                 Task { @MainActor in await passage.leave(openWindow: open, dismissSpace: dismiss) }
             }
         ) {
-            // Only games the board has actually read. An unreachable board
-            // shows nothing here rather than an empty panel in the stands.
-            let others = board.slate.filter { $0.event != currentEvent }
-            if !others.isEmpty { Elsewhere(games: others) }
+            if !others.isEmpty { Elsewhere(games: others, rows: rows) }
         }
         .task { board.start() }
         .task {
@@ -149,6 +161,7 @@ struct StadiumHostSpace: View {
 /// panel reads the real slate and says so.
 private struct Elsewhere: View {
     let games: [Board.SlateGame]
+    var rows = 6
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -156,7 +169,7 @@ private struct Elsewhere: View {
             if games.isEmpty {
                 Text("No other games on the slate.").font(.system(size: 15)).foregroundStyle(.secondary)
             }
-            ForEach(games.sorted { ($0.live ? 0 : 1, $0.event) < ($1.live ? 0 : 1, $1.event) }.prefix(6)) { g in
+            ForEach(games.sorted { ($0.live ? 0 : 1, $0.event) < ($1.live ? 0 : 1, $1.event) }.prefix(rows)) { g in
                 HStack(spacing: 10) {
                     Text(g.line).font(.system(size: 16, weight: .semibold))
                     Spacer()

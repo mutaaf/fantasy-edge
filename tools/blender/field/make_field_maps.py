@@ -226,7 +226,7 @@ def engine_maps(league: str):
     # the sideline is where the chain crew, cameras and substitutes walk all night
     band = np.exp(-0.5 * (np.minimum(np.abs(Y + 2.0), np.abs(Y - W - 2.0)) / 3.0) ** 2)
     grime = band * (0.55 + 0.45 * fbm(X, Y, [0.8, 2.5, 6.0], 91))
-    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1) + 0.45 * grime, 0, 0.8)
+    opacity = np.clip(0.62 * wear ** 0.9 + 0.55 * np.clip(0.5 - macro, 0, 1) + 0.22 * grime, 0, 0.8)
     common.write_png(common.FIELD_OUT / "maps" / league / "variation_opacity.png", srgb(opacity))
 
 
@@ -251,8 +251,29 @@ def grass_through():
         return
     carry = common.read_image(src)[..., 0]
     carry = carry.reshape(512, 2, 512, 2).mean(axis=(1, 3)) if carry.shape[0] == 1024 else carry
+    # the Shader Graph paint reads carry itself, raw, at the size it can afford
+    common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_breakup_512.png", carry)
     cover = np.clip((0.62 - carry) / 0.3, 0, 1) ** 1.3
     common.write_png(common.FIELD_OUT / "turf" / "natural" / "paint_grassthrough.png", srgb(cover))
+
+
+def shell_atlas():
+    """The eight natural shell slices at 256 px in a 4 x 2 atlas for the shell
+    graph. Cell i (column i % 4, row i // 4, row 0 at the bottom of the image)
+    holds the slice for layer i counted up from the ground, which is baked
+    slice 7 - i. Raw linear coverage."""
+    base = common.FIELD_OUT / "turf" / "natural"
+    slices = [base / f"turf_natural_shell_{k}.png" for k in range(8)]
+    if not all(p.exists() for p in slices):
+        return
+    atlas = np.zeros((512, 1024))
+    for i in range(8):
+        img = common.read_image(slices[7 - i])[..., 0]
+        small = img.reshape(256, img.shape[0] // 256, 256, img.shape[1] // 256).mean(axis=(1, 3))
+        col, row = i % 4, i // 4
+        top = (1 - row) * 256                                  # row 0 in the lower half of the image
+        atlas[top:top + 256, col * 256:(col + 1) * 256] = small
+    common.write_png(base / "shell_atlas.png", atlas)
 
 
 def main():
@@ -263,6 +284,7 @@ def main():
         engine_maps(league)
     split_orm()
     grass_through()
+    shell_atlas()
     divots()
     paint_breakup()
     print("MAPS", out)

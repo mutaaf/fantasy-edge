@@ -23,31 +23,24 @@ struct CrowdCue: Equatable {
 ///     c.shared.stand(.sections(["112", "113"]), until: .infinity)// the final: the winners stay up
 ///     c.shared.sit(.side("away"), until: now + 10)
 ///
-/// Cues live beside `StadiumShared` rather than on it, so the blackboard's
-/// owner does not have to change for the crowd to take instructions; Crowd
-/// reads them every frame. A cue overrides idle motion and the scoring
-/// celebration while it lasts; reduce motion turns every cue into a still pose.
+/// Cues live on the blackboard as `shared.crowdCues`, so they end with the
+/// stadium that set them; Crowd reads them every frame. A cue overrides idle
+/// motion and the scoring celebration while it lasts; reduce motion turns
+/// every cue into a still pose.
 @MainActor
 enum CrowdCues {
-    private static var table: [ObjectIdentifier: [CrowdCue]] = [:]
-
     static func add(_ cue: CrowdCue, to shared: StadiumShared) {
-        let key = ObjectIdentifier(shared)
-        var list = (table[key] ?? []).filter { $0.target != cue.target || $0.kind != cue.kind }
-        list.append(cue)
-        table[key] = list
+        shared.crowdCues.removeAll { $0.target == cue.target && $0.kind == cue.kind }
+        shared.crowdCues.append(cue)
     }
 
-    /// The live cues, oldest expired ones dropped.
+    /// The live cues, expired ones dropped.
     static func live(_ shared: StadiumShared, at time: Double) -> [CrowdCue] {
-        let key = ObjectIdentifier(shared)
-        guard let list = table[key] else { return [] }
-        let kept = list.filter { $0.until > time }
-        if kept.count != list.count { table[key] = kept }
-        return kept
+        shared.crowdCues.removeAll { $0.until <= time }
+        return shared.crowdCues
     }
 
-    static func clear(_ shared: StadiumShared) { table[ObjectIdentifier(shared)] = nil }
+    static func clear(_ shared: StadiumShared) { shared.crowdCues = [] }
 }
 
 extension StadiumShared {

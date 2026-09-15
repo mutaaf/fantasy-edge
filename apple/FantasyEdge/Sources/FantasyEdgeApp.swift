@@ -64,7 +64,9 @@ struct FantasyEdgeApp: App {
                 .environment(board).environment(scene).environment(passage)
         }
         .windowStyle(.volumetric)
-        .defaultSize(width: 0.9, height: 0.4, depth: 0.6, in: .meters)
+        // presentation.tabletop.volume: sized for the two-deck bowl on its
+        // plinth (fantasyedge/scene.py). Change both together.
+        .defaultSize(width: 1.12, height: 0.45, depth: 0.86, in: .meters)
 
         // Seated at the fifty. From the tabletop it opens progressive, so the
         // Digital Crown walks you from the room into the bowl; the ornament

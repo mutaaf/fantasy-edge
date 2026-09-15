@@ -213,6 +213,18 @@ def decals():
     img[..., 3] = np.clip(a, 0, 0.7)
     save_png(out / "shadow_multi.png", img, seed=9)
 
+    # Concourse fill: warm light spilling out of the concourse and the
+    # vomitories onto a wall face. V = 0 at the foot of the face, where the
+    # walkway throws light up it, fading toward the top; U tiles round the bowl
+    # with soft pools where the openings are.
+    w, h = 512, 128
+    u, v = grid(w, h)
+    rise = np.exp(-(1 - v) * 2.4)
+    pools = 0.55 + 0.45 * np.cos(u * 2 * np.pi * 3) ** 2
+    img = np.ones((h, w, 4))
+    img[..., 3] = np.clip(rise * pools, 0, 1)
+    save_png(out / "fill_band.png", img.view(White), seed=17)
+
     # Contact AO for a seating riser: dark in the corner where the tread
     # meets the next riser, fading up the riser and out across the tread.
     # V=0 is the tread's back edge (the corner), tiles along U.

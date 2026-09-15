@@ -59,12 +59,12 @@
    "usdz": "actors/bowl/stands.usdz",
    "glb": "actors/bowl/stands.glb",
    "objects": {
-    "stands": 33282
+    "stands": 34020
    },
    "parts": {
     "stands": 6
    },
-   "triangles": 33282,
+   "triangles": 34020,
    "materials": [
     "bowl_concrete",
     "bowl_glass",
@@ -74,8 +74,8 @@
     "bowl_trim"
    ],
    "bytes": {
-    "usdz": 5287147,
-    "glb": 5486312
+    "usdz": 5334301,
+    "glb": 5537984
    },
    "about": "The whole bowl's structure in one entity."
   },
@@ -84,24 +84,28 @@
    "usdz": "actors/bowl/seats_far.usdz",
    "glb": "actors/bowl/seats_far.glb",
    "objects": {
-    "bands": 10046,
-    "fill_club": 330,
-    "fill_endzone": 320,
-    "fill_upper": 194
+    "bands": 9796,
+    "fill_club": 338,
+    "fill_endzone": 328,
+    "fill_upper": 194,
+    "fill_sideline": 144,
+    "fill_clubLevel": 144
    },
    "parts": {
     "bands": 1,
     "fill_club": 1,
     "fill_endzone": 1,
-    "fill_upper": 1
+    "fill_upper": 1,
+    "fill_sideline": 1,
+    "fill_clubLevel": 1
    },
-   "triangles": 10890,
+   "triangles": 10944,
    "materials": [
     "bowl_seat_band"
    ],
    "bytes": {
-    "usdz": 705766,
-    "glb": 771000
+    "usdz": 709677,
+    "glb": 775468
    },
    "about": "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill except the preset the wearer sits in.",
    "regions": [
@@ -134,6 +138,26 @@
       9
      ],
      "reach": 30.0
+    },
+    {
+     "id": "sideline",
+     "tier": "lower",
+     "angle": 1.6493361431346414,
+     "rows": [
+      0,
+      8
+     ],
+     "reach": 30.0
+    },
+    {
+     "id": "clubLevel",
+     "tier": "lower",
+     "angle": 1.5707963267948966,
+     "rows": [
+      15,
+      29
+     ],
+     "reach": 30.0
     }
    ]
   },
@@ -142,16 +166,20 @@
    "usdz": "actors/bowl/near.usdz",
    "glb": "actors/bowl/near.glb",
    "objects": {
-    "near_club": 16430,
-    "near_endzone": 17792,
-    "near_upper": 13892
+    "near_club": 16246,
+    "near_endzone": 19342,
+    "near_upper": 13892,
+    "near_sideline": 26474,
+    "near_clubLevel": 12960
    },
    "parts": {
     "near_club": 6,
     "near_endzone": 6,
-    "near_upper": 6
+    "near_upper": 6,
+    "near_sideline": 6,
+    "near_clubLevel": 6
    },
-   "triangles": 48114,
+   "triangles": 88914,
    "materials": [
     "bowl_seat_band",
     "bowl_seat_plaque",
@@ -161,8 +189,8 @@
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 3989684,
-    "glb": 4276384
+    "usdz": 6582127,
+    "glb": 7129532
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },
@@ -171,20 +199,20 @@
    "usdz": "actors/bowl/table.usdz",
    "glb": "actors/bowl/table.glb",
    "objects": {
-    "table": 1352
+    "table": 2648
    },
    "parts": {
     "table": 3
    },
-   "triangles": 1352,
+   "triangles": 2648,
    "materials": [
     "bowl_screens",
     "bowl_seat_band",
     "bowl_table_trim"
    ],
    "bytes": {
-    "usdz": 131622,
-    "glb": 138984
+    "usdz": 214560,
+    "glb": 229712
    },
    "about": "The tabletop bowl: lower tier, stepped, home stands cut away."
   }

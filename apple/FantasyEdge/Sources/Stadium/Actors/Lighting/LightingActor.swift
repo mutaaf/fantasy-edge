@@ -43,6 +43,13 @@ final class LightingActor: StadiumActor {
     /// texture transform (visionOS 2) rather than a Shader Graph, which a
     /// headless build cannot author; the ports scroll a UV offset the same way.
     private var dust: ModelEntity?
+    /// The beam as a Shader Graph (`visual.lighting.beams.shader`): soft
+    /// profile, dust drifting on the shader clock, and a view-angle falloff so
+    /// a crossed quad seen edge-on fades out. When it loads it replaces both
+    /// the beam and the UV-scroll dust above, which stay as the fallback - and
+    /// as what the web and Android ports draw until they port the graph.
+    private var beamGraph: ShaderGraphMaterial?
+    private var buildToken = 0
     private var dustOffset: Float = 0
     private var dustTick: Double = 0
     private var glowSeat: SIMD3<Float>?
@@ -54,7 +61,8 @@ final class LightingActor: StadiumActor {
 
     func build(_ c: StadiumContext) {
         clear()
-        lenses = nil; faces = nil; beams = nil; dust = nil; haze = nil
+        lenses = nil; faces = nil; beams = nil; dust = nil; haze = nil; beamGraph = nil
+        buildToken += 1
         floods.removeAll()
         glowLayers.removeAll(); billboards.removeAll()
         glowSeat = nil
@@ -85,7 +93,7 @@ final class LightingActor: StadiumActor {
         buildRigs(c)
         buildGlows(c)
         buildBeams(c)
-        if !tabletop { buildHaze(c) }
+        if !tabletop { buildHaze(c); buildFill(c) }
         buildFloods(c)
     }
 
@@ -368,6 +376,43 @@ final class LightingActor: StadiumActor {
             root.addChild(d)
             dust = d
         }
+        loadBeamGraph(c)
+    }
+
+    private func loadBeamGraph(_ c: StadiumContext) {
+        let G = c.look.lighting.beams.shader
+        guard !G.file.isEmpty else { return }
+        let token = buildToken
+        Task { @MainActor [weak self] in
+            guard let base = await StadiumShaderGraph.material(G.prim, file: G.file) else {
+                StadiumLog.log.notice("[shadergraph] lighting beams: graph unavailable, drawing the UV-scroll fallback")
+                return
+            }
+            guard let self, token == self.buildToken, let beams = self.beams else { return }
+            var m = base
+            m.faceCulling = .none
+            m.writesDepth = false
+            self.beamGraph = m
+            self.applyBeamGraph(c, gain: 1, tint: nil)
+            self.dust?.removeFromParent()
+            self.dust = nil
+            StadiumLog.log.notice("[shadergraph] lighting beams: Shader Graph in use on \(beams.name, privacy: .public)")
+        }
+    }
+
+    /// Set the graph's parameters from tokens, with a strobe gain and wash tint.
+    private func applyBeamGraph(_ c: StadiumContext, gain: Double, tint: String?) {
+        guard var m = beamGraph, let beams else { return }
+        let G = c.look.lighting.beams.shader
+        StadiumShaderGraph.set(&m, "Color", tint ?? G.color)
+        StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * gain)
+        StadiumShaderGraph.set(&m, "DustRepeat", G.dustRepeat)
+        StadiumShaderGraph.set(&m, "DustSpeed", c.reduceMotion ? 0.0 : G.dustSpeed)
+        StadiumShaderGraph.set(&m, "DustFloor", G.dustFloor)
+        StadiumShaderGraph.set(&m, "DustAmount", G.dustAmount)
+        StadiumShaderGraph.set(&m, "ViewPower", G.viewPower)
+        StadiumShaderGraph.set(&m, "Additive", G.additive)
+        beams.model?.materials = [m]
     }
 
     private func dustMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
@@ -438,6 +483,45 @@ final class LightingActor: StadiumActor {
     private func hazeMaterial(_ c: StadiumContext, gain: Double) -> UnlitMaterial {
         let H = c.look.lighting.haze
         return StadiumLook.glow(H.color, opacity: H.opacity * gain, texture: c.assets.texture("lighting.haze"), tile: true)
+    }
+
+    // MARK: concourse fill
+
+    /// The back of the upper deck's guard wall faces the seats, away from
+    /// every flood, and the night probe gives a vertical face almost nothing:
+    /// it rendered near-black under Bowl's LED strip. Real stadiums fill it from the
+    /// concourse and the vomitories behind. That light is drawn as a band
+    /// just in front of the wall face and a glow in each tunnel mouth, unlit
+    /// and additive - one draw, no light, no shadow. The band's geometry
+    /// mirrors Bowl's guard wall (`visual.lighting.fill`, checked against
+    /// tools/blender/bowl/structure.py by a test).
+    private func buildFill(_ c: StadiumContext) {
+        let F = c.look.lighting.fill, s = c.spec
+        var mesh = MeshBuilder()
+        let segments = 128
+        let off = F.wallOffsetYards + F.standOffYards       // on the seats' side of the face
+        let y0 = Float(F.wallRise[0]), y1 = Float(F.wallRise[1])
+        let repeats = Float(max(1, F.repeatsAround))
+        for k in 0..<segments {
+            let t0 = Double(k) / Double(segments) * 2 * .pi, t1 = Double(k + 1) / Double(segments) * 2 * .pi
+            let p0 = SceneMath.bowlPoint(s.bowl.shape, offset: off, angle: t0)
+            let p1 = SceneMath.bowlPoint(s.bowl.shape, offset: off, angle: t1)
+            let u0 = Float(k) / Float(segments) * repeats, u1 = Float(k + 1) / Float(segments) * repeats
+            mesh.quad(SIMD3(Float(p0.x), y0, Float(p0.z)), SIMD3(Float(p1.x), y0, Float(p1.z)),
+                      SIMD3(Float(p1.x), y1, Float(p1.z)), SIMD3(Float(p0.x), y1, Float(p0.z)),
+                      uv: (SIMD2(u0, 1), SIMD2(u1, 1), SIMD2(u1, 0), SIMD2(u0, 0)))
+        }
+        for tunnel in s.bowl.tunnels ?? [] {
+            // A tunnel mouth at x, under the end-zone stands, facing the field.
+            let x = Float(tunnel.x - 50)
+            let towardField: Float = x < 0 ? 1 : -1
+            let w = Float(tunnel.width * F.tunnelScale) / 2, h = Float(tunnel.height * F.tunnelScale)
+            let face = x + towardField * Float(F.standOffYards)
+            mesh.quad(SIMD3(face, 0, -w), SIMD3(face, 0, w), SIMD3(face, h, w), SIMD3(face, h, -w),
+                      uv: (SIMD2(0, 1), SIMD2(repeats / 8, 1), SIMD2(repeats / 8, 0), SIMD2(0, 0)))
+        }
+        let material = StadiumLook.glow(F.color, opacity: F.opacity, texture: c.assets.texture("lighting.fill"), tile: true)
+        root.addChild(mesh.entity("rim.concourseFill", material))
     }
 
     // MARK: floods
@@ -526,7 +610,11 @@ final class LightingActor: StadiumActor {
         // They are capped; the lenses, the glows and a brief wash of extra
         // flood on the field carry the strobe instead.
         let beamGain = Self.strobeGain(S.beamGain, max: S.beamGainMax, pulse: gain)
-        beams?.model?.materials = [beamMaterial(c, gain: beamGain, tint: beamColour)]
+        if beamGraph != nil {
+            applyBeamGraph(c, gain: beamGain, tint: beamColour)
+        } else {
+            beams?.model?.materials = [beamMaterial(c, gain: beamGain, tint: beamColour)]
+        }
         dust?.model?.materials = [dustMaterial(c, gain: beamGain, tint: beamColour)]
         haze?.model?.materials = [hazeMaterial(c, gain: Self.strobeGain(S.beamGain, max: S.hazeGainMax, pulse: gain))]
         let fieldWash = Float(1 + (S.fieldWashGain - 1) * gain)

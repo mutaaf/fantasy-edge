@@ -22,7 +22,7 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
 **Numbers:** field 10 parts, 1.1k triangles. Sideline 19 parts, 21k triangles.
 
 **Critique:**
-- **Paint:** reads right from row 16. Numerals, arrows and hashes are crisp, and the far numerals read from their own sideline.
+- **Paint:** reads right from the club seat. Numerals, arrows and hashes are crisp, and the far numerals read from their own sideline.
 - **Stripe:** almost invisible from the stands; the normals alone are too subtle under this lighting.
 - **Field-level seat:** it sat behind a bench. Chrome-bright bench legs filled the frame.
 - **Field-goal net:** the poles showed but the net vanished. Cutout mips fall under the threshold.
@@ -83,3 +83,42 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - Scuffs weight to the sidelines, the border, the end lines and between the hashes, averaged with their half turn so the field stays symmetric.
   - The variation map adds grime along both sidelines.
 - **Lettering and paint:** a turf overlay (`paint.grass`) lies over all paint and the end-zone names, showing blades only where the turf's paint breakup is low. The lettering now draws under the wear layer. Field: 11 parts; textures as loaded 39.6 MB of 40.
+
+## Iteration 6 (`field-iter6`, director's integration-3 notes)
+- **Border wear:** scuffs cut to 12 in (below half the NFL border's 36 in) and rarer, and the sideline grime halved. `field-level` now shows a ragged edge and grass through the border, with no tearing.
+- **Purple blob:** it was the pop-up medical tent, a 3 m box tinted in the away club's colour. It is dropped from the dressing (medical areas live in the tunnel), so the sideline keeps its 15 parts.
+- **Goal-post net:** thinner cord (6% of each cell) and 0.2 opacity. A cutout can't survive mips at the stands' distance, so the net stays blended; in `td-moment` it now reads as a faint haze behind the far posts, not a sheet.
+
+## Iteration 7
+- **Medical tent restored.**
+  - The canvas and roof are neutral white (`prop_white`) and the frame is `prop_steel`.
+  - Only a 0.22 m valance and a cross on the field-facing wall wear the club's colour (`tint_team_primary`).
+  - All three bins already exist, so the sideline stays at 15 parts.
+- **Net: no view-dependent fade.**
+  - A distance- or Fresnel-driven fade needs the view vector per fragment, which only Shader Graph provides on visionOS.
+  - A baked texture or vertex colour can't depend on the view: PhysicallyBasedMaterial ignores vertex colour, and RealityKit generates the mips, so a mip-aware mask isn't possible either.
+  - Left blended at 0.2 opacity with thin cord.
+
+## Hook for Moments: the field-goal net sways
+- **Writing it (Moments):** on a kick through, set `c.shared.netSway = (endX: m.anchorX, strength: 0...1, until: c.shared.time + seconds)`.
+- **Reading it (Sideline):** `update` swings the net behind the end nearest `endX` about its top bar (13.2 m up), a decaying sine: `visual.sideline.sway` has `maxDegrees` 7, `frequency` 0.85 Hz and `decaySeconds` 1.2. When `until` passes, the net returns level and the hook clears itself.
+- **Reduce motion:** the net holds still.
+- **Geometry:** each end's net mesh is its own entity on that pivot; the poles stay in the static merge.
+- **Parts:** the two nets add two. That is paid for by drawing `prop_black` with `prop_dark` (palette `alias`) and the chain crew's steel in its rods' white, so Sideline stays at 15.
+- **`StadiumActor.swift`:** gains the one blackboard field `netSway`. That's a director file, so it's noted for approval.
+- **Verification:** the swing hasn't been shot yet; it needs Moments' field-goal timeline to fire it.
+
+## Shader Graph (merged `3e67602`)
+- **Paint (`FieldPaint.usda`, `shaderGraph.materials.fieldPaint`):**
+  - Cuts each distance field at `Edge`, pushed in and out by the turf's paint breakup (512 px, raw), sampled on the turf tile from object position.
+  - Shows the turf's own colour where blades stand up through the paint.
+  - Covers every marking and the end-zone lettering (`UseMask` 0).
+  - The texture materials stay as the fallback, and they are what the web and Android draw.
+- **Nets (`NetFresnel.usda`):** the cord mask times a view-angle falloff (`Floor`, `Power`). They're gone from `td-moment` and `sideline-props`, where they face the eye.
+- **Shells (`FieldShells.usda`):**
+  - Six layers of the eight baked slices in a 4×2 atlas. The layer index is read back from each fragment's height, and blades take the paint.
+  - The patch fades at its edge and costs one part and 24 triangles.
+  - It renders (log: "shell grass on 6 layers"), but from the field-level seat the 24×10 yd patch still reads as a darker rectangle.
+  - It ships disabled (`visual.field.shells.enabled` false) until that's solved.
+- **Loads:** all three load via `Entity(contentsOf:)`, each from its own `.reality`, because `StadiumShaderGraph` takes the first material in a file.
+- **Parts:** Field 10 (11 with shells), Sideline 15.
