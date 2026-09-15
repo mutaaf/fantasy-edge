@@ -248,11 +248,14 @@ BOWL = {
     # press box in the far concourse; tunnels under each end zone.
     "wall": {"offset": 5.4, "height": 1.4, "color": "board.base"},
     "ribbon": {"offset": 41.6, "rise": [21.0, 23.6], "color": "ribbon.base", "text": "ribbon.text"},
-    # The club and the press box sit under the upper deck, behind the ribbon
-    # fascia rather than in front of it, so the ribbon is never hidden; they
-    # glow in the band between the concourse and the fascia's underside.
-    "pressBox": {"side": "far", "fromX": 22.0, "toX": 78.0, "offset": 42.4, "depth": 4.1,
-                 "rise": [19.6, 23.9], "mullionEvery": 3.0, "glass": "pressbox.glass",
+    # The press box stands on the far side's parapet, above the top row: under
+    # the upper deck its floor (19.6) was level with the lower bowl's top rows,
+    # and no floor between the decks (4.4 yd of room under the ribbon) clears
+    # them. Up here the box seat's eye sees the near sideline over the upper
+    # deck's last row and its fans (tests/test_bowl.py). It spans the gap
+    # between two rim light rigs, so it is shorter than the old room.
+    "pressBox": {"side": "far", "fromX": 21.0, "toX": 79.0, "offset": 71.5, "depth": 5.0,
+                 "rise": [49.0, 52.6], "mullionEvery": 3.0, "glass": "pressbox.glass",
                  "glassBrightness": 0.38},
     "tunnels": [{"x": -16.0, "width": 7.0, "height": 3.2},
                 {"x": 116.0, "width": 7.0, "height": 3.2}],
@@ -265,7 +268,7 @@ BOWL = {
                 "seatsPerSection": {"lower": 24, "upper": 26},
                 "vomitory": {"lower": {"every": 3, "phase": 1, "rows": [11, 16], "width": 3.0},
                              "upper": {"every": 4, "phase": 2, "rows": [7, 11], "width": 3.0}},
-                "accessibleMargin": 1.1, "tunnelClear": 0.25,
+                "accessibleMargin": 1.1, "tunnelClear": 0.25, "holeClear": 0.3,
                 "startAngle": 1.5707963267948966},
     # The video board behind the away (east) end zone, standing on the parapet
     # above the upper deck's sightline from the far sideline. `centre` is the
@@ -332,8 +335,13 @@ class BowlRing:
         return self.t[lo] + (self.t[hi] - self.t[lo]) * (s - self.cum[lo]) / span
 
     def arc_at(self, t: float) -> float:
-        i = min(self.RES, max(0, round((t % (2 * math.pi)) / (2 * math.pi) * self.RES)))
-        return self.cum[i]
+        """Arc length at angle t, interpolated. On the straights a superellipse
+        covers most of its length in a sliver of angle, so rounding to the
+        nearest sample was off by up to a yard and a half."""
+        f = (t % (2 * math.pi)) / (2 * math.pi) * self.RES
+        i = min(self.RES - 1, int(f))
+        u = f - i
+        return self.cum[i] + (self.cum[i + 1] - self.cum[i]) * u
 
 
 def bowl_row(tier: dict, r: int, rows: int) -> dict:
@@ -436,7 +444,13 @@ def bowl_seating(shape: dict, rows: dict) -> dict:
             runs, run_start, run_len = [], None, 0
             for i in range(count):
                 s = (i + 0.5) * pitch
-                clear = not _covered(s, [(a - pitch * 0.45, b + pitch * 0.45, k) for a, b, k in gaps], ring.length)
+                # A seat keeps half a pitch clear of an aisle; beside a hole in the
+                # tread (vomitory, tunnel) its whole footprint - half a seat plus
+                # `holeClear`, which also covers the cut widening toward the row
+                # front in a corner - must stand on concrete.
+                clear = not _covered(s, [(a - m, b + m, k) for a, b, k in gaps
+                                         for m in [pitch * 0.45 if k in ("aisle", "accessible")
+                                                   else pitch * 0.5 + cfg["holeClear"]]], ring.length)
                 if clear:
                     if run_start is None:
                         run_start, run_len = s, 0
