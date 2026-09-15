@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 import simd
 
@@ -186,7 +187,7 @@ final class BroadcastTrails {
     /// flight reads while it happens and does not stand over the posts after.
     /// Reduce motion lands them at rest at once.
     func update(_ c: StadiumContext) {
-        guard !kicks.isEmpty else { return }
+        guard !kicks.isEmpty, !Self.holdTrails else { return }
         let rule = c.look.broadcast.trail.kick
         for (id, k) in kicks {
             guard let holder = entities[id], holder.children.count == 2, !k.colour.isEmpty else { continue }
@@ -201,6 +202,16 @@ final class BroadcastTrails {
             if t >= 1 { kicks[id] = nil; rested.insert(id) }
         }
     }
+
+    /// Look-dev only: `-trailHold` freezes a kick's fade so a shot taken when
+    /// the moment fires still sees the trail at full strength. Never in release.
+    static let holdTrails: Bool = {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-trailHold")
+        #else
+        return false
+        #endif
+    }()
 
     /// How side-on a seat sees an arc, 0...1: the mean angle between each
     /// piece of the arc and the sightline to it, mapped from
