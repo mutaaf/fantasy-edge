@@ -95,6 +95,16 @@ extension SceneSpec.Look {
         public let beamTint: Double
     }
 
+    public struct LightingFill: Decodable, Equatable, Sendable {
+        public let wallOffsetYards: Double
+        public let wallRise: [Double]
+        public let standOffYards: Double
+        public let repeatsAround: Double
+        public let tunnelScale: Double
+        public let opacity: Double
+        public let color: String
+    }
+
     public struct LightingLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -108,6 +118,7 @@ extension SceneSpec.Look {
         public let haze: LightingHaze
         public let strobe: LightingStrobe
         public let wash: LightingWash
+        public let fill: LightingFill
     }
 }
 
