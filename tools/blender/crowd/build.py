@@ -26,6 +26,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 import bpy
+import bmesh
 import numpy as np
 from mathutils import Vector
 
@@ -36,7 +37,7 @@ import rig as R
 import specs
 
 OUT = common.OUT
-LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 1500, 650, 250
+LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 2400, 650, 250
 MESH_ATLAS = 2048                    # baked at 2x, shipped at this size
 MESH_COLS, MESH_ROWS = 6, 4          # 24 cells, 341 x 512 px each
 IMP_CELL = (64, 128)                 # px per impostor cell
@@ -54,6 +55,8 @@ PAIR_STEP = 7                        # pair_mate(p) = (7p + 11) mod 24: a permut
 def pair_mate(p, n=24):
     return (PAIR_STEP * p + 11) % n
 BAKE_SCALE = 2
+AO_STRENGTH = 0.6
+AO_WARM = (0.62, 0.42, 0.36)
 
 
 def log(*a):
@@ -134,14 +137,14 @@ def unwrap_into_cell(mesh, cell):
     me = mesh.data
     uv = me.uv_layers.active.data
     head_slots = {i for i, m in enumerate(me.materials) if m and "_head" in m.name}
-    # Faces are what people look at in a stand; they get three times the area.
+    # Faces are what people look at in a stand; they get nine times the area.
     if head_slots:
         loops = [li for p in me.polygons if p.material_index in head_slots for li in p.loop_indices]
         if loops:
             pts = np.array([uv[li].uv for li in loops])
             c = pts.mean(axis=0)
             for li in loops:
-                uv[li].uv = tuple(c + (np.array(uv[li].uv) - c) * 1.75)
+                uv[li].uv = tuple(c + (np.array(uv[li].uv) - c) * 3.0)
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.pack_islands(margin=0.006, rotate=True)
@@ -179,6 +182,116 @@ def bake_from(source, target):
                         cage_extrusion=0.015, max_ray_distance=0.04)
 
 
+def bake_ao(source, target, img):
+    """Ambient occlusion from the full-resolution body, for the albedo to multiply in."""
+    for slot in target.material_slots:
+        add_bake_target(slot.material, img)
+    bpy.ops.object.select_all(action="DESELECT")
+    source.select_set(True)
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    sc = bpy.context.scene
+    sc.render.engine = "CYCLES"
+    sc.cycles.samples = 16
+    sc.world = sc.world or bpy.data.worlds.new("w")
+    sc.world.light_settings.distance = 0.25
+    bpy.ops.object.bake(type="AO", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
+                        cage_extrusion=0.015, max_ray_distance=0.04)
+
+
+def soften(ob):
+    """Smooth, area-weighted normals; hard only where two parts meet."""
+    me = ob.data
+    for p in me.polygons:
+        p.use_smooth = True
+    mod = ob.modifiers.new("wn", "WEIGHTED_NORMAL")
+    mod.weight = 50
+    mod.keep_sharp = True
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.modifier_apply(modifier="wn")
+
+
+# The mouth samples a dark patch in the 0.002 gutter every cell keeps free of
+# packed islands (see the cell inset in build_meshes), so it paints over nothing.
+MOUTH_GUTTER = 0.0012
+
+
+def add_mouth(mesh, rig, f, J, cell):
+    """A dark mouth disc just inside the lips, skinned to the head. Poses open it (see open_mouth)."""
+    k = f["height"] / 1.75
+    hs = F.HEAD_SCALE
+    c = (J["head"] + J["head_top"]) / 2 + Vector((0, -0.010, -0.030)) * k
+    centre = c + Vector((0, -0.081, -0.050)) * k * hs
+    bm = bmesh.new()
+    ring = bmesh.ops.create_circle(bm, cap_ends=True, segments=10, radius=1.0)
+    for v in bm.verts:
+        v.co = Vector((v.co.x * 0.021, 0.0, v.co.y * 0.006)) * k * hs + centre
+    me = bpy.data.meshes.new(f"{f['id']}_mouth")
+    bm.to_mesh(me)
+    bm.free()
+    uv = me.uv_layers.new(name=mesh.data.uv_layers.active.name)
+    x0, y0, w, h = cell
+    for d in uv.data:
+        d.uv = (x0 - MOUTH_GUTTER, y0 - MOUTH_GUTTER)
+    ob = bpy.data.objects.new(me.name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    ob.data.materials.append(mesh.data.materials[0])
+    g = ob.vertex_groups.new(name="head")
+    g.add(list(range(len(me.vertices))), 1.0, "REPLACE")
+    ob["mouth_centre"] = list(centre)
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    mesh.select_set(True)
+    bpy.context.view_layer.objects.active = mesh
+    bpy.ops.object.join()
+
+
+def paint_mouth_patch(img, cell):
+    """The texels every mouth disc samples: a dark, warm cavity."""
+    import numpy as _np
+    W, H = img.size
+    px = _np.array(img.pixels[:], dtype=_np.float32).reshape(H, W, 4)
+    x0, y0 = int((cell[0] - MOUTH_GUTTER) * W), int((cell[1] - MOUTH_GUTTER) * H)
+    px[y0 - 3:y0 + 4, x0 - 3:x0 + 4, :3] = (0.07, 0.025, 0.02)
+    px[y0 - 3:y0 + 4, x0 - 3:x0 + 4, 3] = 1.0
+    img.pixels.foreach_set(px.ravel())
+
+
+OPEN_POSES = {"cheer_a": 2.6, "clap_b": 1.4}
+
+
+def open_mouth(ob, pose, height):
+    """Frozen pose meshes: find the mouth by its UV and open it (or keep it a slit)."""
+    me = ob.data
+    uv = me.uv_layers.active.data
+    ids = set()
+    want = 0.002 - MOUTH_GUTTER
+    for p in me.polygons:
+        for li in p.loop_indices:
+            u, v = uv[li].uv
+            if abs((u % (1 / MESH_COLS)) - want) < 2e-4 and abs((v % (1 / MESH_ROWS)) - want) < 2e-4:
+                ids.add(me.loops[li].vertex_index)
+    if len(ids) < 3:
+        return
+    pts = [me.vertices[i].co.copy() for i in ids]
+    centre = sum(pts, Vector()) / len(pts)
+    # The disc is wide and short; its short axis is the face's up, whatever the pose.
+    wide = max((q - centre for q in pts), key=lambda e: e.length).normalized()
+    normal = (pts[0] - centre).cross(pts[1] - centre)
+    if normal.length < 1e-9:
+        return
+    up = normal.normalized().cross(wide).normalized()
+    if up.z < 0:
+        up = -up
+    open_by = OPEN_POSES.get(pose, 0.55)
+    for i in ids:
+        co = me.vertices[i].co
+        along = (co - centre).dot(up)
+        # A jaw drops: the lower lip moves, the upper barely does.
+        factor = open_by if along < 0 else min(1.0, 0.6 + 0.4 * open_by)
+        me.vertices[i].co = co + up * along * (factor - 1)
+
+
 def swap_materials(mesh, mode):
     for i, slot in enumerate(mesh.material_slots):
         name = slot.material.name.rsplit("_", 1)[0]
@@ -209,6 +322,8 @@ def save(img, path, size=None):
 def build_meshes(cast):
     albedo = image("fan_albedo", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "sRGB")
     mask = image("fan_mask", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "Non-Color")
+    ao = image("fan_ao", MESH_ATLAS * BAKE_SCALE, MESH_ATLAS * BAKE_SCALE, "Non-Color")
+    ao.generated_color = (1, 1, 1, 1)
     cw, ch = 1 / MESH_COLS, 1 / MESH_ROWS
     built = []
     for i, f in enumerate(cast):
@@ -236,17 +351,33 @@ def build_meshes(cast):
             for slot in mesh.material_slots:
                 add_bake_target(slot.material, img)
             bake_from(hi, mesh)
+        swap_materials(mesh, "base")
+        bake_ao(hi, mesh, ao)
         bpy.data.objects.remove(hi)
+        paint_mouth_patch(albedo, cell)
+        soften(mesh)
+        add_mouth(mesh, rig, f, J, cell)
         lod1 = mesh.copy(); lod1.data = mesh.data.copy(); lod1.name = f"{f['id']}_lod1"; lod1.data.name = lod1.name
         bpy.context.scene.collection.objects.link(lod1)
         lod1.parent = rig
         decimate(lod1, LOD1_TRIS)
+        soften(lod1)
         lod2 = lod1.copy(); lod2.data = lod1.data.copy(); lod2.name = f"{f['id']}_lod2"; lod2.data.name = lod2.name
         bpy.context.scene.collection.objects.link(lod2)
         lod2.parent = rig
         decimate(lod2, LOD2_TRIS)
+        soften(lod2)
         built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell})
         log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, lod2 {R.triangles(lod2)} tris")
+    # Warm occlusion: cavities go a little red-brown, which reads as skin on
+    # skin and as fold shadow on cloth, rather than grey dirt.
+    W, H = albedo.size
+    a = np.array(albedo.pixels[:], dtype=np.float32).reshape(H, W, 4)
+    o = np.array(ao.pixels[:], dtype=np.float32).reshape(H, W, 4)[..., :1]
+    o = 1 - (1 - o) * AO_STRENGTH
+    warm = np.array(AO_WARM, dtype=np.float32)
+    a[..., :3] *= o + (1 - o) * warm
+    albedo.pixels.foreach_set(a.ravel())
     save(albedo, OUT / "fan_albedo.png", (MESH_ATLAS, MESH_ATLAS))
     # Full size: a half-size mask upscaled on load missed edge texels, and near
     # fans came out with white wedges and sawtooth sleeves.
@@ -296,7 +427,7 @@ def export_fans(built):
         start, usd_ranges = 0, {}
         for clip, spec in P.CLIPS.items():
             for fr, pose in spec["keys"]:
-                P.apply_pose(rig, pose, f["height"])
+                P.apply_pose(rig, pose, f["height"], built.index(b))
                 P.key_pose(rig, start + fr)
             end = start + spec["keys"][-1][0]
             usd_ranges[clip] = [start, end]
@@ -325,11 +456,12 @@ def export_pose_meshes(built, lod):
         lod1 = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"]}[lod]
         rig.animation_data.action = None
         for pose in IMP_POSES:
-            P.apply_pose(rig, pose, f["height"])
+            P.apply_pose(rig, pose, f["height"], built.index(b))
             dg = bpy.context.evaluated_depsgraph_get()
             ev = lod1.evaluated_get(dg)
             me = bpy.data.meshes.new_from_object(ev, depsgraph=dg)
             me.name = f"{f['id']}_lod{lod}_{pose}"
+            open_mouth(type("O", (), {"data": me})(), pose, f["height"])
             ob = bpy.data.objects.new(me.name, me)
             bpy.context.scene.collection.objects.link(ob)
             ob.matrix_world = lod1.matrix_world
@@ -403,7 +535,7 @@ def render_impostors(built, albedo, mask):
 
     for pi, pose in enumerate(IMP_POSES):
         for b in built:
-            P.apply_pose(b["rig"], pose, b["f"]["height"])
+            P.apply_pose(b["rig"], pose, b["f"]["height"], built.index(b))
         for vi, yaw in enumerate(IMP_VIEWS):
             th = math.radians(yaw)
             for b in built:

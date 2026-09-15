@@ -75,6 +75,47 @@ CLIPS = {
 
 IMPOSTOR_POSES = ["sit", "sit_b", "stand", "clap_a", "clap_b", "cheer_a", "cheer_b", "groan"]
 
+# A slot a crowd shows ("cheer_a", "clap_b") is filled per fan from a family
+# of real celebrations, so a section on its feet is not one gesture copied
+# 24 times. The frozen pose meshes and the impostor atlas both bake the
+# fan's own variant into the slot, so no renderer has to know.
+TORSO_UP = {"spine": (0, 0.03, 1), "chest": (0, 0.06, 1), "neck": (0, 0.1, 1), "head": (0, 0.16, 1)}
+VARIANTS = {
+    "cheer_a": [
+        # Arms up in a V, elbows soft, chin up.
+        {**TORSO_UP, "upperarm.L": (0.55, -0.12, 0.83), "forearm.L": (0.18, -0.2, 1), "hand.L": (0.05, -0.1, 1)},
+        # Both fists pumping just above the head, elbows well bent.
+        {**TORSO_UP, "upperarm.L": (0.62, -0.28, 0.55), "forearm.L": (-0.35, -0.25, 0.95), "hand.L": (-0.25, -0.05, 1)},
+        # Clapping overhead: hands meet above the crown.
+        {**TORSO_UP, "upperarm.L": (0.3, -0.3, 0.9), "forearm.L": (-0.7, -0.12, 0.72), "hand.L": (-0.9, 0.0, 0.45)},
+        # Turned to high-five a neighbour: lean left, right arm up and across.
+        {"spine": (0.12, 0.02, 1), "chest": (0.28, -0.02, 1), "neck": (0.3, -0.05, 1), "head": (0.35, 0.05, 1),
+         "upperarm.L": (0.45, -0.3, -0.6), "forearm.L": (0.2, -0.7, 0.4), "hand.L": (0.1, -0.5, 0.8),
+         "upperarm.R": (0.35, -0.2, 0.9), "forearm.R": (0.55, 0.0, 0.85), "hand.R": (0.5, 0.05, 1)},
+        # Leaning over the row in front, both arms thrown forward and up.
+        {"spine": (0, -0.28, 1), "chest": (0, -0.38, 1), "neck": (0, -0.3, 1), "head": (0, -0.1, 1),
+         "upperarm.L": (0.35, -0.85, 0.55), "forearm.L": (0.12, -0.55, 0.9), "hand.L": (0.05, -0.3, 1)},
+        # One arm punching the air, the other fist at the chest.
+        {**TORSO_UP, "upperarm.L": (0.18, -0.35, -0.85), "forearm.L": (-0.45, -0.85, 0.3), "hand.L": (-0.4, -0.6, 0.6),
+         "upperarm.R": (-0.25, -0.15, 1), "forearm.R": (-0.05, -0.1, 1), "hand.R": (0, -0.1, 1)},
+    ],
+    "clap_b": [
+        # Hands together in front of the chest, elbows out and down.
+        {"upperarm.L": (0.35, -0.55, -0.75), "forearm.L": (-0.75, -0.6, 0.3), "hand.L": (-0.8, -0.4, 0.45)},
+        # Clapping at face height.
+        {"upperarm.L": (0.45, -0.6, -0.35), "forearm.L": (-0.55, -0.45, 0.7), "hand.L": (-0.7, -0.2, 0.7)},
+        # Clapping overhead.
+        {"upperarm.L": (0.3, -0.3, 0.9), "forearm.L": (-0.7, -0.12, 0.72), "hand.L": (-0.9, 0.0, 0.45)},
+    ],
+}
+
+
+def variant_for(fan_index, pose_name):
+    family = VARIANTS.get(pose_name)
+    if not family or fan_index is None:
+        return {}
+    return family[(fan_index * 7 + 3) % len(family)]
+
 
 def _mirror(dirs: dict) -> dict:
     out = dict(dirs)
@@ -86,10 +127,18 @@ def _mirror(dirs: dict) -> dict:
     return out
 
 
-def apply_pose(rig, pose_name: str, height: float):
-    """Set every bone of `rig` to a pose; parents first, so children aim from posed heads."""
+def apply_pose(rig, pose_name: str, height: float, fan_index=None):
+    """Set every bone of `rig` to a pose; parents first, so children aim from posed heads.
+
+    With a fan index, a slot that has variants takes that fan's own.
+    """
     pose = POSES[pose_name]
-    dirs = _mirror(pose["dirs"])
+    over = variant_for(fan_index, pose_name)
+    # A variant's explicit right-side bones win; its left side mirrors unless given.
+    base = {k: v for k, v in pose["dirs"].items()}
+    base.update({k: v for k, v in over.items() if not k.endswith(".R")})
+    dirs = _mirror(base)
+    dirs.update({k: v for k, v in over.items() if k.endswith(".R")})
     k = height / 1.75
     for pb in rig.pose.bones:
         pb.matrix_basis = Matrix.Identity(4)

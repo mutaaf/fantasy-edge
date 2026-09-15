@@ -288,7 +288,7 @@ def hat(f: dict, c: Vector):
     if kind == "none":
         return None
     if kind == "beanie":
-        ob = _shell(f"{f['id']}_hat", c + Vector((0, 0, 0.01)) * k, k, (0.098, 0.112, 0.128), lambda co: co.z > -0.05)
+        ob = _shell(f"{f['id']}_hat", c + Vector((0, 0, 0.018)) * k, k, (0.098, 0.112, 0.126), lambda co: co.z > (0.28 if co.y < -0.3 else 0.02))  # brim above the brows
         bm = bmesh.new(); bm.from_mesh(ob.data)
         pom = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=6, radius=0.024 * k)
         for v in pom["verts"]:
@@ -334,15 +334,34 @@ def accessory(f: dict, J: dict[str, Vector]):
             v.co += Vector((0.015, 0, -0.17))
         origin = hand + Vector((-0.02, -0.01, -0.06)) * k
     elif kind == "towel":
-        grid = bmesh.ops.create_grid(bm, x_segments=6, y_segments=3, size=1.0)
+        # Cloth, not a paddle: gathered in the fist, widening, curling as it
+        # falls, and each towel-carrier's swings its own way.
+        style = sum(map(ord, f["id"])) % 3
+        grid = bmesh.ops.create_grid(bm, x_segments=10, y_segments=4, size=1.0)
         for v in grid["verts"]:
-            u, w = v.co.x, v.co.y
-            v.co = Vector((w * 0.10, 0.025 * math.sin(u * 3), -0.17 * (u + 1)))
-        origin = hand + Vector((0, -0.01, 0.01)) * k
+            u, w = (v.co.x + 1) / 2, v.co.y                  # u 0 at the fist, 1 at the free end
+            width = 0.025 + 0.085 * min(1.0, u * 2.2)
+            drop = 0.36 * u
+            if style == 0:                                   # hangs, curling back
+                off = Vector((0, 0.05 * math.sin(u * 3.0), 0))
+            elif style == 1:                                 # swung out sideways
+                off = Vector((0.18 * u * u, -0.03 * u, 0.12 * u * u))
+            else:                                            # twisting as it swings forward
+                off = Vector((0.03 * math.sin(u * 4), -0.16 * u * u, 0.08 * u))
+            twist = (0.6 * u if style == 2 else 0.15 * math.sin(u * 5))
+            v.co = Vector((w * width * math.cos(twist), w * width * math.sin(twist) + 0.01 * math.sin(w * 3), -drop)) + off
+        origin = hand + Vector((0, -0.01, 0.02)) * k
     elif kind == "sign":
+        # Foam board with thickness, and a lettered face: a grid so block
+        # letters can be painted face by face (paint_prop).
         board = bmesh.ops.create_cube(bm, size=1.0)
         for v in board["verts"]:
-            v.co = Vector((v.co.x * 0.46, v.co.y * 0.008, v.co.z * 0.32)) + Vector((0, 0, 0.36))
+            v.co = Vector((v.co.x * 0.50, v.co.y * 0.022, v.co.z * 0.34)) + Vector((0, 0.013, 0.36))
+        face = bmesh.ops.create_grid(bm, x_segments=12, y_segments=6, size=1.0)
+        for v in face["verts"]:
+            v.co = Vector((v.co.x * 0.24, -0.0005, v.co.y * 0.16))
+            v.co = Matrix.Rotation(math.radians(90), 4, "X") @ v.co
+            v.co += Vector((0, 0.0, 0.36))
         stick = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.008, radius2=0.008, depth=0.4)
         for v in stick["verts"]:
             v.co += Vector((0, 0.012, 0.12))
@@ -502,7 +521,15 @@ def paint_prop(ob, kind):
         if kind == "phone":
             rgb, mask = ((0.05, 0.05, 0.06), (0, 0, 0)) if p.normal.y > -0.9 else ((0.35, 0.55, 0.9), (0, 0, 0))
         elif kind == "sign":
+            c = ob.matrix_world.inverted() @ (ob.matrix_world @ p.center)
             rgb, mask = ((0.93, 0.92, 0.88), (0, 0, 0)) if abs(p.normal.y) > 0.9 else ((0.55, 0.42, 0.28), (0, 0, 0))
+            if p.normal.y < -0.9 and len(p.vertices) == 4 and p.area < 0.002:
+                # Generic block lettering in the club colour: two lines of "letters".
+                gx = int((c.x + 0.24) / 0.48 * 12)
+                gz = int((c.z - 0.20) / 0.32 * 6)
+                ink = (gz in (1, 4)) and (gx % 3 != 2) and 1 <= gx <= 10
+                if ink:
+                    rgb, mask = TINTED, (1, 0, 0)
         elif kind == "towel":
             rgb, mask = TINTED, (0, 1, 0)
         else:

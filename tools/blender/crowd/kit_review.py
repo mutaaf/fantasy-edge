@@ -42,7 +42,8 @@ def main():
     L.new(sep.outputs[1], sec.inputs["Factor"]); L.new(prim.outputs[2], sec.inputs[6])
     L.new(sec.outputs[2], bsdf.inputs["Base Color"])
     L.new(bsdf.outputs[0], out.inputs["Surface"])
-    poses = [o for o in bpy.context.scene.objects if o.type == "MESH" and o.name.endswith("_sit")]
+    want = common.args()[0] if common.args() else "sit"
+    poses = [o for o in bpy.context.scene.objects if o.type == "MESH" and o.name.endswith("_" + want)]
     poses.sort(key=lambda o: o.name)
     for o in bpy.context.scene.objects:
         if o.type == "MESH" and o not in poses[:12]:
@@ -57,9 +58,9 @@ def main():
         l = bpy.data.lights.new(name, "AREA"); l.energy = e; l.size = 5
         ob = bpy.data.objects.new(name, l); sc.collection.objects.link(ob)
         ob.location = loc; ob.rotation_euler = tuple(math.radians(a) for a in rot)
-    common.review_render(common.REVIEW / "kit_tinted.png", 2400, 1300, (0, -6.2, 2.2), (math.radians(78), 0, 0),
+    common.review_render(common.REVIEW / f"kit_tinted_{want}.png", 2400, 1300, (0, -6.2, 2.2), (math.radians(78), 0, 0),
                          engine="BLENDER_EEVEE")
-    print("wrote kit_tinted.png")
+    print("wrote", want)
 
 
 main()

@@ -111,9 +111,15 @@ def _face(nt, colour, mask, c, paint):
     add = lambda a, b: _add(nt, a, b)
     eyes = add(blob(0.031, 0.010, 0.0085, 0.0085, sharp=4), blob(-0.031, 0.010, 0.0085, 0.0085, sharp=4))
     whites = add(blob(0.031, 0.010, 0.013, 0.007, sharp=4), blob(-0.031, 0.010, 0.013, 0.007, sharp=4))
-    brows = add(blob(0.033, 0.034, 0.021, 0.0065, sharp=3), blob(-0.033, 0.034, 0.021, 0.0065, sharp=3))
-    mouth = blob(0.0, -0.050, 0.024, 0.0060, sharp=3)
+    brows = add(blob(0.033, 0.035, 0.024, 0.0085, sharp=3), blob(-0.033, 0.035, 0.024, 0.0085, sharp=3))
+    mouth = blob(0.0, -0.050, 0.026, 0.0075, sharp=3)
     cheeks = add(blob(0.042, -0.018, 0.020, 0.016, sharp=3), blob(-0.042, -0.018, 0.020, 0.016, sharp=3))
+    # Read at 3-10 m, a face is shadows, not details: sockets under the brow,
+    # a shadow under the nose, a dark lip line. Eyes stay small and soft.
+    sockets = add(blob(0.031, 0.014, 0.026, 0.017, sharp=2.2), blob(-0.031, 0.014, 0.026, 0.017, sharp=2.2))
+    nose_shadow = blob(0.0, -0.026, 0.014, 0.007, sharp=3)
+    colour = mix(colour, sockets, (0.18, 0.11, 0.09), 0.32)
+    colour = mix(colour, nose_shadow, (0.2, 0.12, 0.1), 0.35)
     colour = mix(colour, whites, (0.78, 0.76, 0.72), 0.45)
     colour = mix(colour, eyes, (0.05, 0.04, 0.035), 1.0)
     colour = mix(colour, brows, (0.07, 0.055, 0.045), 1.0)

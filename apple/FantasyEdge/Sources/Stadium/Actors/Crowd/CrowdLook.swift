@@ -60,6 +60,11 @@ extension SceneSpec.Look {
         public let referenceHeightMetres: Double
     }
 
+    public struct CrowdLuma: Decodable, Equatable, Sendable {
+        public let min: Double
+        public let max: Double
+    }
+
     public struct CrowdLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -84,6 +89,7 @@ extension SceneSpec.Look {
         public let neutralShare: Double
         public let neutrals: [String]
         public let desaturate: [Double]
+        public let clubLuma: CrowdLuma
         public let cardContrast: Double
         public let tint: CrowdTint
         public let roughness: Double

@@ -612,7 +612,7 @@ final class CrowdKit {
     }
 
     private static func key(_ s: SceneSpec, _ C: SceneSpec.Look.CrowdLook) -> String {
-        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
+        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.clubLuma)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
     }
 
     func cachedDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress? {
@@ -709,6 +709,7 @@ final class CrowdKit {
         let neutralShare: Float
         let neutrals: [SIMD4<Float>]
         let desaturate: (Float, Float)
+        let luma: (Float, Float)
         /// 1 keeps the kit's contrast; less pulls each fan toward its own mean.
         let contrast: Float
         let salt: UInt64
@@ -721,6 +722,7 @@ final class CrowdKit {
             neutralShare = Float(C.neutralShare)
             neutrals = C.neutrals.map { SceneMath.rgba($0) }
             desaturate = (Float(C.desaturate[0]), Float(C.desaturate[1]))
+            luma = (Float(C.clubLuma.min), Float(C.clubLuma.max))
             contrast = card ? Float(C.cardContrast) : 1
             self.salt = salt
         }
@@ -755,6 +757,11 @@ final class CrowdKit {
                                       : (r2 < P.rawShare ? raw : chip)
             colour *= P.shade.0 + (P.shade.1 - P.shade.0) * r1
             if !wearsNeutral {
+                // Into the club luma band first, so the shade below still mottles within it.
+                let y = max(1e-4, colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722)
+                let target = min(P.luma.1, max(P.luma.0, y))
+                let lift = target / y
+                colour = SIMD4(min(1, colour.x * lift), min(1, colour.y * lift), min(1, colour.z * lift), colour.w)
                 let d = P.desaturate.0 + (P.desaturate.1 - P.desaturate.0) * r4
                 let l = colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722
                 colour = colour + (SIMD4(l, l, l, colour.w) - colour) * d
