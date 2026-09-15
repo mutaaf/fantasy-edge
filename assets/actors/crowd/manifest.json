@@ -486,7 +486,7 @@
    },
    "lod1": {
     "mesh": "fan05_lod1",
-    "triangles": 649
+    "triangles": 648
    },
    "uvCell": [
     0.83533,

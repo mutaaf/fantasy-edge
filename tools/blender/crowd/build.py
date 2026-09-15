@@ -166,6 +166,19 @@ def bake(mesh, target):
     bpy.ops.object.bake(type="EMIT", use_clear=False, margin=6 * BAKE_SCALE)
 
 
+def bake_from(source, target):
+    """Bake the source's emission onto the target's UVs, a few millimetres apart."""
+    bpy.ops.object.select_all(action="DESELECT")
+    source.select_set(True)
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    sc = bpy.context.scene
+    sc.render.engine = "CYCLES"
+    sc.cycles.samples = 4
+    bpy.ops.object.bake(type="EMIT", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
+                        cage_extrusion=0.015, max_ray_distance=0.04)
+
+
 def swap_materials(mesh, mode):
     for i, slot in enumerate(mesh.material_slots):
         name = slot.material.name.rsplit("_", 1)[0]
@@ -210,13 +223,20 @@ def build_meshes(cast):
             is_head = base_name == f"{f['id']}_head"
             common.attr_material(f"{base_name}_tint", hc if is_head else None,
                                  f["paint"] if is_head else "none", mode="tint")
+        # Colour lives on the full-resolution body's faces. Baked after
+        # decimation, collars and sleeve stripes smeared across collapsed
+        # triangles into white wedges; baked from a full copy they stay crisp.
+        hi = mesh.copy(); hi.data = mesh.data.copy(); hi.name = f"{f['id']}_hi"
+        bpy.context.scene.collection.objects.link(hi)
         decimate(mesh, LOD0_TRIS)
         unwrap_into_cell(mesh, cell)
         for mode, img in (("base", albedo), ("tint", mask)):
             swap_materials(mesh, mode)
+            swap_materials(hi, mode)
             for slot in mesh.material_slots:
                 add_bake_target(slot.material, img)
-            bake(mesh, img)
+            bake_from(hi, mesh)
+        bpy.data.objects.remove(hi)
         lod1 = mesh.copy(); lod1.data = mesh.data.copy(); lod1.name = f"{f['id']}_lod1"; lod1.data.name = lod1.name
         bpy.context.scene.collection.objects.link(lod1)
         lod1.parent = rig
