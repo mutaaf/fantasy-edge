@@ -81,7 +81,10 @@ struct TabletopHost: View {
         .onAppear {
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
             passage.appeared(.tabletop(value))
-            if passage.appearedInside(.tabletop(value)) { dismissWindow(id: "tabletop", value: value) }
+            if passage.appearedInside(.tabletop(value)) {
+                dismissWindow(id: "tabletop", value: value)
+                dismissWindow(id: "tabletop")
+            }
         }
         .onDisappear { passage.disappeared(.tabletop(value)) }
         // The launch arguments run from whichever window the system restores

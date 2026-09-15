@@ -82,6 +82,10 @@ final class StadiumPassage {
         moving = true
         log.info("entered stadium; closing \(before.count) window(s)")
         for case .tabletop(let value) in before { dismissWindow(id: "tabletop", value: value) }
+        // A tabletop visionOS restored on launch carries no value (the host
+        // shows it as the replay), so dismissing by value misses it and it
+        // stayed in the middle of the bowl. Dismiss by id as well.
+        if before.contains(where: { if case .tabletop = $0 { true } else { false } }) { dismissWindow(id: "tabletop") }
         if before.contains(.board) { dismissWindow(id: "board") }
         moving = false
     }
