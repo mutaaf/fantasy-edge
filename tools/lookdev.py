@@ -204,16 +204,7 @@ def main() -> None:
             waited = wait_for_build(args.device, launched, name == "tabletop", args.build_timeout)
             time.sleep(args.settle)
             print(f"  {name}: built after {waited:.0f}s", flush=True)
-            takes = [("", 0.0)]
-            if where == "touchdown":
-                post(args.port, {"action": "speed", "speed": 1})
-                post(args.port, {"action": "play"})
-                if args.times:
-                    fired = wait_for_moment(args.port, args.moment)
-                    takes = [(f"-t{t}", fired + float(t)) for t in args.times.split(",")]
-                else:
-                    time.sleep(6.0)
-            for tag, due in takes:
+            def shoot(tag: str, due: float = 0.0) -> None:
                 if due:
                     time.sleep(max(0.0, due - time.monotonic()))
                 shot = args.out / f"{name}{tag}{args.suffix}.png"
@@ -222,6 +213,27 @@ def main() -> None:
                                capture_output=True)
                 logs.append(f"{name}{tag}: replay at {at}s ({where}) -> {shot}")
                 print(logs[-1], flush=True)
+
+            if where != "touchdown":
+                shoot("")
+                continue
+            post(args.port, {"action": "speed", "speed": 1})
+            post(args.port, {"action": "play"})
+            played = time.monotonic()
+            if not args.times:
+                shoot("", played + 6.0)
+                continue
+            # "p1.5" is 1.5 s after play resumes (3 s before the snap): frames
+            # in flight, before the moment exists. Plain numbers count from the
+            # moment appearing in the scene.
+            times = args.times.split(",")
+            for t in sorted((t for t in times if t.startswith("p")), key=lambda t: float(t[1:])):
+                shoot(f"-{t}", played + float(t[1:]))
+            late = [t for t in times if not t.startswith("p")]
+            if late:
+                fired = wait_for_moment(args.port, args.moment)
+                for t in late:
+                    shoot(f"-t{t}", fired + float(t))
         stats = app_log(args.device, started)
         # Per-actor draw counts, and which path loaded each Shader Graph material.
         lines = sorted({line[line.index(tag):] for line in stats.splitlines()
