@@ -78,6 +78,20 @@ The tests in `tests/test_bowl.py` cover:
      - Even a fascia ring clips.
      - This needs Experience to change the table scale, or accept a lower-bowl model.
 
+6. **After the eye-height fix and Lighting** (merges `3e7b6e2`, `26e632d`, `617c4de`; stills in `lookdev/it11-*`).
+   - **Compensations taken back:** the eye-height bug was the real cause of iteration 5's `field-level`, so the field seat moved back to +4.5. `field-level` now reads: floodlit field and both decks, with the home bench back at the bottom edge.
+   - **Foreground pieces were rotated.** Pulling a near patch or fill out of its model dropped the USD Y-up conversion on the prims above it, and the club foreground lay a quarter turn off, as a dark ramp. The transform relative to the model root now travels with the piece. `crowd-closeup` shows the modelled chairs, rails and stairs where the crowd sits.
+   - **The black ledge, found by elimination** (`BOWL_SKIP` / `-bowlSkip` debug switch).
+     - It was stands geometry at exactly 0.0: the upper deck's front, lit by nothing. The floods face away from it and the night probe gives an outward face nothing.
+     - The 2.2 yd slab became a 0.25 yd guard wall with a cap, and a walkway at the first row's tread.
+     - A warm LED strip runs under the cap, facing the seats, and step lights sit on each aisle step. The foreground seats carry `nearLift` 0.1.
+     - *Worst thing left:* the wall face under the strip is still near-black, which is plausible at night but heavy. Lighting could add fill from the concourse.
+   - **Press box:** a canted curtain wall on a concrete upstand, with mullions every 3 yd, a steel head and soffit under the fascia, and a lit desk line.
+     - *Limit:* the fascia's bottom (`bowl.ribbon.rise[0]` = 21.0) leaves 1.4 yd above the concourse, so the room gains depth, not height.
+   - **Light rigs:** each of the 16 `bowl.mounts.rim` gets a lattice headframe, a catwalk with a guard rail, twin masts to the parapet and a back stay.
+   - **Far lower bowl greyness:** that was bowl material. Concrete treads and risers show between fans, and the scan read too pale under floods. Treads are now ×0.62 and risers are painted `#4F4D4A`-equivalent.
+   - **Budget:** measured stadium bowl is 57.9–60.3k triangles and 15 draw parts; tabletop is 1,352 and 3. Models are 10.6 MB usdz.
+
 ## Notes for other actors
 
 - **Crowd:** in `bowl-wide`, the upper-deck fans read as vertical stripes, one per section, because the colour mix restarts at each section edge. Seat fans from `bowl.seating` runs with a noise field continuous across sections, so aisles break the rows but not the pattern.

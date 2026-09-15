@@ -59,12 +59,12 @@
    "usdz": "actors/bowl/stands.usdz",
    "glb": "actors/bowl/stands.glb",
    "objects": {
-    "stands": 33102
+    "stands": 33282
    },
    "parts": {
     "stands": 6
    },
-   "triangles": 33102,
+   "triangles": 33282,
    "materials": [
     "bowl_concrete",
     "bowl_glass",
@@ -74,8 +74,8 @@
     "bowl_trim"
    ],
    "bytes": {
-    "usdz": 5357333,
-    "glb": 5555492
+    "usdz": 5287147,
+    "glb": 5486312
    },
    "about": "The whole bowl's structure in one entity."
   },
@@ -142,26 +142,27 @@
    "usdz": "actors/bowl/near.usdz",
    "glb": "actors/bowl/near.glb",
    "objects": {
-    "near_club": 15822,
-    "near_endzone": 17392,
-    "near_upper": 13292
+    "near_club": 16430,
+    "near_endzone": 17792,
+    "near_upper": 13892
    },
    "parts": {
-    "near_club": 5,
-    "near_endzone": 5,
-    "near_upper": 5
+    "near_club": 6,
+    "near_endzone": 6,
+    "near_upper": 6
    },
-   "triangles": 46506,
+   "triangles": 48114,
    "materials": [
     "bowl_seat_band",
     "bowl_seat_plaque",
     "bowl_stair",
+    "bowl_step_light",
     "seat_hardware.001",
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 3808198,
-    "glb": 4083576
+    "usdz": 3989684,
+    "glb": 4276384
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },
@@ -182,8 +183,8 @@
     "bowl_table_trim"
    ],
    "bytes": {
-    "usdz": 136172,
-    "glb": 143536
+    "usdz": 131622,
+    "glb": 138984
    },
    "about": "The tabletop bowl: lower tier, stepped, home stands cut away."
   }

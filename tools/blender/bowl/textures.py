@@ -199,7 +199,7 @@ def trim_sheet(S: int = 2048) -> None:
     a = tile_band(src["concrete_floor_worn_001"]["diff"], S, h)
     wear = np.exp(-((np.linspace(0, 1, h) - 0.3) / 0.12) ** 2)[:, None, None]
     grime = fbm(h, S, 12, 7)[:, :, None]
-    albedo[r0:r1] = a * (0.92 - 0.10 * wear * (0.6 + 0.4 * grime))
+    albedo[r0:r1] = a * (0.62 - 0.08 * wear * (0.6 + 0.4 * grime))   # stadium concrete reads darker than a scan under floods
     normal[r0:r1] = tile_band(src["concrete_floor_worn_001"]["nor_gl"], S, h)
     o = tile_band(src["concrete_floor_worn_001"]["arm"], S, h)
     o[:, :, 1] = np.clip(o[:, :, 1] - 0.08 * wear[:, :, 0], 0.3, 1.0)
@@ -224,7 +224,7 @@ def trim_sheet(S: int = 2048) -> None:
     r0, r1 = band("riser")
     h = r1 - r0
     a = tile_band(src["painted_concrete"]["diff"], S, h, 200)
-    a = tint(a, (0.47, 0.45, 0.42), keep=0.0)
+    a = tint(a, (0.31, 0.30, 0.29), keep=0.0)
     streak = fbm(h, S, 90, 21, 2)
     streak = np.clip((streak - 0.35) * 1.8, 0, 1) * np.linspace(0.55, 0.0, h)[:, None]
     foot = np.linspace(0.78, 1.0, h)[:, None, None]

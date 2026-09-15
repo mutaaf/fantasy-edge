@@ -75,8 +75,13 @@ final class BowlActor: StadiumActor {
                     self[keyPath: into][id] = holder
                 }
             }
-            root.addChild(stands)
-            root.addChild(far)
+            // Debug: `-bowlSkip stands,far,near,fills` leaves pieces out, to find
+            // which one draws something in a look-dev shot.
+            let skip = Self.skipped
+            if !skip.contains("stands") { root.addChild(stands) }
+            if !skip.contains("far") { root.addChild(far) }
+            if skip.contains("near") { near = [:] }
+            if skip.contains("fills") { fills = [:] }
             choosePreset(c)
         }
         publish(c)
@@ -165,6 +170,19 @@ final class BowlActor: StadiumActor {
             }
             node.components.set(model)
         }
+    }
+
+    static var skipped: Set<String> {
+        let args = ProcessInfo.processInfo.arguments
+        let value: String
+        if let i = args.firstIndex(of: "-bowlSkip"), i + 1 < args.count {
+            value = args[i + 1]
+        } else if let env = ProcessInfo.processInfo.environment["BOWL_SKIP"] {
+            value = env                               // SIMCTL_CHILD_BOWL_SKIP from a harness
+        } else {
+            return []
+        }
+        return Set(value.split(separator: ",").map(String.init))
     }
 
     static func descendants(of e: Entity) -> [Entity] {

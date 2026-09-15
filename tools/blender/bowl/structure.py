@@ -68,6 +68,8 @@ def materials():
         "stair": C.material("bowl_stair", albedo="stair_albedo.jpg", roughness=0.85, color=(1, 1, 1, 1)),
         "seat_plastic": SEAT.materials()["seat_plastic"],
         "seat_hardware": SEAT.materials()["seat_hardware"],
+        "steplight": C.material("bowl_step_light", color=(0, 0, 0, 1), emission="interiors_emission.jpg",
+                                emission_strength=6.0),
         "plaque": C.material("bowl_seat_plaque", albedo="seat_numbers.png", roughness=0.35, metallic=0.8,
                              color=(1, 1, 1, 1)),
         "table_trim": C.material("bowl_table_trim", albedo="table_trim_albedo.jpg", roughness=0.9, color=(1, 1, 1, 1)),
@@ -443,6 +445,9 @@ def club(b: C.Builder) -> None:
                   pt(wall_b + 0.04, ta, cap)), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.0, 0.3))
         oquad(b, (pt(wall_b, ta, walk), pt(wall_b, tb, walk), pt(wall_b, tb, cap), pt(wall_b, ta, cap)),
               (-nin[0], 0, -nin[2]), "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.4), (u0 / 3, 0.4)))
+        oquad(b, (pt(wall_b + 0.01, ta, cap - 0.16), pt(wall_b + 0.01, tb, cap - 0.16), pt(wall_b + 0.01, tb, cap - 0.08),
+                  pt(wall_b + 0.01, ta, cap - 0.08)), (-nin[0], 0, -nin[2]), "interiors",
+              atlas_uv("glow", u0, u1, 0.75, 0.8))
         oquad(b, (pt(wall_b, ta, walk), pt(wall_b, tb, walk), pt(T["upper"]["inner"], tb, walk),
                   pt(T["upper"]["inner"], ta, walk)), (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.1, 0.9))
         # mullions behind the glass, columns in the open end concourses
@@ -799,6 +804,15 @@ def near_patch(reg) -> C.Builder:
                 return (x + tan[0] * lat, y, z + tan[2] * lat)
 
             steps = STEPS[tier_name]
+            for side in (-1, 1):
+                for k in range(steps):
+                    d = max(0.02, k / steps) - 0.014
+                    h0 = rw["tread"] + rise_step * k / steps
+                    c = P(d, side * (half - 0.12), h0 + 0.09)
+                    oquad(b, (C._add(c, C._scale(tan, -0.07)), C._add(c, C._scale(tan, 0.07)),
+                              C._add(C._add(c, C._scale(tan, 0.07)), (0, 0.05, 0)),
+                              C._add(C._add(c, C._scale(tan, -0.07)), (0, 0.05, 0))),
+                          (nx, 0, nz), "steplight", ((0.1, 0.02), (0.4, 0.02), (0.4, 0.2), (0.1, 0.2)))
             for k in range(1, steps):
                 d0, d1 = k / steps, 1.0
                 h = tr + rise_step * k / steps
