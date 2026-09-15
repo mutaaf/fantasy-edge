@@ -56,6 +56,19 @@ extension SceneSpec.Look {
         public let spillOpacity: Double
     }
 
+    public struct LightingBeamShader: Decodable, Equatable, Sendable {
+        public let file: String
+        public let prim: String
+        public let color: String
+        public let opacity: SceneSpec.PerMode<Double>
+        public let dustRepeat: Double
+        public let dustSpeed: Double
+        public let dustFloor: Double
+        public let dustAmount: Double
+        public let viewPower: Double
+        public let additive: Double
+    }
+
     public struct LightingBeams: Decodable, Equatable, Sendable {
         public let perBank: Int
         public let fanYards: Double
@@ -67,6 +80,7 @@ extension SceneSpec.Look {
         public let overdrawCapScreens: Double
         public let startInsideOffsetYards: Double
         public let endHeightYards: SceneSpec.PerMode<Double>
+        public let shader: LightingBeamShader
         public let dustOpacity: SceneSpec.PerMode<Double>
         public let dustTileYards: Double
         public let dustScrollPerSecond: Double

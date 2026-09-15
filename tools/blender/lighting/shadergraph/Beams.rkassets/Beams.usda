@@ -1,0 +1,229 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    # A floodlight beam as light in air, for the crossed quads LightingActor
+    # builds (u across the quad, v = 1 at the lamp, 0 where the beam stops).
+    #
+    #   alpha = profile(u, v)                       soft across, hot throat, faded far end
+    #         * (DustFloor + DustAmount * dust(u, v * DustRepeat + time * DustSpeed))
+    #         * |dot(normal, view)| ^ ViewPower     a quad seen edge-on fades out, so the
+    #                                               crossed quads never read as a solid cone
+    #         * Opacity
+    #   colour = Color * alpha, premultiplied; opacity = alpha * (1 - Additive).
+    #   Additive = 1 is pure additive light (src + dst), 0 ordinary alpha blending.
+    #
+    # Every parameter is set from visual.lighting.beams.shader. Web and Android
+    # port the same five lines; the portable fallback without a shader is the
+    # UV-scroll dust in LightingActor.
+    def Material "Beam"
+    {
+        color3f inputs:Color = (1, 0.945, 0.855)
+        float inputs:Opacity = 0.32
+        float inputs:DustRepeat = 4
+        float inputs:DustSpeed = 0.035
+        float inputs:DustFloor = 0.6
+        float inputs:DustAmount = 0.8
+        float inputs:ViewPower = 1.5
+        float inputs:Additive = 1
+
+        token outputs:mtlx:surface.connect = </Root/Beam/Surface.outputs:out>
+
+        def Shader "Surface"
+        {
+            uniform token info:id = "ND_realitykit_unlit_surfaceshader"
+            color3f inputs:color.connect = </Root/Beam/Light.outputs:out>
+            float inputs:opacity.connect = </Root/Beam/Cover.outputs:out>
+            bool inputs:applyPostProcessToneMap = 0
+            bool inputs:hasPremultipliedAlpha = 1
+            token outputs:out
+        }
+
+        def Shader "UV"
+        {
+            uniform token info:id = "ND_texcoord_vector2"
+            float2 outputs:out
+        }
+
+        def Shader "SplitUV"
+        {
+            uniform token info:id = "ND_separate2_vector2"
+            float2 inputs:in.connect = </Root/Beam/UV.outputs:out>
+            float outputs:outx
+            float outputs:outy
+        }
+
+        def Shader "Time"
+        {
+            uniform token info:id = "ND_time_float"
+            float outputs:out
+        }
+
+        def Shader "Drift"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/Time.outputs:out>
+            float inputs:in2.connect = </Root/Beam.inputs:DustSpeed>
+            float outputs:out
+        }
+
+        def Shader "Along"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/SplitUV.outputs:outy>
+            float inputs:in2.connect = </Root/Beam.inputs:DustRepeat>
+            float outputs:out
+        }
+
+        def Shader "Scroll"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/Beam/Along.outputs:out>
+            float inputs:in2.connect = </Root/Beam/Drift.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "DustUV"
+        {
+            uniform token info:id = "ND_combine2_vector2"
+            float inputs:in1.connect = </Root/Beam/SplitUV.outputs:outx>
+            float inputs:in2.connect = </Root/Beam/Scroll.outputs:out>
+            float2 outputs:out
+        }
+
+        def Shader "Dust"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file = @beam_dust_sg.png@
+            string inputs:uaddressmode = "clamp"
+            string inputs:vaddressmode = "periodic"
+            float2 inputs:texcoord.connect = </Root/Beam/DustUV.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Profile"
+        {
+            uniform token info:id = "ND_image_float"
+            asset inputs:file = @beam_profile_sg.png@
+            string inputs:uaddressmode = "clamp"
+            string inputs:vaddressmode = "clamp"
+            float2 inputs:texcoord.connect = </Root/Beam/UV.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "DustScaled"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/Dust.outputs:out>
+            float inputs:in2.connect = </Root/Beam.inputs:DustAmount>
+            float outputs:out
+        }
+
+        def Shader "DustFactor"
+        {
+            uniform token info:id = "ND_add_float"
+            float inputs:in1.connect = </Root/Beam/DustScaled.outputs:out>
+            float inputs:in2.connect = </Root/Beam.inputs:DustFloor>
+            float outputs:out
+        }
+
+        def Shader "Normal"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            string inputs:space = "world"
+            float3 outputs:out
+        }
+
+        def Shader "View"
+        {
+            uniform token info:id = "ND_realitykit_viewdirection_vector3"
+            float3 outputs:out
+        }
+
+        def Shader "Facing"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/Beam/Normal.outputs:out>
+            float3 inputs:in2.connect = </Root/Beam/View.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "FacingAbs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/Beam/Facing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Broadside"
+        {
+            uniform token info:id = "ND_power_float"
+            float inputs:in1.connect = </Root/Beam/FacingAbs.outputs:out>
+            float inputs:in2.connect = </Root/Beam.inputs:ViewPower>
+            float outputs:out
+        }
+
+        def Shader "ProfileDust"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/Profile.outputs:out>
+            float inputs:in2.connect = </Root/Beam/DustFactor.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Seen"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/ProfileDust.outputs:out>
+            float inputs:in2.connect = </Root/Beam/Broadside.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Alpha"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/Seen.outputs:out>
+            float inputs:in2.connect = </Root/Beam.inputs:Opacity>
+            float outputs:out
+        }
+
+        def Shader "Light"
+        {
+            uniform token info:id = "ND_multiply_color3FA"
+            color3f inputs:in1.connect = </Root/Beam.inputs:Color>
+            float inputs:in2.connect = </Root/Beam/Alpha.outputs:out>
+            color3f outputs:out
+        }
+
+        def Shader "Blend"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/Beam.inputs:Additive>
+            float outputs:out
+        }
+
+        def Shader "Cover"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Beam/Alpha.outputs:out>
+            float inputs:in2.connect = </Root/Beam/Blend.outputs:out>
+            float outputs:out
+        }
+    }
+
+    def Mesh "Preview"
+    {
+        rel material:binding = </Root/Beam>
+        int[] faceVertexCounts = [4]
+        int[] faceVertexIndices = [0, 1, 2, 3]
+        point3f[] points = [(-0.5, 0, 0), (0.5, 0, 0), (0.5, 1, 0), (-0.5, 1, 0)]
+        normal3f[] normals = [(0, 0, 1), (0, 0, 1), (0, 0, 1), (0, 0, 1)] (interpolation = "vertex")
+        texCoord2f[] primvars:st = [(0, 0), (1, 0), (1, 1), (0, 1)] (interpolation = "vertex")
+    }
+}
