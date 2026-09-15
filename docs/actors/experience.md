@@ -83,4 +83,27 @@ These can't be verified in the simulator:
 
 ## Critique log
 
-See the iterations below; before and after paths are under `.work/shots/experience-*`.
+Before and after shots are under `.work/shots/experience-*` in the Experience worktree. The baseline is `docs/lookdev/integration-2/` and `integration-3/`.
+
+**Before (integration 2 and 3):**
+- `s-td-moment`: the Elsewhere panel floats in front of the play and the controls cover the lower-left of the field.
+- `s-field-level`: the drive log and Elsewhere sit across the near sideline.
+- `s-tabletop`: the model is a wide, low single deck; the ornament, centred on the volume's front edge, covers its front; the win-probability labels float above the model.
+
+**Iteration 1 (`experience-it1`).** Invalid as evidence: I merged `a71facc` mid-shoot, so the API served merged tokens and assets to a pre-merge build. `td-moment` couldn't decode and the tabletop drew nothing. Lesson: never change tokens or merge while a shoot runs; the API reads `tokens.json` live.
+
+**Iteration 2 (`experience-it2`, build `440ae1e`).**
+- **`td-moment`:** the field is clear. Elsewhere starts folded, and during the touchdown every side panel yields. The scorebug and banner stay.
+- **`tabletop`:** at 4 mm per yard on the 1.12 m volume, the model fills the table, with the bevel and club edge light visible.
+- **`tabletop_gate`:** the disc read as frosted glass under room light, not as floodlight. Replaced with a curtain along the plinth edge in iteration 3.
+- **`field-level_down` / `_left`:** the controls are too wide (seat label, 300-point segmented control), and the drive log at −30° crowds into them. Iteration 3 narrows the controls and moves the side panels to 1.25 m.
+- **`bowl-wide_picker`:** the map is small, and four seats cluster on the home sideline. Iteration 3 adds a list beside the map.
+- **`field-level*` render black at the `field` seat** (see "Found for other actors").
+
+## Found for other actors
+
+**The `field` seat renders black after `dbfe41d`/`ba34aa5`/`a71facc`.**
+- **Evidence:** it rendered in integration 3 (`115620e`) and in Experience iteration 1 (a pre-merge build), and is black in iteration 2 after merging `a71facc`. The `club` and `upper` seats render in the same build.
+- **Not Bowl:** it stays black with `-bowlSkip stands,far,near,fills`.
+- **Suspect:** the crowd change in `ba34aa5` ("back cards for the rows in front"), for a seat that is not on a row.
+- **Handed back:** to the director and Crowd; Experience didn't change crowd code.

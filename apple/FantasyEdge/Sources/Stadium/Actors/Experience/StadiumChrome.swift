@@ -114,10 +114,9 @@ struct SeatPickerView: View {
 
     var body: some View {
         let dims = picker
-        let width = CGFloat(dims?.widthPoints ?? 440), height = CGFloat(dims?.heightPoints ?? 250)
+        let width = CGFloat(dims?.widthPoints ?? 340), height = CGFloat(dims?.heightPoints ?? 260)
         let dot = CGFloat(dims?.dotPoints ?? 60), inset = CGFloat(dims?.insetPoints ?? 18)
         let seats = spec.presentation.stadium.seats ?? []
-        let chosen = spec.presentation.stadium.seat(current)
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Pick a seat").font(.system(size: 22, weight: .semibold))
@@ -128,32 +127,53 @@ struct SeatPickerView: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Close the seat picker")
             }
-            ZStack {
-                Canvas { ctx, size in drawBowl(ctx, size, inset: inset) }
-                ForEach(seats) { seat in
-                    let p = mapPoint(seat.x, seat.z, CGSize(width: width, height: height), inset: inset)
-                    Button { sit(seat.id) } label: {
-                        ZStack {
-                            Circle().strokeBorder(.white.opacity(seat.id == current ? 0.95 : 0), lineWidth: 3)
-                            Circle().fill(seat.id == current ? Color.white : Color.white.opacity(0.7))
-                                .frame(width: 16, height: 16)
+            HStack(alignment: .top, spacing: 18) {
+                ZStack {
+                    Canvas { ctx, size in drawBowl(ctx, size, inset: inset) }
+                    ForEach(seats) { seat in
+                        let p = mapPoint(seat.x, seat.z, CGSize(width: width, height: height), inset: inset)
+                        Button { sit(seat.id) } label: {
+                            ZStack {
+                                Circle().strokeBorder(.white.opacity(seat.id == current ? 0.95 : 0), lineWidth: 3)
+                                Circle().fill(seat.id == current ? Color.white : Color.white.opacity(0.7))
+                                    .frame(width: 14, height: 14)
+                            }
+                            .frame(width: dot, height: dot)
+                            .contentShape(Circle())
                         }
-                        .frame(width: dot, height: dot)
-                        .contentShape(Circle())
+                        .buttonStyle(.plain)
+                        .hoverEffect(.highlight)
+                        .position(p)
+                        .accessibilityLabel(seat.label)
+                        .accessibilityAddTraits(seat.id == current ? .isSelected : [])
                     }
-                    .buttonStyle(.plain)
-                    .hoverEffect(.highlight)
-                    .position(p)
-                    .accessibilityLabel(seat.label)
-                    .accessibilityAddTraits(seat.id == current ? .isSelected : [])
                 }
-            }
-            .frame(width: width, height: height)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(chosen.label).font(.system(size: 18, weight: .semibold))
-                Text(String(format: "Seat floor %.0f m above the field",
-                            chosen.y * spec.presentation.stadium.metersPerYard))
-                    .font(.system(size: 15)).foregroundStyle(.secondary)
+                .frame(width: width, height: height)
+                // The same seats as a list: several sit close together along
+                // one sideline on a map this small, and a row is easier to hit.
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(seats) { seat in
+                        Button { sit(seat.id) } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: seat.id == current ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 18))
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(seat.label).font(.system(size: 16, weight: .semibold)).lineLimit(1)
+                                    Text(String(format: "%.0f m up", seat.y * spec.presentation.stadium.metersPerYard))
+                                        .font(.system(size: 13)).foregroundStyle(.secondary)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 12)
+                            .frame(width: CGFloat(dims?.listWidthPoints ?? 320), height: dot, alignment: .leading)
+                            .contentShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .hoverEffect(.highlight)
+                        .accessibilityLabel(seat.label)
+                        .accessibilityAddTraits(seat.id == current ? .isSelected : [])
+                    }
+                }
             }
         }
         .padding(22)

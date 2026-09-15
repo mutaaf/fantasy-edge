@@ -231,14 +231,6 @@ public struct TabletopView: View {
                 flag.position = SIMD3(0, 0.13, 0)
                 content.add(flag)
             }
-            #if DEBUG
-            // `-arrivalAt <0...1>` freezes the gate part-way open, for a still.
-            if let p = Double(StadiumShots.argument("-arrivalAt") ?? ""), let arrival = ExperienceTokens.arrival(feed.spec) {
-                prepareGate(arrival)
-                renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
-                gate.open(at: p) {}
-            }
-            #endif
         } update: { _, attachments in
             // Only the renderer is told; attachments were placed once in
             // `make` and are only moved here, never re-added.
@@ -278,6 +270,17 @@ public struct TabletopView: View {
         .task(id: hold.shown?.playId) {
             await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
         }
+        #if DEBUG
+        // `-arrivalAt <0...1>` freezes the gate part-way open, for a still,
+        // once the scene it takes its outline from has arrived.
+        .onChange(of: feed.spec != nil, initial: true) { _, reading in
+            guard reading, !entering, let p = Double(StadiumShots.argument("-arrivalAt") ?? ""),
+                  let arrival = ExperienceTokens.arrival(feed.spec), prepareGate(arrival) else { return }
+            entering = true
+            renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
+            gate.open(at: p) {}
+        }
+        #endif
         // The scorebug rides in the ornament rather than floating in the
         // volume: the win-probability horizon fills the back of the volume
         // at exactly the height a floating scorebug wanted, and the two drew
@@ -340,12 +343,24 @@ public struct TabletopView: View {
         }
     }
 
-    private func prepareGate(_ arrival: SceneSpec.Look.Arrival) {
-        let spec = feed.spec
-        gate.build(arrival, color: spec?.palette["baseplate.rim"] ?? "#FFE9C2")
-        let s = Float(spec?.presentation.tabletop.metersPerYard ?? 0.0045)
-        gate.root.scale = SIMD3(repeating: s)
-        gate.root.position = SIMD3(0, Float(spec?.presentation.tabletop.floor ?? -0.18), 0)
+    /// The gate follows the plinth's edge: the outermost tier the table draws,
+    /// plus the plinth's margin and bevel, as `ExperienceActor` builds it.
+    /// False when there is no scene yet to take the outline from.
+    @discardableResult
+    private func prepareGate(_ arrival: SceneSpec.Look.Arrival) -> Bool {
+        guard let spec = feed.spec, let look = ExperienceTokens.look(spec) else { return false }
+        let t = spec.presentation.tabletop
+        let drawn = spec.bowl.tiers.filter { t.bowlTiers.contains($0.name) }
+        let base = look.baseplate
+        let edge = ((drawn.last?.outer ?? spec.bowl.tiers.first?.outer ?? 36) + 3) * base.marginScale + (base.bevelYards ?? 0)
+        let outline = (0..<96).map { k -> SIMD2<Float> in
+            let p = SceneMath.bowlPoint(spec.bowl.shape, offset: edge, angle: Double(k) / 96 * 2 * .pi)
+            return SIMD2(Float(p.x), Float(p.z))
+        }
+        gate.build(arrival, color: spec.palette["baseplate.rim"] ?? "#FFE9C2", outline: outline)
+        gate.root.scale = SIMD3(repeating: Float(t.metersPerYard))
+        gate.root.position = SIMD3(0, Float(t.floor), 0)
+        return true
     }
 
     /// The way in: gate, then the space. Reduce motion opens the space at once.
@@ -356,8 +371,11 @@ public struct TabletopView: View {
             enterStadium()
             return
         }
+        guard prepareGate(arrival) else {
+            enterStadium()
+            return
+        }
         entering = true
-        prepareGate(arrival)
         renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
         ExperienceEvents.post(.gateOpening(seconds: arrival.gateSeconds, swellLead: arrival.swellLeadSeconds))
         gate.open {
@@ -789,7 +807,8 @@ public struct StadiumSpaceView<Trailing: View>: View {
                         touch()
                     } label: {
                         Label(renderer.seat(spec).label, systemImage: "chair.lounge")
-                            .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
+                            .font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                            .frame(maxWidth: 240, minHeight: 60)
                     }
                     .accessibilityHint("Opens a map of the stadium to choose another seat")
                 }
@@ -801,20 +820,26 @@ public struct StadiumSpaceView<Trailing: View>: View {
                         .font(.system(size: 20, weight: .semibold)).frame(width: 60, height: 60)
                 }
                 .accessibilityLabel(renderer.muted ? "Unmute the crowd" : "Mute the crowd")
-                Picker("Immersion", selection: $immersion) {
-                    Text("Crown dial").tag(StadiumImmersion.dial)
-                    Text("Full 100%").tag(StadiumImmersion.full)
+                // One toggle rather than a 300-point segmented control: the
+                // controls stay narrow enough to sit between the side panels.
+                Button {
+                    immersion = immersion == .full ? .dial : .full
+                    touch()
+                } label: {
+                    Label(immersion == .full ? "Full" : "Dial",
+                          systemImage: immersion == .full ? "circle.inset.filled" : "dial.medium")
+                        .font(.system(size: 17, weight: .semibold)).frame(minWidth: 60, minHeight: 60)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 300)
-                .onChange(of: immersion) { _, _ in touch() }
+                .accessibilityLabel(immersion == .full ? "Full immersion" : "Crown dial immersion")
+                .accessibilityHint(immersion == .full ? "Switches to the Digital Crown dial" : "Switches to 100% full immersion")
                 Button {
                     ExperienceEvents.post(.leaving)
                     leave()
                 } label: {
-                    Label("Leave stadium", systemImage: "xmark")
+                    Label("Leave", systemImage: "xmark")
                         .font(.system(size: 17, weight: .semibold)).frame(minHeight: 60)
                 }
+                .accessibilityLabel("Leave stadium")
                 .accessibilityHint("Returns to the tabletop and windows you had open")
                 Button {
                     controlsFolded = true

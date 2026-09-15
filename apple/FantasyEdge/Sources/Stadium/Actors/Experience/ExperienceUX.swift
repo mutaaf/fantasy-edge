@@ -71,14 +71,16 @@ extension StadiumLayout {
     }
 }
 
-/// The gate of light over the table: a disc of floodlight that rises and
-/// widens from the centre spot while the table dims, then the space opens.
-/// Drawn in the table's yards, under the renderer's root.
+/// The gate of light over the table: a curtain of floodlight that rises from
+/// a ring on the table and widens while the table dims, then the space opens.
+/// A disc alone read as frosted glass under the room's light; a lit wall with
+/// a bright lip reads as light. Drawn in the table's yards.
 @MainActor
 final class ArrivalGate {
     let root = Entity()
     private var disc: ModelEntity?
     private var ring: ModelEntity?
+    private var wall: ModelEntity?
     private var elapsed: Double?
     private var arrival: SceneSpec.Look.Arrival?
     private var done: (() -> Void)?
@@ -90,26 +92,30 @@ final class ArrivalGate {
 
     var running: Bool { elapsed != nil }
 
-    /// Build the gate's two meshes once, in yards.
-    func build(_ arrival: SceneSpec.Look.Arrival, color: String) {
-        guard disc == nil else { return }
+    /// Build the gate's meshes once, in yards, along `outline`: the plinth's
+    /// edge, so the curtain rises around the model rather than through it.
+    func build(_ arrival: SceneSpec.Look.Arrival, color: String, outline: [SIMD2<Float>]) {
+        guard disc == nil, outline.count > 2 else { return }
         self.arrival = arrival
-        let S = 64
-        var d = MeshBuilder(), pts: [SIMD3<Float>] = []
-        for k in 0..<S {
-            let t0 = Float(k) / Float(S) * 2 * .pi, t1 = Float(k + 1) / Float(S) * 2 * .pi
-            let a = SIMD3(cos(t0), 0, sin(t0)), b = SIMD3(cos(t1), 0, sin(t1))
+        var d = MeshBuilder(), w = MeshBuilder(), pts: [SIMD3<Float>] = []
+        for k in 0..<outline.count {
+            let p0 = outline[k], p1 = outline[(k + 1) % outline.count]
+            let a = SIMD3(p0.x, 0, p0.y), b = SIMD3(p1.x, 0, p1.y)
             d.quad(SIMD3(0, 0, 0), b, a, SIMD3(0, 0, 0), normal: SIMD3(0, 1, 0))
+            // A unit-high wall, scaled to the curtain's height as it rises.
+            w.quad(a, b, SIMD3(b.x, 1, b.z), SIMD3(a.x, 1, a.z))
             pts.append(a)
         }
         pts.append(pts[0])
         var r = MeshBuilder()
-        r.tube(pts, radius: 0.02, sides: 6)
-        let disc = d.entity("gate.disc", StadiumLook.glow(color, opacity: arrival.gateOpacity * 0.35, texture: nil))
+        r.tube(pts, radius: 0.6, sides: 6)
+        let disc = d.entity("gate.disc", StadiumLook.glow(color, opacity: arrival.gateOpacity * 0.12, texture: nil))
+        let wall = w.entity("gate.wall", StadiumLook.glow(color, opacity: arrival.gateWallOpacity ?? arrival.gateOpacity * 0.25,
+                                                           texture: nil))
         let ring = r.entity("gate.ring", StadiumLook.glow(color, opacity: arrival.gateOpacity, texture: nil))
-        root.addChild(disc)
-        root.addChild(ring)
+        for e in [disc, wall, ring] { root.addChild(e) }
         self.disc = disc
+        self.wall = wall
         self.ring = ring
     }
 
@@ -150,11 +156,14 @@ final class ArrivalGate {
     private func draw(_ p: Double) {
         guard let arrival else { return }
         let eased = Float(1 - pow(1 - p, 3))
-        let radius = max(0.01, Float(arrival.gateRadiusYards) * eased)
-        let lift = Float(arrival.gateHeightYards) * eased
-        disc?.scale = SIMD3(radius, 1, radius)
-        disc?.position = SIMD3(0, lift, 0)
-        ring?.scale = SIMD3(radius, 1, radius)
+        // The curtain stands at the plinth's edge and widens only a little
+        // (by gateWiden of its size at the end); what grows is its height.
+        let edge = 1 + Float(arrival.gateWiden) * eased
+        let lift = max(0.01, Float(arrival.gateHeightYards) * eased)
+        disc?.scale = SIMD3(edge, 1, edge)
+        disc?.position = SIMD3(0, 0.2, 0)
+        wall?.scale = SIMD3(edge, lift, edge)
+        ring?.scale = SIMD3(edge, 1, edge)
         ring?.position = SIMD3(0, lift, 0)
         root.components.set(OpacityComponent(opacity: Float(min(1, p * 3))))
     }

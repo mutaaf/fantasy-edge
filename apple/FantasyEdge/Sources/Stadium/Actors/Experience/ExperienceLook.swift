@@ -41,9 +41,10 @@ extension SceneSpec.Look {
     /// Tabletop to seat: the gate of light, the dimmed table, the Crown hint.
     public struct Arrival: Decodable, Equatable, Sendable {
         public let gateSeconds: Double
-        public let gateRadiusYards: Double
+        public let gateWiden: Double
         public let gateHeightYards: Double
         public let gateOpacity: Double
+        public let gateWallOpacity: Double?
         public let tabletopDim: Double
         public let crownHintSeconds: Double
         public let crownHintOnce: Bool
@@ -105,6 +106,7 @@ extension SceneSpec.Look {
         public let heightPoints: Double
         public let dotPoints: Double
         public let insetPoints: Double
+        public let listWidthPoints: Double?
     }
 
     public struct ExperienceLook: Decodable, Equatable, Sendable {
