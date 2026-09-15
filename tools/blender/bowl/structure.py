@@ -399,7 +399,7 @@ def club(b: C.Builder) -> None:
         x, z = kit.bowl_point(40.0, tm)
         u0, u1 = ul[i], ul[i + 1]
         end = abs(x) > HALF_L + 2
-        press = pb["side"] == "far" and z < 0 and (pb["fromX"] - 50) <= x <= (pb["toX"] - 50)
+        press = False            # the press box moved to the parapet (press_box below)
         region = "press" if press else "glow" if end else "suites"
         # concourse floor, running back under the deck to the glass
         oquad(b, (pt(T["lower"]["outer"], ta, y0), pt(T["lower"]["outer"], tb, y0), pt(glass_m, tb, y0), pt(glass_m, ta, y0)),
@@ -551,6 +551,70 @@ def mullions_press(b: C.Builder) -> None:
                   (c[0] + tx, P["head"], c[1] + tz), (c[0] - tx, P["head"], c[1] - tz)),
               (nx, 0.45, nz), "steel")
         s += pb["mullionEvery"]
+
+
+def press_box(b: C.Builder) -> None:
+    """The press box on the far parapet (`bowl.pressBox`): a glazed room
+    canted toward the field, a lit interior with a desk line, a flat roof with
+    an overhang, mullions, and a back wall and ends in concrete."""
+    pb = kit.BOWL["pressBox"]
+    front, back = pb["offset"], pb["offset"] + pb["depth"]
+    y0, y1 = pb["rise"]
+    ring = kit.Ring(front)
+    c = ring.arc_at(math.pi * 1.5)
+    half = (pb["toX"] - pb["fromX"]) / 2
+    ts = [ring.angle(c - half + 2 * half * k / 16) for k in range(17)]
+    ul = arclen(front, ts)
+    cant = 0.7                                 # the glass leans out at the top
+    for i in range(len(ts) - 1):
+        ta, tb = ts[i], ts[i + 1]
+        nin = inward3(front, (ta + tb) / 2)
+        u0, u1 = ul[i], ul[i + 1]
+        # floor slab edge and sill
+        oquad(b, (pt(front - 0.2, ta, y0 - 0.5), pt(front - 0.2, tb, y0 - 0.5), pt(front - 0.2, tb, y0 + 0.6),
+                  pt(front - 0.2, ta, y0 + 0.6)), nin, "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.35), (u0 / 3, 0.35)))
+        oquad(b, (pt(front - 0.2, ta, y0 - 0.5), pt(front - 0.2, tb, y0 - 0.5), pt(back, tb, y0 - 0.5),
+                  pt(back, ta, y0 - 0.5)), (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+        # canted glazing
+        oquad(b, (pt(front, ta, y0 + 0.6), pt(front, tb, y0 + 0.6), pt(front - cant, tb, y1), pt(front - cant, ta, y1)),
+              C._norm((nin[0], 0.2, nin[2])), "glass")
+        # the room: floor, lit back wall, desk line
+        oquad(b, (pt(front, ta, y0 + 0.02), pt(front, tb, y0 + 0.02), pt(back, tb, y0 + 0.02), pt(back, ta, y0 + 0.02)),
+              (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.2, 0.6))
+        oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, y1), pt(back, ta, y1)), nin, "interiors",
+              atlas_uv("press", u0, u1))
+        oquad(b, (pt(front + 1.2, ta, y0 + 0.9), pt(front + 1.2, tb, y0 + 0.9), pt(front + 1.2, tb, y0 + 1.5),
+                  pt(front + 1.2, ta, y0 + 1.5)), nin, "interiors", atlas_uv("press", u0, u1, 0.3, 0.55))
+        # roof with an overhang, and its fascia edge
+        oquad(b, (pt(front - cant - 0.9, ta, y1 + 0.35), pt(front - cant - 0.9, tb, y1 + 0.35), pt(back + 0.2, tb, y1 + 0.35),
+                  pt(back + 0.2, ta, y1 + 0.35)), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.6, 1.0))
+        oquad(b, (pt(front - cant - 0.9, ta, y1), pt(front - cant - 0.9, tb, y1), pt(back, tb, y1), pt(back, ta, y1)),
+              (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+        oquad(b, (pt(front - cant - 0.9, ta, y1), pt(front - cant - 0.9, tb, y1), pt(front - cant - 0.9, tb, y1 + 0.35),
+                  pt(front - cant - 0.9, ta, y1 + 0.35)), nin, "steel")
+        # back wall outside
+        oquad(b, (pt(back + 0.2, ta, y0 - 0.5), pt(back + 0.2, tb, y0 - 0.5), pt(back + 0.2, tb, y1 + 0.35),
+                  pt(back + 0.2, ta, y1 + 0.35)), (-nin[0], 0, -nin[2]), "concrete",
+              ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 1.4), (u0 / 3, 1.4)))
+        # mullion at the segment start
+        nx, nz = kit.inward(front, ta)
+        tx, tz = nz * 0.07, -nx * 0.07
+        a = kit.bowl_point(front, ta)
+        cc = kit.bowl_point(front - cant, ta)
+        oquad(b, ((a[0] - tx, y0 + 0.6, a[1] - tz), (a[0] + tx, y0 + 0.6, a[1] + tz), (cc[0] + tx, y1, cc[1] + tz),
+                  (cc[0] - tx, y1, cc[1] - tz)), (nx, 0.2, nz), "steel")
+    # end walls
+    for t in (ts[0], ts[-1]):
+        nx, nz = kit.inward(front, t)
+        side = (nz, 0.0, -nx) if t == ts[0] else (-nz, 0.0, nx)
+        oquad(b, (pt(front - cant, t, y0 - 0.5), pt(back + 0.2, t, y0 - 0.5), pt(back + 0.2, t, y1 + 0.35),
+                  pt(front - cant, t, y1 + 0.35)), side, "concrete", ((0, 0), (1.7, 0), (1.7, 1.4), (0, 1.4)))
+    # the slab reaches back to the parapet on two stub walls
+    for t in (ts[2], ts[8], ts[14]):
+        nx, nz = kit.inward(front, t)
+        yaw = math.atan2(nx, nz)
+        b.box(pt(front + pb["depth"] / 2, t, (kit.PARAPET["top"] + y0 - 0.5) / 2),
+              (0.5, y0 - 0.5 - kit.PARAPET["top"], pb["depth"]), "concrete", yaw=yaw, skip=("top", "bottom"), uv_scale=0.3)
 
 
 def rigs(b: C.Builder) -> None:
@@ -902,8 +966,11 @@ def near_patch(reg) -> C.Builder:
 # ───────────────────────────── table ─────────────────────────────
 
 def table() -> C.Builder:
-    """The lower bowl three rows a step, the wall and the concourse rail, with
-    the home stands cut away so the wearer looks in."""
+    """Both decks at LOD2 - the lower three rows a step, the upper four - with
+    the ribbon fascia, the back walls and the field wall, and the home stands
+    cut away so the wearer looks in. The Experience actor draws
+    presentation.tabletop.bowlTiers; with only "lower" listed the upper deck
+    is still in the model but outside what the table volume promised."""
     b = C.Builder("table")
     tier = T["lower"]
     n = ROWS["lower"]
@@ -923,6 +990,41 @@ def table() -> C.Builder:
             su0, su1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
             oquad(b, (pt(f, ta, tr), pt(f, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0), "band",
                   ((su0, 0), (su1, 0), (su1, g1 - g0 + 1), (su0, g1 - g0 + 1)))
+    upper = T["upper"]
+    nu = ROWS["upper"]
+    base = kit.adaptive_angles((upper["inner"] + upper["outer"]) / 2, tolerance=0.5, max_step=14.0)
+    for g0 in range(0, nu, 4):
+        g1 = min(nu, g0 + 4) - 1
+        first, last = kit.row(upper, g0, nu), kit.row(upper, g1, nu)
+        f, bk, tr, rf = first["front"], last["back"], last["tread"], first["riserFrom"]
+        ul = arclen(f, base)
+        for i in range(len(base) - 1):
+            ta, tb = base[i], base[i + 1]
+            if cut_on_table(ta, tb):
+                continue
+            nin = inward3(f, (ta + tb) / 2)
+            oquad(b, (pt(f, ta, rf), pt(f, tb, rf), pt(f, tb, tr), pt(f, ta, tr)), nin, "table_trim",
+                  band_uv("riser", ul[i] / 4.4, ul[i + 1] / 4.4))
+            su0, su1 = ul[i] / (8 * kit.SEAT_PITCH), ul[i + 1] / (8 * kit.SEAT_PITCH)
+            oquad(b, (pt(f, ta, tr), pt(f, tb, tr), pt(bk, tb, tr), pt(bk, ta, tr)), (0, 1, 0), "band",
+                  ((su0, 0), (su1, 0), (su1, g1 - g0 + 1), (su0, g1 - g0 + 1)))
+    for i in range(len(base) - 1):
+        ta, tb = base[i], base[i + 1]
+        if cut_on_table(ta, tb):
+            continue
+        nin = inward3(upper["inner"], (ta + tb) / 2)
+        rib = kit.BOWL["ribbon"]
+        # the ribbon fascia and the deck's front, then the back of the top row down to the ground
+        oquad(b, (pt(rib["offset"], ta, T["lower"]["rise"][1]), pt(rib["offset"], tb, T["lower"]["rise"][1]),
+                  pt(rib["offset"], tb, upper["rise"][0]), pt(rib["offset"], ta, upper["rise"][0])), nin, "screens")
+        oquad(b, (pt(rib["offset"], ta, upper["rise"][0]), pt(rib["offset"], tb, upper["rise"][0]),
+                  pt(upper["inner"], tb, upper["rise"][0]), pt(upper["inner"], ta, upper["rise"][0])), (0, 1, 0),
+              "table_trim", band_uv("steel", 0, 1))
+        o, yt = upper["outer"], upper["rise"][1]
+        oquad(b, (pt(o, ta, yt), pt(o, tb, yt), pt(o, tb, yt + 1.8), pt(o, ta, yt + 1.8)), nin, "table_trim",
+              band_uv("steel", 0, 1))
+        oquad(b, (pt(o + 0.6, ta, 0), pt(o + 0.6, tb, 0), pt(o + 0.6, tb, yt + 1.8), pt(o + 0.6, ta, yt + 1.8)),
+              (-nin[0], 0, -nin[2]), "table_trim", band_uv("riser", 0, 1))
     wm, top = kit.BOWL["wall"]["offset"], kit.BOWL["wall"]["height"]
     base = kit.adaptive_angles(20.0, tolerance=0.35, max_step=12.0)
     for i in range(len(base) - 1):
@@ -967,7 +1069,7 @@ def build() -> list[dict]:
     team_tunnels(stands)
     club(stands)
     parapet(stands)
-    mullions_press(stands)
+    press_box(stands)
     rigs(stands)
     video_board(stands)
     emit("stands", [stands], "The whole bowl's structure in one entity.")
