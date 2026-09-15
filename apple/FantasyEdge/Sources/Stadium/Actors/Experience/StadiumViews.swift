@@ -13,37 +13,58 @@ public struct SceneScorebug: View {
     let spec: SceneSpec
     public init(spec: SceneSpec) { self.spec = spec }
 
+    // Visuals are Broadcast's (docs/actors/broadcast.md); placement stays
+    // Experience's. A broadcast scorebug: each side a panel washed in its
+    // chip's colour, the clock in the middle, the down on its own plate,
+    // which turns red in the red zone.
     public var body: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 0) {
             side(spec.teams.away, score: spec.status.awayScore, has: spec.status.possession == "away")
-            VStack(spacing: 3) {
+            VStack(spacing: 5) {
                 Text(spec.status.label.isEmpty ? spec.status.state.capitalized : spec.status.label)
-                    .font(.system(size: 17, weight: .bold)).monospacedDigit()
+                    .font(.system(size: 19, weight: .heavy)).monospacedDigit()
                 if !spec.status.downDistance.isEmpty {
-                    Text(spec.status.downDistance).font(.system(size: 14)).foregroundStyle(.secondary)
+                    HStack(spacing: 5) {
+                        if spec.status.redZone {
+                            Image(systemName: "arrow.right.to.line").font(.system(size: 11, weight: .black))
+                        }
+                        Text(spec.status.downDistance.uppercased()).font(.system(size: 13, weight: .heavy)).kerning(0.6)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Capsule().fill(spec.status.redZone ? swatch(spec.palette["fill.redZone"] ?? "#DF0B0B")
+                                                                 : Color.black.opacity(0.35)))
+                    .accessibilityLabel(spec.status.redZone ? "red zone, \(spec.status.downDistance)" : spec.status.downDistance)
                 }
                 if spec.isReplay {
                     Label("Replay", systemImage: "arrow.counterclockwise")
                         .font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                 }
             }
+            .padding(.horizontal, 22)
             side(spec.teams.home, score: spec.status.homeScore, has: spec.status.possession == "home")
-            if spec.status.redZone {
-                SceneChip(text: "RED ZONE", fill: spec.palette["fill.redZone"] ?? "#DF0B0B",
-                     symbol: "arrow.right.to.line")
-            }
         }
-        .padding(.horizontal, 24).padding(.vertical, 14)
+        .padding(8)
         .glassBackgroundEffect()
     }
 
     private func side(_ t: SceneSpec.Team, score: Double, has ball: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 3).fill(swatch(t.chip)).frame(width: 6, height: 46)
             SceneChip(text: t.abbr, fill: t.chip, symbol: nil, hatch: t.hatch)
-            Text("\(Int(score))").font(.system(size: 38, weight: .heavy)).monospacedDigit()
-            Image(systemName: "football.fill").font(.system(size: 14)).opacity(ball ? 1 : 0)
+            Text("\(Int(score))").font(.system(size: 40, weight: .black)).monospacedDigit()
+                .frame(minWidth: 50, alignment: .trailing)
+            Image(systemName: "football.fill").font(.system(size: 15, weight: .bold))
+                .opacity(ball ? 1 : 0)
                 .accessibilityLabel(ball ? "has the ball" : "")
         }
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 16).fill(swatch(t.chip).opacity(0.24)))
+    }
+
+    private func swatch(_ hex: String) -> Color {
+        let c = SceneMath.rgba(hex)
+        return Color(red: Double(c.x), green: Double(c.y), blue: Double(c.z))
     }
 }
 
@@ -90,20 +111,34 @@ public struct DriveLog: View {
     let spec: SceneSpec
     public init(spec: SceneSpec) { self.spec = spec }
 
+    // Visuals are Broadcast's: the newest play bright, the drive behind it
+    // fading the way its trails do, each play's gain on the right.
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             if let d = spec.shownDrive {
-                Text("\(d.team) drive\(d.result.isEmpty ? "" : " · \(d.result)")")
-                    .font(.system(size: 20, weight: .semibold))
-                ForEach(Array(d.arcs.suffix(9).enumerated()), id: \.element.id) { i, arc in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle().fill(color(arc.color)).frame(width: 10, height: 10).padding(.top, 5)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(label(arc)).font(.system(size: 14, weight: .semibold))
-                            Text(arc.text).font(.system(size: 13)).foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
+                HStack(spacing: 10) {
+                    if let t = d.side.flatMap({ spec.teams.side($0) }) {
+                        SceneChip(text: t.abbr, fill: t.chip, symbol: nil, hatch: t.hatch)
                     }
+                    Text(d.result.isEmpty ? "\(d.team) drive" : d.result).font(.system(size: 20, weight: .heavy))
+                    Spacer()
+                    Text("\(d.arcs.count) plays").font(.system(size: 14, weight: .semibold)).foregroundStyle(.secondary)
+                }
+                let shown = Array(d.arcs.suffix(8))
+                ForEach(Array(shown.enumerated()), id: \.element.id) { i, arc in
+                    let age = shown.count - 1 - i
+                    HStack(alignment: .top, spacing: 10) {
+                        Capsule().fill(color(arc.color)).frame(width: 4, height: 30).padding(.top, 2)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(label(arc)).font(.system(size: 14, weight: age == 0 ? .heavy : .semibold))
+                            Text(arc.text).font(.system(size: 13)).foregroundStyle(.secondary)
+                                .lineLimit(age == 0 ? 3 : 1)
+                        }
+                        Spacer(minLength: 8)
+                        Text(gain(arc, side: d.side)).font(.system(size: 15, weight: .heavy)).monospacedDigit()
+                            .foregroundStyle(age == 0 ? .primary : .secondary)
+                    }
+                    .opacity(age == 0 ? 1 : max(0.5, 1 - Double(age) * 0.08))
                 }
             } else {
                 Text("No drive yet").font(.system(size: 17)).foregroundStyle(.secondary)
@@ -121,6 +156,12 @@ public struct DriveLog: View {
         }
         parts.append(arc.type)
         return parts.joined(separator: " · ")
+    }
+
+    /// Yards toward the side's goal: home attacks +x.
+    private func gain(_ arc: SceneSpec.Arc, side: String?) -> String {
+        let yards = Int(((arc.toX - arc.fromX) * (side == "away" ? -1 : 1)).rounded())
+        return yards > 0 ? "+\(yards)" : "\(yards)"
     }
 
     private func color(_ token: String) -> Color {
@@ -218,7 +259,10 @@ public struct TabletopView: View {
             }
         } attachments: {
             Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
+                // The moment graphic is Broadcast's now, drawn in the world
+                // over the end zone (BroadcastBanner); this glass chip stays
+                // empty so the two never show at once.
+                EmptyView()
             }
         }
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
@@ -487,7 +531,10 @@ public struct StadiumSpaceView<Trailing: View>: View {
             Attachment(id: "trailing") { trailing }
             Attachment(id: "controls") { controls }
             Attachment(id: "moment") {
-                if let m = hold.shown { MomentBanner(moment: m, spec: feed.spec) }
+                // The moment graphic is Broadcast's now, drawn in the world
+                // over the end zone (BroadcastBanner); this glass chip stays
+                // empty so the two never show at once.
+                EmptyView()
             }
         }
         .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }

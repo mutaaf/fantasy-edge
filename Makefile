@@ -38,7 +38,7 @@ verify-scene:
 	python3 tools/scene_samples.py .work/scenes
 	swiftc -O -o .work/verify-scene $(STADIUM)/SceneSpec.swift $(STADIUM)/SceneLook.swift \
 		$(STADIUM)/Actors/*/*Look.swift $(STADIUM)/Actors/Field/FieldArtSpec.swift \
-		$(STADIUM)/SceneMath.swift apple/verify_scene.swift
+		$(STADIUM)/SceneMath.swift $(STADIUM)/Actors/Broadcast/BroadcastFlight.swift apple/verify_scene.swift
 	.work/verify-scene .work/scenes/*.json
 
 clean:

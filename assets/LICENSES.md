@@ -75,3 +75,16 @@ Seat plastic, seat bands, stair nosing, soffit panels and the lit interiors
 `tools/blender/bowl/textures.py`: original, no third-party content.
 
 Blender itself (GPL) is a build tool only; its output is not covered by the GPL.
+
+## Broadcast (`assets/actors/broadcast/`)
+
+**Original: no third-party inputs, no downloads.** Released with the repository.
+
+| Files | Made by |
+|---|---|
+| `football_{nfl,college}.{usdz,glb}`, `manifest.json` | `tools/blender/broadcast/build.py`: geometry to the NFL and NCAA ball specs; pebble grain, seams and wear from seeded numpy height fields |
+| `trail_core.png`, `trail_halo.png`, `line.png`, `marker.png` | `tools/blender/broadcast/textures.py` (standard library), shaped by `visual.broadcast` |
+
+The ribbon crawl, the down-and-distance tag, the horizon band and label, and
+the moment banner are drawn at runtime from the scene: no team logos or marks,
+only each club's abbreviation and chip colour.
