@@ -101,6 +101,9 @@ final class StadiumShared {
     var strobeUntil: Double = 0
     /// Which side's section surges, and until when. Written by Moments, read by Crowd.
     var surge: (away: Bool, until: Double)?
+    /// The field-goal net behind the end nearest `endX` sways, `strength` 0..1,
+    /// until `until`. Written by Moments on a kick through, read by Sideline.
+    var netSway: (endX: Double, strength: Double, until: Double)?
     /// Sound is off. Written by the composer, read by Audio.
     var muted = false
 }
