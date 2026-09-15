@@ -51,9 +51,38 @@ Experience posts on `NotificationCenter.default`, name `ExperienceEvents.name` (
 | `.panelsYielded(Bool)` | a moment took the panels away (`true`) or gave them back | none required; lets Moments align its choreography with a clear view |
 | `.leaving` | Leave stadium pressed | fade the bed out |
 
-### Broadcast: the drive log's length
+### Broadcast: panel footprints
 
-The drive log's visuals are Broadcast's. Experience wraps it in a fold, and wants the unfolded log to be as short as it can be while staying useful. When Broadcast restyles `DriveLog`, please take a row count (e.g. `DriveLog(spec:, rows:)`) and put its default in `visual.broadcast`. Experience will pass it through.
+`visual.experience.layout.panelSizes` is the contract, in points. Each panel is exactly `widthPoints` wide and at most `maxHeightPoints` tall, and the stadium clamps it (top-aligned, clipped).
+
+| Panel | Width (pt) | Max height (pt) |
+|---|---|---|
+| drive | 460 | 400 |
+| trailing | 420 | 450 |
+| controls | 700 | 160 |
+| folded tab | 180 | 64 |
+
+Broadcast's drive log (5 rows, at most 360 pt) fits. Its test should read `panelSizes.drive.maxHeightPoints`.
+
+### Broadcast: the glass scorebug yields to the video board
+
+`layout.perSeat.<seat>.scorebugHidden` is true when `bowl.videoBoard` faces the wearer, sits within `scorebugYield.inViewDegrees` of straight ahead, and subtends at least `boardMinDegrees`. Today that is only the `endzone` seat.
+
+## Panels per seat
+
+`scene.py`'s `seat_panels()` works out each seat's drive, trailing and controls places.
+- **Search:** from the default slot, it looks for the nearest spot inside the comfort limits (±30°, at most 33° below) whose angular box stays outside the field's projected silhouette (end zones included, plus `search.marginDegrees`).
+- **Controls:** dead ahead, so they never climb above `search.controlsHighestBelowDegrees`.
+- **No room:** a panel starts folded, and its tab is placed the same way.
+- **Output:** the scene carries the result as `visual.experience.layout.perSeat`.
+- **Swift:** moves the attachments when the seat changes and applies the folds.
+- **Test:** `tests/test_experience.py` asserts no open panel overlaps the field from any of the seven presets.
+
+| Seat | Drive / trailing below eye | Controls |
+|---|---|---|
+| club, endzone, sideline | about −1° to −4° (just above the eye, over the stands) | low, or folded |
+| upper, clubLevel, pressBox | 1° to 11° | folded |
+| field | 24–25° | 30° |
 
 ### Director: seat previews in `SceneSpec`
 
@@ -119,6 +148,12 @@ Before and after shots are under `.work/shots/experience-*` in the Experience wo
 - **`td-moment`:** only the scorebug is up; the play is unobstructed.
 - **`field-level`:** a clean look down the field. The drive log sits in the lower-left corner and the Elsewhere tab in the lower right.
 - **Budget:** stadium 0 draw parts. Tabletop 6 parts and 2.9k triangles, plus 3 parts for the gate while it opens. Budget is 5k triangles and 10 parts.
+
+**Iteration 6 (`experience-it6`, build `cfe35ad`), `redzone-trails` from all seven presets.**
+- **`pressBox`:** the drive log sits over the far stands and the controls pill above the field's far sideline; the field is clear.
+- **`club` / `clubLevel` / `upper` / `sideline`:** the side panels sit over the stands, just above the field's far edge.
+- **`field`:** panels over the near apron.
+- **`endzone`:** the glass scorebug has yielded to the video board.
 
 ## Found for other actors
 

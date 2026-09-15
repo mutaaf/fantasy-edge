@@ -131,9 +131,65 @@ class Layout(unittest.TestCase):
         self.assertLessEqual(abs(h["z"]) * t["metersPerYard"], t["volume"][2] / 2)
         self.assertLessEqual(h["y1"] * t["metersPerYard"] + t["floor"], t["volume"][1] / 2)
 
+    def test_no_open_panel_covers_the_field_from_any_seat(self):
+        """From every preset, a panel that starts open sits outside the field's
+        projected silhouette and inside the comfort limits; one that cannot
+        starts folded. The pressBox drive log used to sit over the play."""
+        built = sc.build({})
+        layout = built["visual"]["experience"]["layout"]
+        eye = EXPERIENCE["camera"]["eyeMeters"]
+        mpy = built["presentation"]["stadium"]["metersPerYard"]
+        seats = built["presentation"]["stadium"]["seats"]
+        self.assertEqual(set(layout["perSeat"]), {s["id"] for s in seats})
+        for seat in seats:
+            poly = sc.field_silhouette(seat, built["field"], eye, mpy)
+            for name, slot in layout["perSeat"][seat["id"]].items():
+                if name == "scorebugHidden":
+                    continue
+                with self.subTest(seat=seat["id"], panel=name):
+                    self.assertLessEqual(abs(slot["yaw"]), layout["maxSideDegrees"])
+                    self.assertLessEqual(below_degrees(slot), layout["maxBelowDegrees"] + 1e-6)
+                    if not slot["folded"]:
+                        box = sc.panel_box(slot, layout["panelSizes"][name], layout["pointsPerMeter"])
+                        self.assertFalse(sc.box_overlaps(box, poly), f"{name} covers the field from {seat['id']}")
+
+    def test_the_silhouette_test_sees_a_panel_over_the_field(self):
+        """The overlap check itself: the old fixed drive slot from the press box
+        is over the field, and a panel high above the eye is not."""
+        seat = next(s for s in sc.PRESENTATION["stadium"]["seats"] if s["id"] == "pressBox")
+        field = sc.RULES["nfl"]["field"]
+        eye = EXPERIENCE["camera"]["eyeMeters"]
+        poly = sc.field_silhouette(seat, field, eye, 0.9144)
+        size = EXPERIENCE["layout"]["panelSizes"]["drive"]
+        low = {"yaw": -20.0, "distance": 1.25, "height": -0.5}
+        high = {"yaw": -30.0, "distance": 1.25, "height": 0.6}
+        ppm = EXPERIENCE["layout"]["pointsPerMeter"]
+        self.assertTrue(sc.box_overlaps(sc.panel_box(low, size, ppm), poly))
+        self.assertFalse(sc.box_overlaps(sc.panel_box(high, size, ppm), poly))
+
+    def test_the_glass_scorebug_yields_where_the_video_board_carries_the_score(self):
+        """Behind the home end zone the board faces the wearer, dead ahead and
+        wide: the glass scorebug would sit on it. From the sidelines it is off
+        to the side, and from behind the board it is not in view at all."""
+        per = sc.build({})["visual"]["experience"]["layout"]["perSeat"]
+        self.assertTrue(per["endzone"]["scorebugHidden"])
+        for sid in ("club", "field", "upper", "sideline", "clubLevel", "pressBox"):
+            self.assertFalse(per[sid]["scorebugHidden"], sid)
+        board = sc.BOWL["videoBoard"]
+        behind = {"x": 200.0, "y": 20.0, "z": 0.0, "lookAt": {"x": 50.0, "y": 0.0, "z": 0.0}}
+        self.assertFalse(sc.board_carries_score(behind, board, EXPERIENCE["layout"]["scorebugYield"]))
+
+    def test_panel_heights_are_a_contract_a_renderer_can_read(self):
+        sizes = EXPERIENCE["layout"]["panelSizes"]
+        for name in ("drive", "trailing", "controls", "tab"):
+            self.assertGreater(sizes[name]["maxHeightPoints"], 0)
+            self.assertGreater(sizes[name]["widthPoints"], 0)
+        self.assertGreaterEqual(sizes["tab"]["maxHeightPoints"], 60.0, "a folded tab is a 60-point target")
+
     def test_the_scene_carries_the_experience_tokens(self):
         built = sc.build({})
-        self.assertEqual(built["visual"]["experience"]["layout"], EXPERIENCE["layout"])
+        carried = {k: v for k, v in built["visual"]["experience"]["layout"].items() if k != "perSeat"}
+        self.assertEqual(carried, EXPERIENCE["layout"])
         self.assertEqual([s["id"] for s in built["presentation"]["stadium"]["seats"]],
                          [s["id"] for s in sc.PRESENTATION["stadium"]["seats"]])
 
