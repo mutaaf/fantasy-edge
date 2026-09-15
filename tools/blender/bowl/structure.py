@@ -39,7 +39,7 @@ HALF_L = kit.SHAPE["halfLength"]
 RAIL_H = 1.04            # 0.95 m guard height, in yards
 EYE = 1.26 / kit.YARD    # a seated eye above the tread
 STEPS = {"lower": 2, "upper": 3}
-LOD0_RADIUS, LOD1_RADIUS = 2.4, 9.0
+LOD0_RADIUS, LOD1_RADIUS = 2.4, 7.0
 CUTAWAY = kit.VISUAL["experience"]["tabletop"]["cutaway"]
 
 # Interiors atlas regions, v: suites 0.5-1, press box 0.25-0.5, glow 0-0.25.
@@ -60,7 +60,11 @@ def materials():
         # A slot: dark screens other actors light (ribbon, wall boards, tunnel header).
         "screens": C.material("bowl_screens", color=(0.012, 0.012, 0.014, 1), roughness=0.3,
                               emission_color=(0.02, 0.03, 0.05), emission_strength=1.0),
-        "band": C.material("bowl_seat_band", color=(0.03, 0.05, 0.14, 1), albedo="seat_band_albedo.png", roughness=0.92),
+        # Double-sided: from any seat the rows in front are seen from behind,
+        # and a culled band left the treads bare - a grey slab in the review
+        # and the black ledge in the headset.
+        "band": C.material("bowl_seat_band", color=(0.03, 0.05, 0.14, 1), albedo="seat_band_albedo.png", roughness=0.92,
+                           double_sided=True),
         "stair": C.material("bowl_stair", albedo="stair_albedo.jpg", roughness=0.85, color=(1, 1, 1, 1)),
         "seat_plastic": SEAT.materials()["seat_plastic"],
         "seat_hardware": SEAT.materials()["seat_hardware"],
@@ -400,7 +404,10 @@ def club(b: C.Builder) -> None:
         oquad(b, (pt(T["lower"]["outer"], ta, y0), pt(T["lower"]["outer"], tb, y0), pt(glass_m, tb, y0), pt(glass_m, ta, y0)),
               (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4))
         # the glass wall and the lit room behind it
-        oquad(b, (pt(glass_m, ta, y0), pt(glass_m, tb, y0), pt(glass_m, tb, ceil), pt(glass_m, ta, ceil)), nin, "glass")
+        if press:
+            press_face(b, ta, tb, u0, u1, nin, y0)
+        else:
+            oquad(b, (pt(glass_m, ta, y0), pt(glass_m, tb, y0), pt(glass_m, tb, ceil), pt(glass_m, ta, ceil)), nin, "glass")
         oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, ceil), pt(back, ta, ceil)), nin, "interiors",
               atlas_uv(region, u0, u1))
         oquad(b, (pt(glass_m, ta, ceil), pt(glass_m, tb, ceil), pt(back, tb, ceil), pt(back, ta, ceil)), (0, -1, 0), "trim",
@@ -423,10 +430,21 @@ def club(b: C.Builder) -> None:
               atlas_uv("glow", u0, u1, 0.6, 0.9))
         oquad(b, (pt(lip_m, ta, lip_under), pt(lip_m, tb, lip_under), pt(lip_m, tb, lip_top), pt(lip_m, ta, lip_top)), nin,
               "trim", band_uv("steel", u0 / 3, u1 / 3))
-        oquad(b, (pt(lip_m, ta, lip_top), pt(lip_m, tb, lip_top), pt(T["upper"]["inner"], tb, lip_top),
-                  pt(T["upper"]["inner"], ta, lip_top)), (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.1, 0.9))
-        oquad(b, (pt(lip_m + 0.25, ta, lip_top), pt(lip_m + 0.25, tb, lip_top), pt(lip_m + 0.25, tb, lip_top + 0.95),
-                  pt(lip_m + 0.25, ta, lip_top + 0.95)), nin, "glass")
+        # The deck's front: a narrow guard wall with a cap, then a walkway at
+        # the first row's tread. It was a 2.2 yd slab standing proud of row 1,
+        # and from every upper seat it read as a bare grey ledge.
+        wall_f, wall_b, cap = lip_m + 0.9, lip_m + 1.15, lip_top + 1.0
+        walk = T["upper"]["rise"][0] + (T["upper"]["rise"][1] - T["upper"]["rise"][0]) / ROWS["upper"]
+        oquad(b, (pt(lip_m, ta, lip_top), pt(lip_m, tb, lip_top), pt(wall_f, tb, lip_top), pt(wall_f, ta, lip_top)),
+              (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.6, 1.0))
+        oquad(b, (pt(wall_f, ta, lip_top), pt(wall_f, tb, lip_top), pt(wall_f, tb, cap), pt(wall_f, ta, cap)), nin,
+              "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.33), (u0 / 3, 0.33)))
+        oquad(b, (pt(wall_f - 0.04, ta, cap), pt(wall_f - 0.04, tb, cap), pt(wall_b + 0.04, tb, cap),
+                  pt(wall_b + 0.04, ta, cap)), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0.0, 0.3))
+        oquad(b, (pt(wall_b, ta, walk), pt(wall_b, tb, walk), pt(wall_b, tb, cap), pt(wall_b, ta, cap)),
+              (-nin[0], 0, -nin[2]), "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.4), (u0 / 3, 0.4)))
+        oquad(b, (pt(wall_b, ta, walk), pt(wall_b, tb, walk), pt(T["upper"]["inner"], tb, walk),
+                  pt(T["upper"]["inner"], ta, walk)), (0, 1, 0), "trim", band_uv("tread", u0 / 4.4, u1 / 4.4, 0.1, 0.9))
         # mullions behind the glass, columns in the open end concourses
         while next_mull <= u1:
             if next_mull >= u0:
@@ -466,6 +484,115 @@ def club(b: C.Builder) -> None:
             oquad(b, (Q(front, side * bay_half, y0), Q(glass_m, side * bay_half, y0), Q(glass_m, side * bay_half, top),
                       Q(front, side * bay_half, top)), (tan[0] * side, 0, tan[2] * side), "glass")
     del x0, x1
+
+
+PRESS = {"upstand": 37.6, "sill": 20.25, "glassTop": 38.9, "head": 20.95, "desk": 40.6}
+
+
+def press_face(b: C.Builder, ta, tb, u0, u1, nin, y0) -> None:
+    """The press box's face. The fascia above leaves only its bottom edge
+    (bowl.ribbon.rise[0]) for a room above the concourse, so depth comes from
+    projecting forward: a concrete upstand at the concourse edge, glazing
+    canted out toward the field, a steel head tucked under the fascia, and a
+    lit desk line inside."""
+    P = PRESS
+    fb = kit.FASCIA["bottom"]
+    # upstand: front face, top
+    oquad(b, (pt(P["upstand"], ta, y0), pt(P["upstand"], tb, y0), pt(P["upstand"], tb, P["sill"]),
+              pt(P["upstand"], ta, P["sill"])), nin, "concrete",
+          ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.2), (u0 / 3, 0.2)))
+    oquad(b, (pt(P["upstand"], ta, P["sill"]), pt(P["upstand"], tb, P["sill"]), pt(P["upstand"] + 0.45, tb, P["sill"]),
+              pt(P["upstand"] + 0.45, ta, P["sill"])), (0, 1, 0), "trim", band_uv("steel", u0 / 3, u1 / 3, 0, 0.3))
+    # canted glazing from the sill back up to the head under the fascia
+    oquad(b, (pt(P["upstand"] + 0.3, ta, P["sill"]), pt(P["upstand"] + 0.3, tb, P["sill"]),
+              pt(P["glassTop"], tb, P["head"]), pt(P["glassTop"], ta, P["head"])),
+          C._norm((nin[0], 0.45, nin[2])), "glass")
+    # steel head and a soffit back to the fascia's underside
+    oquad(b, (pt(P["glassTop"] - 0.1, ta, P["head"]), pt(P["glassTop"] - 0.1, tb, P["head"]),
+              pt(P["glassTop"] - 0.1, tb, fb), pt(P["glassTop"] - 0.1, ta, fb)), nin, "trim",
+          band_uv("steel", u0 / 3, u1 / 3, 0.3, 0.6))
+    oquad(b, (pt(P["glassTop"] - 0.1, ta, fb), pt(P["glassTop"] - 0.1, tb, fb), pt(kit.FASCIA["front"], tb, fb),
+              pt(kit.FASCIA["front"], ta, fb)), (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+    # inside: a floor, and the desk line lit by its monitors
+    oquad(b, (pt(P["upstand"] + 0.45, ta, P["sill"] - 0.4), pt(P["upstand"] + 0.45, tb, P["sill"] - 0.4),
+              pt(P["desk"], tb, P["sill"] - 0.4), pt(P["desk"], ta, P["sill"] - 0.4)), (0, 1, 0), "trim",
+          band_uv("tread", u0 / 4.4, u1 / 4.4, 0.2, 0.6))
+    oquad(b, (pt(P["desk"], ta, P["sill"] - 0.4), pt(P["desk"], tb, P["sill"] - 0.4), pt(P["desk"], tb, P["sill"] + 0.35),
+              pt(P["desk"], ta, P["sill"] + 0.35)), nin, "interiors", atlas_uv("press", u0, u1, 0.3, 0.55))
+
+
+def mullions_press(b: C.Builder) -> None:
+    """Mullions on the canted press glazing, every pressBox.mullionEvery yards."""
+    pb, P = kit.BOWL["pressBox"], PRESS
+    ring = kit.Ring(P["upstand"])
+    s0 = ring.arc_at(math.pi * 1.5)
+    half = (pb["toX"] - pb["fromX"]) / 2
+    s = s0 - half
+    while s <= s0 + half:
+        t = ring.angle(s)
+        nx, nz = kit.inward(P["upstand"], t)
+        tx, tz = nz * 0.06, -nx * 0.06
+        a = kit.bowl_point(P["upstand"] + 0.3, t)
+        c = kit.bowl_point(P["glassTop"], t)
+        oquad(b, ((a[0] - tx, P["sill"], a[1] - tz), (a[0] + tx, P["sill"], a[1] + tz),
+                  (c[0] + tx, P["head"], c[1] + tz), (c[0] - tx, P["head"], c[1] - tz)),
+              (nx, 0.45, nz), "steel")
+        s += pb["mullionEvery"]
+
+
+def rigs(b: C.Builder) -> None:
+    """A structure for every rim light bank in `bowl.mounts.rim`: a lattice
+    headframe behind the lamp face, a catwalk with a guard rail along its foot,
+    twin masts down to the parapet and a raking back stay. The Lighting actor
+    hangs the lamps on the mount's position and facing; this is what they hang
+    on."""
+    for mount in kit.mounts()["rim"]:
+        px, py, pz = mount["position"]
+        fx, _, fz = mount["facing"]
+        pitch = math.radians(mount["pitch"])
+        n = (fx * math.cos(pitch), math.sin(pitch), fz * math.cos(pitch))       # the face looks along n
+        r = C._norm((-fz, 0.0, fx))
+        u = C._norm(C._cross(r, n))
+        if u[1] < 0:
+            u = C._scale(u, -1)
+        w, h = mount["headframe"]
+        back = C._scale(n, -0.9)                                                 # frame sits behind the lamps
+
+        def F(a, c, d=0.0):
+            return C._add(C._add(C._add((px, py, pz), back), C._scale(r, a * w / 2)),
+                          C._add(C._scale(u, c * h / 2), C._scale(n, d)))
+        R = 0.09
+        corners = [F(-1, -1), F(1, -1), F(1, 1), F(-1, 1)]
+        b.tube(corners + [corners[0]], R, "steel", sides=4)
+        # lattice: verticals and alternating diagonals across the back
+        bays = 6
+        for k in range(bays + 1):
+            a = -1 + 2 * k / bays
+            b.tube([F(a, -1, -0.6), F(a, 1, -0.6)], R * 0.7, "steel", sides=4)
+            if k < bays:
+                a2 = -1 + 2 * (k + 1) / bays
+                lo, hi = (-1, 1) if k % 2 == 0 else (1, -1)
+                b.tube([F(a, lo, -0.6), F(a2, hi, -0.6)], R * 0.55, "steel", sides=4)
+        b.tube([F(-1, -1, -0.6), F(1, -1, -0.6)], R * 0.7, "steel", sides=4)
+        b.tube([F(-1, 1, -0.6), F(1, 1, -0.6)], R * 0.7, "steel", sides=4)
+        # catwalk at the frame's foot: grating plank and a guard rail
+        g0, g1 = F(-1, -1, 0.1), F(1, -1, 0.1)
+        g2, g3 = F(1, -1, 1.0), F(-1, -1, 1.0)
+        oquad(b, (g0, g1, g2, g3), u, "trim", band_uv("steel", 0, w / 3, 0.6, 1.0))
+        b.tube([F(-1, -1, 1.0), F(1, -1, 1.0)], 0.03, "steel", sides=4)
+        rail = [C._add(p, C._scale(u, 1.05)) for p in (F(-1, -1, 1.0), F(1, -1, 1.0))]
+        b.tube(rail, 0.03, "steel", sides=4)
+        for a in (-1.0, 0.0, 1.0):
+            b.tube([F(a, -1, 1.0), C._add(F(a, -1, 1.0), C._scale(u, 1.05))], 0.025, "steel", sides=4)
+        # masts: from the frame's lower corners down to the parapet top, and a stay
+        base = mount["base"]
+        for a in (-0.7, 0.7):
+            top = F(a, -1, -0.6)
+            foot = (top[0] - fx * 1.5, base, top[2] - fz * 1.5)
+            b.tube([top, foot], 0.16, "steel", sides=5)
+        stay_top = F(0.0, 1, -0.6)
+        stay_foot = (px - fx * 5.0, base, pz - fz * 5.0)
+        b.tube([stay_top, stay_foot], 0.11, "steel", sides=4)
 
 
 def parapet(b: C.Builder) -> None:
@@ -768,6 +895,8 @@ def build() -> list[dict]:
     team_tunnels(stands)
     club(stands)
     parapet(stands)
+    mullions_press(stands)
+    rigs(stands)
     emit("stands", [stands], "The whole bowl's structure in one entity.")
 
     bands = far_bands(regions)
