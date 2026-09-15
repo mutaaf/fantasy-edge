@@ -482,6 +482,43 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertGreater(seen["good"], 3)
         self.assertGreaterEqual(seen["wide"], 2)
 
+    def test_trails_fade_end_on_and_stay_whole_side_on(self):
+        """BroadcastTrails.sideOn, restated: field goals seen from behind the
+        end zone fade toward their subtle core; from the club seat every field
+        goal and every play of the game stays whole."""
+        look = self.tokens["visual"]["broadcast"]["trail"]
+        edge, kick = look["edge"], look["kick"]
+        eye = self.tokens["visual"]["experience"]["camera"]["eyeMeters"] / 0.9144
+        self.assertTrue(0 < edge["minOpacity"] < 1 and 0 < edge["minScale"] < 1)
+        self.assertTrue(0 <= kick["restOpacity"] < 1 and kick["fadeSeconds"] > 0)
+
+        def side_on(a, seat):
+            e, n, total = (seat["x"] - 50, seat["y"] + eye, seat["z"]), 32, 0.0
+            pt = lambda u: (a["fromX"] + (a["toX"] - a["fromX"]) * u - 50, a["apex"] * 4 * u * (1 - u), a["lane"])
+            for i in range(n):
+                p, q = pt(i / n), pt((i + 1) / n)
+                t = [q[k] - p[k] for k in range(3)]
+                d = [e[k] - (p[k] + q[k]) / 2 for k in range(3)]
+                tl, dl = math.sqrt(sum(c * c for c in t)), math.sqrt(sum(c * c for c in d))
+                total += 90 if tl < 1e-5 else math.degrees(math.acos(min(1, abs(sum(t[k] * d[k] for k in range(3))) / (tl * dl))))
+            deg = total / n
+            rule = kick if a["shape"] == "kick" else edge
+            return max(0.0, min(1.0, (deg - rule["goneDegrees"]) / (rule["fullDegrees"] - rule["goneDegrees"])))
+
+        faded = 0
+        for event in (REGULATION, OVERTIME, PICK_SIX):
+            s = SceneAt.at(event, 99999, speed=1.0)
+            seats = {x["id"]: x for x in s["presentation"]["stadium"]["seats"]}
+            for a in self.arcs(s):
+                if a["shape"] not in edge["shapes"]:
+                    continue
+                self.assertEqual(side_on(a, seats["club"]), 1.0, f"{a['id']} {a['type']}: dimmed from the club seat")
+                if "field goal" in a["type"].lower() and (a["toX"] < a["fromX"]):
+                    # Kicked into the home end, toward the end-zone seat.
+                    self.assertLess(side_on(a, seats["endzone"]), 0.75, f"{a['id']}: a streak from behind the posts")
+                    faded += 1
+        self.assertGreater(faded, 3)
+
     def test_goal_kick_rules_for_short_blocked_and_the_away_end(self):
         field = dict(sc.RULES["college-football"]["field"])
         t = self.tokens
