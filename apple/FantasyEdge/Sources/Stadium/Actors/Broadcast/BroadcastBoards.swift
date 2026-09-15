@@ -174,9 +174,21 @@ final class BroadcastRibbon {
         var mesh = MeshBuilder()
         var run: Float = 0
         let segment = Float(c.look.broadcast.ribbon.segmentYards)
+        // In front of Bowl's screen, not on it. Bowl's fascia carries a dark
+        // screen at exactly `band.offset`, tessellated to within 0.1 yd of the
+        // true curve, and a crawl on the same surface z-fought it into
+        // patches all round the bowl. Pushed toward the field along the
+        // fascia's normal by more than that chord error, and cut finely
+        // enough that its own chords stay close to the curve.
+        let push = c.look.broadcast.ribbon.offset
+        func point(_ t: Double) -> (x: Double, z: Double) {
+            let p = SceneMath.bowlPoint(shape, offset: band.offset, angle: t)
+            let n = SceneMath.inward(shape, offset: band.offset, angle: t)
+            return (p.x + n.x * push, p.z + n.y * push)
+        }
         for k in 0..<S {
-            let r0 = SceneMath.bowlPoint(shape, offset: band.offset, angle: angles[k])
-            let r1 = SceneMath.bowlPoint(shape, offset: band.offset, angle: angles[k + 1])
+            let r0 = point(angles[k])
+            let r1 = point(angles[k + 1])
             let seg = Float(hypot(r1.x - r0.x, r1.z - r0.z))
             let v0 = run / segment, v1 = (run + seg) / segment
             run += seg

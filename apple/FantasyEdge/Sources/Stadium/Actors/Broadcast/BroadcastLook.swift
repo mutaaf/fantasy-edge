@@ -148,6 +148,7 @@ extension SceneSpec.Look {
         public let heightPixels: Int
         public let segmentYards: Double
         public let segments: Int
+        public let offset: Double
         public let textShare: Double
         public let legibility: RibbonLegibility
         public let scroll: RibbonScroll
