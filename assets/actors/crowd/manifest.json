@@ -1,0 +1,2084 @@
+{
+ "version": 1,
+ "generator": "tools/blender/crowd/build.py",
+ "units": "metres",
+ "axes": {
+  "gltf": "+Y up, fans face +Z",
+  "usd": "+Y up, fans face +Z (converted on export, same frame as glTF)"
+ },
+ "origin": "floor under the pelvis in the standing pose",
+ "seat": {
+  "about": "In the sitting clips the pelvis moves back and down onto the seat pan; feet stay near the origin.",
+  "pelvisAt175m": [
+   0.0,
+   0.3,
+   0.52
+  ]
+ },
+ "skeleton": [
+  {
+   "name": "root",
+   "parent": null
+  },
+  {
+   "name": "hips",
+   "parent": "root"
+  },
+  {
+   "name": "spine",
+   "parent": "hips"
+  },
+  {
+   "name": "chest",
+   "parent": "spine"
+  },
+  {
+   "name": "neck",
+   "parent": "chest"
+  },
+  {
+   "name": "head",
+   "parent": "neck"
+  },
+  {
+   "name": "clavicle.L",
+   "parent": "chest"
+  },
+  {
+   "name": "upperarm.L",
+   "parent": "clavicle.L"
+  },
+  {
+   "name": "forearm.L",
+   "parent": "upperarm.L"
+  },
+  {
+   "name": "hand.L",
+   "parent": "forearm.L"
+  },
+  {
+   "name": "clavicle.R",
+   "parent": "chest"
+  },
+  {
+   "name": "upperarm.R",
+   "parent": "clavicle.R"
+  },
+  {
+   "name": "forearm.R",
+   "parent": "upperarm.R"
+  },
+  {
+   "name": "hand.R",
+   "parent": "forearm.R"
+  },
+  {
+   "name": "thigh.L",
+   "parent": "hips"
+  },
+  {
+   "name": "shin.L",
+   "parent": "thigh.L"
+  },
+  {
+   "name": "foot.L",
+   "parent": "shin.L"
+  },
+  {
+   "name": "thigh.R",
+   "parent": "hips"
+  },
+  {
+   "name": "shin.R",
+   "parent": "thigh.R"
+  },
+  {
+   "name": "foot.R",
+   "parent": "shin.R"
+  }
+ ],
+ "fans": [
+  {
+   "id": "fan00",
+   "build": "heavy",
+   "height": 1.781,
+   "top": "hoodie",
+   "club": false,
+   "hat": "visor",
+   "hair": "bald",
+   "accessory": "none",
+   "paint": "none",
+   "model": "fan00.usdz",
+   "gltf": "fan00.glb",
+   "lod0": {
+    "mesh": "fan00",
+    "triangles": 1492
+   },
+   "lod1": {
+    "mesh": "fan00_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.002,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    0,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan01",
+   "build": "broad",
+   "height": 1.903,
+   "top": "jersey",
+   "club": true,
+   "hat": "none",
+   "hair": "curly",
+   "accessory": "towel",
+   "paint": "cheek",
+   "model": "fan01.usdz",
+   "gltf": "fan01.glb",
+   "lod0": {
+    "mesh": "fan01",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan01_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.16867,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    320,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan02",
+   "build": "petite",
+   "height": 1.616,
+   "top": "hoodie",
+   "club": true,
+   "hat": "none",
+   "hair": "ponytail",
+   "accessory": "foam_finger",
+   "paint": "none",
+   "model": "fan02.usdz",
+   "gltf": "fan02.glb",
+   "lod0": {
+    "mesh": "fan02",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan02_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.33533,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    640,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan03",
+   "build": "petite",
+   "height": 1.604,
+   "top": "jersey",
+   "club": true,
+   "hat": "none",
+   "hair": "ponytail",
+   "accessory": "phone",
+   "paint": "none",
+   "model": "fan03.usdz",
+   "gltf": "fan03.glb",
+   "lod0": {
+    "mesh": "fan03",
+    "triangles": 1489
+   },
+   "lod1": {
+    "mesh": "fan03_lod1",
+    "triangles": 415
+   },
+   "uvCell": [
+    0.502,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    960,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan04",
+   "build": "petite",
+   "height": 1.572,
+   "top": "tee",
+   "club": true,
+   "hat": "none",
+   "hair": "long",
+   "accessory": "foam_finger",
+   "paint": "half",
+   "model": "fan04.usdz",
+   "gltf": "fan04.glb",
+   "lod0": {
+    "mesh": "fan04",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan04_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.66867,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1280,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan05",
+   "build": "average",
+   "height": 1.664,
+   "top": "jersey",
+   "club": true,
+   "hat": "beanie",
+   "hair": "curly",
+   "accessory": "phone",
+   "paint": "half",
+   "model": "fan05.usdz",
+   "gltf": "fan05.glb",
+   "lod0": {
+    "mesh": "fan05",
+    "triangles": 1498
+   },
+   "lod1": {
+    "mesh": "fan05_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.83533,
+    0.752,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1600,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan06",
+   "build": "petite",
+   "height": 1.554,
+   "top": "pullover",
+   "club": true,
+   "hat": "beanie",
+   "hair": "short",
+   "accessory": "phone",
+   "paint": "none",
+   "model": "fan06.usdz",
+   "gltf": "fan06.glb",
+   "lod0": {
+    "mesh": "fan06",
+    "triangles": 1497
+   },
+   "lod1": {
+    "mesh": "fan06_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.002,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1920,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan07",
+   "build": "petite",
+   "height": 1.523,
+   "top": "hoodie",
+   "club": true,
+   "hat": "visor",
+   "hair": "long",
+   "accessory": "none",
+   "paint": "none",
+   "model": "fan07.usdz",
+   "gltf": "fan07.glb",
+   "lod0": {
+    "mesh": "fan07",
+    "triangles": 1499
+   },
+   "lod1": {
+    "mesh": "fan07_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.16867,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    2240,
+    0
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan08",
+   "build": "average",
+   "height": 1.767,
+   "top": "jacket",
+   "club": false,
+   "hat": "beanie",
+   "hair": "short",
+   "accessory": "foam_finger",
+   "paint": "half",
+   "model": "fan08.usdz",
+   "gltf": "fan08.glb",
+   "lod0": {
+    "mesh": "fan08",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan08_lod1",
+    "triangles": 412
+   },
+   "uvCell": [
+    0.33533,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    0,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan09",
+   "build": "average",
+   "height": 1.787,
+   "top": "jacket",
+   "club": false,
+   "hat": "beanie",
+   "hair": "ponytail",
+   "accessory": "foam_finger",
+   "paint": "none",
+   "model": "fan09.usdz",
+   "gltf": "fan09.glb",
+   "lod0": {
+    "mesh": "fan09",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan09_lod1",
+    "triangles": 413
+   },
+   "uvCell": [
+    0.502,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    320,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan10",
+   "build": "broad",
+   "height": 1.836,
+   "top": "tee",
+   "club": true,
+   "hat": "visor",
+   "hair": "short",
+   "accessory": "towel",
+   "paint": "half",
+   "model": "fan10.usdz",
+   "gltf": "fan10.glb",
+   "lod0": {
+    "mesh": "fan10",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan10_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.66867,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    640,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan11",
+   "build": "average",
+   "height": 1.715,
+   "top": "tee",
+   "club": true,
+   "hat": "beanie",
+   "hair": "short",
+   "accessory": "phone",
+   "paint": "stripes",
+   "model": "fan11.usdz",
+   "gltf": "fan11.glb",
+   "lod0": {
+    "mesh": "fan11",
+    "triangles": 1498
+   },
+   "lod1": {
+    "mesh": "fan11_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.83533,
+    0.502,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    960,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan12",
+   "build": "slim",
+   "height": 1.718,
+   "top": "pullover",
+   "club": true,
+   "hat": "beanie",
+   "hair": "short",
+   "accessory": "sign",
+   "paint": "none",
+   "model": "fan12.usdz",
+   "gltf": "fan12.glb",
+   "lod0": {
+    "mesh": "fan12",
+    "triangles": 1490
+   },
+   "lod1": {
+    "mesh": "fan12_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.002,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1280,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan13",
+   "build": "teen",
+   "height": 1.527,
+   "top": "jacket",
+   "club": false,
+   "hat": "cap",
+   "hair": "buzz",
+   "accessory": "towel",
+   "paint": "none",
+   "model": "fan13.usdz",
+   "gltf": "fan13.glb",
+   "lod0": {
+    "mesh": "fan13",
+    "triangles": 1492
+   },
+   "lod1": {
+    "mesh": "fan13_lod1",
+    "triangles": 417
+   },
+   "uvCell": [
+    0.16867,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1600,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan14",
+   "build": "slim",
+   "height": 1.707,
+   "top": "pullover",
+   "club": true,
+   "hat": "cap_back",
+   "hair": "ponytail",
+   "accessory": "foam_finger",
+   "paint": "none",
+   "model": "fan14.usdz",
+   "gltf": "fan14.glb",
+   "lod0": {
+    "mesh": "fan14",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan14_lod1",
+    "triangles": 414
+   },
+   "uvCell": [
+    0.33533,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1920,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan15",
+   "build": "teen",
+   "height": 1.554,
+   "top": "jacket",
+   "club": false,
+   "hat": "cap",
+   "hair": "buzz",
+   "accessory": "phone",
+   "paint": "none",
+   "model": "fan15.usdz",
+   "gltf": "fan15.glb",
+   "lod0": {
+    "mesh": "fan15",
+    "triangles": 1498
+   },
+   "lod1": {
+    "mesh": "fan15_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.502,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    2240,
+    768
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan16",
+   "build": "teen",
+   "height": 1.559,
+   "top": "jersey",
+   "club": true,
+   "hat": "cap_back",
+   "hair": "short",
+   "accessory": "sign",
+   "paint": "stripes",
+   "model": "fan16.usdz",
+   "gltf": "fan16.glb",
+   "lod0": {
+    "mesh": "fan16",
+    "triangles": 1496
+   },
+   "lod1": {
+    "mesh": "fan16_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.66867,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    0,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan17",
+   "build": "heavy",
+   "height": 1.718,
+   "top": "hoodie",
+   "club": false,
+   "hat": "cap_back",
+   "hair": "bald",
+   "accessory": "towel",
+   "paint": "none",
+   "model": "fan17.usdz",
+   "gltf": "fan17.glb",
+   "lod0": {
+    "mesh": "fan17",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan17_lod1",
+    "triangles": 418
+   },
+   "uvCell": [
+    0.83533,
+    0.252,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    320,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan18",
+   "build": "broad",
+   "height": 1.85,
+   "top": "jacket",
+   "club": false,
+   "hat": "cap",
+   "hair": "short",
+   "accessory": "none",
+   "paint": "half",
+   "model": "fan18.usdz",
+   "gltf": "fan18.glb",
+   "lod0": {
+    "mesh": "fan18",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan18_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.002,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    640,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan19",
+   "build": "average",
+   "height": 1.758,
+   "top": "jersey",
+   "club": true,
+   "hat": "visor",
+   "hair": "short",
+   "accessory": "sign",
+   "paint": "half",
+   "model": "fan19.usdz",
+   "gltf": "fan19.glb",
+   "lod0": {
+    "mesh": "fan19",
+    "triangles": 1490
+   },
+   "lod1": {
+    "mesh": "fan19_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.16867,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    960,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan20",
+   "build": "heavy",
+   "height": 1.82,
+   "top": "pullover",
+   "club": true,
+   "hat": "none",
+   "hair": "curly",
+   "accessory": "sign",
+   "paint": "cheek",
+   "model": "fan20.usdz",
+   "gltf": "fan20.glb",
+   "lod0": {
+    "mesh": "fan20",
+    "triangles": 1498
+   },
+   "lod1": {
+    "mesh": "fan20_lod1",
+    "triangles": 414
+   },
+   "uvCell": [
+    0.33533,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1280,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan21",
+   "build": "broad",
+   "height": 1.877,
+   "top": "hoodie",
+   "club": false,
+   "hat": "visor",
+   "hair": "short",
+   "accessory": "sign",
+   "paint": "none",
+   "model": "fan21.usdz",
+   "gltf": "fan21.glb",
+   "lod0": {
+    "mesh": "fan21",
+    "triangles": 1490
+   },
+   "lod1": {
+    "mesh": "fan21_lod1",
+    "triangles": 415
+   },
+   "uvCell": [
+    0.502,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1600,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan22",
+   "build": "teen",
+   "height": 1.458,
+   "top": "tee",
+   "club": true,
+   "hat": "cap_back",
+   "hair": "curly",
+   "accessory": "none",
+   "paint": "stripes",
+   "model": "fan22.usdz",
+   "gltf": "fan22.glb",
+   "lod0": {
+    "mesh": "fan22",
+    "triangles": 1492
+   },
+   "lod1": {
+    "mesh": "fan22_lod1",
+    "triangles": 416
+   },
+   "uvCell": [
+    0.66867,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    1920,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  },
+  {
+   "id": "fan23",
+   "build": "heavy",
+   "height": 1.689,
+   "top": "jersey",
+   "club": true,
+   "hat": "cap_back",
+   "hair": "bald",
+   "accessory": "towel",
+   "paint": "stripes",
+   "model": "fan23.usdz",
+   "gltf": "fan23.glb",
+   "lod0": {
+    "mesh": "fan23",
+    "triangles": 1500
+   },
+   "lod1": {
+    "mesh": "fan23_lod1",
+    "triangles": 418
+   },
+   "uvCell": [
+    0.83533,
+    0.002,
+    0.16267,
+    0.246
+   ],
+   "impostorBlock": [
+    2240,
+    1536
+   ],
+   "usdClips": {
+    "idle_sway": [
+     0,
+     56
+    ],
+    "sit": [
+     58,
+     59
+    ],
+    "stand": [
+     61,
+     77
+    ],
+    "clap": [
+     79,
+     91
+    ],
+    "cheer": [
+     93,
+     109
+    ],
+    "fist_pump": [
+     111,
+     123
+    ],
+    "towel_spin": [
+     125,
+     137
+    ],
+    "wave": [
+     139,
+     171
+    ],
+    "groan": [
+     173,
+     213
+    ],
+    "phone_raise": [
+     215,
+     259
+    ]
+   }
+  }
+ ],
+ "animations": [
+  {
+   "name": "idle_sway",
+   "frames": [
+    0,
+    56
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "sit",
+   "frames": [
+    0,
+    1
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "stand",
+   "frames": [
+    0,
+    16
+   ],
+   "fps": 24,
+   "loop": false
+  },
+  {
+   "name": "clap",
+   "frames": [
+    0,
+    12
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "cheer",
+   "frames": [
+    0,
+    16
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "fist_pump",
+   "frames": [
+    0,
+    12
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "towel_spin",
+   "frames": [
+    0,
+    12
+   ],
+   "fps": 24,
+   "loop": true
+  },
+  {
+   "name": "wave",
+   "frames": [
+    0,
+    32
+   ],
+   "fps": 24,
+   "loop": false
+  },
+  {
+   "name": "groan",
+   "frames": [
+    0,
+    40
+   ],
+   "fps": 24,
+   "loop": false
+  },
+  {
+   "name": "phone_raise",
+   "frames": [
+    0,
+    44
+   ],
+   "fps": 24,
+   "loop": false
+  }
+ ],
+ "tint": {
+  "formula": "albedo.rgb * mix(1, chip, mask) per channel: rgb = albedo * lerp(1, primary, m.r) * lerp(1, secondary, m.g); paint = lerp(rgb, primary*0.86, m.b)",
+  "R": "club primary chip",
+  "G": "club secondary chip",
+  "B": "face paint (primary)",
+  "note": "Tinted regions carry a 0.86 luminance in albedo so the chip reads at its own value."
+ },
+ "textures": {
+  "fanAlbedo": {
+   "file": "fan_albedo.png",
+   "size": [
+    2048,
+    2048
+   ],
+   "colorspace": "srgb"
+  },
+  "fanMask": {
+   "file": "fan_mask.png",
+   "size": [
+    1024,
+    1024
+   ],
+   "colorspace": "linear"
+  },
+  "impostorAlbedo": {
+   "file": "impostor_albedo.png",
+   "size": [
+    2560,
+    2304
+   ],
+   "colorspace": "srgb"
+  },
+  "impostorMask": {
+   "file": "impostor_mask.png",
+   "size": [
+    1280,
+    1152
+   ],
+   "colorspace": "linear"
+  },
+  "impostorNormal": {
+   "file": "impostor_normal.png",
+   "size": [
+    1280,
+    1152
+   ],
+   "colorspace": "linear"
+  },
+  "variation": {
+   "file": "variation.png",
+   "size": [
+    256,
+    256
+   ],
+   "colorspace": "linear",
+   "channels": {
+    "r": "animation phase 0..1",
+    "g": "fan index (i+0.5)/24",
+    "b": "tint jitter",
+    "a": "pose bias"
+   }
+  }
+ },
+ "impostor": {
+  "cellPx": [
+   64,
+   128
+  ],
+  "worldSize": [
+   1.2,
+   2.4
+  ],
+  "pivot": "bottom centre",
+  "poses": [
+   "sit",
+   "sit_b",
+   "stand",
+   "clap_b",
+   "cheer_a",
+   "groan"
+  ],
+  "viewsYawDeg": [
+   0,
+   45,
+   90,
+   135,
+   180
+  ],
+  "mirror": {
+   "225": 135,
+   "270": 90,
+   "315": 45
+  },
+  "elevationDeg": 12.0,
+  "layout": {
+   "per_row": 8,
+   "block_px": [
+    320,
+    768
+   ],
+   "atlas_px": [
+    2560,
+    2304
+   ],
+   "cell": "column = view index, row = pose index, both from the block's top-left"
+  },
+  "normal": "view space, +X right, +Y up, +Z toward the viewer, encoded n*0.5+0.5"
+ },
+ "poseMeshes": {
+  "about": "Static meshes of every fan frozen in each impostor pose, for animating near and mid rings by group.",
+  "lod0": {
+   "model": "lod0_poses.usdz",
+   "gltf": "lod0_poses.glb",
+   "meshName": "<fanId>_lod0_<pose>"
+  },
+  "lod1": {
+   "model": "lod1_poses.usdz",
+   "gltf": "lod1_poses.glb",
+   "meshName": "<fanId>_lod1_<pose>"
+  },
+  "poses": [
+   "sit",
+   "sit_b",
+   "stand",
+   "clap_b",
+   "cheer_a",
+   "groan"
+  ]
+ },
+ "lod": {
+  "lod0Triangles": 1500,
+  "lod1Triangles": 420,
+  "suggestedRings": {
+   "lod0MaxMetres": 7,
+   "lod1MaxMetres": 16,
+   "impostorBeyondMetres": 16
+  }
+ }
+}
