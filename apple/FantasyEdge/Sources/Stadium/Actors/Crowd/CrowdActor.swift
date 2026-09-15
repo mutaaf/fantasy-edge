@@ -61,6 +61,9 @@ final class CrowdActor: StadiumActor {
     private var sectionSlices: [String: Set<Int>] = [:]
     private var cardRowV: Float = 0
     private var generation = 0
+    /// The side whose moment just ended, and when: it settles back into its seats over `settleSeconds`.
+    private var lastScoring: (away: Bool, ended: Double)?
+    private var previousTint: String?
 
     init() { root.name = "actor.crowd" }
 
@@ -374,6 +377,9 @@ final class CrowdActor: StadiumActor {
         let surge = c.shared.surge.flatMap { time < $0.until ? $0 : nil }
         let cues = CrowdCues.live(c.shared, at: time)
         let tintSide = s.bowl.sectionTint.side
+        if previousTint != nil, tintSide == nil { lastScoring = (previousTint == "away", time) }
+        if tintSide != nil { lastScoring = nil }
+        previousTint = tintSide
         // Third down: the defence's crowd gets up.
         var standingSide: Bool? = nil
         if C.thirdDownStand, s.status.state == "in", s.status.down == 3, let offense = s.status.possession {
@@ -386,7 +392,13 @@ final class CrowdActor: StadiumActor {
             var pose: Int
             // The scene says whose section is lit: that side is on its feet for as
             // long as the moment lasts, not only while Moments' surge peaks.
-            let scoring = tintSide.map { ($0 == "away") == g.away }
+            var scoring = tintSide.map { ($0 == "away") == g.away }
+            // After the moment: the scoring side keeps celebrating, each group
+            // sitting down at its own point in settleSeconds, not all on one frame.
+            if scoring == nil, let last = lastScoring, last.away == g.away {
+                let settle = C.settleSeconds[0] + (C.settleSeconds[1] - C.settleSeconds[0]) * g.phase
+                if time - last.ended < settle { scoring = true }
+            }
             if c.reduceMotion {
                 pose = scoring == true ? stand : (g.standing ? stand : sit)
             } else {
@@ -433,7 +445,8 @@ final class CrowdActor: StadiumActor {
                 }
             }
             setPose(g, pose)
-            let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : C.tint.dim } ?? C.tint.normal
+            let dim = g.ring == .card ? C.tint.dim : C.tint.meshDim
+            let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : dim } ?? C.tint.normal
             if bright != g.brightness {
                 g.brightness = bright
                 g.material.baseColor.tint = UIColor(white: CGFloat(bright), alpha: 1)

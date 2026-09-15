@@ -88,6 +88,20 @@ class CrowdKitTest(unittest.TestCase):
         seated = src.index("if !c.tabletop, let seating = s.bowl.seating")
         self.assertIn("guard rng.next() < C.fill", src[seated:seated + 1200], "fill applies to Bowl's seats")
 
+    def test_a_new_stadium_starts_with_no_cues(self):
+        """Cues belong to one stadium's blackboard. A process-wide table kept
+        them past a stadium's end, and a new stadium at a reused address
+        inherited the last game's stand-until-forever. The blackboard starts
+        empty, and Crowd keeps no static store of its own."""
+        import re
+        root = ROOT / "apple/FantasyEdge/Sources/Stadium"
+        shared = "".join(f.read_text() for f in root.rglob("*.swift") if "class StadiumShared" in f.read_text())
+        self.assertRegex(shared, r"var crowdCues\s*:\s*\[CrowdCue\]\s*=\s*\[\]")
+        for f in (root / "Actors/Crowd").glob("*.swift"):
+            src = f.read_text()
+            self.assertIsNone(re.search(r"static var \w+\s*:\s*\[ObjectIdentifier", src), f"{f.name} keeps cues outside the stadium")
+            self.assertNotIn("static var table", src, f.name)
+
     def test_mesh_rings_are_stadium_only(self):
         """The tabletop's crowd budget did not rise with the stadium's: it draws
         cards only. The ring assignment must stay behind the tabletop guard."""

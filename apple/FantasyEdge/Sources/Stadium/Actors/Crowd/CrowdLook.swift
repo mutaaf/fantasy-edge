@@ -11,6 +11,7 @@ extension SceneSpec.Look {
     public struct CrowdTint: Decodable, Equatable, Sendable {
         public let normal: Double
         public let dim: Double
+        public let meshDim: Double
         public let bright: Double
     }
 
@@ -100,6 +101,7 @@ extension SceneSpec.Look {
         public let waveWidth: Double
         public let surgeHz: Double
         public let groanSeconds: Double
+        public let settleSeconds: [Double]
         public let thirdDownStand: Bool
         public let sideJitter: Double
     }
