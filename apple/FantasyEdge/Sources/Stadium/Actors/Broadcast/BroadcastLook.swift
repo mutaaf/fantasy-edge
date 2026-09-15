@@ -33,6 +33,29 @@ extension SceneSpec.Look {
         public let historyOpacity: Double
     }
 
+    public struct TrailEdge: Decodable, Equatable, Sendable {
+        public let fullDegrees: Double
+        public let goneDegrees: Double
+        public let minOpacity: Double
+        public let minScale: Double
+        public let shapes: [String]
+
+        public init(fullDegrees: Double, goneDegrees: Double, minOpacity: Double, minScale: Double, shapes: [String] = []) {
+            self.fullDegrees = fullDegrees
+            self.goneDegrees = goneDegrees
+            self.minOpacity = minOpacity
+            self.minScale = minScale
+            self.shapes = shapes
+        }
+    }
+
+    public struct TrailKick: Decodable, Equatable, Sendable {
+        public let fadeSeconds: Double
+        public let restOpacity: Double
+        public let fullDegrees: Double
+        public let goneDegrees: Double
+    }
+
     public struct Trail: Decodable, Equatable, Sendable {
         public let core: SceneSpec.PerMode<Double>
         public let coreOpacity: Double
@@ -43,6 +66,8 @@ extension SceneSpec.Look {
         public let nearSeat: NearSeat
         public let scoreEmphasis: Emphasis
         public let tabletopView: [Double]
+        public let edge: TrailEdge
+        public let kick: TrailKick
     }
 
     public struct BallGlow: Decodable, Equatable, Sendable {

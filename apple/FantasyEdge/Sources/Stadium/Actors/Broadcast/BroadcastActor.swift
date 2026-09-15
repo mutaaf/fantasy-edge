@@ -251,6 +251,7 @@ extension BroadcastActor {
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         ribbon.update(frame, c)
         banner.update(c)
+        trails.update(c)
         guard var f = flight else { return }
         f.elapsed += frame.dt
         let t = min(1, f.elapsed / f.duration)
