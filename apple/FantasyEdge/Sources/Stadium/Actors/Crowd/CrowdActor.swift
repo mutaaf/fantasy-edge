@@ -201,6 +201,9 @@ final class CrowdActor: StadiumActor {
                 if d < C.rings.lod0Yards && n0 < C.rings.lod0Max { ringOf[i] = .lod0; n0 += 1 }
                 else if d < C.rings.lod1Yards && n1 < C.rings.lod1Max { ringOf[i] = .lod1; n1 += 1 }
                 else if d < C.rings.lod2Yards && n2 < C.rings.lod2Max { ringOf[i] = .lod2; n2 += 1 }
+                // Never a card within arm's reach of the wearer, whatever the caps say:
+                // a magnified card beside you is worse than a few thousand triangles.
+                else if Double(placed[i].dist) < C.rings.minCardYards { ringOf[i] = .lod2; n2 += 1 }
             }
         }
 

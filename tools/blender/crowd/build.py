@@ -179,7 +179,7 @@ def bake_from(source, target):
     sc.render.engine = "CYCLES"
     sc.cycles.samples = 4
     bpy.ops.object.bake(type="EMIT", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
-                        cage_extrusion=0.015, max_ray_distance=0.04)
+                        cage_extrusion=0.03, max_ray_distance=0.1)  # decimation moves elbows and fists up to ~8 cm
 
 
 def bake_ao(source, target, img):
@@ -196,7 +196,7 @@ def bake_ao(source, target, img):
     sc.world = sc.world or bpy.data.worlds.new("w")
     sc.world.light_settings.distance = 0.25
     bpy.ops.object.bake(type="AO", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
-                        cage_extrusion=0.015, max_ray_distance=0.04)
+                        cage_extrusion=0.03, max_ray_distance=0.1)  # decimation moves elbows and fists up to ~8 cm
 
 
 def soften(ob):

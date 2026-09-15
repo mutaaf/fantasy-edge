@@ -166,3 +166,36 @@ Review renders: `assets/actors/crowd/review/lineup_*.png`, `poses_*.png`.
 - **Gap:** in the steep upper deck, shins came out in front of the
   chair backs one row down. A 0.20 m forward shift put knees past the tread
   edge. It is now 0.10 m, and cards 0.11 m. Verified in `crowd-iter10/s-crowd-closeup_upper.png`: fans sit back in their chairs. One fan at the deck-edge aisle still shows shoes below the pans.
+
+## Round 2 (the art director's critique of `crowd-iter9`)
+
+Before: `crowd-iter9/s-crowd-closeup.png`, `s-td-moment.png`, `crowd-iter10/s-crowd-closeup_upper.png`.
+
+### Pass 1: `crowd-r2-1/` and `crowd-r2-2/`
+
+- **Faceted mannequins:** weighted smooth normals, LOD0 at about 2,400
+  triangles, and warm AO baked from the full body (strength 0.6, cavities
+  toward red-brown). The review render (`review/kit_tinted_sit.png`) reads
+  soft. In the headset shots silhouettes still facet within about 1.5 m.
+- **Stiff T-arms:** the cheer and clap slots are filled per fan from
+  families of real gestures: V with bent elbows, fists pumping, clapping
+  overhead, a high-five lean, leaning over the row, one arm punching.
+  `crowd-r2-2/s-td-moment.png` shows a section celebrating in different
+  ways (`review/kit_tinted_cheer_a.png`).
+- **Blank faces:** 9× the head texels, brow sockets, a nose shadow, heavier
+  brows, and a mouth disc. The cheer pose drops it open (2.6×), clapping
+  opens it slightly, and at rest it is a slit.
+- **Props:** towels drape and swing three ways, and signs are 22 mm boards
+  with block lettering. Beanies no longer cover the eyes.
+- **Dark sections:** the crowd's own albedo. Chips are solved to about 0.16
+  relative luminance for white text; times 0.86 cloth and the shade, that
+  came to about 0.12 linear. Club colours now lift into `clubLuma` (sRGB
+  luma 0.5–0.7) before tinting. Lighting unchanged.
+- **Shoes below the pans:** the tread in front of those seats is cut
+  (vomitory or accessible). The fans are at the right height, so this was
+  routed to Bowl.
+- **Budget:** rings rebalanced (16 LOD0, 32 LOD1, 150 LOD2, and never a card
+  within 5.5 yd). Measured 141.3k triangles, 36 parts.
+- **Gap:** white blotches on some shirts and pale fingertips. Decimation moves
+  elbows and fists further than the 4 cm bake reach, so those texels were
+  never baked. Reach widened to 10 cm in pass 2.

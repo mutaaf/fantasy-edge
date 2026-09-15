@@ -45,6 +45,7 @@ extension SceneSpec.Look {
         public let lod1Yards: Double
         public let lod2Yards: Double
         public let ditherYards: Double
+        public let minCardYards: Double
         public let lod0Max: Int
         public let lod1Max: Int
         public let lod2Max: Int
