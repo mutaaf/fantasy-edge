@@ -41,7 +41,7 @@ TIERS = [
     {"name": "lower", "inner": 6.0, "outer": 36.0, "rise": (1.0, 19.6)},
     {"name": "upper", "inner": 42.0, "outer": 70.0, "rise": (24.0, 45.8)},
 ]
-RIM = {"count": 10, "beyondOuter": 1.0, "phase": 0.3, "heightAbove": 9.0}
+RIM = {"count": 16, "beyondOuter": 1.0, "phase": 0.3, "heightAbove": 9.0}
 
 
 def to_blender(x, y, z):

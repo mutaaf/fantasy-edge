@@ -30,7 +30,7 @@ import stage as S  # noqa: E402
 
 OUT = C.OUT_LIGHT / "env"
 CLAMP = 64.0
-REFERENCE = C.ROOT / "assets" / "src" / "env" / "stadium_night.hdr"
+REFERENCE = C.ROOT / "assets" / "generated" / "lighting" / "stadium_night.hdr"
 
 
 def luminance(img):
@@ -154,23 +154,32 @@ def room_stage():
     return scene
 
 
-def variant(name, quick):
+def variant(name, quick, reuse=False):
     t0 = time.time()
+    if reuse:
+        vid = "tabletop_room" if name == "room" else f"stadium_{name}"
+        img = C.load_float(C.SCRATCH / f"probe_{vid}.exr")
+        return finish(name, vid, img, img.shape[1], 0, t0)
     if name == "room":
         scene = room_stage()
         probe_camera(scene, 0.45)
         w, samples, vid = (1024 if quick else 2048), (48 if quick else 256), "tabletop_room"
     else:
-        scene, placed, source = S.build(sky=name, lod="lod0")
+        scene, placed, source = S.build(sky=name, lod="hero")
         # Between the 50 and the 45, a stride off the centre line: sat exactly
         # on a painted line, the line fills the probe's whole nadir and every
         # model is lit white from below.
         probe_camera(scene, 1.5, x=2.5 * C.YD, y=1.2)
         w, samples, vid = (1024 if quick else 2048), (64 if quick else 384), f"stadium_{name}"
     img = render(scene, vid, w, samples)
+    return finish(name, vid, img, w, samples, t0)
+
+
+def finish(name, vid, img, w, samples, t0):
     raw_below = below_mean(img)
-    ref = C.load_float(REFERENCE) if REFERENCE.exists() else None
-    target = below_mean(ref) if ref is not None else 0.2
+    if not REFERENCE.exists():
+        raise SystemExit(f"[lighting] reference probe missing at {REFERENCE}; refusing to guess an exposure")
+    target = below_mean(C.load_float(REFERENCE))
     if name == "room":
         target *= 0.6          # a lamp-lit room is dimmer than a floodlit bowl
     scale = target / max(raw_below, 1e-9)
@@ -203,9 +212,10 @@ def variant(name, quick):
 def main():
     a = C.args()
     quick = "--quick" in a
+    reuse = "--reuse" in a          # reprocess the last raw renders in .work without rendering
     names = [x for x in a if not x.startswith("--")] or ["night", "dusk", "room"]
     for n in names:
-        variant(n, quick)
+        variant(n, quick, reuse)
 
 
 main()

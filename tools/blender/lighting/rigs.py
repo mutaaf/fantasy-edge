@@ -2,13 +2,21 @@
 
     blender --background --factory-startup --python tools/blender/lighting/rigs.py
 
-Writes assets/actors/lighting/:
-  rigs/light_bank_lod0.glb   every fixture modelled: housing, lens, fins, yoke,
-                              pipes, truss, catwalk with rails, support legs
-  rigs/light_bank_lod1.glb   a housing box with the baked face - the far side
-  rigs/light_bank_lod2.glb   the face card alone, for the tabletop
-  rigs/beam_cone.glb         unit cone, U round / V along, V=0 at the lamp
-  rigs/beam_quads.glb        three crossed quads, the cheap beam
+Writes assets/actors/lighting/, every model twice - .usdz for the headset and
+a .glb beside it for Three.js and Filament:
+  light_bank_hero     every fixture modelled: housing, lens, fins, yoke, pipes,
+                      truss, catwalk with rails, driver cabinets, legs (~8k tris)
+                      - press box and field-level close-ups, and the probe
+  light_bank_near     fixtures as housings and lenses on their pipes, a light
+                      truss, deck, rail and legs (~1.1k tris) - the banks you face
+  light_bank_far      a housing box with the baked face and legs (~60 tris) -
+                      banks behind you, and the tabletop
+  beam_cone           unit cone, U round / V along, V=0 at the lamp
+  beam_quads          three crossed quads, the cheap beam
+
+Each model is one mesh per material, and each mesh's name ends in its role -
+_housing, _steel, _lens, _face, _beam - which is how an actor re-materials it
+from tokens and merges every bank of one level into a single draw per role.
   textures/emitter_lens.png  one fixture's lens: 4x4 LEDs with reflector falloff
   textures/lamp_bank_face.png  the whole bank seen head-on, baked from LOD0
 
@@ -171,8 +179,10 @@ def emitter_lens():
 
 # ───────────────────────────── the bank ─────────────────────────────
 
-def bank(builder: Builder, detail=True):
-    """Blender coords: bank centre at the origin, face toward -Y, up +Z."""
+def bank(builder: Builder, detail="hero"):
+    """Blender coords: bank centre at the origin, face toward -Y, up +Z.
+    detail: hero | near | face (the bake, pipes and fixtures only)."""
+    hero = detail == "hero"
     col_pitch = BANK_W / COLS
     row_pitch = BANK_H / ROWS
     fw, fh, fd = col_pitch * 0.88, row_pitch * 0.62, 0.20
@@ -188,7 +198,7 @@ def bank(builder: Builder, detail=True):
             builder.box("housing", (fw, fd, fh), m)
             lens_m = m @ Matrix.Translation((0, -fd / 2 - 0.004, 0))
             builder.quad("lens", fw * 0.9, fh * 0.86, lens_m)
-            if detail:
+            if hero:
                 for k in range(6):                                   # heat-sink fins
                     fx = -fw / 2 + fw * (k + 0.5) / 6
                     builder.box("housing", (0.012, 0.10, fh * 0.9), m @ Matrix.Translation((fx, fd / 2 + 0.05, 0)))
@@ -198,7 +208,26 @@ def bank(builder: Builder, detail=True):
     for side in (-1, 1):                                             # frame posts
         builder.tube("steel", (side * (BANK_W / 2 + 0.2), 0.22, -BANK_H / 2 - 0.3),
                      (side * (BANK_W / 2 + 0.2), 0.22, BANK_H / 2 + 0.2), 0.07)
-    if not detail:
+    if detail == "face":
+        return
+    if detail == "near":
+        tz = -BANK_H / 2 - 0.55
+        chords = [(0.1, tz + 0.35), (-0.25, tz - 0.2), (0.45, tz - 0.2)]
+        for cyy, cz in chords:
+            builder.tube("steel", (-BANK_W / 2 - 0.3, cyy, cz), (BANK_W / 2 + 0.3, cyy, cz), 0.05, sides=4)
+        for i in range(7):
+            x0 = -BANK_W / 2 - 0.3 + (BANK_W + 0.6) * i / 6
+            x1 = x0 + (BANK_W + 0.6) / 12
+            builder.tube("steel", (x0, chords[0][0], chords[0][1]), (x1, chords[1][0], chords[1][1]), 0.025, sides=4)
+        deck_z = tz - 0.25
+        builder.box("steel", (BANK_W + 0.6, 0.95, 0.05), Matrix.Translation((0, -0.6, deck_z)))
+        builder.tube("steel", (-BANK_W / 2 - 0.3, -1.05, deck_z + 1.05), (BANK_W / 2 + 0.3, -1.05, deck_z + 1.05), 0.03, sides=4)
+        for i in range(5):
+            x = -BANK_W / 2 - 0.3 + (BANK_W + 0.6) * i / 4
+            builder.tube("steel", (x, -1.05, deck_z), (x, -1.05, deck_z + 1.05), 0.025, sides=4)
+        for side in (-1, 1):
+            x = side * BANK_W * 0.32
+            builder.tube("steel", (x, 0.2, deck_z), (x, 0.2, -LEG), 0.14, sides=6)
         return
     # A triangular truss under the bank, then the catwalk the crew walks.
     tz = -BANK_H / 2 - 0.55
@@ -238,14 +267,27 @@ def bank(builder: Builder, detail=True):
 
 
 def export(path, objs):
+    """Write <path>.glb and <path>.usdz from the same objects. Both come out Y-up
+    with Blender (x, y, z) -> (x, z, -y), which orient-checked usd_export does
+    with forward -Z / up Y, the same mapping glTF's exporter makes."""
+    path = path.with_suffix("")
     bpy.ops.object.select_all(action="DESELECT")
     for o in objs:
         o.select_set(True)
     bpy.context.view_layer.objects.active = objs[0]
     path.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB", use_selection=True,
+    bpy.ops.export_scene.gltf(filepath=str(path.with_suffix(".glb")), export_format="GLB", use_selection=True,
                               export_apply=True, export_yup=True, export_texcoords=True,
                               export_normals=True, export_materials="EXPORT", export_image_format="AUTO")
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objs:
+        o.select_set(True)
+    bpy.ops.wm.usd_export(filepath=str(path.with_suffix(".usdz")), selected_objects_only=True,
+                          export_materials=True, generate_preview_surface=True, export_uvmaps=True,
+                          rename_uvmaps=True, export_normals=True, triangulate_meshes=True,
+                          convert_orientation=True, export_global_forward_selection="NEGATIVE_Z",
+                          export_global_up_selection="Y", export_lights=False, export_cameras=False,
+                          export_animation=False)
     tris = sum(sum(len(p.vertices) - 2 for p in o.data.polygons) for o in objs)
     for o in objs:
         bpy.data.objects.remove(o, do_unlink=True)
@@ -272,12 +314,12 @@ def cone():
             coords = [(s / seg, r / rings), ((s + 1) / seg, r / rings), ((s + 1) / seg, (r + 1) / rings), (s / seg, (r + 1) / rings)]
             for loop, c in zip(f.loops, coords):
                 loop[uv].uv = (c[0], 1 - c[1])
-    me = bpy.data.meshes.new("beam_cone")
+    me = bpy.data.meshes.new("beam_cone_beam")
     b.to_mesh(me)
     b.free()
     mat = C.material("beam", color=(0, 0, 0), emit=(1, 1, 1), emit_strength=1.0)
     me.materials.append(mat)
-    obj = C.link(bpy.data.objects.new("beam_cone", me))
+    obj = C.link(bpy.data.objects.new("beam_cone_beam", me))
     return [obj]
 
 
@@ -295,7 +337,7 @@ def bake_face(mats):
     visible, into the texture the far-side LOD shows."""
     scene = bpy.context.scene
     b = Builder()
-    bank(b, detail=False)
+    bank(b, detail="face")
     objs = b.objects("bank_bake", mats)
     cam_data = bpy.data.cameras.new("face_cam")
     cam_data.type = "ORTHO"
@@ -337,8 +379,12 @@ def main():
     mats = materials()      # reload so the face material picks up the fresh bake
 
     b = Builder()
-    bank(b, detail=True)
-    t0 = export(OUT / "rigs" / "light_bank_lod0.glb", b.objects("light_bank_lod0", mats))
+    bank(b, detail="hero")
+    t0 = export(OUT / "light_bank_hero", b.objects("light_bank_hero", mats))
+
+    b = Builder()
+    bank(b, detail="near")
+    t1 = export(OUT / "light_bank_near", b.objects("light_bank_near", mats))
 
     b = Builder()
     depth = 0.35
@@ -346,17 +392,13 @@ def main():
     b.quad("face", BANK_W + 0.5, BANK_H + 0.9, Matrix.Translation((0, -0.01, -0.2)))
     for side in (-1, 1):
         b.tube("steel", (side * BANK_W * 0.32, 0.2, -BANK_H / 2), (side * BANK_W * 0.32, 0.2, -LEG), 0.14, sides=6)
-    t1 = export(OUT / "rigs" / "light_bank_lod1.glb", b.objects("light_bank_lod1", mats))
+    t2 = export(OUT / "light_bank_far", b.objects("light_bank_far", mats))
 
-    b = Builder()
-    b.quad("face", BANK_W + 0.5, BANK_H + 0.9, Matrix.Translation((0, 0, -0.2)))
-    t2 = export(OUT / "rigs" / "light_bank_lod2.glb", b.objects("light_bank_lod2", mats))
-
-    t3 = export(OUT / "rigs" / "beam_cone.glb", cone())
-    t4 = export(OUT / "rigs" / "beam_quads.glb", quads())
-    C.write_json(C.SCRATCH / "rig_stats.json", {"lod0": t0, "lod1": t1, "lod2": t2, "cone": t3, "quads": t4,
+    t3 = export(OUT / "beam_cone", cone())
+    t4 = export(OUT / "beam_quads", quads())
+    C.write_json(C.SCRATCH / "rig_stats.json", {"hero": t0, "near": t1, "far": t2, "cone": t3, "quads": t4,
                                                "faceTexture": list(size)})
-    print(f"[lighting] rigs: lod0 {t0} tris, lod1 {t1}, lod2 {t2}, cone {t3}, quads {t4}; face {size}")
+    print(f"[lighting] rigs: hero {t0} tris, near {t1}, far {t2}, cone {t3}, quads {t4}; face {size}")
 
 
 main()

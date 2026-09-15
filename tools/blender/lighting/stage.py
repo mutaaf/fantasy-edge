@@ -159,9 +159,9 @@ def bowl():
     fascia("upper_back", 70.0, 45.8, 47.5, back)
 
 
-def rigs(lod="lod0"):
+def rigs(lod="hero"):
     mounts, source = C.placeholder_mounts()
-    path = C.OUT_LIGHT / "rigs" / f"light_bank_{lod}.glb"
+    path = C.OUT_LIGHT / f"light_bank_{lod}.glb"
     placed = []
     for m in mounts:
         before = set(bpy.data.objects)
@@ -235,7 +235,7 @@ def world(sky="night", strength=None):
     return w
 
 
-def build(sky="night", lod="lod0"):
+def build(sky="night", lod="hero"):
     scene = C.reset()
     field()
     bowl()

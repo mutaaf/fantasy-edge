@@ -139,6 +139,14 @@ def sprites():
     haze = smoothstep(0.2, 0.9, n) * 0.55 + 0.35 * n
     save_png(out / "haze_layer.png", white(haze), seed=7)
 
+    # Haze band: the same thin air laid round the bowl as a ring whose V runs
+    # from its inner edge (0) to its outer edge (1). Both edges fade to zero,
+    # so a sheet of it never shows a rim; U tiles round the bowl.
+    n = fbm(1024, 256, 8, 2, 5, 71)
+    band = np.sin(np.clip(grid(1024, 256)[1], 0, 1) * np.pi) ** 1.6
+    wisps = smoothstep(0.25, 0.9, n) * 0.7 + 0.3 * n
+    save_png(out / "haze_band.png", white(band * wisps), seed=14)
+
     # Moths: eight frames of a wingbeat, lit from behind (bright edges,
     # dark body), 64 px each. A handful drift in the throat of a beam.
     fw, frames = 64, 8
@@ -302,7 +310,21 @@ def sky():
             save_png(out / "textures" / "sky_clouds.png", cl, seed=12)
 
 
-GROUPS = {"sprites": sprites, "decals": decals, "sky": sky}
+def dome():
+    """The light a floodlit bowl throws into the air above its rim, for a
+    band of quads standing on the rim: bright at the rim (top row, which a
+    renderer maps to v = 1), gone well before the band's top, tiling round
+    the bowl with soft pools where banks would be."""
+    w, h = 1024, 256
+    u, v = grid(w, h)
+    rise = np.exp(-v * 3.6) * (1 - smoothstep(0.7, 1.0, v))
+    pools = 0.75 + 0.25 * np.cos(u * 2 * np.pi * 2.5) ** 2
+    n = fbm(w, h, 8, 2, 4, 401)
+    a = rise * pools * (0.8 + 0.2 * n)
+    save_png(C.OUT_SKY / "textures" / "light_dome.png", white(a), seed=13)
+
+
+GROUPS = {"sprites": sprites, "decals": decals, "sky": sky, "dome": dome}
 
 if __name__ == "__main__":
     wanted = C.args() or list(GROUPS)
