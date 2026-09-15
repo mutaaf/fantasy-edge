@@ -36,3 +36,39 @@ committed), then packed into each `.usdz` and `.glb`.
 Seat plastic, seat bands, stair nosing, soffit panels and the lit interiors
 (suites, press box, concourse glow) are generated with numpy in
 `tools/blender/bowl/textures.py`: original, no third-party content.
+
+## Audio (`assets/actors/audio/`)
+
+**Original: no recordings, no samples, no downloads.** Every sound is
+synthesised from seeded noise, oscillators and a synthetic stadium impulse
+response by `tools/audio/build.py` (run on Blender's bundled Python for
+numpy; nothing is pip-installed), then encoded with `afconvert` (Apple
+Lossless `.caf`) and `ffmpeg` (Opus `.ogg`). No chants, songs, team
+music, PA voices or brand sounds. Released with the repository.
+
+| Sound | Files | Class |
+|---|---|---|
+| crowd_bed, clap_bed, murmur_bed, wind_bed | `<name>.{caf,ogg}` | looping beds |
+| roar, cheer, groan, sting | `<name>.{caf,ogg}` | crowd reactions |
+| whistle, chime, horn | `<name>.{caf,ogg}` | referee, PA, scoreboard |
+| rumble, defense_swell, final_cheer, exodus, fireworks | `<name>.{caf,ogg}` | cues and moments |
+
+`manifest.json` records each file's length, seed and measured RMS and peak.
+
+## Moments (`assets/actors/moments/`)
+
+No files: particles are RealityKit's default soft sprite, configured from
+`visual.moments.bursts`.
+
+## Broadcast (`assets/actors/broadcast/`)
+
+**Original: no third-party inputs, no downloads.** Released with the repository.
+
+| Files | Made by |
+|---|---|
+| `football_{nfl,college}.{usdz,glb}`, `manifest.json` | `tools/blender/broadcast/build.py`: geometry to the NFL and NCAA ball specs; pebble grain, seams and wear from seeded numpy height fields |
+| `trail_core.png`, `trail_halo.png`, `line.png`, `marker.png` | `tools/blender/broadcast/textures.py` (standard library), shaped by `visual.broadcast` |
+
+The ribbon crawl, the down-and-distance tag, the horizon band and label, and
+the moment banner are drawn at runtime from the scene: no team logos or marks,
+only each club's abbreviation and chip colour.
