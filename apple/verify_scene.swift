@@ -151,9 +151,9 @@ struct VerifyScene {
         if let look = spec.look {
             let seatPoint = SceneMath.local(x: 50, y: 12, z: 50)
             let near = [SceneMath.local(x: 50, y: 12, z: 45)]
-            let s = SceneMath.nearSeatScale(near, seat: seatPoint, rule: look.trail.nearSeat)
-            expect(abs(s - max(look.trail.nearSeat.minScale, 5 / look.trail.nearSeat.yards)) < 1e-6,
-                   "\(name): a trail 5 yards from the seat should thin to \(5 / look.trail.nearSeat.yards), not \(s)")
+            let s = SceneMath.nearSeatScale(near, seat: seatPoint, rule: look.broadcast.trail.nearSeat)
+            expect(abs(s - max(look.broadcast.trail.nearSeat.minScale, 5 / look.broadcast.trail.nearSeat.yards)) < 1e-6,
+                   "\(name): a trail 5 yards from the seat should thin to \(5 / look.broadcast.trail.nearSeat.yards), not \(s)")
         }
         let tt = spec.presentation.tabletop
         let reach = Float((spec.bowl.shape.halfLength + (spec.bowl.tiers.first?.outer ?? 0)) * tt.metersPerYard)

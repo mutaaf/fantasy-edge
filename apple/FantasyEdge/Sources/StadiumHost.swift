@@ -36,11 +36,11 @@ struct StadiumLaunchArguments: ViewModifier {
         content.task {
             guard !Self.done else { return }
             Self.done = true
-            let args = ProcessInfo.processInfo.arguments
-            if let i = args.firstIndex(of: "-openTabletop"), i + 1 < args.count {
-                openWindow(id: "tabletop", value: args[i + 1])
+            // `-shot <name>` fills in any of these (StadiumShots).
+            if let value = StadiumShots.argument("-openTabletop") {
+                openWindow(id: "tabletop", value: value)
             }
-            guard args.contains("-openStadium") else { return }
+            guard StadiumShots.opensStadium else { return }
             let style: RoomStyle = StadiumHost.argument("-stadiumStyle") == "full" ? .full : .progressive
             // Unstructured: entering closes this very window, and a `.task`
             // tied to it would be cancelled halfway through closing the rest.
@@ -56,9 +56,7 @@ struct StadiumLaunchArguments: ViewModifier {
 
 extension StadiumHost {
     static func argument(_ name: String) -> String? {
-        let args = ProcessInfo.processInfo.arguments
-        guard let i = args.firstIndex(of: name), i + 1 < args.count else { return nil }
-        return args[i + 1]
+        StadiumShots.argument(name)
     }
 }
 

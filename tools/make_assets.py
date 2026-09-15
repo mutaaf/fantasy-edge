@@ -1,12 +1,15 @@
 """Write the stadium's source assets: textures, a light probe, and sound.
 
-Every file under assets/src is made here, from nothing but the standard
+Every file under assets/generated is made here, from nothing but the standard
 library, so the look has no licence to track and no download to go stale, and
 a web or Android renderer loads exactly the same bytes the headset does:
 
-  textures/*.png    8-bit RGBA or grey PNG, tileable where the name says so
-  env/*.hdr         Radiance RGBE, the night light probe for image-based light
+  <actor>/*.png     8-bit RGBA or grey PNG, tileable where the name says so
+  lighting/*.hdr    Radiance RGBE, the night light probe for image-based light
   audio/*.wav       16-bit mono PCM, 24 kHz
+
+One folder per stadium actor (docs/ART_BIBLE.md), so specialists never touch
+each other's files. Groups below are named for the actor that owns them.
 
 Deterministic: a second run writes identical files.
 
@@ -25,7 +28,7 @@ import zlib
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / "assets" / "src"
+OUT = ROOT / "assets" / "generated"
 
 
 # ───────────────────────────── writers ─────────────────────────────
@@ -158,9 +161,9 @@ def turf() -> None:
             ln = math.sqrt(nx * nx + ny * ny + nz * nz)
             row += bytes((clamp8(nx / ln * 0.5 + 0.5), clamp8(ny / ln * 0.5 + 0.5), clamp8(nz / ln * 0.5 + 0.5), 255))
         normal_rows.append(bytes(row))
-    write_png(OUT / "textures/turf_albedo.png", size, size, albedo_rows, 4)
-    write_png(OUT / "textures/turf_normal.png", size, size, normal_rows, 4)
-    write_png(OUT / "textures/turf_roughness.png", size, size, rough_rows, 1)
+    write_png(OUT / "field/turf_albedo.png", size, size, albedo_rows, 4)
+    write_png(OUT / "field/turf_normal.png", size, size, normal_rows, 4)
+    write_png(OUT / "field/turf_roughness.png", size, size, rough_rows, 1)
 
 
 def paint() -> None:
@@ -184,7 +187,7 @@ def paint() -> None:
             a = soft * holes * (0.92 - 0.1 * speck.at(u * 16, 0.3))
             row += bytes((255, 255, 255, clamp8(a)))
         rows.append(bytes(row))
-    write_png(OUT / "textures/paint_mask.png", w, h, rows, 4)
+    write_png(OUT / "field/paint_mask.png", w, h, rows, 4)
 
 
 # ───────────────────────────── light ─────────────────────────────
@@ -203,7 +206,7 @@ def glows() -> None:
             a *= max(0.0, 1 - r2)
             row += bytes((255, 255, 255, clamp8(a)))
         rows.append(bytes(row))
-    write_png(OUT / "textures/glow.png", s, s, rows, 4)
+    write_png(OUT / "lighting/glow.png", s, s, rows, 4)
 
     w, h = 64, 512
     rows = []
@@ -216,7 +219,7 @@ def glows() -> None:
             across = math.exp(-c * c * 9)
             row += bytes((255, 255, 255, clamp8(along * across)))
         rows.append(bytes(row))
-    write_png(OUT / "textures/beam.png", w, h, rows, 4)
+    write_png(OUT / "broadcast/beam.png", w, h, rows, 4)
 
     w, h = 512, 16
     rows = []
@@ -227,7 +230,7 @@ def glows() -> None:
             a = 0.18 + 0.82 * t ** 1.8
             row += bytes((255, 255, 255, clamp8(a)))
         rows.append(bytes(row))
-    write_png(OUT / "textures/trail.png", w, h, rows, 4)
+    write_png(OUT / "broadcast/trail.png", w, h, rows, 4)
 
     w, h = 128, 512
     rows = []
@@ -238,7 +241,7 @@ def glows() -> None:
             a = (1 - t) ** 2.2 * 0.55
             row += bytes((255, 255, 255, clamp8(a)))
         rows.append(bytes(row))
-    write_png(OUT / "textures/haze.png", w, h, rows, 4)
+    write_png(OUT / "lighting/haze.png", w, h, rows, 4)
 
 
 def lamp_face() -> None:
@@ -257,7 +260,7 @@ def lamp_face() -> None:
             v = frame + (1 - frame) * lamp
             row += bytes((clamp8(v), clamp8(v * 0.97), clamp8(v * 0.9), 255))
         rows.append(bytes(row))
-    write_png(OUT / "textures/lamp_face.png", w, h, rows, 4)
+    write_png(OUT / "lighting/lamp_face.png", w, h, rows, 4)
 
 
 # ───────────────────────────── the bowl ─────────────────────────────
@@ -286,7 +289,7 @@ def seats() -> None:
                 r, gg, b = r * 1.4, gg * 1.4, b * 1.4
             row += bytes((clamp8(srgb(r * 0.8)), clamp8(srgb(gg * 0.8)), clamp8(srgb(b * 0.8)), 255))
         rows.append(bytes(row))
-    write_png(OUT / "textures/seats.png", w, h, rows, 4)
+    write_png(OUT / "bowl/seats.png", w, h, rows, 4)
 
     s = 512
     rows = []
@@ -298,7 +301,7 @@ def seats() -> None:
             c = 0.42 + 0.14 * (n - 0.5)
             row += bytes((clamp8(srgb(c * 0.8)), clamp8(srgb(c * 0.78)), clamp8(srgb(c * 0.75)), 255))
         rows.append(bytes(row))
-    write_png(OUT / "textures/concrete.png", s, s, rows, 4)
+    write_png(OUT / "bowl/concrete.png", s, s, rows, 4)
 
 
 def crowd_atlas() -> None:
@@ -367,7 +370,7 @@ def crowd_atlas() -> None:
                                     colour = (0, 255, 0) if Y < torso_top - 36 else (255, 0, 0)
                                     put(ox + px, oy + py, *colour)
     rows = [bytes(v for p in line for v in p) for line in img]
-    write_png(OUT / "textures/crowd_atlas.png", W, H, rows, 4)
+    write_png(OUT / "crowd/crowd_atlas.png", W, H, rows, 4)
 
 
 # ───────────────────────────── sky and probe ─────────────────────────────
@@ -413,7 +416,7 @@ def sky() -> None:
                     r, g, b = r + 0.8 * s, g + 0.8 * s, b + 0.9 * s
             row += bytes((clamp8(srgb(r)), clamp8(srgb(g)), clamp8(srgb(b)), 255))
         rows.append(bytes(row))
-    write_png(OUT / "textures/sky_night.png", W, H, rows, 4)
+    write_png(OUT / "sky/sky_night.png", W, H, rows, 4)
 
 
 def probe() -> None:
@@ -444,7 +447,7 @@ def probe() -> None:
             return (0.085, 0.066, 0.052)
         return (0.030, 0.070, 0.030)                    # the field
 
-    write_hdr(OUT / "env/stadium_night.hdr", W, H, pixel)
+    write_hdr(OUT / "lighting/stadium_night.hdr", W, H, pixel)
 
 
 def football() -> None:
@@ -470,7 +473,7 @@ def football() -> None:
                     r, g, b = 0.92, 0.90, 0.86
             row += bytes((clamp8(srgb(r)), clamp8(srgb(g)), clamp8(srgb(b)), 255))
         rows.append(bytes(row))
-    write_png(OUT / "textures/football.png", w, h, rows, 4)
+    write_png(OUT / "broadcast/football.png", w, h, rows, 4)
 
 
 # ───────────────────────────── sound ─────────────────────────────
@@ -565,11 +568,12 @@ def chime() -> None:
 
 
 GROUPS = {
-    "turf": [turf, paint],
-    "light": [glows, lamp_face],
-    "bowl": [seats, crowd_atlas],
-    "sky": [sky, probe],
-    "ball": [football],
+    "field": [turf, paint],
+    "lighting": [glows, lamp_face, probe],
+    "bowl": [seats],
+    "crowd": [crowd_atlas],
+    "sky": [sky],
+    "broadcast": [football],
     "audio": [crowd_bed, roar, groan, chime],
 }
 

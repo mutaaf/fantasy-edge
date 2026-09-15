@@ -43,6 +43,22 @@ TOKENS_PATH = pathlib.Path(
 # What differs between codes of football, and nothing else. College is stubbed:
 # its field geometry is here because the stadium is shared, and everything the
 # scene does not yet use for it is left out rather than guessed.
+# ═══════════════════════ actor sections (docs/ART_BIBLE.md) ═══════════════════════
+# Each block below is owned by one stadium actor. The spec's shape does not
+# change with this layout; it only says whose numbers are whose.
+#
+#   field       RULES[league].field            -> scene.field
+#   sideline    _props()                       -> scene.field.props
+#   bowl        BOWL tiers/wall/ribbon/pressBox/tunnels -> scene.bowl
+#   lighting    BOWL["rimLights"]              -> scene.bowl.rimLights
+#   crowd       build(): crowd, sectionTint    -> scene.bowl.crowd, .sectionTint
+#   broadcast   build(): drives, ball, lasers, winProbability, PRESENTATION horizon/beacon
+#   moments     build(): moments, activeMoment
+#   experience  SEATS, PRESENTATION            -> scene.presentation
+#   every actor tokens.json visual.<actor>     -> scene.visual.<actor>
+
+# ── sideline ──
+
 def _props(bench_from: float, bench_to: float) -> dict:
     """The sideline furniture, in yards. Both codes share its shape; where
     they differ - the team area - is an argument.
@@ -62,6 +78,8 @@ def _props(bench_from: float, bench_to: float) -> dict:
                    "side": "away", "color": "prop.chain"},
     }
 
+
+# ── field ──
 
 RULES = {
     "nfl": {
@@ -87,6 +105,8 @@ RULES = {
 NOT_A_PLAY = {"timeout", "official timeout", "end period", "end of half",
               "end of game", "end of regulation", "two-minute warning",
               "coin toss", "end of quarter"}
+
+# ── bowl (and lighting's rimLights) ──
 
 BOWL = {
     "shape": {"type": "superellipse", "exponent": 4.0},
@@ -127,6 +147,8 @@ def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: fl
     return {"id": sid, "label": label, "x": x, "y": y, "z": round(z, 3),
             "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]}}
 
+
+# ── experience ──
 
 HALF_WIDTH = 80 / 3
 SEATS = [
@@ -412,7 +434,7 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
     # 1.1: whether a moment stops the stadium, and where its banner, light and
     # sound go - the middle of the end zone the scoring side attacks. Home
     # attacks x = 100, so a home score lands in 100..110.
-    celebrate = set(tokens["look"]["moment"]["celebrate"])
+    celebrate = set(tokens["visual"]["moments"]["celebrate"])
     for m in moments:
         m["celebrates"] = m["kind"] in celebrate
         ez = field["endZone"]
@@ -523,5 +545,5 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
         "presentation": PRESENTATION,
         "palette": tokens["color"],
         "motion": tokens["motion"],
-        "look": tokens["look"],
+        "visual": tokens["visual"],
     }
