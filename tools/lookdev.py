@@ -87,6 +87,16 @@ def field_goal_second() -> int:
     return int(rp.play_seconds(play, lengths))
 
 
+def play_second(needle: str) -> int:
+    """The replay second of the first play whose text contains `needle`."""
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    play = next((p for p in rp._all_plays(summary) if needle in (p.get("text") or "")), None)
+    if play is None:
+        raise SystemExit(f"--play {needle!r}: no play in {PICK_SIX} says that")
+    return int(rp.play_seconds(play, lengths))
+
+
 def wait_for_moment(port: int, kind: str, timeout: float = 20.0) -> float:
     """Poll the replay until the scene's active moment is `kind`; the time it
     appeared, or now if it never does."""
@@ -160,6 +170,9 @@ def main() -> None:
                     help="sit in this preset (any id in presentation.stadium.seats) instead of the shot's own seat")
     ap.add_argument("--during-moment", action="store_true",
                     help="play every selected shot through the --moment, not only td-moment")
+    ap.add_argument("--play", default="",
+                    help="play every selected shot through the first play whose text contains this, at 1x; "
+                         "use p-times (--times p4,p6) for frames mid-play")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -181,7 +194,8 @@ def main() -> None:
         simctl("install", args.device, str(args.app))
         post(args.port, {"action": "load", "event": PICK_SIX})
         post(args.port, {"action": "pause"})
-        positions = {"touchdown": field_goal_second() if args.moment == "fieldGoal" else pick_six_second(),
+        positions = {"touchdown": (play_second(args.play) if args.play else
+                                   field_goal_second() if args.moment == "fieldGoal" else pick_six_second()),
                      "redzone": red_zone_second(args.port)}
         positions["early"] = positions["redzone"] - 150
         if args.seat:
@@ -192,7 +206,7 @@ def main() -> None:
         for name, where in SHOTS.items():
             if args.only and name not in args.only:
                 continue
-            if args.during_moment:
+            if args.during_moment or args.play:
                 where = "touchdown"
             at = positions[where]
             simctl("terminate", args.device, BUNDLE, check=False)
@@ -233,7 +247,7 @@ def main() -> None:
             times = args.times.split(",")
             for t in sorted((t for t in times if t.startswith("p")), key=lambda t: float(t[1:])):
                 shoot(f"-{t}", played + float(t[1:]))
-            late = [t for t in times if not t.startswith("p")]
+            late = [t for t in times if not t.startswith("p")] if not args.play else []
             if late:
                 fired = wait_for_moment(args.port, args.moment)
                 for t in late:
