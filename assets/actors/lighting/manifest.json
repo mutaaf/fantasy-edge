@@ -1,0 +1,407 @@
+{
+  "about": "Lighting and sky assets for every client. Models are metres, Y-up, face +Z; see README.md.",
+  "budget": {
+    "additiveOverdrawCapScreens": 2.0,
+    "lighting": {
+      "drawParts": 20,
+      "shadowCasters": 1,
+      "spotLights": 4,
+      "textureMB": 20,
+      "triangles": 10000
+    },
+    "sky": {
+      "drawParts": 3,
+      "textureMB": 30,
+      "triangles": 5000
+    }
+  },
+  "equirect": "top row zenith, centre column -Z (the far side), +X a quarter turn right; verified by orient.py",
+  "files": [
+    {
+      "bytes": 0,
+      "path": "actors/lighting/.gitkeep"
+    },
+    {
+      "bytes": 17248,
+      "path": "actors/lighting/beam_cone.glb"
+    },
+    {
+      "bytes": 21223,
+      "path": "actors/lighting/beam_cone.usdz"
+    },
+    {
+      "bytes": 1596,
+      "path": "actors/lighting/beam_quads.glb"
+    },
+    {
+      "bytes": 3034,
+      "path": "actors/lighting/beam_quads.usdz"
+    },
+    {
+      "bytes": 3917641,
+      "path": "actors/lighting/env/stadium_dusk.exr"
+    },
+    {
+      "bytes": 905108,
+      "path": "actors/lighting/env/stadium_dusk.hdr"
+    },
+    {
+      "bytes": 5078,
+      "path": "actors/lighting/env/stadium_dusk_irradiance.exr"
+    },
+    {
+      "bytes": 79922,
+      "path": "actors/lighting/env/stadium_dusk_specular_r40.exr"
+    },
+    {
+      "bytes": 73279,
+      "path": "actors/lighting/env/stadium_dusk_specular_r60.exr"
+    },
+    {
+      "bytes": 55550,
+      "path": "actors/lighting/env/stadium_dusk_specular_r80.exr"
+    },
+    {
+      "bytes": 4135890,
+      "path": "actors/lighting/env/stadium_night.exr"
+    },
+    {
+      "bytes": 971652,
+      "path": "actors/lighting/env/stadium_night.hdr"
+    },
+    {
+      "bytes": 4983,
+      "path": "actors/lighting/env/stadium_night_irradiance.exr"
+    },
+    {
+      "bytes": 85139,
+      "path": "actors/lighting/env/stadium_night_specular_r40.exr"
+    },
+    {
+      "bytes": 70570,
+      "path": "actors/lighting/env/stadium_night_specular_r60.exr"
+    },
+    {
+      "bytes": 58278,
+      "path": "actors/lighting/env/stadium_night_specular_r80.exr"
+    },
+    {
+      "bytes": 3969005,
+      "path": "actors/lighting/env/tabletop_room.exr"
+    },
+    {
+      "bytes": 1035544,
+      "path": "actors/lighting/env/tabletop_room.hdr"
+    },
+    {
+      "bytes": 7459,
+      "path": "actors/lighting/env/tabletop_room_irradiance.exr"
+    },
+    {
+      "bytes": 73573,
+      "path": "actors/lighting/env/tabletop_room_specular_r40.exr"
+    },
+    {
+      "bytes": 59877,
+      "path": "actors/lighting/env/tabletop_room_specular_r60.exr"
+    },
+    {
+      "bytes": 60116,
+      "path": "actors/lighting/env/tabletop_room_specular_r80.exr"
+    },
+    {
+      "bytes": 532684,
+      "path": "actors/lighting/light_bank_far.glb"
+    },
+    {
+      "bytes": 471440,
+      "path": "actors/lighting/light_bank_far.usdz"
+    },
+    {
+      "bytes": 665164,
+      "path": "actors/lighting/light_bank_hero.glb"
+    },
+    {
+      "bytes": 559262,
+      "path": "actors/lighting/light_bank_hero.usdz"
+    },
+    {
+      "bytes": 179068,
+      "path": "actors/lighting/light_bank_near.glb"
+    },
+    {
+      "bytes": 168918,
+      "path": "actors/lighting/light_bank_near.usdz"
+    },
+    {
+      "bytes": 19583,
+      "path": "actors/lighting/textures/ao_riser.png"
+    },
+    {
+      "bytes": 290623,
+      "path": "actors/lighting/textures/beam_cone.png"
+    },
+    {
+      "bytes": 60389,
+      "path": "actors/lighting/textures/beam_dust.png"
+    },
+    {
+      "bytes": 206352,
+      "path": "actors/lighting/textures/beam_noise.png"
+    },
+    {
+      "bytes": 143904,
+      "path": "actors/lighting/textures/beam_quad.png"
+    },
+    {
+      "bytes": 123240,
+      "path": "actors/lighting/textures/bloom_card.png"
+    },
+    {
+      "bytes": 102202,
+      "path": "actors/lighting/textures/emitter_lens.png"
+    },
+    {
+      "bytes": 34417,
+      "path": "actors/lighting/textures/glow_core.png"
+    },
+    {
+      "bytes": 122973,
+      "path": "actors/lighting/textures/glow_halo.png"
+    },
+    {
+      "bytes": 158039,
+      "path": "actors/lighting/textures/haze_band.png"
+    },
+    {
+      "bytes": 169240,
+      "path": "actors/lighting/textures/haze_layer.png"
+    },
+    {
+      "bytes": 464880,
+      "path": "actors/lighting/textures/lamp_bank_face.png"
+    },
+    {
+      "bytes": 37525,
+      "path": "actors/lighting/textures/moth_atlas.png"
+    },
+    {
+      "bytes": 216547,
+      "path": "actors/lighting/textures/shadow_multi.png"
+    },
+    {
+      "bytes": 70605,
+      "path": "actors/lighting/textures/spill_card.png"
+    },
+    {
+      "bytes": 0,
+      "path": "actors/sky/.gitkeep"
+    },
+    {
+      "bytes": 1450320,
+      "path": "actors/sky/env/sky_dusk.exr"
+    },
+    {
+      "bytes": 1387391,
+      "path": "actors/sky/env/sky_night.exr"
+    },
+    {
+      "bytes": 136132,
+      "path": "actors/sky/textures/light_dome.png"
+    },
+    {
+      "bytes": 2043811,
+      "path": "actors/sky/textures/sky_clouds.png"
+    },
+    {
+      "bytes": 2539452,
+      "path": "actors/sky/textures/sky_dusk.png"
+    },
+    {
+      "bytes": 2485914,
+      "path": "actors/sky/textures/sky_night.png"
+    }
+  ],
+  "probes": {
+    "stadium_dusk": {
+      "belowHorizonMean": 0.06144,
+      "clamp": 64.0,
+      "exposureScale": 0.212037,
+      "peak": 64.0,
+      "referenceBelowMean": 0.06144,
+      "renderWidth": 2048,
+      "samples": 0,
+      "sh9": [
+        [
+          0.4897,
+          0.485306,
+          0.421203
+        ],
+        [
+          0.201397,
+          0.144996,
+          0.189501
+        ],
+        [
+          0.015866,
+          0.014313,
+          0.012417
+        ],
+        [
+          -0.013547,
+          -0.014142,
+          -0.013849
+        ],
+        [
+          -0.007046,
+          -0.006883,
+          -0.007058
+        ],
+        [
+          0.012632,
+          0.009809,
+          0.009049
+        ],
+        [
+          0.101161,
+          0.076249,
+          0.065376
+        ],
+        [
+          0.040961,
+          0.040743,
+          0.039858
+        ],
+        [
+          0.268605,
+          0.239987,
+          0.221939
+        ]
+      ]
+    },
+    "stadium_night": {
+      "belowHorizonMean": 0.06144,
+      "clamp": 64.0,
+      "exposureScale": 0.217555,
+      "peak": 64.0,
+      "referenceBelowMean": 0.06144,
+      "renderWidth": 2048,
+      "samples": 0,
+      "sh9": [
+        [
+          0.466162,
+          0.474403,
+          0.405367
+        ],
+        [
+          0.179414,
+          0.132072,
+          0.170681
+        ],
+        [
+          0.012161,
+          0.012788,
+          0.011913
+        ],
+        [
+          -0.013032,
+          -0.013796,
+          -0.013586
+        ],
+        [
+          -0.006067,
+          -0.006262,
+          -0.006669
+        ],
+        [
+          0.00808,
+          0.007962,
+          0.008446
+        ],
+        [
+          0.101241,
+          0.078365,
+          0.070863
+        ],
+        [
+          0.043694,
+          0.042412,
+          0.041099
+        ],
+        [
+          0.271352,
+          0.244766,
+          0.231144
+        ]
+      ]
+    },
+    "tabletop_room": {
+      "belowHorizonMean": 0.03687,
+      "clamp": 64.0,
+      "exposureScale": 5.262429,
+      "peak": 16.654,
+      "referenceBelowMean": 0.03687,
+      "renderWidth": 2048,
+      "samples": 0,
+      "sh9": [
+        [
+          0.433785,
+          0.292775,
+          0.218001
+        ],
+        [
+          0.135053,
+          0.121698,
+          0.10554
+        ],
+        [
+          -0.257417,
+          -0.176169,
+          -0.109833
+        ],
+        [
+          -0.156921,
+          -0.078265,
+          0.014146
+        ],
+        [
+          -0.099703,
+          -0.050656,
+          0.014568
+        ],
+        [
+          -0.159734,
+          -0.116191,
+          -0.075327
+        ],
+        [
+          0.060931,
+          0.02779,
+          -0.020433
+        ],
+        [
+          0.259625,
+          0.175309,
+          0.094995
+        ],
+        [
+          0.086923,
+          0.08547,
+          0.09833
+        ]
+      ]
+    }
+  },
+  "triangles": {
+    "cone": 384,
+    "faceTexture": [
+      1024,
+      442
+    ],
+    "far": 38,
+    "hero": 7988,
+    "near": 1044,
+    "quads": 6
+  },
+  "units": "metres for models; scene yards divide by 0.9144"
+}
