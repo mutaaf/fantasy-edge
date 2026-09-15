@@ -13,8 +13,11 @@ import simd
 ///
 /// Fans are grouped into angular slices per section so a wave can travel and
 /// a section can rise, and shared materials are all a moment has to swap.
+/// Reads `bowl.crowd`, `bowl.sectionTint` and `visual.crowd`; surges when
+/// Moments writes a surge to the blackboard.
 @MainActor
-final class StadiumCrowd {
+final class CrowdActor: StadiumActor {
+    let name = "crowd"
     struct Group {
         let entity: Entity
         let front: ModelEntity
@@ -35,13 +38,17 @@ final class StadiumCrowd {
     private var front: Materials?
     private var back: Materials?
     private var tint: String? = "unset"
-    private var surge: (away: Bool, until: Double)?
-    private var time: Double = 0
 
-    init(_ s: SceneSpec, look: SceneSpec.Look, assets: StadiumAssets, tiers: [SceneSpec.Tier], tabletop: Bool) {
-        root.name = "crowd"
+    init() { root.name = "actor.crowd" }
+
+    func build(_ c: StadiumContext) {
+        clear()
+        groups.removeAll()
+        fans = 0
+        tint = "unset"
+        let s = c.spec, look = c.look, tiers = c.tiers, tabletop = c.tabletop
         let C = look.crowd
-        guard let mask = assets.images["crowd"],
+        guard let mask = c.assets.images["crowd.crowd"],
               let frontImage = Self.compose(mask, s: s, look: look, back: false),
               let backImage = Self.compose(mask, s: s, look: look, back: true),
               let frontTexture = StadiumText.texture(frontImage),
@@ -85,7 +92,7 @@ final class StadiumCrowd {
                 let (angles, _) = SceneMath.evenAngles(shape, offset: m, count: perRow)
                 for t in angles {
                     guard rng.next() < C.fill else { continue }
-                    if tabletop && StadiumBowl.cut(t, t, look) { continue }
+                    if c.cut(t, t) { continue }
                     let p = SceneMath.bowlPoint(shape, offset: m, angle: t)
                     if !tabletop && seats.contains(where: { seat in
                         hypot(Float(p.x) - seat.x, Float(p.z) - seat.z) < clear && abs(Float(row.tread) - seat.y) < clearHeight
@@ -214,7 +221,8 @@ final class StadiumCrowd {
 
     /// Light the scoring side's section and dim the rest, from the scene's
     /// section tint. Materials change only when the tint does.
-    func applyTint(_ s: SceneSpec) {
+    func apply(_ c: StadiumContext, previous: SceneSpec?) {
+        let s = c.spec
         let side = s.bowl.sectionTint.side
         guard side != tint, let front, let back else { return }
         tint = side
@@ -228,20 +236,17 @@ final class StadiumCrowd {
         }
     }
 
-    func celebrate(side: String, seconds: Double) {
-        surge = (side == "away", time + seconds)
-    }
-
     /// Idle breathing, a slow wave, and the surge of a scoring section.
-    func tick(_ dt: Double, look: SceneSpec.Look, reduceMotion: Bool) {
-        time += dt
-        let C = look.crowd
-        guard !reduceMotion else {
+    func update(_ frame: StadiumFrame, _ c: StadiumContext) {
+        let time = frame.time
+        let C = c.look.crowd
+        guard !c.reduceMotion else {
             for g in groups where g.entity.position.y != 0 { g.entity.position.y = 0 }
             return
         }
         let slices = Double(max(1, C.slices))
         let wavePhase = (time / max(1, C.waveSeconds)).truncatingRemainder(dividingBy: 3)
+        let surge = c.shared.surge
         let surging = surge.map { time < $0.until } ?? false
         for g in groups {
             let a = (Double(g.slice) + 0.5) / slices

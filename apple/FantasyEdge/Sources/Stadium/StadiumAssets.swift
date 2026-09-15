@@ -3,12 +3,14 @@ import ImageIO
 import RealityKit
 
 /// The stadium's textures, light probe and sound, loaded once per process
-/// from the `StadiumAssets` folder the app bundles - `assets/src` unchanged,
-/// the same files the web and Android renderers load.
+/// from the bundled copy of `assets/` - one folder per actor, the same files
+/// the web and Android renderers load.
 ///
-/// Loading is asynchronous and happens before the first build, so opening the
-/// stadium never stalls a frame on a PNG decode. Anything that fails to load
-/// is simply absent: the renderer draws without it rather than not at all.
+/// Every asset is addressed as `<actor>.<id>`, from that actor's section of
+/// `look`, so two actors can each have a `glow` without colliding. Loading is
+/// asynchronous and happens before the first build, so opening the stadium
+/// never stalls a frame on a PNG decode. Anything that fails to load is simply
+/// absent: the actor draws without it rather than not at all.
 @MainActor
 public final class StadiumAssets {
     public static let shared = StadiumAssets()
@@ -19,27 +21,31 @@ public final class StadiumAssets {
     private(set) var images: [String: CGImage] = [:]
     private(set) var environment: EnvironmentResource?
     private(set) var audio: [String: AudioFileResource] = [:]
+    private(set) var models: [String: Entity] = [:]
     private(set) var bytes = 0
 
-    /// The bundled copy of `assets/src`. Xcode keeps a folder reference's
-    /// on-disk name, so it is `src`; a Swift package would call it
-    /// `StadiumAssets`. Either is accepted, and it must hold the probe.
+    /// The bundled `assets/` folder. Xcode keeps a folder reference's on-disk
+    /// name; a Swift package would call it `StadiumAssets`. It must hold `actors`.
     static var folder: URL? {
-        for name in ["StadiumAssets", "src"] {
+        for name in ["assets", "StadiumAssets"] {
             if let url = Bundle.main.url(forResource: name, withExtension: nil),
-               FileManager.default.fileExists(atPath: url.appendingPathComponent("env").path) {
+               FileManager.default.fileExists(atPath: url.appendingPathComponent("generated").path)
+                || FileManager.default.fileExists(atPath: url.appendingPathComponent("actors").path) {
                 return url
             }
         }
         return nil
     }
 
-    /// Which texture semantic each asset is, by id in `look.assets`.
-    private static let semantics: [String: TextureResource.Semantic] = [
-        "turfAlbedo": .color, "turfNormal": .normal, "turfRoughness": .scalar,
-        "paint": .color, "glow": .color, "beam": .color, "trail": .color, "haze": .color,
-        "lampFace": .color, "seats": .color, "concrete": .color, "sky": .color, "football": .color,
-    ]
+    /// Texture semantics by the file's role; anything unnamed is colour.
+    private static func semantic(_ id: String) -> TextureResource.Semantic {
+        if id.hasSuffix("Normal") { return .normal }
+        if id.hasSuffix("Roughness") { return .scalar }
+        return .color
+    }
+
+    /// Mask images an actor composes itself rather than sampling directly.
+    private static let imagesOnly: Set<String> = ["crowd.crowd"]
 
     public func prepare(_ look: SceneSpec.Look) async {
         if ready { return }
@@ -51,43 +57,64 @@ public final class StadiumAssets {
 
     private func load(_ look: SceneSpec.Look) async {
         guard let root = Self.folder else {
-            StadiumLog.log.error("[stadium] no StadiumAssets folder in the bundle; drawing without textures")
+            StadiumLog.log.error("[stadium] no assets folder in the bundle; drawing without textures")
             ready = true
             return
         }
-        for (id, rel) in look.assets.sorted(by: { $0.key < $1.key }) {
-            let url = root.appendingPathComponent(rel)
-            switch url.pathExtension.lowercased() {
-            case "png":
-                if id == "crowd" {
-                    // The crowd atlas is a mask a renderer dresses in club
-                    // colours, so it is kept as an image, not a texture.
-                    if let img = Self.image(url) { images[id] = img; bytes += img.width * img.height * 4 }
+        var byPath: [String: TextureResource] = [:]
+        for (actor, section) in look.assetSections {
+            for (id, rel) in section.sorted(by: { $0.key < $1.key }) {
+                let key = "\(actor).\(id)"
+                let url = root.appendingPathComponent(rel)
+                switch url.pathExtension.lowercased() {
+                case "png":
+                    if Self.imagesOnly.contains(key) {
+                        if let img = Self.image(url) { images[key] = img; bytes += img.width * img.height * 4 }
+                        continue
+                    }
+                    // Two actors may name one file; it is loaded once.
+                    if let shared = byPath[rel] {
+                        textures[key] = shared
+                        continue
+                    }
+                    var options = TextureResource.CreateOptions(semantic: Self.semantic(id))
+                    options.mipmapsMode = .allocateAndGenerateAll
+                    if let t = try? await TextureResource(contentsOf: url, options: options) {
+                        textures[key] = t
+                        byPath[rel] = t
+                        if let img = Self.image(url) { bytes += img.width * img.height * 16 / 3 }
+                    }
+                case "hdr", "exr":
+                    if let img = Self.image(url, float: true),
+                       let env = try? await EnvironmentResource(equirectangular: img, withName: key) {
+                        environment = env
+                        bytes += img.width * img.height * 8
+                    }
+                case "wav", "caf", "m4a":
+                    let loop = id.hasSuffix("Bed")
+                    if let a = try? await AudioFileResource(contentsOf: url, configuration: .init(shouldLoop: loop)) {
+                        audio[key] = a
+                    }
+                default:
                     continue
                 }
-                var options = TextureResource.CreateOptions(semantic: Self.semantics[id] ?? .color)
-                options.mipmapsMode = .allocateAndGenerateAll
-                if let t = try? await TextureResource(contentsOf: url, options: options) {
-                    textures[id] = t
-                    if let img = Self.image(url) { bytes += img.width * img.height * 4 * 4 / 3 }
+            }
+        }
+        // Models: a specialist's `.usdz` (exported from Blender beside its
+        // `.glb`), loaded once as a template that actors clone.
+        for (actor, section) in look.modelSections {
+            for (id, rel) in section.sorted(by: { $0.key < $1.key }) {
+                let url = root.appendingPathComponent(rel)
+                guard ["usdz", "usda", "usdc", "reality"].contains(url.pathExtension.lowercased()) else { continue }
+                do {
+                    models["\(actor).\(id)"] = try await Entity(contentsOf: url)
+                } catch {
+                    StadiumLog.log.error("[stadium] model \(actor).\(id) failed to load from \(rel): \(error.localizedDescription)")
                 }
-            case "hdr", "exr":
-                if let img = Self.image(url, float: true),
-                   let env = try? await EnvironmentResource(equirectangular: img, withName: id) {
-                    environment = env
-                    bytes += img.width * img.height * 8
-                }
-            case "wav", "caf", "m4a":
-                let loop = id == "crowdBed"
-                if let a = try? await AudioFileResource(contentsOf: url,
-                                                        configuration: .init(shouldLoop: loop)) {
-                    audio[id] = a
-                }
-            default:
-                continue
             }
         }
         ready = true
+        StadiumLog.log.notice("[stadium] models: \(self.models.count)")
         StadiumLog.log.notice("[stadium] assets: \(self.textures.count) textures, \(self.audio.count) sounds, probe \(self.environment == nil ? "missing" : "loaded"), ~\(self.bytes / 1_048_576) MB")
     }
 
@@ -97,5 +124,9 @@ public final class StadiumAssets {
         return CGImageSourceCreateImageAtIndex(src, 0, options)
     }
 
-    func texture(_ id: String) -> TextureResource? { textures[id] }
+    /// A texture by `<actor>.<id>`.
+    func texture(_ key: String) -> TextureResource? { textures[key] }
+
+    /// A fresh copy of a model by `<actor>.<id>`, or nil if none was declared or it failed.
+    func model(_ key: String) -> Entity? { models[key]?.clone(recursive: true) }
 }
