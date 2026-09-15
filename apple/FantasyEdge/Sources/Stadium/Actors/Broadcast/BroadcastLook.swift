@@ -155,12 +155,11 @@ extension SceneSpec.Look {
         public let flash: RibbonFlash
     }
 
+    /// How the moment banner looks. Its size, height, timing and kinds are
+    /// Moments' contract, `visual.moments.banner`.
     public struct BannerLook: Decodable, Equatable, Sendable {
         public let widthYards: SceneSpec.PerMode<Double>
-        public let liftYards: SceneSpec.PerMode<Double>
         public let pixels: [Int]
-        public let inSeconds: Double
-        public let outSeconds: Double
         public let glowOpacity: Double
         public let glowScale: Double
     }

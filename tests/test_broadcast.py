@@ -95,6 +95,31 @@ class TestBroadcastLook(unittest.TestCase):
         self.assertGreaterEqual(h["label"]["pixels"], 48, "a label drawn smaller than 48 px blurs at stadium distance")
         self.assertLess(h["haloOpacity"], h["opacity"])
 
+    def test_the_banner_draws_to_the_moments_contract(self):
+        """Broadcast draws the banner; Moments says what and when. Every kind
+        the contract names has a word to put up and a timeline entry saying
+        when, and Broadcast's own section carries no size or timing that
+        would compete with it."""
+        contract = self.tokens["visual"]["moments"]["banner"]
+        words = self.look["ribbon"]["flash"]["words"]
+        timeline = self.tokens["visual"]["moments"]["timeline"]
+        for kind in contract["kinds"]:
+            self.assertIn(kind, words, f"{kind}: no word for the banner")
+            self.assertIn(kind, timeline, f"{kind}: no timeline entry says when its banner goes up")
+            self.assertGreaterEqual(timeline[kind]["banner"], 0, f"{kind}: named for a banner but timed never")
+        for gone in ("liftYards", "inSeconds", "outSeconds"):
+            self.assertNotIn(gone, self.look["banner"], f"banner.{gone} belongs to visual.moments.banner")
+        self.assertGreater(contract["widthDegrees"], contract["minHeightDegrees"])
+        W, H = self.look["banner"]["pixels"]
+        # The slab's own aspect must already reach the minimum height at the stated width.
+        self.assertGreaterEqual(contract["widthDegrees"] * H / W, contract["minHeightDegrees"] * 0.9)
+
+    def test_the_ribbon_stands_clear_of_bowls_screen(self):
+        """Bowl tessellates its fascia screen to within 0.1 yd of the curve;
+        the crawl must stand further off it than that or the two z-fight."""
+        self.assertGreater(self.look["ribbon"]["offset"], 0.1)
+        self.assertLess(self.look["ribbon"]["offset"], 0.5, "far enough off to see a gap from the lower bowl")
+
     def test_trails_ghost_with_age_and_never_vanish(self):
         age = self.look["trail"]["age"]
         self.assertTrue(0 < age["decay"] < 1 and 0 < age["thin"] <= 1)

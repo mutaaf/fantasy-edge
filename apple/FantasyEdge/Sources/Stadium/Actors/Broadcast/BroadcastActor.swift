@@ -240,7 +240,7 @@ extension BroadcastActor {
 
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {
         ribbon.moment(event, c)
-        if case .moment(let m) = event { banner.show(m, c) }
+        if case .moment(let m) = event { banner.arrive(m, c) }
     }
 
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
