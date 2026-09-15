@@ -688,7 +688,8 @@ class TestSceneGeometry(unittest.TestCase):
             declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
             runtime = ({"Color", "UseMask", "Roughness", "BorderColor", "BorderRoughness", "BorderGrassCut",
                         "HalfWidth", "HalfLength"} if key == "paintMaterial" else
-                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else set())
+                       {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else
+                       {"FaceOpacity", "GrazingOpacity"})
             self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
             self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
         shells = self.final["visual"]["field"]["shells"]
@@ -697,6 +698,26 @@ class TestSceneGeometry(unittest.TestCase):
         breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
         self.assertTrue(breakup.is_file())
         self.assertLess(breakup.stat().st_size, 1_000_000)
+
+    def test_the_boundary_is_as_wide_as_each_book_says(self):
+        """NFL: a solid white border six feet (two yards) wide outside the
+        sidelines and end lines (2026 Rule 1 §1 Art.2). NCAA: a 4-inch
+        sideline (1-2-1-a). Measured off the baked markings, not the table."""
+        import json as _json
+        root = pathlib.Path(sc.__file__).resolve().parent.parent / "assets" / "actors" / "field" / "markings"
+        for league, kind, width in (("nfl", "border", 2.0), ("college-football", "sideline", 4 / 36)):
+            prims = _json.loads((root / league / "markings.json").read_text())["primitives"]
+            near = [q for q in prims if q["kind"] == kind and max(y for _, y in q["poly"]) <= 1e-6]
+            self.assertTrue(near, f"{league}: no near {kind}")
+            ys = [y for q in near for _, y in q["poly"]]
+            self.assertAlmostEqual(max(ys) - min(ys), width, places=3, msg=league)
+
+    def test_a_net_is_visible_face_on(self):
+        """Behind the goal a net faces the eye, and a real one reads there as
+        a mesh of cords: it keeps a face-on minimum and only fades edge-on."""
+        net = self.final["visual"]["sideline"]["net"]
+        self.assertGreaterEqual(net["minOpacity"], 0.35)
+        self.assertLess(net["grazingOpacity"], net["minOpacity"])
 
     def test_field_paint_is_paint_not_white(self):
         """Under the field floods pure white albedo reads as a flat grey slab.
@@ -707,10 +728,10 @@ class TestSceneGeometry(unittest.TestCase):
             h = h.lstrip("#")
             return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
         p = self.final["visual"]["field"]["paint"]
-        for key in ("white", "border"):
+        for key, lo, hi in (("white", 0.75, 0.85), ("border", 0.58, 0.75)):
             for ch in srgb(p[key]):
-                self.assertGreaterEqual(ch, 0.70, key)
-                self.assertLessEqual(ch, 0.85, key)
+                self.assertGreaterEqual(ch, lo, key)
+                self.assertLessEqual(ch, hi, key)
         self.assertLessEqual(max(srgb(p["border"])), max(srgb(p["white"])))
         turf = self.final["visual"]["field"]["turf"]
         self.assertGreaterEqual(p["borderRoughness"], max(turf["stripeRoughness"]))
