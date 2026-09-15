@@ -113,6 +113,13 @@ Before and after shots are under `.work/shots/experience-*` in the Experience wo
 - **Bug: the tabletop volume sat in the middle of the stadium in every frame.** visionOS restores the tabletop on relaunch with no value (the host shows it as the replay), so `dismissWindow(id:value:)` missed it. The passage now dismisses by id as well.
 - **`bowl-wide_press`:** the press box seat looks into the back of the lower bowl. Its floor (19.8 yd) is level with the lower bowl's top rows (19.6 yd), so the heads in front and the box's own sill hide the field. See "Found for other actors".
 
+**Iteration 5 (`experience-it5`, build `b3f1dc2`).**
+- **Tabletop:** gone from the stadium in every frame.
+- **`crowd-closeup_ahead`:** the drive log and Elsewhere rest low at ±30° and translucent. The controls folded to the `Controls` pill on their own. The field from sideline to sideline is clear.
+- **`td-moment`:** only the scorebug is up; the play is unobstructed.
+- **`field-level`:** a clean look down the field. The drive log sits in the lower-left corner and the Elsewhere tab in the lower right.
+- **Budget:** stadium 0 draw parts. Tabletop 6 parts and 2.9k triangles, plus 3 parts for the gate while it opens. Budget is 5k triangles and 10 parts.
+
 ## Found for other actors
 
 **Bowl: the press box sits too low to see the field from.** `bowl.pressBox.rise[0]` (19.8) is barely above the lower tier's top (19.6). A real press box looks over the last rows. Proposed: raise the box's floor about 3 yd above the lower bowl's top, or move it back over the concourse. The `pressBox` seat preset takes its floor from `pressBox.rise[0]`, so it follows automatically.
