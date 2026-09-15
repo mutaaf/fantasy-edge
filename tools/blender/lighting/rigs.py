@@ -163,11 +163,13 @@ def emitter_lens():
     n = 4
     cu, cv = (u * n) % 1 - 0.5, (v * n) % 1 - 0.5
     r = np.hypot(cu, cv) * 2
-    core = np.exp(-(r / 0.34) ** 2)
+    core = np.exp(-(r / 0.26) ** 2)
     cup = np.clip(1 - r, 0, 1) ** 1.2 * 0.35
     facets = 0.8 + 0.2 * np.cos(np.arctan2(cv, cu) * 12) ** 2
-    diffuse = 0.62 + 0.08 * np.cos(u * np.pi * 2) * np.cos(v * np.pi * 2)
-    val = np.clip(diffuse + 0.5 * core + cup * facets, 0, 1.0)
+    diffuse = 0.30 + 0.05 * np.cos(u * np.pi * 2) * np.cos(v * np.pi * 2)
+    # Peaks at 1 only in each LED's core, so a renderer's gain never clips the
+    # panel to a flat white card and the grid survives close up.
+    val = np.clip(diffuse + 0.7 * core + cup * facets * 0.6, 0, 1.0)
     edge = np.minimum(np.minimum(u, 1 - u), np.minimum(v, 1 - v))
     val *= np.clip(edge / 0.03, 0, 1)
     rgba = np.ones((s, s, 4))
@@ -357,7 +359,7 @@ def bake_face(mats):
     scene.world = world
     # Bake hot: the lens should clip to white across most of its area, the
     # LED structure surviving only as a faint pattern, the frame dark.
-    mats["lens"].node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = 1.35
+    mats["lens"].node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = 1.0
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
     scene.render.image_settings.color_depth = "8"

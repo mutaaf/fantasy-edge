@@ -110,27 +110,27 @@
       "path": "actors/lighting/env/tabletop_room_specular_r80.exr"
     },
     {
-      "bytes": 542720,
+      "bytes": 532684,
       "path": "actors/lighting/light_bank_far.glb"
     },
     {
-      "bytes": 481476,
+      "bytes": 471440,
       "path": "actors/lighting/light_bank_far.usdz"
     },
     {
-      "bytes": 666732,
+      "bytes": 665164,
       "path": "actors/lighting/light_bank_hero.glb"
     },
     {
-      "bytes": 560831,
+      "bytes": 559262,
       "path": "actors/lighting/light_bank_hero.usdz"
     },
     {
-      "bytes": 180636,
+      "bytes": 179068,
       "path": "actors/lighting/light_bank_near.glb"
     },
     {
-      "bytes": 170492,
+      "bytes": 168918,
       "path": "actors/lighting/light_bank_near.usdz"
     },
     {
@@ -140,6 +140,10 @@
     {
       "bytes": 290623,
       "path": "actors/lighting/textures/beam_cone.png"
+    },
+    {
+      "bytes": 60389,
+      "path": "actors/lighting/textures/beam_dust.png"
     },
     {
       "bytes": 206352,
@@ -154,7 +158,7 @@
       "path": "actors/lighting/textures/bloom_card.png"
     },
     {
-      "bytes": 103772,
+      "bytes": 102202,
       "path": "actors/lighting/textures/emitter_lens.png"
     },
     {
@@ -174,7 +178,7 @@
       "path": "actors/lighting/textures/haze_layer.png"
     },
     {
-      "bytes": 474916,
+      "bytes": 464880,
       "path": "actors/lighting/textures/lamp_bank_face.png"
     },
     {
@@ -186,15 +190,19 @@
       "path": "actors/lighting/textures/shadow_multi.png"
     },
     {
+      "bytes": 70605,
+      "path": "actors/lighting/textures/spill_card.png"
+    },
+    {
       "bytes": 0,
       "path": "actors/sky/.gitkeep"
     },
     {
-      "bytes": 1458269,
+      "bytes": 1450320,
       "path": "actors/sky/env/sky_dusk.exr"
     },
     {
-      "bytes": 1539312,
+      "bytes": 1387391,
       "path": "actors/sky/env/sky_night.exr"
     },
     {
@@ -206,11 +214,11 @@
       "path": "actors/sky/textures/sky_clouds.png"
     },
     {
-      "bytes": 2539907,
+      "bytes": 2539452,
       "path": "actors/sky/textures/sky_dusk.png"
     },
     {
-      "bytes": 2530971,
+      "bytes": 2485914,
       "path": "actors/sky/textures/sky_night.png"
     }
   ],

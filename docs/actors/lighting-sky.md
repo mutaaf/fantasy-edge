@@ -53,6 +53,68 @@ Remaining critique, ranked:
 3. Beams are uniform shafts; they want the scrolling dust (`beam_noise.png`), which a Shader Graph material would allow. UnlitMaterial can't scroll.
 4. There are no field shadows from the goal posts beyond the single shadow caster. The multi-shadow decal exists for Sideline to use.
 
+**It 6: art director's round (`lighting-it6`).** Each fix, and the shot that shows it:
+- **Sky:** navy toward the zenith, city glow pulled down to the horizon
+  (falloff 14 per radian of elevation, was 7), and fewer stars that are
+  smaller and sharper. The warm light dome is down from 0.32 to 0.2 opacity.
+  The night no longer reads grey-brown (`s-rim-far`).
+- **Grey veil:** the haze sheets left the open sky. They are now rings at
+  bank height (40 and 52 yd up) over the rim, 38 to 78 yd out. Gone in every
+  shot.
+- **Spill:** a new seat-facing glow layer (78×40 yd card, 16 yd below and
+  10 yd in front of each bank) lies over the upper seats. The rows under the
+  banks now read as floodlit (`s-rim-far`, `s-strobe`).
+- **Lens:** a lower diffuse floor so only the LED cores reach full value, with
+  gains set to 1.0. The grid survives at distance and the face bake shows it.
+- **Beam dust:** a second quad set tiles `beam_dust.png` along each beam and
+  scrolls it with `UnlitMaterial.textureCoordinateTransform.offset`, updated
+  every 0.1 s and held still under reduce motion. **This is the fallback:**
+  visionOS has no CustomMaterial, and a Shader Graph `.usda` needs a Reality
+  Composer Pro package that a headless build can't author or verify. Beam
+  opacity is now 0.42 and dust 0.22; the beams read as shafts in haze
+  (`s-rim-left`). The motion is unverified; the shots are stills.
+- **Near turf:** the four floods alternate their aim between z +14 and −4
+  yards instead of the centre line. The near half evens up with the far half
+  (`s-rim-far`).
+- **Budget:** lighting is 11 parts and 9.3k triangles; overdraw is still
+  capped at 2.0 screens.
+
+## Contract for Sideline: prop shadows
+
+Only one spot light casts real shadows (the budget allows one), so goal posts,
+benches, pylons and chains need faked floodlight shadows. Lighting provides the
+decal; Sideline places and owns it.
+
+- **Texture:** `visual.lighting.response.propShadowDecal`
+  (`actors/lighting/textures/shadow_multi.png`, 512²). RGB is black and alpha
+  is the shadow: four soft lobes at 35°/145°/215°/325°, one per light-bank
+  quadrant, plus a contact core. Its alpha is already capped at 0.7.
+- **Placement:** a quad lying on the turf, centred on the prop's footprint,
+  about 3× the footprint across (goal-post base: 3 yd; pylon: 0.5 yd). Put it
+  at `field.lines.lift / 2` so it sits under the paint, in `StadiumLook.groundSort`.
+- **Material:** a PBR or unlit transparent material with black tint and the
+  decal as opacity. Don't write depth. Don't use additive blending; shadows
+  subtract light.
+- **Orientation:** lobe 0 (35°) points toward scene +x, −z; yaw the quad so
+  the lobes line up with the rim banks' quadrants. Banks stand all round, so any
+  yaw works, but keep one yaw for every prop.
+- **Strength:** multiply alpha by `visual.lighting.response.bowlContactAO`
+  (0.55) so props and seats share one level of occlusion.
+- **Seat risers:** `response.riserAO` (`ao_riser.png`) is for Bowl, not
+  Sideline. V runs from the tread's back corner (0) to the next riser (1) and
+  tiles along U.
+
+Lighting won't draw these itself: a decal Lighting placed could not follow a
+prop Sideline moves.
+
+## Out of scope, noted for other actors
+
+- **Crowd:** the foreground fans in the rows directly in front of the seat
+  render pixelated and blocky (`s-rim-far`, `s-strobe`, `s-endzone`).
+- **Broadcast (Wave 2):** the win-probability labels
+  ("WIN PROBABILITY", "MIN", "CHI") float in the open sky with no panel behind
+  them, so they read as stray text over the stars.
+
 ## Budget, measured (stadium, `-stadiumStats`)
 
 | Actor | Draw parts | Triangles | Lights | Budget |

@@ -192,6 +192,7 @@ extension SceneSpec {
             public let tabletopLumens: Double
             public let tabletopReach: Double
             public let color: String
+            public let aimZ: [Double]
         }
 
         public struct Rim: Decodable, Equatable, Sendable {
@@ -224,6 +225,10 @@ extension SceneSpec {
             public let bloomOpacity: Double
             public let liftYards: Double
             public let color: String
+            public let spillYards: [Double]
+            public let spillForwardYards: Double
+            public let spillDropYards: Double
+            public let spillOpacity: Double
         }
 
         public struct LightingBeams: Decodable, Equatable, Sendable {
@@ -235,6 +240,9 @@ extension SceneSpec {
             public let opacity: PerMode<Double>
             public let color: String
             public let overdrawCapScreens: Double
+            public let dustOpacity: PerMode<Double>
+            public let dustTileYards: Double
+            public let dustScrollPerSecond: Double
         }
 
         public struct LightingHaze: Decodable, Equatable, Sendable {

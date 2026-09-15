@@ -36,6 +36,13 @@ final class LightingActor: StadiumActor {
     private var glowLayers: [ModelEntity] = []   // stadium: merged, seat-facing
     private var billboards: [ModelEntity] = []   // tabletop: one per glow
     private var beams: ModelEntity?
+    /// Dust drifting through the beams: the same quads, a tiling texture,
+    /// its offset moved along the beam a few times a second. UnlitMaterial's
+    /// texture transform (visionOS 2) rather than a Shader Graph, which a
+    /// headless build cannot author; the ports scroll a UV offset the same way.
+    private var dust: ModelEntity?
+    private var dustOffset: Float = 0
+    private var dustTick: Double = 0
     private var glowSeat: SIMD3<Float>?
     private var applied = (gain: -1.0, wash: -1.0, away: false)
 
@@ -45,7 +52,7 @@ final class LightingActor: StadiumActor {
 
     func build(_ c: StadiumContext) {
         clear()
-        lenses = nil; faces = nil; beams = nil
+        lenses = nil; faces = nil; beams = nil; dust = nil
         glowLayers.removeAll(); billboards.removeAll()
         glowSeat = nil
         applied = (-1, -1, false)
@@ -189,7 +196,18 @@ final class LightingActor: StadiumActor {
 
     // MARK: glow
 
-    private struct GlowLayer { let key: String; let size: Float; let opacity: Double }
+    /// A seat-facing card per bank: `size` wide and tall, centred `forward`
+    /// yards toward the field and `drop` yards below the bank.
+    private struct GlowLayer {
+        let key: String; let size: SIMD2<Float>; let opacity: Double
+        var forward: Float = 0; var drop: Float = 0
+        init(key: String, size: Float, opacity: Double) {
+            self.key = key; self.size = SIMD2(size, size); self.opacity = opacity
+        }
+        init(key: String, size: SIMD2<Float>, opacity: Double, forward: Float, drop: Float) {
+            self.key = key; self.size = size; self.opacity = opacity; self.forward = forward; self.drop = drop
+        }
+    }
 
     private func layers(_ c: StadiumContext) -> [GlowLayer] {
         let G = c.look.lighting.glow, t = c.tabletop
@@ -198,7 +216,13 @@ final class LightingActor: StadiumActor {
         if t {
             return [GlowLayer(key: "lighting.glowHalo", size: Float(G.haloYards.value(tabletop: t)), opacity: G.haloOpacity)]
         }
-        return [GlowLayer(key: "lighting.bloom", size: Float(G.bloomYards.value(tabletop: t)), opacity: G.bloomOpacity),
+        // The spill: the banks' light lying on the seats just below and in
+        // front of them. Without it a bank glows in the air over stands that
+        // look unlit, which is the tell of a stadium lit by stickers.
+        let spill = GlowLayer(key: "lighting.spill", size: SIMD2(Float(G.spillYards[0]), Float(G.spillYards[1])),
+                              opacity: G.spillOpacity, forward: Float(G.spillForwardYards), drop: Float(G.spillDropYards))
+        return [spill,
+                GlowLayer(key: "lighting.bloom", size: Float(G.bloomYards.value(tabletop: t)), opacity: G.bloomOpacity),
                 GlowLayer(key: "lighting.glowHalo", size: Float(G.haloYards.value(tabletop: t)), opacity: G.haloOpacity),
                 GlowLayer(key: "lighting.glowCore", size: Float(G.coreYards.value(tabletop: t)), opacity: G.coreOpacity)]
     }
@@ -214,7 +238,7 @@ final class LightingActor: StadiumActor {
             for layer in layers(c) {
                 let material = StadiumLook.glow(G.color, opacity: layer.opacity, texture: c.assets.texture(layer.key))
                 for bank in banks where bank.front {
-                    let g = ModelEntity(mesh: .generatePlane(width: layer.size, height: layer.size), materials: [material])
+                    let g = ModelEntity(mesh: .generatePlane(width: layer.size.x, height: layer.size.y), materials: [material])
                     g.name = "rim.glow"
                     g.position = glowCentre(bank, c)
                     g.components.set(BillboardComponent())
@@ -240,12 +264,12 @@ final class LightingActor: StadiumActor {
         for (layer, entity) in zip(layers(c), glowLayers) {
             var mesh = MeshBuilder()
             for bank in banks {
-                let centre = glowCentre(bank, c)
+                let centre = glowCentre(bank, c) + bank.facing * layer.forward - SIMD3(0, layer.drop, 0)
                 let toSeat = simd_normalize(seat - centre)
                 var right = simd_cross(SIMD3<Float>(0, 1, 0), toSeat)
                 right = simd_length(right) < 1e-4 ? SIMD3(1, 0, 0) : simd_normalize(right)
                 let up = simd_cross(toSeat, right)
-                let r = right * layer.size / 2, u = up * layer.size / 2
+                let r = right * layer.size.x / 2, u = up * layer.size.y / 2
                 mesh.quad(centre - r - u, centre + r - u, centre + r + u, centre - r + u, normal: toSeat)
             }
             let material = StadiumLook.glow(c.look.lighting.glow.color, opacity: layer.opacity,
@@ -300,7 +324,8 @@ final class LightingActor: StadiumActor {
             kept.append(b)
             screens += b.cover
         }
-        var mesh = MeshBuilder()
+        var mesh = MeshBuilder(), dustMesh = MeshBuilder()
+        let dustTile = Float(max(1, Bm.dustTileYards))
         for b in kept {
             let axis = simd_normalize(b.to - b.from)
             var a = simd_cross(axis, SIMD3<Float>(0, 1, 0))
@@ -311,6 +336,8 @@ final class LightingActor: StadiumActor {
                 let p2 = b.to + across * b.w1 / 2, p3 = b.to - across * b.w1 / 2
                 // v = 1 at the lamp: the beam texture's top row is the throat.
                 mesh.quad(p0, p1, p2, p3, uv: (SIMD2(0, 1), SIMD2(1, 1), SIMD2(1, 0), SIMD2(0, 0)))
+                let v = simd_distance(b.from, b.to) / dustTile
+                dustMesh.quad(p0, p1, p2, p3, uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, v), SIMD2(0, v)))
             }
         }
         StadiumLog.log.notice("[stadium] lighting beams \(kept.count)/\(all.count), overdraw ≈ \(String(format: "%.2f", screens)) screens (cap \(Bm.overdrawCapScreens))")
@@ -318,6 +345,19 @@ final class LightingActor: StadiumActor {
         let e = mesh.entity("rim.beams", beamMaterial(c, gain: 1, tint: nil))
         root.addChild(e)
         beams = e
+        if c.assets.texture("lighting.beamDust") != nil, !dustMesh.isEmpty {
+            let d = dustMesh.entity("rim.beamDust", dustMaterial(c, gain: 1, tint: nil))
+            root.addChild(d)
+            dust = d
+        }
+    }
+
+    private func dustMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
+        let Bm = c.look.lighting.beams
+        var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * gain,
+                                 texture: c.assets.texture("lighting.beamDust"), tile: true)
+        m.textureCoordinateTransform.offset = SIMD2(0, dustOffset)
+        return m
     }
 
     private func beamMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
@@ -369,7 +409,11 @@ final class LightingActor: StadiumActor {
             let e = Entity()
             e.name = "flood.\(i)"
             e.position = bank.position
-            e.look(at: SIMD3(0, 0, 0), from: bank.position, relativeTo: nil)
+            // The banks stand on the far side; aimed at the centre line they
+            // leave the near half a stop dark. Alternate aim depths across the
+            // floods (visual.lighting.flood.aimZ) so both halves read even.
+            let aimZ = flood.aimZ.isEmpty ? 0 : Float(flood.aimZ[i % flood.aimZ.count])
+            e.look(at: SIMD3(0, 0, aimZ), from: bank.position, relativeTo: nil)
             var spot = SpotLightComponent(color: StadiumLook.color(flood.color),
                                           intensity: Float(t ? flood.tabletopLumens : flood.lumens),
                                           innerAngleInDegrees: Float(flood.innerDegrees),
@@ -386,6 +430,13 @@ final class LightingActor: StadiumActor {
 
     /// Strobe and wash, and relaying the glow when the wearer changes seat.
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
+        var dustMoved = false
+        if dust != nil, !c.reduceMotion, frame.time - dustTick >= 0.1 {
+            dustOffset = (dustOffset - Float(c.look.lighting.beams.dustScrollPerSecond * (frame.time - dustTick)))
+                .truncatingRemainder(dividingBy: 1)
+            dustTick = frame.time
+            dustMoved = true
+        }
         if !c.tabletop, let seat = c.shared.seat, glowSeat.map({ simd_distance($0, seat) > 0.5 }) ?? true {
             relayGlows(c, seat: seat)
             applied = (-1, -1, false)
@@ -403,7 +454,13 @@ final class LightingActor: StadiumActor {
             away = surge.away
         }
         let gain = (pulse * 20).rounded() / 20
-        guard gain != applied.gain || wash != applied.wash || away != applied.away else { return }
+        let changed = gain != applied.gain || wash != applied.wash || away != applied.away
+        if dustMoved && !changed {
+            let tint = applied.wash > 0 ? Self.mix(c.look.lighting.beams.color, applied.away ? c.spec.bowl.crowd.away : c.spec.bowl.crowd.home,
+                                                   c.look.lighting.wash.beamTint) : nil
+            dust?.model?.materials = [dustMaterial(c, gain: 1 + (c.look.lighting.strobe.beamGain - 1) * applied.gain, tint: tint)]
+        }
+        guard changed else { return }
         applied = (gain, wash, away)
 
         let W = c.look.lighting.wash, G = c.look.lighting.glow
@@ -421,6 +478,7 @@ final class LightingActor: StadiumActor {
         }
         let beamColour = wash > 0 ? Self.mix(c.look.lighting.beams.color, chip, W.beamTint) : nil
         beams?.model?.materials = [beamMaterial(c, gain: 1 + (S.beamGain - 1) * gain, tint: beamColour)]
+        dust?.model?.materials = [dustMaterial(c, gain: 1 + (S.beamGain - 1) * gain, tint: beamColour)]
     }
 
     private static func mix(_ a: String, _ b: String, _ t: Double) -> String {

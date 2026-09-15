@@ -147,6 +147,25 @@ def sprites():
     wisps = smoothstep(0.25, 0.9, n) * 0.7 + 0.3 * n
     save_png(out / "haze_band.png", white(band * wisps), seed=14)
 
+    # Spill: floodlight lying on the stands under a bank. Wide, flat-bottomed
+    # (the light is strongest on the rows nearest the bank, at the card's
+    # top) and fading to nothing at every edge.
+    w, h = 512, 256
+    u_, v_ = grid(w, h)
+    across = np.exp(-((u_ - 0.5) / 0.26) ** 2)
+    down = np.exp(-((v_ - 0.35) / 0.28) ** 2)
+    edge = (1 - smoothstep(0.38, 0.5, np.abs(u_ - 0.5))) * (1 - smoothstep(0.38, 0.5, np.abs(v_ - 0.5)))
+    save_png(out / "spill_card.png", white(across * down * edge), seed=15)
+
+    # Beam dust: tiles along V (the beam's length), soft Gaussian across U so
+    # the drifting motes stay inside the shaft. Streaky and sparse.
+    w, h = 128, 512
+    u_, v_ = grid(w, h)
+    motes = value_noise(w, h, 24, 96, 81) ** 6 * 3.0
+    drift = fbm(w, h, 4, 8, 4, 82)
+    across = np.exp(-((u_ - 0.5) / 0.2) ** 2) * (1 - smoothstep(0.4, 0.5, np.abs(u_ - 0.5)))
+    save_png(out / "beam_dust.png", white(np.clip((0.35 * drift + motes) * across, 0, 1)), seed=16)
+
     # Moths: eight frames of a wingbeat, lit from behind (bright edges,
     # dark body), 64 px each. A handful drift in the throat of a beam.
     fw, frames = 64, 8
@@ -215,9 +234,9 @@ def sky_image(w, h, kind, seed):
     rng = np.random.default_rng(seed)
 
     if kind == "night":
-        zenith = np.array([0.0030, 0.0042, 0.0085])
-        horizon = np.array([0.018, 0.019, 0.024])
-        pollute = np.array([0.070, 0.047, 0.026])     # sodium and LED mix, warm
+        zenith = np.array([0.0016, 0.0032, 0.0135])   # navy at 6x display exposure
+        horizon = np.array([0.0080, 0.0105, 0.0200])
+        pollute = np.array([0.040, 0.028, 0.017])     # sodium and LED mix, kept to the horizon
     else:
         zenith = np.array([0.012, 0.024, 0.075])
         horizon = np.array([0.30, 0.16, 0.10])
@@ -229,7 +248,7 @@ def sky_image(w, h, kind, seed):
     # Light pollution: a city glow that is stronger in two directions, so
     # the horizon is not a uniform ring.
     city = 0.55 + 0.45 * np.cos(ph - 0.9) ** 8 + 0.25 * np.cos(ph + 2.2) ** 16
-    img += pollute * (np.exp(-up * 7.0) * city)[..., None]
+    img += pollute * (np.exp(-up * 14.0) * city)[..., None]
 
     if kind == "dusk":
         sun_az = 2.4
@@ -240,7 +259,7 @@ def sky_image(w, h, kind, seed):
 
     # Stars: magnitude-weighted, dimmed by extinction near the horizon and
     # drowned by light pollution; very few at dusk.
-    count = 2600 if kind == "night" else 260
+    count = 1800 if kind == "night" else 200
     su = rng.random(count)
     sv = np.arcsin(rng.random(count))                  # uniform over the upper hemisphere
     mag = rng.random(count) ** 7
@@ -252,14 +271,14 @@ def sky_image(w, h, kind, seed):
         if cy < 1 or cy > h * 0.5 - 2:
             continue
         ext = math.sin(sv[i]) ** 0.8
-        b = (0.10 + 6.0 * mag[i]) * ext * 0.10
+        b = (0.05 + 5.0 * mag[i]) * ext * 0.12
         col = np.array([1.0, 0.95, 0.9]) if temp[i] < 0.6 else np.array([0.85, 0.9, 1.0])
         x0, y0 = int(cx), int(cy)
         for oy in (-1, 0, 1):
             for ox in (-1, 0, 1):
                 xx, yy = (x0 + ox) % w, y0 + oy
                 if 0 <= yy < h:
-                    wgt = math.exp(-((xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2) / 0.35)
+                    wgt = math.exp(-((xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2) / 0.12)
                     stars[yy, xx] += col * b * wgt
     haze_mask = np.exp(-up * 5)[..., None]
     img += stars * (1 - 0.85 * haze_mask)
@@ -276,7 +295,7 @@ def sky_image(w, h, kind, seed):
     cloud *= smoothstep(0.03, 0.22, up) * (1 - smoothstep(1.25, 1.5, up))
     if kind == "night":
         cloud *= 0.55
-        under = np.array([0.020, 0.020, 0.024])
+        under = np.array([0.009, 0.010, 0.015])
         overhead = np.exp(-((np.pi / 2 - up) / 0.45) ** 2)[..., None] * np.array([0.020, 0.017, 0.013])
     else:
         under = np.array([0.30, 0.15, 0.11])
