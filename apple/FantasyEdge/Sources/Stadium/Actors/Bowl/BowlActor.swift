@@ -160,6 +160,11 @@ final class BowlActor: StadiumActor {
                         pbr.emissiveColor = .init(color: lift)
                         pbr.emissiveIntensity = Float(B.nearLift)
                     }
+                } else if inNear && n.contains("near_deck") {
+                    // Treads and risers under the foreground seats sit in the
+                    // crowd's shadow; a low self-light keeps them concrete, not void.
+                    pbr.emissiveColor = .init(color: StadiumLook.color(B.nearDeckColor))
+                    pbr.emissiveIntensity = Float(B.nearDeckLift)
                 } else if inNear && (n.contains("plaque") || n.contains("stair") || n.contains("seat_hardware")) {
                     pbr.emissiveColor = .init(color: .init(white: 0.55, alpha: 1))
                     pbr.emissiveIntensity = Float(B.nearLift)

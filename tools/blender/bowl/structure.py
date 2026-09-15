@@ -66,6 +66,8 @@ def materials():
         "band": C.material("bowl_seat_band", color=(0.03, 0.05, 0.14, 1), albedo="seat_band_albedo.png", roughness=0.92,
                            double_sided=True),
         "stair": C.material("bowl_stair", albedo="stair_albedo.jpg", roughness=0.85, color=(1, 1, 1, 1)),
+        # Concrete under the foreground seats; the actor adds visual.bowl.nearDeckLift.
+        "deck": C.material("bowl_near_deck", albedo="stair_albedo.jpg", roughness=0.9, color=(1, 1, 1, 1)),
         "seat_plastic": SEAT.materials()["seat_plastic"],
         "seat_hardware": SEAT.materials()["seat_hardware"],
         "steplight": C.material("bowl_step_light", color=(0, 0, 0, 1), emission="interiors_emission.jpg",
@@ -880,6 +882,13 @@ def near_patch(reg) -> C.Builder:
                           pt(f - 0.02, ta, tr + 0.012)), nin, "stair", ((u0, 0.02), (u1, 0.02), (u1, 0.16), (u0, 0.16)))
                 oquad(b, (pt(f - 0.02, ta, tr + 0.012), pt(f - 0.02, tb, tr + 0.012), pt(f + 0.07, tb, tr + 0.012),
                           pt(f + 0.07, ta, tr + 0.012)), (0, 1, 0), "stair", ((u0, 0.05), (u1, 0.05), (u1, 0.15), (u0, 0.15)))
+                # The tread and riser under the chairs around the wearer, as their
+                # own lit surfaces: under a sold-out row the shared stands are in
+                # the fans' shadow and read as a void (integration-7).
+                oquad(b, (pt(f + 0.07, ta, tr + 0.006), pt(f + 0.07, tb, tr + 0.006), pt(bk - 0.01, tb, tr + 0.006),
+                          pt(bk - 0.01, ta, tr + 0.006)), (0, 1, 0), "deck", ((u0, 0.45), (u1, 0.45), (u1, 0.95), (u0, 0.95)))
+                oquad(b, (pt(f - 0.015, ta, rw["riserFrom"]), pt(f - 0.015, tb, rw["riserFrom"]), pt(f - 0.015, tb, tr - 0.06),
+                          pt(f - 0.015, ta, tr - 0.06)), nin, "deck", ((u0, 0.5), (u1, 0.5), (u1, 0.9), (u0, 0.9)))
         # seats: chairs near the wearer, bands beyond
         for s0, s1 in stretches:
             lo, hi = max(s0, s_lo), min(s1, s_hi)
