@@ -747,8 +747,8 @@
     },
     "medical_tent": {
       "dimensionsMetres": [
-        3.044,
-        2.044,
+        3.06,
+        2.065,
         2.575
       ],
       "id": "medical_tent",
@@ -760,9 +760,10 @@
           ],
           "meshes": [
             "medical_tent__prop_steel",
-            "medical_tent__tint_team_secondary"
+            "medical_tent__prop_white",
+            "medical_tent__tint_team_primary"
           ],
-          "triangles": 166
+          "triangles": 238
         },
         "1": {
           "files": [
@@ -771,9 +772,10 @@
           ],
           "meshes": [
             "medical_tent__prop_steel",
-            "medical_tent__tint_team_secondary"
+            "medical_tent__prop_white",
+            "medical_tent__tint_team_primary"
           ],
-          "triangles": 74
+          "triangles": 106
         },
         "2": {
           "files": [
@@ -782,14 +784,16 @@
           ],
           "meshes": [
             "medical_tent__prop_steel",
-            "medical_tent__tint_team_secondary"
+            "medical_tent__prop_white",
+            "medical_tent__tint_team_primary"
           ],
-          "triangles": 15
+          "triangles": 18
         }
       },
       "materials": [
         "prop_steel",
-        "tint_team_secondary"
+        "prop_white",
+        "tint_team_primary"
       ]
     },
     "penalty_flag": {

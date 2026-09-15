@@ -434,9 +434,13 @@ def cooler_station():
 
 
 def medical_tent():
-    """A pop-up sideline medical tent, 3 x 2 m, sides down, blue."""
-    canvas = mat("tint_team_secondary_tent", "#1C3E77", 0.8)
-    frame = mat("prop_tent_frame", "#A8ADB3", 0.35, 0.8)
+    """A pop-up sideline medical tent, 3 x 2 m, sides down: neutral white
+    canvas, as real ones are, with only a valance trim and a cross panel on
+    the field side in the club's colour. Canvas shares the white palette
+    entry and the trim the club's, so the tent adds no draw part."""
+    canvas = mat("prop_white")
+    frame = mat("prop_steel")
+    trim = mat("tint_team_primary")
     w, d, h = 3.0, 2.0, 2.0
     objs = [box((w, 0.02, h), (0, -d / 2, h / 2), canvas), box((w, 0.02, h), (0, d / 2, h / 2), canvas),
             box((0.02, d, h), (-w / 2, 0, h / 2), canvas), box((0.02, d, h), (w / 2, 0, h / 2), canvas)]
@@ -446,6 +450,13 @@ def medical_tent():
                      [], [(0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4), (3, 2, 1, 0)])
     roof = bpy.data.objects.new("roof", mesh)
     objs.append(_link(roof, canvas))
+    # valance: a 0.22 m band under the roof edge, all round, just proud of the walls
+    v = 0.22
+    for (sx, sy, lx, ly) in ((0, -1, w + 0.04, 0.03), (0, 1, w + 0.04, 0.03), (-1, 0, 0.03, d + 0.04), (1, 0, 0.03, d + 0.04)):
+        objs.append(box((lx, ly, v), (sx * (w / 2 + 0.015), sy * (d / 2 + 0.015), h - v / 2), trim))
+    # a cross on the field-facing wall (+Y), in the club's colour
+    objs.append(box((0.50, 0.03, 0.14), (0, d / 2 + 0.02, h * 0.55), trim))
+    objs.append(box((0.14, 0.03, 0.50), (0, d / 2 + 0.02, h * 0.55), trim))
     for sx in (-1, 1):
         for sy in (-1, 1):
             objs.append(cylinder(0.022, h + 0.05, (sx * w / 2, sy * d / 2, h / 2), frame, verts=8))
