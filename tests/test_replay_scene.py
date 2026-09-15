@@ -627,7 +627,8 @@ class TestSceneGeometry(unittest.TestCase):
             src = (root / "tools/blender/field/shadergraph" / usda).read_text()
             # the material's own inputs sit at eight spaces; node inputs are deeper
             declared = set(re.findall(r"^ {8}(?:float|color3f) inputs:(\w+) =", src, re.M))
-            runtime = ({"Color", "UseMask"} if key == "paintMaterial" else
+            runtime = ({"Color", "UseMask", "Roughness", "BorderColor", "BorderRoughness", "BorderGrassCut",
+                        "HalfWidth", "HalfLength"} if key == "paintMaterial" else
                        {"PatchX0", "PatchX1", "PatchZ0", "PatchZ1", "PatchFade"} if key == "shells.material" else set())
             self.assertEqual(declared - set(entry["parameters"]) - runtime, set(), f"{usda} inputs the tokens do not set")
             self.assertTrue(entry["prim"].endswith("/" + usda.split("/")[-1][:-5]))
@@ -637,6 +638,24 @@ class TestSceneGeometry(unittest.TestCase):
         breakup = root / "assets" / self.final["visual"]["field"]["shaderTextures"]["breakup"]
         self.assertTrue(breakup.is_file())
         self.assertLess(breakup.stat().st_size, 1_000_000)
+
+    def test_field_paint_is_paint_not_white(self):
+        """Under the field floods pure white albedo reads as a flat grey slab.
+        Painted lines sit at field-paint albedo (0.75-0.85 sRGB), the border a
+        touch darker, and the border is duller than any grass so it never
+        catches a specular highlight, with more grass let through it."""
+        def srgb(h):
+            h = h.lstrip("#")
+            return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        p = self.final["visual"]["field"]["paint"]
+        for key in ("white", "border"):
+            for ch in srgb(p[key]):
+                self.assertGreaterEqual(ch, 0.70, key)
+                self.assertLessEqual(ch, 0.85, key)
+        self.assertLessEqual(max(srgb(p["border"])), max(srgb(p["white"])))
+        turf = self.final["visual"]["field"]["turf"]
+        self.assertGreaterEqual(p["borderRoughness"], max(turf["stripeRoughness"]))
+        self.assertGreater(p["borderGrassCut"], self.final["shaderGraph"]["materials"]["fieldPaint"]["parameters"]["GrassCut"])
 
     def test_pylons_stand_where_each_book_puts_them(self):
         """NFL: the four goal-line corners and two on each end line at the
