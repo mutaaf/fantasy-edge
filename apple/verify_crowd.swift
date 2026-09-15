@@ -56,6 +56,31 @@ struct VerifyCrowd {
                         }
                     }
                 }
+                // Near slots with the ripple and the staged rise: the scored-on side never shows a
+                // celebrating slot; the scoring side is up by its delay plus two stages.
+                for groupAway in [false, true] {
+                    let isScoring = (scorer == "away") == groupAway
+                    for delay in [0.0, 0.4, 1.2] {
+                        for look in [-1, 0, 1] {
+                            for t in stride(from: 0.0, through: 6.0, by: 0.05) {
+                                let input = C.Input(away: groupAway, phase: 0.3, time: 10 + t, tintSide: scorer,
+                                                    surgeAway: scorer == "away", momentStarted: 10, delay: delay,
+                                                    riseStageSeconds: 0.35, look: look)
+                                let slot = C.slot(input)
+                                checks += 1
+                                if !isScoring && C.celebrates(slot) {
+                                    failures.append("\(kind) by \(scorer): scored-on near group showed \(slot.rawValue) at t=\(t)")
+                                }
+                                if isScoring && t < delay && C.celebrates(slot) {
+                                    failures.append("\(kind) by \(scorer): celebrated at t=\(t) before its ripple delay \(delay)")
+                                }
+                                if isScoring && t >= delay + 0.75 && !C.celebrates(slot) {
+                                    failures.append("\(kind) by \(scorer): still seated (\(slot.rawValue)) at t=\(t), delay \(delay)")
+                                }
+                            }
+                        }
+                    }
+                }
                 checks += 1
                 if scoringFrames == 0 || Double(scoringCelebrated) / Double(scoringFrames) < 0.9 {
                     failures.append("\(kind) by \(scorer): the scoring side celebrated on only \(scoringCelebrated)/\(scoringFrames) frames")

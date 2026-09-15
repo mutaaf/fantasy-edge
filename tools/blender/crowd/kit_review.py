@@ -49,6 +49,9 @@ def main():
         if o.type == "MESH" and o not in poses[:12]:
             o.hide_render = True
     for i, o in enumerate(poses[:12]):
+        # Frozen poses carry transferred custom normals: shade smooth so a review shows them.
+        for poly in o.data.polygons:
+            poly.use_smooth = True
         o.data.materials.clear(); o.data.materials.append(mat)
         col, row = i % 6, i // 6
         o.location = ((col - 2.5) * 0.9, row * 1.1, row * 0.55)

@@ -245,6 +245,43 @@ struct VerifyScene {
             }
         }
 
+        // ---- the crowd faces the field ----
+        // Every seat, placed the way CrowdActor places a kit fan (CrowdFacing), must look
+        // toward the field. The kit's forward axis comes from its manifest, where build.py
+        // records what it measured in each exported file: in round 3 the headset's USDZ
+        // faced -Z while its glTF twin faced +Z, and every near fan sat facing its chair back.
+        if let seating = spec.bowl.seating {
+            var fansChecked = 0
+            for tier in seating.tiers {
+                for row in tier.rows {
+                    let ring = SceneMath.Ring(spec.bowl.shape, offset: row.feet)
+                    for (run, span) in row.runs.enumerated() where span.count == 2 {
+                        for k in stride(from: 0, to: Int(span[1]), by: 5) {
+                            let got = SceneMath.seat(row, run: run, k: k, shape: spec.bowl.shape, ring: ring)
+                            let facing = SIMD3<Float>(Float(got.facing.x), 0, Float(got.facing.y))
+                            let looks = CrowdFacing.placedForward(facing: facing)
+                            let toField = simd_normalize(SIMD3<Float>(-got.position.x, 0, -got.position.z))
+                            fansChecked += 1
+                            expect(simd_dot(looks, toField) > 0.2,
+                                   "\(name): a fan in \(tier.tier) row \(row.row) seat \(k) would look \(looks), away from the field \(toField)")
+                        }
+                    }
+                }
+            }
+            expect(fansChecked > 1000, "\(name): only \(fansChecked) seats checked for facing")
+        }
+        struct KitManifest: Decodable { let forward: [String: String]? }
+        if let blob = FileManager.default.contents(atPath: "assets/actors/crowd/manifest.json"),
+           let kit = try? JSONDecoder().decode(KitManifest.self, from: blob) {
+            let files = (kit.forward ?? [:]).filter { $0.key != "about" }
+            expect(files.count == 6, "the crowd kit's manifest should record the measured forward of all six pose files, has \(files.keys.sorted())")
+            for (file, axis) in files {
+                expect(axis == "+Z", "the crowd kit's \(file) faces \(axis): CrowdFacing turns +Z onto the seat, so those fans sit backwards")
+            }
+        } else {
+            expect(false, "run verify_scene from the repository root: assets/actors/crowd/manifest.json not found")
+        }
+
         // ---- the ball's queue ----
         if let drive = spec.shownDrive, drive.arcs.count > 2 {
             var motion = PlayMotion()

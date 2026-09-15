@@ -31,13 +31,15 @@ POSES: dict[str, dict] = {
                 **LEGS_STAND, "thigh.L": (0.06, 0, -1), "thigh.R": (0.02, 0, -1),
                 "upperarm.L": (0.24, -0.35, -1), "forearm.L": (-1, -0.45, 0.12), "hand.L": (-1, -0.2, 0.1),
                 "upperarm.R": (-0.24, -0.38, -1), "forearm.R": (1, -0.5, 0.2), "hand.R": (1, -0.2, 0.1)}},
-    "sit": {"hips": SIT_HIPS, "dirs": {"spine": (0, 0.12, 1), "chest": (0, 0.05, 1), "neck": (0, -0.12, 1), "head": (0, -0.1, 1),
+    # Hands rest on the thighs. Held out level they floated over the rail of the row in front (round 3).
+    "sit": {"hips": SIT_HIPS, "reach": {"hand.L": ("thigh", 0.62), "hand.R": ("thigh", 0.58)},
+            "dirs": {"spine": (0, 0.12, 1), "chest": (0, 0.05, 1), "neck": (0, -0.12, 1), "head": (0, -0.1, 1),
             **LEGS_SIT, "upperarm.L": (0.12, 0.06, -1), "forearm.L": (0.06, -1, -0.35), "hand.L": (0.03, -1, -0.6)}},
-    "sit_b": {"hips": SIT_HIPS, "dirs": {"spine": (0.05, 0.02, 1), "chest": (0.02, -0.08, 1), "neck": (0.0, -0.2, 1), "head": (0.12, -0.15, 1),
+    "sit_b": {"hips": SIT_HIPS, "reach": {"hand.L": ("armrest", 0.0)}, "dirs": {"spine": (0.05, 0.02, 1), "chest": (0.02, -0.08, 1), "neck": (0.0, -0.2, 1), "head": (0.12, -0.15, 1),
               **LEGS_SIT, "thigh.R": (-0.14, -1, 0.05),
               "upperarm.L": (0.10, -0.35, -1), "forearm.L": (0.02, -1, -0.15), "hand.L": (0, -1, -0.4),
               "upperarm.R": (-0.18, -0.5, -1), "forearm.R": (0.2, -0.6, 1), "hand.R": (0.1, -0.2, 1)}},
-    "semi": {"hips": SEMI_HIPS, "dirs": {"spine": (0, -0.25, 1), "chest": (0, -0.1, 1), "neck": (0, -0.1, 1), "head": (0, 0.0, 1),
+    "semi": {"hips": SEMI_HIPS, "reach": {"hand.L": ("armrest", 0.0), "hand.R": ("armrest", 0.0)}, "dirs": {"spine": (0, -0.25, 1), "chest": (0, -0.1, 1), "neck": (0, -0.1, 1), "head": (0, 0.0, 1),
              **LEGS_SEMI, "upperarm.L": (0.35, -0.5, -0.4), "forearm.L": (0.2, -0.6, 0.6), "hand.L": (0.1, -0.3, 1)}},
     "clap_a": {"dirs": {**TORSO, **LEGS_STAND, "upperarm.L": (0.38, -0.75, -0.55), "forearm.L": (0.28, -1, 0.40), "hand.L": (0.2, -1, 0.5)}},
     "clap_b": {"dirs": {**TORSO, **LEGS_STAND, "upperarm.L": (0.14, -0.85, -0.5), "forearm.L": (-0.50, -1, 0.35), "hand.L": (-0.7, -0.8, 0.4)}},
@@ -54,6 +56,12 @@ POSES: dict[str, dict] = {
     "phone": {"dirs": {**TORSO, "head": (0, -0.12, 1), **LEGS_STAND, **ARM_DOWN,
               "upperarm.R": (-0.16, -0.78, 0.62), "forearm.R": (0.04, -0.35, 1), "hand.R": (0, -0.25, 1)}},
 }
+# Near-only stills: the rows around the wearer turn their heads to follow the
+# play and chat, and rise in stages on a score. Cards never draw these.
+POSES["sit_look_l"] = {**POSES["sit"], "twist": 38}
+POSES["sit_look_r"] = {**POSES["sit"], "twist": -38}
+POSES["rise"] = POSES["semi"]
+
 for i in range(4):
     th = i * math.pi / 2
     POSES[f"towel_{i}"] = {"dirs": {**TORSO, "head": (0, 0.08, 1), **LEGS_STAND, **ARM_DOWN,
@@ -74,13 +82,45 @@ CLIPS = {
 }
 
 IMPOSTOR_POSES = ["sit", "sit_b", "stand", "clap_a", "clap_b", "cheer_a", "cheer_b", "groan"]
+NEAR_ONLY_POSES = ["sit_look_l", "sit_look_r", "rise"]
 
 # A slot a crowd shows ("cheer_a", "clap_b") is filled per fan from a family
 # of real celebrations, so a section on its feet is not one gesture copied
 # 24 times. The frozen pose meshes and the impostor atlas both bake the
 # fan's own variant into the slot, so no renderer has to know.
 TORSO_UP = {"spine": (0, 0.03, 1), "chest": (0, 0.06, 1), "neck": (0, 0.1, 1), "head": (0, 0.16, 1)}
+SEATED = [
+    # Hands on thighs, upright.
+    {},
+    # One forearm on the armrest, the other hand on the thigh, a little slouched.
+    {"spine": (0.04, 0.18, 1), "chest": (0.03, 0.1, 1), "reach": {"hand.L": ("armrest", 0.0), "hand.R": ("thigh", 0.55)}},
+    # Elbows on knees, leaning in to watch.
+    {"spine": (0, -0.35, 1), "chest": (0, -0.45, 1), "neck": (0, -0.2, 1), "head": (0, 0.05, 1),
+     "reach": {"hand.L": ("knee", 0.0), "hand.R": ("knee", 0.0)}},
+    # Hands clasped in the lap.
+    {"spine": (0, 0.15, 1), "reach": {"hand.L": ("lap", 0.45), "hand.R": ("lap", 0.45)}},
+    # Leaning back, both forearms on the armrests.
+    {"spine": (0, 0.28, 1), "chest": (0, 0.2, 1), "neck": (0, -0.05, 1), "reach": {"hand.L": ("armrest", 0.0), "hand.R": ("armrest", 0.0)}},
+    # Weight on one hip, a hand on the far knee.
+    {"spine": (-0.1, 0.12, 1), "chest": (-0.08, 0.06, 1), "head": (0.06, -0.08, 1),
+     "reach": {"hand.L": ("thigh", 0.7), "hand.R": ("knee", 0.0)}},
+]
+STANDING = [
+    {},
+    # Weight on the left leg, hip out.
+    {"hips_shift": (0.035, 0.0, -0.01), "spine": (-0.06, 0.02, 1), "chest": (-0.03, 0.0, 1), "thigh.L": (0.0, 0, -1), "thigh.R": (-0.08, 0, -1)},
+    # Hands on hips.
+    {"reach": {"hand.L": ("hip", 0.0), "hand.R": ("hip", 0.0)}},
+    # Arms folded.
+    {"reach": {"hand.L": ("fold", 0.0), "hand.R": ("fold", 0.0)}},
+    # Weight on the right leg, one hand on the hip.
+    {"hips_shift": (-0.035, 0.0, -0.01), "spine": (0.06, 0.02, 1), "thigh.R": (0.0, 0, -1), "thigh.L": (0.08, 0, -1),
+     "reach": {"hand.R": ("hip", 0.0)}},
+]
+
 VARIANTS = {
+    "sit": SEATED, "sit_look_l": SEATED, "sit_look_r": SEATED,
+    "sit_b": SEATED[3:] + SEATED[:3], "stand": STANDING,
     "cheer_a": [
         # Arms up in a V, elbows soft, chin up.
         {**TORSO_UP, "upperarm.L": (0.55, -0.12, 0.83), "forearm.L": (0.18, -0.2, 1), "hand.L": (0.05, -0.1, 1)},
@@ -117,6 +157,10 @@ def variant_for(fan_index, pose_name):
     return family[(fan_index * 7 + 3) % len(family)]
 
 
+# Fans holding something hold it up: a foam finger resting on a thigh pointed into the row in front.
+HOLD_UP = {"upperarm.R": (-0.18, -0.45, -1), "forearm.R": (0.1, -0.55, 1), "hand.R": (0.05, -0.2, 1)}
+
+
 def _mirror(dirs: dict) -> dict:
     out = dict(dirs)
     for name, d in dirs.items():
@@ -133,7 +177,10 @@ def apply_pose(rig, pose_name: str, height: float, fan_index=None):
     With a fan index, a slot that has variants takes that fan's own.
     """
     pose = POSES[pose_name]
-    over = variant_for(fan_index, pose_name)
+    over = dict(variant_for(fan_index, pose_name))
+    reach = dict(pose.get("reach", {}))
+    reach.update(over.pop("reach", {}))
+    shift = over.pop("hips_shift", None)
     # A variant's explicit right-side bones win; its left side mirrors unless given.
     base = {k: v for k, v in pose["dirs"].items()}
     base.update({k: v for k, v in over.items() if not k.endswith(".R")})
@@ -141,7 +188,18 @@ def apply_pose(rig, pose_name: str, height: float, fan_index=None):
     dirs.update({k: v for k, v in over.items() if k.endswith(".R")})
     if rig.get("mpfb"):
         import mh
-        mh.apply_pose(rig, dirs, pose.get("hips"), height, pose_name)
+        holds = rig.get("prop", "none") in ("foam_finger", "sign", "towel")
+        if holds and pose_name.startswith("sit"):
+            dirs.update(HOLD_UP)
+            reach.pop("hand.R", None)
+        # Explicitly aimed arm bones win over a reach the base pose set.
+        for side in ("L", "R"):
+            if any(f"{b}.{side}" in over for b in ("upperarm", "forearm")):
+                reach.pop(f"hand.{side}", None)
+        hips = pose.get("hips")
+        if shift is not None:
+            hips = tuple(a + b for a, b in zip(hips or (0.0, 0.0, 0.965), shift))
+        mh.apply_pose(rig, dirs, hips, height, pose_name, reach=reach, twist=pose.get("twist", 0))
         return
     k = height / 1.75
     for pb in rig.pose.bones:

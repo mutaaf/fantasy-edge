@@ -326,13 +326,22 @@ def accessory(f: dict, J: dict[str, Vector]):
     hand = J["hand_end.R"]
     bm = bmesh.new()
     if kind == "foam_finger":
+        # Foam, not a baton: a rounded mitt the hand goes into (about 19 x 8 x 22 cm),
+        # a raised index finger 24 cm long, and a thumb. Fingers run down -Z from the grip.
         mitt = bmesh.ops.create_cube(bm, size=1.0)
         for v in mitt["verts"]:
-            v.co = Vector((v.co.x * 0.085, v.co.y * 0.04, v.co.z * 0.13)) + Vector((0, 0, -0.02))
-        finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.028, radius2=0.022, depth=0.2)
+            v.co = Vector((v.co.x * 0.19, v.co.y * 0.08, v.co.z * 0.22)) + Vector((0.0, 0.0, -0.08))
+        bmesh.ops.bevel(bm, geom=list(mitt["verts"]) + [e for e in bm.edges], offset=0.03, segments=3, affect="EDGES")
+        finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=0.036, radius2=0.03, depth=0.24)
         for v in finger["verts"]:
-            v.co += Vector((0.015, 0, -0.17))
-        origin = hand + Vector((-0.02, -0.01, -0.06)) * k
+            v.co += Vector((0.035, 0.0, -0.31))
+        tip = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=6, radius=0.03)
+        for v in tip["verts"]:
+            v.co += Vector((0.035, 0.0, -0.43))
+        thumb = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=1.0)
+        for v in thumb["verts"]:
+            v.co = Vector((v.co.x * 0.03, v.co.y * 0.03, v.co.z * 0.06)) + Vector((-0.11, -0.01, -0.12))
+        origin = hand
     elif kind == "towel":
         # Cloth, not a paddle: gathered in the fist, widening, curling as it
         # falls, and each towel-carrier's swings its own way.
@@ -352,20 +361,17 @@ def accessory(f: dict, J: dict[str, Vector]):
             v.co = Vector((w * width * math.cos(twist), w * width * math.sin(twist) + 0.01 * math.sin(w * 3), -drop)) + off
         origin = hand + Vector((0, -0.01, 0.02)) * k
     elif kind == "sign":
-        # Foam board with thickness, and a lettered face: a grid so block
-        # letters can be painted face by face (paint_prop).
+        # Poster board, 56 x 40 cm and 5 mm thick, gripped at the middle of its lower
+        # edge and standing up past the fingers; a lettered face toward the field (-Y).
         board = bmesh.ops.create_cube(bm, size=1.0)
         for v in board["verts"]:
-            v.co = Vector((v.co.x * 0.50, v.co.y * 0.022, v.co.z * 0.34)) + Vector((0, 0.013, 0.36))
+            v.co = Vector((v.co.x * 0.56, v.co.y * 0.005, v.co.z * 0.40)) + Vector((0, 0.004, -0.22))
         face = bmesh.ops.create_grid(bm, x_segments=12, y_segments=6, size=1.0)
         for v in face["verts"]:
-            v.co = Vector((v.co.x * 0.24, -0.0005, v.co.y * 0.16))
+            v.co = Vector((v.co.x * 0.26, -0.0005, v.co.y * 0.18))
             v.co = Matrix.Rotation(math.radians(90), 4, "X") @ v.co
-            v.co += Vector((0, 0.0, 0.36))
-        stick = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.008, radius2=0.008, depth=0.4)
-        for v in stick["verts"]:
-            v.co += Vector((0, 0.012, 0.12))
-        origin = hand + Vector((0, -0.02, -0.08)) * k
+            v.co += Vector((0, 0.0, -0.22))
+        origin = hand
     elif kind == "phone":
         phone = bmesh.ops.create_cube(bm, size=1.0)
         for v in phone["verts"]:
@@ -521,12 +527,13 @@ def paint_prop(ob, kind):
         if kind == "phone":
             rgb, mask = ((0.05, 0.05, 0.06), (0, 0, 0)) if p.normal.y > -0.9 else ((0.35, 0.55, 0.9), (0, 0, 0))
         elif kind == "sign":
-            c = ob.matrix_world.inverted() @ (ob.matrix_world @ p.center)
-            rgb, mask = ((0.93, 0.92, 0.88), (0, 0, 0)) if abs(p.normal.y) > 0.9 else ((0.55, 0.42, 0.28), (0, 0, 0))
-            if p.normal.y < -0.9 and len(p.vertices) == 4 and p.area < 0.002:
-                # Generic block lettering in the club colour: two lines of "letters".
-                gx = int((c.x + 0.24) / 0.48 * 12)
-                gz = int((c.z - 0.20) / 0.32 * 6)
+            # Painted in the prop's own frame (before it is moved into the hand): white board,
+            # off-white edges, and two lines of block lettering in the club colour on the front.
+            c = p.center
+            rgb, mask = ((0.93, 0.92, 0.88), (0, 0, 0)) if abs(p.normal.y) > 0.9 else ((0.84, 0.83, 0.8), (0, 0, 0))
+            if p.normal.y < -0.9 and len(p.vertices) == 4 and p.area < 0.004:
+                gx = int((c.x + 0.26) / 0.52 * 12)
+                gz = int((c.z + 0.40) / 0.36 * 6)
                 ink = (gz in (1, 4)) and (gx % 3 != 2) and 1 <= gx <= 10
                 if ink:
                     rgb, mask = TINTED, (1, 0, 0)

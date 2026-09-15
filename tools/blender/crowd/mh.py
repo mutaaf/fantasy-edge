@@ -121,7 +121,17 @@ def flat_material(name, colour=None, image=None, image_multiply=(1, 1, 1), shade
         mul = N.new("ShaderNodeMix"); mul.data_type = "RGBA"; mul.blend_type = "MULTIPLY"; mul.inputs["Factor"].default_value = 1
         mul.inputs[7].default_value = (*image_multiply, 1)
         L.new(tex.outputs["Color"], mul.inputs[6])
-        L.new(mul.outputs[2], em.inputs["Color"])
+        if alpha_image is not None:
+            # Hair is alpha cards and the stadium draws fans opaque: where a card is clear,
+            # show the shadowed depth of the hair, not the texture's colour under zero alpha
+            # (an orange lattice over the scalp in round 4's first bake).
+            deep = N.new("ShaderNodeMix"); deep.data_type = "RGBA"; deep.clamp_factor = True
+            deep.inputs[6].default_value = (*(c * 0.28 for c in image_multiply), 1)
+            L.new(tex.outputs["Alpha"], deep.inputs["Factor"])
+            L.new(mul.outputs[2], deep.inputs[7])
+            L.new(deep.outputs[2], em.inputs["Color"])
+        else:
+            L.new(mul.outputs[2], em.inputs["Color"])
     else:
         em.inputs["Color"].default_value = (*colour, 1)
         if shade_from_normal is not None:
@@ -366,6 +376,7 @@ def fitted_prop(f, bones):
     ob = F.accessory({**f, "height": 1.75}, {**F.joints({**f, "height": 1.75}), "hand_end.R": Vector((0, 0, 0))})
     if ob is None:
         return None
+    F.paint_prop(ob, ob.get("prop", ""))                 # in the prop's own frame, before it moves
     tip = bones["finger3-3.R"].tail_local
     wrist = bones["wrist.R"].head_local
     d = (tip - wrist).normalized()
@@ -389,6 +400,7 @@ def assemble(f: dict, index: int):
     base = HS.create_human(macro_detail_dict=json.loads(json.dumps(ident["macros"])), scale=0.1)
     rig = HS.add_builtin_rig(base, "default")
     rig["mpfb"] = True
+    rig["prop"] = f.get("accessory", "none")
     skin_dir = SYS / f"skins/{ident['age']}_{ident['ancestry']}_{sex}"
     HS.set_character_skin(str(next(skin_dir.glob("*.mhmat"))), base, skin_type="MAKESKIN")
     suit = SUITS[sex][(index * 5 + 1) % len(SUITS[sex])]
@@ -476,7 +488,6 @@ def assemble(f: dict, index: int):
         extras.append((sc, "spine01"))
     pr = fitted_prop(f, bones)
     if pr:
-        F.paint_prop(pr, pr.get("prop", ""))
         extras.append((pr, "wrist.R"))
     for ob, bone in extras:
         ob.data.materials.append(common.attr_material(f"{ob.name}_base", None, "none", mode="base"))
@@ -556,7 +567,87 @@ def solve_legs(rig, height, sitting_hips_z):
     return thigh, shin
 
 
-def apply_pose(rig, dirs: dict, hips, height: float, pose_name: str = ""):
+def _head(rig, name):
+    return rig.pose.bones[name].head.copy()
+
+
+def _reach_target(rig, kind, t, side, k):
+    """Where a hand rests, in armature space, read off the posed body."""
+    sx = 1 if side == "L" else -1
+    hip = _head(rig, f"upperleg01.{side}")
+    knee = _head(rig, f"lowerleg01.{side}")
+    root = _head(rig, "root")
+    if kind == "thigh":
+        # On top of the thigh: the bone runs through its middle, the hand sits on the cloth.
+        return hip.lerp(knee, t) + Vector((sx * 0.012, 0.0, 0.075 * k))
+    if kind == "knee":
+        return knee + Vector((-sx * 0.02, 0.02, 0.07 * k))
+    if kind == "lap":
+        other = "R" if side == "L" else "L"
+        mid = hip.lerp(knee, t).lerp(_head(rig, f"upperleg01.{other}").lerp(_head(rig, f"lowerleg01.{other}"), t), 0.5)
+        return mid + Vector((sx * 0.03, 0.0, 0.085 * k))
+    if kind == "armrest":
+        # Bowl's armrests sit half a seat pitch out (0.25 m), about 0.19 m over the pan, forward of the hips.
+        return Vector((sx * 0.235, root.y - 0.13, root.z + 0.17 * k))
+    if kind == "hip":
+        return Vector((sx * 0.19 * k, root.y + 0.01, root.z + 0.09 * k))
+    if kind == "fold":
+        chest = _head(rig, "spine01")
+        return Vector((-sx * 0.12 * k, chest.y - 0.16 * k, chest.z - 0.02 * k))
+    return None
+
+
+def _aim(rig, names, direction):
+    d = Vector(direction).normalized()
+    for name in names:
+        pb = rig.pose.bones[name]
+        rest = pb.bone.matrix_local
+        rest_dir = (pb.bone.tail_local - pb.bone.head_local).normalized()
+        q = rest_dir.rotation_difference(d)
+        m = q.to_matrix().to_4x4() @ rest.to_3x3().to_4x4()
+        m.translation = pb.head.copy()
+        pb.matrix = m
+        bpy.context.view_layer.update()
+
+
+def solve_arm(rig, side, target, k):
+    """Two-bone reach: upper arm and forearm lengths from the rig, the elbow
+    out to the side and a little back, the hand laid along the forearm."""
+    sx = 1 if side == "L" else -1
+    b = rig.data.bones
+    s0 = _head(rig, f"upperarm01.{side}")
+    Lu = (b[f"lowerarm01.{side}"].head_local - b[f"upperarm01.{side}"].head_local).length
+    Lf = (b[f"wrist.{side}"].head_local - b[f"lowerarm01.{side}"].head_local).length
+    to = target - s0
+    dist = min(to.length, (Lu + Lf) * 0.985)
+    to = to.normalized()
+    # Law of cosines: the elbow's angle off the shoulder-to-hand line.
+    cos_a = max(-1.0, min(1.0, (Lu * Lu + dist * dist - Lf * Lf) / (2 * Lu * dist)))
+    a = math.acos(cos_a)
+    hint = Vector((sx * 0.8, 0.35, -0.5))
+    bend = (hint - to * hint.dot(to)).normalized()
+    elbow = s0 + (to * math.cos(a) + bend * math.sin(a)) * Lu
+    hand = s0 + to * dist
+    _aim(rig, [f"upperarm01.{side}", f"upperarm02.{side}"], elbow - s0)
+    _aim(rig, [f"lowerarm01.{side}", f"lowerarm02.{side}"], hand - elbow)
+    fore = (hand - elbow).normalized()
+    _aim(rig, [f"wrist.{side}"], (fore + Vector((0, 0, -0.55))).normalized())
+
+
+def twist_upper_body(rig, degrees):
+    """Turn chest, neck and head about the vertical, parents first, so the
+    head ends up `degrees` round: positive to the fan's left."""
+    if not degrees:
+        return
+    for name, share in (("spine01", 0.2), ("neck01", 0.35), ("head", 0.45)):
+        pb = rig.pose.bones[name]
+        h = pb.head.copy()
+        R = Matrix.Translation(h) @ Matrix.Rotation(math.radians(degrees * share), 4, "Z") @ Matrix.Translation(-h)
+        pb.matrix = R @ pb.matrix
+        bpy.context.view_layer.update()
+
+
+def apply_pose(rig, dirs: dict, hips, height: float, pose_name: str = "", reach=None, twist=0):
     """Aim MPFB's chains along the kit's bone directions (armature space, -Y front)."""
     k = height / 1.75
     for pb in rig.pose.bones:
@@ -588,8 +679,15 @@ def apply_pose(rig, dirs: dict, hips, height: float, pose_name: str = ""):
         m.translation = pb.head.copy()
         pb.matrix = m
         bpy.context.view_layer.update()
-    # Hands: relaxed curl, fists on a cheer. Mouth open on a cheer. Eyes on the field.
-    curl = math.radians(62 if pose_name in FIST_POSES else 22)
+    for key, (kind, t) in (reach or {}).items():
+        side = key[-1]
+        target = _reach_target(rig, kind, t, side, k)
+        if target is not None:
+            solve_arm(rig, side, target, k)
+    twist_upper_body(rig, twist)
+    # Hands: relaxed curl, fists on a cheer, flatter where they rest on something. Mouth open on a cheer.
+    resting = bool(reach)
+    curl = math.radians(62 if pose_name in FIST_POSES else (12 if resting else 22))
     for pb in rig.pose.bones:
         if pb.name.startswith("finger") and not pb.name.startswith("finger1"):
             pb.rotation_mode = "XYZ"; pb.rotation_euler = (curl, 0, 0)

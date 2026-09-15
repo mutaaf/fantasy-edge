@@ -37,12 +37,18 @@ import rig as R
 import specs
 
 OUT = common.OUT
-LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 2400, 650, 250
+# Fewer, better near meshes (round 4): 14 x 3000 + 24 x 900 + 130 x 250 = 96.1k, inside the
+# 100k the crowd keeps for meshes beside its 50k of cards (tests/test_crowd_kit.py).
+LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 3000, 900, 250
 MESH_ATLAS = 2048                    # baked at 2x, shipped at this size
 MESH_COLS, MESH_ROWS = 6, 4          # 24 cells, 341 x 512 px each
 IMP_CELL = (64, 128)                 # px per impostor cell
 IMP_WORLD = (1.2, 2.4)               # metres a cell covers, pivot at bottom centre
 IMP_POSES = ["sit", "sit_b", "stand", "clap_b", "cheer_a", "groan"]
+NEAR_POSES = IMP_POSES + P.NEAR_ONLY_POSES      # frozen meshes only: head turns and the staged rise
+# USD's forward axis for Blender's -Y. "Z" lands a fan's front on -Z; the glTF twin's
+# export_yup and every renderer put it on +Z, so the headset seated every fan facing its chair back.
+USD_FORWARD = "NEGATIVE_Z"
 IMP_VIEWS = [0, 45, 90, 135, 180]    # yaw of the fan relative to the viewer; 225..315 mirror 135..45
 IMP_ELEVATION = 12.0                 # degrees the camera looks down on a fan
 # A far card is two neighbours, not one fan: seats are 0.55 yd (0.503 m) on
@@ -55,6 +61,9 @@ PAIR_STEP = 7                        # pair_mate(p) = (7p + 11) mod 24: a permut
 def pair_mate(p, n=24):
     return (PAIR_STEP * p + 11) % n
 BAKE_SCALE = 2
+# Island colour extended this far into every gutter (bake pixels, 2x). At 12 px the gutters stayed
+# black in the albedo and untinted in the mask, and from mip 2 down a shirt read as light squares.
+BAKE_MARGIN = 40 * BAKE_SCALE
 AO_STRENGTH = 0.6
 AO_WARM = (0.62, 0.42, 0.36)
 
@@ -135,7 +144,7 @@ def unwrap_into_cell(mesh, cell, face_z=None):
     bpy.context.view_layer.objects.active = mesh
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.004)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.01)
     bpy.ops.object.mode_set(mode="OBJECT")
     me = mesh.data
     uv = me.uv_layers.active.data
@@ -161,6 +170,70 @@ def unwrap_into_cell(mesh, cell, face_z=None):
         d.uv = (x0 + u * w, y0 + v * h)
 
 
+# Where each MakeHuman part's own UV layout goes inside a fan's atlas cell (u0, v0, w, h,
+# as fractions of the cell). Re-unwrapping a decimated body with smart_project cut it into
+# thousands of islands a few texels wide, and every mip mixed them: salmon squares on jeans,
+# pale blotches on faces. MakeHuman's layouts are already clean; they only need a place.
+PART_RECTS = {
+    "skin": (0.00, 0.36, 0.62, 0.64),
+    "suit": (0.62, 0.36, 0.38, 0.64),        # the trousers and the top share the suit's layout
+    "shoes": (0.00, 0.18, 0.22, 0.18),
+    "hair": (0.22, 0.18, 0.24, 0.18),
+    "eyes": (0.46, 0.27, 0.16, 0.09),
+    "teeth": (0.46, 0.18, 0.16, 0.09),
+    "extras": (0.00, 0.00, 0.62, 0.18),      # fitted hat, scarf and prop: projected, then packed here
+}
+PART_GAP = 0.006
+
+
+def _part_of(material_name, fid):
+    rest = material_name[len(fid) + 1:].rsplit("_", 1)[0]     # "fan03_top_base" -> "top"
+    if rest in ("pants", "top"):
+        return "suit"
+    if rest in PART_RECTS:
+        return rest
+    return "extras"                                          # "hat", "scarf", "prop"
+
+
+def layout_mpfb_uvs(mesh, fid, cell):
+    """MakeHuman parts keep their own UVs, each fitted into its rectangle of the cell;
+    the fitted extras, which have none, are projected and packed into theirs."""
+    me = mesh.data
+    if not me.uv_layers:
+        me.uv_layers.new(name="UVMap")
+    parts = {}
+    for poly in me.polygons:
+        parts.setdefault(_part_of(me.materials[poly.material_index].name, fid), []).append(poly.index)
+    if parts.get("extras"):
+        bpy.ops.object.select_all(action="DESELECT")
+        mesh.select_set(True)
+        bpy.context.view_layer.objects.active = mesh
+        for poly in me.polygons:
+            poly.select = False
+        for i in parts["extras"]:
+            me.polygons[i].select = True
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.02)
+        bpy.ops.uv.pack_islands(margin=0.02, rotate=True)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        me = mesh.data
+    uv = me.uv_layers.active.data
+    x0, y0, cw, ch = cell
+    for part, faces in parts.items():
+        loops = [li for i in faces for li in me.polygons[i].loop_indices]
+        us = [uv[li].uv[0] for li in loops]; vs = [uv[li].uv[1] for li in loops]
+        umin, umax, vmin, vmax = min(us), max(us), min(vs), max(vs)
+        ru, rv, rw, rh = PART_RECTS[part]
+        # Uniform scale keeps the part's texel aspect; a small gap keeps rectangles apart.
+        w, h = (rw - PART_GAP) * cw, (rh - PART_GAP) * ch
+        k = min(w / max(1e-6, umax - umin), h / max(1e-6, vmax - vmin))
+        ou = x0 + (ru + PART_GAP / 2) * cw
+        ov = y0 + (rv + PART_GAP / 2) * ch
+        for li in loops:
+            u, v = uv[li].uv
+            uv[li].uv = (ou + (u - umin) * k, ov + (v - vmin) * k)
+
+
 def bake(mesh, target):
     bpy.ops.object.select_all(action="DESELECT")
     mesh.select_set(True)
@@ -169,8 +242,9 @@ def bake(mesh, target):
     sc.render.engine = "CYCLES"
     sc.cycles.samples = 4
     sc.render.bake.use_clear = False
-    sc.render.bake.margin = 6 * BAKE_SCALE
-    bpy.ops.object.bake(type="EMIT", use_clear=False, margin=6 * BAKE_SCALE)
+    sc.render.bake.margin_type = "EXTEND"
+    sc.render.bake.margin = BAKE_MARGIN
+    bpy.ops.object.bake(type="EMIT", use_clear=False, margin=BAKE_MARGIN)
 
 
 def bake_from(source, target):
@@ -182,7 +256,8 @@ def bake_from(source, target):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"
     sc.cycles.samples = 4
-    bpy.ops.object.bake(type="EMIT", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
+    sc.render.bake.margin_type = "EXTEND"
+    bpy.ops.object.bake(type="EMIT", use_clear=False, margin=BAKE_MARGIN, use_selected_to_active=True,
                         cage_extrusion=0.03, max_ray_distance=0.1)  # decimation moves elbows and fists up to ~8 cm
 
 
@@ -199,7 +274,8 @@ def bake_ao(source, target, img):
     sc.cycles.samples = 16
     sc.world = sc.world or bpy.data.worlds.new("w")
     sc.world.light_settings.distance = 0.25
-    bpy.ops.object.bake(type="AO", use_clear=False, margin=6 * BAKE_SCALE, use_selected_to_active=True,
+    sc.render.bake.margin_type = "EXTEND"
+    bpy.ops.object.bake(type="AO", use_clear=False, margin=BAKE_MARGIN, use_selected_to_active=True,
                         cage_extrusion=0.03, max_ray_distance=0.1)  # decimation moves elbows and fists up to ~8 cm
 
 
@@ -363,8 +439,12 @@ def build_meshes(cast, mpfb=True):
         # triangles into white wedges; baked from a full copy they stay crisp.
         hi = mesh.copy(); hi.data = mesh.data.copy(); hi.name = f"{f['id']}_hi"
         bpy.context.scene.collection.objects.link(hi)
-        decimate(mesh, LOD0_TRIS)
-        unwrap_into_cell(mesh, cell, face_z=J["neck"].z if mpfb else None)
+        if mpfb:
+            layout_mpfb_uvs(mesh, f["id"], cell)             # before decimation: every LOD inherits it
+            decimate(mesh, LOD0_TRIS)
+        else:
+            decimate(mesh, LOD0_TRIS)
+            unwrap_into_cell(mesh, cell)
         for mode, img in (("base", albedo), ("tint", mask)):
             swap_materials(mesh, mode)
             swap_materials(hi, mode)
@@ -373,7 +453,8 @@ def build_meshes(cast, mpfb=True):
             bake_from(hi, mesh)
         swap_materials(mesh, "base")
         bake_ao(hi, mesh, ao)
-        bpy.data.objects.remove(hi)
+        # Kept, posed with the same rig: every frozen pose takes its shading normals from it.
+        hi.hide_render = True
         soften(mesh)
         if not mpfb:
             # The scripted head has no mouth; MakeHuman's has lips, teeth and a jaw the poses open.
@@ -389,7 +470,7 @@ def build_meshes(cast, mpfb=True):
         lod2.parent = rig
         decimate(lod2, LOD2_TRIS)
         soften(lod2)
-        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell, "info": info})
+        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell, "info": info, "hi": hi})
         log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, lod2 {R.triangles(lod2)} tris")
     # Warm occlusion: cavities go a little red-brown, which reads as skin on
     # skin and as fold shadow on cloth, rather than grey dirt.
@@ -457,7 +538,7 @@ def export_fans(built):
         bpy.context.scene.frame_start, bpy.context.scene.frame_end = 0, start
         bpy.ops.wm.usd_export(filepath=str(OUT / f"{f['id']}.usdz"), selected_objects_only=True,
                               export_animation=True, export_armatures=True, export_materials=False,
-                              convert_orientation=True, export_global_forward_selection="Z", export_global_up_selection="Y")
+                              convert_orientation=True, export_global_forward_selection=USD_FORWARD, export_global_up_selection="Y")
 
         rig.animation_data.action = None
         b["usd_ranges"] = usd_ranges
@@ -465,28 +546,48 @@ def export_fans(built):
     return clips
 
 
-def export_pose_meshes(built, lod):
-    """Freeze each fan's LOD in every impostor pose into static meshes.
+def transfer_normals(target, source):
+    """Shading normals from the full-resolution body in the same pose. A decimated mesh
+    shaded by its own normals facets into planes; the silhouette can stay coarse, the light cannot."""
+    mod = target.modifiers.new("normals", "DATA_TRANSFER")
+    mod.object = source
+    mod.use_loop_data = True
+    mod.data_types_loops = {"CUSTOM_NORMAL"}
+    mod.loop_mapping = "POLYINTERP_NEAREST"
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def export_pose_meshes(built, lod, poses=None):
+    """Freeze each fan's LOD in every pose into static meshes.
 
     The art bible animates fans by group, never per fan on the CPU: a group
     swaps which frozen pose it shows, the way the far crowd flips cells.
     """
+    poses = poses or NEAR_POSES
     frozen = []
-    dg = bpy.context.evaluated_depsgraph_get()
     for b in built:
         f, rig = b["f"], b["rig"]
-        lod1 = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"]}[lod]
+        source = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"]}[lod]
         rig.animation_data.action = None
-        for pose in IMP_POSES:
+        for pose in poses:
             P.apply_pose(rig, pose, f["height"], built.index(b))
             dg = bpy.context.evaluated_depsgraph_get()
-            ev = lod1.evaluated_get(dg)
-            me = bpy.data.meshes.new_from_object(ev, depsgraph=dg)
+            me = bpy.data.meshes.new_from_object(source.evaluated_get(dg), depsgraph=dg)
             me.name = f"{f['id']}_lod{lod}_{pose}"
-            open_mouth(type("O", (), {"data": me})(), pose, f["height"])
+            if not rig.get("mpfb"):
+                open_mouth(type("O", (), {"data": me})(), pose, f["height"])
             ob = bpy.data.objects.new(me.name, me)
             bpy.context.scene.collection.objects.link(ob)
-            ob.matrix_world = lod1.matrix_world
+            ob.matrix_world = source.matrix_world
+            if b.get("hi") is not None:
+                hi = bpy.data.meshes.new_from_object(b["hi"].evaluated_get(dg), depsgraph=dg)
+                hob = bpy.data.objects.new(f"{me.name}_hi", hi)
+                bpy.context.scene.collection.objects.link(hob)
+                hob.matrix_world = b["hi"].matrix_world
+                transfer_normals(ob, hob)
+                bpy.data.objects.remove(hob)
+                bpy.data.meshes.remove(hi)
             frozen.append(ob)
         P.apply_pose(rig, "stand", f["height"])
     bpy.ops.object.select_all(action="DESELECT")
@@ -497,11 +598,52 @@ def export_pose_meshes(built, lod):
                               export_animations=False, export_image_format="NONE", export_yup=True)
     bpy.ops.wm.usd_export(filepath=str(OUT / f"lod{lod}_poses.usdz"), selected_objects_only=True,
                           export_animation=False, export_materials=False,
-                          convert_orientation=True, export_global_forward_selection="Z", export_global_up_selection="Y")
+                          convert_orientation=True, export_global_forward_selection=USD_FORWARD, export_global_up_selection="Y")
     tris = R.triangles(frozen[0])
     for ob in frozen:
-        bpy.data.objects.remove(ob)
+        bpy.data.meshes.remove(ob.data)
     return tris
+
+
+def measured_forward(path):
+    """Which way the fans in an exported pose file face, measured, not assumed.
+
+    Opens the file as a renderer would (USD through pxr with every xform composed;
+    glTF's bytes in its own +Y-up frame) and takes each fan's seated mesh: the knees
+    reach about 45 cm ahead of the hips and the back barely 15 cm behind, which still
+    holds at LOD2's 250 triangles, where standing feet collapse into blobs that read
+    either way. Returns "+Z", "-Z" or "mixed", and each fan's forward reach minus back reach."""
+    offsets = []
+    if path.suffix == ".usdz":
+        from pxr import Usd, UsdGeom
+        stage = Usd.Stage.Open(str(path))
+        cache = UsdGeom.XformCache()
+        up = UsdGeom.GetStageUpAxis(stage)
+        for prim in stage.Traverse():
+            if not prim.IsA(UsdGeom.Mesh) or not prim.GetName().endswith("_sit"):
+                continue
+            M = cache.GetLocalToWorldTransform(prim)
+            pts = [M.Transform(p) for p in UsdGeom.Mesh(prim).GetPointsAttr().Get()]
+            offsets.append(knee_reach([(p[0], p[1], p[2]) if up == "Y" else (p[0], p[2], -p[1]) for p in pts]))
+    else:
+        # glTF bytes as written (+Y up), read without importing: an import would clear the build's scene.
+        import glb
+        for name, pts in glb.meshes(path, suffix="_sit"):
+            offsets.append(knee_reach(pts))
+    signs = {o > 0 for o in offsets}
+    return ("+Z" if signs == {True} else "-Z" if signs == {False} else "mixed"), offsets
+
+
+def knee_reach(pts):
+    """Y up, seated: mean z of the feet and shins (lowest 30 cm) minus mean z of the torso
+    (55-85% of the seated height). A seated fan's feet are on the tread in front of the
+    pelvis, 20-30 cm toward the way they face; leaning onto the knees still leaves 10 cm.
+    Props, raised arms and hair sit above the feet band and cannot flip it."""
+    low = min(p[1] for p in pts)
+    top = max(p[1] for p in pts)
+    feet = [p[2] for p in pts if p[1] < low + 0.30]
+    torso = [p[2] for p in pts if low + 0.55 * (top - low) < p[1] < low + 0.85 * (top - low)]
+    return sum(feet) / len(feet) - sum(torso) / len(torso)
 
 
 # ───────────────────────────── impostors ─────────────────────────────
@@ -639,7 +781,7 @@ def variation_map(n_fans, size=256, seed=specs.SEED):
 
 # ───────────────────────────── manifest ─────────────────────────────
 
-def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
+def write_manifest(built, clips, lod1_tris, impostor, layout, cast, forward=None):
     rig0 = built[0]["rig"]
     if rig0.get("mpfb"):
         joints = [{"name": b.name, "parent": b.parent.name if b.parent else None} for b in rig0.data.bones]
@@ -674,6 +816,8 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
         "units": "metres",
         "axes": {"gltf": "+Y up, fans face +Z", "usd": "+Y up, fans face +Z (converted on export, same frame as glTF)"},
         "origin": "floor under the pelvis in the standing pose",
+        "forward": {"about": "Measured after export by build.py (measured_forward): the side each pose file's fans face, measured from a seated fan's feet against their torso. Renderers turn +Z onto a seat's facing.",
+                    **(forward or {})},
         "seat": {"about": "In the sitting clips the pelvis moves back and down onto the seat pan; feet stay near the origin.",
                  "pelvisAt175m": list(P.SIT_HIPS)},
         "skeleton": joints,
@@ -706,7 +850,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast):
         "lod0": {"model": "lod0_poses.usdz", "gltf": "lod0_poses.glb", "meshName": "<fanId>_lod0_<pose>"},
         "lod1": {"model": "lod1_poses.usdz", "gltf": "lod1_poses.glb", "meshName": "<fanId>_lod1_<pose>"},
         "lod2": {"model": "lod2_poses.usdz", "gltf": "lod2_poses.glb", "meshName": "<fanId>_lod2_<pose>"},
-        "poses": IMP_POSES},
+        "poses": NEAR_POSES},
         "lod": {"lod0Triangles": LOD0_TRIS, "lod1Triangles": LOD1_TRIS,
                 "suggestedRings": {"lod0MaxMetres": 7, "lod1MaxMetres": 16, "impostorBeyondMetres": 16}},
     }
@@ -740,7 +884,15 @@ def main():
         import pad_atlas
         pad_atlas.pad_kit(OUT)
     variation_map(len(cast))
-    write_manifest(built, clips, lod1_tris, impostor, layout, cast)
+    forward = {}
+    for lod in (0, 1, 2):
+        for ext in ("usdz", "glb"):
+            axis, offsets = measured_forward(OUT / f"lod{lod}_poses.{ext}")
+            forward[f"lod{lod}.{ext}"] = axis
+            log(f"lod{lod}_poses.{ext} faces {axis} (seated feet ahead of torso by {min(offsets):+.3f}..{max(offsets):+.3f} m)")
+    if set(forward.values()) != {"+Z"}:
+        raise SystemExit(f"[crowd] fans must face +Z in every pose file, got {forward}")
+    write_manifest(built, clips, lod1_tris, impostor, layout, cast, forward)
     log("done")
 
 
