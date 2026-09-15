@@ -21,6 +21,8 @@ extension SceneSpec.Look {
         public let tint: String?
         /// An asset id whose grey channel cuts the surface out (nets).
         public let mask: String?
+        /// Scales the mask, for surfaces that are mostly air.
+        public let opacity: Double?
     }
 
     public struct SidelineLodSuffix: Decodable, Equatable, Sendable {
@@ -51,6 +53,16 @@ extension SceneSpec.Look {
         public let boxOffset: Double
     }
 
+    public struct SidelineShadow: Decodable, Equatable, Sendable {
+        public let footprintScale: Double
+        public let footprintBelowMetres: Double
+        public let minYards: Double
+        public let maxYards: Double
+        /// visual.lighting.response.bowlContactAO, so props and seats share one occlusion.
+        public let strength: Double
+        public let lift: Double
+    }
+
     public struct SidelineLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -62,6 +74,7 @@ extension SceneSpec.Look {
         public let dressing: [PropPlacement]
         public let endLine: [PropPlacement]
         public let chains: SidelineChains
+        public let shadow: SidelineShadow
     }
 }
 

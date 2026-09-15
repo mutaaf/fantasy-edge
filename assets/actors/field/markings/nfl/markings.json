@@ -36,6 +36,7 @@
     }
   ],
   "half": {
+    "drawnTo": 50.0,
     "encoding": "sRGB-encoded linear distance; decode as colour, threshold 0.5",
     "height": 1302,
     "maxAsymmetry": {
@@ -43,9 +44,9 @@
       "yellow": 2.325917236589703e-14
     },
     "otherHalf": "rotate 180 degrees about (50, 26.667): u' = 1 - u, v' = 1 - v",
-    "width": 1056,
+    "width": 1072,
     "x0": -16.0,
-    "x1": 50.0
+    "x1": 51.0
   },
   "league": "nfl",
   "primitives": [

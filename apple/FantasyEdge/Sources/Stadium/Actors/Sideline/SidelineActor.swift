@@ -24,6 +24,11 @@ final class SidelineActor: StadiumActor {
     private var crewKey = ""
     /// Model geometry in model metres, by model id then material key.
     private var geometry: [String: [String: MeshBuilder]] = [:]
+    /// Each model's footprint on the ground (x, z half extents, metres),
+    /// measured from what stands below `shadow.footprintBelowMetres`.
+    private var footprints: [String: SIMD2<Float>] = [:]
+    /// Faked floodlight shadows under every static prop, one merged decal.
+    private var shadows = MeshBuilder()
 
     init() {
         root.name = "actor.sideline"
@@ -62,8 +67,10 @@ final class SidelineActor: StadiumActor {
         let college = s.league == "college-football"
         var bins: [String: Bin] = [:]
 
+        shadows = MeshBuilder()
         func place(_ model: String, x: Double, z: Double, yaw: Float, side: String) {
             add(model, c, at: SceneMath.local(x: x, y: 0, z: z), yaw: yaw, side: side, into: &bins)
+            shadow(model, c, x: x, z: z)
         }
 
         // Toward the field is model -Z. On the home sideline (z > 0) the field
@@ -103,6 +110,18 @@ final class SidelineActor: StadiumActor {
             }
         }
 
+        if !shadows.isEmpty, let decal = c.assets.texture("sideline.propShadow") {
+            // Lighting's contract (docs/actors/lighting-sky.md): black, the
+            // decal as opacity, scaled by the shared contact occlusion, under
+            // the paint, never additive.
+            var m = PhysicallyBasedMaterial()
+            m.baseColor = .init(tint: .black)
+            m.roughness = .init(floatLiteral: 1)
+            m.blending = .transparent(opacity: .init(scale: Float(V.shadow.strength), texture: StadiumLook.clamped(decal)))
+            let e = shadows.entity("sideline.shadows", m)
+            StadiumLook.ground(e, order: 2)
+            fixed.addChild(e)
+        }
         for (key, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
             let e = bin.mesh.entity("sideline.\(key)", material(bin.material, side: bin.side, c))
             if bin.material == "prop_gold" {
@@ -149,6 +168,23 @@ final class SidelineActor: StadiumActor {
         for (k, bin) in bins.sorted(by: { $0.key < $1.key }) where !bin.mesh.isEmpty {
             crew.addChild(bin.mesh.entity("crew.\(k)", material(bin.material, side: bin.side, c)))
         }
+    }
+
+    // MARK: shadows
+
+    /// A shadow decal under a prop: a quad on the turf about three times its
+    /// footprint, one yaw for every prop so the lobes keep to the banks.
+    private func shadow(_ id: String, _ c: StadiumContext, x: Double, z: Double) {
+        let V = c.look.sideline, S = V.shadow
+        let modelId = id + (c.tabletop ? V.lodSuffix.tabletop : V.lodSuffix.stadium)
+        guard let foot = footprints[modelId] else { return }
+        let yards = Double(max(foot.x, foot.y)) * 2 / V.metresPerYard
+        let size = min(S.maxYards, max(S.minYards, yards * S.footprintScale))
+        let h = size / 2
+        let y = S.lift
+        shadows.quad(SceneMath.local(x: x - h, y: y, z: z + h), SceneMath.local(x: x + h, y: y, z: z + h),
+                     SceneMath.local(x: x + h, y: y, z: z - h), SceneMath.local(x: x - h, y: y, z: z - h),
+                     uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1)), normal: SIMD3(0, 1, 0))
     }
 
     // MARK: models into merged meshes
@@ -217,6 +253,14 @@ final class SidelineActor: StadiumActor {
         }
         visit(model)
         geometry[modelId] = out
+        let below = Float(c.look.sideline.shadow.footprintBelowMetres)
+        var lo = SIMD2<Float>(repeating: .greatestFiniteMagnitude), hi = SIMD2<Float>(repeating: -.greatestFiniteMagnitude)
+        for mesh in out.values {
+            for p in mesh.positions where p.y < below {
+                lo = simd_min(lo, SIMD2(p.x, p.z)); hi = simd_max(hi, SIMD2(p.x, p.z))
+            }
+        }
+        if lo.x <= hi.x { footprints[modelId] = simd_max(simd_abs(lo), simd_abs(hi)) }
         return out
     }
 
@@ -232,7 +276,7 @@ final class SidelineActor: StadiumActor {
             // Blended, not cut: a cutout net's mips fall under any threshold
             // and the net vanishes past a few yards; blended it fades to the
             // haze a real net is from the stands.
-            m.blending = .transparent(opacity: .init(texture: StadiumLook.repeating(tex)))
+            m.blending = .transparent(opacity: .init(scale: Float(entry.opacity ?? 1), texture: StadiumLook.repeating(tex)))
         }
         return m
     }

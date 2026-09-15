@@ -44,6 +44,7 @@ W = 160 / 3
 CANVAS = {"x0": -16.0, "x1": 116.0, "y0": -(81.375 - W) / 2, "y1": W + (81.375 - W) / 2}
 HI_PPY = 32                  # texels per yard while rasterising
 OUT_PPY = 16                 # texels per yard shipped
+HALF_PAD_YARDS = 1.0         # the half textures run this far past midfield
 SDF_RANGE_IN = 12.0          # inches of distance either side of an edge
 FONT_FILE = common.FIELD_OUT / "fonts" / "Graduate-Regular.ttf"
 GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&.'-?"
@@ -466,12 +467,17 @@ def encode(p: Paint, league: str):
     out = common.FIELD_OUT / "markings" / league
     common.write_png(out / "paint_sdf.png", rg)
     half = int(round((50.0 - CANVAS["x0"]) * OUT_PPY))
+    # One yard of overlap past midfield: a GPU builds mips as if the texture
+    # wrapped, so the last columns of a texture that stopped at x = 50 would
+    # average with its first and cut a gap down the fifty at any distance.
+    pad = int(round(HALF_PAD_YARDS * OUT_PPY))
     asym = {}
     for k, c in enumerate(("white", "yellow")):
         full = rg[..., k]
         left, right = full[:, :half], full[:, half:]
         asym[c] = float(np.abs(left - right[::-1, ::-1]).max())
         assert asym[c] < 0.02, f"{league} {c} paint is not half-turn symmetric ({asym[c]:.3f})"
+        left = full[:, :half + pad]
         srgb = np.where(left <= 0.0031308, left * 12.92, 1.055 * np.power(np.clip(left, 0, 1), 1 / 2.4) - 0.055)
         common.write_png(out / f"paint_{c}_half.png", srgb)
     return rg, asym, half
@@ -500,7 +506,8 @@ def main():
                      "y": "yards from the near sideline, 0..53.333"},
             "canvas": {**CANVAS, "texelsPerYard": OUT_PPY, "width": rg.shape[1], "height": rg.shape[0],
                        "rowOrder": "top row is the far edge (y1)"},
-            "half": {"x0": CANVAS["x0"], "x1": 50.0, "width": half, "height": rg.shape[0],
+            "half": {"x0": CANVAS["x0"], "x1": 50.0 + HALF_PAD_YARDS, "drawnTo": 50.0,
+                     "width": half + int(round(HALF_PAD_YARDS * OUT_PPY)), "height": rg.shape[0],
                      "encoding": "sRGB-encoded linear distance; decode as colour, threshold 0.5",
                      "otherHalf": "rotate 180 degrees about (50, 26.667): u' = 1 - u, v' = 1 - v",
                      "maxAsymmetry": asym},

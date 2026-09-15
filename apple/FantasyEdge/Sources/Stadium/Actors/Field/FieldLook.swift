@@ -20,6 +20,8 @@ extension SceneSpec.Look {
         public let y0: Double
         public let y1: Double
         public let halfX1: Double
+        /// The half textures run past midfield to here (mip padding).
+        public let halfTextureX1: Double
     }
 
     public struct FieldTurf: Decodable, Equatable, Sendable {

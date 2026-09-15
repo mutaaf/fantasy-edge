@@ -138,7 +138,7 @@
       "width": 528
     },
     {
-      "bytes": 426964,
+      "bytes": 426985,
       "path": "markings/college-football/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
@@ -152,25 +152,25 @@
       "width": 2112
     },
     {
-      "bytes": 23392,
+      "bytes": 23908,
       "bytesPerTexel": 1,
-      "gpuMB": 1.83,
+      "gpuMB": 1.86,
       "height": 1302,
       "path": "markings/college-football/paint_white_half.png",
       "role": "",
-      "width": 1056
+      "width": 1072
     },
     {
-      "bytes": 4560,
+      "bytes": 4611,
       "bytesPerTexel": 1,
-      "gpuMB": 1.83,
+      "gpuMB": 1.86,
       "height": 1302,
       "path": "markings/college-football/paint_yellow_half.png",
       "role": "",
-      "width": 1056
+      "width": 1072
     },
     {
-      "bytes": 497146,
+      "bytes": 497167,
       "path": "markings/nfl/markings.json",
       "role": "every marking as polygons in field yards with its rule"
     },
@@ -184,22 +184,22 @@
       "width": 2112
     },
     {
-      "bytes": 15401,
+      "bytes": 15593,
       "bytesPerTexel": 1,
-      "gpuMB": 1.83,
+      "gpuMB": 1.86,
       "height": 1302,
       "path": "markings/nfl/paint_white_half.png",
       "role": "",
-      "width": 1056
+      "width": 1072
     },
     {
-      "bytes": 8111,
+      "bytes": 8185,
       "bytesPerTexel": 1,
-      "gpuMB": 1.83,
+      "gpuMB": 1.86,
       "height": 1302,
       "path": "markings/nfl/paint_yellow_half.png",
       "role": "",
-      "width": 1056
+      "width": 1072
     },
     {
       "bytes": 587,
@@ -505,9 +505,9 @@
     "measuredUncompressed": {
       "decals": 2.45,
       "natural": 24.11,
-      "perLeague": 16.73,
+      "perLeague": 16.79,
       "shellsNearField": 2.8,
-      "total": 46.09
+      "total": 46.15
     }
   },
   "leagues": [

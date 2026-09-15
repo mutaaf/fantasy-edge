@@ -14,7 +14,7 @@ import simd
 /// arrows, limit and coaching lines - costs two draw parts, and the edge is
 /// exact at any distance because it is a threshold, not a blurred mask.
 ///
-/// Draw parts: surround 1, stripes 2, wear 1, end zones 2, ring 1, paint 2,
+/// Draw parts: surround 1, stripes 2, end zones 2, ring 1, paint 2, wear 1,
 /// lettering 1 - ten.
 @MainActor
 final class FieldActor: StadiumActor {
@@ -63,7 +63,9 @@ final class FieldActor: StadiumActor {
         canvasQuad(&wear, x0: K.x0, x1: K.x1, lift: L.wear, canvas: K, width: f.width, half: false)
         let wearEntity = wear.entity("turf.wear", SimpleMaterial())
         wearEntity.isEnabled = false
-        add(wearEntity, order: 2)
+        // Over the paint as well as the grass: where the turf is trampled the
+        // lines are too, and a line as clean at the hash as at the wall is CG.
+        add(wearEntity, order: 5)
 
         // End zones: club paint over the grass.
         for (team, x0, x1) in [(s.teams.home, -f.endZone, 0.0), (s.teams.away, f.length, f.length + f.endZone)] {
@@ -116,7 +118,7 @@ final class FieldActor: StadiumActor {
             var m = PhysicallyBasedMaterial()
             m.baseColor = .init(tint: StadiumLook.color(P.white))
             m.roughness = .init(floatLiteral: Float(P.roughness))
-            add(letters.entity("lettering", m), order: 5)
+            add(letters.entity("lettering", m), order: 6)
         }
 
         // The league's maps, loaded once and then handed to the meshes waiting for them.
@@ -171,7 +173,7 @@ final class FieldActor: StadiumActor {
                 return SIMD2(Float((x - K.x0) / (K.x1 - K.x0)), Float((y - K.y0) / (K.y1 - K.y0)))
             }
             let (hx, hy) = turned ? (100 - x, width - y) : (x, y)
-            return SIMD2(Float((hx - K.x0) / (K.halfX1 - K.x0)), Float((hy - K.y0) / (K.y1 - K.y0)))
+            return SIMD2(Float((hx - K.x0) / (K.halfTextureX1 - K.x0)), Float((hy - K.y0) / (K.y1 - K.y0)))
         }
         let p = { (x: Double, y: Double) in SceneMath.local(x: x, y: lift, z: yz(y)) }
         // corners in the order MeshBuilder.floor uses, so the quad faces up
