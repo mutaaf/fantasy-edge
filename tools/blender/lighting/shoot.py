@@ -36,6 +36,10 @@ SHOTS = {
     "tabletop": (None, 0, 0, "redzone"),
     "bowl-wide-club": ("club", 0, -8, "early"),     # bowl-wide's framing from the club seat
     "bowl-wide-upper": ("upper", 0, -8, "early"),   # the shared preset's seat
+    "rz-pressBox": ("pressBox", 0, -14, "redzone"),  # looking down along the beams
+    "rz-upper": ("upper", 0, -10, "redzone"),
+    "rz-clubLevel": ("clubLevel", 0, -6, "redzone"),
+    "rz-sideline": ("sideline", 0, 0, "redzone"),
 }
 
 
@@ -86,7 +90,8 @@ def main():
             if seat is None:
                 launch += ["-shot", "tabletop"]
             else:
-                launch += ["-shot", "td-moment", "-stadiumSeat", seat, "-stadiumLook", str(yaw), "-stadiumPitch", str(pitch)]
+                base = "redzone-trails" if where == "redzone" else "td-moment"
+                launch += ["-shot", base, "-stadiumSeat", seat, "-stadiumLook", str(yaw), "-stadiumPitch", str(pitch)]
             L.simctl(*launch, check=False)
             time.sleep(args.settle + (3 if where == "touchdown" else 0))
             shot = args.out / f"{name}.png"
