@@ -69,6 +69,12 @@ extension SceneSpec.Look {
         public let additive: Double
     }
 
+    public struct LightingElevationFade: Decodable, Equatable, Sendable {
+        public let fromDegrees: Double
+        public let toDegrees: Double
+        public let minScale: Double
+    }
+
     public struct LightingBeams: Decodable, Equatable, Sendable {
         public let perBank: Int
         public let fanYards: Double
@@ -81,6 +87,7 @@ extension SceneSpec.Look {
         public let startInsideOffsetYards: Double
         public let endHeightYards: SceneSpec.PerMode<Double>
         public let shader: LightingBeamShader
+        public let elevationFade: LightingElevationFade
         public let dustOpacity: SceneSpec.PerMode<Double>
         public let dustTileYards: Double
         public let dustScrollPerSecond: Double

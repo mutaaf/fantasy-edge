@@ -157,14 +157,17 @@ def sprites():
     edge = (1 - smoothstep(0.38, 0.5, np.abs(u_ - 0.5))) * (1 - smoothstep(0.38, 0.5, np.abs(v_ - 0.5)))
     save_png(out / "spill_card.png", white(across * down * edge), seed=15)
 
-    # Beam dust: tiles along V (the beam's length), soft Gaussian across U so
-    # the drifting motes stay inside the shaft. Streaky and sparse.
-    w, h = 128, 512
+    # Beam dust: soft, isotropic clumps of lit air. Tiles in V (the beam's
+    # length); a renderer repeats it about length/width times so a clump is
+    # as long as it is wide. The first version stretched sparse, sharp motes
+    # along the beam and, seen from above, the shafts read as rain
+    # (integration-7). No motes now: two octaves of smooth noise, low contrast.
+    w, h = 256, 256
     u_, v_ = grid(w, h)
-    motes = value_noise(w, h, 24, 96, 81) ** 6 * 3.0
-    drift = fbm(w, h, 4, 8, 4, 82)
-    across = np.exp(-((u_ - 0.5) / 0.2) ** 2) * (1 - smoothstep(0.4, 0.5, np.abs(u_ - 0.5)))
-    save_png(out / "beam_dust.png", white(np.clip((0.35 * drift + motes) * across, 0, 1)), seed=16)
+    base = fbm(w, h, 6, 6, 4, 83, gain=0.45)
+    clumps = smoothstep(0.35, 0.75, base)
+    across = np.exp(-((u_ - 0.5) / 0.24) ** 2) * (1 - smoothstep(0.42, 0.5, np.abs(u_ - 0.5)))
+    save_png(out / "beam_dust.png", white(np.clip((0.35 + 0.65 * clumps) * across, 0, 1)), seed=16)
 
     # Moths: eight frames of a wingbeat, lit from behind (bright edges,
     # dark body), 64 px each. A handful drift in the throat of a beam.

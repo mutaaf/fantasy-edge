@@ -405,7 +405,7 @@ final class LightingActor: StadiumActor {
         guard var m = beamGraph, let beams else { return }
         let G = c.look.lighting.beams.shader
         StadiumShaderGraph.set(&m, "Color", tint ?? G.color)
-        StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * gain)
+        StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * gain * elevationScale(c))
         StadiumShaderGraph.set(&m, "DustRepeat", G.dustRepeat)
         StadiumShaderGraph.set(&m, "DustSpeed", c.reduceMotion ? 0.0 : G.dustSpeed)
         StadiumShaderGraph.set(&m, "DustFloor", G.dustFloor)
@@ -417,7 +417,7 @@ final class LightingActor: StadiumActor {
 
     private func dustMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
         let Bm = c.look.lighting.beams
-        var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * gain,
+        var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * gain * elevationScale(c),
                                  texture: c.assets.texture("lighting.beamDust"), tile: true)
         m.textureCoordinateTransform.offset = SIMD2(0, dustOffset)
         return m
@@ -442,10 +442,26 @@ final class LightingActor: StadiumActor {
         return hi
     }
 
+    /// How much of its alpha a beam keeps from this seat. From low seats you
+    /// look up or across into the shafts, which is how haze reads; from the
+    /// press box and the upper deck you look down along their length through
+    /// the crossed quads, where the same alpha stacks into bright sheets. The
+    /// fade goes by the seat's angle of depression to the field's centre
+    /// (`beams.elevationFade`), the same for every client.
+    private func elevationScale(_ c: StadiumContext) -> Double {
+        guard !c.tabletop else { return 1 }
+        let E = c.look.lighting.beams.elevationFade
+        let eye = c.shared.seat ?? defaultSeat(c)
+        let depression = atan2(Double(eye.y), Double(simd_length(SIMD2(eye.x, eye.z)))) * 180 / .pi
+        let t = max(0, min(1, (depression - E.fromDegrees) / max(1e-6, E.toDegrees - E.fromDegrees)))
+        let smooth = t * t * (3 - 2 * t)
+        return 1 + (E.minScale - 1) * smooth
+    }
+
     private func beamMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
         let Bm = c.look.lighting.beams
         let colour = tint ?? Bm.color
-        return StadiumLook.glow(colour, opacity: Bm.opacity.value(tabletop: c.tabletop) * gain,
+        return StadiumLook.glow(colour, opacity: Bm.opacity.value(tabletop: c.tabletop) * gain * elevationScale(c),
                                 texture: c.assets.texture("lighting.beam"))
     }
 
@@ -564,6 +580,7 @@ final class LightingActor: StadiumActor {
         if !c.tabletop, let seat = c.shared.seat, glowSeat.map({ simd_distance($0, seat) > 0.5 }) ?? true {
             relayGlows(c, seat: seat)
             applied = (-1, -1, false)
+            if beamGraph == nil { beams?.model?.materials = [beamMaterial(c, gain: 1, tint: nil)] }
         }
         let S = c.look.lighting.strobe, M = c.look.moments
         var pulse = 0.0
