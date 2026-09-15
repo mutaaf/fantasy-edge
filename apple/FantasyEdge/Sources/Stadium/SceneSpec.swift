@@ -65,6 +65,11 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let numbersEvery: Double
         /// 1.1: goal posts, pylons, benches and chains, by league.
         public let props: Props?
+        /// 1.2: where each club's name and the midfield ring are painted
+        /// (`FieldArt`, Actors/Field), and the folder of this league's baked
+        /// markings under assets/.
+        public let art: FieldArt?
+        public let markings: String?
     }
 
     public struct PostRadius: Decodable, Equatable, Sendable {
@@ -87,6 +92,8 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let size: Double
         public let height: Double
         public let color: String
+        /// 1.2: every pylon's centre as [x, z] yards, by league.
+        public let at: [[Double]]?
     }
 
     public struct Benches: Decodable, Equatable, Sendable {

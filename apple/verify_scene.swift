@@ -15,6 +15,7 @@
 //         apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
 //         apple/FantasyEdge/Sources/Stadium/Actors/*/*Look.swift \
+//         apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldArtSpec.swift \
 //         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
 //         apple/FantasyEdge/Sources/Stadium/Actors/Broadcast/BroadcastFlight.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
@@ -51,7 +52,7 @@ struct VerifyScene {
         }
         let spec = try JSONDecoder().decode(SceneSpec.self, from: blob)
         let name = URL(fileURLWithPath: path).lastPathComponent
-        expect(spec.version == "1.1", "\(name): unexpected scene version \(spec.version)")
+        expect(spec.version == "1.2", "\(name): unexpected scene version \(spec.version)")
 
         // ---- arcs: the apex formula, drawn ----
         for drive in spec.drives {
