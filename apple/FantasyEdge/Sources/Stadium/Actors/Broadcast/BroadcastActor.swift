@@ -24,6 +24,7 @@ final class BroadcastActor: StadiumActor {
     private let horizon = BroadcastHorizon()
     private let ribbon = BroadcastRibbon()
     private let banner = BroadcastBanner()
+    private let board = BroadcastVideoBoard()
     private var laserEntities: [String: Entity] = [:]
     private var beaconKey = ""
     private var tagKey = ""
@@ -34,7 +35,7 @@ final class BroadcastActor: StadiumActor {
 
     init() {
         root.name = "actor.broadcast"
-        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root, banner.root].forEach { root.addChild($0) }
+        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root, banner.root, board.root].forEach { root.addChild($0) }
         ball.isEnabled = false
         beacon.isEnabled = false
         tag.isEnabled = false
@@ -231,12 +232,14 @@ extension BroadcastActor {
         laserEntities.removeAll()
         buildBall(c)
         ribbon.build(c)
+        board.build(c)
     }
 
     func apply(_ c: StadiumContext, previous: SceneSpec?) {
         updateDrive(c, previous: previous)
         horizon.update(c)
         ribbon.apply(c, previous: previous)
+        board.apply(c)
         if flight == nil { settle(c, animated: !c.reduceMotion) }
     }
 
@@ -279,6 +282,8 @@ extension BroadcastActor {
         tagKey = ""
         updateDrive(c, previous: nil)
         settle(c, animated: false)
+        // The seat moved: the horizon's edge-on fade is per seat.
+        horizon.update(c)
     }
 
     // MARK: the drive

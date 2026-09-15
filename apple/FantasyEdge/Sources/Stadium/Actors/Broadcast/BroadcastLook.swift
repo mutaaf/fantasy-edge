@@ -129,6 +129,7 @@ extension SceneSpec.Look {
         public let textureWidth: Int
         public let marker: HorizonMarker
         public let label: HorizonLabel
+        public let edge: HorizonEdge
     }
 
     public struct RibbonLegibility: Decodable, Equatable, Sendable {
@@ -164,6 +165,33 @@ extension SceneSpec.Look {
         public let glowScale: Double
     }
 
+    public struct VideoBoardLegibility: Decodable, Equatable, Sendable {
+        public let minArcMinutes: Double
+    }
+
+    public struct VideoBoardLook: Decodable, Equatable, Sendable {
+        public let pixels: [Int]
+        public let brightness: Double
+        public let offset: Double
+        public let scorebugShare: Double
+        public let smallTextShare: Double
+        public let textShare: Double
+        public let lines: Int
+        public let plays: Int
+        public let legibility: VideoBoardLegibility
+    }
+
+    public struct HorizonEdge: Decodable, Equatable, Sendable {
+        public let fullDegrees: Double
+        public let goneDegrees: Double
+    }
+
+    public struct DriveLogLook: Decodable, Equatable, Sendable {
+        public let rows: Int
+        public let newestLines: Int
+        public let olderLines: Int
+    }
+
     public struct BroadcastLook: Decodable, Equatable, Sendable {
         public let assets: [String: String]
         public let models: [String: String]
@@ -174,6 +202,8 @@ extension SceneSpec.Look {
         public let horizon: HorizonLook
         public let ribbon: RibbonLook
         public let banner: BannerLook
+        public let videoBoard: VideoBoardLook
+        public let driveLog: DriveLogLook
     }
 }
 

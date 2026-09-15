@@ -20,12 +20,18 @@ final class BroadcastHorizon {
 
     func update(_ c: StadiumContext) {
         let s = c.spec, wp = s.winProbability
-        let k = "\(wp.series.count)|\(wp.series.last ?? -1)|\(s.teams.home.chip)|\(s.teams.away.chip)|\(c.tabletop)"
+        let look = c.look.broadcast.horizon
+        // Seen side-on - from behind an end zone - the band collapses into a
+        // streak across the sky. It fades out by how obliquely the seat sees
+        // it; the video board carries win probability for those seats.
+        let seat = c.tabletop ? nil : c.shared.seat
+        let seen = seat.map { Self.visibility(wp.horizon, seat: $0, edge: look.edge) } ?? 1
+        let k = "\(wp.series.count)|\(wp.series.last ?? -1)|\(s.teams.home.chip)|\(s.teams.away.chip)|\(c.tabletop)|\(seen)"
         guard k != key else { return }
         key = k
         root.children.removeAll()
-        guard wp.series.count > 1 else { return }
-        let look = c.look.broadcast.horizon
+        root.isEnabled = seen > 0.01
+        guard wp.series.count > 1, root.isEnabled else { return }
         let raw = wp.series
         let series = Self.smooth(raw, share: look.smoothing)
         let h = wp.horizon
@@ -56,10 +62,10 @@ final class BroadcastHorizon {
         let image = Self.bandImage(series: series, homeSide: homeSide, home: s.teams.home.chip,
                                    away: s.teams.away.chip, ink: s.palette["ink"] ?? "#F7F6F2", look: look)
         if let image {
-            if let halo = BroadcastGraphics.light(image, opacity: look.haloOpacity) {
+            if let halo = BroadcastGraphics.light(image, opacity: look.haloOpacity * seen) {
                 root.addChild(band(Float(look.haloScale)).entity("horizon.halo", halo))
             }
-            if let core = BroadcastGraphics.light(image, opacity: look.opacity) {
+            if let core = BroadcastGraphics.light(image, opacity: look.opacity * seen) {
                 root.addChild(band(1).entity("horizon.band", core))
             }
         }
@@ -68,7 +74,7 @@ final class BroadcastHorizon {
         guard let now = pts.last, let last = raw.last else { return }
         let marker = ModelEntity(mesh: .generatePlane(width: Float(look.marker.yards.value(tabletop: c.tabletop)),
                                                       height: Float(look.marker.yards.value(tabletop: c.tabletop))),
-                                 materials: [StadiumLook.glow(s.palette["ink"] ?? "#F7F6F2", opacity: look.marker.opacity,
+                                 materials: [StadiumLook.glow(s.palette["ink"] ?? "#F7F6F2", opacity: look.marker.opacity * seen,
                                                               texture: c.assets.texture("broadcast.marker"))])
         marker.name = "horizon.now"
         marker.position = now
@@ -80,7 +86,7 @@ final class BroadcastHorizon {
         let share = favourHome == homeSide ? last : 1 - last
         if let label = Self.labelImage(team: favoured, percent: Int((share * 100).rounded()), look: look,
                                        ink: s.palette["ink"] ?? "#F7F6F2"),
-           let m = BroadcastGraphics.overlay(label, opacity: look.label.opacity) {
+           let m = BroadcastGraphics.overlay(label, opacity: look.label.opacity * seen) {
             let h = Float(look.label.heightYards.value(tabletop: c.tabletop))
             let w = h * Float(label.width) / Float(max(1, label.height))
             let plate = ModelEntity(mesh: .generatePlane(width: w, height: h), materials: [m])
@@ -91,6 +97,21 @@ final class BroadcastHorizon {
             plate.components.set(BillboardComponent())
             root.addChild(plate)
         }
+    }
+
+    /// How squarely a seat sees the band, 0...1: the mean angle between the
+    /// band's plane and the sightline to five points along it, mapped from
+    /// `edge.goneDegrees` (0) to `edge.fullDegrees` (1). The band faces +z.
+    nonisolated static func visibility(_ h: SceneSpec.Horizon, seat: SIMD3<Float>, edge: SceneSpec.Look.HorizonEdge) -> Double {
+        var total = 0.0
+        for i in 0..<5 {
+            let x = h.x0 + (h.x1 - h.x0) * Double(i) / 4
+            let p = SIMD3<Float>(Float(x - 50), Float((h.y0 + h.y1) / 2), Float(h.z))
+            let d = simd_normalize(p - seat)
+            total += asin(min(1, Double(abs(d.z)))) * 180 / .pi
+        }
+        let deg = total / 5
+        return max(0, min(1, (deg - edge.goneDegrees) / max(1e-6, edge.fullDegrees - edge.goneDegrees)))
     }
 
     /// The series under a gaussian `share` of its length wide, with the last

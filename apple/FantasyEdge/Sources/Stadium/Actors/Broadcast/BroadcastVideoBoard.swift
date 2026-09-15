@@ -1,0 +1,171 @@
+import RealityKit
+import UIKit
+import simd
+
+/// What the video board behind the east end zone shows (`bowl.videoBoard` is
+/// Bowl's frame and face; `visual.broadcast.videoBoard` is how it looks): the
+/// scorebug across the top, the last play under it, and the drive drawn as a
+/// small field from above. One opaque emissive plane a hair in front of
+/// Bowl's dark screen, redrawn only when what it says changes. Stadium only.
+@MainActor
+final class BroadcastVideoBoard {
+    let root = Entity()
+    private var entity: ModelEntity?
+    private var texture: TextureResource?
+    private var key = ""
+
+    init() { root.name = "broadcast.videoBoard" }
+
+    func build(_ c: StadiumContext) {
+        root.children.removeAll()
+        entity = nil
+        texture = nil
+        key = ""
+        guard !c.tabletop, let vb = c.spec.bowl.videoBoard, vb.centre.count == 3, vb.facing.count == 3,
+              vb.size.count == 2 else { return }
+        let look = c.look.broadcast.videoBoard
+        guard let img = Self.image(c.spec, look: look), let tex = StadiumText.texture(img) else { return }
+        texture = tex
+        key = Self.key(c.spec)
+        let w = Float(vb.size[0]), h = Float(vb.size[1])
+        let e = ModelEntity(mesh: .generatePlane(width: w, height: h),
+                            materials: [StadiumLook.emissive("#FFFFFF", scale: look.brightness, texture: tex, tile: false)])
+        e.name = "videoBoard.face"
+        // Face along `facing`, the texture's +x to the right of whoever looks at it.
+        let n = simd_normalize(SIMD3(Float(vb.facing[0]), Float(vb.facing[1]), Float(vb.facing[2])))
+        var right = simd_cross(-n, SIMD3<Float>(0, 1, 0))
+        if simd_length(right) < 1e-4 { right = SIMD3(1, 0, 0) }
+        right = simd_normalize(right)
+        let up = simd_cross(n, right)
+        e.orientation = simd_quatf(simd_float3x3(columns: (right, up, n)))
+        let centre = SceneMath.local(x: vb.centre[0], y: vb.centre[1], z: vb.centre[2])
+        e.position = centre + n * Float(look.offset)
+        entity = e
+        root.addChild(e)
+    }
+
+    func apply(_ c: StadiumContext) {
+        guard let tex = texture else { return }
+        let k = Self.key(c.spec)
+        guard k != key else { return }
+        key = k
+        if let img = Self.image(c.spec, look: c.look.broadcast.videoBoard) {
+            try? tex.replace(withImage: img, options: .init(semantic: .color))
+        }
+    }
+
+    static func key(_ s: SceneSpec) -> String {
+        let d = s.shownDrive
+        return "\(StadiumText.ribbonKey(s))|\(d?.id ?? "")|\(d?.arcs.count ?? 0)|\(s.ball?.x ?? -1)"
+    }
+
+    /// The board's picture. Every size is a share of its height, so the
+    /// legibility rule in the tokens (`smallTextShare`) is the size of the
+    /// smallest words on it.
+    static func image(_ s: SceneSpec, look: SceneSpec.Look.VideoBoardLook) -> CGImage? {
+        let W = look.pixels.count == 2 ? look.pixels[0] : 1600
+        let H = look.pixels.count == 2 ? look.pixels[1] : 600
+        return BroadcastGraphics.image(width: W, height: H, opaque: true) { ctx, size in
+            let h = size.height, w = size.width
+            UIColor(white: 0.02, alpha: 1).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            let ink = UIColor(white: 0.97, alpha: 1)
+            let small = h * CGFloat(look.smallTextShare)
+
+            // The scorebug: each club on its chip, the clock and the down between.
+            let bugH = h * CGFloat(look.scorebugShare)
+            func side(_ t: SceneSpec.Team, _ score: Double, x: CGFloat, width: CGFloat, possession: Bool) {
+                let rect = CGRect(x: x, y: 0, width: width, height: bugH)
+                StadiumLook.color(t.chip).setFill()
+                ctx.fill(rect)
+                let abbr = NSAttributedString(string: t.abbr, attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.42, weight: .black),
+                                                                           .foregroundColor: UIColor.white])
+                abbr.draw(at: CGPoint(x: rect.minX + h * 0.04, y: rect.midY - abbr.size().height / 2))
+                let n = NSAttributedString(string: "\(Int(score))", attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.78, weight: .black),
+                                                                                  .foregroundColor: UIColor.white])
+                n.draw(at: CGPoint(x: rect.maxX - n.size().width - h * 0.04, y: rect.midY - n.size().height / 2))
+                if possession {
+                    UIColor.white.setFill()
+                    ctx.fill(CGRect(x: rect.minX, y: rect.maxY - h * 0.025, width: rect.width, height: h * 0.025))
+                }
+            }
+            // Wide enough between the panels for "1ST & 10 AT MIN 13" at the legible size.
+            let sideW = w * 0.27
+            side(s.teams.away, s.status.awayScore, x: 0, width: sideW, possession: s.status.possession == "away")
+            side(s.teams.home, s.status.homeScore, x: w - sideW, width: sideW, possession: s.status.possession == "home")
+            let clock = NSAttributedString(string: s.status.label.uppercased(), attributes: [.font: UIFont.systemFont(ofSize: bugH * 0.36, weight: .heavy),
+                                                                                              .foregroundColor: ink])
+            clock.draw(at: CGPoint(x: w / 2 - clock.size().width / 2, y: bugH * 0.12))
+            if !s.status.downDistance.isEmpty {
+                let dd = NSAttributedString(string: s.status.downDistance.uppercased(),
+                                            attributes: [.font: UIFont.systemFont(ofSize: small, weight: .heavy),
+                                                         .foregroundColor: s.status.redZone ? UIColor(red: 1, green: 0.35, blue: 0.3, alpha: 1) : ink])
+                dd.draw(at: CGPoint(x: w / 2 - dd.size().width / 2, y: bugH * 0.9 - dd.size().height))
+            }
+
+            // Under it, left: the last play, in words.
+            let top = bugH + h * 0.05
+            let pad = h * 0.05
+            let split = w * CGFloat(look.textShare)
+            let arcs = s.shownDrive?.arcs ?? []
+            if let last = arcs.last {
+                let head = NSAttributedString(string: "LAST PLAY", attributes: [.font: UIFont.systemFont(ofSize: small * 0.8, weight: .heavy),
+                                                                                .foregroundColor: ink.withAlphaComponent(0.6), .kern: small * 0.06])
+                head.draw(at: CGPoint(x: pad, y: top))
+                // Word-wrapped, the last visible line truncated: a tail
+                // line-break mode on the paragraph would clip to one line.
+                let words = NSAttributedString(string: Self.plain(last.text), attributes: [
+                    .font: UIFont.systemFont(ofSize: small, weight: .bold), .foregroundColor: ink])
+                let box = CGRect(x: pad, y: top + head.size().height + small * 0.2, width: split - pad * 2,
+                                 height: small * 1.25 * CGFloat(look.lines))
+                words.draw(with: box, options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine], context: nil)
+            }
+
+            // Right: the drive from above - the field, its plays, the ball.
+            let field = CGRect(x: split, y: top, width: w - split - pad, height: h - top - pad)
+            UIColor(red: 0.09, green: 0.33, blue: 0.16, alpha: 1).setFill()
+            ctx.fill(field)
+            let ez = field.width * 10 / 120
+            StadiumLook.color(s.teams.home.chip).setFill()
+            ctx.fill(CGRect(x: field.minX, y: field.minY, width: ez, height: field.height))
+            StadiumLook.color(s.teams.away.chip).setFill()
+            ctx.fill(CGRect(x: field.maxX - ez, y: field.minY, width: ez, height: field.height))
+            func fx(_ yard: Double) -> CGFloat { field.minX + ez + (field.width - 2 * ez) * CGFloat(yard / 100) }
+            func fz(_ lane: Double) -> CGFloat { field.midY - field.height * 0.8 * CGFloat(lane / s.field.width) }
+            ctx.setStrokeColor(UIColor.white.withAlphaComponent(0.35).cgColor)
+            ctx.setLineWidth(h * 0.004)
+            for yd in stride(from: 10.0, through: 90.0, by: 10.0) {
+                ctx.move(to: CGPoint(x: fx(yd), y: field.minY))
+                ctx.addLine(to: CGPoint(x: fx(yd), y: field.maxY))
+            }
+            ctx.strokePath()
+            for (i, arc) in arcs.suffix(look.plays).enumerated() {
+                let newest = i == min(arcs.count, look.plays) - 1
+                let colour = StadiumLook.color(s.palette[arc.color] ?? "#FFFFFF").withAlphaComponent(newest ? 1 : 0.55)
+                ctx.setStrokeColor(colour.cgColor)
+                ctx.setLineWidth(h * (newest ? 0.014 : 0.008))
+                ctx.setLineCap(.round)
+                ctx.move(to: CGPoint(x: fx(arc.fromX), y: fz(arc.lane)))
+                ctx.addLine(to: CGPoint(x: fx(arc.toX), y: fz(arc.lane)))
+                ctx.strokePath()
+            }
+            if let ball = s.ball {
+                let r = h * 0.022
+                UIColor(red: 0.55, green: 0.29, blue: 0.13, alpha: 1).setFill()
+                ctx.fillEllipse(in: CGRect(x: fx(ball.x) - r * 1.4, y: field.midY - r, width: r * 2.8, height: r * 2))
+                UIColor.white.setStroke()
+                ctx.setLineWidth(h * 0.005)
+                ctx.strokeEllipse(in: CGRect(x: fx(ball.x) - r * 1.4, y: field.midY - r, width: r * 2.8, height: r * 2))
+            }
+        }
+    }
+
+    /// ESPN's play text without its leading parentheticals and jersey numbers.
+    static func plain(_ text: String) -> String {
+        var t = text
+        // Leading parentheticals: the clock, "(Shotgun)", "(No Huddle, Shotgun)".
+        while let r = t.range(of: #"^\([^)]*\)\s*"#, options: .regularExpression) { t.removeSubrange(r) }
+        t = t.replacingOccurrences(of: #"#\d+\s"#, with: "", options: .regularExpression)
+        return t
+    }
+}
