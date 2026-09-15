@@ -708,6 +708,53 @@ final class CrowdKit {
         }
     }
 
+    /// Unpremultiply, grow colour into transparent texels `passes` times, and
+    /// wrap it as a straight-alpha image (CGContext cannot hold one; CGImage can).
+    nonisolated static func straightPadded(_ o: UnsafeMutablePointer<UInt8>, width W: Int, height H: Int, passes: Int) -> CGImage? {
+        let n = W * H
+        var rgb = [Float](repeating: 0, count: n * 3)
+        var alpha = [UInt8](repeating: 0, count: n)
+        var known = [Bool](repeating: false, count: n)
+        for i in 0..<n {
+            let a = o[i * 4 + 3]
+            alpha[i] = a
+            guard a > 0 else { continue }
+            let k = 255 / Float(a)
+            rgb[i * 3] = Float(o[i * 4]) * k; rgb[i * 3 + 1] = Float(o[i * 4 + 1]) * k; rgb[i * 3 + 2] = Float(o[i * 4 + 2]) * k
+            known[i] = true
+        }
+        for _ in 0..<passes {
+            var next = known
+            for y in 0..<H {
+                for x in 0..<W {
+                    let i = y * W + x
+                    guard !known[i] else { continue }
+                    var sum = SIMD3<Float>.zero, c: Float = 0
+                    for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                        let nx = x + dx, ny = y + dy
+                        guard nx >= 0, ny >= 0, nx < W, ny < H else { continue }
+                        let j = ny * W + nx
+                        guard known[j] else { continue }
+                        sum += SIMD3(rgb[j * 3], rgb[j * 3 + 1], rgb[j * 3 + 2]); c += 1
+                    }
+                    guard c > 0 else { continue }
+                    rgb[i * 3] = sum.x / c; rgb[i * 3 + 1] = sum.y / c; rgb[i * 3 + 2] = sum.z / c
+                    next[i] = true
+                }
+            }
+            known = next
+        }
+        var bytes = [UInt8](repeating: 0, count: n * 4)
+        for i in 0..<n {
+            bytes[i * 4] = UInt8(min(255, rgb[i * 3])); bytes[i * 4 + 1] = UInt8(min(255, rgb[i * 3 + 1]))
+            bytes[i * 4 + 2] = UInt8(min(255, rgb[i * 3 + 2])); bytes[i * 4 + 3] = alpha[i]
+        }
+        guard let provider = CGDataProvider(data: Data(bytes) as CFData) else { return nil }
+        return CGImage(width: W, height: H, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: W * 4,
+                       space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
     nonisolated private static func rgba(_ img: CGImage, width: Int, height: Int) -> (CGContext, UnsafeMutablePointer<UInt8>)? {
         guard let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
                                   space: CGColorSpaceCreateDeviceRGB(),
@@ -826,6 +873,12 @@ final class CrowdKit {
             }
         }
         }
+        // Cards are cut out by alpha and seen at 100 m through small mips. In a
+        // premultiplied bitmap every transparent texel is black, so the mips
+        // averaged each figure with its black surround and far stands went
+        // dark. Pad figure colour into the transparent texels and hand over
+        // straight alpha, so a mip averages people with people.
+        if case .blocks = layout { return straightPadded(o, width: W, height: H, passes: 6) }
         return out.makeImage()
     }
 }
