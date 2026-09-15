@@ -149,6 +149,12 @@ Before and after shots are under `.work/shots/experience-*` in the Experience wo
 - **`field-level`:** a clean look down the field. The drive log sits in the lower-left corner and the Elsewhere tab in the lower right.
 - **Budget:** stadium 0 draw parts. Tabletop 6 parts and 2.9k triangles, plus 3 parts for the gate while it opens. Budget is 5k triangles and 10 parts.
 
+**Iteration 6 (`experience-it6`, build `cfe35ad`), `redzone-trails` from all seven presets.**
+- **`pressBox`:** the drive log sits over the far stands and the controls pill above the field's far sideline; the field is clear.
+- **`club` / `clubLevel` / `upper` / `sideline`:** the side panels sit over the stands, just above the field's far edge.
+- **`field`:** panels over the near apron.
+- **`endzone`:** the glass scorebug has yielded to the video board.
+
 ## Found for other actors
 
 **Bowl: the press box sits too low to see the field from.** `bowl.pressBox.rise[0]` (19.8) is barely above the lower tier's top (19.6). A real press box looks over the last rows. Proposed: raise the box's floor about 3 yd above the lower bowl's top, or move it back over the concourse. The `pressBox` seat preset takes its floor from `pressBox.rise[0]`, so it follows automatically.
