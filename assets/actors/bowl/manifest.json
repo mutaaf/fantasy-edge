@@ -84,12 +84,12 @@
    "usdz": "actors/bowl/seats_far.usdz",
    "glb": "actors/bowl/seats_far.glb",
    "objects": {
-    "bands": 9796,
-    "fill_club": 338,
-    "fill_endzone": 328,
-    "fill_upper": 194,
-    "fill_sideline": 144,
-    "fill_clubLevel": 144
+    "bands": 10098,
+    "fill_club": 264,
+    "fill_endzone": 212,
+    "fill_upper": 140,
+    "fill_sideline": 110,
+    "fill_clubLevel": 134
    },
    "parts": {
     "bands": 1,
@@ -99,13 +99,13 @@
     "fill_sideline": 1,
     "fill_clubLevel": 1
    },
-   "triangles": 10944,
+   "triangles": 10958,
    "materials": [
     "bowl_seat_band"
    ],
    "bytes": {
-    "usdz": 709675,
-    "glb": 775468
+    "usdz": 710611,
+    "glb": 777452
    },
    "about": "Seat bands: `bands` everywhere but the preset regions; `fill_<preset>` for each region. Show every fill except the preset the wearer sits in.",
    "regions": [
@@ -117,7 +117,7 @@
       5,
       20
      ],
-     "reach": 30.0
+     "reach": 22.0
     },
     {
      "id": "endzone",
@@ -127,7 +127,7 @@
       0,
       10
      ],
-     "reach": 30.0
+     "reach": 22.0
     },
     {
      "id": "upper",
@@ -137,7 +137,7 @@
       0,
       9
      ],
-     "reach": 30.0
+     "reach": 22.0
     },
     {
      "id": "sideline",
@@ -147,7 +147,7 @@
       0,
       8
      ],
-     "reach": 30.0
+     "reach": 22.0
     },
     {
      "id": "clubLevel",
@@ -157,7 +157,7 @@
       15,
       29
      ],
-     "reach": 30.0
+     "reach": 22.0
     }
    ]
   },
@@ -166,11 +166,11 @@
    "usdz": "actors/bowl/near.usdz",
    "glb": "actors/bowl/near.glb",
    "objects": {
-    "near_club": 17294,
-    "near_endzone": 20438,
-    "near_upper": 14572,
-    "near_sideline": 27130,
-    "near_clubLevel": 13844
+    "near_club": 7982,
+    "near_endzone": 7482,
+    "near_upper": 5862,
+    "near_sideline": 12456,
+    "near_clubLevel": 6540
    },
    "parts": {
     "near_club": 7,
@@ -179,7 +179,7 @@
     "near_sideline": 7,
     "near_clubLevel": 7
    },
-   "triangles": 93278,
+   "triangles": 40322,
    "materials": [
     "bowl_near_deck",
     "bowl_seat_band",
@@ -190,8 +190,8 @@
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 6862337,
-    "glb": 7438964
+    "usdz": 3494721,
+    "glb": 3750300
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."
   },

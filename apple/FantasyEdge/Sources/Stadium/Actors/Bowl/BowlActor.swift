@@ -127,6 +127,11 @@ final class BowlActor: StadiumActor {
     /// takes the receiver the stands already carry.
     private func attach(_ e: Entity) {
         root.addChild(e)
+        // Shadow casting is opt-in and the composer only marks what exists at
+        // build; a near patch or fill swapped in later marks itself.
+        for node in Self.descendants(of: e) where node.components.has(ModelComponent.self) {
+            node.components.set(DynamicLightShadowComponent(castsShadow: false))
+        }
         guard let receiver = Self.descendants(of: root)
             .lazy.compactMap({ $0.components[ImageBasedLightReceiverComponent.self] }).first else { return }
         for node in Self.descendants(of: e) where node.components.has(ModelComponent.self) {

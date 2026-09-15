@@ -39,7 +39,7 @@ HALF_L = kit.SHAPE["halfLength"]
 RAIL_H = 1.04            # 0.95 m guard height, in yards
 EYE = 1.26 / kit.YARD    # a seated eye above the tread
 STEPS = {"lower": 2, "upper": 3}
-LOD0_RADIUS, LOD1_RADIUS = 2.4, 7.0
+LOD0_RADIUS, LOD1_RADIUS = 1.8, 4.5    # budget: bowl 62k with the worst preset attached
 CUTAWAY = kit.VISUAL["experience"]["tabletop"]["cutaway"]
 
 # Interiors atlas regions, v: suites 0.5-1, press box 0.25-0.5, glow 0-0.25.
@@ -185,7 +185,7 @@ def presets():
         rw = kit.row(tr, r, n)
         feet = kit.bowl_point(rw["front"] + (rw["back"] - rw["front"]) * kit.SEATING_CFG["feetDepth"], t)
         out.append({"id": s["id"], "tier": tier, "angle": t, "row": r,
-                    "rows": (max(0, r - 13), min(n - 1, r + 2)), "reach": 30.0,
+                    "rows": (max(0, r - 13), min(n - 1, r + 2)), "reach": 22.0,
                     "eye": (feet[0], rw["tread"] + EYE, feet[1]), "feet": (feet[0], rw["tread"], feet[1])})
     return out
 
