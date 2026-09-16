@@ -21,10 +21,10 @@ def lit(mat):
 def main():
     common.reset()
     cast = specs.cast()
-    picks = [int(a) for a in common.args()] or [0, 3, 5, 9, 14, 22]
+    picks = [int(a) for a in common.args() if a.isdigit()] or [0, 3, 5, 9, 14, 22]
     for col, i in enumerate(picks):
         f = cast[i]
-        for row, pose in enumerate(["sit", "cheer_a"]):
+        for row, pose in enumerate(common.args_poses() if hasattr(common, "args_poses") else ["sit", "cheer_a"]):
             mesh, rig, J, info = mh.assemble(f, i)
             print("fan", i, info["identity"]["female"], info["identity"]["age"], info["identity"]["ancestry"], info["suit"], info["hair"], round(info["height"], 2), len(mesh.data.polygons))
             for slot in mesh.material_slots:

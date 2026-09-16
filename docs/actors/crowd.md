@@ -300,3 +300,129 @@ Before: `integration-10/s-crowd-closeup{,-clubLevel,-upper}.png`, `s-bowl-wide.p
 | `crowd-r3-4/s-crowd-closeup-upper.png` | The nearest fan's hands float over the rail in front instead of resting on their thighs. |
 | `crowd-r3-4/s-bowl-wide.png` | Unchanged from integration-10: far stands read, but the near celebrating row is still low-poly at the frame edge. |
 | `crowd-r3-4/s-td-moment-t0.5.png`, `-t5.1.png` | Cheering arms read well; the raised foam fingers are cartoon-sized next to MakeHuman hands. |
+
+## Round 4 (backwards, robotic, blocky)
+
+From the user, on integration-11: "fans are backwards and robotic and blocky".
+Before: `docs/lookdev/integration-11/s-redzone-trails.png`, `s-td-moment-t5.1.png`, `s-crowd-closeup-sideline.png`.
+
+### Backwards: the USD export axis
+
+**Every near fan on the headset sat facing their own chair back, and had since the kit's first
+frozen pose meshes.** `export_pose_meshes` wrote the USDZ with
+`export_global_forward_selection="Z"`. For Blender's USD exporter that puts a fan's front
+(Blender -Y) on **-Z**: the stage carries `xformOp:rotateXYZ = (90, 0, 180)`, and measuring a
+marker vertex through it lands -Y at (0, 0, -1). The glTF twin uses `export_yup`, which puts it
+on **+Z**, which is what the manifest promises and what `CrowdPoseMesh.placed` assumes when it
+turns +Z onto a seat's facing. So the web and Android ports were right and the headset was
+backwards. Measured on the shipped kit through pxr: `lod0_poses.usdz` faced -Z.
+
+Round 3 gave the fans faces, which is why it became obvious then; the earlier scripted
+mannequins hid it. Two of its logged "worst things" were this bug seen from the side: fans
+perched above the pan with their legs over the row in front (a fan sat 180° round is sitting on
+the front lip of their chair) and hands floating over the rail.
+
+- **Fixed** at the export: `USD_FORWARD = "NEGATIVE_Z"` for the pose meshes and the skinned fans.
+- **Measured, not assumed:** `build.py` reopens every exported file (USD through `pxr`, glTF
+  through the stdlib reader in `glb.py`) and records the side its fans face in
+  `manifest.json.forward`; the build fails if any file is not +Z. The cue is a seated fan's feet
+  and shins against their torso, which survives LOD2's 250 triangles - standing toes do not, and
+  reading those called 5 of 24 LOD2 fans backwards when they were not.
+- **Held by three checks, at three levels:** `tests/test_crowd_kit.py` reads the glTF bytes for
+  every fan on every LOD; it also holds the manifest's measured USD axis and the export setting.
+  `apple/verify_scene.swift` places every seat through `CrowdFacing` - the one definition the
+  actor also places with - and fails if a fan would look away from the field; with the kit's
+  forward flipped it reports 163,950 failures. The app measures the kit it loaded and logs
+  `[stadium] crowd kit lod0 faces +Z`, or an error naming the offsets.
+- **Cards were never wrong:** the impostor atlas is rendered in Blender with view 0 facing the
+  camera, and the runtime picks view 0 for a fan facing the wearer. Only the mesh rings flipped.
+
+### Robotic
+
+Everything stays group-level: a near group still swaps one merged mesh.
+
+- **Per fan inside the slot.** Each slot a group can show is a merged mesh in which every fan
+  wears a pose drawn by their own seat from `visual.crowd.nearMix`. Going between `sit` and
+  `sit_b` draws from one stream, so about a third of a group changes and the rest hold: a row
+  breathes instead of blinking.
+- **Real postures.** `poses.py` grew seated and standing families - hands on thighs, a forearm on
+  the armrest, elbows on knees leaning in, hands clasped in the lap, leaning back, weight on one
+  hip, hands on hips, arms folded - reached with a two-bone solve (`mh.solve_arm`) onto targets
+  measured off the posed body, not by hand-set angles. Fans holding something hold it up.
+- **Heads follow the play.** New near-only stills `sit_look_l` / `sit_look_r` (chest, neck and
+  head turned 38°, `mh.twist_upper_body`). A group turns when the ball is more than
+  `lookYards` across it. Chatting pairs turn to each other at `chatShare`.
+- **The rise is staggered and ripples.** A score reaches a group after
+  `rippleSeconds x distance / rippleYards` from where the play was, then it goes through `rise_1`
+  (the quickest 40% half up) and `rise_2` (the first cheering) before the celebration.
+  `apple/verify_crowd.swift` sweeps it: 337,996 checks, and the scored-on side still never
+  celebrates.
+
+### Blocky
+
+- **Shading, not silhouette, was most of it.** Every frozen pose mesh now takes custom split
+  normals from the full-resolution body in the same pose (`transfer_normals`).
+- **The square patches were the UV layout.** Smart-projecting a decimated 3,000-triangle body cut
+  it into thousands of islands a few texels wide; at shipped size every texel sat by a seam, so
+  mips mixed islands (salmon squares on jeans, pale blotches on faces). MakeHuman's parts already
+  have clean layouts, so each part's own UVs now go into a fixed rectangle of the fan's cell
+  (`PART_RECTS`), laid out before decimation so every LOD inherits it. Only the fitted hat, scarf
+  and prop are projected. Bake margin is `EXTEND` at 80 px.
+- **Hair.** MakeHuman hair is alpha cards and the stadium draws fans opaque, so clear texels now
+  bake the shadowed depth of the hair instead of the texture under zero alpha (an orange lattice).
+- **Props.** A foam finger is a rounded mitt the hand goes into with a raised finger, about 45 cm
+  overall; a sign is 56 x 40 cm poster board, lettered in its own frame before it is placed.
+- **Fewer, better near meshes,** inside the same 100k the crowd keeps for meshes beside its 50k of
+  cards: LOD0 2400 -> 3000 triangles (14 of them, was 16), LOD1 650 -> 900 (24, was 32), LOD2 250
+  (130, was 150). 96.1k, was 96.7k.
+- **Measured and rejected:** protecting the face and hands with a decimate vertex group. Blender's
+  group is all or nothing - protected vertices never collapse at any factor, and the rest
+  collapsed so hard the head fell to 25 triangles. The head already keeps about half of LOD0.
+
+**Cost:** `lod0_poses.usdz` is 29 MB (was 17): nine poses at 3,000 triangles rather than six at
+2,400. LOD1 10 MB, LOD2 3.6 MB.
+
+### Shot on the headset: `crowd-r4`
+
+Built and shot after the Xcode 27 licence was accepted (the round-4 commit above was written
+blind; `CrowdActor.swift` compiled first time, and the build carries no warning the
+integration-11 baseline does not).
+
+**Facing, the thing the user saw.** Rows in front show backs of heads from every seat:
+
+| Shot | Verdict |
+|---|---|
+| `crowd-r4/s-crowd-closeup.png` (club) | backs and profiles, all turned to the field |
+| `crowd-r4/s-crowd-closeup-clubLevel.png` | backs; the row below reads shoulders-and-cap |
+| `crowd-r4/s-crowd-closeup-upper.png` | backs, legs under the chairs, nobody perched on the pan lip |
+| `crowd-r4/s-crowd-closeup-endzone.png` | backs, turned in toward the goal line |
+| `crowd-r4/s-crowd-closeup-sideline.png` | profiles to the field; this is the frame that showed a wall of faces at integration-11 |
+| `crowd-r4/s-crowd-closeup-field.png` | no near fans at field level (correct: the seats are above and behind) |
+| `crowd-r4/s-crowd-closeup-pressBox.png` | no near fans (behind glass) |
+| `crowd-r4/s-redzone-trails.png` | backs; the integration-11 counterpart was the user's evidence |
+
+The app measures the kit it loads and logs `[stadium] crowd kit lod0/lod1/lod2 faces +Z (24 fans)`.
+
+**In motion.** `s-td-moment-t0.5.png` the near side is up, arms and props in a dozen different
+gestures; `-t5.1.png` still celebrating, mixed cheering and clapping; `-t8.5.png` settled back
+into the seats with a few still clapping. Idle rows read as people: leaning back, forearms on
+armrests, elbows on knees, hands on thighs, heads turned to the play and to each other.
+
+**A first run's `t5.1` caught the near rows seated.** Not a fault: the harness times its frames
+from when the moment appears in the scene, that run drifted about 8 seconds of game clock later
+(12:32 against 12:40 on the board), and it landed inside the settle, where each group sits at its
+own point over `settleSeconds`. Re-shot with the slot decisions logged: `look_r` -> `rise_1` ->
+`rise_2` -> `cheer_a` -> `clap_b` -> `cheer_a`, `scoring true` throughout, every group holding all
+10 slot meshes.
+
+**Budget** (`-stadiumStats`, stadium): crowd **143,728 triangles, 36 draw parts**, 0 shadow
+casters, against 144,344 and 36 at integration-11. Stadium total 239,550 triangles, 97 parts,
+~67 MB of textures. Crowd build 3.4-3.5 s (integration-11: 2.8-3.8 s); the dress composes in
+1.35-1.42 s (integration-11: 1.5-2.3 s).
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r4/s-crowd-closeup.png` | The foam finger reads as a blue baton from behind: the mitt is a rounded block and the raised finger its handle. |
+| `crowd-r4/s-crowd-closeup-upper.png` | Hair is still card-flat at 2-3 m now that the shading no longer hides it. |
+| `crowd-r4/s-bowl-wide.png` | On a plain snap the fans along the bottom edge read as more raised arms than a first-quarter crowd would have. |
+| `crowd-r4/s-td-moment-t8.5.png` | The settle drops a whole group within a second or two; it wants the same per-fan stagger the rise has. |

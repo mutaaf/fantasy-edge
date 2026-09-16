@@ -1,4 +1,5 @@
 import Foundation
+import simd
 
 // visual.crowd: Crowd's whole vocabulary of appearance, decoded from
 // design/tokens.json. Owned by the Crowd specialist (docs/ART_BIBLE.md).
@@ -65,6 +66,12 @@ extension SceneSpec.Look {
         public let referenceHeightMetres: Double
     }
 
+    /// One pose and the share of a near slot's fans who wear it.
+    public struct CrowdMixShare: Decodable, Equatable, Sendable {
+        public let pose: String
+        public let share: Double
+    }
+
     public struct CrowdLuma: Decodable, Equatable, Sendable {
         public let min: Double
         public let max: Double
@@ -109,7 +116,33 @@ extension SceneSpec.Look {
         public let settleSeconds: [Double]
         public let thirdDownStand: Bool
         public let sideJitter: Double
+        public let nearPoses: [String]
+        public let nearPhases: Int
+        public let nearMixAbout: String
+        public let nearMix: [String: [CrowdMixShare]]
+        public let chatShare: Double
+        public let lookYards: Double
+        public let rippleSeconds: Double
+        public let rippleYards: Double
+        public let riseStageSeconds: Double
     }
 }
 
 // LOOK-END
+
+/// How a frozen kit fan is turned onto its seat. The kit faces +Z (manifest
+/// `forward`, measured at export); this turns +Z onto the seat's facing. One
+/// definition, used by CrowdActor to place fans and by apple/verify_scene.swift
+/// to check that every placed fan faces the field.
+public enum CrowdFacing {
+    public static let kitForward = SIMD3<Float>(0, 0, 1)
+
+    public static func rotation(facing: SIMD3<Float>) -> simd_quatf {
+        simd_quatf(angle: atan2(facing.x, facing.z), axis: SIMD3(0, 1, 0))
+    }
+
+    /// Where a fan placed on this facing actually looks.
+    public static func placedForward(facing: SIMD3<Float>) -> SIMD3<Float> {
+        rotation(facing: facing).act(kitForward)
+    }
+}

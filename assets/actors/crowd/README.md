@@ -44,9 +44,8 @@ Club colour is never baked in. Clothing that takes a club colour carries a
 
 | File | What | Budget |
 |---|---|---|
-| `fanNN.usdz` / `.glb` | skinned LOD0 (~1500 tris) + LOD1 (~650 tris), 20-joint skeleton, 10 clips | per fan |
-| `lod0_poses.usdz` / `.glb` | every fan's LOD0 frozen in each of the 6 impostor poses, static | 216k tris on disk, not drawn at once |
-| `lod1_poses.usdz` / `.glb` | the same at LOD1 | 60k tris on disk |
+| `fanNN.usdz` / `.glb` | skinned LOD0 (3000 tris) + LOD1 (900 tris), MakeHuman's rig, 10 clips | per fan |
+| `lod{0,1,2}_poses.usdz` / `.glb` | every fan frozen in each of the 9 near poses, static, shading normals transferred from the full-resolution body | 29 / 10 / 3.6 MB |
 | `fan_albedo.png` | mesh UV atlas, 2048², 6 x 4 fan cells, faces at 1.75x texel density | 16 MB RGBA in GPU |
 | `fan_mask.png` | tint mask, 2048² (full size: a half mask left white wedges on near fans) | composed on load, not kept |
 | `impostor_albedo.png` | 2560x2304: 8 fan blocks per row, 5 views x 6 poses, 64x128 px cells, each cell two neighbours at 0.503 m seat pitch | 23.6 MB RGBA |
@@ -58,6 +57,15 @@ Clips (24 fps): `idle_sway` (56f, loop), `sit` (hold), `stand` (16f), `clap` (12
 `cheer` (16f, loop), `fist_pump` (12f, loop), `towel_spin` (12f, loop), `wave` (32f),
 `groan` (40f), `phone_raise` (44f). glTF carries one animation per clip; USD has one
 timeline with the clips end to end, ranges in the manifest's `usdClips`.
+
+Frozen poses: the six impostor poses plus `sit_look_l`, `sit_look_r` and `rise`, which only the
+near rings draw (heads following the play, and the staged rise on a score). Which pose each fan
+wears in a slot comes from `visual.crowd.nearMix`.
+
+**Every pose file's fans face +Z**, measured after export and recorded in `manifest.json`
+(`forward`). Blender's USD exporter with forward `Z` puts a fan's front on -Z, and the headset
+then seats every near fan facing their own chair back; `tests/test_crowd_kit.py` and
+`apple/verify_scene.swift` both fail on it now.
 
 Impostor poses: `sit`, `sit_b`, `stand`, `clap_b`, `cheer_a`, `groan`. Views at yaw
 0, 45, 90, 135, 180 (fan relative to the viewer, +90 facing the viewer's right);

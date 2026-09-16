@@ -23,6 +23,11 @@ def reset():
             pass
 
 
+def args_poses() -> list[str]:
+    """Pose names among the script arguments (anything that is not a number), or the default pair."""
+    return [a for a in args() if not a.isdigit()] or ["sit", "cheer_a"]
+
+
 def args() -> list[str]:
     return sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 

@@ -12,7 +12,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-sys.path.insert(0, str(ROOT / "tools" / "blender" / "crowd"))
+sys.path.insert(0, str(ROOT / "tools" / "blender" / "crowd"))   # specs.py and glb.py need no Blender
 
 
 class CrowdKitTest(unittest.TestCase):
@@ -29,7 +29,8 @@ class CrowdKitTest(unittest.TestCase):
         C, M = self.C, self.M
         self.assertEqual(C["fans"], len(M["fans"]))
         self.assertEqual(C["poses"], M["impostor"]["poses"])
-        self.assertEqual(C["poses"], M["poseMeshes"]["poses"])
+        self.assertEqual(C["nearPoses"], M["poseMeshes"]["poses"])
+        self.assertEqual(C["nearPoses"][:len(C["poses"])], C["poses"], "near poses extend the impostor poses")
         self.assertEqual(C["impostor"]["cellPixels"], M["impostor"]["cellPx"])
         self.assertEqual(C["impostor"]["viewsYaw"], M["impostor"]["viewsYawDeg"])
         self.assertEqual(C["impostor"]["worldMetres"], M["impostor"]["worldSize"])
@@ -170,6 +171,53 @@ class CrowdKitTest(unittest.TestCase):
         cast = {f["id"]: f for f in specs.cast()}
         for f in self.M["fans"]:
             self.assertAlmostEqual(f["height"], cast[f["id"]]["height"], places=3)
+
+    def test_every_exported_fan_faces_plus_z_on_every_lod(self):
+        """Round 4's backwards crowd. CrowdFacing turns a kit fan's +Z onto its seat's facing,
+        so a pose file whose fans face -Z seats every one of them facing the chair back.
+        Read from the glTF bytes a renderer reads, for every fan on every LOD: seated, the
+        feet and shins sit 10-50 cm toward the front of the torso (build.py's knee_reach,
+        which holds at LOD2's 250 triangles where standing feet do not)."""
+        import glb
+        import importlib.util
+        src = (ROOT / "tools/blender/crowd/build.py").read_text()
+        ns = {}
+        exec(src[src.index("def knee_reach"):src.index("# ───────────────────────────── impostors")], ns)
+        for lod in (0, 1, 2):
+            found = glb.meshes(ASSETS / f"actors/crowd/lod{lod}_poses.glb", suffix="_sit")
+            self.assertEqual(len(found), self.C["fans"], f"lod{lod}")
+            reach = {name: ns["knee_reach"](pts) for name, pts in found}
+            backwards = {n: round(r, 3) for n, r in reach.items() if r <= 0.05}
+            self.assertEqual(backwards, {}, f"lod{lod}: these fans face -Z")
+
+    def test_the_usdz_forward_axis_is_measured_and_plus_z(self):
+        """A USDZ cannot be read with the stdlib; build.py opens each one through pxr after
+        export and records which way its fans face. Blender's USD exporter with forward "Z"
+        put a fan's front on -Z, and that is exactly what the headset drew."""
+        forward = {k: v for k, v in self.M.get("forward", {}).items() if k != "about"}
+        self.assertEqual(sorted(forward), sorted(f"lod{l}.{e}" for l in (0, 1, 2) for e in ("usdz", "glb")))
+        self.assertEqual(set(forward.values()), {"+Z"}, forward)
+        src = (ROOT / "tools/blender/crowd/build.py").read_text()
+        self.assertIn('USD_FORWARD = "NEGATIVE_Z"', src)
+        self.assertNotIn('export_global_forward_selection="Z"', src)
+
+    def test_near_mixes_are_shares_of_near_poses(self):
+        """Every near slot draws only poses the kit froze, and its shares sum to 1."""
+        import re
+        C = self.C
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdChoreography.swift").read_text()
+        body = src[src.index("enum Slot"):src.index("public init(_ pose")]
+        names = set()
+        for line in re.findall(r"^\s*case (.+)$", body, re.M):
+            for item in line.split(","):
+                m = re.match(r'\s*(\w+)(?:\s*=\s*"([\w_]+)")?', item)
+                names.add(m.group(2) or m.group(1))
+        for slot, shares in C["nearMix"].items():
+            self.assertIn(slot, names, f"nearMix.{slot} is not a slot")
+            self.assertAlmostEqual(sum(s["share"] for s in shares), 1.0, places=6, msg=slot)
+            for s in shares:
+                self.assertIn(s["pose"], C["nearPoses"], f"nearMix.{slot} wears {s['pose']}")
+        self.assertLessEqual(C["rings"]["lod0Max"] * 3000, 42_000)
 
 
 if __name__ == "__main__":

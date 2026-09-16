@@ -8,6 +8,15 @@
   "usd": "+Y up, fans face +Z (converted on export, same frame as glTF)"
  },
  "origin": "floor under the pelvis in the standing pose",
+ "forward": {
+  "about": "Measured after export by build.py (measured_forward): the side each pose file's fans face, measured from a seated fan's feet against their torso. Renderers turn +Z onto a seat's facing.",
+  "lod0.usdz": "+Z",
+  "lod0.glb": "+Z",
+  "lod1.usdz": "+Z",
+  "lod1.glb": "+Z",
+  "lod2.usdz": "+Z",
+  "lod2.glb": "+Z"
+ },
  "seat": {
   "about": "In the sitting clips the pelvis moves back and down onto the seat pan; feet stay near the origin.",
   "pelvisAt175m": [
@@ -685,11 +694,11 @@
    "gltf": "fan00.glb",
    "lod0": {
     "mesh": "fan00",
-    "triangles": 2400
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan00_lod1",
-    "triangles": 647
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan00_lod2",
@@ -772,15 +781,15 @@
    "gltf": "fan01.glb",
    "lod0": {
     "mesh": "fan01",
-    "triangles": 2400
+    "triangles": 3000
    },
    "lod1": {
     "mesh": "fan01_lod1",
-    "triangles": 650
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan01_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.16867,
@@ -859,15 +868,15 @@
    "gltf": "fan02.glb",
    "lod0": {
     "mesh": "fan02",
-    "triangles": 2400
+    "triangles": 3000
    },
    "lod1": {
     "mesh": "fan02_lod1",
-    "triangles": 646
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan02_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.33533,
@@ -946,15 +955,15 @@
    "gltf": "fan03.glb",
    "lod0": {
     "mesh": "fan03",
-    "triangles": 2398
+    "triangles": 2997
    },
    "lod1": {
     "mesh": "fan03_lod1",
-    "triangles": 647
+    "triangles": 898
    },
    "lod2": {
     "mesh": "fan03_lod2",
-    "triangles": 249
+    "triangles": 248
    },
    "uvCell": [
     0.502,
@@ -1033,11 +1042,11 @@
    "gltf": "fan04.glb",
    "lod0": {
     "mesh": "fan04",
-    "triangles": 2397
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan04_lod1",
-    "triangles": 647
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan04_lod2",
@@ -1120,15 +1129,15 @@
    "gltf": "fan05.glb",
    "lod0": {
     "mesh": "fan05",
-    "triangles": 2398
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan05_lod1",
-    "triangles": 649
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan05_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.83533,
@@ -1207,15 +1216,15 @@
    "gltf": "fan06.glb",
    "lod0": {
     "mesh": "fan06",
-    "triangles": 2398
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan06_lod1",
-    "triangles": 649
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan06_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.002,
@@ -1294,11 +1303,11 @@
    "gltf": "fan07.glb",
    "lod0": {
     "mesh": "fan07",
-    "triangles": 2400
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan07_lod1",
-    "triangles": 649
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan07_lod2",
@@ -1381,15 +1390,15 @@
    "gltf": "fan08.glb",
    "lod0": {
     "mesh": "fan08",
-    "triangles": 2399
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan08_lod1",
-    "triangles": 647
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan08_lod2",
-    "triangles": 249
+    "triangles": 248
    },
    "uvCell": [
     0.33533,
@@ -1468,15 +1477,15 @@
    "gltf": "fan09.glb",
    "lod0": {
     "mesh": "fan09",
-    "triangles": 2399
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan09_lod1",
-    "triangles": 648
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan09_lod2",
-    "triangles": 249
+    "triangles": 247
    },
    "uvCell": [
     0.502,
@@ -1555,11 +1564,11 @@
    "gltf": "fan10.glb",
    "lod0": {
     "mesh": "fan10",
-    "triangles": 2399
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan10_lod1",
-    "triangles": 650
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan10_lod2",
@@ -1642,11 +1651,11 @@
    "gltf": "fan11.glb",
    "lod0": {
     "mesh": "fan11",
-    "triangles": 2397
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan11_lod1",
-    "triangles": 648
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan11_lod2",
@@ -1729,15 +1738,15 @@
    "gltf": "fan12.glb",
    "lod0": {
     "mesh": "fan12",
-    "triangles": 2400
+    "triangles": 2997
    },
    "lod1": {
     "mesh": "fan12_lod1",
-    "triangles": 643
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan12_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.002,
@@ -1816,15 +1825,15 @@
    "gltf": "fan13.glb",
    "lod0": {
     "mesh": "fan13",
-    "triangles": 2400
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan13_lod1",
-    "triangles": 649
+    "triangles": 898
    },
    "lod2": {
     "mesh": "fan13_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.16867,
@@ -1903,15 +1912,15 @@
    "gltf": "fan14.glb",
    "lod0": {
     "mesh": "fan14",
-    "triangles": 2399
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan14_lod1",
-    "triangles": 646
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan14_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.33533,
@@ -1990,15 +1999,15 @@
    "gltf": "fan15.glb",
    "lod0": {
     "mesh": "fan15",
-    "triangles": 2398
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan15_lod1",
-    "triangles": 650
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan15_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.502,
@@ -2077,11 +2086,11 @@
    "gltf": "fan16.glb",
    "lod0": {
     "mesh": "fan16",
-    "triangles": 2397
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan16_lod1",
-    "triangles": 648
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan16_lod2",
@@ -2164,15 +2173,15 @@
    "gltf": "fan17.glb",
    "lod0": {
     "mesh": "fan17",
-    "triangles": 2397
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan17_lod1",
-    "triangles": 648
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan17_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.83533,
@@ -2251,11 +2260,11 @@
    "gltf": "fan18.glb",
    "lod0": {
     "mesh": "fan18",
-    "triangles": 2400
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan18_lod1",
-    "triangles": 650
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan18_lod2",
@@ -2338,15 +2347,15 @@
    "gltf": "fan19.glb",
    "lod0": {
     "mesh": "fan19",
-    "triangles": 2398
+    "triangles": 2998
    },
    "lod1": {
     "mesh": "fan19_lod1",
-    "triangles": 648
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan19_lod2",
-    "triangles": 249
+    "triangles": 250
    },
    "uvCell": [
     0.16867,
@@ -2425,15 +2434,15 @@
    "gltf": "fan20.glb",
    "lod0": {
     "mesh": "fan20",
-    "triangles": 2399
+    "triangles": 3000
    },
    "lod1": {
     "mesh": "fan20_lod1",
-    "triangles": 650
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan20_lod2",
-    "triangles": 250
+    "triangles": 249
    },
    "uvCell": [
     0.33533,
@@ -2512,11 +2521,11 @@
    "gltf": "fan21.glb",
    "lod0": {
     "mesh": "fan21",
-    "triangles": 2398
+    "triangles": 2997
    },
    "lod1": {
     "mesh": "fan21_lod1",
-    "triangles": 647
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan21_lod2",
@@ -2599,15 +2608,15 @@
    "gltf": "fan22.glb",
    "lod0": {
     "mesh": "fan22",
-    "triangles": 2400
+    "triangles": 2999
    },
    "lod1": {
     "mesh": "fan22_lod1",
-    "triangles": 649
+    "triangles": 900
    },
    "lod2": {
     "mesh": "fan22_lod2",
-    "triangles": 250
+    "triangles": 248
    },
    "uvCell": [
     0.66867,
@@ -2686,11 +2695,11 @@
    "gltf": "fan23.glb",
    "lod0": {
     "mesh": "fan23",
-    "triangles": 2399
+    "triangles": 3000
    },
    "lod1": {
     "mesh": "fan23_lod1",
-    "triangles": 650
+    "triangles": 899
    },
    "lod2": {
     "mesh": "fan23_lod2",
@@ -2988,12 +2997,15 @@
    "stand",
    "clap_b",
    "cheer_a",
-   "groan"
+   "groan",
+   "sit_look_l",
+   "sit_look_r",
+   "rise"
   ]
  },
  "lod": {
-  "lod0Triangles": 2400,
-  "lod1Triangles": 650,
+  "lod0Triangles": 3000,
+  "lod1Triangles": 900,
   "suggestedRings": {
    "lod0MaxMetres": 7,
    "lod1MaxMetres": 16,

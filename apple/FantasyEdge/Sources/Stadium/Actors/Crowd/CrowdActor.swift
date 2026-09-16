@@ -38,10 +38,14 @@ final class CrowdActor: StadiumActor {
         let ring: Ring
         let away: Bool
         let slice: Int
-        /// Near rings: the merged mesh for each pose. Cards: empty.
-        var poseMeshes: [MeshResource] = []
+        /// Near rings: the merged mesh for each slot. Cards: empty.
+        var slotMeshes: [CrowdChoreography.Slot: MeshResource] = [:]
         var material: PhysicallyBasedMaterial
         var pose = -1
+        var slot: CrowdChoreography.Slot?
+        /// Where the group sits and which way is its fans' left, for the ripple and for heads turning to the play.
+        var centre = SIMD3<Float>.zero
+        var left = SIMD3<Float>(1, 0, 0)
         var brightness = -1.0
         let phase: Double
         let standing: Bool
@@ -63,6 +67,8 @@ final class CrowdActor: StadiumActor {
     private var generation = 0
     /// The side whose moment just ended, and when: it settles back into its seats over `settleSeconds`.
     private var lastScoring: (away: Bool, ended: Double)?
+    /// The moment on now: when it began and where the play was, for the ripple.
+    private var momentStart: (time: Double, at: SIMD3<Float>)?
     private var previousTint: String?
 
     init() { root.name = "actor.crowd" }
@@ -109,7 +115,12 @@ final class CrowdActor: StadiumActor {
         let wearerSeats = (s.presentation.stadium.seats ?? []).map { SceneMath.local(x: $0.x, y: $0.y, z: $0.z) }
         let clear = Float(C.clearance.radius), clearHeight = Float(C.clearance.height)
 
-        struct Placed { let fan: Int; let base: SIMD3<Float>; let facing: SIMD3<Float>; let away: Bool; let slice: Int; let variant: Int; let dist: Float; let row: Int; let seat: Int }
+        struct Placed {
+            let fan: Int; let base: SIMD3<Float>; let facing: SIMD3<Float>; let away: Bool; let slice: Int; let variant: Int
+            let dist: Float; let row: Int; let seat: Int
+            /// The next seat along the row is on this fan's left.
+            var nextOnLeft = true
+        }
         var placed: [Placed] = []
         var rowId = 0
         // Every seat Bowl built, when the scene carries them: fans sit exactly in
@@ -158,10 +169,13 @@ final class CrowdActor: StadiumActor {
                             let slice = sections.isEmpty ? Int(fraction * Double(slices)) % slices
                                                          : section * slices / sections.count
                             if section < sections.count { sectionSlices[sections[section].id, default: []].insert(slice) }
-                            placed.append(Placed(fan: fan, base: p, facing: SIMD3(Float(spot.facing.x), 0, Float(spot.facing.y)),
-                                                 away: isAway, slice: slice,
-                                                 variant: Int(rng.next() * Double(max(1, C.cardVariants))),
-                                                 dist: simd_distance(p, seat), row: rowId, seat: k))
+                            let facing = SIMD3(Float(spot.facing.x), 0, Float(spot.facing.y))
+                            let next = SceneMath.seat(row, run: runIndex, k: k + 1, shape: shape, ring: ring).position
+                            var fanPlaced = Placed(fan: fan, base: p, facing: facing, away: isAway, slice: slice,
+                                                   variant: Int(rng.next() * Double(max(1, C.cardVariants))),
+                                                   dist: simd_distance(p, seat), row: rowId, seat: k)
+                            fanPlaced.nextOnLeft = simd_dot(next - p, CrowdActor.leftOf(facing)) > 0
+                            placed.append(fanPlaced)
                         }
                     }
                     ahead = here
@@ -231,6 +245,7 @@ final class CrowdActor: StadiumActor {
         // Cards: one quad per fan, grouped by slice and side.
         struct CardKey: Hashable { let slice: Int; let away: Bool; let variant: Int }
         var cards: [CardKey: MeshBuilder] = [:]
+        var cardCentres: [CardKey: (sum: SIMD3<Float>, n: Float)] = [:]
         let atlas = kit.impostorSize
         let cell = SIMD2<Float>(Float(C.impostor.cellPixels[0]), Float(C.impostor.cellPixels[1]))
         let blockW = Float(C.impostor.cellPixels[0] * C.impostor.blockCells[0])
@@ -242,7 +257,7 @@ final class CrowdActor: StadiumActor {
             if consumed.contains(i) { continue }
             switch ringOf[i] {
             case .lod0, .lod1, .lod2:
-                near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % 2), default: []].append(f)
+                near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % max(1, C.nearPhases)), default: []].append(f)
             case .card:
                 var centre = f.base
                 let cardForward = Float(C.chair.cardForwardMetres) * yard
@@ -277,46 +292,52 @@ final class CrowdActor: StadiumActor {
                         uv: (SIMD2(ul, vBottom), SIMD2(ur, vBottom), SIMD2(ur, vTop), SIMD2(ul, vTop)),
                         normal: toViewer)
                 cards[ck] = mb
+                let sofar = cardCentres[ck] ?? (.zero, 0)
+                cardCentres[ck] = (sofar.sum + centre, sofar.n + 1)
             }
             fans += 1
             counts[ringOf[i], default: 0] += 1
         }
 
-        let poses = C.poses.count
         for (key, list) in near.sorted(by: { ($0.key.ring.rawValue, $0.key.away ? 1 : 0, $0.key.phase) < ($1.key.ring.rawValue, $1.key.away ? 1 : 0, $1.key.phase) }) {
-            var meshes: [MeshResource] = []
-            for pi in 0..<poses {
+            var meshes: [CrowdChoreography.Slot: MeshResource] = [:]
+            for slot in CrowdChoreography.Slot.allCases {
                 var mb = MeshBuilder()
-                let seated = C.chair.sitPoses.contains(C.poses[pi])
                 for f in list {
-                    // Seated, half the fans take the other seated pose, so a near row is not one posture copied;
-                    // the idle swap still flips every one of them.
-                    var pose = C.poses[pi]
-                    let sits = C.chair.sitPoses
-                    if sits.count == 2, let at = sits.firstIndex(of: pose), (f.fan + f.seat) % 2 == 1 { pose = sits[1 - at] }
-                    guard let src = kit.poseMesh(ring: key.ring, fan: f.fan, pose: pose) else { continue }
+                    let pose = CrowdActor.nearPose(slot, fan: f.fan, row: f.row, seat: f.seat, nextOnLeft: f.nextOnLeft, look: C)
+                    guard let hit = kit.nearPoseMesh(ring: key.ring, fan: f.fan, pose: pose) else { continue }
+                    let (name, src) = hit
                     // Into Bowl's chair: forward of its origin, pelvis on the pan whatever the fan's height.
+                    let seated = name.hasPrefix("sit")
                     let forward = Float(seated ? C.chair.sitForwardMetres : C.chair.standForwardMetres) * yard
                     let scale = kit.height(f.fan) / Float(C.chair.referenceHeightMetres)
                     // The kit seats a 1.75 m fan's pelvis at kitPelvisMetres; scaled by height, then lifted to the pan.
                     let lift = seated ? (Float(C.chair.pelvisMetres) - Float(C.chair.kitPelvisMetres) * scale) * yard : 0
                     mb.append(src.placed(at: f.base + f.facing * forward + SIMD3(0, lift, 0), facing: f.facing, scale: yard))
                 }
-                if let res = mb.resource("crowd.\(key.ring).\(pi)") { meshes.append(res) }
+                if let res = mb.resource("crowd.\(key.ring).\(slot.rawValue)") { meshes[slot] = res }
             }
-            guard meshes.count == poses else { continue }
+            guard let first = meshes[.sit] else { continue }
             var mat = PhysicallyBasedMaterial()
             mat.baseColor = .init(tint: .white, texture: .init((key.away ? dress.fanAway : dress.fanHome)))
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.faceCulling = .back
-            let e = ModelEntity(mesh: meshes[0], materials: [mat])
+            let e = ModelEntity(mesh: first, materials: [mat])
             e.name = "crowd.\(key.ring).\(key.away ? "away" : "home").\(key.phase)"
             root.addChild(e)
-            let g = Group(entity: e, ring: key.ring, away: key.away, slice: key.phase * slices / 2,
-                          material: mat, phase: Double(key.phase) * 0.37, standing: false)
-            g.poseMeshes = meshes
-            g.pose = 0
+            let phases = Double(max(1, C.nearPhases))
+            let g = Group(entity: e, ring: key.ring, away: key.away, slice: key.phase * slices / max(1, C.nearPhases),
+                          material: mat, phase: (Double(key.phase) + 0.35) / phases, standing: false)
+            g.slotMeshes = meshes
+            g.slot = .sit
+            g.centre = list.reduce(SIMD3<Float>.zero) { $0 + $1.base } / Float(max(1, list.count))
+            let facing = list.reduce(SIMD3<Float>.zero) { $0 + $1.facing }
+            g.left = CrowdActor.leftOf(simd_length(facing) > 1e-4 ? simd_normalize(facing) : SIMD3(0, 0, 1))
             groups.append(g)
+            #if DEBUG
+            let missing = CrowdChoreography.Slot.allCases.filter { meshes[$0] == nil }.map(\.rawValue)
+            StadiumLog.log.notice("[stadium] crowd group \(e.name): slots \(meshes.count)/\(CrowdChoreography.Slot.allCases.count)\(missing.isEmpty ? "" : ", missing \(missing.joined(separator: ","))"), \(list.count) fans")
+            #endif
         }
         for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.away ? 1 : 0, $0.key.variant) < ($1.key.slice, $1.key.away ? 1 : 0, $1.key.variant) }) {
             guard let res = mb.resource("crowd.cards.\(key.slice).\(key.variant)") else { continue }
@@ -337,8 +358,10 @@ final class CrowdActor: StadiumActor {
             var h = UInt64(key.slice * 7919 + key.variant * 3571 + (key.away ? 104_729 : 0)) &+ C.seed
             h ^= h >> 17
             let phase = Double(h % 997) / 997
-            groups.append(Group(entity: e, ring: .card, away: key.away, slice: key.slice, material: mat,
-                                phase: phase, standing: phase < C.standingShare))
+            let g = Group(entity: e, ring: .card, away: key.away, slice: key.slice, material: mat,
+                          phase: phase, standing: phase < C.standingShare)
+            if let c = cardCentres[key], c.n > 0 { g.centre = c.sum / c.n }
+            groups.append(g)
         }
         #if DEBUG
         // Look-dev: `-crowdCue clap:home` (or stand, sit, groan) holds a cue from the first frame,
@@ -405,6 +428,9 @@ final class CrowdActor: StadiumActor {
         let cues = CrowdCues.live(c.shared, at: time)
         let tintSide = s.bowl.sectionTint.side
         if previousTint != nil, tintSide == nil { lastScoring = (previousTint == "away", time) }
+        let ball = s.ball.map { SceneMath.local(x: $0.x, y: $0.y, z: $0.z) }
+        if tintSide == nil { momentStart = nil }
+        else if previousTint == nil || momentStart == nil { momentStart = (time, ball ?? .zero) }
         if tintSide != nil { lastScoring = nil }
         previousTint = tintSide
         // Third down: the defence's crowd gets up.
@@ -423,15 +449,27 @@ final class CrowdActor: StadiumActor {
                 }
                 return hits ? CrowdChoreography.CueKind(rawValue: cue.kind.rawValue) : nil
             }
-            let decided = CrowdChoreography.pose(.init(
+            let input = CrowdChoreography.Input(
                 away: g.away, isCard: g.ring == .card, phase: g.phase, standing: g.standing, slice: g.slice,
                 slices: Int(slices), time: time, reduceMotion: c.reduceMotion, tintSide: tintSide,
                 lastScoringAway: lastScoring?.away, lastScoringEnded: lastScoring?.ended ?? 0,
                 settleSeconds: (C.settleSeconds[0], C.settleSeconds[1]), surgeAway: surge?.away,
                 standingSideAway: standingSide, idleSeconds: (C.idleSeconds[0], C.idleSeconds[1]),
-                waveSeconds: C.waveSeconds, waveWidth: C.waveWidth, surgeHz: C.surgeHz, cues: reaching))
-            let pose = index(decided.rawValue)
-            setPose(g, pose)
+                waveSeconds: C.waveSeconds, waveWidth: C.waveWidth, surgeHz: C.surgeHz, cues: reaching,
+                momentStarted: momentStart?.time,
+                // The reaction spreads out from the play: the nearest groups move first.
+                delay: momentStart.map { C.rippleSeconds * Double(min(1, simd_distance(g.centre, $0.at) / Float(C.rippleYards))) } ?? 0,
+                riseStageSeconds: C.riseStageSeconds,
+                // Heads follow the play across the group, group by group, never per fan.
+                look: ball.map { b in
+                    let across = simd_dot(b - g.centre, g.left)
+                    return across > Float(C.lookYards) ? 1 : (across < -Float(C.lookYards) ? -1 : 0)
+                } ?? 0)
+            if g.ring == .card {
+                setPose(g, index(CrowdChoreography.pose(input).rawValue))
+            } else {
+                setSlot(g, CrowdChoreography.slot(input))
+            }
             let dim = g.ring == .card ? C.tint.dim : C.tint.meshDim
             let bright: Double = tintSide.map { side in (side == "away") == g.away ? C.tint.bright : dim } ?? C.tint.normal
             if bright != g.brightness {
@@ -446,12 +484,49 @@ final class CrowdActor: StadiumActor {
     private func setPose(_ g: Group, _ pose: Int) {
         guard pose != g.pose else { return }
         g.pose = pose
-        if g.ring == .card {
-            g.material.textureCoordinateTransform = .init(offset: SIMD2(0, -Float(pose) * cardRowV), scale: SIMD2(1, 1), rotation: 0)
-            g.entity.model?.materials = [g.material]
-        } else if pose < g.poseMeshes.count {
-            g.entity.model?.mesh = g.poseMeshes[pose]
+        g.material.textureCoordinateTransform = .init(offset: SIMD2(0, -Float(pose) * cardRowV), scale: SIMD2(1, 1), rotation: 0)
+        g.entity.model?.materials = [g.material]
+    }
+
+    private func setSlot(_ g: Group, _ slot: CrowdChoreography.Slot) {
+        guard slot != g.slot, let mesh = g.slotMeshes[slot] ?? g.slotMeshes[.sit] else { return }
+        g.slot = slot
+        g.entity.model?.mesh = mesh
+    }
+
+    /// A fan's left, for a fan facing `facing` with Y up: the kit's +X (MakeHuman's .L side).
+    nonisolated static func leftOf(_ facing: SIMD3<Float>) -> SIMD3<Float> {
+        SIMD3(facing.z, 0, -facing.x)
+    }
+
+    /// Which pose this fan wears in a near slot: drawn from `visual.crowd.nearMix` by the fan's own
+    /// seat, so one group's people are not one posture; chatting pairs turn to each other in `sit`.
+    nonisolated static func nearPose(_ slot: CrowdChoreography.Slot, fan: Int, row: Int, seat: Int, nextOnLeft: Bool,
+                                     look C: SceneSpec.Look.CrowdLook) -> String {
+        func hash(_ salt: UInt64) -> Double {
+            var h = UInt64(truncatingIfNeeded: row &* 92_821 &+ seat &* 68_917 &+ fan &* 131) &+ salt &* 0x9E3779B97F4A7C15
+            h ^= h >> 31; h = h &* 0xBF58476D1CE4E5B9; h ^= h >> 27
+            return Double(h % 10_000) / 10_000
         }
+        if slot == .sit {
+            let pair = UInt64(truncatingIfNeeded: row &* 7_919 &+ (seat / 2))
+            var h = pair &* 0x9E3779B97F4A7C15; h ^= h >> 29
+            if Double(h % 10_000) / 10_000 < C.chatShare {
+                // The even seat turns to the next seat; the odd seat back to the one before.
+                let towardNext = seat % 2 == 0
+                return (towardNext == nextOnLeft) ? "sit_look_l" : "sit_look_r"
+            }
+        }
+        guard let shares = C.nearMix[slot.rawValue], !shares.isEmpty else { return slot.rawValue }
+        let total = shares.reduce(0) { $0 + $1.share }
+        var x = hash(slot.rawValue.utf8.reduce(UInt64(0)) { $0 &* 31 &+ UInt64($1) }) * total
+        // The idle slots draw from one stream, so going between sit and sit_b only moves the fans whose draw differs.
+        if slot == .sit || slot == .sitB { x = hash(1) * total }
+        for s in shares {
+            if x < s.share { return s.pose }
+            x -= s.share
+        }
+        return shares[shares.count - 1].pose
     }
 }
 
@@ -474,8 +549,7 @@ struct CrowdPoseMesh {
 
     /// This fan in the stands: yards, turned to face the field, on its seat.
     func placed(at base: SIMD3<Float>, facing: SIMD3<Float>, scale: Float) -> MeshBuilder {
-        let yaw = atan2(facing.x, facing.z)
-        let q = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
+        let q = CrowdFacing.rotation(facing: facing)
         var mb = MeshBuilder()
         mb.positions = positions.map { q.act($0 * scale) + base }
         mb.normals = normals.map { q.act($0) }
@@ -523,6 +597,14 @@ final class CrowdKit {
             guard let template = StadiumAssets.shared.model("crowd.\(id)") else { continue }
             collect(template, root: template)
         }
+        for ring in [CrowdActor.Ring.lod0, .lod1, .lod2] {
+            let (ok, offsets) = measuredForward(ring: ring)
+            if ok {
+                StadiumLog.log.notice("[stadium] crowd kit \(String(describing: ring)) faces +Z (\(offsets.count) fans)")
+            } else {
+                StadiumLog.log.error("[stadium] crowd kit \(String(describing: ring)) does not face +Z: toes \(offsets.map { String(format: "%+.2f", $0) }.joined(separator: " ")); every near fan is seated backwards")
+            }
+        }
     }
 
     static func load(_ C: SceneSpec.Look.CrowdLook) -> CrowdKit? {
@@ -563,6 +645,34 @@ final class CrowdKit {
             }
         }
         for child in e.children { collect(child, root: root) }
+    }
+
+    /// A near pose, or the nearest one the kit has: an older kit without the head turns
+    /// and the rise still draws its fans seated.
+    func nearPoseMesh(ring: CrowdActor.Ring, fan: Int, pose: String) -> (String, CrowdPoseMesh)? {
+        let fallback = ["sit_look_l": "sit", "sit_look_r": "sit", "rise": "sit_b"]
+        for name in [pose, fallback[pose]].compactMap({ $0 }) {
+            if let m = poseMesh(ring: ring, fan: fan, pose: name) { return (name, m) }
+        }
+        return nil
+    }
+
+    /// Which way the loaded kit's fans face: a seated fan's feet and shins (lowest 30 cm) are
+    /// 10-50 cm toward their front from their torso, at every LOD (build.py's knee_reach).
+    /// CrowdPoseMesh.placed turns +Z onto a seat's facing, so anything else seats every fan backwards.
+    func measuredForward(ring: CrowdActor.Ring) -> (ok: Bool, offsets: [Float]) {
+        var offsets: [Float] = []
+        for fan in 0..<look.fans {
+            guard let m = poseMesh(ring: ring, fan: fan, pose: "sit"),
+                  let low = m.positions.map(\.y).min(), let top = m.positions.map(\.y).max() else { continue }
+            var feet: (Float, Float) = (0, 0), torso: (Float, Float) = (0, 0)
+            for p in m.positions {
+                if p.y < low + 0.30 { feet = (feet.0 + p.z, feet.1 + 1) }
+                else if p.y > low + 0.55 * (top - low) && p.y < low + 0.85 * (top - low) { torso = (torso.0 + p.z, torso.1 + 1) }
+            }
+            if feet.1 > 0 && torso.1 > 0 { offsets.append(feet.0 / feet.1 - torso.0 / torso.1) }
+        }
+        return (!offsets.isEmpty && offsets.allSatisfy { $0 > 0 }, offsets)
     }
 
     func poseMesh(ring: CrowdActor.Ring, fan: Int, pose: String) -> CrowdPoseMesh? {
