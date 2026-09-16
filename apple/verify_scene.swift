@@ -256,6 +256,18 @@ struct VerifyScene {
                         }
                     }
                 }
+                // A kick at the posts leaves play where SceneMath.kickCut says:
+                // inside its flight, past the plane, and before the arc's end.
+                if let cut = SceneMath.kickCut(arc, field: spec.field, netYards: play.goalKick.netYards) {
+                    expect(cut > 0 && cut < path.seconds, "\(name): kick \(arc.id) cut \(cut) outside its path")
+                    let attack: Double = arc.toX > arc.fromX ? 1 : -1
+                    let plane = attack > 0 ? spec.field.length + spec.field.endZone : -spec.field.endZone
+                    let at = Double(SceneMath.ball(on: arc, at: cut).position.x) + 50
+                    expect((at - plane) * attack >= play.goalKick.netYards - 0.2,
+                           "\(name): kick \(arc.id) cut at \(at), short of the posts at \(plane)")
+                    expect(SceneMath.ball(on: arc, at: cut).position.y > 0.5,
+                           "\(name): kick \(arc.id) is already down at the posts")
+                }
                 let line = SceneMath.trace(arc, count: 72, lift: play.heights.trailLift)
                 expect(line.count > 1 && line.allSatisfy { $0.y >= -1e-4 }, "\(name): arc \(arc.id) trail under the grass")
                 if ["run"].contains(arc.shape) && !arc.type.lowercased().contains("interception") && !arc.type.lowercased().contains("fumble") {

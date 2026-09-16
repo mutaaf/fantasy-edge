@@ -1729,7 +1729,8 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
                 to_z = (half + 1.5) * (1 if to_z >= 0 else -1)
             to = (clamp_x(x0 + attack * air), 0.0, to_z)
             dist = math.dist((qb[0], qb[2]), (to[0], to[2]))
-            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw")
+            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw",
+                     floor_rise=ps["minRiseYards"])
             path.hold(ps["fallSeconds"], "fall")
         else:
             gain = (x1 - x0) * attack
@@ -1743,7 +1744,10 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
                 catch_z = edge * (half - ps["sidelineCatchYards"])
             to = (catch_x, h["catch"], catch_z)
             dist = math.dist((qb[0], qb[2]), (to[0], to[2]))
-            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw")
+            # A throw always rises enough to read as a throw: at a hundred
+            # yards a 1.2 yd arc is flat, and a short pass looked like a run.
+            path.air(to, ps["hangBase"] + ps["hangPerYard"] * dist, ps["drag"], g, "throw",
+                     floor_rise=ps["minRiseYards"])
             yac = abs(x1 - catch_x)
             end_z = catch_z
             if sideline:
