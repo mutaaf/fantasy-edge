@@ -68,15 +68,39 @@ extension SceneSpec.Look {
         public let hint: Slot
     }
 
-    /// A panel's place from one seat, worked out by scene.py's seat_panels():
-    /// off the field's silhouette where the comfort limits allow, else folded.
+    /// Where a folded panel's tab or pill stands on the dock's rail. `scale`
+    /// below 1 means it was brought in front of something near (a chair, the
+    /// press box glass) and draws smaller, so it subtends the same angle.
+    public struct TabSlot: Decodable, Equatable, Sendable {
+        public let yaw: Double
+        public let distance: Double
+        public let height: Double
+        public let scale: Double?
+
+        public var slot: Slot { Slot(yaw: yaw, distance: distance, height: height) }
+    }
+
+    /// A panel's places from one seat, worked out by scene.py's seat_panels():
+    /// open in the dock's gallery, folded on its rail. `clear` false: there is
+    /// nowhere open that keeps off the field, the boards and the lights, so it
+    /// starts folded and opens over its tab only when asked.
     public struct PanelSlot: Decodable, Equatable, Sendable {
         public let yaw: Double
         public let distance: Double
         public let height: Double
+        public let scale: Double?
         public let folded: Bool
+        public let clear: Bool?
+        public let tab: TabSlot?
 
         public var slot: Slot { Slot(yaw: yaw, distance: distance, height: height) }
+
+        /// The place and scale to draw at, open or folded. A scene from before
+        /// the dock has no tab, and its one place stands for both.
+        public func place(folded: Bool) -> (slot: Slot, scale: Double) {
+            if folded, let tab { return (tab.slot, tab.scale ?? 1) }
+            return (slot, scale ?? 1)
+        }
     }
 
     public struct SeatPanels: Decodable, Equatable, Sendable {

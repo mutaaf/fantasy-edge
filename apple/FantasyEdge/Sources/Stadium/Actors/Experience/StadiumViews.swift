@@ -519,8 +519,8 @@ public struct StadiumSpaceView<Trailing: View>: View {
     @State private var hintShown = false
     @State private var arrived = false
     @State private var beforeMoment: (drive: Bool, trailing: Bool, controls: Bool)?
-    /// Which seat the panels were last placed for. A reference, so moving
-    /// them from `update` never writes view state mid-update.
+    /// Where the dock last put each panel. A reference, so moving them from
+    /// `update` never writes view state mid-update.
     @State private var placer = SeatPlacement()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -601,7 +601,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
         } update: { _, attachments in
             if let spec = feed.spec {
                 renderer.apply(spec, reduceMotion: reduceMotion)
-                placeForSeat(renderer.seat(spec).id, attachments)
+                placeDock(renderer.seat(spec).id, attachments)
             }
             let reading = feed.spec != nil
             let seatID = feed.spec.map { renderer.seat($0).id }
@@ -740,15 +740,27 @@ public struct StadiumSpaceView<Trailing: View>: View {
         applySeatFolds(id)
     }
 
-    /// Move the side panels and the controls to this seat's places. Called
-    /// from `update` on every pass and a no-op until the seat changes; the
-    /// attachments are only moved, never re-added.
-    private func placeForSeat(_ seat: String, _ attachments: RealityViewAttachments) {
-        guard placer.seat != seat, let per = layout?.perSeat?[seat] else { return }
-        placer.seat = seat
-        for (id, p) in [("drive", per.drive), ("trailing", per.trailing), ("controls", per.controls)] {
-            guard let e = attachments.entity(for: id) else { continue }
-            face(e, at: StadiumLayout.position(p.slot))
+    /// Put the side panels and the controls where the dock says for this seat:
+    /// on the rail while folded, in the gallery while open. A tab stands where
+    /// its tab belongs, not at the middle of the panel it folded from - that is
+    /// what left the Elsewhere tab among the light banks from the upper deck.
+    /// Called from `update` on every pass; an attachment moves only when its
+    /// seat or its fold changes, and is never re-added.
+    private func placeDock(_ seat: String, _ attachments: RealityViewAttachments) {
+        guard let per = layout?.perSeat?[seat] else { return }
+        let asTab = yielding && reduceMotion
+        let wanted: [(String, SceneSpec.Look.PanelSlot, Bool)] = [
+            ("drive", per.drive, driveFolded || asTab),
+            ("trailing", per.trailing, trailingFolded || asTab),
+            ("controls", per.controls, controlsFolded || asTab),
+        ]
+        for (id, p, folded) in wanted {
+            let key = "\(seat).\(folded)"
+            guard placer.placed[id] != key, let e = attachments.entity(for: id) else { continue }
+            placer.placed[id] = key
+            let (slot, scale) = p.place(folded: folded)
+            face(e, at: StadiumLayout.position(slot))
+            e.scale = SIMD3(repeating: Float(scale))
         }
     }
 
@@ -869,8 +881,9 @@ struct StadiumStatus: View {
     }
 }
 
-/// The seat the stadium's panels are currently laid out for.
+/// Where each dock attachment was last put, as "<seat>.<folded>", so a pass
+/// through `update` moves only what changed.
 @MainActor
 final class SeatPlacement {
-    var seat: String?
+    var placed: [String: String] = [:]
 }

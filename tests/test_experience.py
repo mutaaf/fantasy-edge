@@ -69,6 +69,40 @@ class Seats(unittest.TestCase):
 
 
 class Layout(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.built = sc.build({})
+        cls.layout = cls.built["visual"]["experience"]["layout"]
+        cls.seats = cls.built["presentation"]["stadium"]["seats"]
+        cls.by_id = {s["id"]: s for s in cls.seats}
+        cls._views = {}
+
+    def view(self, seat):
+        """What the dock is solved against, recomputed here from the scene."""
+        if seat["id"] not in self._views:
+            eye = EXPERIENCE["camera"]["eyeMeters"]
+            mpy = self.built["presentation"]["stadium"]["metersPerYard"]
+            bowl, field = self.built["bowl"], self.built["field"]
+            self._views[seat["id"]] = {
+                "field": sc.field_silhouette(seat, field, eye, mpy),
+                "board": sc.video_board_points(seat, bowl["videoBoard"], eye, mpy),
+                "ribbon": sc.ribbon_points(seat, field, bowl["ribbon"], eye, mpy),
+                "rim": sc.rim_points(seat, bowl["mounts"], eye, mpy),
+                "near": sc.near_occluders(seat, bowl["shape"], bowl["seating"], eye, mpy),
+            }
+        return self._views[seat["id"]]
+
+    def dock_places(self):
+        """Every (seat, panel, folded, slot, size) the app can draw."""
+        sizes = self.layout["panelSizes"]
+        for seat in self.seats:
+            per = self.layout["perSeat"][seat["id"]]
+            self.assertEqual(set(per) - {"scorebugHidden", "rail"}, {"drive", "trailing", "controls"})
+            for name in ("drive", "trailing", "controls"):
+                if per[name]["clear"]:
+                    yield seat, name, False, per[name], sizes[name]
+                yield seat, name, True, per[name]["tab"], sizes["tab"]
+
     def test_every_panel_is_inside_the_comfort_limits(self):
         layout = EXPERIENCE["layout"]
         for name, slot in layout["slots"].items():
@@ -132,30 +166,132 @@ class Layout(unittest.TestCase):
         self.assertLessEqual(h["y1"] * t["metersPerYard"] + t["floor"], t["volume"][1] / 2)
 
     def test_no_open_panel_covers_the_field_from_any_seat(self):
-        """From every preset, a panel that starts open sits outside the field's
-        projected silhouette and inside the comfort limits; one that cannot
-        starts folded. The pressBox drive log used to sit over the play."""
-        built = sc.build({})
-        layout = built["visual"]["experience"]["layout"]
-        eye = EXPERIENCE["camera"]["eyeMeters"]
-        mpy = built["presentation"]["stadium"]["metersPerYard"]
-        seats = built["presentation"]["stadium"]["seats"]
-        self.assertEqual(set(layout["perSeat"]), {s["id"] for s in seats})
-        for seat in seats:
-            poly = sc.field_silhouette(seat, built["field"], eye, mpy)
-            for name, slot in layout["perSeat"][seat["id"]].items():
-                if name == "scorebugHidden":
-                    continue
+        """From every preset, every place a panel can be drawn - open, and
+        folded to its tab or pill - sits inside the comfort limits and off the
+        field's projected silhouette and the video board. The pressBox drive
+        log used to sit over the play, and the upper deck's pill on the fifty."""
+        for seat, name, folded, slot, size in self.dock_places():
+            with self.subTest(seat=seat["id"], panel=name, folded=folded):
+                self.assertLessEqual(abs(slot["yaw"]), self.layout["maxSideDegrees"])
+                self.assertLessEqual(below_degrees(slot), self.layout["maxBelowDegrees"] + 1e-6)
+                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                self.assertFalse(sc.box_overlaps(box, self.view(seat)["field"]), f"covers the field from {seat['id']}")
+                self.assertFalse(sc.points_in_box(box, self.view(seat)["board"]), f"covers the video board from {seat['id']}")
+
+    def test_nothing_in_the_dock_covers_the_ribbon_or_a_light_bank(self):
+        """The ribbon used to be a cost a panel could pay: from the club seat the
+        drive log sat across it through a field goal, and from the upper deck
+        and the press box the Elsewhere tab hung among the rim light banks.
+        Both are hard rules now, open and folded."""
+        for seat, name, folded, slot, size in self.dock_places():
+            with self.subTest(seat=seat["id"], panel=name, folded=folded):
+                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                self.assertFalse(sc.points_in_box(box, self.view(seat)["ribbon"]), f"covers the ribbon from {seat['id']}")
+                self.assertFalse(sc.points_in_box(box, self.view(seat)["rim"]), f"covers a light bank from {seat['id']}")
+
+    def test_nothing_in_the_dock_stands_past_something_near_it(self):
+        """A panel further out than a chair back, an aisle rail, the ground or
+        the press box glass it overlaps is drawn through it: the sideline
+        seat's Elsewhere tab read as lying on the chair in front. Every place
+        is nearer than whatever solid thing shares its box."""
+        for seat, name, folded, slot, size in self.dock_places():
+            with self.subTest(seat=seat["id"], panel=name, folded=folded):
+                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                inside = [d for y, b, d in self.view(seat)["near"] if box[0] <= y <= box[1] and box[2] <= b <= box[3]]
+                if inside:
+                    self.assertLess(slot["distance"], min(inside), f"stands past something near from {seat['id']}")
+                self.assertGreaterEqual(slot["distance"], self.layout["dock"]["minDistance"] - 1e-6)
+                self.assertLessEqual(slot.get("scale", 1.0), 1.0)
+
+    def test_every_panel_has_a_clear_place_from_every_seat(self):
+        """The dock finds room for every panel, open, from all seven presets -
+        none has to start folded for want of a place. Guards the search's
+        reach as well as its rules."""
+        for seat in self.seats:
+            for name in ("drive", "trailing", "controls"):
                 with self.subTest(seat=seat["id"], panel=name):
-                    self.assertLessEqual(abs(slot["yaw"]), layout["maxSideDegrees"])
-                    self.assertLessEqual(below_degrees(slot), layout["maxBelowDegrees"] + 1e-6)
-                    # Open, the whole panel; folded, its tab - the upper deck's
-                    # controls pill once fell back onto the fifty.
-                    size = layout["panelSizes"]["tab" if slot["folded"] else name]
-                    box = sc.panel_box(slot, size, layout["pointsPerMeter"])
-                    self.assertFalse(sc.box_overlaps(box, poly), f"{name} covers the field from {seat['id']}")
-                    board = sc.video_board_points(seat, built["bowl"]["videoBoard"], eye, mpy)
-                    self.assertFalse(sc.points_in_box(box, board), f"{name} covers the video board from {seat['id']}")
+                    self.assertTrue(self.layout["perSeat"][seat["id"]][name]["clear"])
+
+    def test_the_rail_is_one_line_under_its_panels(self):
+        """The tabs and the pill stand on one line at one height, the pill in
+        the middle and each side tab on its own panel's side, so what is
+        always there reads as one anchored thing rather than three strays."""
+        rail = self.layout["dock"]["rail"]
+        for seat in self.seats:
+            per = self.layout["perSeat"][seat["id"]]
+            with self.subTest(seat=seat["id"]):
+                self.assertTrue(per["rail"]["clear"], "no one line holds the rail")
+                tabs = [per[n]["tab"] for n in ("drive", "controls", "trailing")]
+                belows = [below_degrees(t) for t in tabs]
+                self.assertLess(max(belows) - min(belows), 0.05, "the rail is not one line")
+                self.assertEqual([t["yaw"] for t in tabs], [-rail["sideYawDegrees"], 0.0, rail["sideYawDegrees"]])
+                self.assertLess(per["drive"]["yaw"], 0.0)
+                self.assertGreater(per["trailing"]["yaw"], 0.0)
+
+    def test_a_folded_panel_is_drawn_at_its_tab_not_at_its_open_place(self):
+        """The bug behind the floating tabs: the app placed each attachment once
+        per seat, so a folded panel's tab sat at the middle of where the panel
+        would open. The scene now carries both, and the app draws the one that
+        matches the fold."""
+        per = self.layout["perSeat"]["upper"]
+        self.assertNotEqual((per["trailing"]["tab"]["yaw"], per["trailing"]["tab"]["height"]),
+                            (per["trailing"]["yaw"], per["trailing"]["height"]))
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        body = src.split("private func placeDock", 1)[1].split("\n    }\n", 1)[0]
+        for folded in ("driveFolded", "trailingFolded", "controlsFolded"):
+            self.assertIn(folded, body, f"the dock ignores {folded}")
+        self.assertIn("place(folded:", body)
+        self.assertIn("e.scale", body)
+
+    def test_open_panels_and_the_rail_never_overlap_each_other(self):
+        """What can be on screen at once never overlaps: an open side panel and
+        the pill or the other tab, the open controls and either side, open
+        or folded."""
+        ppm = self.layout["pointsPerMeter"]
+        sizes = self.layout["panelSizes"]
+        for seat in self.seats:
+            per = self.layout["perSeat"][seat["id"]]
+            box = lambda slot, size: sc.panel_box(slot, size, ppm)
+            tabs = {n: box(per[n]["tab"], sizes["tab"]) for n in ("drive", "trailing", "controls")}
+            opened = {n: box(per[n], sizes[n]) for n in ("drive", "trailing", "controls")}
+            pairs = [("drive", opened["drive"], tabs["controls"]), ("drive", opened["drive"], tabs["trailing"]),
+                     ("trailing", opened["trailing"], tabs["controls"]), ("trailing", opened["trailing"], tabs["drive"]),
+                     ("controls", opened["controls"], tabs["drive"]), ("controls", opened["controls"], tabs["trailing"]),
+                     ("controls", opened["controls"], opened["drive"]), ("controls", opened["controls"], opened["trailing"]),
+                     ("drive", opened["drive"], opened["trailing"])]
+            for name, a, b in pairs:
+                with self.subTest(seat=seat["id"], panel=name):
+                    self.assertFalse(sc._boxes_overlap(a, b), f"{name} overlaps another dock element from {seat['id']}")
+
+    def test_near_geometry_sees_the_press_box_glass_and_the_rows_in_front(self):
+        """The near check itself: from the press box the glass is under a metre
+        ahead, so a panel at the old 1.25 m stood outside the window; from the
+        club seat the chair backs in front are there, low."""
+        glass = [d for y, b, d in self.view(self.by_id["pressBox"])["near"] if abs(y) < 5 and 0 < b < 20]
+        self.assertTrue(glass)
+        self.assertLess(max(glass), 1.2)
+        self.assertGreater(min(glass), 0.8)
+        chairs = self.view(self.by_id["club"])["near"]
+        self.assertTrue(any(abs(y) < 30 and b > 30 and d < 2.5 for y, b, d in chairs), "no chair backs ahead of the club seat")
+        ground = self.view(self.by_id["field"])["near"]
+        self.assertTrue(ground and all(b > 0 for _, b, _ in ground))
+
+    def test_near_numbers_match_the_bowl_kit(self):
+        """NEAR's chair, rail and press box numbers are Bowl's, read from its kit."""
+        import re
+        structure = (ROOT / "tools/blender/bowl/structure.py").read_text()
+        seat = (ROOT / "tools/blender/bowl/seat.py").read_text()
+        self.assertAlmostEqual(float(re.search(r"RAIL_H = ([\d.]+)", structure).group(1)), sc.NEAR["railYards"])
+        self.assertIn("cant = 0.7", structure)
+        self.assertAlmostEqual(sc.NEAR["pressCantYards"], 0.7)
+        room = re.search(r"PRESS_ROOM = \{([^}]*)\}", structure).group(1)
+        self.assertIn(f'"deskFront": {sc.NEAR["pressDeskFrontYards"]}', room)
+        self.assertIn(f'"deskDepth": {sc.NEAR["pressDeskDepthYards"]}', room)
+        self.assertIn(f'"deskTop": {sc.NEAR["pressSillYards"]}', room)
+        self.assertIn("y0 + 0.6", structure)
+        # The seat back rises from 0.47 m by 0.37 m (seat.py back surface).
+        self.assertIn("y = 0.47 + 0.37 * v", seat)
+        self.assertAlmostEqual(sc.NEAR["chairBackYards"] * 0.9144, 0.84)
 
     def test_the_board_test_sees_a_panel_over_the_board(self):
         """From behind the home end zone the board is dead ahead a little
