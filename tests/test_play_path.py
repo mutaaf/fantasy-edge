@@ -129,7 +129,9 @@ class TestPlayPath(unittest.TestCase):
             length = math.dist(throw["from"][::2], throw["to"][::2])
             hang = ps["hangBase"] + ps["hangPerYard"] * length
             self.assertAlmostEqual(throw["seconds"], hang, delta=0.01)
-            self.assertAlmostEqual(throw["rise"], g * hang * hang / 8 * ps["drag"], delta=0.01)
+            # Gravity's own rise, or the floor that keeps a short throw
+            # reading as a throw from the upper deck, whichever is higher.
+            self.assertAlmostEqual(throw["rise"], max(ps["minRiseYards"], g * hang * hang / 8 * ps["drag"]), delta=0.01)
             self.assertTrue(0.4 <= throw["seconds"] <= 3.5, f"{a['id']}: hang {throw['seconds']}")
             throws.append((length, throw["rise"]))
             if a["type"] != "Pass Incompletion":
@@ -144,8 +146,52 @@ class TestPlayPath(unittest.TestCase):
         short = [r for l, r in throws if l < 12]
         deep = [r for l, r in throws if l > 30]
         self.assertTrue(short and deep)
-        self.assertGreater(min(deep), 2.5 * max(short) / 2, "a deep ball hangs visibly higher than a quick one")
-        self.assertLess(max(short), 3.0, "a quick throw is a line, not a rainbow")
+        # Every quick throw sits on the floor; the shallowest deep ball still
+        # clears it by a yard and a half, and the longest by far more.
+        self.assertGreater(min(deep), max(short) + 1.5, "a deep ball hangs visibly higher than a quick one")
+        self.assertGreater(max(deep), 3 * max(short), "the longest throws are rainbows next to a quick out")
+        self.assertLessEqual(max(short), ps["minRiseYards"] + 0.5, "a quick throw is a line, not a rainbow")
+
+    def test_every_throw_rises_enough_to_read_as_a_throw(self):
+        """A 1.2 yd arc is flat from the upper deck, and a short pass read as
+        a run (integration-12). Every throw now rises at least
+        `pass.minRiseYards` over its chord."""
+        floor = self.rule["pass"]["minRiseYards"]
+        self.assertGreaterEqual(floor, 2.0)
+        throws = 0
+        for a in self.of("Pass Reception", "Passing Touchdown", "Pass Incompletion"):
+            for seg in a["path"]["segments"]:
+                if seg["phase"] != "throw":
+                    continue
+                self.assertGreaterEqual(seg["rise"], floor - 1e-6, f"{a['id']}: rise {seg['rise']}")
+                throws += 1
+        self.assertGreater(throws, 150)
+
+    def test_a_kick_passes_the_posts_while_it_is_still_in_the_air(self):
+        """SceneMath.kickCut stops the ball and its trail `netYards` past the
+        plane of the posts. That point must lie inside the kick's flight, with
+        the ball still up: the arc carries ten yards past the posts, and flown
+        the whole way the ball hung over the stands."""
+        net = self.rule["goalKick"]["netYards"]
+        seen = 0
+        for s in self.scenes.values():
+            f = s["field"]
+            for a in (x for d in s["drives"] for x in d["arcs"]):
+                kind = a["type"].lower()
+                if "field goal" not in kind and "extra point" not in kind:
+                    continue
+                kick = [x for x in a["path"]["segments"] if x["phase"] == "kick" and x["kind"] == "air"]
+                if not kick or a["toX"] == a["fromX"]:
+                    continue
+                seg = kick[0]
+                attack = 1.0 if a["toX"] > a["fromX"] else -1.0
+                plane = f["length"] + f["endZone"] if attack > 0 else -f["endZone"]
+                stop = plane + attack * net
+                u = (stop - seg["from"][0]) / (seg["to"][0] - seg["from"][0])
+                self.assertTrue(0 < u < 1, f"{a['id']}: the posts are not inside the kick")
+                self.assertGreater(sc.air_point(seg, u)[1], 0.5, f"{a['id']}: down before the posts")
+                seen += 1
+        self.assertGreater(seen, 3)
 
     def test_deep_passes_throw_further_than_short_ones(self):
         deep, short = [], []

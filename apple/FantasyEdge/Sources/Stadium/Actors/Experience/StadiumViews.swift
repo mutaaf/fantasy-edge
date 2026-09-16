@@ -657,7 +657,10 @@ public struct StadiumSpaceView<Trailing: View>: View {
             Attachment(id: "hint") { CrownHint() }
         }
         .gesture(SpatialTapGesture().targetedToEntity(catcher).onEnded { _ in reveal() })
-        .onChange(of: feed.spec?.activeMoment, initial: true) { _, m in hold.arrive(m) }
+        // The stadium's moment, not the scene's: the composer holds it until
+        // Broadcast has flown the play, so the panels yield and the celebration
+        // shows as the ball lands rather than five seconds before it.
+        .onChange(of: renderer.liveMoment, initial: true) { _, m in hold.arrive(m) }
         .task(id: hold.shown?.playId) {
             await hold.expire(after: feed.spec?.motion.momentSeconds ?? MomentHold.defaultSeconds)
         }

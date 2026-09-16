@@ -86,6 +86,12 @@ extension SceneSpec.Look {
     public struct BallGlow: Decodable, Equatable, Sendable {
         public let yards: SceneSpec.PerMode<Double>
         public let opacity: Double
+        /// The light never subtends less than this at the wearer's eye, and
+        /// never grows past `maxYards`; it sits `coverYards` toward them, so
+        /// far off it covers the dark leather rather than ringing it.
+        public let minArcMinutes: Double
+        public let maxYards: Double
+        public let coverYards: Double
     }
 
     public struct BallFlight: Decodable, Equatable, Sendable {
@@ -255,8 +261,17 @@ extension SceneSpec.Look {
 
     /// What the renderer reads of `visual.broadcast.play`; the path itself
     /// is laid out by scene.play_path and arrives on every arc.
+    /// What the renderer needs of a kick: where the ball leaves play.
+    public struct PlayGoalKick: Decodable, Equatable, Sendable {
+        public let netYards: Double
+    }
+
     public struct PlayLook: Decodable, Equatable, Sendable {
         public let heights: PlayHeights
+        public let goalKick: PlayGoalKick
+        /// How long a new drive waits for the play on the field to finish
+        /// before it takes the stage.
+        public let holdSwitchSeconds: Double
         /// The rest between one play landing and the next snap, in real seconds.
         public let beatSeconds: Double
         public let marker: PlayMarker

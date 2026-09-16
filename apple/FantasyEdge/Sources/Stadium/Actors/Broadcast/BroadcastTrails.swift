@@ -45,6 +45,9 @@ final class BroadcastTrails {
     private(set) var order: [String] = []
     private var arcs: [String: SceneSpec.Arc] = [:]
     private var entities: [String: Entity] = [:]
+    /// Where a kick's trail stops, in seconds along its path: at the posts,
+    /// not at the end of an arc that carries ten yards beyond them.
+    private var cuts: [String: Double] = [:]
     /// Kicks laid while watching, and when: they fade to `kick.restOpacity`.
     private var kicks: [String: (born: Double, colour: String, core: Double, halo: Double)] = [:]
     /// Kicks that have finished fading: a rebuild keeps them at rest.
@@ -61,15 +64,18 @@ final class BroadcastTrails {
         liveDrawn = -1
         order.removeAll()
         arcs.removeAll()
+        cuts.removeAll()
         entities.removeAll()
         kicks.removeAll()
         rested.removeAll()
     }
 
-    /// Lay a play down and re-age the drive behind it.
-    func add(_ arc: SceneSpec.Arc, _ c: StadiumContext) {
+    /// Lay a play down and re-age the drive behind it. `cut` stops a kick's
+    /// trail where the ball left play.
+    func add(_ arc: SceneSpec.Arc, _ c: StadiumContext, cut: Double? = nil) {
         guard arcs[arc.id] == nil else { return }
         arcs[arc.id] = arc
+        cuts[arc.id] = cut
         order.append(arc.id)
         if arc.shape == "kick" { kicks[arc.id] = (c.shared.time, "", 0, 0) }
         rebuild(c)
@@ -79,6 +85,7 @@ final class BroadcastTrails {
     func set(_ list: [SceneSpec.Arc], _ c: StadiumContext) {
         for arc in list where arcs[arc.id] == nil {
             arcs[arc.id] = arc
+            cuts[arc.id] = SceneMath.kickCut(arc, field: c.spec.field, netYards: c.look.broadcast.play.goalKick.netYards)
             order.append(arc.id)
         }
         rebuild(c)
@@ -162,7 +169,7 @@ final class BroadcastTrails {
         g.emphasis = arc.style == "score"
         var width = look.core.value(tabletop: c.tabletop)
         let lift = c.look.broadcast.play.heights.trailLift
-        let line = SceneMath.trace(arc, count: 96, lift: lift)
+        let line = SceneMath.trace(arc, count: 96, lift: lift, until: cuts[arc.id])
         if let seat = c.shared.seat, !c.tabletop {
             width *= SceneMath.nearSeatScale(line, seat: seat, rule: look.nearSeat)
         }
