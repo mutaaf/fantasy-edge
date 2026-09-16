@@ -238,3 +238,55 @@ The user chose broadcast graphics with no players, so the no-players rule stands
     The composer should hold a moment until Broadcast lands its play
     (`hasTrail(playId)` already exists). That is a director change.
   - Ports: web and Android still draw `apex` parabolas until they read `path`.
+
+### Round 4 shot pass (`docs/lookdev/broadcast-r4/`, Xcode 27.0, visionOS 26.5 sim)
+
+The licence being accepted, the branch built first time with no compile errors
+and no new warnings (only the AppIntents metadata notice, which `6c57bc3`
+raises too). What the frames showed, and what changed because of them:
+
+- **The ball was not findable.** At the upper deck it was a dark blob with its
+  own shadow under it and no glow to speak of. `ball.glow.yards.stadium`
+  2.6 → 4.2 and `glow.opacity` 0.85 → 1.0; the marker's shadow softened
+  (`shadowOpacity` 0.55 → 0.32, `shadowYards.stadium` 1.4 → 1.9) so it reads
+  as a shadow rather than a hole. After: the ball reads as a lit point on the
+  grass through a run (`bowl-wide-p4.5-run`, `-p5.5-run`).
+- **Trails were thin at distance.** `trail.core.stadium` 0.2 → 0.34.
+- **Budget, measured with `-stadiumStats` during the kick:** 26 draw parts at
+  `fieldGoal+3.0s`, over the actor's 25. `trail.age.individual` 3 → 2 brings
+  it to **24** (22 at +0.5 s and +6 s), 7.5k triangles of 30k. The stadium
+  totals 98 parts idle, 115 mid-kick.
+
+**Per play type, from the renders**
+
+| Play | Verdict |
+|---|---|
+| Run | **Good.** Carried along the grass, never an arc, from the upper deck, the club seat and field level. The ball is findable and its shadow reads (`bowl-wide-p4.5-run`). |
+| Short pass | **Reads,** but the 1.2 yd rise is invisible beyond about 40 yd, so from the upper deck it reads as a flat line (`bowl-wide-p5.5-short`). |
+| Field goal | **The laid trail reads** as a thin arc over the end zone, and the ribbon says "4TH & 8 AT CHI 14 · RED ZONE" whole (`td-moment-p4-fg`). The kick itself was not caught in flight. |
+| Deep pass | **Not verified.** Never caught mid-flight (see below). |
+| Punt | **Never animates.** A punt is its drive's last play, and the scene moves to the receiving team's drive as the punt lands, so the shown drive changes and the punt is laid at rest instead of flying. Pre-existing, not from this change; the kickoff that follows does fly. |
+| Kickoff | **Animates but was never seen.** `-trailTrace` puts the ball at 18 yd over the left of the field with a 46-point live trail, yet no ball and no trail appear in `bowl-wide-p6/p8-kick-deep`. Unresolved, and the most important thing left. |
+
+**The touchdown banner leads the ball.** Timestamps from one run:
+`fly 4017728102188 Interception Return Touchdown 5.112s` at 17:20:54.774, the
+moment's first stats line at 17:20:55.269, `land` at 17:20:59.872. So the
+banner, strobe, fireworks and the score all fire as the ball leaves, and the
+ball is still in the air 5.1 s later - `td-moment-t0.5-td` shows CHI already
+on 17 with the return still running.
+
+**The hook I want** (a director change, not made here): the composer holds a
+`.moment` until Broadcast says that play has landed - `hasTrail(m.playId)`
+already answers it - with a timeout of the arc's `path.duration` + ~1 s so a
+scrub or a reduce-motion jump never strands the moment. Failing that, a
+`shared.landed(playId:)` on the blackboard the composer waits on.
+
+**Look-dev:** `--play "<text>"` plays any shot through the first play whose
+text contains it, with `--times p4,p5.5` for frames mid-play. It is flaky by
+nature: a play only flies when its own drive is the one on screen, so plays
+that end a drive (punts, field goals) and plays queued behind a long kickoff
+often never animate. Shots here were taken with a burst of times and the ones
+that caught the play kept.
+
+**Worst thing left:** the kickoff's ball and trail are invisible in flight
+though the trace has them placed; then the deep pass, never caught in a frame.
