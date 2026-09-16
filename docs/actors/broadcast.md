@@ -290,3 +290,57 @@ that caught the play kept.
 
 **Worst thing left:** the kickoff's ball and trail are invisible in flight
 though the trace has them placed; then the deep pass, never caught in a frame.
+
+## Round 5: the ball at distance, kicks that stop at the posts, punts that play (`docs/lookdev/broadcast-r5/`)
+
+Integration-12's five findings in Broadcast's area, four fixed and one
+answered with a frame.
+
+- **The ball lost its glow at distance (`ball.glow`).** The light was a fixed
+  4.2 yd billboard *behind* the leather, and the child sits in the ball's own
+  space - which spins with the spiral - so the offset r4 added swam behind the
+  ball and back. At a hundred yards the leather is a third of a degree wide
+  and the halo read as a dark dot in a ring.
+  - The glow now holds `minArcMinutes` 46' at the wearer's eye, growing with
+    distance to `maxYards` 11, and sits `coverYards` 0.5 toward them with the
+    ball's rotation undone, so far off the light covers the leather.
+  - Frames: `bowl-wide-p5-deep`, `-p5-short`, `-p8-kickoff` - a clean lit dot
+    from the upper deck, no dark centre.
+- **A lit ball over the far stands at t8.5 (`SceneMath.kickCut`).** It was the
+  extra point. A goal kick's arc carries `goalKick.overshootYards` 10 past the
+  posts so that it plainly crosses their plane, and the ball flew the whole
+  way - out over the stands, with the trail behind it reading stick-straight
+  end-on. The ball and the trail now stop `play.goalKick.netYards` 3 past the
+  plane, where the kick leaves play, and the ball is hidden until the next
+  snap gives it a spot. Measured: `land ... at y 3.7 cut=3.9`, just over the
+  crossbar. `td-moment-t8.5-td` is clear.
+- **A short pass read flat from the upper deck (`play.pass.minRiseYards`).**
+  A 1.2 yd rise is nothing at 100 yd. Every throw now rises at least 2.6 yd
+  over its chord; a deep ball still clears a short one by well over a yard and
+  the longest are three times higher, which `test_play_path` holds.
+- **Punts never animated (`play.holdSwitchSeconds`).** Not the punt's fault:
+  the scene moves to the receiving team's drive about six seconds after the
+  snap, while the ball is still up, and the switch cleared the trails and
+  cancelled the flight. A new drive now waits for the field to go quiet, up to
+  8 s. Trace: `fly ... Punt 7.575s`, `hold drive=... for ...`, `land`. The
+  punt reads as a proper hanging parabola (`bowl-wide-p6-punt`).
+- **The deep pass, never caught in a frame at r4:** `bowl-wide-p3.5-deep`
+  has the ball lit in flight, and `-p4.5-deep` the finished arc from the
+  quarterback, over the 30, down to the catch at the 40 with the run after it.
+
+**Gates:** `make test` 560, `verify_scene` (which now checks every kick's cut
+lies inside its flight, past the posts, with the ball still up), `verify_crowd`
+337,996 checks, `contrast_check`, and a build with no new warnings (the
+AppIntents notice only, as at `e173952`).
+
+**Budget:** 24 draw parts at `touchdown+3.0s`, 6 idle, 6.2k triangles - inside
+the actor's 25 and 30k.
+
+**Worst thing left:**
+- No frame catches the ball *mid-kick* on a field goal: the kick is over in
+  3.9 s and the shot times either side of it missed. Everything else about
+  that kick is verified.
+- A play only animates while its own drive is the one on screen, so plays
+  queued behind a long kickoff can still be laid down without flying.
+- The moment still leads the ball; the hook is the director's
+  (`director/moment-timing`).

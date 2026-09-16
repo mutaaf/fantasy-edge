@@ -31,8 +31,11 @@ final class BroadcastActor: StadiumActor {
 
     private var driveID = ""
     private var motion = PlayMotion()
-    /// The play under way: `elapsed` animation seconds into `duration`.
-    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double)?
+    /// The play under way: `elapsed` animation seconds into `duration`, and
+    /// where a kick at the posts leaves play.
+    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double, cut: Double?)?
+    /// A drive waiting for the play on the field to finish before it shows.
+    private var heldSince: Double?
     /// When the next play may snap: plays keep a beat between them.
     private var beatUntil: Double?
     /// One card on the grass under the play: the snap's ring, then the ball's shadow.
@@ -235,6 +238,7 @@ extension BroadcastActor {
         driveID = ""
         flight = nil
         beatUntil = nil
+        heldSince = nil
         buildMarker(c)
         beaconKey = ""
         tagKey = ""
@@ -267,13 +271,21 @@ extension BroadcastActor {
                 beatUntil = nil
                 startNextFlight(c)
             }
+            // The drive that was waiting for this play can come on now.
+            if heldSince != nil, flight == nil, motion.queue.isEmpty, beatUntil == nil {
+                heldSince = nil
+                updateDrive(c, previous: nil)
+                settle(c, animated: !c.reduceMotion)
+            }
             return
         }
         f.elapsed += frame.dt
-        let t = min(1, f.elapsed / max(1e-3, f.duration))
+        var t = min(1, f.elapsed / max(1e-3, f.duration))
         // The path is timed in real seconds; a fast replay plays it faster.
         let real = f.arc.path?.seconds ?? f.arc.seconds
-        let seconds = t * real
+        // A kick is over when it passes the posts, wherever its arc ends.
+        if let cut = f.cut, real > 0, t * real >= cut { t = 1 }
+        let seconds = min(t * real, f.cut ?? real)
         let look = c.look.broadcast.ball
         let scale = Float(look.scale.value(tabletop: tabletop))
         let pose = BallFlight.pose(f.arc, seconds: seconds, flight: look.flight,
@@ -283,12 +295,15 @@ extension BroadcastActor {
         ball.orientation = pose.orientation
         placeMarker(f.arc, seconds: seconds, ball: pose.position, c)
         if t >= 1 {
-            Self.trace(c, "land \(f.arc.id) at y \(ball.position.y)")
+            Self.trace(c, "land \(f.arc.id) at y \(ball.position.y) cut=\(f.cut.map { String(format: "%.1f", $0) } ?? "-")")
             trails.clearLive()
-            trails.add(f.arc, c)
+            trails.add(f.arc, c, cut: f.cut)
             flight = nil
             marker.isEnabled = false
             setGlow(airborne: false, c)
+            // A kick that has passed the posts is out of play: the ball is
+            // gone until the next snap gives it a spot on the field.
+            if f.cut != nil { ball.isEnabled = false }
             // A beat before the next snap, shortened as a fast replay shortens the play.
             let beat = c.look.broadcast.play.beatSeconds * (f.duration / max(1e-3, real))
             if motion.queue.isEmpty || c.reduceMotion {
@@ -300,6 +315,7 @@ extension BroadcastActor {
         } else {
             // The trail grows behind the ball as far as it has gone.
             trails.grow(f.arc, seconds: seconds, c)
+            setGlow(airborne: SceneMath.ball(on: f.arc, at: seconds).segment?.kind == "air", c)
             flight = f
         }
     }
@@ -368,14 +384,34 @@ extension BroadcastActor {
         }
     }
 
-    /// The ball's light grows while it flies, so a throw is findable against the stands.
+    /// The ball's light: bigger while it flies, and never smaller at the eye
+    /// than `glow.minArcMinutes`, so it reads from the upper deck as well as
+    /// from the front row. It also sits `glow.coverYards` toward the wearer:
+    /// at a hundred yards the leather is a third of a degree wide and a halo
+    /// behind it reads as a dark dot ringed with light (integration-12).
     private func setGlow(airborne: Bool, _ c: StadiumContext) {
         guard let glow = ball.children.first(where: { $0.name == "football.glow" }) else { return }
-        let want = Float(airborne ? c.look.broadcast.play.flightGlowScale : 1)
-        if abs(glow.scale.x - want) > 1e-3 { glow.scale = SIMD3(repeating: want) }
+        let look = c.look.broadcast.ball.glow
+        let base = look.yards.value(tabletop: tabletop)
+        var want = base * (airborne ? c.look.broadcast.play.flightGlowScale : 1)
+        var toward = SIMD3<Float>(0, 0, 0)
+        if let seat = c.shared.seat, !c.tabletop {
+            let away = seat - ball.position
+            let distance = Double(simd_length(away))
+            if distance > 1e-3 {
+                let floorYards = 2 * distance * tan(look.minArcMinutes / 60 * .pi / 180 / 2)
+                want = min(look.maxYards, max(want, floorYards))
+                toward = simd_normalize(away) * Float(look.coverYards)
+            }
+        }
+        let scale = Float(want / max(1e-3, base))
+        if abs(glow.scale.x - scale) > 1e-3 { glow.scale = SIMD3(repeating: scale) }
+        // The child sits in the ball's own space, which spins with the
+        // spiral: without undoing that rotation the light swam behind the
+        // leather and back, and the ball read as a dark dot in a ring.
+        let local = ball.orientation.inverse.act(toward) / max(1e-3, ball.scale.x)
+        if simd_distance(glow.position, local) > 1e-3 { glow.position = local }
     }
-
-    func hasTrail(_ id: String) -> Bool { trails.has(id) }
 
     /// Look-dev only (`-trailTrace`, DEBUG builds): what the drive did and when.
     static func trace(_ c: StadiumContext, _ what: String) {
@@ -425,6 +461,20 @@ extension BroadcastActor {
                 && s.drives.firstIndex(where: { $0.id == drive.id }) == (p.drives.firstIndex(where: { $0.id == driveID }) ?? -2) + 1
         } ?? false
         Self.trace(c, "scene drive=\(drive.id) shown=\(driveID) arcs=\(drive.arcs.count) last=\(drive.arcs.last?.id ?? "-") lost=\(lostAPlay) next=\(nextDrive) flight=\(flight?.arc.id ?? "-")")
+        // A punt is its drive's last play, and the scene moves to the
+        // receiving team's drive about six seconds later - while the punt is
+        // still in the air. Switching then cleared the trails and cancelled
+        // the flight, so a punt never once played. The new drive waits for
+        // the field to be quiet, up to `play.holdSwitchSeconds`.
+        if drive.id != driveID, !driveID.isEmpty, flight != nil || !motion.queue.isEmpty {
+            let held = heldSince ?? c.shared.time
+            heldSince = held
+            if c.shared.time - held < c.look.broadcast.play.holdSwitchSeconds {
+                Self.trace(c, "hold drive=\(drive.id) for \(flight?.arc.id ?? "queue")")
+                return
+            }
+        }
+        heldSince = nil
         if drive.id != driveID || lostAPlay {
             trails.clear()
             motion.reset()
@@ -454,7 +504,7 @@ extension BroadcastActor {
             trails.add(arc, c)
             startNextFlight(c)
         } else {
-            flight = (arc, 0, seconds)
+            flight = (arc, 0, seconds, SceneMath.kickCut(arc, field: c.spec.field, netYards: c.look.broadcast.play.goalKick.netYards))
             // The beacon marks where the ball rests; while a play is on, the ball is the mark.
             beacon.isEnabled = false
             Self.trace(c, "fly \(arc.id) \(arc.type) \(seconds)s")

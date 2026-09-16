@@ -175,6 +175,31 @@ public enum SceneMath {
         return 0.5 - sin(asin(1 - 2 * e) / 3)
     }
 
+    /// Where a kick at the posts leaves play: the seconds at which the ball
+    /// passes `netYards` beyond the plane of the posts it was aimed at, or nil
+    /// for anything that is not such a kick. A goal kick's arc carries ten
+    /// yards past the posts so that it plainly crosses them; flown the whole
+    /// way, the ball hung lit over the far stands with its trail behind it
+    /// (integration-12). The ball and the trail stop here instead.
+    public static func kickCut(_ arc: SceneSpec.Arc, field: SceneSpec.Field, netYards: Double) -> Double? {
+        let type = arc.type.lowercased()
+        guard type.contains("field goal") || type.contains("extra point"),
+              let path = arc.path, arc.toX != arc.fromX else { return nil }
+        let attack: Double = arc.toX > arc.fromX ? 1 : -1
+        let plane = attack > 0 ? field.length + field.endZone : -field.endZone
+        let stop = plane + attack * netYards
+        var start = 0.0
+        for seg in path.segments {
+            defer { start += seg.seconds }
+            guard seg.kind == "air", seg.phase == "kick", let from = seg.from, let to = seg.to,
+                  abs(to[0] - from[0]) > 1e-6 else { continue }
+            let u = (stop - from[0]) / (to[0] - from[0])
+            guard u > 0, u < 1 else { return nil }
+            return start + u * seg.seconds
+        }
+        return nil
+    }
+
     /// The highest point anything on a play reaches.
     public static func peak(_ arc: SceneSpec.Arc) -> Double {
         guard let path = arc.path else { return arc.apex }
