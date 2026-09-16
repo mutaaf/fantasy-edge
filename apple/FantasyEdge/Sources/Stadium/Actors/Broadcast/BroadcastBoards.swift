@@ -58,11 +58,11 @@ enum BroadcastGraphics {
     /// The ribbon's crawl: both chips and scores, the clock and the down, with
     /// capital letters `textShare` of the board's height (the legibility rule
     /// in `visual.broadcast.ribbon`).
-    static func ribbon(_ s: SceneSpec, look: SceneSpec.Look) -> CGImage? {
+    static func ribbon(_ s: SceneSpec, look: SceneSpec.Look, segmentYards: Double? = nil) -> CGImage? {
         let r = look.broadcast.ribbon
         let h = r.heightPixels
         let rise = (s.bowl.ribbon?.rise[1] ?? 23.6) - (s.bowl.ribbon?.rise[0] ?? 21)
-        let w = h * Int((r.segmentYards / max(0.1, rise)).rounded())
+        let w = h * Int(((segmentYards ?? r.segmentYards) / max(0.1, rise)).rounded())
         return image(width: max(256, w), height: h, opaque: true) { ctx, size in
             StadiumLook.color(s.palette[s.bowl.ribbon?.color ?? ""] ?? "#05060A").setFill()
             ctx.fill(CGRect(origin: .zero, size: size))
@@ -118,25 +118,40 @@ enum BroadcastGraphics {
     }
 
     /// A moment across the whole board: the word, repeated, on the side's chip.
-    static func flash(_ word: String, chip: String, s: SceneSpec, look: SceneSpec.Look) -> CGImage? {
+    ///
+    /// The image is one tile of a board that repeats round the bowl, so the
+    /// words must tile with it: as many whole words as fit, spaced evenly
+    /// across the tile with a divider after each. Drawn until the edge
+    /// instead, the last word was cut and met the next tile's first -
+    /// "TOUCHD TOUCHDOWN" (integration-11).
+    static func flash(_ word: String, chip: String, s: SceneSpec, look: SceneSpec.Look, segmentYards: Double? = nil) -> CGImage? {
         let r = look.broadcast.ribbon
         let h = r.heightPixels
         let rise = (s.bowl.ribbon?.rise[1] ?? 23.6) - (s.bowl.ribbon?.rise[0] ?? 21)
-        let w = max(256, h * Int((r.segmentYards / max(0.1, rise)).rounded()))
+        let w = max(256, h * Int(((segmentYards ?? r.segmentYards) / max(0.1, rise)).rounded()))
         return image(width: w, height: h, opaque: true) { ctx, size in
             StadiumLook.color(chip).setFill()
             ctx.fill(CGRect(origin: .zero, size: size))
-            let text = size.height * CGFloat(r.textShare)
-            let t = NSAttributedString(string: word, attributes: [.font: UIFont.systemFont(ofSize: text, weight: .black),
-                                                                  .foregroundColor: UIColor.white, .kern: text * 0.12])
-            let tw = t.size().width + size.height * 1.2
-            var x: CGFloat = size.height * 0.4
-            while x < size.width {
+            var text = size.height * CGFloat(r.textShare)
+            func make(_ pt: CGFloat) -> NSAttributedString {
+                NSAttributedString(string: word, attributes: [.font: UIFont.systemFont(ofSize: pt, weight: .black),
+                                                             .foregroundColor: UIColor.white, .kern: pt * 0.12])
+            }
+            var t = make(text)
+            let gap = size.height * 1.2
+            // A word longer than the tile narrows until one fits whole.
+            while t.size().width + gap > size.width, text > 4 {
+                text *= 0.95
+                t = make(text)
+            }
+            let count = max(1, Int(size.width / (t.size().width + gap)))
+            let pitch = size.width / CGFloat(count)
+            for i in 0..<count {
+                let x = CGFloat(i) * pitch + (pitch - t.size().width - gap) / 2 + gap / 2
                 t.draw(at: CGPoint(x: x, y: (size.height - t.size().height) / 2))
                 UIColor.white.withAlphaComponent(0.55).setFill()
-                ctx.fill(CGRect(x: x + t.size().width + size.height * 0.45, y: size.height * 0.2,
+                ctx.fill(CGRect(x: CGFloat(i + 1) * pitch - size.height * 0.03, y: size.height * 0.2,
                                 width: size.height * 0.06, height: size.height * 0.6))
-                x += tw
             }
         }
     }
@@ -171,6 +186,10 @@ final class BroadcastRibbon {
     private var offset: Float = 0
     private var flashUntil: Double = 0
     private var flashing = false
+    /// The crawl's tile length, stretched so a whole number of tiles fits the
+    /// ring. With a remainder, the texture jumped where the ring closes and
+    /// one word read cut in half there - "REDNE" (integration-11).
+    private var segment: Double = 60
 
     init() { root.name = "broadcast.ribbon" }
 
@@ -189,7 +208,6 @@ final class BroadcastRibbon {
         let angles = (0...S).map { Double($0) / Double(S) * 2 * .pi }
         var mesh = MeshBuilder()
         var run: Float = 0
-        let segment = Float(c.look.broadcast.ribbon.segmentYards)
         // In front of Bowl's screen, not on it. Bowl's fascia carries a dark
         // screen at exactly `band.offset`, tessellated to within 0.1 yd of the
         // true curve, and a crawl on the same surface z-fought it into
@@ -202,6 +220,14 @@ final class BroadcastRibbon {
             let n = SceneMath.inward(shape, offset: band.offset, angle: t)
             return (p.x + n.x * push, p.z + n.y * push)
         }
+        var ring = 0.0
+        for k in 0..<S {
+            let a = point(angles[k]), b = point(angles[k + 1])
+            ring += hypot(b.x - a.x, b.z - a.z)
+        }
+        let want = c.look.broadcast.ribbon.segmentYards
+        self.segment = ring / max(1, (ring / max(1, want)).rounded())
+        let segment = Float(self.segment)
         for k in 0..<S {
             let r0 = point(angles[k])
             let r1 = point(angles[k + 1])
@@ -213,7 +239,7 @@ final class BroadcastRibbon {
                       SIMD3(Float(r1.x), rt, Float(r1.z)), SIMD3(Float(r0.x), rt, Float(r0.z)),
                       uv: (SIMD2(v0, 0), SIMD2(v1, 0), SIMD2(v1, 1), SIMD2(v0, 1)))
         }
-        let tex = StadiumText.texture(BroadcastGraphics.ribbon(s, look: c.look))
+        let tex = StadiumText.texture(BroadcastGraphics.ribbon(s, look: c.look, segmentYards: self.segment))
         texture = tex
         crawlKey = StadiumText.ribbonKey(s)
         let m: UnlitMaterial = tex.map { StadiumLook.emissive("#FFFFFF", scale: 1.0, texture: $0) }
@@ -234,7 +260,7 @@ final class BroadcastRibbon {
         let k = StadiumText.ribbonKey(s)
         guard k != crawlKey else { return }
         crawlKey = k
-        if let img = BroadcastGraphics.ribbon(s, look: c.look) {
+        if let img = BroadcastGraphics.ribbon(s, look: c.look, segmentYards: segment) {
             try? tex.replace(withImage: img, options: .init(semantic: .color))
         }
     }
@@ -261,7 +287,7 @@ final class BroadcastRibbon {
         }
         guard !c.reduceMotion else { return }
         let r = c.look.broadcast.ribbon
-        offset = (offset + Float(r.scroll.yardsPerSecond * frame.dt / r.segmentYards)).truncatingRemainder(dividingBy: 1)
+        offset = (offset + Float(r.scroll.yardsPerSecond * frame.dt / segment)).truncatingRemainder(dividingBy: 1)
         m.textureCoordinateTransform.offset = SIMD2(-offset, 0)
         material = m
         e.model?.materials = [m]
@@ -269,7 +295,7 @@ final class BroadcastRibbon {
 
     private func flash(_ word: String?, chip: String, _ c: StadiumContext) {
         guard let word, let tex = texture,
-              let img = BroadcastGraphics.flash(word, chip: chip, s: c.spec, look: c.look) else { return }
+              let img = BroadcastGraphics.flash(word, chip: chip, s: c.spec, look: c.look, segmentYards: segment) else { return }
         try? tex.replace(withImage: img, options: .init(semantic: .color))
         flashing = true
         flashUntil = c.shared.time + c.look.broadcast.ribbon.flash.seconds

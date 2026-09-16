@@ -492,16 +492,24 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertTrue(0 < edge["minOpacity"] < 1 and 0 < edge["minScale"] < 1)
         self.assertTrue(0 <= kick["restOpacity"] < 1 and kick["fadeSeconds"] > 0)
 
+        lift = self.tokens["visual"]["broadcast"]["play"]["heights"]["trailLift"]
+
         def side_on(a, seat):
-            e, n, total = (seat["x"] - 50, seat["y"] + eye, seat["z"]), 32, 0.0
-            pt = lambda u: (a["fromX"] + (a["toX"] - a["fromX"]) * u - 50, a["apex"] * 4 * u * (1 - u), a["lane"])
-            for i in range(n):
-                p, q = pt(i / n), pt((i + 1) / n)
+            # Along the line the trail draws (scene.trail_points), weighted by length.
+            e, total, weight = (seat["x"], seat["y"] + eye, seat["z"]), 0.0, 0.0
+            line = sc.trail_points(a, 96, lift)
+            ground = min(pt[1] for pt in line)
+            for p, q in zip(line, line[1:]):
+                if max(p[1], q[1]) <= ground + 0.05:
+                    continue
                 t = [q[k] - p[k] for k in range(3)]
                 d = [e[k] - (p[k] + q[k]) / 2 for k in range(3)]
                 tl, dl = math.sqrt(sum(c * c for c in t)), math.sqrt(sum(c * c for c in d))
-                total += 90 if tl < 1e-5 else math.degrees(math.acos(min(1, abs(sum(t[k] * d[k] for k in range(3))) / (tl * dl))))
-            deg = total / n
+                if tl < 1e-5 or dl < 1e-5:
+                    continue
+                total += tl * math.degrees(math.acos(min(1, abs(sum(t[k] * d[k] for k in range(3))) / (tl * dl))))
+                weight += tl
+            deg = total / weight if weight else 90
             rule = kick if a["shape"] == "kick" else edge
             return max(0.0, min(1.0, (deg - rule["goneDegrees"]) / (rule["fullDegrees"] - rule["goneDegrees"])))
 

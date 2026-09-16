@@ -141,3 +141,152 @@ simulator: `-stadiumStats` reports at build time, before a drive arrives
   - `crowd-closeup`: the board is legible but small in frame; its size is the limit now, not its layout.
   - `field-level`: the newest pass still stands full height at the right edge, alone, which is the intent. The ribbon is too oblique from field level to read at all.
   - `redzone-trails`: the three newest passes from the club seat are thin and bright, but the ghosted one is hard to tell from the stands behind it.
+
+## Round 4: plays that read like a broadcast (`actor/broadcast-r4`)
+
+The user's word on integration-11: "plays dont look like the real thing". Every
+play was one parabola from snap spot to finish spot, so a 3-yard run and a
+3-yard pass both stood up as rainbows (`integration-11/s-redzone-trails.png`).
+The user chose broadcast graphics with no players, so the no-players rule stands.
+
+- **The path (`scene.play_path`, contract `arc.path`, additive):** every arc
+  now carries timed segments - `hold`, `carry`, `air` - with a `phase`
+  (presnap, snap, drop, mesh, run, throw, catch, yac, fall, kick, return,
+  walk, sack, spike, settle). They're built from the type, the scene's spots
+  and the text, with the numbers in `visual.broadcast.play`. `apex`,
+  `seconds` and `duration` are unchanged for ports that have not moved.
+  - **Snap:** every play starts on its spot for `presnapSeconds`; shotgun
+    snaps fly 5 yd back.
+  - **Runs:** carried at 1 yd, never flown. The mesh sits beside the
+    quarterback, then the run goes to the hole the text names (end 11,
+    tackle 5, guard 2.5, middle 0 yd off the lane, right = +z x attack), with
+    a cut and a drift. "Pushed ob" ends on that sideline. Scrambles skip the
+    mesh.
+  - **Passes:** a drop (1.5 yd in the gun, 6 under centre, 1.9-2.3 s in the
+    pocket), then a gravity parabola: hang 0.35 + 0.048 x throw length, rise
+    g x hang^2 / 8 x 0.95. Air yards are bounded by short and deep (ESPN has
+    no air yards), with the rest run after the catch. Incompletions fall to
+    the grass at 9/24/12 yd; a catch pushed out is made 3 yd inside that
+    sideline.
+  - **Kicks:** punts from 14 yd back, hanging 3.2 + 0.025/yd s and landing
+    on the spot the text names ("punts 51 yards to DAL 26"). Kickoffs
+    hang about 4 s, and a touchback does not return. Field goals go from the
+    hold at 7 yd, with the rise floored so a good kick clears the bar by the
+    promised yard. Blocked kicks fall short. Every return runs to the spot
+    in the text.
+  - **Also:** sacks, interceptions (thrown to the "at" spot, then returned),
+    kneels, spikes, penalties (flag, then walk).
+  - **Reviews and conversions:** `play_body` reads the play after "REVERSED."
+    and drops what follows a two-point try or a penalty. "M.Kneeland" is not
+    a kneel.
+- **Tempo:** real seconds. Runs of up to 10 yd take 2.4-5.5 s, short passes
+  3-6.5 s, punts 7-12 s, all capped at 14 s. A replay faster than
+  `referenceSpeed` divides them as before (`path.duration`). Plays keep a
+  `beatSeconds` 0.9 rest between them when several are queued.
+- **The headset:**
+  - `SceneMath.ball/segmentPoint/trace/lowered/peak` fly and draw the path;
+    `BallFlight.pose(arc, seconds:)` spirals throws, tumbles kicks, tucks and
+    bobs runs, and lays the ball flat at rest.
+  - Trails draw carried legs on the grass (`heights.trailLift` 0.12) and
+    flights with ends easing to it. They grow behind the ball through the
+    whole play, not just the air.
+  - A ground marker rings the snap (`play.marker.pulse*`), then becomes
+    the ball's shadow, fading with height, so depth reads. The ball's glow
+    grows x1.7 while it's in the air.
+  - The beacon hides while a play is on.
+- **Edge fade:** now kicks only (`trail.edge.shapes`), judged on the
+  airborne part of the line and weighted by length. A pass now crosses the
+  field toward a sideline seat, and fading it hid the play being watched
+  (from the club seat, a 16-yd out to the near sideline faded to 0).
+- **Ribbon:** a whole number of tiles now fits the ring (the seam made
+  "REDNE"), and a flash spaces whole words across its tile (it cut
+  "TOUCHD TOUCHDOWN").
+- **Budget:**
+  - `trail.age.individual` 4 → 3 (-2 parts).
+  - The beacon is off in flight (-1).
+  - The marker costs one card (+1).
+  - During a kick that is 27 → 25 by count; not measured (see below).
+- **Audio:** the play whistle now waits for `arc.flightSeconds`, the path's
+  duration, not the old 2.5 s-capped flight. That is a one-line change in
+  Audio's file, flagged for its owner.
+- **Tests:**
+  - `tests/test_play_path.py` (10): the path joins and stays on the field,
+    runs hug the grass and go the way the text says, pass rise follows hang
+    and grows with length, deep throws go further, kicks hang like real ones,
+    good field goals clear the bar, tempo and speed scaling, and text
+    cleaning and spots.
+  - `verify_scene.swift` flies every path in 15 scenes: 331,030 assertions,
+    covering snap spot, never under the grass, no teleport, spiral along
+    its flight, run trails on the grass, and lowered caps.
+  - `sideOn`'s Python restatement follows the trail line
+    (`scene.trail_points`).
+- **Not verified:** the Xcode 27.0 update installed at 16:58 on 2026-09-15
+  has not had its licence accepted.
+  - `xcodebuild`, `simctl` and `/usr/bin/make` all refuse to run, so the app
+    target (BroadcastActor, BroadcastTrails, BroadcastBoards, AudioActor) is
+    unbuilt and no shots were taken.
+  - `test_crowd_choreography.test_the_scored_on_side_never_celebrates`
+    fails for the same reason; it compiles through `xcrun`.
+  - `SceneSpec`, `SceneMath`, `BroadcastFlight` and the Look structs compile
+    and pass under Command Line Tools swiftc.
+- **Worst thing left (no shots this round):**
+  - `redzone-trails`, `field-level`, `bowl-wide`, `td-moment`, `tabletop`:
+    unshot until the licence is accepted; the new paths are proven only in
+    the scene, `verify_scene` and tests.
+  - `td-moment`: moments fire when the scene arrives, and a scoring play now
+    takes about 5 s to play out, so the banner and fireworks lead the ball.
+    The composer should hold a moment until Broadcast lands its play
+    (`hasTrail(playId)` already exists). That is a director change.
+  - Ports: web and Android still draw `apex` parabolas until they read `path`.
+
+### Round 4 shot pass (`docs/lookdev/broadcast-r4/`, Xcode 27.0, visionOS 26.5 sim)
+
+The licence being accepted, the branch built first time with no compile errors
+and no new warnings (only the AppIntents metadata notice, which `6c57bc3`
+raises too). What the frames showed, and what changed because of them:
+
+- **The ball was not findable.** At the upper deck it was a dark blob with its
+  own shadow under it and no glow to speak of. `ball.glow.yards.stadium`
+  2.6 → 4.2 and `glow.opacity` 0.85 → 1.0; the marker's shadow softened
+  (`shadowOpacity` 0.55 → 0.32, `shadowYards.stadium` 1.4 → 1.9) so it reads
+  as a shadow rather than a hole. After: the ball reads as a lit point on the
+  grass through a run (`bowl-wide-p4.5-run`, `-p5.5-run`).
+- **Trails were thin at distance.** `trail.core.stadium` 0.2 → 0.34.
+- **Budget, measured with `-stadiumStats` during the kick:** 26 draw parts at
+  `fieldGoal+3.0s`, over the actor's 25. `trail.age.individual` 3 → 2 brings
+  it to **24** (22 at +0.5 s and +6 s), 7.5k triangles of 30k. The stadium
+  totals 98 parts idle, 115 mid-kick.
+
+**Per play type, from the renders**
+
+| Play | Verdict |
+|---|---|
+| Run | **Good.** Carried along the grass, never an arc, from the upper deck, the club seat and field level. The ball is findable and its shadow reads (`bowl-wide-p4.5-run`). |
+| Short pass | **Reads,** but the 1.2 yd rise is invisible beyond about 40 yd, so from the upper deck it reads as a flat line (`bowl-wide-p5.5-short`). |
+| Field goal | **The laid trail reads** as a thin arc over the end zone, and the ribbon says "4TH & 8 AT CHI 14 · RED ZONE" whole (`td-moment-p4-fg`). The kick itself was not caught in flight. |
+| Deep pass | **Not verified.** Never caught mid-flight (see below). |
+| Punt | **Never animates.** A punt is its drive's last play, and the scene moves to the receiving team's drive as the punt lands, so the shown drive changes and the punt is laid at rest instead of flying. Pre-existing, not from this change; the kickoff that follows does fly. |
+| Kickoff | **Animates but was never seen.** `-trailTrace` puts the ball at 18 yd over the left of the field with a 46-point live trail, yet no ball and no trail appear in `bowl-wide-p6/p8-kick-deep`. Unresolved, and the most important thing left. |
+
+**The touchdown banner leads the ball.** Timestamps from one run:
+`fly 4017728102188 Interception Return Touchdown 5.112s` at 17:20:54.774, the
+moment's first stats line at 17:20:55.269, `land` at 17:20:59.872. So the
+banner, strobe, fireworks and the score all fire as the ball leaves, and the
+ball is still in the air 5.1 s later - `td-moment-t0.5-td` shows CHI already
+on 17 with the return still running.
+
+**The hook I want** (a director change, not made here): the composer holds a
+`.moment` until Broadcast says that play has landed - `hasTrail(m.playId)`
+already answers it - with a timeout of the arc's `path.duration` + ~1 s so a
+scrub or a reduce-motion jump never strands the moment. Failing that, a
+`shared.landed(playId:)` on the blackboard the composer waits on.
+
+**Look-dev:** `--play "<text>"` plays any shot through the first play whose
+text contains it, with `--times p4,p5.5` for frames mid-play. It is flaky by
+nature: a play only flies when its own drive is the one on screen, so plays
+that end a drive (punts, field goals) and plays queued behind a long kickoff
+often never animate. Shots here were taken with a burst of times and the ones
+that caught the play kept.
+
+**Worst thing left:** the kickoff's ball and trail are invisible in flight
+though the trace has them placed; then the deep pass, never caught in a frame.

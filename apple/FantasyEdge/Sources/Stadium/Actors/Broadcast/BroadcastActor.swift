@@ -31,14 +31,22 @@ final class BroadcastActor: StadiumActor {
 
     private var driveID = ""
     private var motion = PlayMotion()
-    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double, manner: BallFlight.Manner)?
+    /// The play under way: `elapsed` animation seconds into `duration`.
+    private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double)?
+    /// When the next play may snap: plays keep a beat between them.
+    private var beatUntil: Double?
+    /// One card on the grass under the play: the snap's ring, then the ball's shadow.
+    private let marker = ModelEntity()
+    private var markerMode = ""
 
     init() {
         root.name = "actor.broadcast"
-        [trails.root, lines, tag, horizon.root, beacon, ball, ribbon.root, banner.root, board.root].forEach { root.addChild($0) }
+        [trails.root, lines, tag, horizon.root, beacon, marker, ball, ribbon.root, banner.root, board.root].forEach { root.addChild($0) }
         ball.isEnabled = false
         beacon.isEnabled = false
         tag.isEnabled = false
+        marker.isEnabled = false
+        marker.name = "play.marker"
     }
 
     // MARK: the ball
@@ -226,6 +234,8 @@ extension BroadcastActor {
         motion.reset()
         driveID = ""
         flight = nil
+        beatUntil = nil
+        buildMarker(c)
         beaconKey = ""
         tagKey = ""
         laserEntities.values.forEach { $0.removeFromParent() }
@@ -252,28 +262,117 @@ extension BroadcastActor {
         ribbon.update(frame, c)
         banner.update(c)
         trails.update(c)
-        guard var f = flight else { return }
+        guard var f = flight else {
+            if let until = beatUntil, c.shared.time >= until {
+                beatUntil = nil
+                startNextFlight(c)
+            }
+            return
+        }
         f.elapsed += frame.dt
-        let t = min(1, f.elapsed / f.duration)
-        // Ease the flight: quick off the snap, settling into the catch.
-        let eased = 1 - pow(1 - t, c.spec.motion.flightEase ?? 1.6)
+        let t = min(1, f.elapsed / max(1e-3, f.duration))
+        // The path is timed in real seconds; a fast replay plays it faster.
+        let real = f.arc.path?.seconds ?? f.arc.seconds
+        let seconds = t * real
         let look = c.look.broadcast.ball
-        let pose = BallFlight.pose(f.arc, t: eased, elapsed: c.reduceMotion ? 0 : f.elapsed, manner: f.manner,
-                                   flight: look.flight, lift: Float(look.liftYards) * 0.25)
+        let scale = Float(look.scale.value(tabletop: tabletop))
+        let pose = BallFlight.pose(f.arc, seconds: seconds, flight: look.flight,
+                                   floor: Float(look.widthYards) * scale / 2)
         ball.isEnabled = true
         ball.position = pose.position
         ball.orientation = pose.orientation
+        placeMarker(f.arc, seconds: seconds, ball: pose.position, c)
         if t >= 1 {
             Self.trace(c, "land \(f.arc.id) at y \(ball.position.y)")
             trails.clearLive()
             trails.add(f.arc, c)
             flight = nil
-            startNextFlight(c)
+            marker.isEnabled = false
+            setGlow(airborne: false, c)
+            // A beat before the next snap, shortened as a fast replay shortens the play.
+            let beat = c.look.broadcast.play.beatSeconds * (f.duration / max(1e-3, real))
+            if motion.queue.isEmpty || c.reduceMotion {
+                startNextFlight(c)
+            } else {
+                settle(c, animated: true)
+                beatUntil = c.shared.time + beat
+            }
         } else {
-            // The trail grows behind the ball as far as it has flown.
-            trails.grow(f.arc, to: eased, c)
+            // The trail grows behind the ball as far as it has gone.
+            trails.grow(f.arc, seconds: seconds, c)
             flight = f
         }
+    }
+
+    // MARK: the snap ring and the ball's shadow
+
+    private func buildMarker(_ c: StadiumContext) {
+        markerMode = ""
+        marker.isEnabled = false
+        var q = MeshBuilder()
+        q.quad(SIMD3(-0.5, 0, 0.5), SIMD3(0.5, 0, 0.5), SIMD3(0.5, 0, -0.5), SIMD3(-0.5, 0, -0.5),
+               uv: (SIMD2(0, 0), SIMD2(1, 0), SIMD2(1, 1), SIMD2(0, 1)), normal: SIMD3(0, 1, 0))
+        if let mesh = q.resource("play.marker") { marker.model = ModelComponent(mesh: mesh, materials: []) }
+        StadiumLook.ground(marker, order: 7)
+    }
+
+    /// Under the play: a ring that swells and fades from the snap spot while
+    /// the ball sits there and is snapped, then the ball's soft shadow on the
+    /// grass, smaller and fainter the higher it flies, so depth reads.
+    private func placeMarker(_ arc: SceneSpec.Arc, seconds: Double, ball at: SIMD3<Float>, _ c: StadiumContext) {
+        let look = c.look.broadcast.play.marker
+        let segment = SceneMath.ball(on: arc, at: seconds).segment
+        let lift = Float(c.look.broadcast.laser.lift) * 3
+        guard arc.path != nil, !c.reduceMotion else { marker.isEnabled = false; return }
+        let pulse = seconds < (arc.path?.segments.first?.seconds ?? 0) + look.pulseSeconds
+        let mode = pulse ? "pulse" : "shadow"
+        if mode != markerMode, var model = marker.model {
+            markerMode = mode
+            let tex = c.assets.texture("broadcast.glow")
+            if pulse {
+                var m = StadiumLook.glow(c.spec.palette[look.pulseColor] ?? "#A6D0FF", opacity: 1, texture: tex)
+                m.faceCulling = .none
+                model.materials = [m]
+            } else {
+                var m = UnlitMaterial(applyPostProcessToneMap: false)
+                m.color = .init(tint: .black)
+                if let tex {
+                    m.blending = .transparent(opacity: .init(scale: 1, texture: StadiumLook.clamped(tex)))
+                } else {
+                    m.blending = .transparent(opacity: .init(floatLiteral: 1))
+                }
+                m.writesDepth = false
+                m.faceCulling = .none
+                model.materials = [m]
+            }
+            marker.model = model
+        }
+        marker.isEnabled = true
+        if pulse {
+            let start = arc.path?.segments.first?.seconds ?? 0
+            // A small glow on the spot while the ball waits; it swells and fades on the snap.
+            let k = Float(max(0, min(1, (seconds - start + look.pulseSeconds * 0.35) / look.pulseSeconds)))
+            let size = Float(look.pulseYards.value(tabletop: tabletop)) * (0.35 + 0.65 * k)
+            marker.scale = SIMD3(size, 1, size)
+            marker.position = SIMD3(at.x, lift, at.z)
+            marker.components.set(OpacityComponent(opacity: Float(look.pulseOpacity) * (1 - k * k)))
+            setGlow(airborne: false, c)
+        } else {
+            let height = max(0, at.y)
+            let fade = max(0, 1 - height / Float(max(0.1, look.shadowFadeYards)))
+            let size = Float(look.shadowYards.value(tabletop: tabletop)) * (1 + height * 0.06)
+            marker.scale = SIMD3(size, 1, size)
+            marker.position = SIMD3(at.x, lift, at.z)
+            marker.components.set(OpacityComponent(opacity: Float(look.shadowOpacity) * fade))
+            setGlow(airborne: segment?.kind == "air", c)
+        }
+    }
+
+    /// The ball's light grows while it flies, so a throw is findable against the stands.
+    private func setGlow(airborne: Bool, _ c: StadiumContext) {
+        guard let glow = ball.children.first(where: { $0.name == "football.glow" }) else { return }
+        let want = Float(airborne ? c.look.broadcast.play.flightGlowScale : 1)
+        if abs(glow.scale.x - want) > 1e-3 { glow.scale = SIMD3(repeating: want) }
     }
 
     func hasTrail(_ id: String) -> Bool { trails.has(id) }
@@ -293,6 +392,8 @@ extension BroadcastActor {
         motion.reset()
         driveID = ""
         flight = nil
+        beatUntil = nil
+        marker.isEnabled = false
         tagKey = ""
         updateDrive(c, previous: nil)
         settle(c, animated: false)
@@ -309,6 +410,8 @@ extension BroadcastActor {
             motion.reset()
             driveID = ""
             flight = nil
+            beatUntil = nil
+            marker.isEnabled = false
             return
         }
         let oldIDs = Set(previous?.shownDrive?.arcs.map(\.id) ?? [])
@@ -326,6 +429,8 @@ extension BroadcastActor {
             trails.clear()
             motion.reset()
             flight = nil
+            beatUntil = nil
+            marker.isEnabled = false
             driveID = drive.id
             let initial = !nextDrive
             _ = motion.arrive(drive, initial: initial)
@@ -340,7 +445,7 @@ extension BroadcastActor {
     }
 
     private func startNextFlight(_ c: StadiumContext) {
-        guard flight == nil else { return }
+        guard flight == nil, beatUntil == nil else { return }
         guard let (arc, seconds) = motion.next(reduceMotion: c.reduceMotion, floor: c.spec.motion.floorSeconds) else {
             settle(c, animated: !c.reduceMotion)
             return
@@ -349,7 +454,9 @@ extension BroadcastActor {
             trails.add(arc, c)
             startNextFlight(c)
         } else {
-            flight = (arc, 0, seconds, BallFlight.manner(arc, c.look.broadcast.ball.flight))
+            flight = (arc, 0, seconds)
+            // The beacon marks where the ball rests; while a play is on, the ball is the mark.
+            beacon.isEnabled = false
             Self.trace(c, "fly \(arc.id) \(arc.type) \(seconds)s")
         }
     }
