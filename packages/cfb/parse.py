@@ -137,6 +137,7 @@ def game_record(event: dict) -> dict:
     return {
         "id": str(event.get("id") or ""),
         "kickoff": event.get("date") or comp.get("date") or "",
+        "kickoffLabel": words.kickoff_label(event.get("date") or comp.get("date") or "", comp.get("timeValid", True)),
         "status": st,
         "away": away,
         "home": home,

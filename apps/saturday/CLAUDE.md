@@ -11,6 +11,9 @@ College football for Apple Vision Pro, iPad and iPhone, with web and Android por
 make test                          # stdlib unittest, no network; replays the whole recorded night in a few seconds
 PYTHONPATH=packages:apps/saturday python3 -m api doctor --json   # exit code + next_command
 make replay                        # API on the recorded 2026-09-12 slate, port 8780 (/api/replay, /api/stream)
+make live                          # API against live ESPN, on the LAN (docs/LIVE_TEST.md)
+make record-plan SLATE=2026-09-19  # the recording window, from the real schedule
+make record-weekend SLATE=...      # wait for the window, record the weekend, keep the Mac awake
 make serve                         # API on the test fixtures
 make build-visionos build-ios build-ipad
 ```
@@ -37,6 +40,9 @@ tests/               fixtures come from tools/make_fixtures.py
 - **Stdlib only, Python 3.11+.** No third-party dependencies.
 - **Never write credentials into the repo.** `CFBD_API_KEY` and `ESPN_API_KEY` live in the environment.
 - **Raw captures in `data/capture/` are ESPN's bytes, gzipped, never edited.** Fixtures come from `tools/make_fixtures.py`. Never edit `tests/fixtures` by hand.
+- **A recording pins the week: `week=N&seasontype=2`.** ESPN answers a date range with 400 and one `dates=` day splits a Friday-Saturday slate over two boards. The week board carries Thursday too, so the recorder's slate is the Saturday and its Friday, by ET kickoff.
+- **Before kickoff, ESPN's summary `boxscore` is season averages**, not this game. It ships as `seasonAverages` and `boxscore` is empty until the game starts; drawn as game totals it read 586 yards before kickoff.
+- **A live source is shared by every client, so its cache needs a lock.** Three clients against live ESPN doubled the scoreboard budget on 2026-09-15: each thread saw the expired board and fetched its own. `sources.Budgeted` fetches under one lock per resource.
 - **Scoreboard requests need `groups=80`.** Without it ESPN serves a curated subset of the FBS slate, with no error.
 - **Completion comes from status, never from play text.** A college overtime game has no "End of Game" play: Wake Forest–Purdue (401858224, 2OT) ends on "Rushing Touchdown". A summary header also has no `period`, so the overtime count is read from "Final/2OT".
 - **At halftime and in a delay the scoreboard keeps the last down and distance.** `parse.game_record` drops the situation, so no ball is drawn.

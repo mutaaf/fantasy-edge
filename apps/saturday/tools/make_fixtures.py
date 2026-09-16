@@ -16,6 +16,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CAP = ROOT / "data/capture/2026-09-12"
 OUT = ROOT / "tests/fixtures"
 
+PREGAME = ROOT / "data/capture/2026-09-19-pregame"   # a Tuesday snapshot of the week-3 board
+PRE_EVENT = "401856688"                              # LSU at Ole Miss, days before kickoff
+
 AT = "20260913T003400Z"          # OSU-Texas, 3rd & 6 at the TEX 17, early 2nd quarter
 DELAYED_AT = "20260913T002000Z"  # Georgia Southern at Clemson, sitting in a delay
 
@@ -81,6 +84,22 @@ def write(name, payload):
     (OUT / name).write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n")
 
 
+def pregame():
+    """A real board on which every game is scheduled, and one scheduled game's
+    summary: the state a Saturday starts in, which a recorded night never
+    contains. Skipped when that capture is not present."""
+    boards = sorted((PREGAME / "scoreboard").glob("*.json.gz"))
+    summaries = sorted((PREGAME / "live" / PRE_EVENT).glob("*.json.gz"))
+    if not boards or not summaries:
+        return
+    board = load(boards[0])
+    write("slate_pregame.json", {"events": [trim_event(ev) for ev in board["events"]],
+                                 "capturedAt": boards[0].name[:16],
+                                 "week": board.get("week"), "season": board.get("season") or {},
+                                 "leagues": [{"calendar": (board.get("leagues") or [{}])[0].get("calendar") or []}]})
+    write(f"summary_pregame_{PRE_EVENT}.json", trim_summary(load(summaries[0])))
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     board = load(newest(CAP / "scoreboard", AT))
@@ -92,6 +111,7 @@ def main():
     write(f"summary_{OSU_TEX}.json", trim_summary(load(newest(CAP / "live" / OSU_TEX, AT))))
     for event in (WAKE_PUR, OKST_ORE):
         write(f"summary_{event}.json", trim_summary(load(CAP / "final" / f"{event}.json.gz")))
+    pregame()
     for p in sorted(OUT.glob("*.json")):
         print(f"{p.name}: {p.stat().st_size // 1024} KB")
 

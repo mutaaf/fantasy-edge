@@ -18,7 +18,8 @@ Live games (0 to 112, the sum of the weights):
               + 12 * close and late (one score, 3/4 of regulation gone)
 
 Finals are ordered by what is worth hearing about - upset 30, overtime 20,
-one-score 15, rankness 10 - and upcoming games by rankness then kickoff.
+one-score 15, rankness 10 - and upcoming games by kickoff, then rankness:
+"Coming up" is a schedule, so noon comes before the 7:30 marquee game.
 Ties break on event id, so the order never depends on dict iteration.
 """
 from __future__ import annotations
@@ -86,8 +87,8 @@ def rank(games: list[dict]) -> list[dict]:
             if s["delayed"]:
                 reasons = reasons + ["delayed"]
         g["leverage"] = {"score": score, "reasons": reasons}
-    ordered = sorted(games, key=lambda g: (band(g), -g["leverage"]["score"],
-                                           g["kickoff"] if band(g) == 1 else "", g["id"]))
+    ordered = sorted(games, key=lambda g: (band(g), g["kickoff"] if band(g) == 1 else "",
+                                           -g["leverage"]["score"], g["id"]))
     for i, g in enumerate(ordered):
         g["leverage"]["rank"] = i + 1
     return ordered

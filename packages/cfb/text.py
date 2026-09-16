@@ -16,6 +16,7 @@ into "K. Jackson". Names, numbers and yard lines are never changed.
 """
 from __future__ import annotations
 
+import datetime as dt
 import re
 
 # Words ESPN writes in capitals as tags, never as names or places.
@@ -126,3 +127,30 @@ def short_name(location: str, espn_short: str | None, abbr: str) -> str:
             break
         name = re.sub(rf"\b{long}\b", short, name)
     return name if len(name) < len(location) else location
+
+
+# ---- kickoff ----------------------------------------------------------------
+
+try:
+    from zoneinfo import ZoneInfo
+    EASTERN = ZoneInfo("America/New_York")
+except Exception:                     # no tz database: a football Saturday is EDT
+    EASTERN = dt.timezone(dt.timedelta(hours=-4), "ET")
+
+
+def kickoff_label(iso: str, time_valid: bool = True) -> str:
+    """"2026-09-19T23:30Z" -> "Sat 7:30 PM ET". A college slate is scheduled
+    on the East Coast clock whatever zone the viewer is in, and a week-ahead
+    board spans Thursday to Saturday, so the day is always part of it. ESPN
+    marks a time it has not fixed with timeValid false: that is "TBA", never a
+    made-up midnight."""
+    try:
+        when = dt.datetime.fromisoformat((iso or "").replace("Z", "+00:00"))
+    except ValueError:
+        return "TBA"
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=dt.timezone.utc)
+    local = when.astimezone(EASTERN)
+    if not time_valid:
+        return local.strftime("%a") + " TBA"
+    return local.strftime("%a %-I:%M %p ET")

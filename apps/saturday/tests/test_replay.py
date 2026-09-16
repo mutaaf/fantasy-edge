@@ -12,6 +12,7 @@ import itertools
 import json
 import pathlib
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
@@ -352,6 +353,34 @@ class Budget(unittest.TestCase):
         self.assertLessEqual(report["requests"]["summary"][OSU_TEX], duration // league.BUDGET["summarySeconds"] + 1)
         self.assertEqual(len(tiles_seen), 86)
         self.assertGreater(slates, 3)
+
+    def test_concurrent_clients_share_one_fetch(self):
+        """Live ESPN takes a second or more to answer; the threaded server must
+        not let every request that arrives meanwhile fetch its own board."""
+        calls = []
+
+        class Slow(Source):
+            label = "slow"
+
+            def scoreboard(self):
+                calls.append("board")
+                time.sleep(0.2)
+                return {"events": []}
+
+            def summary(self, event):
+                calls.append(event)
+                time.sleep(0.2)
+                return None
+
+        src = Budgeted(Slow(), clock=lambda: 0.0)
+        threads = [threading.Thread(target=src.scoreboard) for _ in range(8)]
+        threads += [threading.Thread(target=src.summary, args=(OSU_TEX,)) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(sorted(calls), sorted(["board", OSU_TEX]))
+        self.assertEqual(src.report()["requests"]["total"], 2)
 
     def test_a_cache_hit_is_not_a_request(self):
         t = [0.0]

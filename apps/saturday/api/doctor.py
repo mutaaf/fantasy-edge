@@ -23,8 +23,21 @@ def check(repo: pathlib.Path, offline: bool = False) -> dict:
 
     caps = sorted(p for p in (repo / "data/capture").glob("*") if (p / "scoreboard").is_dir())
     if caps:
-        finals = len(list((caps[-1] / "final").glob("*.json.gz")))
-        checks.append({"name": "captures", "status": "ok", "detail": f"{len(caps)} recorded slate(s); newest {caps[-1].name} has {finals} finals", "fix": None, "kind": "data"})
+        newest = caps[-1]
+        finals = len(list((newest / "final").glob("*.json.gz")))
+        boards = len(list((newest / "scoreboard").glob("*.json.gz")))
+        beat = newest / "heartbeat.json"
+        alive = ""
+        if beat.exists():
+            try:
+                state = json.loads(beat.read_text())
+                alive = f", recorder {state.get('phase')} at {state.get('at')}"
+            except (OSError, ValueError):
+                alive = ""
+        checks.append({"name": "captures", "status": "ok",
+                       "detail": f"{len(caps)} recorded slate(s); newest {newest.name} has {boards} boards "
+                                 f"and {finals} finals{alive}",
+                       "fix": None, "kind": "data"})
     else:
         checks.append({"name": "captures", "status": "fail", "detail": "no recorded slate under data/capture",
                        "fix": "python3 tools/record_slate.py --out data/capture/$(date +%F) --interval 60", "kind": "data"})

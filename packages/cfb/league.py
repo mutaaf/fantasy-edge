@@ -42,8 +42,14 @@ RULES = {
 }
 
 
-def scoreboard_url(dates: str | None = None) -> str:
-    return SCOREBOARD + (f"&dates={dates}" if dates else "")
+def scoreboard_url(dates: str | None = None, week: int | None = None, seasontype: int | None = None) -> str:
+    """The FBS board. `dates` is one ET day (ESPN answers a range with 400).
+    `week` with `seasontype` pins a whole week - Thursday to Saturday on one
+    board - which is what a recording wants: every frame is the full slate."""
+    url = SCOREBOARD + (f"&dates={dates}" if dates else "")
+    if week is not None:
+        url += f"&week={week}&seasontype={seasontype or 2}"
+    return url
 
 
 def summary_url(event: str) -> str:

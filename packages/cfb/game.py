@@ -116,7 +116,11 @@ def game_from_summary(event: str, data: dict) -> dict:
             "home": _int(sp.get("homeScore"), 0),
             "away": _int(sp.get("awayScore"), 0),
         } for sp in data.get("scoringPlays") or []],
-        "boxscore": box,
+        # Before kickoff ESPN's "box score" is each team's season per-game
+        # averages; shown as this game's totals it reads 586 yards for a game
+        # that has not started. It moves to seasonAverages until kickoff.
+        "boxscore": [] if st["state"] == "pre" else box,
+        "seasonAverages": box if st["state"] == "pre" else [],
         "leaders": leaders,
         "venue": ((info.get("venue") or {}).get("fullName")) or "",
         "weather": {"temperature": (info.get("weather") or {}).get("temperature")} if info.get("weather") else None,

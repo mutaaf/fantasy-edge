@@ -150,6 +150,7 @@
       "required": [
         "id",
         "kickoff",
+        "kickoffLabel",
         "status",
         "away",
         "home",
@@ -345,6 +346,11 @@
               "type": "boolean"
             }
           }
+        },
+        "kickoffLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The kickoff in the East Coast clock a college Saturday is scheduled on, with the day: 'Sat 7:30 PM ET'. 'TBA' when ESPN has not fixed the time. Clients draw it and never format kickoff themselves."
         }
       }
     },

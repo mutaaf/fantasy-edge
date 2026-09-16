@@ -20,6 +20,7 @@ import json
 import os
 import pathlib
 import re
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -187,7 +188,7 @@ class EspnSource(Source):
     label = "espn"
 
     def __init__(self):
-        self._boards: collections.deque[tuple[str, dict]] = collections.deque(maxlen=120)
+        self._boards: collections.deque[tuple[str, dict]] = collections.deque(maxlen=64)   # 1.3 MB each; 21 min at one per window
 
     def _get(self, url: str) -> dict:
         key = os.environ.get("ESPN_API_KEY")
@@ -226,6 +227,12 @@ class Budgeted(Source):
     `summarySeconds`, and a summary is fetched only when somebody asks for
     that game. Every upstream request is counted, so a test and `/api/health`
     can say whether the night stayed inside the budget.
+
+    The server is threaded and an ESPN fetch takes a second or more, so the
+    check and the fetch happen under one lock per resource: when a cached
+    board expires, the first request fetches and every request that arrives
+    meanwhile waits for that answer. Without the lock, three clients doubled
+    the scoreboard budget against live ESPN on 2026-09-15.
     """
 
     def __init__(self, inner: Source, clock=time.monotonic, budget: dict | None = None):
@@ -236,29 +243,37 @@ class Budgeted(Source):
         self._board: tuple[float, dict] | None = None
         self._summaries: dict[str, tuple[float, dict | None]] = {}
         self.requests = {"scoreboard": 0, "summary": collections.Counter()}
+        self._board_lock = threading.Lock()
+        self._locks_lock = threading.Lock()
+        self._summary_locks: dict[str, threading.Lock] = {}
 
     def scoreboard(self) -> dict:
-        now = self.clock()
-        if self._board is None or now - self._board[0] >= self.budget["scoreboardSeconds"]:
-            self._board = (now, self.inner.scoreboard())
-            self.requests["scoreboard"] += 1
-        return self._board[1]
+        with self._board_lock:
+            now = self.clock()
+            if self._board is None or now - self._board[0] >= self.budget["scoreboardSeconds"]:
+                self.requests["scoreboard"] += 1          # counted even if the fetch fails
+                self._board = (now, self.inner.scoreboard())
+            return self._board[1]
 
     def summary(self, event: str) -> dict | None:
-        now = self.clock()
-        hit = self._summaries.get(event)
-        if hit is None or now - hit[0] >= self.budget["summarySeconds"]:
-            hit = (now, self.inner.summary(event))
-            self._summaries[event] = hit
-            self.requests["summary"][event] += 1
-        return hit[1]
+        with self._locks_lock:
+            lock = self._summary_locks.setdefault(event, threading.Lock())
+        with lock:
+            now = self.clock()
+            hit = self._summaries.get(event)
+            if hit is None or now - hit[0] >= self.budget["summarySeconds"]:
+                self.requests["summary"][event] += 1
+                hit = (now, self.inner.summary(event))
+                self._summaries[event] = hit
+            return hit[1]
 
     def stamp(self) -> str | None:
         return self.inner.stamp()
 
     def history(self, seconds: float):
         self.scoreboard()
-        return self.inner.history(seconds)
+        with self._board_lock:
+            return self.inner.history(seconds)
 
     def report(self) -> dict:
         elapsed = max(0.0, self.clock() - self.started)

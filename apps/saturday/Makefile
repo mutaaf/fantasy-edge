@@ -1,7 +1,8 @@
 PY ?= python3
 export PYTHONPATH := packages:apps/saturday:tests
 
-.PHONY: test fixtures doctor serve replay project build-visionos build-ios build-ipad mockups
+.PHONY: test fixtures doctor serve replay live live-test record-weekend record-dry-run record-plan \
+	project build-visionos build-ios build-ipad mockups
 
 test:
 	$(PY) -m unittest discover -s tests -t tests
@@ -17,6 +18,26 @@ serve:
 
 replay:
 	$(PY) -m api serve --source capture:data/capture/2026-09-12@20260913T003400Z --host 0.0.0.0
+
+# --- the live test (docs/LIVE_TEST.md) ---
+
+SLATE ?= 2026-09-19
+HOST ?= 0.0.0.0
+
+live:            ## API against live ESPN, reachable from a phone or headset on the LAN
+	$(PY) -m api serve --source espn --host $(HOST)
+
+live-test: doctor live   ## doctor first, then the live API
+
+record-plan:     ## the window the recorder computes from the real schedule
+	$(PY) tools/record_slate.py --slate $(SLATE) --plan
+
+record-weekend:  ## wait for the window, record the weekend, keep the Mac awake
+	tools/record_weekend.sh $(SLATE)
+
+record-dry-run:  ## prove the recording works now: 3 minutes against today's board
+	tools/record_weekend.sh $(SLATE) --dry-run 3 --interval 30 \
+	  --out data/capture/$(SLATE)-pregame --watch 401856688
 
 project:
 	$(PY) apps/saturday/apple/generate_project.py

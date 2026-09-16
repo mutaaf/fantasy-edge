@@ -19,6 +19,7 @@
     "winProbabilityCaveat",
     "scoringPlays",
     "boxscore",
+    "seasonAverages",
     "leaders"
   ],
   "properties": {
@@ -206,7 +207,8 @@
             }
           }
         }
-      }
+      },
+      "description": "This game's team stats. Empty before kickoff: ESPN's pre-game box score holds season averages, which are in seasonAverages."
     },
     "leaders": {
       "type": "array",
@@ -256,6 +258,40 @@
     "asOf": {
       "type": "string",
       "description": "the moment this detail was read at: a replay frame, or now"
+    },
+    "seasonAverages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "team",
+          "stats"
+        ],
+        "properties": {
+          "team": {
+            "type": "string"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "value"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "Before kickoff only: each team's season per-game averages as ESPN publishes them ('Points Per Game'). Empty once the game starts."
     }
   },
   "$defs": {
