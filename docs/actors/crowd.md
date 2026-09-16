@@ -381,3 +381,48 @@ Everything stays group-level: a near group still swaps one merged mesh.
 
 **Cost:** `lod0_poses.usdz` is 29 MB (was 17): nine poses at 3,000 triangles rather than six at
 2,400. LOD1 10 MB, LOD2 3.6 MB.
+
+### Shot on the headset: `crowd-r4`
+
+Built and shot after the Xcode 27 licence was accepted (the round-4 commit above was written
+blind; `CrowdActor.swift` compiled first time, and the build carries no warning the
+integration-11 baseline does not).
+
+**Facing, the thing the user saw.** Rows in front show backs of heads from every seat:
+
+| Shot | Verdict |
+|---|---|
+| `crowd-r4/s-crowd-closeup.png` (club) | backs and profiles, all turned to the field |
+| `crowd-r4/s-crowd-closeup-clubLevel.png` | backs; the row below reads shoulders-and-cap |
+| `crowd-r4/s-crowd-closeup-upper.png` | backs, legs under the chairs, nobody perched on the pan lip |
+| `crowd-r4/s-crowd-closeup-endzone.png` | backs, turned in toward the goal line |
+| `crowd-r4/s-crowd-closeup-sideline.png` | profiles to the field; this is the frame that showed a wall of faces at integration-11 |
+| `crowd-r4/s-crowd-closeup-field.png` | no near fans at field level (correct: the seats are above and behind) |
+| `crowd-r4/s-crowd-closeup-pressBox.png` | no near fans (behind glass) |
+| `crowd-r4/s-redzone-trails.png` | backs; the integration-11 counterpart was the user's evidence |
+
+The app measures the kit it loads and logs `[stadium] crowd kit lod0/lod1/lod2 faces +Z (24 fans)`.
+
+**In motion.** `s-td-moment-t0.5.png` the near side is up, arms and props in a dozen different
+gestures; `-t5.1.png` still celebrating, mixed cheering and clapping; `-t8.5.png` settled back
+into the seats with a few still clapping. Idle rows read as people: leaning back, forearms on
+armrests, elbows on knees, hands on thighs, heads turned to the play and to each other.
+
+**A first run's `t5.1` caught the near rows seated.** Not a fault: the harness times its frames
+from when the moment appears in the scene, that run drifted about 8 seconds of game clock later
+(12:32 against 12:40 on the board), and it landed inside the settle, where each group sits at its
+own point over `settleSeconds`. Re-shot with the slot decisions logged: `look_r` -> `rise_1` ->
+`rise_2` -> `cheer_a` -> `clap_b` -> `cheer_a`, `scoring true` throughout, every group holding all
+10 slot meshes.
+
+**Budget** (`-stadiumStats`, stadium): crowd **143,728 triangles, 36 draw parts**, 0 shadow
+casters, against 144,344 and 36 at integration-11. Stadium total 239,550 triangles, 97 parts,
+~67 MB of textures. Crowd build 3.4-3.5 s (integration-11: 2.8-3.8 s); the dress composes in
+1.35-1.42 s (integration-11: 1.5-2.3 s).
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r4/s-crowd-closeup.png` | The foam finger reads as a blue baton from behind: the mitt is a rounded block and the raised finger its handle. |
+| `crowd-r4/s-crowd-closeup-upper.png` | Hair is still card-flat at 2-3 m now that the shading no longer hides it. |
+| `crowd-r4/s-bowl-wide.png` | On a plain snap the fans along the bottom edge read as more raised arms than a first-quarter crowd would have. |
+| `crowd-r4/s-td-moment-t8.5.png` | The settle drops a whole group within a second or two; it wants the same per-fan stagger the rise has. |

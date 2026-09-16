@@ -334,6 +334,10 @@ final class CrowdActor: StadiumActor {
             let facing = list.reduce(SIMD3<Float>.zero) { $0 + $1.facing }
             g.left = CrowdActor.leftOf(simd_length(facing) > 1e-4 ? simd_normalize(facing) : SIMD3(0, 0, 1))
             groups.append(g)
+            #if DEBUG
+            let missing = CrowdChoreography.Slot.allCases.filter { meshes[$0] == nil }.map(\.rawValue)
+            StadiumLog.log.notice("[stadium] crowd group \(e.name): slots \(meshes.count)/\(CrowdChoreography.Slot.allCases.count)\(missing.isEmpty ? "" : ", missing \(missing.joined(separator: ","))"), \(list.count) fans")
+            #endif
         }
         for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.away ? 1 : 0, $0.key.variant) < ($1.key.slice, $1.key.away ? 1 : 0, $1.key.variant) }) {
             guard let res = mb.resource("crowd.cards.\(key.slice).\(key.variant)") else { continue }
