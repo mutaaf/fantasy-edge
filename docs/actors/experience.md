@@ -217,22 +217,32 @@ note here suspected the crowd at the `field` seat; that was this, not a bug.
 - the comfort window dashed;
 - each panel's box as the app draws it: integration-11 with tabs at their panel's slot, then the dock with open panels solid and the rail outlined.
 
-**No simulator shots this round.** Xcode.app was updated to 27.0 at 16:58 today, after integration-11's last build, and its licence has not been accepted. `xcodebuild`, `xcrun simctl`, `/usr/bin/git` and `/usr/bin/make` all refuse to run until someone runs `sudo xcodebuild -license accept`. The gates were run around it:
-- **Tests:** `python3 -m unittest discover -s tests` (what `make test` runs): 556 tests. `test_crowd_choreography` needs `swiftc` and passes with the toolchain's own.
-- **Scene:** `verify_scene` built with the toolchain's `swiftc` against the macOS SDK: 15 scenes, 59,515 assertions OK.
-- **Type-check:** the whole app (78 files) with the toolchain's `swiftc -typecheck` against the visionOS simulator SDK: no errors, no warnings.
-- **Contrast:** `contrast_check` OK.
-- **Not run:** a full `xcodebuild`, and every shot. Both are owed once the licence is accepted.
+**Gates.** Xcode.app was updated to 27.0 mid-round and its licence was accepted before this pass:
+- **`make test`:** 556 tests OK.
+- **`verify_scene`:** 15 scenes, 1,422 arcs, 59,515 assertions OK.
+- **`contrast_check`:** OK.
+- **`xcodebuild`** (visionOS 27.0 simulator SDK, own derived data `.work/dd-exp`): BUILD SUCCEEDED, one warning - the AppIntents metadata notice integration-11 already recorded. No warning from this change, and none new from Xcode 27 in this target.
+- **Budget:** Experience 0 draw parts, 0 triangles, as before. Stadium 87-97 parts, 183-245k triangles across the run.
 
-**Worst thing left, per seat, from the plots:**
-- `club`: the open side panels stand 1.8 m out over the far stands, just under the ribbon, and the rail sits at 31.5°, the height integration-11's redzone-trails framing read as "at your feet". It is one line now, but a render has to say whether that reads as a tray.
-- `field`: the side panels open at 22° below, over the painted border. They are nearer than the ground everywhere, but in a flat screenshot they may still read as lying on the grass.
-- `endzone`: the side panels open level with the eye, 1.8 m out, either side of the video board. They are clear of it, but the board, the scorebug yield and both panels crowd the upper middle of the view.
-- `upper`: the rail sits between the far sideline and the ribbon, so the tabs and pill are always in the middle of the view. There is no clear band under the field from up there.
-- `sideline`: the only seat without a mirrored pair. The ribbon dips on the right, so the right panel opens low over the rows in front (×0.93, nearer than the chairs).
-- `clubLevel`: none found in the plot.
-- `pressBox`: every panel is inside the glass at about 0.9 m and drawn at ×0.48–0.9. It is angularly as legible as at 2 m, but physically small and near in stereo. Needs a device.
-- `tabletop`: unchanged; the tabletop has no dock.
+**Shots** (`docs/lookdev/experience-r4/`, own simulator clone `fe-exp-r4`): `main/` (tabletop, bowl-wide, field-level, crowd-closeup, redzone-trails, sideline-props), `seat-<id>/` (crowd-closeup from the other six presets), `td/` (touchdown at 0.5, 5.1 and 8.5 s) and `fg-club/`, `fg-sideline/` (the field goal). Review-sized `s-*.png` as usual; full frames are not committed.
+
+**Verdict per seat, from the renders.**
+- `club` (`main/s-crowd-closeup.png`, `main/s-redzone-trails.png`): the rail reads as a pair of small pills tucked low among the near rows, not as UI dropped at the wearer's feet. The risk I flagged from the plot does not appear in the render. The drive log opens between the ribbon and the far sideline and no longer crosses the ribbon.
+- `field` (`seat-field/s-crowd-closeup-field.png`): the Elsewhere tab sits low over the painted border, a metre and a quarter in front of a wearer whose turf is two and a half metres out. It keeps off the playing surface, and in stereo it is plainly nearer than the paint, but a flat frame still reads it as lying on the white. Worth a look on device before anything is changed for it.
+- `endzone` (`main/s-sideline-props.png`): not crowded. The glass scorebug yields to the video board, the drive log sits well left over the stands, and the pill and tab are low and central-bottom. The board, the ribbon and the goal posts share the upper middle without a panel among them.
+- `upper` (`main/s-bowl-wide.png`): the clearest improvement. The drive log, the pill and the Elsewhere tab sit on one line between the far sideline and the ribbon, where in integration-11 the tab was among the rim light banks and the pill had fallen onto the fifty. The pill is dead ahead, which is the cost of the upper deck having no clear band under the field; it is small, translucent, and over the far stands rather than the play.
+- `sideline` (`seat-sideline/s-crowd-closeup-sideline.png`): nothing on the chair in front any more. Turned 55° for this shot the dock is off frame to the left, which is correct - the rail is anchored to the seat's own forward, not to where the head is turned.
+- `clubLevel` (`seat-clubLevel/s-crowd-closeup-clubLevel.png`): the tab is low over the near rows, clear of the video board and the ribbon above it.
+- `pressBox` (`seat-pressBox/s-crowd-closeup-pressBox.png`): the tab is inside the glass at 0.92 m, drawn at ×0.74. It subtends what the club seat's tab does, and in the frame it reads as a small label over the bowl. Stereo depth and legibility here are the one judgement a simulator frame cannot make.
+- **Moments** (`td/s-td-moment-t5.1.png`, `fg-club/`, `fg-sideline/`): the panels yield as they should - at 5.1 s into the touchdown nothing is up but the scorebug and the win-probability horizon. Through the field goal the drive log sits in the gap between ribbon and field instead of across the ribbon, which was integration-11's fault at both seats.
+
+**Nothing was changed after the renders.** Every risk I listed from the plots either did not appear (club, endzone) or is inherent to the seat and within the rules (upper's centred pill, the press box's near panels), and the one that half-appeared - the field seat's tab over the border paint - is a flat-frame artefact of a panel that is genuinely nearer than the paint. Changing the layout for it would trade a real comfort win for a screenshot.
+
+**Worst thing left:**
+- `field`: the tab over the border paint, above.
+- `upper`: the pill dead ahead. Only a band under the field would fix it, and the upper deck has none.
+- `pressBox`: everything inside the glass at ×0.48-0.74. Needs a device.
+- All seats: a panel resting at `restOpacity` over a busy crowd reads as a floating label in a still frame; hover brightening, which the simulator cannot show, is what separates it in use.
 
 **Found for the director:** the renderer's wearer eye is not Bowl's near-patch eye. `presentation.stadium.seats[].y` is the tier height at the seat's offset, which from the club seat is the tread of the row in front (12.16 yd). Bowl's `structure.presets()` puts the eye on the seat's own row tread plus 1.26 m (14.16 yd against the renderer's 13.47 yd). The near check uses the renderer's eye, since that is where the wearer is, but the modelled "own seat" gap and the chairs around it were cut for Bowl's.
 
