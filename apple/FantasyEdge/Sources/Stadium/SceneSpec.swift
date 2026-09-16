@@ -517,6 +517,10 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let momentSeconds: Double?
         /// 1.1: the ball's flight eases out by this power, quick off the snap.
         public let flightEase: Double?
+        /// How long past a play's own flight the composer waits for it to land
+        /// before firing its moment anyway. Optional until `design/tokens.json`
+        /// carries it; `MomentGate.defaultGraceSeconds` stands in.
+        public let momentHoldGraceSeconds: Double?
     }
 }
 

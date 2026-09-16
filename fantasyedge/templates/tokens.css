@@ -54,5 +54,6 @@
   --fe-motion-floor-seconds: 0.2s;
   --fe-motion-section-dim: 0.28;
   --fe-motion-moment-seconds: 6.0s;
+  --fe-motion-moment-hold-grace-seconds: 1.0s;
   --fe-motion-flight-ease: 1.6;
 }

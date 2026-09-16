@@ -73,9 +73,18 @@ public final class StadiumRenderer {
     @ObservationIgnored private var staticKey = ""
     @ObservationIgnored private var preparing = false
     @ObservationIgnored private var pendingReduceMotion = false
-    @ObservationIgnored private var lastMoment: String?
     @ObservationIgnored private var lastRedZone = false
     @ObservationIgnored private var lastCue: String?
+    /// Holds a moment until Broadcast has flown its play. See `MomentGate`.
+    @ObservationIgnored private var gate = MomentGate()
+    /// The frame clock when the held moment arrived, for the log line that says
+    /// how long it waited.
+    @ObservationIgnored private var momentArrivedAt = 0.0
+    /// The moment the stadium is celebrating right now, which is not the
+    /// scene's newest: the scene announces a touchdown as the play arrives and
+    /// the ball lands about five seconds later. The views follow this, so the
+    /// panels yield and the celebration shows with the stadium, not ahead of it.
+    public private(set) var liveMoment: SceneSpec.Moment?
     /// With -stadiumStats, the frame-clock times at which to count again, and
     /// what to call the count: mid-moment, when particles and cards are live.
     @ObservationIgnored private var statsDue: [(at: Double, label: String)] = []
@@ -130,7 +139,8 @@ public final class StadiumRenderer {
             if let openedAt { StadiumTiming.log("\(label) assets ready after open", since: openedAt) }
             build(c)
             staticKey = key
-            lastMoment = next.activeMoment?.playId
+            gate.suppress(next.activeMoment?.playId)
+            liveMoment = nil
             lastCue = next.activeCue?.id
             lastRedZone = next.status.redZone
         }
@@ -255,16 +265,46 @@ public final class StadiumRenderer {
             for actor in actors { actor.moment(.cue(cue), c) }
         }
         guard let m = s.activeMoment else {
-            lastMoment = nil
+            // Scrubbed off the moment, or a stoppage ended it: a moment nobody
+            // is watching any more must not fire late.
+            gate.clear()
+            liveMoment = nil
             return
         }
-        guard m.playId != lastMoment else { return }
-        lastMoment = m.playId
+        // The scene announces the moment when the play arrives; Broadcast flies
+        // that play for seconds afterwards. Hold it until the ball lands.
+        let arc = s.shownDrive?.arcs.first { $0.id == m.playId }
+        if !gate.isHolding(m.playId) { momentArrivedAt = c.shared.time }
+        if gate.arrive(playId: m.playId, flightSeconds: arc?.flightSeconds ?? 0, now: c.shared.time,
+                       grace: s.motion.momentHoldGraceSeconds ?? MomentGate.defaultGraceSeconds,
+                       landed: broadcast.hasTrail(m.playId)) {
+            fire(m, c)
+        }
+    }
+
+    /// The moment happens now: every actor hears it, and everything timed from
+    /// it - `motion.momentSeconds`, the surge, the fireworks, the strobe, the
+    /// audio cues, the stats counts - starts from this frame, not from the
+    /// frame the play arrived in.
+    private func fire(_ m: SceneSpec.Moment, _ c: StadiumContext) {
+        liveMoment = m
+        let waited = c.shared.time - momentArrivedAt
+        let line = String(format: "[stadium] moment %@ fired at t=%.2f, held %.2f s for its play to land",
+                          m.kind, c.shared.time, max(0, waited))
+        StadiumLog.log.notice("\(line, privacy: .public)")
         for actor in actors { actor.moment(.moment(m), c) }
         if ProcessInfo.processInfo.arguments.contains("-stadiumStats") {
             let base = c.tabletop ? "tabletop" : "stadium"
             statsDue += [0.5, 3, 6].map { (c.shared.time + $0, "\(base)@\(m.kind)+\($0)s") }
         }
+    }
+
+    /// On the frame clock: release a held moment the frame its play lands, or
+    /// when its hold runs out.
+    private func releaseMoment(_ c: StadiumContext) {
+        guard let id = gate.due(now: c.shared.time, landed: { [broadcast] in broadcast.hasTrail($0) }),
+              let m = c.spec.activeMoment, m.playId == id else { return }
+        fire(m, c)
     }
 
     // MARK: seats and sound
@@ -291,6 +331,9 @@ public final class StadiumRenderer {
     public func tick(_ dt: TimeInterval) {
         guard let c = context, !staticKey.isEmpty else { return }
         c.shared.time += dt
+        // Before the actors update, so a moment released this frame is acted on
+        // in the same frame the ball lands.
+        releaseMoment(c)
         let frame = StadiumFrame(dt: dt, time: c.shared.time)
         let first = firstFrameDue
         firstFrameDue = false
