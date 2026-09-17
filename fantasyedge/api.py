@@ -68,8 +68,10 @@ ROUTES = [
     ["GET", "/api/intel/models", "which model providers are configured"],
     ["POST", "/api/intel/narrate", "narrate the brief - loopback only, costs money"],
     ["GET", "/api/scene/{event}", "one live game as renderable geometry: field, arcs, lasers, moments"],
+    ["GET", "/api/lastweek", "last week's games and why each is worth replaying (?spoilers=&offline=)"],
     ["GET", "/api/replay", "the replay being driven, and every captured game"],
     ["POST", "/api/replay", "load, play, pause, seek, speed - loopback only, see the handler"],
+    ["GET", "/api/replay/markers", "the loaded replay's scores and drives, in game seconds"],
     ["GET", "/api/replay/live", "the replay's own /api/live - labelled, never the real one"],
     ["GET", "/api/replay/gamecast", "the replayed game's gamecast, with the controls' state"],
     ["GET", "/api/replay/scene", "the replayed game as renderable geometry, paced to its speed"],
@@ -523,6 +525,38 @@ class Api:
     def replay_state(self) -> dict:
         director = self.replay_director()
         return {**director.state(), "games": director.catalog()}
+
+    def last_week(self, qs: dict | None = None) -> dict:
+        """Last week's slate as a picker reads it.
+
+        Scores are withheld unless `?spoilers=1`, so the default answer can be
+        put on screen beside a "watch it" button without ending the game for
+        whoever presses it. `?offline=1` answers from the pulled slate alone.
+
+        The week is *not* pulled here. A GET that spends sixteen requests on
+        ESPN because somebody opened a screen is a GET that will be opened
+        sixteen times; pulling stays an explicit act, on the command line or
+        through POST /api/replay's own capture.
+        """
+        qs = qs or {}
+        flag = lambda k: (qs.get(k) or ["0"])[0] not in ("0", "", "false")  # noqa: E731
+        root = pathlib.Path(os.environ.get("FANTASYEDGE_REPLAY_DIR",
+                                           "data/replay/source"))
+        from . import week as wk
+
+        try:
+            out = wk.last_week(source=root, reveal=flag("spoilers"),
+                               offline=flag("offline"))
+        except SystemExit as exc:
+            raise HttpError(503, str(exc),
+                            "python3 -m fantasyedge last-week --pull") from exc
+        out["open"] = {"method": "POST", "path": "/api/replay",
+                       "body": {"action": "load", "event": "<event>"}}
+        return out
+
+    def replay_markers(self) -> dict:
+        """Where the scores and drives are in the loaded game."""
+        return self._replay_loaded().markers()
 
     def replay_live(self) -> dict:
         self._replay_loaded()
@@ -1894,8 +1928,15 @@ class Api:
             return self.gamecast(rest[1]), LIVE
         if len(rest) == 2 and rest[0] == "scene":
             return self.scene(rest[1]), LIVE
+        if rest == ["lastweek"]:
+            # A finished week never changes, but which week is last does,
+            # and a pull swaps a row's reasons from quarter to play
+            # resolution - so this is derived, not immutable.
+            return self.last_week(qs), DERIVED
         if rest == ["replay"]:
             return self.replay_state(), REPLAY
+        if rest == ["replay", "markers"]:
+            return self.replay_markers(), REPLAY
         if rest == ["replay", "live"]:
             return self.replay_live(), REPLAY
         if rest == ["replay", "gamecast"]:

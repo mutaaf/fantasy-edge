@@ -188,6 +188,16 @@ public struct ReplayControls: View {
     public var body: some View {
         if let r = feed.replay, r.loaded, let length = r.length, length > 0 {
             HStack(spacing: 16) {
+                // Skipping by score rather than by time, because a replay is
+                // watched for the scores and "back thirty seconds" is a guess
+                // at where one was. The server holds where they are, so this
+                // is one call and lands a beat before the snap.
+                Button { Task { await feed.previousScore() } } label: {
+                    Image(systemName: "backward.end.fill")
+                        .font(.system(size: 17, weight: .bold)).frame(width: 60, height: 60)
+                }
+                .buttonStyle(.borderless).accessibilityLabel("Previous score")
+
                 Button {
                     Task { r.playing ? await feed.pause() : await feed.play() }
                 } label: {
@@ -197,6 +207,14 @@ public struct ReplayControls: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel(r.playing ? "Pause" : "Play")
 
+                Button { Task { await feed.nextScore() } } label: {
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 17, weight: .bold)).frame(width: 60, height: 60)
+                }
+                .buttonStyle(.borderless).accessibilityLabel("Next score")
+
+                // The scores drawn on the bar itself, so a scrub has something
+                // to aim at instead of being a blind drag through an hour.
                 Slider(value: Binding(
                     get: { scrub ?? Double(r.gameSeconds ?? 0) },
                     set: { scrub = $0 }),
@@ -206,6 +224,20 @@ public struct ReplayControls: View {
                     }
                 }
                 .frame(width: 360)
+                .background(alignment: .leading) {
+                    if let marks = feed.markers?.scores, length > 0 {
+                        GeometryReader { geo in
+                            ForEach(marks) { m in
+                                Capsule().fill(.secondary)
+                                    .frame(width: 2, height: 10)
+                                    .offset(x: geo.size.width
+                                            * CGFloat(m.playAt) / CGFloat(length),
+                                            y: geo.size.height / 2 - 5)
+                            }
+                        }
+                        .allowsHitTesting(false)
+                    }
+                }
 
                 Text(r.label ?? "").font(.system(size: 15, weight: .semibold)).monospacedDigit()
                     .frame(width: 96)

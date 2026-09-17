@@ -73,6 +73,10 @@ PERIOD_SECONDS = 900
 REGULATION_PERIODS = 4
 OVERTIME_SECONDS = 600
 
+# How long before a scoring play "skip to the next score" lands. Landing on
+# the play itself shows you the celebration and not the score.
+LEAD_SECONDS = 12
+
 BOXSCORE_NOTE = (
     "Player stats in `boxscore` are DERIVED from the play-by-play text as of "
     "this clock, not ESPN's published final. Each frame's `replay.boxscore` "
@@ -1812,7 +1816,9 @@ class ReplayDirector:
             return self.seek(int(body.get("at") or 0))
         if action == "speed":
             return self.set_speed(body.get("speed") or 60)
-        raise ValueError(f"unknown action {action!r}: load, play, pause, seek or speed")
+        if action in ("next", "previous"):
+            return self.skip(forward=action == "next")
+        raise ValueError(f"unknown action {action!r}: load, play, pause, seek, speed, next or previous")
 
     # ── position ──
 
@@ -1875,6 +1881,50 @@ class ReplayDirector:
                     "homeScore": note.get("homeScore", 0),
                     "awayScore": note.get("awayScore", 0),
                     "matchup": matchup(self.summary)}
+
+    def markers(self) -> dict:
+        """Where the scores and the drives are, in game seconds.
+
+        What "skip to the next score" and "jump to that drive" are made of. It
+        is computed from the loaded game rather than asked for per press, so a
+        scrub costs nothing and the bar can draw its own ticks.
+
+        A score's marker sits a beat *before* the play, not on it, so pressing
+        skip lands you in time to watch it happen rather than on the aftermath.
+        """
+        with self._lock:
+            self._need()
+            lengths = period_lengths(self.summary)
+            lead = int((self.summary.get("replayLeadSeconds") or 0) or LEAD_SECONDS)
+            scores, drives = [], []
+            for d in _drives(self.summary):
+                plays = d.get("plays") or []
+                if not plays:
+                    continue
+                team = ((d.get("team") or {}).get("abbreviation") or "").upper()
+                drives.append({"at": play_seconds(plays[0], lengths), "team": team,
+                               "result": d.get("displayResult") or d.get("result") or "",
+                               "plays": len(plays)})
+                for p in plays:
+                    if not p.get("scoringPlay"):
+                        continue
+                    at = play_seconds(p, lengths)
+                    scores.append({"at": max(0, at - lead), "playAt": at, "team": team,
+                                   "period": _num((p.get("period") or {}).get("number"), 0),
+                                   "clock": ((p.get("clock") or {}).get("displayValue") or "")})
+            return {"scores": scores, "drives": drives, "length": self.length}
+
+    def skip(self, forward: bool = True) -> dict:
+        """Seek to the next scoring play, or the previous one."""
+        with self._lock:
+            self._need()
+            at = self.game_seconds()
+            marks = [m["at"] for m in self.markers()["scores"]]
+            if forward:
+                nxt = next((m for m in marks if m > at + 1), self.length)
+            else:
+                nxt = next((m for m in reversed(marks) if m < at - 1), 0)
+            return self.seek(nxt)
 
     def seconds_of(self, play_id: str) -> int | None:
         """The game second a play was snapped at, in the loaded game."""
