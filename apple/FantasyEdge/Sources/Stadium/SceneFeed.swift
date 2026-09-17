@@ -21,6 +21,8 @@ public final class SceneFeed {
 
     public private(set) var spec: SceneSpec?
     public private(set) var replay: ReplayState?
+    public private(set) var lastWeek: LastWeek?
+    public private(set) var markers: ReplayMarkers?
     public private(set) var error: String?
     public var target: Target? {
         didSet { if target != oldValue { spec = nil; error = nil; restart() } }
@@ -129,10 +131,43 @@ public final class SceneFeed {
         }
     }
 
+    /// Last week's slate. `spoilers` is the viewer's choice, not a default:
+    /// the picker opens with scores hidden and asks the server again when it
+    /// is turned on, so a hidden row never holds a score the UI is trusted to
+    /// keep off screen.
+    public func loadLastWeek(spoilers: Bool = false) async {
+        let query = spoilers ? "?spoilers=1" : ""
+        guard let url = URL(string: base() + "/api/lastweek" + query) else { return }
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard code == 200 else {
+                error = Self.failure(data) ?? "The week could not be read (\(code))."
+                return
+            }
+            lastWeek = try JSONDecoder().decode(LastWeek.self, from: data)
+            error = nil
+        } catch {
+            self.error = "Could not reach the week: \(error.localizedDescription)"
+        }
+    }
+
+    /// The loaded replay's scores and drives, for skipping and jumping.
+    public func loadMarkers() async {
+        guard let url = URL(string: base() + "/api/replay/markers") else { return }
+        guard let (data, _) = try? await URLSession.shared.data(from: url),
+              let marks = try? JSONDecoder().decode(ReplayMarkers.self, from: data)
+        else { return }
+        markers = marks
+    }
+
     public func load(_ event: String) async {
         await control(["action": "load", "event": event])
         target = .replay
+        await loadMarkers()
     }
+    public func nextScore() async { await control(["action": "next"]) }
+    public func previousScore() async { await control(["action": "previous"]) }
     public func play() async { await control(["action": "play"]) }
     public func pause() async { await control(["action": "pause"]) }
     public func seek(_ seconds: Int) async { await control(["action": "seek", "at": seconds]) }

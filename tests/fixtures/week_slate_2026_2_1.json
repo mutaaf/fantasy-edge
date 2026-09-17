@@ -1,0 +1,1910 @@
+{
+ "events": [
+  {
+   "competitions": [
+    {
+     "attendance": 68744,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "26",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "score": "13",
+       "team": {
+        "abbreviation": "SEA",
+        "alternateColor": "69be28",
+        "color": "002a5c",
+        "displayName": "Seattle Seahawks",
+        "id": "26",
+        "location": "Seattle",
+        "name": "Seahawks",
+        "shortDisplayName": "Seahawks",
+        "uid": "s:20~l:28~t:26"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "17",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "10",
+       "team": {
+        "abbreviation": "NE",
+        "alternateColor": "c60c30",
+        "color": "002a5c",
+        "displayName": "New England Patriots",
+        "id": "17",
+        "location": "New England",
+        "name": "Patriots",
+        "shortDisplayName": "Patriots",
+        "uid": "s:20~l:28~t:17"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-10T00:20Z",
+     "id": "401872656",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-10T00:20Z",
+   "id": "401872656",
+   "name": "New England Patriots at Seattle Seahawks",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NE @ SEA",
+   "uid": "s:20~l:28~e:401872656",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 100021,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "14",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "7",
+       "team": {
+        "abbreviation": "LAR",
+        "alternateColor": "ffd100",
+        "color": "003594",
+        "displayName": "Los Angeles Rams",
+        "id": "14",
+        "location": "Los Angeles",
+        "name": "Rams",
+        "shortDisplayName": "Rams",
+        "uid": "s:20~l:28~t:14"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "25",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "score": "27",
+       "team": {
+        "abbreviation": "SF",
+        "alternateColor": "b3995d",
+        "color": "aa0000",
+        "displayName": "San Francisco 49ers",
+        "id": "25",
+        "location": "San Francisco",
+        "name": "49ers",
+        "shortDisplayName": "49ers",
+        "uid": "s:20~l:28~t:25"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-11T00:35Z",
+     "id": "401872657",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-11T00:35Z",
+   "id": "401872657",
+   "name": "San Francisco 49ers at Los Angeles Rams",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "SF VS LAR",
+   "uid": "s:20~l:28~e:401872657",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 66625,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "4",
+       "linescores": [
+        {
+         "displayValue": "14",
+         "period": 1,
+         "value": 14.0
+        },
+        {
+         "displayValue": "10",
+         "period": 2,
+         "value": 10.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "6",
+         "period": 4,
+         "value": 6.0
+        }
+       ],
+       "score": "33",
+       "team": {
+        "abbreviation": "CIN",
+        "alternateColor": "000000",
+        "color": "fb4f14",
+        "displayName": "Cincinnati Bengals",
+        "id": "4",
+        "location": "Cincinnati",
+        "name": "Bengals",
+        "shortDisplayName": "Bengals",
+        "uid": "s:20~l:28~t:4"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "27",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "10",
+         "period": 3,
+         "value": 10.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "27",
+       "team": {
+        "abbreviation": "TB",
+        "alternateColor": "3e3a35",
+        "color": "bd1c36",
+        "displayName": "Tampa Bay Buccaneers",
+        "id": "27",
+        "location": "Tampa Bay",
+        "name": "Buccaneers",
+        "shortDisplayName": "Buccaneers",
+        "uid": "s:20~l:28~t:27"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872925",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872925",
+   "name": "Tampa Bay Buccaneers at Cincinnati Bengals",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "TB @ CIN",
+   "uid": "s:20~l:28~e:401872925",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 62897,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "8",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "14",
+         "period": 3,
+         "value": 14.0
+        },
+        {
+         "displayValue": "3",
+         "period": 4,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 5,
+         "value": 7.0
+        }
+       ],
+       "score": "31",
+       "team": {
+        "abbreviation": "DET",
+        "alternateColor": "bbbbbb",
+        "color": "0076b6",
+        "displayName": "Detroit Lions",
+        "id": "8",
+        "location": "Detroit",
+        "name": "Lions",
+        "shortDisplayName": "Lions",
+        "uid": "s:20~l:28~t:8"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "18",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "14",
+         "period": 3,
+         "value": 14.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        },
+        {
+         "displayValue": "6",
+         "period": 5,
+         "value": 6.0
+        }
+       ],
+       "score": "30",
+       "team": {
+        "abbreviation": "NO",
+        "alternateColor": "000000",
+        "color": "d3bc8d",
+        "displayName": "New Orleans Saints",
+        "id": "18",
+        "location": "New Orleans",
+        "name": "Saints",
+        "shortDisplayName": "Saints",
+        "uid": "s:20~l:28~t:18"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872923",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 5,
+      "type": {
+       "altDetail": "OT",
+       "completed": true,
+       "description": "Final",
+       "detail": "Final/OT",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final/OT",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872923",
+   "name": "New Orleans Saints at Detroit Lions",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NO @ DET",
+   "uid": "s:20~l:28~e:401872923",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 64336,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "10",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "10",
+       "team": {
+        "abbreviation": "TEN",
+        "alternateColor": "001532",
+        "color": "4495d2",
+        "displayName": "Tennessee Titans",
+        "id": "10",
+        "location": "Tennessee",
+        "name": "Titans",
+        "shortDisplayName": "Titans",
+        "uid": "s:20~l:28~t:10"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "20",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "3",
+         "period": 2,
+         "value": 3.0
+        },
+        {
+         "displayValue": "10",
+         "period": 3,
+         "value": 10.0
+        },
+        {
+         "displayValue": "3",
+         "period": 4,
+         "value": 3.0
+        }
+       ],
+       "score": "23",
+       "team": {
+        "abbreviation": "NYJ",
+        "alternateColor": "ffffff",
+        "color": "115740",
+        "displayName": "New York Jets",
+        "id": "20",
+        "location": "New York",
+        "name": "Jets",
+        "shortDisplayName": "Jets",
+        "uid": "s:20~l:28~t:20"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872924",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872924",
+   "name": "New York Jets at Tennessee Titans",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NYJ @ TEN",
+   "uid": "s:20~l:28~e:401872924",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 65045,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "11",
+       "linescores": [
+        {
+         "displayValue": "6",
+         "period": 1,
+         "value": 6.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "23",
+       "team": {
+        "abbreviation": "IND",
+        "alternateColor": "ffffff",
+        "color": "003b75",
+        "displayName": "Indianapolis Colts",
+        "id": "11",
+        "location": "Indianapolis",
+        "name": "Colts",
+        "shortDisplayName": "Colts",
+        "uid": "s:20~l:28~t:11"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "33",
+       "linescores": [
+        {
+         "displayValue": "14",
+         "period": 1,
+         "value": 14.0
+        },
+        {
+         "displayValue": "17",
+         "period": 2,
+         "value": 17.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "score": "41",
+       "team": {
+        "abbreviation": "BAL",
+        "alternateColor": "000000",
+        "color": "29126f",
+        "displayName": "Baltimore Ravens",
+        "id": "33",
+        "location": "Baltimore",
+        "name": "Ravens",
+        "shortDisplayName": "Ravens",
+        "uid": "s:20~l:28~t:33"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872659",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872659",
+   "name": "Baltimore Ravens at Indianapolis Colts",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "BAL @ IND",
+   "uid": "s:20~l:28~e:401872659",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 66089,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "23",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "10",
+         "period": 2,
+         "value": 10.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "20",
+       "team": {
+        "abbreviation": "PIT",
+        "alternateColor": "ffb612",
+        "color": "000000",
+        "displayName": "Pittsburgh Steelers",
+        "id": "23",
+        "location": "Pittsburgh",
+        "name": "Steelers",
+        "shortDisplayName": "Steelers",
+        "uid": "s:20~l:28~t:23"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "1",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "3",
+         "period": 4,
+         "value": 3.0
+        }
+       ],
+       "score": "13",
+       "team": {
+        "abbreviation": "ATL",
+        "alternateColor": "000000",
+        "color": "a71930",
+        "displayName": "Atlanta Falcons",
+        "id": "1",
+        "location": "Atlanta",
+        "name": "Falcons",
+        "shortDisplayName": "Falcons",
+        "uid": "s:20~l:28~t:1"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872658",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872658",
+   "name": "Atlanta Falcons at Pittsburgh Steelers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "ATL @ PIT",
+   "uid": "s:20~l:28~e:401872658",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 72597,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "29",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "17",
+         "period": 2,
+         "value": 17.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "6",
+         "period": 4,
+         "value": 6.0
+        }
+       ],
+       "score": "37",
+       "team": {
+        "abbreviation": "CAR",
+        "alternateColor": "000000",
+        "color": "0085ca",
+        "displayName": "Carolina Panthers",
+        "id": "29",
+        "location": "Carolina",
+        "name": "Panthers",
+        "shortDisplayName": "Panthers",
+        "uid": "s:20~l:28~t:29"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "3",
+       "linescores": [
+        {
+         "displayValue": "14",
+         "period": 1,
+         "value": 14.0
+        },
+        {
+         "displayValue": "17",
+         "period": 2,
+         "value": 17.0
+        },
+        {
+         "displayValue": "14",
+         "period": 3,
+         "value": 14.0
+        },
+        {
+         "displayValue": "14",
+         "period": 4,
+         "value": 14.0
+        }
+       ],
+       "score": "59",
+       "team": {
+        "abbreviation": "CHI",
+        "alternateColor": "e64100",
+        "color": "0b1c3a",
+        "displayName": "Chicago Bears",
+        "id": "3",
+        "location": "Chicago",
+        "name": "Bears",
+        "shortDisplayName": "Bears",
+        "uid": "s:20~l:28~t:3"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872661",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872661",
+   "name": "Chicago Bears at Carolina Panthers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "CHI @ CAR",
+   "uid": "s:20~l:28~e:401872661",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 41156,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "30",
+       "linescores": [
+        {
+         "displayValue": "14",
+         "period": 1,
+         "value": 14.0
+        },
+        {
+         "displayValue": "10",
+         "period": 2,
+         "value": 10.0
+        },
+        {
+         "displayValue": "10",
+         "period": 3,
+         "value": 10.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "34",
+       "team": {
+        "abbreviation": "JAX",
+        "alternateColor": "d7a22a",
+        "color": "007487",
+        "displayName": "Jacksonville Jaguars",
+        "id": "30",
+        "location": "Jacksonville",
+        "name": "Jaguars",
+        "shortDisplayName": "Jaguars",
+        "uid": "s:20~l:28~t:30"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "5",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "10",
+       "team": {
+        "abbreviation": "CLE",
+        "alternateColor": "ff3c00",
+        "color": "472a08",
+        "displayName": "Cleveland Browns",
+        "id": "5",
+        "location": "Cleveland",
+        "name": "Browns",
+        "shortDisplayName": "Browns",
+        "uid": "s:20~l:28~t:5"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872922",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872922",
+   "name": "Cleveland Browns at Jacksonville Jaguars",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "CLE @ JAX",
+   "uid": "s:20~l:28~e:401872922",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 71008,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "34",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "14",
+         "period": 2,
+         "value": 14.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "score": "31",
+       "team": {
+        "abbreviation": "HOU",
+        "alternateColor": "eb0028",
+        "color": "021018",
+        "displayName": "Houston Texans",
+        "id": "34",
+        "location": "Houston",
+        "name": "Texans",
+        "shortDisplayName": "Texans",
+        "uid": "s:20~l:28~t:34"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "2",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "21",
+         "period": 2,
+         "value": 21.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "9",
+         "period": 4,
+         "value": 9.0
+        }
+       ],
+       "score": "36",
+       "team": {
+        "abbreviation": "BUF",
+        "alternateColor": "d50a0a",
+        "color": "00338d",
+        "displayName": "Buffalo Bills",
+        "id": "2",
+        "location": "Buffalo",
+        "name": "Bills",
+        "shortDisplayName": "Bills",
+        "uid": "s:20~l:28~t:2"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-13T17:00Z",
+     "id": "401872660",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T17:00Z",
+   "id": "401872660",
+   "name": "Buffalo Bills at Houston Texans",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "BUF @ HOU",
+   "uid": "s:20~l:28~e:401872660",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 62541,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "13",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "10",
+         "period": 2,
+         "value": 10.0
+        },
+        {
+         "displayValue": "10",
+         "period": 3,
+         "value": 10.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "27",
+       "team": {
+        "abbreviation": "LV",
+        "alternateColor": "a5acaf",
+        "color": "000000",
+        "displayName": "Las Vegas Raiders",
+        "id": "13",
+        "location": "Las Vegas",
+        "name": "Raiders",
+        "shortDisplayName": "Raiders",
+        "uid": "s:20~l:28~t:13"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "15",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "6",
+         "period": 2,
+         "value": 6.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "13",
+       "team": {
+        "abbreviation": "MIA",
+        "alternateColor": "fc4c02",
+        "color": "008e97",
+        "displayName": "Miami Dolphins",
+        "id": "15",
+        "location": "Miami",
+        "name": "Dolphins",
+        "shortDisplayName": "Dolphins",
+        "uid": "s:20~l:28~t:15"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T20:25Z",
+     "id": "401872928",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T20:25Z",
+   "id": "401872928",
+   "name": "Miami Dolphins at Las Vegas Raiders",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "MIA @ LV",
+   "uid": "s:20~l:28~e:401872928",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 66940,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "16",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "22",
+         "period": 4,
+         "value": 22.0
+        }
+       ],
+       "score": "39",
+       "team": {
+        "abbreviation": "MIN",
+        "alternateColor": "ffc62f",
+        "color": "4f2683",
+        "displayName": "Minnesota Vikings",
+        "id": "16",
+        "location": "Minnesota",
+        "name": "Vikings",
+        "shortDisplayName": "Vikings",
+        "uid": "s:20~l:28~t:16"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "9",
+       "linescores": [
+        {
+         "displayValue": "9",
+         "period": 1,
+         "value": 9.0
+        },
+        {
+         "displayValue": "10",
+         "period": 2,
+         "value": 10.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "22",
+       "team": {
+        "abbreviation": "GB",
+        "alternateColor": "ffb612",
+        "color": "204e32",
+        "displayName": "Green Bay Packers",
+        "id": "9",
+        "location": "Green Bay",
+        "name": "Packers",
+        "shortDisplayName": "Packers",
+        "uid": "s:20~l:28~t:9"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T20:25Z",
+     "id": "401872927",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T20:25Z",
+   "id": "401872927",
+   "name": "Green Bay Packers at Minnesota Vikings",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "GB @ MIN",
+   "uid": "s:20~l:28~e:401872927",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 69879,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "21",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "14",
+         "period": 2,
+         "value": 14.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "24",
+       "team": {
+        "abbreviation": "PHI",
+        "alternateColor": "000000",
+        "color": "06424d",
+        "displayName": "Philadelphia Eagles",
+        "id": "21",
+        "location": "Philadelphia",
+        "name": "Eagles",
+        "shortDisplayName": "Eagles",
+        "uid": "s:20~l:28~t:21"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "28",
+       "linescores": [
+        {
+         "displayValue": "3",
+         "period": 1,
+         "value": 3.0
+        },
+        {
+         "displayValue": "6",
+         "period": 2,
+         "value": 6.0
+        },
+        {
+         "displayValue": "0",
+         "period": 3,
+         "value": 0.0
+        },
+        {
+         "displayValue": "13",
+         "period": 4,
+         "value": 13.0
+        }
+       ],
+       "score": "22",
+       "team": {
+        "abbreviation": "WSH",
+        "alternateColor": "ffb612",
+        "color": "5a1414",
+        "displayName": "Washington Commanders",
+        "id": "28",
+        "location": "Washington",
+        "name": "Commanders",
+        "shortDisplayName": "Commanders",
+        "uid": "s:20~l:28~t:28"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-13T20:25Z",
+     "id": "401872929",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T20:25Z",
+   "id": "401872929",
+   "name": "Washington Commanders at Philadelphia Eagles",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "WSH @ PHI",
+   "uid": "s:20~l:28~e:401872929",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 70540,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "24",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "14",
+       "team": {
+        "abbreviation": "LAC",
+        "alternateColor": "ffc20e",
+        "color": "0080c6",
+        "displayName": "Los Angeles Chargers",
+        "id": "24",
+        "location": "Los Angeles",
+        "name": "Chargers",
+        "shortDisplayName": "Chargers",
+        "uid": "s:20~l:28~t:24"
+       },
+       "winner": false
+      },
+      {
+       "homeAway": "away",
+       "id": "22",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "6",
+         "period": 2,
+         "value": 6.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "10",
+         "period": 4,
+         "value": 10.0
+        }
+       ],
+       "score": "26",
+       "team": {
+        "abbreviation": "ARI",
+        "alternateColor": "ffffff",
+        "color": "a40227",
+        "displayName": "Arizona Cardinals",
+        "id": "22",
+        "location": "Arizona",
+        "name": "Cardinals",
+        "shortDisplayName": "Cardinals",
+        "uid": "s:20~l:28~t:22"
+       },
+       "winner": true
+      }
+     ],
+     "date": "2026-09-13T20:25Z",
+     "id": "401872926",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-13T20:25Z",
+   "id": "401872926",
+   "name": "Arizona Cardinals at Los Angeles Chargers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "ARI @ LAC",
+   "uid": "s:20~l:28~e:401872926",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 83286,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "19",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "28",
+       "team": {
+        "abbreviation": "NYG",
+        "alternateColor": "c9243f",
+        "color": "003c7f",
+        "displayName": "New York Giants",
+        "id": "19",
+        "location": "New York",
+        "name": "Giants",
+        "shortDisplayName": "Giants",
+        "uid": "s:20~l:28~t:19"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "6",
+       "linescores": [
+        {
+         "displayValue": "0",
+         "period": 1,
+         "value": 0.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 3,
+         "value": 7.0
+        },
+        {
+         "displayValue": "6",
+         "period": 4,
+         "value": 6.0
+        }
+       ],
+       "score": "20",
+       "team": {
+        "abbreviation": "DAL",
+        "alternateColor": "b0b7bc",
+        "color": "002a5c",
+        "displayName": "Dallas Cowboys",
+        "id": "6",
+        "location": "Dallas",
+        "name": "Cowboys",
+        "shortDisplayName": "Cowboys",
+        "uid": "s:20~l:28~t:6"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-14T00:20Z",
+     "id": "401872930",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-14T00:20Z",
+   "id": "401872930",
+   "name": "Dallas Cowboys at New York Giants",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "DAL @ NYG",
+   "uid": "s:20~l:28~e:401872930",
+   "week": {
+    "number": 1
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 73543,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "12",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "7",
+         "period": 2,
+         "value": 7.0
+        },
+        {
+         "displayValue": "10",
+         "period": 3,
+         "value": 10.0
+        },
+        {
+         "displayValue": "7",
+         "period": 4,
+         "value": 7.0
+        }
+       ],
+       "score": "31",
+       "team": {
+        "abbreviation": "KC",
+        "alternateColor": "ffb612",
+        "color": "e31837",
+        "displayName": "Kansas City Chiefs",
+        "id": "12",
+        "location": "Kansas City",
+        "name": "Chiefs",
+        "shortDisplayName": "Chiefs",
+        "uid": "s:20~l:28~t:12"
+       },
+       "winner": true
+      },
+      {
+       "homeAway": "away",
+       "id": "7",
+       "linescores": [
+        {
+         "displayValue": "7",
+         "period": 1,
+         "value": 7.0
+        },
+        {
+         "displayValue": "0",
+         "period": 2,
+         "value": 0.0
+        },
+        {
+         "displayValue": "3",
+         "period": 3,
+         "value": 3.0
+        },
+        {
+         "displayValue": "0",
+         "period": 4,
+         "value": 0.0
+        }
+       ],
+       "score": "10",
+       "team": {
+        "abbreviation": "DEN",
+        "alternateColor": "fc4c02",
+        "color": "0a2343",
+        "displayName": "Denver Broncos",
+        "id": "7",
+        "location": "Denver",
+        "name": "Broncos",
+        "shortDisplayName": "Broncos",
+        "uid": "s:20~l:28~t:7"
+       },
+       "winner": false
+      }
+     ],
+     "date": "2026-09-15T00:15Z",
+     "id": "401872931",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 4,
+      "type": {
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "shortDetail": "Final",
+       "state": "post"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-15T00:15Z",
+   "id": "401872931",
+   "name": "Denver Broncos at Kansas City Chiefs",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "DEN @ KC",
+   "uid": "s:20~l:28~e:401872931",
+   "week": {
+    "number": 1
+   }
+  }
+ ],
+ "leagues": [
+  {
+   "season": {
+    "displayName": "2026",
+    "endDate": "2027-02-16T07:59Z",
+    "startDate": "2026-08-06T07:00Z",
+    "type": {
+     "abbreviation": "reg",
+     "id": "2",
+     "name": "Regular Season",
+     "type": 2
+    },
+    "year": 2026
+   }
+  }
+ ],
+ "season": {
+  "type": 2,
+  "year": 2026
+ },
+ "week": {
+  "number": 1
+ }
+}

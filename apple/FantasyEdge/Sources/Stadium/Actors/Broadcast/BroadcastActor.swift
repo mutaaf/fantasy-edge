@@ -95,10 +95,6 @@ final class BroadcastActor: StadiumActor {
         ball.scale = SIMD3(repeating: scale)
     }
 
-    /// Whether this play's trail is laid, which is what a moment waits on:
-    /// true at the end of a flight, and at once for a drive laid at rest.
-    func hasTrail(_ id: String) -> Bool { trails.has(id) }
-
     // MARK: lines, tag, beacon
 
     func settle(_ c: StadiumContext, animated: Bool) {
@@ -417,6 +413,8 @@ extension BroadcastActor {
         if simd_distance(glow.position, local) > 1e-3 { glow.position = local }
     }
 
+    /// Whether this play's trail is on the field yet. MomentGate holds a moment until the
+    /// ball has landed, and asks through here (StadiumRenderer).
     func hasTrail(_ id: String) -> Bool { trails.has(id) }
 
     /// Look-dev only (`-trailTrace`, DEBUG builds): what the drive did and when.

@@ -10,7 +10,10 @@ import SwiftUI
 struct GameFieldView: View {
     @Environment(Board.self) private var board
     @Environment(\.openWindow) private var openWindow
-    @State private var showReplays = false
+    /// `-openLastWeek` on the launch arguments opens the picker without a tap,
+    /// which is the only way it can be screenshotted: a simulator cannot pinch.
+    @State private var showReplays = ProcessInfo.processInfo.arguments
+        .contains("-openLastWeek")
     @Binding var event: String
     @Binding var focus: String?
     /// The play the field is showing. Nil means "the latest one", which is

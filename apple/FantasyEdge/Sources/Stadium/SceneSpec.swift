@@ -548,6 +548,76 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
 }
 
 /// The remote control's view of a replay: `GET /api/replay`.
+/// Last week's slate, as `/api/lastweek` serves it.
+///
+/// Every game of the week, not only the ones already captured: a picker that
+/// listed captures alone could never be the thing you pick *from*, because
+/// what you want to watch is usually the one nobody has pulled yet.
+///
+/// Scores are absent unless they were asked for, which is why `Club.score` is
+/// optional and the row carries `spoiler` to say which kind of row it is. A
+/// view must never fill that gap with a zero.
+public struct LastWeek: Decodable, Equatable, Sendable {
+    public let season: Int
+    public let week: Int
+    public let games: [Game]
+    public let pulled: Int
+    public let total: Int
+    public let spoilers: Bool
+    public let offline: Bool?
+
+    public struct Club: Decodable, Equatable, Sendable {
+        public let abbr: String
+        public let name: String
+        public let score: Double?
+    }
+
+    public struct Game: Decodable, Equatable, Sendable, Identifiable {
+        public let event: String
+        public let name: String
+        public let kickoff: String
+        public let away: Club
+        public let home: Club
+        /// The one line under the matchup: why this game is worth an hour.
+        public let reason: String
+        public let reasons: [String]
+        /// "quarter" from the slate alone, "play" once the game is pulled.
+        public let precision: String
+        public let caveat: String
+        public let watchability: Double
+        public let pulled: Bool
+        public let spoiler: Bool
+        public let plays: Int?
+        public let length: Int?
+        public let final: String?
+        public var id: String { event }
+    }
+}
+
+/// Where the scores and drives sit in a loaded replay, in game seconds.
+public struct ReplayMarkers: Decodable, Equatable, Sendable {
+    public let scores: [Score]
+    public let drives: [Drive]
+    public let length: Int
+
+    public struct Score: Decodable, Equatable, Sendable, Identifiable {
+        public let at: Int
+        public let playAt: Int
+        public let team: String
+        public let period: Int
+        public let clock: String
+        public var id: Int { playAt }
+    }
+
+    public struct Drive: Decodable, Equatable, Sendable, Identifiable {
+        public let at: Int
+        public let team: String
+        public let result: String
+        public let plays: Int
+        public var id: Int { at }
+    }
+}
+
 public struct ReplayState: Decodable, Equatable, Sendable {
     public let replay: Bool
     public let loaded: Bool

@@ -221,6 +221,37 @@ def trim_scoreboard(board: dict, event: str) -> dict:
             "events": [ev]}
 
 
+def trim_week(board: dict) -> dict:
+    """A whole week's slate, every game, with only what a picker reads.
+
+    `trim_scoreboard` keeps one event because a replay drives one game. A week
+    fixture is the opposite shape - sixteen games and no play-by-play - and it
+    is what `week.py` is tested against: the states that decide whether a week
+    is finished, and the `linescores` every quarter-resolution reason is read
+    from.
+    """
+    events = []
+    for ev in (board.get("events") or []):
+        ev = {k: v for k, v in ev.items()
+              if k in ("id", "uid", "date", "name", "shortName", "season", "week")}
+        src = rp._event(board, str(ev.get("id")))
+        comp = dict(((src or {}).get("competitions") or [{}])[0])
+        for key in COMP_DROP:
+            comp.pop(key, None)
+        comp = {k: v for k, v in comp.items()
+                if k in ("id", "date", "status", "competitors", "attendance")}
+        comp["competitors"] = [
+            {**{k: v for k, v in c.items()
+                if k in ("id", "homeAway", "winner", "score", "linescores")},
+             "team": slim_team(c.get("team") or {})}
+            for c in (comp.get("competitors") or [])]
+        ev["competitions"] = [comp]
+        events.append(ev)
+    return {"leagues": [{"season": ((board.get("leagues") or [{}])[0].get("season"))}],
+            "season": board.get("season"), "week": board.get("week"),
+            "events": events}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--event", default="401872656")
@@ -235,6 +266,10 @@ def main() -> None:
     ap.add_argument("--nflverse", action="store_true",
                     help="write tests/fixtures/nflverse_pbp_EVENT.json: the game's published "
                          "play-by-play rows, which correct a replay's geometry")
+    ap.add_argument("--week", type=int,
+                    help="write a week's slate fixture, tests/fixtures/week_slate_SEASON_TYPE_WEEK.json")
+    ap.add_argument("--season", type=int, default=2026)
+    ap.add_argument("--seasontype", type=int, default=2)
     args = ap.parse_args()
 
     if args.nflverse:
@@ -251,6 +286,19 @@ def main() -> None:
                                   indent=1, sort_keys=True))
         print(f"event {args.event}: {sched['game_id']}, {len(rows)} nflverse plays "
               f"-> {out} ({out.stat().st_size // 1024} KB)")
+        return
+
+    if args.week:
+        from fantasyedge import week as wk
+
+        board = _get_json(with_key(wk.week_url(args.season, args.week, args.seasontype)))
+        out = FIX / f"week_slate_{args.season}_{args.seasontype}_{args.week}.json"
+        FIX.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(trim_week(board), indent=1, sort_keys=True))
+        print(f"{args.season} type {args.seasontype} week {args.week}: "
+              f"{len(board.get('events') or [])} games, state "
+              f"{wk.week_state(board)} -> {out} ({out.stat().st_size // 1024} KB)")
+
         return
 
     if args.game:

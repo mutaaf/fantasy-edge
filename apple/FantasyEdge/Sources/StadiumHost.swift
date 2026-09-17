@@ -186,48 +186,117 @@ private struct Elsewhere: View {
     }
 }
 
-/// Every captured game, loaded into the replay with one tap.
+/// Last week's games, and one tap into the stadium at kickoff.
+///
+/// The picker this replaced listed the games somebody had already captured on
+/// a Mac, with their final scores across the row. Both halves were wrong: what
+/// you want to watch is usually the game nobody has pulled yet, and a list of
+/// last week's results is the one thing a replay picker must not be. This
+/// lists the whole week - pulled or not - and says why each game is worth an
+/// hour without saying how it ended.
+///
+/// Scores are off. Turning them on re-asks the server rather than unhiding a
+/// field, so a hidden row never carries the number it is hiding.
 struct ReplayPicker: View {
     let opened: () -> Void
     @Environment(SceneFeed.self) private var feed
     @Environment(\.dismiss) private var dismiss
+    @State private var spoilers = false
+    @State private var opening: String?
+
+    private var week: LastWeek? { feed.lastWeek }
 
     var body: some View {
         NavigationStack {
             List {
-                if let games = feed.replay?.games, !games.isEmpty {
-                    ForEach(games) { g in
-                        Button {
-                            Task {
-                                await feed.load(g.event)
-                                await feed.play()
-                                opened()
-                                dismiss()
-                            }
-                        } label: {
-                            HStack {
-                                Text("\(g.away.abbr) \(Int(g.away.score)) @ \(g.home.abbr) \(Int(g.home.score))")
-                                    .font(.system(size: 17, weight: .semibold)).monospacedDigit()
-                                Spacer()
-                                Text(g.final).foregroundStyle(.secondary)
-                                Text(String(g.date.prefix(10))).foregroundStyle(.tertiary)
-                            }
-                            .frame(minHeight: 60)
+                if let week, !week.games.isEmpty {
+                    Section {
+                        ForEach(week.games) { g in row(g) }
+                    } header: {
+                        HStack {
+                            Text("\(week.season) · Week \(week.week)")
+                            Spacer()
+                            Text("\(week.pulled) of \(week.total) ready to watch")
+                                .foregroundStyle(.tertiary)
                         }
+                        .font(.system(size: 13))
+                    } footer: {
+                        Text(week.pulled == week.total
+                             ? "Every game is on this Mac and opens without a request."
+                             : "A game that is not ready is fetched when you open it. "
+                               + "Pull the week in one go with: "
+                               + "python3 -m fantasyedge last-week --pull")
+                        .font(.system(size: 12)).foregroundStyle(.tertiary)
                     }
-                } else {
-                    Text("No games captured yet. On the Mac: python3 -m fantasyedge replay "
-                         + "--season 2025 --week 1 --team PHI --at 0")
-                        .foregroundStyle(.secondary)
+                } else if feed.error == nil {
+                    HStack(spacing: 12) {
+                        ProgressView()
+                        Text("Reading last week …").foregroundStyle(.secondary)
+                    }
+                    .frame(minHeight: 60)
                 }
                 if let error = feed.error {
                     Text(error).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Replay a game")
-            .toolbar { Button("Done") { dismiss() } }
+            .navigationTitle("Last week")
+            .toolbar {
+                Toggle("Scores", isOn: $spoilers)
+                    .toggleStyle(.switch)
+                    .onChange(of: spoilers) { _, on in
+                        Task { await feed.loadLastWeek(spoilers: on) }
+                    }
+                Button("Done") { dismiss() }
+            }
         }
-        .task { await feed.loadGames() }
-        .frame(minWidth: 620, minHeight: 520)
+        .task { await feed.loadLastWeek(spoilers: spoilers) }
+        .frame(minWidth: 680, minHeight: 560)
+    }
+
+    /// One game. The reason is the loudest thing after the clubs, because it
+    /// is what the choice is actually made on.
+    private func row(_ g: LastWeek.Game) -> some View {
+        Button {
+            opening = g.event
+            Task {
+                await feed.load(g.event)
+                await feed.play()
+                opening = nil
+                opened()
+                dismiss()
+            }
+        } label: {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(g.name).font(.system(size: 17, weight: .semibold))
+                        if let a = g.away.score, let h = g.home.score {
+                            Text("\(Int(a))–\(Int(h))")
+                                .font(.system(size: 17, weight: .bold)).monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                        if let final = g.final {
+                            Text(final).font(.system(size: 12)).foregroundStyle(.tertiary)
+                        }
+                    }
+                    Text(g.reason).font(.system(size: 14)).foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 12)
+                if opening == g.event {
+                    ProgressView()
+                } else if g.pulled {
+                    Label("Ready", systemImage: "arrow.down.circle.fill")
+                        .labelStyle(.iconOnly).foregroundStyle(.green)
+                        .accessibilityLabel("Ready to watch")
+                } else {
+                    Image(systemName: "icloud.and.arrow.down")
+                        .foregroundStyle(.tertiary)
+                        .accessibilityLabel("Will be fetched")
+                }
+            }
+            .frame(minHeight: 60)
+        }
+        .accessibilityHint(g.reason)
     }
 }

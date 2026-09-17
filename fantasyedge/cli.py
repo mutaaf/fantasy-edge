@@ -472,6 +472,96 @@ def cmd_replay(args, cfg) -> None:
                      f"{info['frames']} frame(s) written to {info['out']}")
 
 
+def cmd_last_week(args, cfg) -> None:
+    """List last week's games, pull them, or open one in the stadium.
+
+    Needs no credential and no database: the NFL slate is public, and a capture
+    is a pair of files. `--json` gives an agent the whole week in one call, with
+    an event id per row that `replay --game` and the app's `-openGame` both
+    take.
+
+    Final scores are withheld unless `--spoilers` is passed, because the first
+    thing a picker for last week's games must not do is tell you how they went.
+    """
+    from . import week as wk
+
+    source = pathlib.Path(args.out) / "source"
+    reveal = bool(args.spoilers)
+    quiet = getattr(args, "json", False)
+
+    board = None
+    if args.season and args.week:
+        board = wk.week_board(args.season, args.week, args.seasontype)
+    elif args.offline:
+        board = wk.cached_board(source)
+        if board is None:
+            raise SystemExit("Nothing pulled yet, so there is no offline week. "
+                             "Run `last-week --pull` once while online.")
+
+    if board is None:
+        found = wk.last_finished()
+    else:
+        # A board knows its own season and week. Reading them off it rather
+        # than off the flags is what makes `--offline` - where there are no
+        # flags to read - say which week it is showing.
+        at = wk.season_week(board)
+        found = {"season": args.season or at["season"],
+                 "week": args.week or at["week"],
+                 "seasontype": args.seasontype or at["seasontype"],
+                 "board": board, "current": at,
+                 "tried": [{**at, "state": wk.week_state(board),
+                            "games": len(board.get("events") or [])}],
+                 "isCurrent": False}
+
+    if args.pull or args.open:
+        only = [args.open] if args.open else None
+        if not quiet:
+            label = f"{found['season']} week {found['week']}"
+            print(f"Pulling {label} into {source} ...")
+        got = wk.pull_week(found["board"], source, log=None if quiet else print,
+                           refresh=bool(args.refresh), only=only)
+        if got["failed"] and not quiet:
+            print(f"\n{len(got['failed'])} game(s) failed; the rest are ready.")
+        if not args.open:
+            rows = wk.week_games(found["board"], source=source, reveal=reveal)
+            payload = {"season": found["season"], "week": found["week"],
+                       "seasontype": found["seasontype"], "pull": got,
+                       "games": rows, "spoilers": reveal}
+            return emit(args, payload,
+                        f"\n{len(got['pulled'])} pulled, {len(got['cached'])} already "
+                        f"there, {len(got['failed'])} failed, {got['requests']} "
+                        f"request(s) in {got['seconds']}s.")
+
+    if args.open:
+        event = args.open
+        rows = wk.week_games(found["board"], source=source, reveal=reveal)
+        row = next((r for r in rows if r["event"] == str(event)), None)
+        if row is None:
+            raise SystemExit(f"No game {event} in {found['season']} week {found['week']}. "
+                             "Run without --open to list the week.")
+        info = {"opened": row, "season": found["season"], "week": found["week"],
+                "app": f"-openGame {event}",
+                "api": {"method": "POST", "path": "/api/replay",
+                        "body": {"action": "load", "event": str(event)}},
+                "cli": f"python3 -m fantasyedge replay --game {event} --out {args.out}"}
+        return emit(args, info,
+                    f"{row['name']}  {row['reason']}\n"
+                    f"  in the app:  {info['app']}\n"
+                    f"  as a daemon: {info['cli']}")
+
+    payload = wk.last_week(source=source, reveal=reveal, board=found["board"])
+    lines = [f"{found['season']} week {found['week']}"
+             f"{' (in progress)' if found.get('isCurrent') else ''}"
+             f"  -  {payload['pulled']}/{payload['total']} pulled"
+             f"{'' if reveal else '  -  scores hidden, pass --spoilers'}"]
+    for g in payload["games"]:
+        score = (f"  {g['away'].get('score')}-{g['home'].get('score')}"
+                 if reveal else "")
+        lines.append(f"  {g['event']}  {g['name']:12s}{score:9s}  {g['reason']}"
+                     f"{'' if g['pulled'] else '   (not pulled)'}")
+    emit(args, payload, "\n".join(lines))
+
+
 def _week_range(args) -> list[int]:
     """Which weeks `projections sleeper` should fetch.
 
@@ -822,6 +912,26 @@ def build_parser() -> argparse.ArgumentParser:
     rpl.add_argument("--capture", action="store_true",
                      help="re-download the game from ESPN before replaying")
     jsonify(rpl); rpl.set_defaults(fn=cmd_replay)
+
+    lw = sub.add_parser("last-week",
+                        help="last week's games, why each is worth watching, and how to open one")
+    lw.add_argument("--pull", action="store_true",
+                    help="capture every game on the week, skipping what is already local")
+    lw.add_argument("--open", metavar="EVENT",
+                    help="pull one game if needed and print how to open it")
+    lw.add_argument("--spoilers", action="store_true",
+                    help="show final scores (hidden by default)")
+    lw.add_argument("--refresh", action="store_true",
+                    help="re-download games already captured")
+    lw.add_argument("--offline", action="store_true",
+                    help="use the slate a previous --pull left on disk; no requests")
+    lw.add_argument("--season", type=int, help="with --week: a specific week instead of last")
+    lw.add_argument("--week", type=int, help="week number within --seasontype")
+    lw.add_argument("--seasontype", type=int, default=2,
+                    help="ESPN season type: 1 preseason, 2 regular (default), 3 postseason")
+    lw.add_argument("--out", default="data/replay",
+                    help="replay directory; games are captured into its source/")
+    jsonify(lw); lw.set_defaults(fn=cmd_last_week)
 
     pj = common(sub.add_parser("projections",
                                help="record projections so they can be scored"))

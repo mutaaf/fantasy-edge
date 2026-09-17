@@ -100,6 +100,27 @@ python3 -m fantasyedge pull --provider manual \
   --draft draft.txt --standings standings.txt --league mine --season 2025
 ```
 
+**Last week, replayed:**
+```bash
+python3 -m fantasyedge last-week --json            # the week, best game first
+python3 -m fantasyedge last-week --pull            # all of it, one request per game
+python3 -m fantasyedge last-week --open 401872660  # how to open that one
+python3 -m fantasyedge last-week --offline         # from disk, no requests
+```
+
+Needs no credential and no database. The week is read off ESPN's own board -
+the most recent one whose every game is final, so a Thursday with one game
+played offers the week before it rather than a half-played one. `--pull` costs
+one request per game and is free to re-run; a pulled week then lists and opens
+with no network at all.
+
+**Final scores are hidden unless `--spoilers` is passed**, on the command line
+and at `/api/lastweek`, because a picker for games you have not seen must not
+be a results page. Each row carries a reason to watch that survives that
+rule - "3 lead changes", "won on a touchdown in the last minute" - and a
+`precision` saying which answer it is: `quarter` from the slate alone, `play`
+once the game is pulled and its play-by-play can be read.
+
 ## Rules
 
 **Never write credentials into a file in this repo.** `ESPN_S2`, `ESPN_SWID`,
@@ -141,6 +162,13 @@ and it holds for exactly one of the three providers. Everything else joins
 through `identity.py`, which is the single owner of name folding - do not add
 a fourth copy of it. A roster whose ids resolve to nothing does not raise; it
 reports every player as scoreless, which looks like a quiet Sunday.
+
+**ESPN stamps a stale score on the plays after a score.** On event 401772949
+the two timeouts following the winning touchdown carry 37-36, the score before
+its two-point try, and the game's own last record carries 37-38. Walking every
+play in order therefore counts two lead changes that never happened and puts
+the winning score on "END GAME". A lead can only change on a play that scores,
+so `week._play_swing` reads `scoringPlay` plays alone.
 
 **Do not add third-party dependencies.** Zero-dependency is a deliberate
 constraint: stdlib only, Python 3.11+. If something seems to need `requests`
