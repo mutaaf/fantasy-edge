@@ -95,6 +95,10 @@ final class BroadcastActor: StadiumActor {
         ball.scale = SIMD3(repeating: scale)
     }
 
+    /// Whether this play's trail is laid, which is what a moment waits on:
+    /// true at the end of a flight, and at once for a drive laid at rest.
+    func hasTrail(_ id: String) -> Bool { trails.has(id) }
+
     // MARK: lines, tag, beacon
 
     func settle(_ c: StadiumContext, animated: Bool) {
