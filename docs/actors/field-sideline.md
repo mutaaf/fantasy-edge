@@ -161,3 +161,80 @@ Owner: the Field & Sideline specialist. Shots are taken with `tools/blender/fiel
   - `field-level`: the border is now clean but lit a flat mid-grey from this seat. It reads as a smooth painted slab rather than bright paint on grass. The value is the floods behind the wearer, so this needs Lighting's near-field fill, not more albedo.
   - `sideline-props`: the net grid still reads over the whole field from behind the posts at its 0.35 face-on floor.
   - `redzone-trails`: the far half's turf carries a hard diagonal light-pool edge. That is Lighting's floods, not the stripe.
+
+## The field belongs to the home club (`docs/lookdev/field-identity/`)
+
+The user, on integration-12's `s-bowl-wide.png`: "lets make it so the endzones
+and logos on the field and stuff and fans are in the teams relevant". That
+frame is a Bears home game with `CHICAGO BEARS` in one end zone and
+`MINNESOTA VIKINGS` in the other, painted in each club's own colour - two
+clubs' fields stitched together, which no stadium has ever looked like.
+
+**What was wrong.** `field_art` walked `(("home", home), ("away", away))` and
+lettered each end with that club's name, and `FieldActor` painted each end
+with that club's chip. So the visiting club owned the end zone it defended,
+in its own colour, on someone else's field. The midfield ring was already the
+home club's and is unchanged.
+
+**The rule now.** Both end zones are the home club's, in its paint, and so is
+the ring. `side` on an end zone still says *which end* (the side that defends
+it, which the geometry needs); the new `fill` says *whose colour* it is, and
+is `home` at both ends. The visiting club appears where a real stadium shows
+it: in the stands (`bowl.crowd.away` and its away section), and on its own
+bench, where `tint_team_primary` props are already tinted per side.
+
+**Two ends, two words.** A club that states its name in parts letters the
+nickname at the end it defends and the location at the other, the way a split
+field reads - Soldier Field paints `BEARS` and `CHICAGO`. `location` and
+`nickname` come from ESPN through `api.py`, which already had both and threw
+them away into one `displayName`. A club that gives only one name letters it
+at both ends, which is equally real (Lambeau paints `PACKERS` twice) and is
+the only honest answer: splitting a display name on its last word invents
+`NOTRE DAME FIGHTING` and `IRISH`. The midfield ring takes the nickname when
+it is known, which is what made `BEARS` legible at midfield where
+`CHICAGO BEARS` had been set small enough to fill the ring.
+
+**One cap for both ends.** The cap was solved per name, so `MINNESOTA VIKINGS`
+lettered its end at 3.72 yd while `CHICAGO BEARS` lettered the other at 5.0.
+Both ends now take the smaller of the two fits, because the two ends of a real
+field match.
+
+**The mark at midfield is not anyone's.** It is a ring struck from the club's
+own chip with the club's name set inside it in Graduate. No club's device is
+copied, approximated or referenced, here or anywhere else on the field; the
+art bible's rule holds and nothing in the repository holds a club logo.
+
+**Contrast.** End-zone paint is the club's chip, which `chip()` solves onto a
+luminance band, so white lettering clears WCAG large text on every hue - swept
+round the wheel at 18³ samples, the worst is 4.96:1, which clears body text. Whether the end zone reads as a different
+surface from the grass is a colour question, not a luminance one: the band
+puts every club at one luminance, so a WCAG ratio is near 1 by construction
+and says nothing. Measured as CIE76 dE against `turf.a` at the paint's 0.8
+opacity, the hardest real case is a green club on green grass and it bottoms
+out at dE 12.2 (a Jets green), against a just-noticeable difference of 2.3.
+
+**Shots.** `s-bowl-wide.png`, `s-field-level.png`, `s-redzone-trails.png`,
+`s-sideline-props.png`, `s-tabletop.png` (MIN at CHI), and `-phi` on the
+second pairing (DAL at PHI) to prove it is a rule and not two clubs' luck.
+`tools/lookdev.py --event` selects the fixture for that.
+
+**Budget (`-stadiumStats`).** Field 10 parts / 770 triangles (2k, 12);
+sideline 15 / 20.8k (21k, 15). Tabletop field 10 / 610, sideline 15 / 2.9k.
+The field's count *fell* from integration-12's 1,114: `BEARS` and `CHICAGO`
+are fewer glyphs than `CHICAGO BEARS` and `MINNESOTA VIKINGS`, and glyphs are
+triangles.
+
+**Worst thing left:**
+- **The club's paint is its chip, not its colour.** A chip is solved to a
+  luminance band so white text reads on it in a panel; on 1,000 square yards
+  of end zone it lightens a club past what it is. Bears navy `#0B162A` paints
+  `#366CCD`, and Eagles midnight green `#004C54` paints a teal `#0B7B86`.
+  Accuracy wants the club's own colour, with the lettering picked for contrast
+  against it rather than assumed white - a change to how the paint is chosen,
+  not a tweak to a number.
+- **`s-sideline-props.png`:** the goal-post net still reads as a grid across
+  the whole field from behind the posts, at its 0.35 face-on floor. Unchanged
+  and already on the director's list.
+- **`s-bowl-wide.png`:** the away support fills most of one side of the bowl.
+  That is `bowl.crowd.awaySection` (`fromX` 90, far side), and it reads as a
+  larger travelling support than a home game has. Crowd's, not Field's.

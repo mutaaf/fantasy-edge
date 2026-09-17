@@ -18,6 +18,7 @@ extension SceneSpec {
     }
 
     public struct EndZoneArt: Decodable, Equatable, Sendable {
+        /// Which end of the field this is, by the side that defends it.
         public let side: String
         public let text: String
         public let capHeight: Double
@@ -25,6 +26,8 @@ extension SceneSpec {
         public let along: [Double]
         public let up: [Double]
         public let tint: String
+        /// Whose colour paints this end: the home club, at both ends.
+        public let fill: String
 
         var layout: ArtText {
             ArtText(text: text, capHeight: capHeight, origin: origin, along: along, up: up, tint: tint)

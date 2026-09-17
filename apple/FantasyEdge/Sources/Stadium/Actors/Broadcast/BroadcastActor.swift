@@ -413,6 +413,8 @@ extension BroadcastActor {
         if simd_distance(glow.position, local) > 1e-3 { glow.position = local }
     }
 
+    func hasTrail(_ id: String) -> Bool { trails.has(id) }
+
     /// Look-dev only (`-trailTrace`, DEBUG builds): what the drive did and when.
     static func trace(_ c: StadiumContext, _ what: String) {
         #if DEBUG

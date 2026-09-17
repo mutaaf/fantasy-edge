@@ -879,6 +879,127 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertLessEqual(names, set(sys.stdlib_module_names))
 
 
+class TestTheFieldBelongsToTheHomeClub(unittest.TestCase):
+    """A visiting club is not painted on someone else's field.
+
+    Before this, the end zone the visitors defended was lettered with their
+    name and painted in their colour, so a home game showed two clubs' fields
+    stitched together. Both ends are the home club's now; the away side wears
+    its colour in the stands, and on its own bench.
+    """
+
+    HOME = {"abbr": "MIN", "name": "Minnesota Vikings", "location": "Minnesota",
+            "nickname": "Vikings", "color": "#4F2683", "id": "16"}
+    AWAY = {"abbr": "CHI", "name": "Chicago Bears", "location": "Chicago",
+            "nickname": "Bears", "color": "#0B162A", "id": "3"}
+
+    def art(self, home=None, away=None, league="nfl"):
+        built = sc.build({"home": home or self.HOME, "away": away or self.AWAY}, league=league)
+        return built, built["field"]["art"]
+
+    def test_both_end_zones_carry_the_home_club_and_never_the_visitors(self):
+        built, art = self.art()
+        self.assertEqual({z["side"] for z in art["endZones"]}, {"home", "away"},
+                         "both ends are still drawn; `side` says which end, not whose it is")
+        for z in art["endZones"]:
+            self.assertEqual(z["fill"], "home", "the home club's paint at both ends")
+        painted = " ".join(z["text"] for z in art["endZones"]) + " " + art["midfield"]["text"]["text"]
+        for word in ("CHICAGO", "BEARS", "CHI"):
+            self.assertNotIn(word, painted, f"the visiting club is painted on the grass: {painted!r}")
+        for word in ("VIKINGS", "MINNESOTA"):
+            self.assertIn(word, painted)
+        self.assertEqual(art["midfield"]["tint"], "home")
+
+    def test_swapping_home_and_away_swaps_the_whole_field(self):
+        _, art = self.art(home=self.AWAY, away=self.HOME)
+        painted = " ".join(z["text"] for z in art["endZones"])
+        self.assertIn("BEARS", painted)
+        self.assertNotIn("VIKINGS", painted)
+
+    def test_one_cap_height_serves_both_ends(self):
+        """A long word at one end must not letter it smaller than the other:
+        the two ends of a real field match."""
+        _, art = self.art()
+        caps = {z["capHeight"] for z in art["endZones"]}
+        self.assertEqual(len(caps), 1, f"end zones lettered at different sizes: {caps}")
+
+    def test_a_club_that_states_only_one_name_letters_it_at_both_ends(self):
+        """Lambeau paints PACKERS twice. Splitting a display name on its last
+        word would invent "NOTRE DAME FIGHTING" and "IRISH", so it is not done."""
+        _, art = self.art(home={"abbr": "ND", "name": "Notre Dame Fighting Irish", "color": "#0C2340"})
+        texts = [z["text"] for z in art["endZones"]]
+        self.assertEqual(texts, ["NOTRE DAME FIGHTING IRISH"] * 2)
+
+    def test_the_longest_names_still_fit_their_end_zone(self):
+        """The fit is checked at the lengths that break it, not at a short one."""
+        font = sc._glyphs()
+        self.assertIsNotNone(font)
+        for name in ("Jacksonville Jaguars", "New England Patriots", "Tampa Bay Buccaneers",
+                     "Washington Commanders", "Notre Dame Fighting Irish",
+                     "Southern Mississippi Golden Eagles"):
+            built, art = self.art(home={"abbr": "XX", "name": name, "color": "#4F2683"})
+            f = built["field"]
+            clear, gl = 4 / 3, 8 / 36
+            for z in art["endZones"]:
+                width = sc.text_width(z["text"], font, art["tracking"])
+                self.assertGreater(width, 0, name)
+                (ox, oz), (ax, az), (ux, uz), cap = z["origin"], z["along"], z["up"], z["capHeight"]
+                self.assertGreater(cap, 0.5, f"{name} lettered too small to read: {cap}")
+                for a in (0, width):
+                    for b in (0, 1):
+                        x = ox + (a * ax + b * ux) * cap
+                        zz = oz + (a * az + b * uz) * cap
+                        lo, hi = ((-f["endZone"] + clear, -gl - clear) if z["side"] == "home"
+                                  else (f["length"] + gl + clear, f["length"] + f["endZone"] - clear))
+                        self.assertGreaterEqual(x, lo - 1e-6, name)
+                        self.assertLessEqual(x, hi + 1e-6, name)
+                        self.assertLessEqual(abs(zz), f["width"] / 2 - clear + 1e-6, name)
+
+    def test_white_lettering_reads_on_every_club_colour(self):
+        """End-zone paint is the club's chip, which is solved to a luminance
+        band, so white letters clear WCAG *body* text on any hue - not merely
+        the 3:1 they would need as large text. Swept at 18 cubed samples the
+        worst any hue reaches is 4.96:1, so 4.5 is the bar. Tested by sweeping
+        rather than by club, because the club list is ESPN's and is not in
+        this repository."""
+        band = sc.load_tokens()["chip"]
+        hexes = [f"#{r:02X}{g:02X}{b:02X}" for r, g, b in
+                 [(255, 0, 0), (255, 255, 0), (0, 255, 0), (0, 255, 255), (0, 0, 255),
+                  (255, 0, 255), (255, 255, 255), (0, 0, 0), (128, 128, 128),
+                  (11, 22, 42), (79, 38, 131), (0, 53, 148), (200, 16, 46)]]
+        worst = min(((sc.contrast("#FFFFFF", sc.chip(h, band)), h) for h in hexes))
+        self.assertGreaterEqual(worst[0], 4.5, f"white letters fail on {worst[1]} at {worst[0]:.2f}:1")
+
+    def test_the_end_zone_reads_against_the_grass_it_is_painted_on(self):
+        """A chip laid over turf at the paint's opacity has to be seen as a
+        different surface from the field of play.
+
+        Measured as colour distance, not luminance contrast: the chip band
+        solves every club to one luminance, so a WCAG ratio is near 1 by
+        construction and says nothing. CIE76 dE 2.3 is one just-noticeable
+        difference; the hardest real case is a green club on green grass, and
+        a swept sample bottoms out at dE 12 (a Jets green at 12.2), so 10 is
+        the floor here - comfortably above a JND, just under the worst case
+        the palette actually produces.
+        """
+        import importlib.util
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        spec = importlib.util.spec_from_file_location("contrast_check", root / "apple" / "contrast_check.py")
+        cc = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cc)
+        tokens = sc.load_tokens()
+        band, paint = tokens["chip"], tokens["visual"]["field"]["paint"]
+        turf = sc._rgb(tokens["color"]["turf.a"])
+        opacity = paint["endZoneOpacity"]
+        for hexs in ("#4F2683", "#0B162A", "#125740", "#203731", "#69BE28",
+                     "#004C54", "#FFFFFF", "#F0BE00", "#000000"):
+            over = tuple(opacity * c + (1 - opacity) * t
+                         for c, t in zip(sc._rgb(sc.chip(hexs, band)), turf))
+            self.assertGreaterEqual(cc.delta_e(over, turf), 10.0,
+                                    f"a {hexs} end zone vanishes into the grass")
+
+
 class TestTokensHaveOneSource(unittest.TestCase):
 
     def test_the_css_is_a_current_rendering_of_the_json(self):

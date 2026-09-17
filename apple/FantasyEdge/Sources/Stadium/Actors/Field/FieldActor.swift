@@ -77,15 +77,20 @@ final class FieldActor: StadiumActor {
         // lines are too, and a line as clean at the hash as at the wall is CG.
         add(wearEntity, order: 6)
 
-        // End zones: club paint over the grass.
-        for (team, x0, x1) in [(s.teams.home, -f.endZone, 0.0), (s.teams.away, f.length, f.length + f.endZone)] {
+        // End zones: the home club's paint over the grass, at both ends. The
+        // field belongs to whoever is at home, so the visiting club's colour
+        // is never painted on it; the scene says so per end (`fill`), and the
+        // away side wears its colour in the stands instead.
+        for (end, x0, x1) in [("home", -f.endZone, 0.0), ("away", f.length, f.length + f.endZone)] {
+            let fill = f.art?.endZones.first { $0.side == end }?.fill ?? "home"
+            let team = s.teams.side(fill) ?? s.teams.home
             var b = MeshBuilder()
             b.floor(x0: x0, x1: x1, z0: -half, z1: half, y: L.endZone, tile: tile)
             var m = PhysicallyBasedMaterial()
             m.baseColor = .init(tint: StadiumLook.color(team.chip))
             m.roughness = .init(floatLiteral: Float(P.roughness))
             m.blending = .transparent(opacity: .init(floatLiteral: Float(P.endZoneOpacity)))
-            add(b.entity("endzone.\(team.abbr)", m), order: 3)
+            add(b.entity("endzone.\(end)", m), order: 3)
         }
 
         // Midfield ring in the home club's chip, under the paint so the yard
