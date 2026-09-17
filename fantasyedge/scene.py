@@ -150,16 +150,44 @@ def text_width(text: str, font: dict, tracking: float = 0.08) -> float:
     return max(0.0, pen - tracking) if drawn else 0.0
 
 
+def club_lines(club: dict) -> tuple[str, str]:
+    """The two lines a club letters its end zones with: its nickname at the end
+    it defends, its location at the other.
+
+    That is how a split field reads (Soldier Field paints BEARS and CHICAGO).
+    A club that gives only one name letters it at both ends, which is equally
+    real - Lambeau paints PACKERS twice - and is the only honest answer when
+    the parts are not known: splitting a display name on its last word invents
+    "NOTRE DAME FIGHTING" and "IRISH".
+    """
+    full = (club.get("name") or club.get("abbr") or "").strip().upper()
+    nick = (club.get("nickname") or "").strip().upper()
+    loc = (club.get("location") or "").strip().upper()
+    if nick and loc and nick != loc:
+        return nick, loc
+    one = nick or full
+    return one, one
+
+
 def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
-    """Where each club's name and the midfield ring are painted.
+    """Where the home club's name and the midfield ring are painted.
+
+    **The field belongs to the home club.** Both end zones carry its name and
+    its colour, and the ring at midfield is its own; a visiting club is not
+    painted on someone else's field, and the away side appears in the stands
+    (`bowl.crowd`), not on the grass. `away` is still taken because the end
+    zone the visitors defend is named for them positionally (`side`), not
+    lettered for them.
 
     A text layout maps glyph space to the field: a glyph point (gx, gy) in
     em units lands at origin + (gx * along + gy * up) * capHeight, in (x, z)
     yards. Each name reads from the field of play with its letters' tops
-    toward the end line; the midfield name reads from the home sideline.
-    Clearance follows NCAA 1-2-1-d, four feet from any line, which never
-    breaks the NFL's Commissioner-approved rule; midfield art stays inside
-    the hashes for college (1-2-1-g-3) and inside the numbers for the NFL.
+    toward the end line; the midfield name reads from the home sideline. One
+    cap height serves both ends, so a long word at one end cannot letter it
+    smaller than the other. Clearance follows NCAA 1-2-1-d, four feet from any
+    line, which never breaks the NFL's Commissioner-approved rule; midfield
+    art stays inside the hashes for college (1-2-1-g-3) and inside the numbers
+    for the NFL.
     """
     font = _glyphs()
     if not font:
@@ -170,28 +198,34 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
     goal_line = 8 / 36
     depth = field["endZone"] - goal_line - 2 * clear
     span = w - 2 * clear
+    near, far = club_lines(home)
+    ends = (
+        ("home", near, -field["endZone"] / 2 - goal_line / 2, (0.0, -1.0), (-1.0, 0.0)),
+        ("away", far, field["length"] + field["endZone"] / 2 + goal_line / 2, (0.0, 1.0), (1.0, 0.0)))
+    widths = {side: text_width(text, font, tracking) for side, text, *_ in ends}
+    fits = [min(5.0, depth * 0.78, span * 0.92 / width) for width in widths.values() if width]
+    cap = min(fits) if fits else 0.0
     zones = []
-    for side, team, x_mid, along, up in (
-            ("home", home, -field["endZone"] / 2 - goal_line / 2, (0.0, -1.0), (-1.0, 0.0)),
-            ("away", away, field["length"] + field["endZone"] / 2 + goal_line / 2, (0.0, 1.0), (1.0, 0.0))):
-        name = (team.get("name") or team.get("abbr") or "").upper()
-        width = text_width(name, font, tracking)
+    for side, text, x_mid, along, up in ends:
+        width = widths[side]
         if not width:
             continue
-        cap = min(5.0, depth * 0.78, span * 0.92 / width)
         # centre: half the width back along `along`, half the cap back along `up`
         ox = x_mid - (width * cap / 2) * along[0] - (cap / 2) * up[0]
         oz = 0.0 - (width * cap / 2) * along[1] - (cap / 2) * up[1]
-        zones.append({"side": side, "text": name, "capHeight": round(cap, 4),
+        zones.append({"side": side, "text": text, "capHeight": round(cap, 4),
                       "origin": [round(ox, 4), round(oz, 4)], "along": list(along), "up": list(up),
-                      "tint": "white"})
+                      "tint": "white", "fill": "home"})
     hash_in = field["hashFromSideline"]
     if league == "college-football":
         half_span = w / 2 - hash_in - 1 * _FT
     else:
         half_span = w / 2 - (12.0 + 2.0) - 1.0          # inside the numerals' tops
     radius = min(8.0, half_span)
-    name = (home.get("name") or home.get("abbr") or "").upper()
+    # The ring reads as a mark without being anyone's: a circle struck from the
+    # club's own chip with the club's name set inside it. No club's device is
+    # copied or approximated, here or anywhere else on the field.
+    name = club_lines(home)[0] or (home.get("name") or home.get("abbr") or "").upper()
     width = text_width(name, font, tracking)
     inner = radius * 0.86
     mid = {"center": [50.0, 0.0], "outer": round(radius, 4), "inner": round(inner, 4), "tint": "home"}
@@ -1207,7 +1241,11 @@ def team_chips(home: dict, away: dict, band: dict) -> tuple[dict, dict]:
     team", not as the other team.
     """
     def one(t):
+        # `location` and `nickname` are the club's name in its two parts, which
+        # the field letters its two end zones with. They are carried only when
+        # the source states them; see club_lines on why they are never guessed.
         return {"abbr": t.get("abbr", ""), "name": t.get("name", ""),
+                "location": t.get("location", ""), "nickname": t.get("nickname", ""),
                 "id": str(t.get("id", "")), "color": t.get("color", ""),
                 "chip": chip(t.get("color", ""), band), "chipText": band["text"],
                 "hatch": False, "score": t.get("score", 0)}

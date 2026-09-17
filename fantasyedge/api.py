@@ -897,6 +897,11 @@ class Api:
                 "id": str(t.get("id") or ""),
                 "abbr": (t.get("abbreviation") or "").upper(),
                 "name": t.get("displayName") or t.get("name") or "",
+                # The same name in its two parts, which the field letters its
+                # end zones with (scene.club_lines). ESPN states both, so they
+                # are passed through rather than split out of `displayName`.
+                "location": t.get("location") or "",
+                "nickname": t.get("name") or "",
                 "logo": ((t.get("logos") or [{}])[0].get("href", "")
                          if t.get("logos") else logo_url(t.get("abbreviation") or "")),
                 "color": "#" + (t.get("color") or "444444"),

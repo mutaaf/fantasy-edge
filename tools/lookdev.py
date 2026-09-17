@@ -173,6 +173,10 @@ def main() -> None:
     ap.add_argument("--play", default="",
                     help="play every selected shot through the first play whose text contains this, at 1x; "
                          "use p-times (--times p4,p6) for frames mid-play")
+    ap.add_argument("--event", default=PICK_SIX,
+                    help="which committed fixture to replay, for a shot that has to hold for more than one "
+                         "pair of clubs (401772510 DAL@PHI, 401772949 LAR@SEA, 401772810 MIN@CHI). The "
+                         "moment and play positions are the pick-six's, so --moment and --play stay on it.")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -192,7 +196,7 @@ def main() -> None:
                 time.sleep(0.2)
         simctl("boot", args.device, check=False)
         simctl("install", args.device, str(args.app))
-        post(args.port, {"action": "load", "event": PICK_SIX})
+        post(args.port, {"action": "load", "event": args.event})
         post(args.port, {"action": "pause"})
         positions = {"touchdown": (play_second(args.play) if args.play else
                                    field_goal_second() if args.moment == "fieldGoal" else pick_six_second()),
