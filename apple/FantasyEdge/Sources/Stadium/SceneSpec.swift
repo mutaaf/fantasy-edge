@@ -201,6 +201,29 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// scene from before the path flies the parabola `apex` describes.
         public var path: PlayPath? = nil
 
+        /// Where this play's geometry came from: `live` is ESPN's text and
+        /// spots with the rest estimated, `corrected` is nflverse's published
+        /// row, which states where the ball was caught.
+        ///
+        /// Optional, like `path`, and for the same reason: a synthesized
+        /// `Decodable` ignores a default value and throws on a missing key,
+        /// so a non-optional `= "live"` would refuse every scene built before
+        /// this field existed. Read `provenance`, which supplies the default.
+        public var source: String? = nil
+
+        /// The fields nflverse stated, when `source` is `corrected`.
+        public var corrected: [String]? = nil
+
+        /// Where this play's geometry came from, defaulting to a live estimate.
+        public var provenance: String { source ?? "live" }
+
+        /// Whether the ball flies where it actually went, rather than where
+        /// the text implied.
+        public var isCorrected: Bool { provenance == "corrected" }
+
+        /// The fields nflverse stated for this play.
+        public var correctedFields: [String] { corrected ?? [] }
+
         /// How long this play animates at the scene's speed.
         public var flightSeconds: Double { path?.duration ?? duration }
     }

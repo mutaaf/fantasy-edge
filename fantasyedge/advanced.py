@@ -21,27 +21,14 @@ No API key, no account. Two CSVs over HTTPS, cached for a day.
 from __future__ import annotations
 
 import collections
-import csv
-import io
-import json
-import pathlib
-import time
-import urllib.request
 
-BASE = "https://github.com/nflverse/nflverse-data/releases/download"
-WEEKLY = BASE + "/stats_player/stats_player_week_{season}.csv"
-ROSTER = BASE + "/players/players.csv"
-CACHE_DIR = pathlib.Path.home() / ".fantasy-edge"
-CACHE_TTL = 24 * 3600
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0"
+# `nflverse.py` owns the fetch, the cache and the release URLs: this module and
+# the play-by-play truth source both read the same nflverse, and two copies of
+# that would be two things to keep current.
+from .nflverse import (BASE, CACHE_DIR, CACHE_TTL, ROSTER, UA,  # noqa: F401
+                       WEEKLY, cached_json as _cached, csv_rows as _csv)
 
 SKILL = ("QB", "RB", "WR", "TE")
-
-
-def _csv(url: str) -> list[dict]:
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=120) as r:
-        return list(csv.DictReader(io.StringIO(r.read().decode("utf-8", "replace"))))
 
 
 def _num(row: dict, key: str) -> float:
@@ -52,22 +39,6 @@ def _num(row: dict, key: str) -> float:
         return float(v)
     except ValueError:
         return 0.0
-
-
-def _cached(name: str, build):
-    path = CACHE_DIR / name
-    if path.exists() and time.time() - path.stat().st_mtime < CACHE_TTL:
-        try:
-            return json.loads(path.read_text())
-        except (OSError, ValueError):
-            pass
-    data = build()
-    try:
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(data))
-    except OSError:
-        pass                                  # a cold cache is not a failure
-    return data
 
 
 def season_profiles(season: int) -> dict:

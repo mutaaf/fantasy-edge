@@ -39,6 +39,17 @@ MOSAIC = pathlib.Path(__file__).parent / "templates" / "mosaic.html"
 #: twenty-three of them is several megabytes of image to draw at 44 points.
 CARD_WIDTH = 200
 
+def correct_finished() -> bool:
+    """Whether a finished game's plays are corrected against nflverse.
+
+    On by default, because a replayed game should be drawn from what happened
+    rather than from what its text implied; off with
+    FANTASYEDGE_CORRECT_PLAYS=0 for a run that must not touch the network.
+    Read per call, not at import, so a test can turn it off after this module
+    is loaded. A live game is never affected: nothing is published yet.
+    """
+    return os.environ.get("FANTASYEDGE_CORRECT_PLAYS", "1") != "0"
+
 ROUTES = [
     ["GET", "/api", "this index"],
     ["GET", "/api/health", "database reachability and row counts"],
@@ -978,9 +989,38 @@ class Api:
              for pid, row in lines.items()),
             key=lambda r: (-r["points"], r["name"]))
 
+        # A finished game can be drawn from what happened rather than from
+        # what the text implied. nflverse publishes the NFL's own row for
+        # every play, including the one number ESPN never states - where the
+        # ball was caught - so once a game is final its plays are corrected in
+        # place and each carries which it is. A game still being played has no
+        # published rows, and is left as the estimate it is.
+        #
+        # Never fatal, and never blocking a live Sunday: an unreachable or
+        # unpublished source leaves every play exactly as ESPN shaped it.
+        state = (status.get("type") or {}).get("state", "pre")
+        truth_report = None
+        if state == "post" and correct_finished():
+            try:
+                from . import truth
+                # Corrected in one pass over the whole game, not per drive: the
+                # match is a game-wide assignment, and a drive at a time would
+                # let two drives claim the same row.
+                flat = [p for d in drives for p in d["plays"]]
+                fixed, truth_report = truth.correct_for_espn(flat, str(event))
+                by_id = {str(p.get("id")): p for p in fixed}
+                for d in drives:
+                    d["plays"] = [by_id.get(str(p.get("id")), p) for p in d["plays"]]
+            except Exception as exc:                   # noqa: BLE001
+                truth_report = {"event": str(event), "covered": False,
+                                "error": type(exc).__name__}
+
         last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
         return {
             "event": str(event),
+            # Whether this game's geometry is what happened or an estimate of
+            # it, so a client can say so rather than implying the stronger one.
+            "truth": truth_report,
             # Present only on a replay, and then always: a client must never
             # be able to mistake a recorded game for one being played.
             "replay": data.get("replay"),

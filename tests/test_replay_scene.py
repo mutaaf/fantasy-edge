@@ -38,6 +38,12 @@ def setUpModule():
     # never touch the real source, but the real source is asserted on below.
     os.environ["FANTASYEDGE_SCOREBOARD_FILE"] = str(FIX / "espn_scoreboard.json")
     os.environ["FANTASYEDGE_SUMMARY_FILE"] = str(FIX / "espn_summary.json")
+    # A finished game's plays are corrected against nflverse in the real
+    # server (api.correct_finished), and that reads a release over HTTPS. The
+    # correction has its own fixture-driven tests in test_truth.py; here it is
+    # off so the suite holds its promise however it was launched, not only
+    # through `make test`.
+    os.environ["FANTASYEDGE_CORRECT_PLAYS"] = "0"
 
 
 _GAMES: dict[str, dict] = {}
