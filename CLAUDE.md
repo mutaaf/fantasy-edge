@@ -144,7 +144,25 @@ reports every player as scoreless, which looks like a quiet Sunday.
 
 **Do not add third-party dependencies.** Zero-dependency is a deliberate
 constraint: stdlib only, Python 3.11+. If something seems to need `requests`
-or `pandas`, it doesn't.
+or `pandas`, it doesn't. nflverse publishes parquet beside its CSV, and
+parquet is the one that would need pandas: read the `.csv.gz` releases.
+
+**ESPN never says where a pass was caught, so a live scene estimates it.**
+The estimate is wrong by the yards after the catch - 4.4 yards on average and
+31 at worst, measured over three games. `truth.py` corrects a finished game
+from nflverse's published rows, and every play and arc carries whether it is a
+`live` estimate or `corrected`. Never present one as the other, and never
+present lateral placement as measured: nobody publishes it. See
+`docs/PLAY_ACCURACY.md`.
+
+**ESPN and nflverse mean different things by a spot on a change of
+possession.** On a kickoff from a team's own 35, ESPN says 65 (the distance to
+the end zone) and nflverse says 35 (the marker); on one punt ESPN reported 16
+where nflverse reported 84. Both are self-consistent statements, not bugs. So
+special-teams plays are matched on kind and clock rather than on their spot,
+and a correction only ever supplies a *relative* yardage, which carries no
+convention. The scene draws from ESPN's `yardLine`, which is fixed to the
+ground and right in both cases.
 
 **Regenerate fixtures with the script, never by hand.**
 `python3 tests/fixtures/make_fixtures.py` is deterministic. Hand-edited
@@ -166,6 +184,8 @@ fantasyedge/
   serve.py               localhost draft board, polls ESPN itself
   leagues.py             followed leagues + board config read from the db
   advanced.py            nflverse opportunity metrics
+  nflverse.py            the one owner of talking to nflverse: releases, cache
+  truth.py               ESPN's live estimate, corrected by what was published
   templates/             draft_report.html, board.html
   cli.py                 argparse wiring
 tests/                   25 tests, fixture-driven, no network

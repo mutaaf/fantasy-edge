@@ -232,7 +232,26 @@ def main() -> None:
     ap.add_argument("--game", action="store_true",
                     help="write the whole-game scene fixture, tests/fixtures/replay_game_EVENT.json, "
                          "from a capture made with `replay --capture`")
+    ap.add_argument("--nflverse", action="store_true",
+                    help="write tests/fixtures/nflverse_pbp_EVENT.json: the game's published "
+                         "play-by-play rows, which correct a replay's geometry")
     args = ap.parse_args()
+
+    if args.nflverse:
+        from fantasyedge import nflverse as nv
+        rows, sched = nv.plays_for_espn(args.event, refresh=True)
+        if not sched:
+            raise SystemExit(f"event {args.event} is not in nflverse's schedules")
+        if not rows:
+            raise SystemExit(f"{sched['game_id']} is not published yet")
+        out = FIX / f"nflverse_pbp_{args.event}.json"
+        out.write_text(json.dumps({"event": args.event, "gameId": sched["game_id"],
+                                   "source": nv.PBP.format(season=int(sched["season"])),
+                                   "plays": rows},
+                                  indent=1, sort_keys=True))
+        print(f"event {args.event}: {sched['game_id']}, {len(rows)} nflverse plays "
+              f"-> {out} ({out.stat().st_size // 1024} KB)")
+        return
 
     if args.game:
         board, summary = rp.load(CAPTURE, args.event)

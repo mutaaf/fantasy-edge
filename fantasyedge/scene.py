@@ -1378,6 +1378,37 @@ def _depth(text: str) -> str:
     return "deep" if " deep" in t else "short" if " short" in t else "other"
 
 
+def air_yards(play: dict, gain: float | None = None, tokens: dict | None = None) -> float:
+    """How far downfield the ball was thrown, in yards from the line.
+
+    nflverse states it, and when it does that number is used and nothing here
+    runs. ESPN does not, so a live play falls back on the estimate below: the
+    depth word bounds a share of the gain. That estimate is wrong by exactly
+    the yards after the catch, which is why `truth.compare` measures it.
+    """
+    stated = play.get("airYards")
+    if stated is not None:
+        try:
+            return float(stated)
+        except (TypeError, ValueError):
+            pass
+    tokens = tokens or load_tokens()
+    ps = tokens["visual"]["broadcast"]["play"]["pass"]
+    text = play_body(play.get("text") or "")
+    depth = play.get("passLength") or _depth(text)
+    if depth not in ps["air"]:
+        depth = "other"
+    if "incomplete" in text.lower():
+        return float(ps["incompleteAir"][depth])
+    if gain is None:
+        a, b = play.get("from"), play.get("to")
+        gain = (float(a) - float(b)) if a is not None and b is not None else 0.0
+    band = ps["air"][depth]
+    if gain > band["min"]:
+        return float(max(band["min"], min(band["max"], gain * band["share"])))
+    return float(max(-2.0, gain))
+
+
 class _Path:
     """Segments laid end to end; every one starts where the last ended."""
 
@@ -1522,7 +1553,7 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
     clamp_z = lambda z: max(-half, min(half, z))
     end_x = (-field["endZone"], field["length"] + field["endZone"])
     clamp_x = lambda x: max(end_x[0], min(end_x[1], x))
-    shotgun = "shotgun" in low
+    shotgun = bool(play["shotgun"]) if play.get("shotgun") is not None else "shotgun" in low
     path = _Path((x0, h["kick"], lane))
     path.hold(rule["presnapSeconds"], "presnap")
 
@@ -1569,8 +1600,10 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
 
     sideline = bool(re.search(r"\b(?:pushed|ran)\s+ob\b|out of bounds", low))
     gap_m = re.search(r"\b(left|right)\s+(end|tackle|guard)\b", low)
-    gap = gap_m.group(2) if gap_m else ("middle" if "middle" in low else None)
-    word = gap_m.group(1) if gap_m else _direction(text)
+    # nflverse names the gap and the side outright; the text only sometimes
+    # does ("up the middle", "right guard"), so it is the fallback.
+    gap = play.get("runGap") or (gap_m.group(2) if gap_m else ("middle" if "middle" in low else None))
+    word = play.get("runLocation") or (gap_m.group(1) if gap_m else _direction(text))
 
     if shape == "flat":
         pen = rule["penalty"]
@@ -1613,6 +1646,9 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         path.hold(p["operationSeconds"], "hold")
         n = _RE_YARDS.search(low.split("punts", 1)[-1]) if "punts" in low else None
         land_x = _spot_after(text.split("punts", 1)[-1], ("to",), home, away) if "punts" in text else None
+        kicked = play.get("kickDistance")
+        if land_x is None and kicked is not None:
+            land_x = x0 + attack * float(kicked)     # nflverse states the distance
         if land_x is None:
             land_x = x0 + attack * (float(n.group(1)) if n else abs(x1 - x0))
         land_x = clamp_x(land_x)
@@ -1647,6 +1683,9 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
             if m:
                 land_x = _club_x(m.group(1), float(m.group(2)), home, away)
         n = _RE_YARDS.search(clause)
+        kicked = play.get("kickDistance")
+        if land_x is None and kicked is not None:
+            land_x = x0 + attack * float(kicked)     # nflverse states the distance
         if land_x is None:
             land_x = x0 + attack * (float(n.group(1)) if n else max(10.0, abs(x1 - x0)))
         land_x = clamp_x(land_x)
@@ -1719,11 +1758,13 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         qb_x = x0 - attack * (rule["snap"]["shotgunYards"] if shotgun else 0.0) - attack * ps["dropYards"][mode]
         qb = (qb_x, h["release"], lane)
         path.carry([qb], ps["pocketSeconds"][mode], "drop")
-        depth = _depth(text)
-        direction = _direction(text.split(" to ", 1)[0] if " to " in text else text)
+        depth = play.get("passLength") or _depth(text)
+        direction = play.get("passLocation") or _direction(text.split(" to ", 1)[0] if " to " in text else text)
         wide = ps["wideYards"]["middle"] if direction == "middle" else ps["wideYards"]["deep" if depth == "deep" else "short"]
         if style == "incomplete" or "incomplete" in low:
-            air = ps["incompleteAir"][depth]
+            # Where it was thrown, not where the down ended: an incompletion
+            # ends the play back at the line, and the ball did not go there.
+            air = air_yards(play, tokens=tokens)
             to_z = clamp_z(lane + lateral(direction, {"side": wide}))
             if "thrown away" in low or sideline:
                 to_z = (half + 1.5) * (1 if to_z >= 0 else -1)
@@ -1734,9 +1775,8 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
             path.hold(ps["fallSeconds"], "fall")
         else:
             gain = (x1 - x0) * attack
-            band = ps["air"][depth]
-            air = max(band["min"], min(band["max"], gain * band["share"])) if gain > band["min"] else max(-2.0, gain)
-            catch_x = x0 + attack * air
+            air = air_yards(play, gain, tokens)
+            catch_x = clamp_x(x0 + attack * air)
             catch_z = clamp_z(lane + lateral(direction, {"side": wide}))
             if sideline:
                 # Pushed out after the catch: it was caught near that sideline.
@@ -1997,6 +2037,12 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                 "text": play.get("text", ""),
                 "period": play.get("period"), "clock": play.get("clock", ""),
                 "down": play.get("down"), "distance": play.get("distance"),
+                # Where this play's geometry came from. A live estimate and a
+                # corrected play are drawn the same way and are not the same
+                # claim, so the arc says which it is rather than leaving a
+                # client to assume the stronger one.
+                "source": (play.get("truth") or {}).get("source", "live"),
+                "corrected": (play.get("truth") or {}).get("fields") or [],
             })
             last_ref = (len(drives_out), len(arcs) - 1)
         for play in (drive.get("plays") or []):

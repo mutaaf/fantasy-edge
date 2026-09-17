@@ -1,7 +1,11 @@
 .PHONY: test doctor demo publish-demo report docs api board clean verify-scene
 
+# FANTASYEDGE_CORRECT_PLAYS=0 keeps the promise the suite is built on: no
+# network. Correcting a finished game's plays reads nflverse (truth.py), and a
+# test must never depend on a release being reachable. The correction itself is
+# tested against fixtures cut by tools/make_replay_fixture.py --nflverse.
 test:
-	python3 -m unittest discover -s tests
+	FANTASYEDGE_CORRECT_PLAYS=0 python3 -m unittest discover -s tests
 
 doctor:
 	python3 -m fantasyedge doctor

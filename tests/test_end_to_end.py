@@ -31,6 +31,10 @@ def setUpModule():
     outside service is not the suite this project promises."""
     os.environ["FANTASYEDGE_SCOREBOARD_FILE"] = str(FIX / "espn_scoreboard.json")
     os.environ["FANTASYEDGE_SUMMARY_FILE"] = str(FIX / "espn_summary.json")
+    # Correcting a finished game reads nflverse over HTTPS (truth.py), which
+    # is exactly the outside service this promise is about. It is tested from
+    # fixtures in test_truth.py instead.
+    os.environ["FANTASYEDGE_CORRECT_PLAYS"] = "0"
 
 
 class StubHttp(Http):
