@@ -89,8 +89,8 @@ class CrowdKitTest(unittest.TestCase):
         seated = src.index("if !c.tabletop, let seating = s.bowl.seating")
         # Round 5: the token is still what fills the bowl, now scaled per seat by where it is and
         # how the game is going (keepChance), so the corners and a decided upper deck thin out.
-        block = src[seated:seated + 1600]
-        self.assertIn("guard draw < C.fill * CrowdActor.keepChance(", block, "fill applies to Bowl's seats")
+        block = src[seated:seated + 1800]
+        self.assertIn("guard draw < C.fill * CrowdSupport.keepChance(", block, "fill applies to Bowl's seats")
         self.assertIn("let draw = rng.next()", block)
 
     def test_a_new_stadium_starts_with_no_cues(self):
@@ -230,8 +230,8 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreater(C["support"]["visitingShare"], 0.02, "a real away support exists")
         self.assertLess(C["support"]["visitingShare"], 0.25, "a home game is overwhelmingly the home club's")
         self.assertLess(C["support"]["neutralShare"], C["support"]["visitingShare"])
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
-        support = src[src.index("static func supportBySection"):src.index("static func keepChance")]
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        support = src[src.index("static func supportBySection"):src.index("static func supportAt")]
         for reads in ("s.bowl.crowd.awaySection", "s.field.props?.benches", "C.support.visitingShare", "C.support.neutralShare"):
             self.assertIn(reads, support, f"the mix must come from {reads}")
         for invented in ('"CHI"', '"home team"', "abbr =="):
@@ -245,7 +245,7 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreaterEqual(b["margin"], 14, "a blowout is a blowout, not a one-score game")
         self.assertLess(b["upperFactor"], C["emptySeats"]["upperFactor"], "a decided game empties the upper deck further")
         import re
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
         emptying = src[src.index("static func keepChance"):src.index("static func standingShare")]
         for reads in ("s.status.homeScore", "s.status.awayScore", "s.status.period", "s.status.clock"):
             self.assertIn(reads, emptying, reads)
@@ -260,7 +260,7 @@ class CrowdKitTest(unittest.TestCase):
     def test_the_clock_is_read_as_the_broadcast_writes_it(self):
         """status.clock is "12:40", not seconds; a missing or odd clock must not decide a game."""
         import re
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
         body = src[src.index("static func clockSeconds"):]
         body = body[:body.index("\n    }")]
         self.assertIn('split(separator: ":")', body)
@@ -271,6 +271,52 @@ class CrowdKitTest(unittest.TestCase):
         src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
         self.assertIn("s.palette[s.bowl.crowd.neutral]", src)
         self.assertIn("s.palette[s.bowl.crowd.dark]", src)
+
+    def test_the_visiting_support_is_a_crowd_not_a_painted_block(self):
+        """integration-13 read the visitors as a wedge: 9% of the seats but 18% of a wide
+        frame's stand pixels, one flat rectangle. Support is drawn per seat on a block grain,
+        so a section that carries visitors carries home shirts too."""
+        C = self.C
+        s = C["support"]
+        self.assertLess(s["coreProbability"], 1.0, "even the core of a travelling support is not unanimous")
+        self.assertGreater(s["coreProbability"], 0.6, "nor is it a sprinkle")
+        self.assertLess(s["edgeProbability"], s["coreProbability"], "the edge is thinner than the core")
+        self.assertGreaterEqual(s["blockRows"], 2, "a seat-by-seat dither is noise, not a crowd")
+        self.assertGreaterEqual(s["blockSeats"], 2)
+        self.assertLess(s["tailRows"], 1.0, "the block thins as it climbs its tier")
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        draw = src[src.index("static func supportAt"):src.index("static func keepChance")]
+        for reads in ("coreProbability", "edgeProbability", "blockRows", "blockSeats", "tailRows"):
+            self.assertIn(reads, draw, f"the per-seat draw must read {reads}")
+
+    def test_empty_seats_come_in_blocks(self):
+        """One empty seat here and one there reads as noise; a stand empties in blocks and at
+        the ends of a run."""
+        C = self.C["emptySeats"]
+        self.assertGreaterEqual(C["blockRows"], 2)
+        self.assertGreaterEqual(C["blockSeats"], 2)
+        self.assertLess(C["blockEmptiness"], 1.0, "a block of empties is emptier than the bowl's average")
+        self.assertGreater(C["blockEmptiness"], 0.4, "but a block is not a hole")
+        self.assertLessEqual(C["runEndFactor"], 1.0)
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        keep = src[src.index("static func keepChance"):src.index("static func decided")]
+        for reads in ("blockRows", "blockSeats", "blockEmptiness", "runEndSeats", "runEndFactor"):
+            self.assertIn(reads, keep, f"keepChance must read {reads}")
+
+    def test_a_scoring_section_brightens_in_its_own_time(self):
+        """A support that lights up as one rectangle advertises itself as one."""
+        C = self.C
+        self.assertGreater(C["tintRiseSeconds"], 0.2)
+        self.assertGreater(C["tintJitter"], 0.0)
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        self.assertIn("C.tintRiseSeconds", src)
+        self.assertIn("C.tintJitter", src)
+
+    def test_the_support_decision_is_pure_and_checkable(self):
+        """It decides what the wide frame looks like, so it is testable without RealityKit."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        self.assertNotIn("import RealityKit", src)
+        self.assertTrue((ROOT / "apple/verify_crowd_support.swift").is_file())
 
 
 if __name__ == "__main__":

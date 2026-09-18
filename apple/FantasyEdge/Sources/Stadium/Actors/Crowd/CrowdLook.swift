@@ -78,6 +78,16 @@ extension SceneSpec.Look {
         public let neutralShare: Double
         public let benchRowsTier: String
         public let cornerFrom: Double
+        /// Inside a visiting block, how many of the seats are theirs; at its edge, how few.
+        public let coreProbability: Double
+        public let edgeProbability: Double
+        /// The grain the draw is made on, so support comes in blocks rather than salt and pepper.
+        public let blockRows: Int
+        public let blockSeats: Int
+        /// How far up a tier the block reaches at its core, tapering to nothing at the tail.
+        public let tailRows: Double
+        /// A few of the other club, sitting where they should not be.
+        public let strayProbability: Double
     }
 
     public struct CrowdBlowout: Decodable, Equatable, Sendable {
@@ -92,6 +102,12 @@ extension SceneSpec.Look {
         public let upperFactor: Double
         public let cornerFactor: Double
         public let endZoneFactor: Double
+        /// Empties come in blocks of this size, and along the ends of a run.
+        public let blockRows: Int
+        public let blockSeats: Int
+        public let blockEmptiness: Double
+        public let runEndSeats: Int
+        public let runEndFactor: Double
         public let blowout: CrowdBlowout
     }
 
@@ -163,6 +179,9 @@ extension SceneSpec.Look {
         public let visitorCelebration: Double
         public let idleStandShare: CrowdIdleStand
         public let settleStageSeconds: Double
+        public let momentRippleAbout: String
+        public let tintRiseSeconds: Double
+        public let tintJitter: Double
     }
 }
 

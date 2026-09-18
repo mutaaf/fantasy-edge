@@ -33,6 +33,31 @@ class CrowdChoreographyTest(unittest.TestCase):
         self.assertIn("CrowdChoreography.pose(", src)
         self.assertNotIn("case .groan: pose = groan", src, "a standing groan reads as cheering")
 
+    def test_whose_crowd_it_is_holds_on_every_sample_scene(self):
+        """apple/verify_crowd_support.swift: every visiting seat on the visitors' side, none of
+        either club's colours beside a wearer's seat, a mixed boundary, and empties in blocks."""
+        import os
+        with tempfile.TemporaryDirectory() as tmp:
+            scenes = pathlib.Path(tmp) / "scenes"
+            build = subprocess.run(["python3", str(ROOT / "tools/scene_samples.py"), str(scenes)],
+                                   capture_output=True, text=True, cwd=ROOT)
+            self.assertEqual(build.returncode, 0, build.stderr[-2000:])
+            exe = pathlib.Path(tmp) / "verify-crowd-support"
+            sources = [str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneSpec.swift"),
+                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneLook.swift"),
+                       *[str(p) for p in sorted((ROOT / "apple/FantasyEdge/Sources/Stadium/Actors").glob("*/*Look.swift"))],
+                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldArtSpec.swift"),
+                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneMath.swift"),
+                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift"),
+                       str(ROOT / "apple/verify_crowd_support.swift")]
+            compiled = subprocess.run(["swiftc", "-parse-as-library", "-o", str(exe), *sources],
+                                      capture_output=True, text=True)
+            self.assertEqual(compiled.returncode, 0, compiled.stderr[-2000:])
+            run = subprocess.run([str(exe), *sorted(str(p) for p in scenes.glob("*.json"))],
+                                 capture_output=True, text=True, timeout=600, cwd=ROOT)
+            self.assertEqual(run.returncode, 0, run.stdout[-3000:])
+            self.assertIn("OK", run.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
