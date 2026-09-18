@@ -326,21 +326,23 @@ def accessory(f: dict, J: dict[str, Vector]):
     hand = J["hand_end.R"]
     bm = bmesh.new()
     if kind == "foam_finger":
-        # Foam, not a baton: a rounded mitt the hand goes into (about 19 x 8 x 22 cm),
-        # a raised index finger 24 cm long, and a thumb. Fingers run down -Z from the grip.
+        # A hand, not a baton (integration-12 read it as a blue stick from behind): a wide
+        # mitt about 26 cm across with a thumb stuck out to one side, and a shorter, fatter
+        # index finger offset from the middle, so the silhouette is unmistakable end-on.
         mitt = bmesh.ops.create_cube(bm, size=1.0)
         for v in mitt["verts"]:
-            v.co = Vector((v.co.x * 0.19, v.co.y * 0.08, v.co.z * 0.22)) + Vector((0.0, 0.0, -0.08))
-        bmesh.ops.bevel(bm, geom=list(mitt["verts"]) + [e for e in bm.edges], offset=0.03, segments=3, affect="EDGES")
-        finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=0.036, radius2=0.03, depth=0.24)
+            v.co = Vector((v.co.x * 0.26, v.co.y * 0.085, v.co.z * 0.24)) + Vector((0.0, 0.0, -0.09))
+        bmesh.ops.bevel(bm, geom=list(mitt["verts"]) + [e for e in bm.edges], offset=0.045, segments=3, affect="EDGES")
+        finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.052, radius2=0.045, depth=0.20)
         for v in finger["verts"]:
-            v.co += Vector((0.035, 0.0, -0.31))
-        tip = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=6, radius=0.03)
+            v.co += Vector((0.055, 0.0, -0.30))
+        tip = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=4, radius=0.045)
         for v in tip["verts"]:
-            v.co += Vector((0.035, 0.0, -0.43))
-        thumb = bmesh.ops.create_uvsphere(bm, u_segments=10, v_segments=6, radius=1.0)
+            v.co += Vector((0.055, 0.0, -0.39))
+        thumb = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.05, radius2=0.042, depth=0.15)
         for v in thumb["verts"]:
-            v.co = Vector((v.co.x * 0.03, v.co.y * 0.03, v.co.z * 0.06)) + Vector((-0.11, -0.01, -0.12))
+            v.co = Matrix.Rotation(math.radians(64), 4, "Y") @ v.co
+            v.co += Vector((-0.15, 0.0, -0.10))
         origin = hand
     elif kind == "towel":
         # Cloth, not a paddle: gathered in the fist, widening, curling as it
@@ -366,7 +368,7 @@ def accessory(f: dict, J: dict[str, Vector]):
         board = bmesh.ops.create_cube(bm, size=1.0)
         for v in board["verts"]:
             v.co = Vector((v.co.x * 0.56, v.co.y * 0.005, v.co.z * 0.40)) + Vector((0, 0.004, -0.22))
-        face = bmesh.ops.create_grid(bm, x_segments=12, y_segments=6, size=1.0)
+        face = bmesh.ops.create_grid(bm, x_segments=9, y_segments=5, size=1.0)
         for v in face["verts"]:
             v.co = Vector((v.co.x * 0.26, -0.0005, v.co.y * 0.18))
             v.co = Matrix.Rotation(math.radians(90), 4, "X") @ v.co
@@ -531,7 +533,8 @@ def paint_prop(ob, kind):
             # off-white edges, and two lines of block lettering in the club colour on the front.
             c = p.center
             rgb, mask = ((0.93, 0.92, 0.88), (0, 0, 0)) if abs(p.normal.y) > 0.9 else ((0.84, 0.83, 0.8), (0, 0, 0))
-            if p.normal.y < -0.9 and len(p.vertices) == 4 and p.area < 0.004:
+            # The lettering grid's own quads: the board's faces are an order of magnitude bigger.
+            if p.normal.y < -0.9 and len(p.vertices) == 4 and p.area < 0.006:
                 gx = int((c.x + 0.26) / 0.52 * 12)
                 gz = int((c.z + 0.40) / 0.36 * 6)
                 ink = (gz in (1, 4)) and (gx % 3 != 2) and 1 <= gx <= 10

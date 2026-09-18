@@ -426,3 +426,88 @@ casters, against 144,344 and 36 at integration-11. Stadium total 239,550 triangl
 | `crowd-r4/s-crowd-closeup-upper.png` | Hair is still card-flat at 2-3 m now that the shading no longer hides it. |
 | `crowd-r4/s-bowl-wide.png` | On a plain snap the fans along the bottom edge read as more raised arms than a first-quarter crowd would have. |
 | `crowd-r4/s-td-moment-t8.5.png` | The settle drops a whole group within a second or two; it wants the same per-fan stagger the rise has. |
+
+## Round 5 (whose crowd it is)
+
+From the user: the fans should be "sooo accurate", and they should belong to the teams playing.
+Before: `docs/lookdev/integration-12/` (crowd section). After: `docs/lookdev/crowd-r5/`.
+
+### Whose crowd it is
+
+Support is decided **per section, from the scene**, and the decision is clustered because that is
+what a real away support looks like:
+
+1. the scene's own `bowl.crowd.awaySection`;
+2. behind the visiting bench - their sideline, between `field.props.benches` `fromX` and `toX`;
+3. the upper corners on that side,
+
+until `visual.crowd.support.visitingShare` (0.11) of the bowl's sections are the visitors'. Then
+`neutralShare` (0.06) more, taken from the corners farthest from them, wear neither club: a third
+dress composed from the scene's own `crowd.neutral` and `crowd.dark`, at quarter size because
+those sections are the farthest seats in the building. Measured in the app: **home 85%, visiting
+9%, neutral 5%** of the seats taken.
+
+Nothing names a club. Home and away chips, the away section and the bench range all come from the
+scene, so the same code dresses any fixture, and a test fails if an abbreviation appears in it.
+
+**What could not be done, and why.** Support is per section rather than per seat because a group
+of fans shares one texture: a lone visitor in a home section would cost another draw part, and at
+45 seats the budget has room for about nine. So there are no scattered strays, only clusters.
+
+### What the scene knows about the score and the clock
+
+It knows `status.homeScore`, `awayScore`, `period`, `clock` ("12:40", read as minutes and
+seconds) and `state`, and the crowd uses all of them. It carries **no attendance**, so nothing is
+inferred about how full the building should be beyond the tokens. A game decided by
+`emptySeats.blowout.margin` (17) once the fourth quarter is inside ten minutes empties the upper
+deck to 55% and the lower to 88%; the corners and the end zones thin out at every score. A test
+holds the crowd to reading only fields `SceneSpec.Status` actually carries.
+
+### Reactions, within what the feed knows
+
+- **Third down**: the defending side rises (as before), and the side whose own offence is at the
+  line now goes quiet - `hushOwnOffence`. Nothing idle outranks the hush; a moment and a cue still do.
+- **A visiting score** is real but outnumbered: `visitorCelebration` 0.55 thins their celebration
+  to standing and clapping between the cheers. The scored-on side still never celebrates.
+- **A neutral section** watches both clubs' moments from its seats.
+- **The wave** now needs a late or decided game: a 0-0 first quarter was full of raised arms.
+- **The settle** comes down in stages (`settle_1`, `settle_2`), the way the rise goes up.
+
+`apple/verify_crowd.swift` sweeps all of it: **346,120 checks**.
+
+### Round 4's leftovers
+
+- **Shoes over the tread edge** (clubLevel, endzone): seated legs are now a two-bone solve onto an
+  ankle target `chair.ankleForwardMetres` (0.10 m) in front of the chair, which keeps the whole shoe
+  inside Bowl's `seating.feetDepth` of tread. Before, only the ankle's height was solved and the
+  shin was tipped forward whenever it could not reach.
+- **Hair flat at 2-3 m**: MakeHuman's alpha cards get 6 mm of thickness.
+- **The foam finger as a blue baton**: rebuilt as a hand - a 26 cm mitt with a thumb stuck out and a
+  shorter, fatter finger offset from the middle.
+- **More raised arms than a first quarter would have**: the wave gate above, and `idleStandShare`
+  (0.06 early, 0.16 from the third quarter).
+- **The settle dropping a group at once**: staged, as above.
+
+**A LOD floor the props set.** Hair thickness and the rebuilt props are many small closed shells,
+and a collapse decimate cannot take a shell under four triangles: LOD2 landed at 250-720 and the
+ring left the budget. `weld_parts` welds hair, props, hats and scarves before each lower LOD is
+decimated (1.5 cm at LOD1, 9 cm at LOD2, where the fan is 7-13 m away). Back to 3000/900/250.
+
+**The forward probe.** Round 4 proved the export axis from anatomy; round 5's tucked feet broke
+that cue, and at 250 triangles a shoe is a blob anyway. `build.py` now exports a one-triangle
+marker beside the fans whose apex points where they face, measures it in every file, and fails the
+build if it is not +Z. The app measures the same marker and logs
+`[stadium] crowd kit lod0 faces +Z (probe apex z +0.053)`. Nothing looks it up as a pose, so it is
+never drawn.
+
+**Budget**: 135,998-136,330 triangles, 38 draw parts (integration-12: 143,728 and 36), against
+150k and 45. The crowd dress takes 2.36-2.48 s, up from 1.44-1.52: the third dress costs about
+0.9 s of tint even at a quarter size.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r5/s-crowd-closeup-sideline.png` | Held up, the foam finger still reads as a blue bar end-on; the hand shape only tells from the side. |
+| `crowd-r5/s-bowl-wide.png` | The empty seats are scattered evenly inside a section; real ones come in blocks and along the aisles. |
+| `crowd-r5/s-td-moment-p7-visitors.png` | The visiting section brightens as a whole rectangle, because the tint is per group. |
+| `crowd-r5/s-crowd-closeup-upper.png` | Hair has thickness now but still reads as cards rather than volume at 2-3 m. |
+| Dress time | 2.4 s, up 0.9 s on round 4: a third dress is composed even when its sections are all cards. |

@@ -72,6 +72,35 @@ extension SceneSpec.Look {
         public let share: Double
     }
 
+    /// Whose crowd it is: how much of the bowl the visitors and the unaligned fill.
+    public struct CrowdSupport: Decodable, Equatable, Sendable {
+        public let visitingShare: Double
+        public let neutralShare: Double
+        public let benchRowsTier: String
+        public let cornerFrom: Double
+    }
+
+    public struct CrowdBlowout: Decodable, Equatable, Sendable {
+        public let margin: Double
+        public let fromPeriod: Int
+        public let clockSeconds: Double
+        public let upperFactor: Double
+        public let lowerFactor: Double
+    }
+
+    public struct CrowdEmpty: Decodable, Equatable, Sendable {
+        public let upperFactor: Double
+        public let cornerFactor: Double
+        public let endZoneFactor: Double
+        public let blowout: CrowdBlowout
+    }
+
+    public struct CrowdIdleStand: Decodable, Equatable, Sendable {
+        public let early: Double
+        public let late: Double
+        public let aboutPeriod: Int
+    }
+
     public struct CrowdLuma: Decodable, Equatable, Sendable {
         public let min: Double
         public let max: Double
@@ -125,6 +154,15 @@ extension SceneSpec.Look {
         public let rippleSeconds: Double
         public let rippleYards: Double
         public let riseStageSeconds: Double
+        public let supportAbout: String
+        public let support: CrowdSupport
+        public let emptySeatsAbout: String
+        public let emptySeats: CrowdEmpty
+        public let reactionsAbout: String
+        public let hushOwnOffence: Bool
+        public let visitorCelebration: Double
+        public let idleStandShare: CrowdIdleStand
+        public let settleStageSeconds: Double
     }
 }
 
