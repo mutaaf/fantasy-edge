@@ -92,6 +92,10 @@ extension SceneSpec.Look {
         public let folded: Bool
         public let clear: Bool?
         public let tab: TabSlot?
+        /// Shorter than `panelSizes` where this seat's band is too thin for the
+        /// full panel: it shows fewer rows at the same type size rather than
+        /// the same rows smaller.
+        public let maxHeightPoints: Double?
 
         public var slot: Slot { Slot(yaw: yaw, distance: distance, height: height) }
 

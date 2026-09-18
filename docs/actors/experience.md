@@ -246,3 +246,38 @@ note here suspected the crowd at the `field` seat; that was this, not a bug.
 
 **Found for the director:** the renderer's wearer eye is not Bowl's near-patch eye. `presentation.stadium.seats[].y` is the tier height at the seat's offset, which from the club seat is the tread of the row in front (12.16 yd). Bowl's `structure.presets()` puts the eye on the seat's own row tread plus 1.26 m (14.16 yd against the renderer's 13.47 yd). The near check uses the renderer's eye, since that is where the wearer is, but the modelled "own seat" gap and the chairs around it were cut for Bowl's.
 
+## Round 5: off the paint, and never half out of view (`docs/lookdev/experience-r5/`)
+
+Two things the reviews kept flagging against the dock's own "never touches the field" rule, both now rules rather than judgements.
+
+**1. The Elsewhere tab lay over the border paint from the field seat.** Round 4 called it a flat-frame artefact - the tab is a metre and a quarter out, the paint two and a half - and that was true and beside the point: it read as lying on the white every time anyone looked at the frame.
+
+- **The keep-off region is now the painted field**, not the playing surface: surface, end zones, the painted border (`PAINTED_BORDER`, Field's own rule book - the NFL's 6 ft white border, college's 4 in line) and `dock.paintClearYards` of ground beyond it, because a degree of margin is only a hand's width of grass from a seat at field level.
+- **Consequence, and it is the right one:** from the field seat the whole lower view is painted field to within half a yard of the wearer's feet, so there is no band under the paint at all. The rail moves up to the gallery, where the dock already sits from the club, end zone, sideline and club level seats. The field seat's dock now reads exactly like every other lower-bowl seat's.
+- **Measured:** the old rail sat 0.13 yd clear of the paint's outer edge - a hand's width, which is why it touched in every frame. The new one is 40 yd clear, over the far stands.
+
+**2. The drive panel clipped at the frame edge in redzone-trails.** Comfort and legibility were one rule and had to be two:
+
+- **Where a panel sits** is comfort: its centre inside ±`maxSideDegrees`, never below `maxBelowDegrees`.
+- **How much of it can be seen** is `dock.viewWindowDegrees`: the whole box, edges and all, inside the view window. A 460-point panel is 16° wide at 1.8 m, so demanding the *box* inside ±30° would have meant centres inside ±22° - that is a tighter comfort rule than the art bible's, and it cost the end zone and sideline seats their open panels outright. The window is the honest home for "nothing half out of view".
+- **A thin band now costs rows, not type size.** Where no full-height panel fits, the dock shortens it in `heightStep` steps to `minHeightFraction`, ships the seat's own `maxHeightPoints`, and the app clamps the panel to it. Shrinking (`scale`) is the last resort, and a floor holds every panel to subtending at least what it would full size at `gallery.maxDistance`: shrinking *and* standing back reads smaller than either alone. The home 30 is the seat that needs it - the ribbon dips into its right side - and it now opens a mirrored pair at full type size, 360 pt tall instead of 400.
+
+**Tests.** `make test` 672. Four new: nothing in the dock overlaps the paint; the paint check itself catches the old field-seat rail (off the surface, on the border); nothing is half out of view (centre in the comfort window, box in the view window); a thin band costs rows before type size, and the app reads the seat's own height. `PAINTED_BORDER` is held to Field's rule book.
+
+**Gates.** `verify_scene` 15 scenes / 495,078 assertions, `verify_crowd` OK, `verify_moment` 117 checks, `contrast_check` OK, `xcodebuild` BUILD SUCCEEDED (`generic/platform=visionOS Simulator`, own derived data) with one warning - the AppIntents metadata notice that predates this work.
+
+**Verdict per seat, from the renders.**
+- `field` (`seat-field/`, `main/s-field-level.png`): solved. The tab sits at eye level over the far stands; the grass, the white border and the near apron are empty. This is the frame two checkpoints complained about.
+- `club` (`main/s-crowd-closeup.png`, `ahead/`): the dock is one line under the ribbon - drive log open at the left, pill centred, Elsewhere right - and `ahead/s-redzone-trails-ahead.png`, shot with the head straight, shows all three whole and inside the frame.
+- `endzone` (`seat-endzone/`): the tab is over the far stands, clear of the blue end zone paint. The upper middle integration-13 called crowded is not: the board carries the score, the scorebug yields, and no panel is near it.
+- `upper` (`main/s-bowl-wide.png`): unchanged and still the clearest read - one line between the far sideline and the ribbon. The pill remains centred; the upper deck has no clear band under the field, and after this round it has none under the paint either.
+- `sideline` (`seat-sideline/`): nothing on a chair, nothing on the paint; the pair opens shortened rather than shrunk.
+- `clubLevel`, `pressBox` (`seat-*/`): unchanged from round 4 but for the paint clearance; the press box dock is still inside the glass.
+- **Field goal** (`fg-club/`, `fg-sideline/`): the drive log sits in the band, off the ribbon, at both seats.
+
+**Worst thing left.**
+- **A turned head still takes a panel out of frame.** With the head turned 22° (the redzone-trails shot) the left panel's box runs from 52° to 57° off the view centre, past the simulator frame's edge - so it is now wholly outside rather than cut in half, which is the better of the two but is not "in view". The dock is anchored to the seat, and the art bible's comfort window is measured from the seat, so no placement fixes this. The two real fixes both change that contract: a recentre affordance (`AnchorEntity(.head, trackingMode: .once)` can re-anchor the dock to where the wearer is looking, on a tap of the pill), or a dock that follows the play by a few degrees. Both are the director's call, not mine.
+- **The pill is centred from the upper deck and the press box**, for want of any clear band below.
+- **The press box** still draws everything at ×0.47 inside the glass; it needs a device to judge.
+- **`fg-club`** shows the pill clipped at the right frame edge, the same turned-head effect at -45°.
+

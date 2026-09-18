@@ -663,7 +663,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 if let spec = feed.spec {
                     FoldablePanel(title: "Drive", symbol: "list.bullet", folded: $driveFolded, yielding: yielding) {
                         DriveLog(spec: spec)
-                            .frame(maxHeight: layout?.panelSizes.map { CGFloat($0.drive.maxHeightPoints) }, alignment: .top)
+                            .frame(maxHeight: panelHeight(\.drive), alignment: .top)
                             .clipped()
                     }
                     .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
@@ -673,7 +673,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
                 FoldablePanel(title: trailingTitle ?? "More", symbol: "sportscourt", folded: $trailingFolded,
                               yielding: yielding) {
                     trailing
-                        .frame(maxHeight: layout?.panelSizes.map { CGFloat($0.trailing.maxHeightPoints) }, alignment: .top)
+                        .frame(maxHeight: panelHeight(\.trailing), alignment: .top)
                         .clipped()
                 }
                     .stadiumPanel(layout, panels, yielding: yielding && !reduceMotion)
@@ -754,6 +754,16 @@ public struct StadiumSpaceView<Trailing: View>: View {
             #endif
         }
         .onDisappear { feed.stop() }
+    }
+
+    /// How tall a side panel may be here: the seat's own height where the dock
+    /// had to shorten it for a thin band, else the panel size contract.
+    private func panelHeight(_ side: KeyPath<SceneSpec.Look.PanelSizes, SceneSpec.Look.PanelSize>) -> CGFloat? {
+        let seat = feed.spec.map { renderer.seat($0).id }
+        let per = seat.flatMap { layout?.perSeat?[$0] }
+        let slot = side == \.drive ? per?.drive : per?.trailing
+        if let points = slot?.maxHeightPoints { return CGFloat(points) }
+        return layout?.panelSizes.map { CGFloat($0[keyPath: side].maxHeightPoints) }
     }
 
     /// Put an attachment at a point, facing the wearer. An attachment looks
