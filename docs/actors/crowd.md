@@ -511,3 +511,94 @@ never drawn.
 | `crowd-r5/s-td-moment-p7-visitors.png` | The visiting section brightens as a whole rectangle, because the tint is per group. |
 | `crowd-r5/s-crowd-closeup-upper.png` | Hair has thickness now but still reads as cards rather than volume at 2-3 m. |
 | Dress time | 2.4 s, up 0.9 s on round 4: a third dress is composed even when its sections are all cards. |
+
+## Round 6 (the visiting wedge)
+
+From the user, on integration-13: the visiting support reads as a painted purple wedge filling
+one side of the bowl. Before: `docs/lookdev/integration-13/s-bowl-wide.png`. After:
+`docs/lookdev/crowd-r6/`.
+
+### Measured, not eyeballed
+
+`tools/crowd_pixels.py` (stdlib: a small PNG reader) scores a wide frame's stand pixels against
+the two crowd chips the scene carries, counting pixels between them as neither club's.
+
+| | seats | stand pixels |
+|---|---|---|
+| integration-12 | 9% | 35.0% |
+| integration-13 | 9% | 26.1% |
+| crowd-r6 | 4% | 20.1% |
+
+### What broke the silhouette
+
+The wedge was a granularity problem: support was decided per **section**, and a section is a
+radial wedge from the front row to the back of its tier, so one verdict painted a rectangle.
+
+`CrowdSupport.supportBySection` now returns a *pull* per section, and `supportAt` draws each seat
+against it on a grain of `blockRows` x `blockSeats` (3 x 4): `coreProbability` 0.9 inside the
+block, `edgeProbability` 0.28 at its edge, thinning as it climbs the tier (`tailRows` 0.62). Home
+shirts therefore sit inside the visiting block and the boundary is ragged.
+
+**This costs no draw parts.** A group of fans shares one texture, so the cost of a mixture is the
+number of (slice, support, variant) groups it creates, not the number of mixed seats: seats of
+different support inside one slice simply land in the group that already exists for that slice.
+What does cost parts is a *new* slice carrying visitors, which is why a stray visitor in an
+unpulled section is refused - the first pass allowed them and took the crowd to 45 parts, the
+ceiling. At 36 parts now, against 38 at integration-13.
+
+### A section that brightens as one rectangle
+
+The tint each group takes now rises over `tintRiseSeconds` (0.9) after that group's own ripple
+delay, and settles a little away from its neighbours' (`tintJitter` 0.06), so a support lights up
+the way it rises: a few blocks first.
+
+### Empty seats
+
+Empties come in blocks of `blockRows` x `blockSeats` (4 x 6) at `blockEmptiness` (0.78), and the
+last two seats of every run are emptier (`runEndFactor` 0.85) - both supports, everywhere, not
+only in the visiting block. 30,651 of 49,982 seats taken (61%).
+
+### The close club pairing: what the crowd can honestly do about it
+
+At Philadelphia the chips are teal (`#0B798E`) and blue (`#116CD9`), about 0.08 apart in hue, and
+integration-13 found them hard to tell apart at distance. **The crowd cannot honestly fix this.**
+The chips come from the scene, they are already solved for legibility against white text, and a
+colour that separated them would be a colour neither club wears - the same rule that forbids
+inventing a club's colours forbids inventing a contrast between two.
+
+Measured, with pixels whose hue sits within 0.06 of both chips counted as neither: **19.4%** of the
+Philadelphia frame's stand pixels belong to neither club, against 10.7% for Chicago-Minnesota,
+whose chips are 0.13 apart. The same measure calls 68.5% of Philadelphia's attributable stand
+pixels "visiting", which is plainly wrong for a 4%-of-seats away support: a hue test cannot
+separate those two clubs, and neither can an eye at that distance.
+
+What the crowd does instead is positional, and it is what a real ground does: the visitors are one
+block behind their own bench with a tail into the corner, so they read as *the other club* by
+where they sit even when the hue will not carry it. Pairwise separation of two close chips would
+have to happen where the chips are solved - `fantasyedge/scene.py`'s palette, which belongs to the
+director and to `actor/field-identity` - and it is recorded here as their call, not taken here.
+
+### Budget and cost
+
+133,138-133,481 triangles, 36 draw parts, against 150k and 45. The dress measured 6.94-8.66 s in
+these runs, against 1.7-2.96 s at integration-13 - but the machine was carrying a load average of
+348-437 from the parallel agents while these shots were taken, and the dress does the same six
+tints it did at round 5 (home, away and neutral, fan and card). It wants re-measuring on a quiet
+machine before anyone reads a regression into it.
+
+### The support decision is now pure and checked
+
+It decides what the wide frame looks like, so it moved out of `CrowdActor` into `CrowdSupport.swift`
+with no RealityKit, and `apple/verify_crowd_support.swift` runs it over every sample scene:
+**98,715 checks** that every visiting seat is on the visitors' side, that neither club's colours sit
+within 14 yd of a wearer's seat preset, that no section is unanimous, and that taken seats come in
+runs rather than singly. It caught a real fault while it was being written: the unaligned were
+ranked into upper *midfield* sections, which put a violet block a row in front of the wearer.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r6/s-bowl-wide.png` | The visiting core sits in the lower bowl behind the bench, where the near rows hide it; what the wide frame shows is mostly the thin upper tail. |
+| `crowd-r6/s-bowl-wide-phi.png` | Teal and blue still read as one crowd at distance, and nothing here can honestly change that. |
+| `crowd-r6/s-td-moment-p7-visitors.png` | The blocks brighten in their own time, but every block still reaches the same final brightness. |
+| Dress time | 6.9-8.7 s under load; needs a quiet-machine number. |
+| `crowd-r6/s-crowd-closeup-pressBox.png` | Still Bowl's featureless beige desk, unchanged since integration-11. |
