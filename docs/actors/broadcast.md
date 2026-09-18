@@ -371,3 +371,65 @@ the actor's 25 and 30k.
   than from the status. Feeding the board the newest *laid* play from `trails`
   would fix it, and the drive log beside it has to follow in the same change
   or the two disagree.
+
+## Round 6: the board narrates what has landed (`docs/lookdev/broadcast-r6/`)
+
+`director/score-timing` made the score wait for the ball. Two things in
+Broadcast were still ahead of it, both the same shape, and both are now tied
+to the same landing.
+
+- **The video board (`BroadcastVideoBoard`).** It took `arcs.last` - the
+  newest play to *arrive* - so it read "W.Reichard 31 yard field goal is GOOD"
+  with the kick still in the air, beside a score correctly waiting for it.
+  `apply(_:laid:)` now takes the newest play the viewer has seen land, from
+  the same `trails.has` the score's gate uses, and the board's drive diagram
+  draws only the plays up to it. The board is redrawn when a play lands, so it
+  catches up on the frame the ball does.
+  - `td-moment-p4.2-fg-club`, `-p4.4-fg-sideline`, `-p5.0-fg-endzone`: mid-kick,
+    the board says "J.McCarthy pass incomplete short right to..." - the third
+    down before it - and the ribbon still reads MIN 0.
+  - `td-moment-t0.5-td`: the pick-six is still running; the board says
+    "A.Jones right end to CHI 32 for 2 yards" and the score is CHI 10.
+  - `td-moment-t5.1-td`: both have caught up - CHI 17, and the board has moved
+    on to the kickoff.
+- **The win-probability horizon (`BroadcastHorizon`).** Win probability is a
+  top-level field, not part of the gated status, so the band swung to the
+  outcome of a play still in the air. `update(_:hold:)` keeps the drawn band
+  while the newest play is airborne. Measured across the touchdown: 58% at
+  t0.5 with the return still running, 82% at t5.1 once it had landed.
+- **The drive log is not Broadcast's to change.** `DriveLog` lives in
+  Experience's `StadiumViews.swift` and reads `spec.shownDrive` from the spec
+  the renderer hands the views. **The hook:** have the renderer hand views a
+  spec whose `shownDrive.arcs` stop at the newest laid play - it already knows,
+  through `broadcast.hasTrail` - or pass `DriveLog` a `laidThrough: String?`.
+  Either fixes the log, the scrubber and anything else reading the drive, in
+  one place. Broadcast's board and diagram already obey it.
+- **A play queued behind a long kickoff was laid down without flying.** The
+  drive-switch hold from r5 counted total time, and an eleven-second kickoff
+  out-waited its eight seconds, so the switch took the stage and the queued
+  play never flew. The hold now measures the field being *idle*: while the ball
+  is moving it keeps its patience. Trace from the field-goal shoot:
+  `fly Kickoff 11.613s`, `land`, then `fly Pass Reception 5.969s`.
+- **The ball mid-kick, never caught before.** The kick lasts 3.9 s and the
+  strike is 2 s into the path, so the window is p5-p7 after the resume, and
+  each screenshot costs over a second - closely spaced times slip past it.
+  Shot one frame per launch and checked the file's own timestamp against the
+  `fly`/`land` pair in the log. `td-moment-p5.0-fg-endzone` catches it:
+  the lit ball climbing from the left, the posts ahead of it, the board and
+  ribbon still on the previous play.
+
+**Gates:** `make test` 566, `verify_scene` 495,078 assertions, `verify_crowd`
+346,120 checks, `verify_moment` 117 checks, `contrast_check`, and a build with
+no new warnings. `xcodebuild` takes `-destination "generic/platform=visionOS
+Simulator"`; the harness installs to a cloned device by id.
+
+**Budget:** 22 draw parts at the touchdown's peak (6 idle, 8.4k triangles), of
+the actor's 25 and 30k.
+
+**Worst thing left:**
+- The drive log still narrates a play in the air, pending the hook above.
+- From the club and sideline seats the near crowd hides a kick struck in that
+  corner; the end-zone seat is the one that sees it.
+- Nothing in the suite holds the board to the laid play: it is a UIKit drawing
+  path, so `verify_scene` cannot reach it. A test needs `newestLaid` split out
+  into a file that does not import UIKit.

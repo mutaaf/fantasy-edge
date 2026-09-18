@@ -251,9 +251,9 @@ extension BroadcastActor {
 
     func apply(_ c: StadiumContext, previous: SceneSpec?) {
         updateDrive(c, previous: previous)
-        horizon.update(c)
+        horizon.update(c, hold: airborneNewest(c))
         ribbon.apply(c, previous: previous)
-        board.apply(c)
+        board.apply(c, laid: { [trails] in trails.has($0) })
         if flight == nil { settle(c, animated: !c.reduceMotion) }
     }
 
@@ -299,6 +299,9 @@ extension BroadcastActor {
             trails.clearLive()
             trails.add(f.arc, c, cut: f.cut)
             flight = nil
+            // The board, the diagram and the band describe what has landed.
+            board.apply(c, laid: { [trails] in trails.has($0) })
+            horizon.update(c, hold: airborneNewest(c))
             marker.isEnabled = false
             setGlow(airborne: false, c)
             // A kick that has passed the posts is out of play: the ball is
@@ -417,6 +420,14 @@ extension BroadcastActor {
     /// ball has landed, and asks through here (StadiumRenderer).
     func hasTrail(_ id: String) -> Bool { trails.has(id) }
 
+    /// True while the newest play of the drive on screen is still in the air.
+    /// The board, the drive diagram and the win-probability band all wait for
+    /// it, the way the score does.
+    private func airborneNewest(_ c: StadiumContext) -> Bool {
+        guard let newest = c.spec.shownDrive?.arcs.last else { return false }
+        return !trails.has(newest.id)
+    }
+
     /// Look-dev only (`-trailTrace`, DEBUG builds): what the drive did and when.
     static func trace(_ c: StadiumContext, _ what: String) {
         #if DEBUG
@@ -439,6 +450,7 @@ extension BroadcastActor {
         settle(c, animated: false)
         // The seat moved: the horizon's edge-on fade is per seat.
         horizon.update(c)
+        board.apply(c, laid: { [trails] in trails.has($0) })
     }
 
     // MARK: the drive
@@ -471,6 +483,11 @@ extension BroadcastActor {
         // the flight, so a punt never once played. The new drive waits for
         // the field to be quiet, up to `play.holdSwitchSeconds`.
         if drive.id != driveID, !driveID.isEmpty, flight != nil || !motion.queue.isEmpty {
+            // The clock runs on a field that is *not* playing: a kickoff of
+            // eleven seconds with a play queued behind it would otherwise
+            // out-wait the hold, and that play was laid down without ever
+            // flying. While the ball is moving, the hold keeps its patience.
+            if flight != nil { heldSince = c.shared.time }
             let held = heldSince ?? c.shared.time
             heldSince = held
             if c.shared.time - held < c.look.broadcast.play.holdSwitchSeconds {

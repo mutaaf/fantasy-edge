@@ -1,0 +1,3 @@
+bowl-wide-p6: replay at 476s (touchdown) -> docs/lookdev/broadcast-r6/bowl-wide-p6-kickoff.png
+bowl-wide-p13: replay at 476s (touchdown) -> docs/lookdev/broadcast-r6/bowl-wide-p13-kickoff.png
+bowl-wide-p18: replay at 476s (touchdown) -> docs/lookdev/broadcast-r6/bowl-wide-p18-kickoff.png
