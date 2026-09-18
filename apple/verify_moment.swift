@@ -153,6 +153,117 @@ struct VerifyMoment {
             check("a negative flight cannot fire before now", (gate.held?.deadline ?? 0) >= 3)
         }
 
+        // MARK: the drawn score, which lags the scene the same way
+
+        // The first scene has nothing to lag behind: it is shown at once.
+        do {
+            var g = StatusGate<Int>()
+            g.hold(7, playId: "p1", until: 99)
+            check("the first status is shown at once", g.shown == 7 && !g.isHolding)
+        }
+
+        // A score arriving with a play in the air waits for it.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(0)
+            g.hold(7, playId: "p1", until: 6)
+            var now = 0.0, shownWhen: Double?
+            for _ in 0..<2000 {
+                now += 1.0 / 90
+                if g.due(now: now, landed: { _ in now >= 5.0 }) != nil { shownWhen = now; break }
+            }
+            check("the score waits for the ball", (shownWhen ?? 0) >= 5.0 && (shownWhen ?? 0) < 5.1)
+            check("the board read the old score until then", g.shown == 7)
+        }
+
+        // Nothing lands: the deadline shows it anyway, so the board cannot freeze.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(0)
+            g.hold(7, playId: "p1", until: 6)
+            var now = 0.0, shownWhen: Double?
+            for _ in 0..<2000 {
+                now += 1.0 / 90
+                if g.due(now: now, landed: { _ in false }) != nil { shownWhen = now; break }
+            }
+            check("the deadline shows a score nothing lands", (shownWhen ?? 0) >= 6.0 && (shownWhen ?? 0) < 6.1)
+        }
+
+        // A scene with no new play - the clock ticking - is shown at once.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(0)
+            g.arrive(3)
+            check("a scene with no new play is shown at once", g.shown == 3)
+        }
+
+        // While holding, later scenes replace what is waiting: the board catches up
+        // to the newest, never to a state that has been passed.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(0)
+            g.hold(7, playId: "p1", until: 9)
+            g.arrive(8)
+            g.arrive(9)
+            check("a held score is still the old one", g.shown == 0)
+            var shown: [Int] = []
+            var now = 0.0
+            for _ in 0..<2000 {
+                now += 1.0 / 90
+                if let s = g.due(now: now, landed: { _ in now >= 4.0 }) { shown.append(s) }
+            }
+            check("only the newest status is shown, once", shown == [9])
+        }
+
+        // A scrub, a seat change, a new game: shown immediately, nothing left waiting.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(0)
+            g.hold(7, playId: "p1", until: 9)
+            g.adopt(21)
+            check("adopting shows at once", g.shown == 21 && !g.isHolding)
+            var fired = 0
+            var now = 0.0
+            for _ in 0..<2000 {
+                now += 1.0 / 90
+                if g.due(now: now, landed: { _ in true }) != nil { fired += 1 }
+            }
+            check("nothing is shown after adopting", fired == 0)
+        }
+
+        // A play that changes nothing - an incompletion - costs no redraw.
+        do {
+            var g = StatusGate<Int>()
+            g.adopt(7)
+            g.hold(7, playId: "p1", until: 9)
+            var fired = 0
+            var now = 0.0
+            for _ in 0..<2000 {
+                now += 1.0 / 90
+                if g.due(now: now, landed: { _ in true }) != nil { fired += 1 }
+            }
+            check("a status that did not change is not redrawn", fired == 0)
+            check("and it is no longer waiting", !g.isHolding)
+        }
+
+        // The rule holds at every flight and replay speed: the score is shown with
+        // the ball, never before it.
+        for flight in [0.6, 2.4, 4.3, 6.0, 7.6] {
+            for speed in [1.0, 4.0, 20.0, 60.0] {
+                let lands = flight / speed
+                var g = StatusGate<Int>()
+                g.adopt(0)
+                g.hold(7, playId: "p1", until: flight + 1.0)
+                var now = 0.0, shownWhen: Double?
+                for _ in 0..<20000 {
+                    now += 1.0 / 90
+                    if g.due(now: now, landed: { _ in now >= lands }) != nil { shownWhen = now; break }
+                }
+                check("the score is shown with the ball at \(flight)s / \(speed)x",
+                      (shownWhen ?? 0) >= lands && (shownWhen ?? 0) < lands + 0.05)
+            }
+        }
+
         if failures.isEmpty {
             print("OK: \(checks) checks")
             exit(0)

@@ -11,7 +11,15 @@ import SwiftUI
 /// enlarge a texture.
 public struct SceneScorebug: View {
     let spec: SceneSpec
-    public init(spec: SceneSpec) { self.spec = spec }
+
+    /// `status` is what the stadium is showing rather than what the scene
+    /// says: while the ball is in the air the board still reads the score
+    /// before the play, and the glass must agree with it (`StatusGate`).
+    public init(spec: SceneSpec, status: SceneSpec.Status? = nil) {
+        var s = spec
+        if let status { s.status = status }
+        self.spec = s
+    }
 
     // Visuals are Broadcast's (docs/actors/broadcast.md); placement stays
     // Experience's. A broadcast scorebug: each side a panel washed in its
@@ -347,7 +355,7 @@ public struct TabletopView: View {
         .ornament(attachmentAnchor: .scene(.bottomFront), contentAlignment: .top) {
             HStack(spacing: 12) {
                 if let spec = feed.spec {
-                    SceneScorebug(spec: spec)
+                    SceneScorebug(spec: spec, status: renderer.shownStatus)
                 } else {
                     Text(feed.error ?? "Loading the game…").font(.system(size: 15)).padding()
                 }
@@ -646,7 +654,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
             attachments.entity(for: "hint")?.isEnabled = hintShown
         } attachments: {
             Attachment(id: "scorebug") {
-                if let spec = feed.spec { SceneScorebug(spec: spec) }
+                if let spec = feed.spec { SceneScorebug(spec: spec, status: renderer.shownStatus) }
             }
             Attachment(id: "status") {
                 StadiumStatus(message: feed.error)

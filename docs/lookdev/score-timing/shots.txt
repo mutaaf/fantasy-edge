@@ -1,0 +1,2 @@
+bowl-wide: replay at 240s (early) -> docs/lookdev/score-timing/bowl-wide-scrub.png
+field-level: replay at 390s (redzone) -> docs/lookdev/score-timing/field-level-scrub.png

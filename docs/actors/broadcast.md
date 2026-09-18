@@ -344,3 +344,30 @@ the actor's 25 and 30k.
   queued behind a long kickoff can still be laid down without flying.
 - The moment still leads the ball; the hook is the director's
   (`director/moment-timing`).
+
+## Round 6 (the director's fix for integration-13's #1 and #2)
+
+- **The drawn score waited for nothing.** The moment gate held the banner, the
+  fireworks, the strobe and the crowd until a play landed, but the ribbon, the
+  video board and the glass scorebug all redrew from the scene on arrival:
+  `td-moment-t0.5` read CHI 17 with the pick-six still running. `StatusGate`
+  now holds the arriving status behind the play it describes, and the composer
+  hands every actor the scene with the status the stadium is *showing*. The
+  score, the down and distance and the red-zone flag follow the ball;
+  everything else in a scene arrives untouched. Measured: the score is drawn at
+  t=253.75 having been held 5.24 s, the same hundredth of a second the moment
+  fires.
+- **A banner outlived its play.** At `t8.5` a TOUCHDOWN slab hung over a board
+  that had moved to the next snap. `BroadcastBanner.snapping` is called when
+  Broadcast starts the next flight: the slab wipes out over `exitSeconds`, and
+  is never cut shorter than `visual.moments.banner.minSeconds` (2.5), so a
+  quick snap or a fast replay shortens it rather than flashing it.
+- **Shots:** `docs/lookdev/score-timing/`, with what each frame proves and the
+  two log lines in its README.
+- **Worst thing left, and it is yours:** the board still *narrates* a play
+  while the ball is in the air - `s-td-moment-t0.5-fg-club.png` says the kick
+  "is GOOD" under a score that correctly has not moved. The words come from
+  the drive's newest arc in `BroadcastVideoBoard.image` (`arcs.last`) rather
+  than from the status. Feeding the board the newest *laid* play from `trails`
+  would fix it, and the drive log beside it has to follow in the same change
+  or the two disagree.
