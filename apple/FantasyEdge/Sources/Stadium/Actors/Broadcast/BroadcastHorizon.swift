@@ -18,7 +18,11 @@ final class BroadcastHorizon {
         key = ""
     }
 
-    func update(_ c: StadiumContext) {
+    /// `hold` while the newest play is still in the air: win probability is a
+    /// top-level field, not part of the gated status, so without this the band
+    /// swings to the outcome of a play the viewer is still watching.
+    func update(_ c: StadiumContext, hold: Bool = false) {
+        guard !hold || key.isEmpty else { return }
         let s = c.spec, wp = s.winProbability
         let look = c.look.broadcast.horizon
         // Seen side-on - from behind an end zone - the band collapses into a

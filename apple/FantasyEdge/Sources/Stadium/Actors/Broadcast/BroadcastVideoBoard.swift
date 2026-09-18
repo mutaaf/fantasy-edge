@@ -26,7 +26,9 @@ final class BroadcastVideoBoard {
         let look = c.look.broadcast.videoBoard
         guard let img = Self.image(c.spec, look: look), let tex = StadiumText.texture(img) else { return }
         texture = tex
-        key = Self.key(c.spec)
+        // Built before any play of this drive has landed: the board says the
+        // score and the down, and takes its first play from the first landing.
+        key = Self.key(c.spec, told: nil)
         let w = Float(vb.size[0]), h = Float(vb.size[1])
         let e = ModelEntity(mesh: .generatePlane(width: w, height: h),
                             materials: [StadiumLook.emissive("#FFFFFF", scale: look.brightness, texture: tex, tile: false)])
@@ -44,25 +46,36 @@ final class BroadcastVideoBoard {
         root.addChild(e)
     }
 
-    func apply(_ c: StadiumContext) {
+    /// `laid` is a play the viewer has seen land. The board narrates the
+    /// newest of those, never the one in the air: it read "31 yard field goal
+    /// is GOOD" with the kick still up, beside a score correctly waiting for
+    /// it (integration-13, score-timing).
+    func apply(_ c: StadiumContext, laid: (String) -> Bool) {
         guard let tex = texture else { return }
-        let k = Self.key(c.spec)
+        let told = Self.newestLaid(c.spec, laid: laid)
+        let k = Self.key(c.spec, told: told)
         guard k != key else { return }
         key = k
-        if let img = Self.image(c.spec, look: c.look.broadcast.videoBoard) {
+        if let img = Self.image(c.spec, look: c.look.broadcast.videoBoard, told: told) {
             try? tex.replace(withImage: img, options: .init(semantic: .color))
         }
     }
 
-    static func key(_ s: SceneSpec) -> String {
+    /// The newest play on the drive that has landed, or nil while the first
+    /// play of a drive is still in the air.
+    static func newestLaid(_ s: SceneSpec, laid: (String) -> Bool) -> SceneSpec.Arc? {
+        (s.shownDrive?.arcs ?? []).last(where: { laid($0.id) })
+    }
+
+    static func key(_ s: SceneSpec, told: SceneSpec.Arc?) -> String {
         let d = s.shownDrive
-        return "\(StadiumText.ribbonKey(s))|\(d?.id ?? "")|\(d?.arcs.count ?? 0)|\(s.ball?.x ?? -1)"
+        return "\(StadiumText.ribbonKey(s))|\(d?.id ?? "")|\(told?.id ?? "-")|\(s.ball?.x ?? -1)"
     }
 
     /// The board's picture. Every size is a share of its height, so the
     /// legibility rule in the tokens (`smallTextShare`) is the size of the
     /// smallest words on it.
-    static func image(_ s: SceneSpec, look: SceneSpec.Look.VideoBoardLook) -> CGImage? {
+    static func image(_ s: SceneSpec, look: SceneSpec.Look.VideoBoardLook, told: SceneSpec.Arc? = nil) -> CGImage? {
         let W = look.pixels.count == 2 ? look.pixels[0] : 1600
         let H = look.pixels.count == 2 ? look.pixels[1] : 600
         return BroadcastGraphics.image(width: W, height: H, opaque: true) { ctx, size in
@@ -134,7 +147,10 @@ final class BroadcastVideoBoard {
             let top = bugH + downH + h * 0.035
             let split = w * CGFloat(look.textShare)
             let arcs = s.shownDrive?.arcs ?? []
-            if let last = arcs.last {
+            // Only as far as the viewer has seen: the plays up to and
+            // including the one the board is narrating.
+            let seen = told.flatMap { t in arcs.firstIndex(where: { $0.id == t.id }).map { Array(arcs[...$0]) } } ?? []
+            if let last = told {
                 // A bar in the play's own trail colour says "this is the last
                 // play" without spending a line of the board's height on it.
                 StadiumLook.color(s.palette[last.color] ?? "#FFFFFF").setFill()
@@ -166,8 +182,11 @@ final class BroadcastVideoBoard {
                 ctx.addLine(to: CGPoint(x: fx(yd), y: field.maxY))
             }
             ctx.strokePath()
-            for (i, arc) in arcs.suffix(look.plays).enumerated() {
-                let newest = i == min(arcs.count, look.plays) - 1
+            // The diagram draws the plays the viewer has seen land, for the
+            // same reason the words do.
+            let drawn = seen.suffix(look.plays)
+            for (i, arc) in drawn.enumerated() {
+                let newest = i == drawn.count - 1
                 let colour = StadiumLook.color(s.palette[arc.color] ?? "#FFFFFF").withAlphaComponent(newest ? 1 : 0.55)
                 ctx.setStrokeColor(colour.cgColor)
                 ctx.setLineWidth(h * (newest ? 0.014 : 0.008))
