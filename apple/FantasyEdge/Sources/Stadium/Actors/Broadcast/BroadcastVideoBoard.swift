@@ -62,9 +62,10 @@ final class BroadcastVideoBoard {
     }
 
     /// The newest play on the drive that has landed, or nil while the first
-    /// play of a drive is still in the air.
+    /// play of a drive is still in the air. The rule lives in `LaidPlay`, which
+    /// the composer and the drive log ask too.
     static func newestLaid(_ s: SceneSpec, laid: (String) -> Bool) -> SceneSpec.Arc? {
-        (s.shownDrive?.arcs ?? []).last(where: { laid($0.id) })
+        LaidPlay.newest(s.shownDrive, laid: laid)
     }
 
     static func key(_ s: SceneSpec, told: SceneSpec.Arc?) -> String {

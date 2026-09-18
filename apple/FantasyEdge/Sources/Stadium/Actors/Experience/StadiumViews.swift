@@ -117,10 +117,16 @@ struct SceneChip: View {
 /// scrubber both read from it.
 public struct DriveLog: View {
     let spec: SceneSpec
+    let drive: SceneSpec.Drive?
     let rows: Int
+    /// `drive` is the renderer's `shownDrive`, never `spec.shownDrive`: the log
+    /// lists what the viewer has seen land, not what the feed has announced.
+    /// It is named at every call site rather than defaulted, so a new caller
+    /// cannot quietly go back to the scene's own drive.
     /// `rows` defaults to `visual.broadcast.driveLog.rows`; Experience may pass its own.
-    public init(spec: SceneSpec, rows: Int? = nil) {
+    public init(spec: SceneSpec, drive: SceneSpec.Drive?, rows: Int? = nil) {
         self.spec = spec
+        self.drive = drive
         self.rows = max(1, rows ?? spec.look?.broadcast.driveLog.rows ?? 5)
     }
     private var newestLines: Int { spec.look?.broadcast.driveLog.newestLines ?? 2 }
@@ -130,7 +136,7 @@ public struct DriveLog: View {
     // fading the way its trails do, each play's gain on the right.
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let d = spec.shownDrive {
+            if let d = drive {
                 HStack(spacing: 10) {
                     if let t = d.side.flatMap({ spec.teams.side($0) }) {
                         SceneChip(text: t.abbr, fill: t.chip, symbol: nil, hatch: t.hatch)
@@ -662,7 +668,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
             Attachment(id: "drive") {
                 if let spec = feed.spec {
                     FoldablePanel(title: "Drive", symbol: "list.bullet", folded: $driveFolded, yielding: yielding) {
-                        DriveLog(spec: spec)
+                        DriveLog(spec: spec, drive: renderer.shownDrive)
                             .frame(maxHeight: panelHeight(\.drive), alignment: .top)
                             .clipped()
                     }

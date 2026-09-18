@@ -29,9 +29,16 @@ class MomentGateSweepTest(unittest.TestCase):
     def test_the_gate_holds_until_the_play_lands(self):
         with tempfile.TemporaryDirectory() as tmp:
             exe = pathlib.Path(tmp) / "verify-moment"
+            # The same files `make verify-moment` compiles: the sweep covers
+            # LaidPlay too, which needs SceneSpec and the look types it decodes.
             build = subprocess.run(
                 ["swiftc", "-parse-as-library", "-o", str(exe),
                  str(STADIUM / "MomentGate.swift"),
+                 str(STADIUM / "LaidPlay.swift"),
+                 str(STADIUM / "SceneSpec.swift"),
+                 str(STADIUM / "SceneLook.swift"),
+                 *[str(p) for p in sorted((STADIUM / "Actors").glob("*/*Look.swift"))],
+                 str(STADIUM / "Actors/Field/FieldArtSpec.swift"),
                  str(ROOT / "apple/verify_moment.swift")], capture_output=True, text=True)
             self.assertEqual(build.returncode, 0, build.stderr[-2000:])
             run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=120)
@@ -134,6 +141,54 @@ class DrawnScoreTest(unittest.TestCase):
         body = self.BANNER.split("func snapping(")[1].split("\n    private func")[0]
         self.assertIn("minSeconds", body)
         self.assertIn("max(floor", body)
+
+
+class DriveLogTest(unittest.TestCase):
+    """The drive log lists plays the viewer has seen land.
+
+    The last consumer to run ahead of the ball: the log named the play in the
+    air, and the drive's result with it, beside a score correctly waiting for
+    it. The composer publishes `shownDrive` beside `shownStatus`, and the log
+    reads that.
+    """
+
+    BOARD = (STADIUM / "Actors/Broadcast/BroadcastVideoBoard.swift").read_text()
+    LAID = (STADIUM / "LaidPlay.swift").read_text()
+
+    def test_the_composer_publishes_the_drive_the_views_may_list(self):
+        self.assertIn("public private(set) var shownDrive", RENDERER)
+        self.assertIn("LaidPlay.through(", RENDERER)
+
+    def test_the_log_reads_the_composers_answer(self):
+        code = [l for l in VIEWS.splitlines() if not l.lstrip().startswith("//")]
+        self.assertNotIn("spec.shownDrive", "\n".join(code),
+                         "the log would list a play still in the air")
+        for line in VIEWS.splitlines():
+            if "DriveLog(spec:" in line:
+                self.assertIn("drive: renderer.shownDrive", line,
+                              "every caller names where the drive came from")
+
+    def test_the_actors_still_see_the_play_that_has_not_landed(self):
+        """Broadcast learns of a play from the spec it is handed, and flies it.
+
+        Truncating the drive for the actors would mean the newest play never
+        arrived, so it would never fly, so it would never land: the log would
+        be right and the field empty. The holding is for the views alone.
+        """
+        body = RENDERER.split("private func showing(")[1].split("\n    private func")[0]
+        written = set(re.findall(r"^\s*s\.(\w+)\s*=", body, re.M))
+        self.assertEqual(written, {"status"})
+
+    def test_one_rule_for_the_board_and_the_log(self):
+        self.assertIn("LaidPlay.newest(", self.BOARD,
+                      "the board and the log must not each carry their own idea of newest")
+        self.assertNotIn("import UIKit", self.LAID,
+                         "the rule lives where the sweeps can compile it")
+
+    def test_a_held_play_takes_its_result_with_it(self):
+        body = self.LAID.split("public static func through(")[1]
+        self.assertIn('result: ""', body,
+                      'a header reading "Touchdown" over a ball in flight is the same defect')
 
 
 class TokensTest(unittest.TestCase):

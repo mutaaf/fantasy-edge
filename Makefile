@@ -45,6 +45,21 @@ verify-scene:
 		$(STADIUM)/SceneMath.swift $(STADIUM)/Actors/Broadcast/BroadcastFlight.swift apple/verify_scene.swift
 	.work/verify-scene .work/scenes/*.json
 
+# The composer's two rules, swept exhaustively. Both were run by copying the
+# swiftc line out of the file's own header, which every agent re-derived and
+# some got wrong; they are gates, so they have targets.
+verify-moment:
+	swiftc -parse-as-library -o .work/verify-moment $(STADIUM)/MomentGate.swift \
+		$(STADIUM)/LaidPlay.swift $(STADIUM)/SceneSpec.swift $(STADIUM)/SceneLook.swift \
+		$(STADIUM)/Actors/*/*Look.swift $(STADIUM)/Actors/Field/FieldArtSpec.swift \
+		apple/verify_moment.swift
+	.work/verify-moment
+
+verify-crowd:
+	swiftc -parse-as-library -o .work/verify-crowd \
+		$(STADIUM)/Actors/Crowd/CrowdChoreography.swift apple/verify_crowd.swift
+	.work/verify-crowd
+
 clean:
 	rm -rf data/*.db report.html
 	find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true

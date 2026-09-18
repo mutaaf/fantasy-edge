@@ -87,6 +87,18 @@ public final class StadiumRenderer {
     /// status once its play has landed. The views read it, so the glass
     /// scorebug and the video board never disagree.
     public private(set) var shownStatus: SceneSpec.Status?
+    /// The drive as the views may list it: the plays the viewer has seen land.
+    /// The scene announces a play as it arrives and the ball lands seconds
+    /// later, so the log would otherwise name a play - and a drive result -
+    /// while it was still in the air, beside a score correctly waiting for it.
+    /// One answer, from the gate that holds the score, so the log, the scrubber
+    /// and the video board cannot disagree.
+    public private(set) var shownDrive: SceneSpec.Drive?
+    /// The last drive-log line written, so the log says what changed rather
+    /// than repeating itself every frame. A `--times` frame is its own launch,
+    /// so what the log lists against what the ball is doing is read from these
+    /// lines, not from two screenshots.
+    @ObservationIgnored private var lastDriveLine = ""
     /// The scene the actors were last handed, which is `spec` with `status`
     /// replaced by `shownStatus`. Actors compare against it, not against the
     /// scene as it arrived, so a change is seen once and at the right moment.
@@ -210,9 +222,23 @@ public final class StadiumRenderer {
             status.arrive(next.status)
         }
         shownStatus = status.shown
+        setShownDrive(next.shownDrive)
         var s = next
         s.status = status.shown ?? next.status
         return s
+    }
+
+    /// The drive as the views may list it, and a line saying so when it
+    /// changes: which play the log ends on, and which one it is waiting for.
+    private func setShownDrive(_ drive: SceneSpec.Drive?) {
+        let shown = LaidPlay.through(drive, held: status.waitingOn)
+        shownDrive = shown
+        let line = "[stadium] drive log lists \(shown?.arcs.count ?? 0) of "
+            + "\(drive?.arcs.count ?? 0) plays, newest \(shown?.arcs.last?.id ?? "-"), "
+            + "waiting on \(status.waitingOn ?? "-")"
+        guard line != lastDriveLine else { return }
+        lastDriveLine = line
+        StadiumLog.log.notice("\(line, privacy: .public)")
     }
 
     /// On the frame clock: the drawn status catches up the frame its play
@@ -229,6 +255,7 @@ public final class StadiumRenderer {
                           c.shared.time, max(0, c.shared.time - statusHeldAt), waitingOn ?? "-")
         StadiumLog.log.notice("\(line, privacy: .public)")
         shownStatus = caught
+        setShownDrive(latest.shownDrive)
         var s = latest
         s.status = caught
         let previous = shownSpec

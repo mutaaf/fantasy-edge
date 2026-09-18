@@ -1,0 +1,9 @@
+[stadium] drive log lists 7 of 7 plays, newest 401772810938, waiting on -
+[stadium] drive log lists 7 of 8 plays, newest 401772810938, waiting on 401772810961
+[stadium] score MIN 3 - CHI 7 drawn at t=25.97, held 4.12 s behind 401772810961
+[stadium] drive log lists 8 of 8 plays, newest 401772810961, waiting on -
+[stadium] drive log lists 1 of 2 plays, newest 401772810981, waiting on 4017728101027
+[stadium] score MIN 3 - CHI 7 drawn at t=47.16, held 18.68 s behind 4017728101027
+[stadium] drive log lists 2 of 2 plays, newest 4017728101027, waiting on -
+[stadium] score MIN 3 - CHI 7 drawn at t=26.86, held 4.20 s behind 401772810961
+[stadium] score MIN 3 - CHI 7 drawn at t=48.79, held 18.68 s behind 4017728101027

@@ -3,7 +3,13 @@
 // and never stranded when nothing ever lands.
 //
 //   swiftc -parse-as-library -o /tmp/verify-moment \
-//     apple/FantasyEdge/Sources/Stadium/MomentGate.swift apple/verify_moment.swift && /tmp/verify-moment
+//     apple/FantasyEdge/Sources/Stadium/MomentGate.swift \
+//     apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
+//     apple/FantasyEdge/Sources/Stadium/LaidPlay.swift apple/verify_moment.swift && /tmp/verify-moment
+//
+// It sweeps `LaidPlay` too: the same rule seen from the composer's side (the
+// gate names the play it is holding) and Broadcast's side (its trails name the
+// play that has landed), which must never disagree about the newest play.
 //
 // Prints OK and exits 0, or the first failure and exits 1.
 
@@ -261,6 +267,74 @@ struct VerifyMoment {
                 }
                 check("the score is shown with the ball at \(flight)s / \(speed)x",
                       (shownWhen ?? 0) >= lands && (shownWhen ?? 0) < lands + 0.05)
+            }
+        }
+
+        // MARK: LaidPlay - the drive log lists what has landed
+
+        /// A drive of `n` plays, p1...pn, decoded the way a scene arrives.
+        func drive(_ n: Int, result: String = "Touchdown") -> SceneSpec.Drive {
+            let arcs = (1...n).map { i in
+                """
+                {"id":"p\(i)","style":"pass","shape":"arc","type":"Pass Reception",
+                 "fromX":20,"toX":34,"lane":0.2,"apex":4,"color":"home","seconds":3,
+                 "duration":3,"text":"a play","clock":"12:40"}
+                """
+            }.joined(separator: ",")
+            let json = """
+            {"id":"d1","team":"CHI","side":"home","result":"\(result)","arcs":[\(arcs)]}
+            """
+            return try! JSONDecoder().decode(SceneSpec.Drive.self, from: Data(json.utf8))
+        }
+
+        do {
+            let d = drive(4)
+
+            // Nothing held: a scrub, a seat change, reduce motion, a drive laid
+            // at rest. The whole drive is listed at once, result and all.
+            let whole = LaidPlay.through(d, held: nil)
+            check("nothing held lists the whole drive", whole?.arcs.count == 4)
+            check("and keeps the drive's result", whole?.result == "Touchdown")
+
+            // The newest play in the air: it and its result are not listed yet.
+            let held = LaidPlay.through(d, held: "p4")
+            check("a play in the air is not listed", held?.arcs.map(\.id) == ["p1", "p2", "p3"])
+            check("nor is the result it would give away", held?.result == "")
+
+            // The first play of a drive, still flying: a header and no plays.
+            check("a drive whose first play is in the air lists none",
+                  LaidPlay.through(d, held: "p1")?.arcs.isEmpty == true)
+
+            check("no drive stays no drive", LaidPlay.through(nil, held: nil) == nil)
+            check("a play that is not on this drive cuts nothing",
+                  LaidPlay.through(d, held: "p9")?.arcs.count == 4)
+
+            // The two sides of the rule. Broadcast lays trails as plays land, so
+            // p1...p3 are down and p4 is in the air; the composer is holding p4.
+            // The newest play each names must be the same one.
+            let laid: (String) -> Bool = { $0 != "p4" }
+            check("the board and the log name the same newest play",
+                  LaidPlay.newest(d, laid: laid)?.id == LaidPlay.through(d, held: "p4")?.arcs.last?.id)
+            check("and both say p3", LaidPlay.newest(d, laid: laid)?.id == "p3")
+
+            // Landed: both move on together, on the frame the trail goes down.
+            check("once it lands the board names it",
+                  LaidPlay.newest(d, laid: { _ in true })?.id == "p4")
+            check("and the log lists it", LaidPlay.through(d, held: nil)?.arcs.last?.id == "p4")
+
+            // Every prefix, every length: the log never runs ahead of the board.
+            func number(_ id: String) -> Int { Int(id.dropFirst()) ?? 0 }
+            for n in 1...12 {
+                let dn = drive(n)
+                for k in 1...n {
+                    let holdID = "p\(k)"
+                    let listed = LaidPlay.through(dn, held: holdID)?.arcs.map(\.id) ?? []
+                    check("holding \(holdID) of \(n) lists only what came before",
+                          listed == (1..<k).map { "p\($0)" })
+                    // Broadcast's side: every play before the held one has landed.
+                    let newest = LaidPlay.newest(dn, laid: { number($0) < k })?.id
+                    check("and the board agrees at \(holdID) of \(n)", newest == listed.last)
+                }
             }
         }
 
