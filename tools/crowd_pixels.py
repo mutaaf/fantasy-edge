@@ -23,7 +23,9 @@ import zlib
 
 
 def read_png(path: pathlib.Path) -> tuple[int, int, list[bytes]]:
-    """(width, height, rows of RGB bytes). 8-bit RGB or RGBA, no interlace."""
+    """(width, height, rows of RGB bytes). 8-bit grey, RGB or RGBA, no
+    interlace. Grey is expanded to RGB, so every caller reads three bytes a
+    pixel whatever the file held (the net mask is grey; the crowd's is RGB)."""
     data = path.read_bytes()
     if data[:8] != b"\x89PNG\r\n\x1a\n":
         raise SystemExit(f"{path}: not a PNG")
@@ -33,15 +35,15 @@ def read_png(path: pathlib.Path) -> tuple[int, int, list[bytes]]:
         body = data[pos + 8:pos + 8 + length]
         if kind == b"IHDR":
             w, h, depth, colour, _, _, interlace = struct.unpack(">IIBBBBB", body)
-            if depth != 8 or colour not in (2, 6) or interlace:
-                raise SystemExit(f"{path}: need an 8-bit RGB or RGBA PNG, got depth {depth} colour {colour}")
+            if depth != 8 or colour not in (0, 2, 6) or interlace:
+                raise SystemExit(f"{path}: need an 8-bit grey, RGB or RGBA PNG, got depth {depth} colour {colour}")
         elif kind == b"IDAT":
             idat += body
         elif kind == b"IEND":
             break
         pos += 12 + length
     raw = zlib.decompress(bytes(idat))
-    step = 3 if colour == 2 else 4
+    step = {0: 1, 2: 3, 6: 4}[colour]
     stride = w * step
     out, prev, at = [], bytearray(stride), 0
     for _ in range(h):
@@ -59,7 +61,10 @@ def read_png(path: pathlib.Path) -> tuple[int, int, list[bytes]]:
                 pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
                 line[i] = (line[i] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
         prev = line
-        out.append(bytes(line[i] for i in range(stride) if step == 3 or i % 4 != 3))
+        if step == 1:
+            out.append(bytes(v for g in line for v in (g, g, g)))
+        else:
+            out.append(bytes(line[i] for i in range(stride) if step == 3 or i % 4 != 3))
     return w, h, out
 
 

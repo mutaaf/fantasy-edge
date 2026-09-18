@@ -116,13 +116,17 @@ def textured_mat(name, image_path, rough=0.8, alpha=False, tint="#FFFFFF"):
 def make_textures():
     """The net and pad textures, generated so the models carry no downloads."""
     TEX.mkdir(parents=True, exist_ok=True)
-    # knotted netting: 2 inch square mesh seen at 256 px for a 0.6 m repeat
+    # Knotted netting at 256 px for a 0.6 m repeat: a 4 inch square mesh of
+    # 2.5 mm cord, which is what hangs behind an NFL goal. It was woven at 2
+    # inch, twice as tight as the real thing, and that is what put a grid over
+    # the whole field from behind the posts: a cord this fine is sub-pixel at
+    # any honest distance, so it cannot read as cord and mips to a flat veil
+    # instead. Halving the weave halves the veil (5.2% coverage -> 2.1%).
     n = 256
-    y, x = np.mgrid[0:n, 0:n] / n * 12.0                 # 12 cells per repeat
+    y, x = np.mgrid[0:n, 0:n] / n * 6.0                  # 6 cells per repeat
     fx, fy = np.abs(np.mod(x, 1) - 0.5), np.abs(np.mod(y, 1) - 0.5)
-    # thin cord: about 6% of each cell, so a mip of the net averages to air
-    strand = np.clip(1 - np.minimum(fx, fy) / 0.03, 0, 1) ** 1.5
-    knots = np.clip(1 - np.hypot(fx - 0.5, fy - 0.5) / 0.06, 0, 1)
+    strand = np.clip(1 - np.minimum(fx, fy) / 0.0125, 0, 1) ** 1.5
+    knots = np.clip(1 - np.hypot(fx - 0.5, fy - 0.5) / 0.030, 0, 1)
     a = np.clip(strand + knots, 0, 1)
     common.write_png(TEX / "net.png", np.stack([np.full_like(a, 0.92), np.full_like(a, 0.92), np.full_like(a, 0.9), a], axis=2))
     # the same coverage as one grey channel: a renderer that merges props into

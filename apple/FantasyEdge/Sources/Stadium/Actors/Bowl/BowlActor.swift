@@ -247,10 +247,15 @@ final class BowlActor: StadiumActor {
                     pbr.blending = .transparent(opacity: .init(floatLiteral: Float(B.glassOpacity)))
                     pbr.metallic = .init(floatLiteral: 0.15)
                     pbr.roughness = .init(floatLiteral: 0.04)
-                } else if n.contains("press_desk") {
-                    // desks, chairs and floor: lit by the room's own ceiling strips
+                } else if n.contains("press_desk") || n.contains("press_chair") || n.contains("press_floor") {
+                    // The room's own surfaces, lit by its ceiling strips. They
+                    // were one material until the box seat showed what that
+                    // costs: desk, chairs and carpet in one beige field, with
+                    // nothing standing on anything. Each takes its own share.
+                    let share = n.contains("press_desk") ? B.pressDeskLift
+                        : n.contains("press_chair") ? B.pressChairLift : B.pressFloorLift
                     pbr.emissiveColor = .init(color: StadiumLook.color("#F0D3AE"))
-                    pbr.emissiveIntensity = Float(B.pressRoomLift) * 0.12
+                    pbr.emissiveIntensity = Float(B.pressRoomLift * share)
                 } else if n.contains("interiors") {
                     pbr.emissiveIntensity = 3.5
                 }

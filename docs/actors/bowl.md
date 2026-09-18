@@ -121,3 +121,36 @@ The tests in `tests/test_bowl.py` cover:
 - Darken the aisle stair tops. Break up the band sawtooth with a per-row UV offset.
 - Re-shoot `bowl-wide`, `crowd-closeup`, `sideline-props` and `tabletop` under the two-simulator rule.
 - **Tabletop:** `table` is only the lower bowl, and has no fascia. Decide with Experience whether the plinth wants the upper deck at LOD.
+
+## Round: the press room was one beige field
+
+Before: `docs/lookdev/integration-13/s-crowd-closeup-pressBox.png`. After:
+`docs/lookdev/sideline-r5/s-crowd-closeup-pressBox.png`.
+
+The room was furnished at `896b73b` - desks, monitors, chairs, acoustic walls, a
+lit ceiling - and still read as "a featureless beige desk" from the box seat,
+because **the furniture was not the problem: the material assignment was.** The
+room's floor (`structure.py` line 595), every chair, and the monitor shells were
+all drawn with `press_desk`, so carpet, desk and chair were one surface and
+nothing stood on anything. A dark `press_chair` material had been authored for
+exactly this and was **never referenced** - `grep '"press_chair"'` returned only
+its own definition.
+
+- **Changes:** chairs, monitor shells and stalks -> `press_chair` (authored, now
+  used); the room floor and the 0.6 m dado under the glass -> a new `press_floor`,
+  dark contract carpet. Each surface takes its own share of the ceiling strips
+  rather than one hard-coded 0.12: `visual.bowl.pressDeskLift` 0.12 (unchanged
+  for the desk), `pressChairLift` 0.05, `pressFloorLift` 0.03, all in tokens,
+  read through `BowlLook`.
+- **Measured from the box seat** (sRGB off the review frame): chairs
+  132,121,105 -> **82,75,66**; floor 119,105,87 -> **57,51,43**. The room has
+  value structure for the first time.
+- **Budget:** two new materials cost two draw parts. Bowl 9-16 -> **11-18** of
+  20, triangles unchanged at 47,326-54,596 of 62k. **Two parts of headroom left** -
+  the next material in this room needs one merged away first.
+- **Worst thing left:** a large flat beige mass still fills the middle of the box
+  seat's view and is *not* the room's furniture - it did not move when the floor,
+  chairs or dado did (sampled at 120,106,88 before and after all three). It is
+  bowl structure outside the glass, and I did not identify which. Whoever takes
+  it next: `-bowlSkip` will bisect it in one run, and that is the shot's headline
+  defect now that the room behind it reads.

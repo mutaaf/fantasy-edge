@@ -238,3 +238,53 @@ triangles.
 - **`s-bowl-wide.png`:** the away support fills most of one side of the bowl.
   That is `bowl.crowd.awaySection` (`fromX` 90, far side), and it reads as a
   larger travelling support than a home game has. Crowd's, not Field's.
+
+## Round 5: the net was woven twice as tight as a real one
+
+Before: `docs/lookdev/integration-13/s-sideline-props.png`. After:
+`docs/lookdev/sideline-r5/s-sideline-props.png`.
+
+**The 0.35 floor was never the lever.** `test_a_net_is_visible_face_on` holds
+two things - a face-on minimum, and a fade only edge-on - and both survive this
+round untouched: `minOpacity` went *up*, to 0.85. What it was guarding against
+is older than the blend: "the poles showed but the net vanished. Cutout mips
+fall under the threshold." That was an **alpha-tested** net, whose mips fell
+under the cutout and disappeared. The net has been blended since, and a blended
+net cannot vanish - it converges on its own coverage. So the floor was holding
+a sheet opaque to prevent a failure the blend had already fixed, and the sheet
+is exactly what read as a curtain.
+
+**What the curtain actually was: coverage.** The veil a net lays over the field
+is `coverage x CordGain x FaceOpacity`, and at any honest distance a 2.5 mm cord
+is **sub-pixel**, so that is all it can be - the mip cannot resolve cord and air,
+it averages them. Measured on the shipped mask:
+
+| | coverage | CordGain | FaceOpacity | veil |
+|---|---:|---:|---:|---:|
+| integration-13 | 0.0550 | 2.5 | 0.35 | 0.048 |
+| the same weave, cord-true | 0.0550 | 1.0 | 0.85 | 0.047 |
+| **round 5** | **0.0236** | **1.0** | **0.85** | **0.020** |
+
+The middle row is the point: making the cord true and dropping the gain changed
+the veil by 0.001, because near *and* far are both mip-dominated. Only the weave
+moves it. The mask was authored at a **2 inch** mesh - fishing net - where what
+hangs behind an NFL goal is **4 inch** of 2.5 mm cord. Halving the weave halves
+the veil, and the numbers above are why this round's fix is in
+`tools/blender/field/build.py`, not in the tokens.
+
+- **Changes:** mask 12 cells per 0.6 m repeat -> 6, cord half-width 0.03 -> 0.0125
+  cell, knots 0.06 -> 0.030; `CordGain` 2.5 -> 1.0; `net.minOpacity` 0.35 -> 0.85
+  (a cord is near-opaque, and it is the cord that is visible now, not the sheet);
+  `net.grazingOpacity` 0.12 -> 0.35; the portable `fallback.opacity` 0.35 -> 0.08,
+  which is the veil a flat material can honestly stand in for. Ports cannot draw
+  cords from a flat colour, and should say so rather than draw a 35% sheet.
+- **Test:** `test_a_net_is_cord_and_air_not_a_sheet` pins the real invariant -
+  coverage is a few per cent, a cord reads as cord (`minOpacity >= 0.6`), it is
+  never smeared (`CordGain <= 1`), and the veil stays under 0.10. It reads the
+  shipped `net_mask.png`, so a re-woven mask is checked, not a copied constant.
+  On integration-13's values it fails.
+- **Budget:** sideline unchanged at 15 parts, 20,648-20,776 triangles.
+- **Worst thing left, `s-sideline-props.png`:** the grid still crosses the view.
+  It is finer and half the veil, but a 12 x 9 m net a few metres in front of you
+  spans that view in life too, and at review-image resolution its cords can only
+  ever mip to a wash. Judge this one on the headset before spending more on it.
