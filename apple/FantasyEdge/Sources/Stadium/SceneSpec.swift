@@ -21,7 +21,11 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     public let speed: Double
     public let field: Field
     public let teams: Teams
-    public let status: Status
+    /// The state of the game. `var` for one reason: the composer replaces it
+    /// with the status the stadium is *showing*, which lags the scene while
+    /// the ball is in the air (`StatusGate`). Everything else in a spec is the
+    /// scene exactly as it arrived.
+    public var status: Status
     public let ball: Ball?
     public let lasers: [Laser]
     public let drives: [Drive]

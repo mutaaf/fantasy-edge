@@ -82,3 +82,72 @@ public struct MomentGate: Sendable {
         taken = playId
     }
 }
+
+/// What the stadium is allowed to say the score is.
+///
+/// The same mismatch as `MomentGate`, one layer down. A scene arrives carrying
+/// the state *after* its newest play - the score, the down and distance, the
+/// red-zone flag - and Broadcast then flies that play for seconds. Drawn on
+/// arrival, the board read CHI 17 with the return still running
+/// (integration-13), and the down turned over before the ball got there.
+///
+/// So the drawn status lags the scene by exactly one play: the composer holds
+/// the arriving status until Broadcast says that play has landed, and only then
+/// does the ribbon, the video board, the scorebug and the crowd see it. What is
+/// shown is never wrong for what has been watched.
+///
+/// Generic over the status so the rule stays pure logic with no scene type
+/// behind it: `apple/verify_moment.swift` sweeps it with an `Int`.
+public struct StatusGate<Status>: Sendable where Status: Sendable & Equatable {
+    /// What the stadium draws. Nil only before the first scene.
+    public private(set) var shown: Status?
+    /// Waiting behind a play, with the time it gives up waiting.
+    private var pending: (status: Status, playId: String, deadline: Double)?
+
+    public init() {}
+
+    public var isHolding: Bool { pending != nil }
+    /// The play the drawn status is waiting on, for logs.
+    public var waitingOn: String? { pending?.playId }
+
+    /// Show this status now: the first scene, a scrub, a seat change, a new
+    /// game - anywhere there is no flight between what was drawn and what is
+    /// true.
+    public mutating func adopt(_ status: Status) {
+        shown = status
+        pending = nil
+    }
+
+    /// A new play arrived with this status. It is held until that play lands;
+    /// `deadline` is the frame clock at which it is shown regardless, so a
+    /// play that never flies can never freeze the board.
+    ///
+    /// Nothing is held before the first scene: there is no earlier state to
+    /// keep showing, and a blank board is worse than an early score.
+    public mutating func hold(_ status: Status, playId: String, until deadline: Double) {
+        guard shown != nil else { return adopt(status) }
+        pending = (status, playId, deadline)
+    }
+
+    /// A scene arrived carrying no new play: the clock ticked, a timeout, a
+    /// stoppage. It replaces whatever is waiting, or is shown at once.
+    public mutating func arrive(_ status: Status) {
+        if var p = pending {
+            p.status = status
+            pending = p
+        } else {
+            shown = status
+        }
+    }
+
+    /// On the frame clock: the status to draw now, if its play has landed or
+    /// the hold has run out. Returns it once, when it changes what is drawn.
+    public mutating func due(now: Double, landed: (String) -> Bool) -> Status? {
+        guard let p = pending else { return nil }
+        guard landed(p.playId) || now >= p.deadline else { return nil }
+        pending = nil
+        guard p.status != shown else { return nil }
+        shown = p.status
+        return p.status
+    }
+}

@@ -22,6 +22,8 @@ final class BroadcastBanner {
     private var shownAt: Double?
     private var pending: (moment: SceneSpec.Moment, at: Double)?
     private var dwell: Double = 4.2
+    /// The default for `visual.moments.banner.minSeconds`.
+    private static let defaultMinSeconds = 2.5
 
     init() {
         root.name = "broadcast.banner"
@@ -48,6 +50,25 @@ final class BroadcastBanner {
         guard delay >= 0 else { return }
         clear()
         pending = (m, c.shared.time + delay)
+    }
+
+    /// The next play is about to snap. A moment graphic belongs to the play
+    /// that caused it, so it comes down before the next one - a TOUCHDOWN slab
+    /// still up over the kickoff (integration-13, t8.5) belongs to a game the
+    /// board has already left. It is never cut shorter than
+    /// `visual.moments.banner.minSeconds`, so a quick snap or a fast replay
+    /// flashes nothing: the dwell shortens to that floor instead of vanishing.
+    func snapping(_ c: StadiumContext) {
+        let floor = c.look.moments.banner.minSeconds ?? Self.defaultMinSeconds
+        // Scheduled but not yet up: the play it belonged to is over.
+        guard let start = shownAt else {
+            pending = nil
+            return
+        }
+        // It wipes out rather than disappearing, so the end it is given is the
+        // exit's length away.
+        let exit = max(0.05, c.look.moments.banner.exitSeconds)
+        dwell = min(dwell, max(floor, c.shared.time - start + exit))
     }
 
     private func show(_ m: SceneSpec.Moment, _ c: StadiumContext) {

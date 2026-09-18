@@ -77,6 +77,9 @@ extension SceneSpec.Look {
         public let anchor: String
         public let kinds: [String]
         public let subtitleDegrees: Double
+        /// A moment graphic comes down before the next snap, but never before
+        /// this long on screen. Optional until `design/tokens.json` carries it.
+        public let minSeconds: Double?
     }
 
     public struct MomentReduceMotion: Decodable, Equatable, Sendable {

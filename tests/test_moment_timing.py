@@ -12,6 +12,7 @@ Swift parts are skipped where swiftc is unavailable.
 """
 import json
 import pathlib
+import re
 import shutil
 import subprocess
 import tempfile
@@ -75,7 +76,75 @@ class ComposerTest(unittest.TestCase):
                          "the panels would yield five seconds before the ball lands")
 
 
+class DrawnScoreTest(unittest.TestCase):
+    """The score, the down and the red-zone flag lag the scene by one play.
+
+    A scene carries the state after its newest play, and Broadcast then flies
+    that play for seconds: integration-13 read CHI 17 on the board with the
+    return still running. `StatusGate` holds the arriving status behind that
+    play, and `apple/verify_moment.swift` sweeps the rule itself.
+    """
+
+    BANNER = (STADIUM / "Actors/Broadcast/BroadcastBanner.swift").read_text()
+    BROADCAST = (STADIUM / "Actors/Broadcast/BroadcastActor.swift").read_text()
+
+    def test_the_composer_holds_the_status_behind_the_ball(self):
+        self.assertIn("StatusGate<SceneSpec.Status>", RENDERER)
+        self.assertIn("status.hold(", RENDERER)
+        self.assertIn("status.due(", RENDERER)
+
+    def test_the_status_catches_up_on_the_frame_clock(self):
+        tick = RENDERER.split("public func tick(")[1]
+        self.assertIn("releaseStatus(c)", tick,
+                      "the score must be able to change with no new scene, the frame the ball lands")
+        self.assertLess(tick.index("releaseStatus(c)"), tick.index("releaseMoment(c)"),
+                        "the banner carries the score, so the score catches up first")
+
+    def test_catching_up_redraws_the_boards(self):
+        body = RENDERER.split("private func releaseStatus(")[1].split("\n    private func")[0]
+        self.assertIn("actor.apply(c", body,
+                      "the boards draw in apply, so a score that changes between scenes must re-apply")
+
+    def test_the_actors_are_handed_the_shown_status(self):
+        apply = RENDERER.split("public func apply(")[1].split("\n    private func")[0]
+        self.assertIn("showing(next", apply)
+        self.assertIn("spec: shown", apply,
+                      "actors draw the stadium's status, never the scene's")
+
+    def test_only_the_status_lags_the_scene(self):
+        body = RENDERER.split("private func showing(")[1].split("\n    private func")[0]
+        self.assertIn("s.status = status.shown", body)
+        written = set(re.findall(r"^\s*s\.(\w+)\s*=", body, re.M))
+        self.assertEqual(written, {"status"},
+                         "a scene is held back by its status alone; its plays arrive as they are")
+
+    def test_the_glass_agrees_with_the_board(self):
+        self.assertEqual(VIEWS.count("SceneScorebug(spec:"), 2)
+        for line in VIEWS.splitlines():
+            if "SceneScorebug(spec:" in line:
+                self.assertIn("status: renderer.shownStatus", line,
+                              "the glass scorebug and the video board must show one score")
+
+    def test_the_banner_comes_down_before_the_next_snap(self):
+        self.assertIn("banner.snapping(c)", self.BROADCAST,
+                      "a TOUCHDOWN slab still up over the kickoff belongs to a play the board has left")
+        self.assertIn("func snapping(", self.BANNER)
+
+    def test_a_quick_snap_shortens_the_banner_rather_than_flashing_it(self):
+        body = self.BANNER.split("func snapping(")[1].split("\n    private func")[0]
+        self.assertIn("minSeconds", body)
+        self.assertIn("max(floor", body)
+
+
 class TokensTest(unittest.TestCase):
+    def test_the_banner_floor_is_a_token(self):
+        tokens = json.loads((ROOT / "design/tokens.json").read_text())
+        floor = tokens["visual"]["moments"]["banner"]["minSeconds"]
+        dwell = tokens["visual"]["moments"]["banner"]["dwellSeconds"]
+        self.assertGreater(floor, 0)
+        self.assertLess(floor, dwell, "a floor above the dwell would keep every banner up longer")
+        self.assertIn("minSeconds", (STADIUM / "Actors/Moments/MomentsLook.swift").read_text())
+
     def test_the_grace_is_a_token_not_a_constant(self):
         tokens = json.loads((ROOT / "design/tokens.json").read_text())
         grace = tokens["motion"]["momentHoldGraceSeconds"]

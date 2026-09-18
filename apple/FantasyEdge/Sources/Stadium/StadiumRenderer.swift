@@ -77,9 +77,26 @@ public final class StadiumRenderer {
     @ObservationIgnored private var lastCue: String?
     /// Holds a moment until Broadcast has flown its play. See `MomentGate`.
     @ObservationIgnored private var gate = MomentGate()
+    /// Holds the score, the down and the red-zone flag behind the ball in the
+    /// same way. See `StatusGate`.
+    @ObservationIgnored private var status = StatusGate<SceneSpec.Status>()
+    /// The newest play the shown drive has carried, so a scene that brings one
+    /// is told apart from a scene that only moved the clock.
+    @ObservationIgnored private var lastArrivedPlay: String?
+    /// What the boards, the crowd and the scorebug are drawing: the scene's
+    /// status once its play has landed. The views read it, so the glass
+    /// scorebug and the video board never disagree.
+    public private(set) var shownStatus: SceneSpec.Status?
+    /// The scene the actors were last handed, which is `spec` with `status`
+    /// replaced by `shownStatus`. Actors compare against it, not against the
+    /// scene as it arrived, so a change is seen once and at the right moment.
+    @ObservationIgnored private var shownSpec: SceneSpec?
     /// The frame clock when the held moment arrived, for the log line that says
     /// how long it waited.
     @ObservationIgnored private var momentArrivedAt = 0.0
+    /// The same for the drawn status, so how far the board lags the feed is a
+    /// measured number rather than a claim.
+    @ObservationIgnored private var statusHeldAt = 0.0
     /// The moment the stadium is celebrating right now, which is not the
     /// scene's newest: the scene announces a touchdown as the play arrives and
     /// the ball lands about five seconds later. The views follow this, so the
@@ -110,7 +127,7 @@ public final class StadiumRenderer {
     // MARK: apply
 
     public func apply(_ next: SceneSpec, reduceMotion: Bool) {
-        let previous = spec
+        let previous = shownSpec
         spec = next
         if openedAt == nil { openedAt = .now }
         pendingReduceMotion = reduceMotion
@@ -119,12 +136,18 @@ public final class StadiumRenderer {
             prepare(look)
             return
         }
+        // What the actors are handed is the scene with the status the stadium
+        // is allowed to show: everything else is the scene as it arrived. A
+        // new matchup rebuilds, so there is nothing on screen to lag behind.
+        let key = [next.league, next.teams.home.chip, next.teams.away.chip,
+                   next.teams.home.abbr, next.teams.away.abbr].joined(separator: "|")
+        let shown = showing(next, fresh: key != staticKey)
         let c: StadiumContext
         if let existing = context {
-            existing.update(spec: next, look: look, reduceMotion: reduceMotion)
+            existing.update(spec: shown, look: look, reduceMotion: reduceMotion)
             c = existing
         } else {
-            c = StadiumContext(lod: mode == .tabletop ? .tabletop : .stadium, spec: next, look: look, assets: assets,
+            c = StadiumContext(lod: mode == .tabletop ? .tabletop : .stadium, spec: shown, look: look, assets: assets,
                                stage: root, world: world, reduceMotion: reduceMotion)
             c.shared.muted = muted
             context = c
@@ -133,8 +156,6 @@ public final class StadiumRenderer {
                 self.broadcast.redrawDrive(c)
             }
         }
-        let key = [next.league, next.teams.home.chip, next.teams.away.chip,
-                   next.teams.home.abbr, next.teams.away.abbr].joined(separator: "|")
         if key != staticKey {
             if let openedAt { StadiumTiming.log("\(label) assets ready after open", since: openedAt) }
             build(c)
@@ -142,8 +163,9 @@ public final class StadiumRenderer {
             gate.suppress(next.activeMoment?.playId)
             liveMoment = nil
             lastCue = next.activeCue?.id
-            lastRedZone = next.status.redZone
+            lastRedZone = c.spec.status.redZone
         }
+        shownSpec = c.spec
         let applying = firstFrameDue
         for actor in actors {
             if applying {
@@ -154,6 +176,69 @@ public final class StadiumRenderer {
         }
         dispatchEvents(c)
         // Trails, banners and flags an actor adds after build would cast by default.
+        optOutOfShadows(world)
+    }
+
+    /// The scene as the stadium may show it: its own status while the play it
+    /// describes is still in the air, the scene's once that play has landed.
+    ///
+    /// A status belongs to the newest play in the drive on screen. A scene that
+    /// brings one is held behind it; a scene that brings none - the clock
+    /// ticking, a timeout, a stoppage - is shown at once. The deadline is the
+    /// flight still owed by every play not yet laid, plus the grace, so a
+    /// queue of plays is waited out and a play that never flies cannot freeze
+    /// the board.
+    private func showing(_ next: SceneSpec, fresh: Bool) -> SceneSpec {
+        let newest = next.shownDrive?.arcs.last
+        if fresh {
+            lastArrivedPlay = newest?.id
+            status.adopt(next.status)
+        } else if newest?.id != lastArrivedPlay {
+            lastArrivedPlay = newest?.id
+            if let a = newest, !broadcast.hasTrail(a.id) {
+                let owed = (next.shownDrive?.arcs ?? []).reduce(0.0) {
+                    $0 + (broadcast.hasTrail($1.id) ? 0 : $1.flightSeconds)
+                }
+                let grace = next.motion.momentHoldGraceSeconds ?? MomentGate.defaultGraceSeconds
+                let now = context?.shared.time ?? 0
+                if !status.isHolding { statusHeldAt = now }
+                status.hold(next.status, playId: a.id, until: now + owed + grace)
+            } else {
+                status.adopt(next.status)
+            }
+        } else {
+            status.arrive(next.status)
+        }
+        shownStatus = status.shown
+        var s = next
+        s.status = status.shown ?? next.status
+        return s
+    }
+
+    /// On the frame clock: the drawn status catches up the frame its play
+    /// lands. The boards draw in `apply`, so catching up means applying the
+    /// scene again - one redraw per play, which is what a scene arriving used
+    /// to cost.
+    private func releaseStatus(_ c: StadiumContext) {
+        let waitingOn = status.waitingOn
+        guard let caught = status.due(now: c.shared.time, landed: { [broadcast] in broadcast.hasTrail($0) }),
+              let latest = spec else { return }
+        let line = String(format: "[stadium] score %@ %d - %@ %d drawn at t=%.2f, held %.2f s behind %@",
+                          latest.teams.away.abbr, Int(caught.awayScore),
+                          latest.teams.home.abbr, Int(caught.homeScore),
+                          c.shared.time, max(0, c.shared.time - statusHeldAt), waitingOn ?? "-")
+        StadiumLog.log.notice("\(line, privacy: .public)")
+        shownStatus = caught
+        var s = latest
+        s.status = caught
+        let previous = shownSpec
+        c.update(spec: s, look: c.look, reduceMotion: c.reduceMotion)
+        shownSpec = s
+        for actor in actors { actor.apply(c, previous: previous) }
+        if s.status.redZone != lastRedZone {
+            lastRedZone = s.status.redZone
+            if s.status.redZone { for actor in actors { actor.moment(.redZoneEntered, c) } }
+        }
         optOutOfShadows(world)
     }
 
@@ -332,7 +417,9 @@ public final class StadiumRenderer {
         guard let c = context, !staticKey.isEmpty else { return }
         c.shared.time += dt
         // Before the actors update, so a moment released this frame is acted on
-        // in the same frame the ball lands.
+        // in the same frame the ball lands. The score first, so the banner that
+        // moment puts up carries the score the ball just made.
+        releaseStatus(c)
         releaseMoment(c)
         let frame = StadiumFrame(dt: dt, time: c.shared.time)
         let first = firstFrameDue

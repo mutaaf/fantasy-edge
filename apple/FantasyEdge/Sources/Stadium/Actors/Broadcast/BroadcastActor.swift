@@ -504,6 +504,9 @@ extension BroadcastActor {
             settle(c, animated: !c.reduceMotion)
             return
         }
+        // A moment graphic belongs to the play that caused it: the next snap
+        // takes it down.
+        banner.snapping(c)
         if seconds <= 0 {
             trails.add(arc, c)
             startNextFlight(c)
