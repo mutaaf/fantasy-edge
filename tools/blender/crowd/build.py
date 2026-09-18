@@ -64,6 +64,12 @@ BAKE_SCALE = 2
 # Island colour extended this far into every gutter (bake pixels, 2x). At 12 px the gutters stayed
 # black in the albedo and untinted in the mask, and from mip 2 down a shirt read as light squares.
 BAKE_MARGIN = 40 * BAKE_SCALE
+# What is welded before each lower LOD is decimated, and how far, in metres. Hair cards and
+# held props are many small closed shells, which set a floor a collapse decimate cannot go under.
+WELD_PARTS = ("hair", "prop", "hat", "scarf")
+# A sign's lettering grid is a 5.8 cm lattice and a foam finger's mitt is 26 cm across: at LOD2
+# the weld has to be coarse enough to swallow both, or they set the floor for the whole ring.
+WELD = {1: 0.025, 2: 0.09}
 AO_STRENGTH = 0.6
 AO_WARM = (0.62, 0.42, 0.36)
 
@@ -378,6 +384,31 @@ def swap_materials(mesh, mode):
         slot.material = bpy.data.materials[f"{name}_{mode}"]
 
 
+def weld_parts(ob, fid, parts, distance):
+    """Weld a fan's hair cards and held props before the lower LODs are decimated.
+
+    Hair is dozens of separate cards, and round 5 gave them thickness so they
+    stop reading as flat planes at 2-3 m; a foam finger is a mitt, a finger, a
+    tip and a thumb, and a sign carries a lettering grid. Closed shells cannot
+    collapse below four triangles each, so a decimate aimed at 250 landed at
+    250-720 and the lower rings would have left the crowd's triangle budget.
+    Welding at a centimetre or two joins neighbours into a shell that can, and
+    at 7-13 m a blobbier prop is no loss.
+    """
+    me = ob.data
+    slots = {i for i, m in enumerate(me.materials) if m and any(f"{fid}_{p}" in m.name for p in parts)}
+    if not slots:
+        return
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    verts = {v for f in bm.faces if f.material_index in slots for v in f.verts}
+    if verts:
+        bmesh.ops.remove_doubles(bm, verts=list(verts), dist=distance)
+    bm.to_mesh(me)
+    bm.free()
+
+
 def decimate(ob, tris):
     now = R.triangles(ob)
     if now <= tris:
@@ -463,11 +494,13 @@ def build_meshes(cast, mpfb=True):
         lod1 = mesh.copy(); lod1.data = mesh.data.copy(); lod1.name = f"{f['id']}_lod1"; lod1.data.name = lod1.name
         bpy.context.scene.collection.objects.link(lod1)
         lod1.parent = rig
+        weld_parts(lod1, f["id"], WELD_PARTS, WELD[1])
         decimate(lod1, LOD1_TRIS)
         soften(lod1)
         lod2 = lod1.copy(); lod2.data = lod1.data.copy(); lod2.name = f"{f['id']}_lod2"; lod2.data.name = lod2.name
         bpy.context.scene.collection.objects.link(lod2)
         lod2.parent = rig
+        weld_parts(lod2, f["id"], WELD_PARTS, WELD[2])
         decimate(lod2, LOD2_TRIS)
         soften(lod2)
         built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell, "info": info, "hi": hi})
@@ -546,6 +579,30 @@ def export_fans(built):
     return clips
 
 
+# A marker the size of a coin, pointing where the fans face, exported beside them.
+# Which way a fan faces is a property of the export, not of anatomy: at 250 triangles a
+# shoe is a blob and a tucked foot sits under the knee, so every anatomical cue was a
+# guess. The probe is unambiguous, and nothing ever looks it up as a pose, so it is
+# never drawn.
+PROBE = "forward_probe"
+
+
+def forward_probe(lod):
+    me = bpy.data.meshes.new(f"{PROBE}_lod{lod}")
+    # Apex toward the fans' front (Blender -Y), base behind it.
+    me.from_pydata([(0.0, -0.30, 0.01), (0.04, -0.22, 0.01), (-0.04, -0.22, 0.01)], [], [(0, 1, 2)])
+    ob = bpy.data.objects.new(me.name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    return ob
+
+
+def probe_forward(pts):
+    """The probe's apex is its point farthest from the base: +Z if the export kept the fans' front."""
+    mid = [sum(p[i] for p in pts) / len(pts) for i in range(3)]
+    apex = max(pts, key=lambda p: (p[0] - mid[0]) ** 2 + (p[2] - mid[2]) ** 2)
+    return apex[2] - mid[2]
+
+
 def transfer_normals(target, source):
     """Shading normals from the full-resolution body in the same pose. A decimated mesh
     shaded by its own normals facets into planes; the silhouette can stay coarse, the light cannot."""
@@ -590,6 +647,8 @@ def export_pose_meshes(built, lod, poses=None):
                 bpy.data.meshes.remove(hi)
             frozen.append(ob)
         P.apply_pose(rig, "stand", f["height"])
+    probe = forward_probe(lod)
+    frozen.append(probe)
     bpy.ops.object.select_all(action="DESELECT")
     for ob in frozen:
         ob.select_set(True)
@@ -606,13 +665,9 @@ def export_pose_meshes(built, lod, poses=None):
 
 
 def measured_forward(path):
-    """Which way the fans in an exported pose file face, measured, not assumed.
-
-    Opens the file as a renderer would (USD through pxr with every xform composed;
-    glTF's bytes in its own +Y-up frame) and takes each fan's seated mesh: the knees
-    reach about 45 cm ahead of the hips and the back barely 15 cm behind, which still
-    holds at LOD2's 250 triangles, where standing feet collapse into blobs that read
-    either way. Returns "+Z", "-Z" or "mixed", and each fan's forward reach minus back reach."""
+    """Which way the fans in an exported pose file face, measured from the marker exported
+    beside them (PROBE), as a renderer reads it: USD through pxr with every xform composed,
+    glTF in its own +Y-up frame. Returns "+Z", "-Z" or "mixed" and the apex offsets."""
     offsets = []
     if path.suffix == ".usdz":
         from pxr import Usd, UsdGeom
@@ -620,16 +675,19 @@ def measured_forward(path):
         cache = UsdGeom.XformCache()
         up = UsdGeom.GetStageUpAxis(stage)
         for prim in stage.Traverse():
-            if not prim.IsA(UsdGeom.Mesh) or not prim.GetName().endswith("_sit"):
+            if not prim.IsA(UsdGeom.Mesh) or not prim.GetName().startswith(PROBE):
                 continue
             M = cache.GetLocalToWorldTransform(prim)
             pts = [M.Transform(p) for p in UsdGeom.Mesh(prim).GetPointsAttr().Get()]
-            offsets.append(knee_reach([(p[0], p[1], p[2]) if up == "Y" else (p[0], p[2], -p[1]) for p in pts]))
+            offsets.append(probe_forward([(p[0], p[1], p[2]) if up == "Y" else (p[0], p[2], -p[1]) for p in pts]))
     else:
         # glTF bytes as written (+Y up), read without importing: an import would clear the build's scene.
         import glb
-        for name, pts in glb.meshes(path, suffix="_sit"):
-            offsets.append(knee_reach(pts))
+        for name, pts in glb.meshes(path, suffix=""):
+            if name.startswith(PROBE):
+                offsets.append(probe_forward(pts))
+    if not offsets:
+        return "no probe", []
     signs = {o > 0 for o in offsets}
     return ("+Z" if signs == {True} else "-Z" if signs == {False} else "mixed"), offsets
 
@@ -889,7 +947,7 @@ def main():
         for ext in ("usdz", "glb"):
             axis, offsets = measured_forward(OUT / f"lod{lod}_poses.{ext}")
             forward[f"lod{lod}.{ext}"] = axis
-            log(f"lod{lod}_poses.{ext} faces {axis} (seated feet ahead of torso by {min(offsets):+.3f}..{max(offsets):+.3f} m)")
+            log(f"lod{lod}_poses.{ext} faces {axis} (probe apex at z {min(offsets):+.3f}..{max(offsets):+.3f} m)")
     if set(forward.values()) != {"+Z"}:
         raise SystemExit(f"[crowd] fans must face +Z in every pose file, got {forward}")
     write_manifest(built, clips, lod1_tris, impostor, layout, cast, forward)

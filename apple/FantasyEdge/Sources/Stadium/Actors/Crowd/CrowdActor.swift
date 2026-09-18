@@ -32,11 +32,19 @@ final class CrowdActor: StadiumActor {
 
     enum Ring: Int { case lod0 = 0, lod1 = 1, lod2 = 2, card = 3 }
 
+    /// Whose colours a section wears. Decided per section, never per seat: a group of fans
+    /// shares one texture, so a lone visitor in a home section would cost another draw part.
+    enum Support: Int, Hashable {
+        case home = 0, away = 1, neutral = 2
+        var name: String { self == .home ? "home" : self == .away ? "away" : "neutral" }
+    }
+
     /// A group of fans that move together.
     final class Group {
         let entity: ModelEntity
         let ring: Ring
         let away: Bool
+        let support: Support
         let slice: Int
         /// Near rings: the merged mesh for each slot. Cards: empty.
         var slotMeshes: [CrowdChoreography.Slot: MeshResource] = [:]
@@ -49,9 +57,9 @@ final class CrowdActor: StadiumActor {
         var brightness = -1.0
         let phase: Double
         let standing: Bool
-        init(entity: ModelEntity, ring: Ring, away: Bool, slice: Int, material: PhysicallyBasedMaterial,
-             phase: Double, standing: Bool) {
-            self.entity = entity; self.ring = ring; self.away = away; self.slice = slice
+        init(entity: ModelEntity, ring: Ring, away: Bool, support: Support = .home, slice: Int,
+             material: PhysicallyBasedMaterial, phase: Double, standing: Bool) {
+            self.entity = entity; self.ring = ring; self.away = away; self.support = support; self.slice = slice
             self.material = material; self.phase = phase; self.standing = standing
         }
     }
@@ -69,6 +77,10 @@ final class CrowdActor: StadiumActor {
     private var lastScoring: (away: Bool, ended: Double)?
     /// The moment on now: when it began and where the play was, for the ripple.
     private var momentStart: (time: Double, at: SIMD3<Float>)?
+    /// How many seats each kind of support took, for the look-dev log.
+    private(set) var supportCounts: [Support: Int] = [:]
+
+    struct SectionKey: Hashable { let tier: String; let section: Int }
     private var previousTint: String?
 
     init() { root.name = "actor.crowd" }
@@ -120,6 +132,7 @@ final class CrowdActor: StadiumActor {
             let dist: Float; let row: Int; let seat: Int
             /// The next seat along the row is on this fan's left.
             var nextOnLeft = true
+            var support = Support.home
         }
         var placed: [Placed] = []
         var rowId = 0
@@ -127,6 +140,8 @@ final class CrowdActor: StadiumActor {
         // Bowl's chairs, pairs never straddle an aisle, and a group's edge is a
         // section's edge, so a pose change lands where a real stand changes.
         let drawn = Set(c.tiers.map(\.name))
+        let support = CrowdActor.supportBySection(s, look: C, drawn: drawn)
+        supportCounts = [:]
         if !c.tabletop, let seating = s.bowl.seating {
             for tierSeats in seating.tiers where drawn.contains(tierSeats.tier) {
                 let sections = tierSeats.sections ?? []
@@ -139,13 +154,15 @@ final class CrowdActor: StadiumActor {
                     for (runIndex, run) in row.runs.enumerated() where run.count == 2 {
                         rowId += 1
                         for k in 0..<Int(run[1]) {
-                            guard rng.next() < C.fill else { continue }
+                            let draw = rng.next()
                             let spot = SceneMath.seat(row, run: runIndex, k: k, shape: shape, ring: ring)
                             let p = spot.position
+                            // Empty seats: fewer in the upper deck than the lower, fewer in the corners
+                            // than at midfield, and fewer again high up in a game already decided.
+                            guard draw < C.fill * CrowdActor.keepChance(at: p, tier: tierSeats.tier, look: C, spec: s) else { continue }
                             if wearerSeats.contains(where: { w in
                                 hypot(p.x - w.x, p.z - w.z) < clear && abs(p.y - w.y) < clearHeight
                             }) { continue }
-                            let isAway = away.map { a in (a.side == "far" ? p.z < 0 : p.z > 0) && Double(p.x) >= a.fromX - 50 } ?? false
                             // 24 people and 45,000 seats repeat, but never within four seats along
                             // the row or the three seats straight ahead: at the club seat a twin beside
                             // or in front of another is the first thing the eye finds.
@@ -166,6 +183,10 @@ final class CrowdActor: StadiumActor {
                                 sec.to <= 1 ? (fraction >= sec.from && fraction < sec.to)
                                             : (fraction >= sec.from || fraction < sec.to - 1)
                             } ?? Int(fraction * Double(max(1, sections.count)))
+                            // Whose section this is, and how full it is: both decided before the seat is taken.
+                            let wears = support[SectionKey(tier: tierSeats.tier, section: section)] ?? .home
+                            let isAway = wears == .away
+                            supportCounts[wears, default: 0] += 1
                             let slice = sections.isEmpty ? Int(fraction * Double(slices)) % slices
                                                          : section * slices / sections.count
                             if section < sections.count { sectionSlices[sections[section].id, default: []].insert(slice) }
@@ -175,6 +196,7 @@ final class CrowdActor: StadiumActor {
                                                    variant: Int(rng.next() * Double(max(1, C.cardVariants))),
                                                    dist: simd_distance(p, seat), row: rowId, seat: k)
                             fanPlaced.nextOnLeft = simd_dot(next - p, CrowdActor.leftOf(facing)) > 0
+                            fanPlaced.support = wears
                             placed.append(fanPlaced)
                         }
                     }
@@ -240,10 +262,10 @@ final class CrowdActor: StadiumActor {
         }
 
         // Near rings: one merged mesh per group per pose.
-        struct NearKey: Hashable { let ring: Ring; let away: Bool; let phase: Int }
+        struct NearKey: Hashable { let ring: Ring; let support: Support; let phase: Int }
         var near: [NearKey: [Placed]] = [:]
         // Cards: one quad per fan, grouped by slice and side.
-        struct CardKey: Hashable { let slice: Int; let away: Bool; let variant: Int }
+        struct CardKey: Hashable { let slice: Int; let support: Support; let variant: Int }
         var cards: [CardKey: MeshBuilder] = [:]
         var cardCentres: [CardKey: (sum: SIMD3<Float>, n: Float)] = [:]
         let atlas = kit.impostorSize
@@ -257,7 +279,7 @@ final class CrowdActor: StadiumActor {
             if consumed.contains(i) { continue }
             switch ringOf[i] {
             case .lod0, .lod1, .lod2:
-                near[NearKey(ring: ringOf[i], away: f.away, phase: f.slice % max(1, C.nearPhases)), default: []].append(f)
+                near[NearKey(ring: ringOf[i], support: f.support, phase: f.slice % max(1, C.nearPhases)), default: []].append(f)
             case .card:
                 var centre = f.base
                 let cardForward = Float(C.chair.cardForwardMetres) * yard
@@ -286,7 +308,8 @@ final class CrowdActor: StadiumActor {
                 let (ul, ur) = mirrored ? (u1, u0) : (u0, u1)
                 let a = centre - right * (cw / 2), b = centre + right * (cw / 2)
                 let up = SIMD3<Float>(0, ch, 0)
-                let ck = CardKey(slice: f.slice, away: f.away, variant: f.variant)
+                // A neutral section keeps one card variant: two would cost a draw part for no mottle.
+                let ck = CardKey(slice: f.slice, support: f.support, variant: f.support == .neutral ? 0 : f.variant)
                 var mb = cards[ck] ?? MeshBuilder()
                 mb.quad(a, b, b + up, a + up,
                         uv: (SIMD2(ul, vBottom), SIMD2(ur, vBottom), SIMD2(ur, vTop), SIMD2(ul, vTop)),
@@ -299,7 +322,7 @@ final class CrowdActor: StadiumActor {
             counts[ringOf[i], default: 0] += 1
         }
 
-        for (key, list) in near.sorted(by: { ($0.key.ring.rawValue, $0.key.away ? 1 : 0, $0.key.phase) < ($1.key.ring.rawValue, $1.key.away ? 1 : 0, $1.key.phase) }) {
+        for (key, list) in near.sorted(by: { ($0.key.ring.rawValue, $0.key.support.rawValue, $0.key.phase) < ($1.key.ring.rawValue, $1.key.support.rawValue, $1.key.phase) }) {
             var meshes: [CrowdChoreography.Slot: MeshResource] = [:]
             for slot in CrowdChoreography.Slot.allCases {
                 var mb = MeshBuilder()
@@ -319,14 +342,15 @@ final class CrowdActor: StadiumActor {
             }
             guard let first = meshes[.sit] else { continue }
             var mat = PhysicallyBasedMaterial()
-            mat.baseColor = .init(tint: .white, texture: .init((key.away ? dress.fanAway : dress.fanHome)))
+            mat.baseColor = .init(tint: .white, texture: .init(dress.fan(key.support)))
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.faceCulling = .back
             let e = ModelEntity(mesh: first, materials: [mat])
-            e.name = "crowd.\(key.ring).\(key.away ? "away" : "home").\(key.phase)"
+            e.name = "crowd.\(key.ring).\(key.support.name).\(key.phase)"
             root.addChild(e)
             let phases = Double(max(1, C.nearPhases))
-            let g = Group(entity: e, ring: key.ring, away: key.away, slice: key.phase * slices / max(1, C.nearPhases),
+            let g = Group(entity: e, ring: key.ring, away: key.support == .away, support: key.support,
+                          slice: key.phase * slices / max(1, C.nearPhases),
                           material: mat, phase: (Double(key.phase) + 0.35) / phases, standing: false)
             g.slotMeshes = meshes
             g.slot = .sit
@@ -339,27 +363,29 @@ final class CrowdActor: StadiumActor {
             StadiumLog.log.notice("[stadium] crowd group \(e.name): slots \(meshes.count)/\(CrowdChoreography.Slot.allCases.count)\(missing.isEmpty ? "" : ", missing \(missing.joined(separator: ","))"), \(list.count) fans")
             #endif
         }
-        for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.away ? 1 : 0, $0.key.variant) < ($1.key.slice, $1.key.away ? 1 : 0, $1.key.variant) }) {
+        for (key, mb) in cards.sorted(by: { ($0.key.slice, $0.key.support.rawValue, $0.key.variant) < ($1.key.slice, $1.key.support.rawValue, $1.key.variant) }) {
             guard let res = mb.resource("crowd.cards.\(key.slice).\(key.variant)") else { continue }
             var mat = PhysicallyBasedMaterial()
-            mat.baseColor = .init(tint: .white, texture: .init(key.away ? dress.cardAway : dress.cardHome))
+            mat.baseColor = .init(tint: .white, texture: .init(dress.card(key.support)))
             if let normal { mat.normal = .init(texture: .init(normal)) }
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
             // Spill in the club's colour, not the texture's: an emissive texture read grey here,
             // and at a hundred metres the albedo carries the mottle anyway.
-            let spill = SceneMath.rgba(key.away ? s.bowl.crowd.away : s.bowl.crowd.home)
+            let spill = SceneMath.rgba(key.support == .away ? s.bowl.crowd.away
+                                       : key.support == .neutral ? (s.palette[s.bowl.crowd.neutral] ?? s.bowl.crowd.neutral)
+                                       : s.bowl.crowd.home)
             mat.emissiveColor = .init(color: UIColor(red: CGFloat(spill.x), green: CGFloat(spill.y), blue: CGFloat(spill.z), alpha: 1))
             mat.emissiveIntensity = Float(C.impostor.floodFill)
             mat.faceCulling = .none
             let e = ModelEntity(mesh: res, materials: [mat])
-            e.name = "crowd.cards.\(key.slice).\(key.variant).\(key.away ? "away" : "home")"
+            e.name = "crowd.cards.\(key.slice).\(key.variant).\(key.support.name)"
             root.addChild(e)
-            var h = UInt64(key.slice * 7919 + key.variant * 3571 + (key.away ? 104_729 : 0)) &+ C.seed
+            var h = UInt64(key.slice * 7919 + key.variant * 3571 + key.support.rawValue * 104_729) &+ C.seed
             h ^= h >> 17
             let phase = Double(h % 997) / 997
-            let g = Group(entity: e, ring: .card, away: key.away, slice: key.slice, material: mat,
-                          phase: phase, standing: phase < C.standingShare)
+            let g = Group(entity: e, ring: .card, away: key.support == .away, support: key.support, slice: key.slice,
+                          material: mat, phase: phase, standing: phase < CrowdActor.standingShare(C, spec: s))
             if let c = cardCentres[key], c.n > 0 { g.centre = c.sum / c.n }
             groups.append(g)
         }
@@ -391,6 +417,8 @@ final class CrowdActor: StadiumActor {
             for g in groups { g.entity.components.set(DynamicLightShadowComponent(castsShadow: false)) }
         }
         StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
+        let seatsTaken = max(1, self.supportCounts.values.reduce(0, +))
+        StadiumLog.log.notice("[stadium] crowd support: home \(Int(Double(self.supportCounts[.home] ?? 0) / Double(seatsTaken) * 100))%, visiting \(Int(Double(self.supportCounts[.away] ?? 0) / Double(seatsTaken) * 100))%, neutral \(Int(Double(self.supportCounts[.neutral] ?? 0) / Double(seatsTaken) * 100))% of \(seatsTaken) seats taken")
     }
 
     private func redress(_ d: CrowdKit.Dress) {
@@ -435,9 +463,14 @@ final class CrowdActor: StadiumActor {
         previousTint = tintSide
         // Third down: the defence's crowd gets up.
         var standingSide: Bool? = nil
-        if C.thirdDownStand, s.status.state == "in", s.status.down == 3, let offense = s.status.possession {
-            standingSide = offense == "home"          // away defending: the away section stands
+        var hushSide: Bool? = nil
+        if s.status.state == "in", s.status.down == 3, let offense = s.status.possession {
+            // The defence's crowd gets up; the crowd whose own offence is at the line goes quiet.
+            if C.thirdDownStand { standingSide = offense == "home" }
+            if C.hushOwnOffence { hushSide = offense == "away" }
         }
+        // A visiting score is real, but outnumbered: the away sections celebrate smaller.
+        let visitorsScoring = tintSide == "away"
         let slices = Double(max(1, C.slices))
 
         for g in groups {
@@ -464,7 +497,14 @@ final class CrowdActor: StadiumActor {
                 look: ball.map { b in
                     let across = simd_dot(b - g.centre, g.left)
                     return across > Float(C.lookYards) ? 1 : (across < -Float(C.lookYards) ? -1 : 0)
-                } ?? 0)
+                } ?? 0,
+                hush: hushSide.map { $0 == g.away } ?? false,
+                neutral: g.support == .neutral,
+                visitorsScoring: visitorsScoring,
+                visitorCelebration: C.visitorCelebration,
+                settleStageSeconds: C.settleStageSeconds,
+                // A wave is a late-game or dead-game thing; a 0-0 first quarter is watching the football.
+                waveAllowed: s.status.period >= C.idleStandShare.aboutPeriod || CrowdActor.decided(s, C))
             if g.ring == .card {
                 setPose(g, index(CrowdChoreography.pose(input).rawValue))
             } else {
@@ -492,6 +532,98 @@ final class CrowdActor: StadiumActor {
         guard slot != g.slot, let mesh = g.slotMeshes[slot] ?? g.slotMeshes[.sit] else { return }
         g.slot = slot
         g.entity.model?.mesh = mesh
+    }
+
+    /// Whose colours each section of the bowl wears.
+    ///
+    /// A home game is the home club's, overwhelmingly. The visitors get whole sections in the
+    /// order a real away support fills them: the scene's own `bowl.crowd.awaySection` first, then
+    /// behind their bench (their sideline, between `field.props.benches` fromX and toX), then the
+    /// upper corners on that side, until `support.visitingShare` of the sections are theirs.
+    /// `support.neutralShare` more, taken from the corners farthest from the visitors, wear
+    /// neither club. Nothing here is assumed about which club is which: home, away and the away
+    /// section all come from the scene.
+    nonisolated static func supportBySection(_ s: SceneSpec, look C: SceneSpec.Look.CrowdLook,
+                                             drawn: Set<String>) -> [SectionKey: Support] {
+        guard let seating = s.bowl.seating else { return [:] }
+        let shape = s.bowl.shape
+        let visitorsFar = (s.bowl.crowd.awaySection?.side ?? "far") == "far"
+        let fromX = (s.bowl.crowd.awaySection?.fromX ?? 90) - 50
+        let bench = s.field.props?.benches
+        let benchFrom = (bench?.fromX ?? 30) - 50, benchTo = (bench?.toX ?? 70) - 50
+        let corner = Float(C.support.cornerFrom)
+        var scored: [(key: SectionKey, visitor: Double, neutral: Double)] = []
+        for tier in seating.tiers where drawn.contains(tier.tier) {
+            let sections = tier.sections ?? []
+            guard let row = tier.rows.first.map({ tier.rows[tier.rows.count / 2].length > 0 ? tier.rows[tier.rows.count / 2] : $0 }) else { continue }
+            let ring = SceneMath.Ring(shape, offset: row.feet)
+            for (index, sec) in sections.enumerated() {
+                // The section's middle, on its tier's middle row.
+                let mid = sec.to > sec.from ? (sec.from + sec.to) / 2 : ((sec.from + sec.to + 1) / 2).truncatingRemainder(dividingBy: 1)
+                let t = ring.angle(at: mid * row.length)
+                let p = SceneMath.bowlPoint(shape, offset: row.feet, angle: t)
+                let onVisitorsSide = visitorsFar ? p.z < 0 : p.z > 0
+                let cornerness = min(1, max(0, (abs(p.x) / max(1, shape.halfLength) - Double(corner)) / max(0.01, 1 - Double(corner))))
+                let upper = tier.tier != C.support.benchRowsTier
+                var visitor = 0.0
+                if onVisitorsSide && p.x >= Double(fromX) { visitor = 1.0 }                 // the scene's own away section
+                else if onVisitorsSide && !upper && p.x >= Double(benchFrom) && p.x <= Double(benchTo) { visitor = 0.8 }  // behind their bench
+                else if onVisitorsSide && upper && cornerness > 0.3 { visitor = 0.6 + 0.2 * cornerness }                  // upper corners, their side
+                else if onVisitorsSide { visitor = 0.2 }
+                // The unaligned sit high in the corners, as far from the visitors as the bowl allows.
+                let neutral = (upper ? 0.6 : 0.2) + 0.4 * cornerness - (onVisitorsSide ? 0.5 : 0)
+                scored.append((SectionKey(tier: tier.tier, section: index), visitor, neutral))
+            }
+        }
+        guard !scored.isEmpty else { return [:] }
+        var out: [SectionKey: Support] = [:]
+        let visiting = Int((Double(scored.count) * C.support.visitingShare).rounded())
+        let neutrals = Int((Double(scored.count) * C.support.neutralShare).rounded())
+        for entry in scored.sorted(by: { $0.visitor > $1.visitor }).prefix(visiting) where entry.visitor > 0 {
+            out[entry.key] = .away
+        }
+        for entry in scored.sorted(by: { $0.neutral > $1.neutral }) where out.count < visiting + neutrals {
+            if out[entry.key] == nil { out[entry.key] = .neutral }
+        }
+        for entry in scored where out[entry.key] == nil { out[entry.key] = .home }
+        return out
+    }
+
+    /// How likely this seat is to be taken: the upper deck thinner than the lower, the corners
+    /// thinner than midfield, and thinner again high up once the game is decided. The scene knows
+    /// the score, the period and the clock; it knows nothing about attendance, so nothing else is inferred.
+    nonisolated static func keepChance(at p: SIMD3<Float>, tier: String, look C: SceneSpec.Look.CrowdLook,
+                                       spec s: SceneSpec) -> Double {
+        let shape = s.bowl.shape
+        let upper = tier != C.support.benchRowsTier
+        var keep = upper ? C.emptySeats.upperFactor : 1
+        let corner = Double(C.support.cornerFrom)
+        let alongEnd = min(1, max(0, (Double(abs(p.x)) / max(1, shape.halfLength) - corner) / max(0.01, 1 - corner)))
+        keep *= 1 - alongEnd * (1 - C.emptySeats.cornerFactor)
+        if Double(abs(p.x)) > shape.halfLength * 0.9 { keep *= C.emptySeats.endZoneFactor }
+        if decided(s, C) { keep *= upper ? C.emptySeats.blowout.upperFactor : C.emptySeats.blowout.lowerFactor }
+        return keep
+    }
+
+    /// Is this game over bar the clock? Margin, period and the clock the scene carries.
+    nonisolated static func decided(_ s: SceneSpec, _ C: SceneSpec.Look.CrowdLook) -> Bool {
+        let b = C.emptySeats.blowout
+        guard s.status.state == "in", abs(s.status.homeScore - s.status.awayScore) >= b.margin else { return false }
+        if s.status.period > b.fromPeriod { return true }
+        guard s.status.period == b.fromPeriod else { return false }
+        return clockSeconds(s.status.clock).map { $0 <= b.clockSeconds } ?? false
+    }
+
+    /// "12:40" as seconds. The scene carries the clock as the broadcast writes it.
+    nonisolated static func clockSeconds(_ clock: String) -> Double? {
+        let parts = clock.split(separator: ":")
+        guard parts.count == 2, let m = Double(parts[0]), let sec = Double(parts[1]) else { return nil }
+        return m * 60 + sec
+    }
+
+    /// How many fans are on their feet between plays: fewer in the first half than the fourth quarter.
+    nonisolated static func standingShare(_ C: SceneSpec.Look.CrowdLook, spec s: SceneSpec) -> Double {
+        s.status.period >= C.idleStandShare.aboutPeriod ? C.idleStandShare.late : C.idleStandShare.early
     }
 
     /// A fan's left, for a fan facing `facing` with Y up: the kit's +X (MakeHuman's .L side).
@@ -578,6 +710,24 @@ final class CrowdKit {
     struct Dress {
         let fanHome: TextureResource, fanAway: TextureResource
         let cardHome: TextureResource, cardAway: TextureResource
+        /// Sections wearing neither club: the scene's own `crowd.neutral` and `crowd.dark`.
+        let fanNeutral: TextureResource, cardNeutral: TextureResource
+
+        func fan(_ support: CrowdActor.Support) -> TextureResource {
+            switch support {
+            case .home: return fanHome
+            case .away: return fanAway
+            case .neutral: return fanNeutral
+            }
+        }
+
+        func card(_ support: CrowdActor.Support) -> TextureResource {
+            switch support {
+            case .home: return cardHome
+            case .away: return cardAway
+            case .neutral: return cardNeutral
+            }
+        }
     }
 
     private init?(_ C: SceneSpec.Look.CrowdLook) {
@@ -598,11 +748,12 @@ final class CrowdKit {
             collect(template, root: template)
         }
         for ring in [CrowdActor.Ring.lod0, .lod1, .lod2] {
-            let (ok, offsets) = measuredForward(ring: ring)
+            let (ok, apex) = measuredForward(ring: ring)
+            let z = apex.map { String(format: "%+.3f", $0) } ?? "no probe"
             if ok {
-                StadiumLog.log.notice("[stadium] crowd kit \(String(describing: ring)) faces +Z (\(offsets.count) fans)")
+                StadiumLog.log.notice("[stadium] crowd kit \(String(describing: ring)) faces +Z (probe apex z \(z))")
             } else {
-                StadiumLog.log.error("[stadium] crowd kit \(String(describing: ring)) does not face +Z: toes \(offsets.map { String(format: "%+.2f", $0) }.joined(separator: " ")); every near fan is seated backwards")
+                StadiumLog.log.error("[stadium] crowd kit \(String(describing: ring)) does not face +Z (probe apex z \(z)); every near fan is seated backwards")
             }
         }
     }
@@ -657,22 +808,22 @@ final class CrowdKit {
         return nil
     }
 
-    /// Which way the loaded kit's fans face: a seated fan's feet and shins (lowest 30 cm) are
-    /// 10-50 cm toward their front from their torso, at every LOD (build.py's knee_reach).
-    /// CrowdPoseMesh.placed turns +Z onto a seat's facing, so anything else seats every fan backwards.
-    func measuredForward(ring: CrowdActor.Ring) -> (ok: Bool, offsets: [Float]) {
-        var offsets: [Float] = []
-        for fan in 0..<look.fans {
-            guard let m = poseMesh(ring: ring, fan: fan, pose: "sit"),
-                  let low = m.positions.map(\.y).min(), let top = m.positions.map(\.y).max() else { continue }
-            var feet: (Float, Float) = (0, 0), torso: (Float, Float) = (0, 0)
-            for p in m.positions {
-                if p.y < low + 0.30 { feet = (feet.0 + p.z, feet.1 + 1) }
-                else if p.y > low + 0.55 * (top - low) && p.y < low + 0.85 * (top - low) { torso = (torso.0 + p.z, torso.1 + 1) }
-            }
-            if feet.1 > 0 && torso.1 > 0 { offsets.append(feet.0 / feet.1 - torso.0 / torso.1) }
+    /// Which way the loaded kit's fans face, from the marker build.py exports beside them.
+    ///
+    /// The axis is a property of the export, not of anatomy: at LOD2's 250 triangles a shoe is
+    /// a blob, and round 5 tucked seated feet under the chair, so every anatomical cue was a
+    /// guess. The probe is one triangle whose apex points where the fans face, and nothing ever
+    /// looks it up as a pose, so it is never drawn. CrowdPoseMesh.placed turns +Z onto a seat's
+    /// facing, so anything else seats every near fan backwards.
+    func measuredForward(ring: CrowdActor.Ring) -> (ok: Bool, apex: Float?) {
+        guard let probe = meshes["forward_probe_lod\(ring.rawValue)"], probe.positions.count >= 3 else { return (false, nil) }
+        let mid = probe.positions.reduce(SIMD3<Float>.zero, +) / Float(probe.positions.count)
+        let apex = probe.positions.max { a, b in
+            (a.x - mid.x) * (a.x - mid.x) + (a.z - mid.z) * (a.z - mid.z) <
+            (b.x - mid.x) * (b.x - mid.x) + (b.z - mid.z) * (b.z - mid.z)
         }
-        return (!offsets.isEmpty && offsets.allSatisfy { $0 > 0 }, offsets)
+        guard let apex else { return (false, nil) }
+        return (apex.z - mid.z > 0, apex.z - mid.z)
     }
 
     func poseMesh(ring: CrowdActor.Ring, fan: Int, pose: String) -> CrowdPoseMesh? {
@@ -691,7 +842,7 @@ final class CrowdKit {
             StadiumText.texture(img) ?? (try! TextureResource(image: img, options: .init(semantic: .color)))
         }
         let fan = tex(fanAlbedo), card = tex(cardAlbedo)
-        let d = Dress(fanHome: fan, fanAway: fan, cardHome: card, cardAway: card)
+        let d = Dress(fanHome: fan, fanAway: fan, cardHome: card, cardAway: card, fanNeutral: fan, cardNeutral: card)
         plain = d
         return d
     }
@@ -717,7 +868,8 @@ final class CrowdKit {
         let d = Dress(fanHome: StadiumText.texture(make(fa, fm, home, homeRaw, fanLayout, away: false, card: false)) ?? plain.fanHome,
                       fanAway: StadiumText.texture(make(fa, fm, away, awayRaw, fanLayout, away: true, card: false)) ?? plain.fanAway,
                       cardHome: StadiumText.texture(make(ca, cm, home, homeRaw, cardLayout, away: false, card: true)) ?? plain.cardHome,
-                      cardAway: StadiumText.texture(make(ca, cm, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway)
+                      cardAway: StadiumText.texture(make(ca, cm, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway,
+                      fanNeutral: plain.fanNeutral, cardNeutral: plain.cardNeutral)
         quick[key] = d
         return d
     }
@@ -732,6 +884,7 @@ final class CrowdKit {
 
     private struct Images: @unchecked Sendable {
         let fanHome: CGImage?, fanAway: CGImage?, cardHome: CGImage?, cardAway: CGImage?
+        let fanNeutral: CGImage?, cardNeutral: CGImage?
     }
     private struct Sources: @unchecked Sendable {
         let fanAlbedo: CGImage, fanMask: CGImage, cardAlbedo: CGImage, cardMask: CGImage
@@ -745,11 +898,15 @@ final class CrowdKit {
         if let d = Self.dressCache[key] { done(d); return }
         let home = SceneMath.rgba(s.bowl.crowd.home), away = SceneMath.rgba(s.bowl.crowd.away)
         let homeRaw = SceneMath.rgba(s.teams.home.color), awayRaw = SceneMath.rgba(s.teams.away.color)
+        // Neither club: the scene's own neutral and dark crowd colours.
+        let neutral = SceneMath.rgba(s.palette[s.bowl.crowd.neutral] ?? s.bowl.crowd.neutral)
+        let neutralRaw = SceneMath.rgba(s.palette[s.bowl.crowd.dark] ?? s.bowl.crowd.dark)
         let src = Sources(fanAlbedo: fanAlbedo, fanMask: fanMask, cardAlbedo: cardAlbedo, cardMask: cardMask)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Self.cardLayout(C)
         let homeFan = Palette(C, salt: 1, card: false), awayFan = Palette(C, salt: 2, card: false)
         let homeCard = Palette(C, salt: 1, card: true), awayCard = Palette(C, salt: 2, card: true)
+        let neutralFan = Palette(C, salt: 3, card: false), neutralCard = Palette(C, salt: 3, card: true)
         let started = Date()
         Task.detached(priority: .userInitiated) {
             let fa = CrowdKit.pixels(src.fanAlbedo), fm = CrowdKit.pixels(src.fanMask)
@@ -761,7 +918,11 @@ final class CrowdKit {
                 fanHome: CrowdKit.tint(fa, fm, chip: home, raw: homeRaw, palette: homeFan, layout: fanLayout, divisor: 1),
                 fanAway: CrowdKit.tint(fa, fm, chip: away, raw: awayRaw, palette: awayFan, layout: fanLayout, divisor: 2),
                 cardHome: CrowdKit.tint(ca, cm, chip: home, raw: homeRaw, palette: homeCard, layout: cardLayout, divisor: 1),
-                cardAway: CrowdKit.tint(ca, cm, chip: away, raw: awayRaw, palette: awayCard, layout: cardLayout, divisor: 2))
+                cardAway: CrowdKit.tint(ca, cm, chip: away, raw: awayRaw, palette: awayCard, layout: cardLayout, divisor: 2),
+                // The unaligned sit highest and farthest of anyone: a quarter is plenty, and it keeps
+                // both the crowd's texture budget and the time it takes to dress where round 4 left them.
+                fanNeutral: CrowdKit.tint(fa, fm, chip: neutral, raw: neutralRaw, palette: neutralFan, layout: fanLayout, divisor: 4),
+                cardNeutral: CrowdKit.tint(ca, cm, chip: neutral, raw: neutralRaw, palette: neutralCard, layout: cardLayout, divisor: 4))
             let tinted = Date()
             await MainActor.run {
                 let hop = Date()
@@ -769,7 +930,9 @@ final class CrowdKit {
                 let d = Dress(fanHome: StadiumText.texture(images.fanHome) ?? plain.fanHome,
                               fanAway: StadiumText.texture(images.fanAway) ?? plain.fanAway,
                               cardHome: StadiumText.texture(images.cardHome) ?? plain.cardHome,
-                              cardAway: StadiumText.texture(images.cardAway) ?? plain.cardAway)
+                              cardAway: StadiumText.texture(images.cardAway) ?? plain.cardAway,
+                              fanNeutral: StadiumText.texture(images.fanNeutral) ?? plain.fanNeutral,
+                              cardNeutral: StadiumText.texture(images.cardNeutral) ?? plain.cardNeutral)
                 Self.dressCache[key] = d
                 let f = { (a: Date, b: Date) in String(format: "%.2f", b.timeIntervalSince(a)) }
                 StadiumLog.log.notice("[stadium] crowd dress composed in \(f(started, Date())) s (decode \(f(started, decoded)), tint \(f(decoded, tinted)), main-actor wait \(f(tinted, hop)), textures \(f(hop, Date())))")

@@ -410,6 +410,12 @@ def assemble(f: dict, index: int):
     hair = HAIR[sex].get(f["hair"]) if f["hat"] in ("none", "visor") or f["hair"] in ("long", "ponytail") else HAIR[sex].get("buzz")
     if hair:
         parts["hair"] = HS.add_mhclo_asset(str(SYS / f"hair/{hair}/{hair}.mhclo"), base, asset_type="Hair", subdiv_levels=0)
+        # MakeHuman hair is single-sided alpha cards. Decimated and drawn opaque they read as
+        # flat planes at 2-3 m (integration-12), so give them a little thickness to catch light.
+        if parts["hair"]:
+            sol = parts["hair"].modifiers.new("hairThickness", "SOLIDIFY")
+            sol.thickness = 0.006
+            sol.offset = 0.0
     parts["eyes"] = HS.add_mhclo_asset(str(SYS / "eyes/low-poly/low-poly.mhclo"), base, asset_type="Eyes", subdiv_levels=0)
     teeth = SYS / "teeth/teeth_base/teeth_base.mhclo"
     if teeth.exists():
@@ -537,34 +543,40 @@ def _chair_tokens():
 
 
 def solve_legs(rig, height, sitting_hips_z):
-    """Thigh and shin directions that put a seated fan's ankles on the tread.
+    """Thigh and shin directions that sit a fan's feet on the tread and keep them there.
 
-    The runtime lifts a seated fan by pelvisMetres - kitPelvisMetres * height/1.75,
-    so the ankle must sit at tread (0.085 m) minus that lift in the kit's frame.
-    Shins tuck back under the chair before they ever reach forward into the row
-    in front; if a shin is too short to reach, the thigh tips down instead.
+    Bowl gives each row `seating.feetDepth` of tread in front of the chair
+    (0.38 yd, 0.35 m). Aiming only at the tread's height let the ankle fall
+    where it liked, and at integration-12 the shoes of the nearest fan hung
+    over the edge above the row below. So both the height and the distance are
+    solved: the ankle goes `ankleForwardMetres` in front of the chair's origin,
+    which leaves the whole shoe inside the tread, and the knee bends forward
+    from a two-bone solve rather than the shin being tipped until it reaches.
     """
     ch = _chair_tokens()
     k = height / 1.75
     lift = ch["pelvisMetres"] - ch["kitPelvisMetres"] * k
-    target = 0.085 - lift
     b = rig.data.bones
     Lt = (b["upperleg01.L"].head_local - b["lowerleg01.L"].head_local).length
     Ls = (b["lowerleg01.L"].head_local - b["foot.L"].head_local).length
-    hip = sitting_hips_z - 0.01 * k
-    a = math.radians(4)                          # thigh a little down from level
-    knee = hip - Lt * math.sin(a)
-    need = knee - target
-    if need > Ls:                                # shin cannot reach: tip the thigh down
-        a = math.asin(min(1.0, max(-1.0, (hip - target - Ls * 0.99) / Lt)))
-        knee = hip - Lt * math.sin(a)
-        need = knee - target
-    cosb = max(-1.0, min(1.0, need / Ls))
-    tilt = math.acos(cosb)                       # 0 = shin vertical
-    back = min(tilt, math.radians(28))
-    thigh = (0.08, -math.cos(a), -math.sin(a))
-    shin = (0.03, math.sin(back), -math.cos(back)) if tilt <= math.radians(28) else (0.03, -math.sin(tilt), -math.cos(tilt))
-    return thigh, shin
+    hip = Vector((0.0, 0.0, sitting_hips_z - 0.01 * k))
+    # In the kit's frame the fan faces -Y, so forward of the chair is -Y.
+    ankle = Vector((0.0, -ch.get("ankleForwardMetres", 0.10) * k, 0.085 - lift))
+    to = ankle - hip
+    d = min(to.length, (Lt + Ls) * 0.985)
+    if d < 1e-4:
+        return (0.08, -1.0, 0.05), (0.03, 0.2, -1.0)
+    u = to.normalized()
+    cos_a = max(-1.0, min(1.0, (Lt * Lt + d * d - Ls * Ls) / (2 * Lt * d)))
+    a = math.acos(cos_a)
+    # The knee bends forward, in the plane of the hip and the ankle.
+    forward = Vector((0.0, -1.0, 0.0))
+    bend = (forward - u * forward.dot(u))
+    bend = bend.normalized() if bend.length > 1e-6 else Vector((0.0, -1.0, 0.0))
+    knee = hip + (u * math.cos(a) + bend * math.sin(a)) * Lt
+    thigh = (knee - hip).normalized()
+    shin = (ankle - knee).normalized()
+    return (0.08, thigh.y, thigh.z), (0.03, shin.y, shin.z)
 
 
 def _head(rig, name):

@@ -87,7 +87,11 @@ class CrowdKitTest(unittest.TestCase):
         self.assertAlmostEqual(kept / seats, C["fill"], delta=0.01)
         src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
         seated = src.index("if !c.tabletop, let seating = s.bowl.seating")
-        self.assertIn("guard rng.next() < C.fill", src[seated:seated + 1200], "fill applies to Bowl's seats")
+        # Round 5: the token is still what fills the bowl, now scaled per seat by where it is and
+        # how the game is going (keepChance), so the corners and a decided upper deck thin out.
+        block = src[seated:seated + 1600]
+        self.assertIn("guard draw < C.fill * CrowdActor.keepChance(", block, "fill applies to Bowl's seats")
+        self.assertIn("let draw = rng.next()", block)
 
     def test_a_new_stadium_starts_with_no_cues(self):
         """Cues belong to one stadium's blackboard. A process-wide table kept
@@ -173,22 +177,22 @@ class CrowdKitTest(unittest.TestCase):
             self.assertAlmostEqual(f["height"], cast[f["id"]]["height"], places=3)
 
     def test_every_exported_fan_faces_plus_z_on_every_lod(self):
-        """Round 4's backwards crowd. CrowdFacing turns a kit fan's +Z onto its seat's facing,
-        so a pose file whose fans face -Z seats every one of them facing the chair back.
-        Read from the glTF bytes a renderer reads, for every fan on every LOD: seated, the
-        feet and shins sit 10-50 cm toward the front of the torso (build.py's knee_reach,
-        which holds at LOD2's 250 triangles where standing feet do not)."""
+        """Round 4's backwards crowd, held by the marker build.py exports beside the fans.
+        Which way a fan faces is a property of the export: at LOD2's 250 triangles a shoe is a
+        blob, and round 5 tucks seated feet under the chair, so anatomy cannot answer it. The
+        probe's apex points where the fans face, and must land on +Z in every pose file."""
         import glb
-        import importlib.util
         src = (ROOT / "tools/blender/crowd/build.py").read_text()
         ns = {}
-        exec(src[src.index("def knee_reach"):src.index("# ───────────────────────────── impostors")], ns)
+        exec(src[src.index("def probe_forward"):src.index("def transfer_normals")], ns)
         for lod in (0, 1, 2):
-            found = glb.meshes(ASSETS / f"actors/crowd/lod{lod}_poses.glb", suffix="_sit")
-            self.assertEqual(len(found), self.C["fans"], f"lod{lod}")
-            reach = {name: ns["knee_reach"](pts) for name, pts in found}
-            backwards = {n: round(r, 3) for n, r in reach.items() if r <= 0.05}
-            self.assertEqual(backwards, {}, f"lod{lod}: these fans face -Z")
+            probes = [(n, p) for n, p in glb.meshes(ASSETS / f"actors/crowd/lod{lod}_poses.glb", suffix="")
+                      if n.startswith("forward_probe")]
+            self.assertEqual([n for n, _ in probes], [f"forward_probe_lod{lod}"], f"lod{lod} carries its own probe")
+            self.assertGreater(ns["probe_forward"](probes[0][1]), 0.01, f"lod{lod} faces -Z")
+        # And it is never drawn: the renderer only ever asks for "<fan>_lod<k>_<pose>".
+        actor = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        self.assertIn('String(format: "fan%02d_lod%d_%@"', actor)
 
     def test_the_usdz_forward_axis_is_measured_and_plus_z(self):
         """A USDZ cannot be read with the stdlib; build.py opens each one through pxr after
@@ -218,6 +222,55 @@ class CrowdKitTest(unittest.TestCase):
             for s in shares:
                 self.assertIn(s["pose"], C["nearPoses"], f"nearMix.{slot} wears {s['pose']}")
         self.assertLessEqual(C["rings"]["lod0Max"] * 3000, 42_000)
+
+    def test_the_crowd_belongs_to_the_teams_playing(self):
+        """Whose crowd it is comes from the scene, never from an assumption: the home and away
+        chips, the away section, and the bench range. The shares are the crowd's own tokens."""
+        C = self.C
+        self.assertGreater(C["support"]["visitingShare"], 0.02, "a real away support exists")
+        self.assertLess(C["support"]["visitingShare"], 0.25, "a home game is overwhelmingly the home club's")
+        self.assertLess(C["support"]["neutralShare"], C["support"]["visitingShare"])
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        support = src[src.index("static func supportBySection"):src.index("static func keepChance")]
+        for reads in ("s.bowl.crowd.awaySection", "s.field.props?.benches", "C.support.visitingShare", "C.support.neutralShare"):
+            self.assertIn(reads, support, f"the mix must come from {reads}")
+        for invented in ('"CHI"', '"home team"', "abbr =="):
+            self.assertNotIn(invented, support, "no club is named in the crowd's code")
+
+    def test_empty_seats_use_only_what_the_scene_knows(self):
+        """The scene carries the score, the period and the clock, and no attendance. The blowout
+        rule may use the first three; nothing may invent the fourth."""
+        C = self.C
+        b = C["emptySeats"]["blowout"]
+        self.assertGreaterEqual(b["margin"], 14, "a blowout is a blowout, not a one-score game")
+        self.assertLess(b["upperFactor"], C["emptySeats"]["upperFactor"], "a decided game empties the upper deck further")
+        import re
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        emptying = src[src.index("static func keepChance"):src.index("static func standingShare")]
+        for reads in ("s.status.homeScore", "s.status.awayScore", "s.status.period", "s.status.clock"):
+            self.assertIn(reads, emptying, reads)
+        # Only fields SceneSpec.Status actually carries, so nothing is invented about the game.
+        spec = (ROOT / "apple/FantasyEdge/Sources/Stadium/SceneSpec.swift").read_text()
+        status = spec[spec.index("public struct Status"):]
+        status = status[:status.index("\n    }")]
+        known = set(re.findall(r"public let (\w+):", status))
+        used = set(re.findall(r"s\.status\.(\w+)", emptying))
+        self.assertTrue(used <= known, f"the crowd reads {used - known}, which the scene does not carry")
+
+    def test_the_clock_is_read_as_the_broadcast_writes_it(self):
+        """status.clock is "12:40", not seconds; a missing or odd clock must not decide a game."""
+        import re
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        body = src[src.index("static func clockSeconds"):]
+        body = body[:body.index("\n    }")]
+        self.assertIn('split(separator: ":")', body)
+        self.assertIn("return nil", body, "an unreadable clock decides nothing")
+
+    def test_a_neutral_section_has_somewhere_to_get_its_colours(self):
+        """The unaligned wear the scene's own crowd.neutral and crowd.dark, not an invented grey."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        self.assertIn("s.palette[s.bowl.crowd.neutral]", src)
+        self.assertIn("s.palette[s.bowl.crowd.dark]", src)
 
 
 if __name__ == "__main__":
