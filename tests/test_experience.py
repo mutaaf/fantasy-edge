@@ -85,6 +85,7 @@ class Layout(unittest.TestCase):
             bowl, field = self.built["bowl"], self.built["field"]
             self._views[seat["id"]] = {
                 "field": sc.field_silhouette(seat, field, eye, mpy),
+                "painted": sc.field_silhouette(seat, field, eye, mpy, grow=sc.painted_border(field)),
                 "board": sc.video_board_points(seat, bowl["videoBoard"], eye, mpy),
                 "ribbon": sc.ribbon_points(seat, field, bowl["ribbon"], eye, mpy),
                 "rim": sc.rim_points(seat, bowl["mounts"], eye, mpy),
@@ -177,6 +178,95 @@ class Layout(unittest.TestCase):
                 box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
                 self.assertFalse(sc.box_overlaps(box, self.view(seat)["field"]), f"covers the field from {seat['id']}")
                 self.assertFalse(sc.points_in_box(box, self.view(seat)["board"]), f"covers the video board from {seat['id']}")
+
+    def test_nothing_in_the_dock_overlaps_the_paint(self):
+        """The painted field is the keep-off region, not the playing surface:
+        from the field seat the Elsewhere tab sat low over the 6 ft white
+        border, and read as lying on it through integration-12 and -13,
+        however much nearer than the paint it really was."""
+        for seat, name, folded, slot, size in self.dock_places():
+            with self.subTest(seat=seat["id"], panel=name, folded=folded):
+                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                self.assertFalse(sc.box_overlaps(box, self.view(seat)["painted"]),
+                                 f"{name} overlaps the paint from {seat['id']}")
+
+    def test_the_paint_test_sees_a_panel_on_the_border(self):
+        """The check itself: from the field seat the old rail height is over
+        the border but off the playing surface, so only the painted outline
+        catches it."""
+        seat = self.by_id["field"]
+        size = self.layout["panelSizes"]["tab"]
+        ppm = self.layout["pointsPerMeter"]
+        old = {"yaw": 24.0, "distance": 1.25, "height": -1.25 * math.tan(math.radians(26.0))}
+        box = sc.panel_box(old, size, ppm)
+        self.assertFalse(sc.box_overlaps(box, self.view(seat)["field"]))
+        self.assertTrue(sc.box_overlaps(box, self.view(seat)["painted"]))
+
+    def test_no_panel_is_half_out_of_view(self):
+        """Two rules, not one. Where a panel sits is comfort: its centre inside
+        ±maxSideDegrees, never lower than maxBelowDegrees. How much of it can
+        be seen is the second: the whole box, edges and all, inside
+        viewWindowDegrees and under the window's top. integration-13 caught the
+        drive log cut in two by the frame edge in redzone-trails."""
+        layout = self.layout
+        window = layout["dock"]["viewWindowDegrees"]
+        self.assertGreater(window, layout["maxSideDegrees"], "a view window inside the comfort window clips every panel")
+        for seat, name, folded, slot, size in self.dock_places():
+            with self.subTest(seat=seat["id"], panel=name, folded=folded):
+                y0, y1, b0, b1 = sc.panel_box(slot, size, layout["pointsPerMeter"])
+                self.assertLessEqual(abs(slot["yaw"]), layout["maxSideDegrees"] + 1e-6, "sits outside the comfort window")
+                self.assertGreaterEqual(y0, -window - 1e-6, "half out of view on the left")
+                self.assertLessEqual(y1, window + 1e-6, "half out of view on the right")
+                self.assertLessEqual(b1, layout["maxBelowDegrees"] + 1e-6, "hangs below the window")
+                self.assertGreaterEqual(b0, layout["dock"]["highestBelowDegrees"] - 1e-6, "climbs above the window")
+
+    def test_a_thin_band_costs_rows_before_it_costs_type_size(self):
+        """Where a band is too thin for the full panel the dock shortens it -
+        the home 30's pair, whose right side the ribbon dips into - and the app
+        clamps the panel to the seat's own height. Type size is the last thing
+        to go."""
+        short = {(seat["id"], name): per
+                 for seat in self.seats
+                 for name, per in self.layout["perSeat"][seat["id"]].items()
+                 if name in ("drive", "trailing") and "maxHeightPoints" in per}
+        self.assertTrue(short, "no seat needs a shortened panel; the case is untested")
+        for (sid, name), per in short.items():
+            with self.subTest(seat=sid, panel=name):
+                full = self.layout["panelSizes"][name]["maxHeightPoints"]
+                self.assertLess(per["maxHeightPoints"], full)
+                self.assertGreaterEqual(per["maxHeightPoints"],
+                                        full * self.layout["dock"]["gallery"]["minHeightFraction"] - 1e-6)
+                self.assertEqual(per.get("scale", 1.0), 1.0, "shortened and shrunk; rows come first")
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        self.assertIn("slot?.maxHeightPoints", src, "the app ignores the seat's own panel height")
+
+    def test_a_panel_drawn_smaller_is_still_legible(self):
+        """A panel with nowhere its own size fits may shrink, but only to
+        gallery.minScale: past that the list it carries stops being readable
+        from the seat."""
+        for seat in self.seats:
+            per = self.layout["perSeat"][seat["id"]]
+            for name in ("drive", "trailing", "controls"):
+                with self.subTest(seat=seat["id"], panel=name):
+                    scale = per[name].get("scale", 1.0)
+                    near_capped = per[name]["distance"] < self.layout["dock"]["gallery"]["minDistance"] - 1e-6
+                    if not near_capped:
+                        self.assertGreaterEqual(scale, self.layout["dock"]["gallery"]["minScale"] - 1e-6)
+                    # However it was scaled, it subtends no less than it would
+                    # full size at the gallery's furthest.
+                    subtends = scale / per[name]["distance"]
+                    self.assertGreaterEqual(subtends, 1.0 / self.layout["dock"]["gallery"]["maxDistance"] - 1e-6)
+
+    def test_the_painted_border_matches_fields_rule_book(self):
+        """PAINTED_BORDER is Field's, read from its rule book."""
+        import re
+        rules = (ROOT / "tools/blender/field/rules.py").read_text()
+        nfl = re.search(r'"boundary": \{"kind": "border", "width": (\d+) \* FT\}', rules)
+        self.assertTrue(nfl, "the NFL boundary is no longer a border of whole feet")
+        self.assertAlmostEqual(sc.PAINTED_BORDER["nfl"], int(nfl.group(1)) / 3)
+        college = re.search(r'"boundary": \{"kind": "line", "width": (\d+) \* IN', rules)
+        self.assertTrue(college, "the college boundary is no longer a line of whole inches")
+        self.assertAlmostEqual(sc.PAINTED_BORDER["college-football"], int(college.group(1)) / 36)
 
     def test_nothing_in_the_dock_covers_the_ribbon_or_a_light_bank(self):
         """The ribbon used to be a cost a panel could pay: from the club seat the

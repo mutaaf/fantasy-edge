@@ -604,12 +604,26 @@ PRESENTATION = {
 }
 
 
+# What the paint reaches past the playing surface, in yards: the NFL's solid
+# white border is 6 ft wide, college marks a 4 in sideline instead. Field's
+# own rule book (tools/blender/field/rules.py PAINT[...]["boundary"]) is the
+# source; tests/test_experience.py holds these to it. A panel that overlaps
+# the paint reads as lying on it, whatever its depth says, so the dock treats
+# the painted field - surface, end zones and border - as one keep-off region.
+PAINTED_BORDER = {"nfl": 6 / 3, "college-football": 4 / 36}
+
+
+def painted_border(field: dict) -> float:
+    return PAINTED_BORDER.get(field.get("league", "nfl"), PAINTED_BORDER["nfl"])
+
+
 def field_silhouette(seat: dict, field: dict, eye_meters: float, meters_per_yard: float,
-                     samples: int = 96) -> list[tuple[float, float]]:
+                     samples: int = 96, grow: float = 0.0) -> list[tuple[float, float]]:
     """The playing surface's outline, end zones included, as the seated
     wearer sees it: (yaw degrees, + right; degrees below the eye, + down),
     with the wearer facing the seat's lookAt. Densely sampled, so a caller can
-    treat it as a polygon in angle space."""
+    treat it as a polygon in angle space. `grow` widens it by that many yards
+    on every side, which is how the dock takes in the painted border."""
     ex, ez = seat["x"], seat["z"]
     ey = seat["y"] + eye_meters / meters_per_yard
     fx, fz = seat["lookAt"]["x"] - ex, seat["lookAt"]["z"] - ez
@@ -617,8 +631,8 @@ def field_silhouette(seat: dict, field: dict, eye_meters: float, meters_per_yard
     fx, fz = fx / n, fz / n
     # Right-handed with y up: facing (fx, fz), the wearer's right is (-fz, fx).
     rx, rz = -fz, fx
-    x0, x1 = -field["endZone"], field["length"] + field["endZone"]
-    hw = field["width"] / 2
+    x0, x1 = -field["endZone"] - grow, field["length"] + field["endZone"] + grow
+    hw = field["width"] / 2 + grow
     corners = [(x0, -hw), (x1, -hw), (x1, hw), (x0, hw)]
     out = []
     for i in range(4):
@@ -996,9 +1010,10 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
       band gives moves further out, where it subtends less, up to
       `gallery.maxDistance`.
 
-    Hard rules, never traded against a cost: off the field's silhouette, the
-    video board, the ribbon and the rim light banks; the whole box inside
-    ±maxSideDegrees and above maxBelowDegrees; off every other element of the
+    Hard rules, never traded against a cost: off the painted field - surface,
+    end zones and border - and off the video board, the ribbon and the rim
+    light banks; the whole box, edges and all, inside ±maxSideDegrees and
+    above maxBelowDegrees; off every other element of the
     dock it could be shown with; and nearer than any chair, rail, ground or
     glass it overlaps. A place past such a thing is brought in front of it
     and drawn smaller by `scale`, so it subtends the same angle. A panel with
@@ -1013,19 +1028,36 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
             + ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
             + rim_points(seat, mounts, eye_meters, meters_per_yard))
     near = near_occluders(seat, shape, seating, eye_meters, meters_per_yard) if shape and seating else []
-    grid = ViewGrid(field_silhouette(seat, field, eye_meters, meters_per_yard), hard, near)
+    # The keep-off region is the painted field, not the playing surface: a tab
+    # low over the white border read as lying on it from the field seat, twice
+    # over two checkpoints, however near it really was. `paintClearYards` of
+    # ground beyond the paint keeps a panel from hugging the white as well:
+    # a degree of margin is only a hand's width of grass at the field seat.
+    grid = ViewGrid(field_silhouette(seat, field, eye_meters, meters_per_yard,
+                                     grow=painted_border(field) + dock["paintClearYards"]), hard, near)
 
     def at(yaw, below, distance, scale=1.0):
         return {"yaw": round(yaw, 3), "distance": round(distance, 3),
                 "height": round(-distance * math.tan(math.radians(below)), 3), "scale": round(scale, 3)}
 
-    def fit(yaw, below, distance, size, avoid=()):
-        slot = at(yaw, below, distance)
+    def fit(yaw, below, distance, size, avoid=(), scale=1.0):
+        slot = at(yaw, below, distance, scale)
         box = panel_box(slot, size, ppm)
-        # The comfort limits hold the panel's centre, as the art bible states
-        # them; the top of the box stays under highestBelowDegrees.
-        # (heights are rounded to the millimetre, so stay a hair inside).
-        if abs(yaw) > max_side or below > max_below - 0.05 or box[2] < top:
+        # Where a panel sits is the comfort rule (its centre, within
+        # ±maxSideDegrees); how much of it can be seen is a second rule: the
+        # whole box, edges and all, stays inside viewWindowDegrees, so no
+        # element is ever half out of view (integration-13's redzone-trails
+        # showed the drive log cut in two by the frame). Heights are rounded
+        # to the millimetre, so stay a hair inside.
+        window = dock["viewWindowDegrees"]
+        if abs(yaw) > max_side or box[0] < -window or box[1] > window:
+            return None
+        # However it is moved or scaled, a panel subtends at least what it
+        # would full size at the gallery's furthest: shrinking *and* standing
+        # back reads smaller than either alone.
+        if scale / distance < 1.0 / dock["gallery"]["maxDistance"] - 1e-9:
+            return None
+        if box[3] > max_below - 0.05 or box[2] < top:
             return None
         if grid.covers_field(box, dock["fieldMarginDegrees"]) or grid.covers_hard(box, dock["hardMarginDegrees"]):
             return None
@@ -1036,7 +1068,7 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
             placed = nearest - dock["nearClearanceMeters"]
             if placed < dock["minDistance"]:
                 return None
-            slot = at(yaw, below, placed, placed / distance)
+            slot = at(yaw, below, placed, scale * placed / distance)
         return slot
 
     def first(cands, test):
@@ -1078,32 +1110,50 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
 
     distances = list(_frange(gallery["minDistance"], gallery["maxDistance"], gallery["distanceStep"]))
     yaw_mags = list(_frange(max_side, gallery["minSideDegrees"], -step))
+    # Full size first; a seat whose band is too thin for one (the home 30's,
+    # where the ribbon dips on the right) may draw its panel smaller rather
+    # than go without.
+    scales = list(_frange(1.0, gallery["minScale"], -gallery["scaleStep"]))
+    heights = list(_frange(1.0, gallery["minHeightFraction"], -gallery["heightStep"]))
 
-    def side_cost(mag, below, distance):
+    def shorter(size, fraction):
+        return size if fraction >= 1.0 else {**size, "maxHeightPoints": size["maxHeightPoints"] * fraction}
+
+    def side_cost(mag, below, distance, scale=1.0, height=1.0):
         return (gallery["distanceCost"] * (distance / gallery["minDistance"] - 1) + discomfort(below)
-                + gallery["inwardCost"] * (max_side - mag))
+                + gallery["inwardCost"] * (max_side - mag)
+                + gallery["heightCost"] * (1.0 - height) / max(1e-6, gallery["heightStep"])
+                + gallery["scaleCost"] * (1.0 - scale) / max(1e-6, gallery["scaleStep"]))
 
     # A side panel, open, hides its own tab but not the pill or the other tab.
     avoid_for = {"drive": [tab_box["controls"], tab_box["trailing"]],
                  "trailing": [tab_box["controls"], tab_box["drive"]]}
 
-    def pair(mag, below, distance):
-        left = fit(-mag, below, distance, sizes["drive"], avoid_for["drive"])
-        right = left and fit(mag, below, distance, sizes["trailing"], avoid_for["trailing"])
+    def place_side(name, sign, mag, below, distance, scale, height):
+        slot = fit(sign * mag, below, distance, shorter(sizes[name], height), avoid_for[name], scale)
+        if slot and height < 1.0:
+            slot = {**slot, "maxHeightPoints": round(sizes[name]["maxHeightPoints"] * height, 1)}
+        return slot
+
+    def pair(mag, below, distance, scale, height):
+        left = place_side("drive", -1, mag, below, distance, scale, height)
+        right = left and place_side("trailing", 1, mag, below, distance, scale, height)
         return {"drive": left, "trailing": right} if left and right else None
 
-    side_cands = [(side_cost(m, b, d), (m, b, d)) for m in yaw_mags for b in belows_up for d in distances]
+    side_cands = [(side_cost(m, b, d, k, h), (m, b, d, k, h))
+                  for m in yaw_mags for b in belows_up for d in distances for k in scales for h in heights]
     opened = first(side_cands, pair)
     if opened is None:
         opened = {}
         for name, sign in (("drive", -1), ("trailing", 1)):
-            opened[name] = first(side_cands, lambda m, b, d, name=name, sign=sign:
-                                 fit(sign * m, b, d, sizes[name], avoid_for[name]))
+            opened[name] = first(side_cands, lambda m, b, d, k, h, name=name, sign=sign:
+                                 place_side(name, sign, m, b, d, k, h))
 
     # The controls open centred, nearest the pill, clear of whatever is open
     # or folded either side of them.
     others = [tab_box["drive"], tab_box["trailing"]] + [
-        panel_box(s, sizes[k], ppm) for k, s in opened.items() if s]
+        panel_box(s, shorter(sizes[k], (s.get("maxHeightPoints") or sizes[k]["maxHeightPoints"]) / sizes[k]["maxHeightPoints"]), ppm)
+        for k, s in opened.items() if s]
     ctl_cands = [(abs(b - rail_below) * 0.5 + abs(y) + 4 * (d / ctl["minDistance"] - 1), (y, b, d))
                  for y in _frange(-ctl["maxYawDegrees"], ctl["maxYawDegrees"], step) for b in belows_up
                  for d in _frange(ctl["minDistance"], ctl["maxDistance"], gallery["distanceStep"])]
