@@ -775,6 +775,36 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertGreaterEqual(net["minOpacity"], 0.35)
         self.assertLess(net["grazingOpacity"], net["minOpacity"])
 
+    def test_a_net_is_cord_and_air_not_a_sheet(self):
+        """From behind the posts you watch the game *through* the net, so what
+        keeps it visible must be the cord, not the sheet.
+
+        A cord is near-opaque and thin; the air between cords is most of the
+        net. So the face-on opacity is the *cord's*, and the veil the net lays
+        over the field is that times the mask's own coverage - which is what
+        a mip converges to at the far posts. Gaining the mask to keep a distant
+        net alive instead fattens every near cord into a band, which is how
+        this read as a grid across the whole field through integration-13.
+        """
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "tools"))
+        from crowd_pixels import read_png
+
+        net = self.final["visual"]["sideline"]["net"]
+        gain = self.final["shaderGraph"]["materials"]["netFresnel"]["parameters"]["CordGain"]
+        mask = (pathlib.Path(__file__).resolve().parents[1]
+                / "assets" / "actors" / "sideline" / "textures" / "net_mask.png")
+        w, h, rows = read_png(mask)
+        coverage = sum(r[i] for r in rows for i in range(0, len(r), 3)) / (w * h) / 255
+
+        # real netting: a few per cent of cord, the rest air
+        self.assertLess(coverage, 0.12, "the mask itself is more cord than net")
+        # a cord reads as cord, not as a translucent band
+        self.assertGreaterEqual(net["minOpacity"], 0.6)
+        # and is never smeared wider than it was authored
+        self.assertLessEqual(gain, 1.0, "CordGain fattens near cords into a grid")
+        # so the veil over the field stays a haze at any distance
+        self.assertLessEqual(coverage * gain * net["minOpacity"], 0.10)
+
     def test_field_paint_is_paint_not_white(self):
         """Pure white albedo blows out under the floods, and grey paint reads
         as concrete. Lines sit at chalky field-paint albedo (0.80-0.88 sRGB)

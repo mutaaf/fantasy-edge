@@ -17,6 +17,11 @@ extension SceneSpec.Look {
         public let nearDeckLift: Double
         public let nearDeckColor: String
         public let pressRoomLift: Double
+        /// Fractions of `pressRoomLift` the room's own surfaces take from its
+        /// ceiling strips: the desk catches the most, the carpet the least.
+        public let pressDeskLift: Double
+        public let pressChairLift: Double
+        public let pressFloorLift: Double
         public let glassOpacity: Double
         public let rows: [String: Int]
         public let segments: Int
