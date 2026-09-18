@@ -1,0 +1,142 @@
+[shadergraph] /Root/FieldPaint loaded from actors/field/shadergraph/Field.reality via Entity(contentsOf:)
+[shadergraph] /Root/NetFresnel loaded from actors/sideline/shadergraph/Sideline.reality via Entity(contentsOf:)
+[shadergraph] field paint on 3 meshes
+[shadergraph] net falloff on 3 meshes
+[stadium-stats] tabletop.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.bowl: draw parts 3, triangles 2648, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.broadcast: draw parts 5, triangles 4420, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.crowd: draw parts 16, triangles 1746, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.experience: draw parts 6, triangles 2856, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.field: draw parts 10, triangles 533, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.lighting: draw parts 12, triangles 8672, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] tabletop.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2885, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] tabletop.sky: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop: models 64, draw parts 67, triangles 23760, texture memory ~67 MB
+[stadium-timing] asset bowl.concrete: 1.455 s
+[stadium-timing] asset bowl.seats: 1.481 s
+[stadium-timing] asset broadcast.beam: 1.771 s
+[stadium-timing] asset broadcast.football: 1.799 s
+[stadium-timing] asset broadcast.glow: 1.800 s
+[stadium-timing] asset broadcast.line: 1.819 s
+[stadium-timing] asset broadcast.marker: 1.855 s
+[stadium-timing] asset broadcast.paint: 1.856 s
+[stadium-timing] asset broadcast.trailCore: 1.857 s
+[stadium-timing] asset broadcast.trailHalo: 1.865 s
+[stadium-timing] asset crowd.impostorNormal: 1.514 s
+[stadium-timing] asset field.turfAgainstNormal: 1.371 s
+[stadium-timing] asset field.turfAlbedo: 1.386 s
+[stadium-timing] asset field.turfRoughness: 1.400 s
+[stadium-timing] asset field.turfWithNormal: 1.423 s
+[stadium-timing] asset lighting.beam: 1.536 s
+[stadium-timing] asset lighting.beamDust: 1.561 s
+[stadium-timing] asset lighting.bloom: 1.590 s
+[stadium-timing] asset lighting.face: 1.598 s
+[stadium-timing] asset lighting.fill: 1.630 s
+[stadium-timing] asset lighting.glowCore: 1.630 s
+[stadium-timing] asset lighting.glowHalo: 1.631 s
+[stadium-timing] asset lighting.haze: 1.650 s
+[stadium-timing] asset lighting.lens: 1.651 s
+[stadium-timing] asset lighting.probe: 1.947 s
+[stadium-timing] asset lighting.spill: 1.686 s
+[stadium-timing] asset sideline.netMask: 1.454 s
+[stadium-timing] asset sideline.propShadow: 1.455 s
+[stadium-timing] asset sky.clouds: 1.743 s
+[stadium-timing] asset sky.dome: 1.745 s
+[stadium-timing] asset sky.sky: 1.766 s
+[stadium-timing] assets models: 3.458 s
+[stadium-timing] assets textures, probe and sound: 1.951 s
+[stadium-timing] assets total: 3.458 s
+[stadium-timing] look programs: 0.151 s
+[stadium-timing] model bowl.near: 0.787 s
+[stadium-timing] model bowl.seatsFar: 0.582 s
+[stadium-timing] model bowl.stands: 0.787 s
+[stadium-timing] model bowl.table: 0.582 s
+[stadium-timing] model broadcast.footballCollege: 1.436 s
+[stadium-timing] model broadcast.footballNFL: 1.431 s
+[stadium-timing] model crowd.lod0Poses: 3.422 s
+[stadium-timing] model crowd.lod1Poses: 2.955 s
+[stadium-timing] model crowd.lod2Poses: 2.688 s
+[stadium-timing] model lighting.bankFar: 1.370 s
+[stadium-timing] model lighting.bankNear: 1.397 s
+[stadium-timing] model sideline.ball_bag: 0.538 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.584 s
+[stadium-timing] model sideline.bench: 0.538 s
+[stadium-timing] model sideline.bench_lod2: 0.538 s
+[stadium-timing] model sideline.cable_run: 0.558 s
+[stadium-timing] model sideline.cable_run_lod2: 0.558 s
+[stadium-timing] model sideline.camera_cart: 0.537 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.520 s
+[stadium-timing] model sideline.chain_set: 0.520 s
+[stadium-timing] model sideline.chain_set_lod2: 0.537 s
+[stadium-timing] model sideline.cooler_station: 0.537 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.536 s
+[stadium-timing] model sideline.down_marker: 0.537 s
+[stadium-timing] model sideline.down_marker_lod2: 0.537 s
+[stadium-timing] model sideline.endzone_platform: 0.539 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.537 s
+[stadium-timing] model sideline.fieldgoal_net: 0.575 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.574 s
+[stadium-timing] model sideline.goalpost_college: 0.558 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.558 s
+[stadium-timing] model sideline.goalpost_nfl: 0.559 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.558 s
+[stadium-timing] model sideline.ground_marker: 0.558 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.558 s
+[stadium-timing] model sideline.heater_fan: 0.559 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.574 s
+[stadium-timing] model sideline.kicking_net: 0.582 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.574 s
+[stadium-timing] model sideline.medical_tent: 0.574 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.574 s
+[stadium-timing] model sideline.pylon_college: 0.574 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.574 s
+[stadium-timing] model sideline.pylon_nfl: 0.574 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.574 s
+[stadium-timing] model sideline.tablet_station: 0.574 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.574 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.510 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.660 s
+[stadium-timing] tabletop apply.audio: 0.000 s
+[stadium-timing] tabletop apply.bowl: 0.000 s
+[stadium-timing] tabletop apply.broadcast: 0.124 s
+[stadium-timing] tabletop apply.crowd: 0.000 s
+[stadium-timing] tabletop apply.experience: 0.000 s
+[stadium-timing] tabletop apply.field: 0.000 s
+[stadium-timing] tabletop apply.lighting: 0.000 s
+[stadium-timing] tabletop apply.moments: 0.000 s
+[stadium-timing] tabletop apply.sideline: 0.000 s
+[stadium-timing] tabletop apply.sky: 0.000 s
+[stadium-timing] tabletop assets ready after open: 3.770 s
+[stadium-timing] tabletop build total: 1.999 s
+[stadium-timing] tabletop build.audio: 0.001 s
+[stadium-timing] tabletop build.bowl: 0.000 s
+[stadium-timing] tabletop build.broadcast: 0.011 s
+[stadium-timing] tabletop build.crowd: 1.846 s
+[stadium-timing] tabletop build.experience: 0.018 s
+[stadium-timing] tabletop build.field: 0.029 s
+[stadium-timing] tabletop build.lighting: 0.025 s
+[stadium-timing] tabletop build.moments: 0.000 s
+[stadium-timing] tabletop build.sideline: 0.066 s
+[stadium-timing] tabletop build.sky: 0.000 s
+[stadium-timing] tabletop first tick after open: 5.902 s
+[stadium-timing] tabletop first update.audio: 0.000 s
+[stadium-timing] tabletop first update.bowl: 0.000 s
+[stadium-timing] tabletop first update.broadcast: 0.000 s
+[stadium-timing] tabletop first update.crowd: 0.004 s
+[stadium-timing] tabletop first update.experience: 0.000 s
+[stadium-timing] tabletop first update.field: 0.000 s
+[stadium-timing] tabletop first update.lighting: 0.000 s
+[stadium-timing] tabletop first update.moments: 0.000 s
+[stadium-timing] tabletop first update.sideline: 0.000 s
+[stadium-timing] tabletop first update.sky: 0.000 s
+[stadium-timing] tabletop main-thread tick: 0.222 ms mean over 120 frames
+[stadium] assets: 30 textures, 16 sounds, probe loaded, ~67 MB
+[stadium] crowd dress composed in 1.69 s (decode 0.01, tint 1.58, main-actor wait 0.01, textures 0.08)
+[stadium] crowd kit lod0 faces +Z (probe apex z +0.053)
+[stadium] crowd kit lod1 faces +Z (probe apex z +0.053)
+[stadium] crowd kit lod2 faces +Z (probe apex z +0.053)
+[stadium] crowd support: home 0%, visiting 0%, neutral 0% of 1 seats taken
+[stadium] crowd: 1620 fans, lod0 0, lod1 0, lod2 0, cards 1620, groups 16
+[stadium] lighting beams 0/0, overdraw ≈ 0.00 screens (cap 1.2; all 0 as crossed pairs ≈ 0.00)
+[stadium] models: 47

@@ -214,7 +214,9 @@ struct ReplayPicker: View {
                         ForEach(week.games) { g in row(g) }
                     } header: {
                         HStack {
-                            Text("\(week.season) · Week \(week.week)")
+                            // verbatim: a season is a year, and Text's own
+                            // number formatting grouped it into "2,026".
+                            Text(verbatim: "\(week.season) · Week \(week.week)")
                             Spacer()
                             Text("\(week.pulled) of \(week.total) ready to watch")
                                 .foregroundStyle(.tertiary)
