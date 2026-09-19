@@ -36,6 +36,10 @@ final class BroadcastActor: StadiumActor {
     private var flight: (arc: SceneSpec.Arc, elapsed: Double, duration: Double, cut: Double?)?
     /// A drive waiting for the play on the field to finish before it shows.
     private var heldSince: Double?
+    /// A scoring play that has landed while the drawn score still reads as it
+    /// did before it: the board must not announce what the score has not
+    /// acknowledged. Holds the score at that landing, and when it happened.
+    private var unscored: (id: String, away: Double, home: Double, at: Double)?
     /// When the next play may snap: plays keep a beat between them.
     private var beatUntil: Double?
     /// One card on the grass under the play: the snap's ring, then the ball's shadow.
@@ -253,7 +257,7 @@ extension BroadcastActor {
         updateDrive(c, previous: previous)
         horizon.update(c, hold: airborneNewest(c))
         ribbon.apply(c, previous: previous)
-        board.apply(c, laid: { [trails] in trails.has($0) })
+        board.apply(c, laid: told(c))
         if flight == nil { settle(c, animated: !c.reduceMotion) }
     }
 
@@ -298,9 +302,16 @@ extension BroadcastActor {
             Self.trace(c, "land \(f.arc.id) at y \(ball.position.y) cut=\(f.cut.map { String(format: "%.1f", $0) } ?? "-")")
             trails.clearLive()
             trails.add(f.arc, c, cut: f.cut)
+            // A kick is good, or a run is a touchdown, a beat before the scene
+            // that says so is drawn: the score is gated on this same landing
+            // and catches up a frame later. The board waits for it rather
+            // than announcing the outcome first (integration-14).
+            unscored = f.arc.style == "score"
+                ? (f.arc.id, c.spec.status.awayScore, c.spec.status.homeScore, c.shared.time)
+                : nil
             flight = nil
             // The board, the diagram and the band describe what has landed.
-            board.apply(c, laid: { [trails] in trails.has($0) })
+            board.apply(c, laid: told(c))
             horizon.update(c, hold: airborneNewest(c))
             marker.isEnabled = false
             setGlow(airborne: false, c)
@@ -420,6 +431,21 @@ extension BroadcastActor {
     /// ball has landed, and asks through here (StadiumRenderer).
     func hasTrail(_ id: String) -> Bool { trails.has(id) }
 
+    /// A play the viewer has seen land *and* whose outcome the drawn score
+    /// has acknowledged. A scoring play is held back until the score moves,
+    /// or until `grace` has passed - a scene whose points never arrive can
+    /// not silence the board for ever.
+    private func told(_ c: StadiumContext) -> (String) -> Bool {
+        let status = c.spec.status
+        let grace = c.spec.motion.momentHoldGraceSeconds ?? MomentGate.defaultGraceSeconds
+        let now = c.shared.time
+        let pending = unscored.flatMap { u -> String? in
+            if u.away != status.awayScore || u.home != status.homeScore { return nil }
+            return now - u.at >= grace ? nil : u.id
+        }
+        return { [trails] id in trails.has(id) && id != pending }
+    }
+
     /// True while the newest play of the drive on screen is still in the air.
     /// The board, the drive diagram and the win-probability band all wait for
     /// it, the way the score does.
@@ -450,7 +476,7 @@ extension BroadcastActor {
         settle(c, animated: false)
         // The seat moved: the horizon's edge-on fade is per seat.
         horizon.update(c)
-        board.apply(c, laid: { [trails] in trails.has($0) })
+        board.apply(c, laid: told(c))
     }
 
     // MARK: the drive

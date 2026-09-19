@@ -1,0 +1,3 @@
+td-moment-t0.5: replay at 1929s (touchdown) -> docs/lookdev/broadcast-r7/td-moment-t0.5-td.png
+td-moment-t4: replay at 1929s (touchdown) -> docs/lookdev/broadcast-r7/td-moment-t4-td.png
+td-moment-t8: replay at 1929s (touchdown) -> docs/lookdev/broadcast-r7/td-moment-t8-td.png

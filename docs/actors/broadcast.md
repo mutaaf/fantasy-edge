@@ -433,3 +433,62 @@ the actor's 25 and 30k.
 - Nothing in the suite holds the board to the laid play: it is a UIKit drawing
   path, so `verify_scene` cannot reach it. A test needs `newestLaid` split out
   into a file that does not import UIKit.
+
+## Round 7: a scoring play is announced when it counts (`docs/lookdev/broadcast-r7/`)
+
+Integration-14's first worst thing: "a made field goal is announced about two
+seconds before it counts", root cause recorded as "the kick's own scene never
+carries its points". **Measured, that root cause is wrong, and so is the two
+seconds.**
+
+- **The scene does carry the points with the kick.** Sampling the replayed
+  pick-six four times a second from 1028 s to 1040 s, there is no instant at
+  which the kick's arc is in the scene under the pre-kick score: at 1032.00 s
+  the Field Goal Good arc and `3-7` arrive together, in one scene. Nothing to
+  fix in `scene.py`, and no contract change is needed.
+- **The gap was 0.11 s, not 2 s.** On the tip, `land 401772810961 ... cut=3.9`
+  at t=23.91 and `score MIN 3 - CHI 7 drawn at t=24.02, held 4.06 s`. The
+  board flipped on the landing frame and the score on the release frame after
+  it. Integration-14 sampled t4 and t6 and read the distance between its own
+  two samples as the defect; its t4 frame caught that 0.11 s window.
+- **The layer is Broadcast's.** The score is gated correctly and must not move
+  before the ball lands; the board simply must not announce an outcome the
+  drawn score has not acknowledged. Both now hinge on the same release.
+  - When a play whose `style` is `score` lands, `BroadcastActor` records the
+    drawn score at that instant. The board's `laid` predicate holds that play
+    back while the drawn score still reads the same, so the words and the
+    number appear on one frame. `momentHoldGraceSeconds` is the backstop: a
+    scene whose points never arrive cannot silence the board for ever.
+  - This costs nothing on a play that does not score, and it is the same
+    landing the score, the moment and the win-probability band already use.
+
+**The ribbon "double-draw" is the review image, not the ribbon.** Shot
+`field-level` and cropped the band 1:1 out of the 3840x2160 original: one
+crawl, one gold trim line, "8:30 - 1ST · 1ST & 10 AT MIN 13 · RED ZONE" read
+once. The same band in the committed 1400-wide `s-` copy shows the ghost
+integration-14 describes - the downscale aliases a band a few pixels tall.
+Nothing to fix; shoot the original when judging the ribbon edge-on.
+
+**Frames** (board and ribbon read off each):
+
+| Shot | Board | Ribbon | Ball |
+|---|---|---|---|
+| `td-moment-t3.5-fg-endzone` | MIN 0 · 4TH & 8 · "J.McCarthy pass incomplete short right to..." | MIN 0 CHI 7, 4TH & 8 | lit, climbing at the posts |
+| `td-moment-t4-fg-endzone` (integration-14's time) | MIN 0 · 4TH & 8 · the same incompletion | MIN 0 CHI 7 | down |
+| `td-moment-t4.5-fg-endzone` | **MIN 3** · 1ST & 10 AT CHI 39 · "W.Reichard 31 yard field goal is GOOD" | FIELD GOAL flashing | out of play |
+| `td-moment-t0.5-td` | MIN 6 · CHI 10 · "A.Jones right end to CHI 32 for 2 yards" | 3RD & 8 AT CHI 32 | pick-six running |
+| `td-moment-t4-td`, `-t8-td` | the score and the words together, then the kickoff | | |
+
+**Gates:** `make test` 566, `make verify-scene` 495,078 assertions,
+`contrast_check`, build clean with no new warnings
+(`-destination "generic/platform=visionOS Simulator"`). `verify_moment` (117
+checks) and `verify_crowd` pass, run by the `swiftc` lines in their own
+headers: **neither is a Makefile target** on this tip, whatever the round's
+brief says. Adding them is a one-line change each and belongs to the director.
+
+**Worst thing left:**
+- The drive log still narrates a play in the air (r6's hook, Experience's
+  file, unchanged).
+- The board's rule has no test: it is a UIKit drawing path, so `verify_scene`
+  cannot reach it. `newestLaid` and the new score-acknowledgement rule want a
+  file that does not import UIKit.
