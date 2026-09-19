@@ -17,7 +17,8 @@
     "clock",
     "changes",
     "feed",
-    "changesCaveat"
+    "changesCaveat",
+    "reconstructed"
   ],
   "properties": {
     "version": {
@@ -142,6 +143,31 @@
     "changesCaveat": {
       "type": "string",
       "minLength": 1
+    },
+    "reconstructed": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "games",
+        "caveats"
+      ],
+      "description": "Present when any tile on this board was rebuilt rather than recorded.",
+      "properties": {
+        "games": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
     }
   },
   "$defs": {
@@ -149,6 +175,7 @@
       "type": "object",
       "required": [
         "id",
+        "provenance",
         "kickoff",
         "kickoffLabel",
         "status",
@@ -351,6 +378,14 @@
           "type": "string",
           "minLength": 1,
           "description": "The kickoff in the East Coast clock a college Saturday is scheduled on, with the day: 'Sat 7:30 PM ET'. 'TBA' when ESPN has not fixed the time. Clients draw it and never format kickoff themselves."
+        },
+        "provenance": {
+          "enum": [
+            "recorded",
+            "reconstructed",
+            "schedule"
+          ],
+          "description": "Where this tile's state came from: a board recorded while the game was on ('recorded'), a rebuild from each play's own wallclock after the fact ('reconstructed'), or the schedule, because the game had not kicked off ('schedule'). A client must not show a reconstruction as a recording."
         }
       }
     },

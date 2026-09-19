@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 
-from . import colors, text as words
+from . import colors, reconstruct, text as words
 from .league import LOGO, RULES
 
 DELAYED = {"STATUS_DELAYED", "STATUS_RAIN_DELAY"}
@@ -136,6 +136,10 @@ def game_record(event: dict) -> dict:
     addr = venue.get("address") or {}
     return {
         "id": str(event.get("id") or ""),
+        # Recorded live, rebuilt from play wallclocks, or still just the
+        # schedule. A replay of a backfilled day must never pass one off as
+        # another; see cfb/reconstruct.py.
+        "provenance": reconstruct.provenance_of(event),
         "kickoff": event.get("date") or comp.get("date") or "",
         "kickoffLabel": words.kickoff_label(event.get("date") or comp.get("date") or "", comp.get("timeValid", True)),
         "status": st,

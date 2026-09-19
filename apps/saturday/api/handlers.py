@@ -15,7 +15,7 @@ import hashlib
 import json
 import time
 
-from cfb import changes, colors, leverage, parse
+from cfb import changes, colors, leverage, parse, reconstruct
 from cfb.game import game_from_summary
 from cfb.sources import BadStamp, Source, seconds_between, stamp_of
 
@@ -112,11 +112,18 @@ def slate(source: Source, at: str | None = None) -> dict:
         "spotlight": leverage.spotlight(games),
         "sections": leverage.sections(games),
         "leverageCaveat": leverage.CAVEAT,
+        "reconstructed": _reconstructed(games),
         "changes": changes.diff(previous, games, ranked_history[-1][0]),
         "feed": changes.feed(ranked_history),
         "changesCaveat": changes.CAVEAT,
         "games": games,
     }
+
+
+def _reconstructed(games: list[dict]) -> dict | None:
+    """Say it on the board when any tile was rebuilt rather than recorded."""
+    rebuilt = sum(1 for g in games if g.get("provenance") == "reconstructed")
+    return {"games": rebuilt, "caveats": reconstruct.CAVEATS} if rebuilt else None
 
 
 def game(source: Source, event: str, at: str | None = None) -> dict:

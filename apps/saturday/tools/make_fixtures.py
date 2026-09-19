@@ -16,6 +16,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CAP = ROOT / "data/capture/2026-09-12"
 OUT = ROOT / "tests/fixtures"
 
+BACKFILL = ROOT / "data/capture/2026-09-19-backfill"     # the 19 September slate, rebuilt from wallclocks
+RECON_EVENT = "401856686"                                # Georgia at Arkansas: noon kickoff, wire to wire
+
 PREGAME = ROOT / "data/capture/2026-09-19-pregame"   # a Tuesday snapshot of the week-3 board
 PRE_EVENT = "401856688"                              # LSU at Ole Miss, days before kickoff
 
@@ -57,11 +60,14 @@ def trim_event(ev):
     return ev
 
 
-def trim_summary(sm):
+def trim_summary(sm, keep=()):
+    """`keep` names play fields that would normally be dropped: the wallclock
+    fixture exists for the stamps, so it keeps them."""
     sm = {k: v for k, v in sm.items() if k not in SUMMARY_DROP}
     drives = sm.get("drives") or {}
     for d in (drives.get("previous") or []) + ([drives["current"]] if drives.get("current") else []):
-        d["plays"] = [{k: v for k, v in p.items() if k not in PLAY_DROP} for p in d.get("plays", [])]
+        drop = PLAY_DROP - set(keep)
+        d["plays"] = [{k: v for k, v in p.items() if k not in drop} for p in d.get("plays", [])]
     box = sm.get("boxscore") or {}
     for p in box.get("players") or []:
         p["statistics"] = [{**cat, "athletes": cat.get("athletes", [])[:1]} for cat in p.get("statistics", [])[:3]]
@@ -100,6 +106,21 @@ def pregame():
     write(f"summary_pregame_{PRE_EVENT}.json", trim_summary(load(summaries[0])))
 
 
+def reconstruction():
+    """A finished game's summary with every play's wallclock, and the board it
+    is rebuilt against. The plays are what a reconstruction is made of, so the
+    fixture keeps them whole; only the article, odds and video are dropped."""
+    summary = BACKFILL / "summary" / f"{RECON_EVENT}.json.gz"
+    reference = BACKFILL / "reference-board.json.gz"
+    if not summary.exists() or not reference.exists():
+        return
+    write(f"summary_wallclock_{RECON_EVENT}.json", trim_summary(load(summary), keep=("wallclock",)))
+    board = load(reference)
+    keep = {RECON_EVENT}
+    write("board_reference.json", {"events": [trim_event(ev) for ev in board["events"] if str(ev["id"]) in keep],
+                                   "week": board.get("week"), "season": board.get("season") or {}})
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     board = load(newest(CAP / "scoreboard", AT))
@@ -112,6 +133,7 @@ def main():
     for event in (WAKE_PUR, OKST_ORE):
         write(f"summary_{event}.json", trim_summary(load(CAP / "final" / f"{event}.json.gz")))
     pregame()
+    reconstruction()
     for p in sorted(OUT.glob("*.json")):
         print(f"{p.name}: {p.stat().st_size // 1024} KB")
 

@@ -12,7 +12,8 @@ import pathlib
 import re
 
 KNOWN = {"$schema", "$id", "$defs", "title", "description", "type", "const", "enum", "required",
-         "properties", "items", "allOf", "anyOf", "$ref", "minimum", "maximum", "minLength", "pattern"}
+         "properties", "items", "allOf", "anyOf", "$ref", "minimum", "maximum", "minLength", "minItems",
+         "pattern"}
 TYPES = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
 
 
@@ -69,6 +70,8 @@ class Validator:
             for key, sub in schema.get("properties", {}).items():
                 if key in value:
                     out += self.errors(value[key], sub, base, f"{path}.{key}")
+        if isinstance(value, list) and "minItems" in schema and len(value) < schema["minItems"]:
+            out.append(f"{path}: fewer than {schema['minItems']} items")
         if isinstance(value, list) and "items" in schema:
             for i, item in enumerate(value):
                 out += self.errors(item, schema["items"], base, f"{path}[{i}]")

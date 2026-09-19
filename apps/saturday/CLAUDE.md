@@ -14,6 +14,9 @@ make replay                        # API on the recorded 2026-09-12 slate, port 
 make live                          # API against live ESPN, on the LAN (docs/LIVE_TEST.md)
 make record-plan SLATE=2026-09-19  # the recording window, from the real schedule
 make record-weekend SLATE=...      # wait for the window, record the weekend, keep the Mac awake
+python3 tools/backfill_slate.py both --slate 2026-09-19    # rebuild hours the recorder missed
+python3 tools/verify_reconstruction.py --slate 2026-09-19  # hold the rebuild against recorded boards
+python3 tools/merge_capture.py --slate 2026-09-19          # one continuous night
 make serve                         # API on the test fixtures
 make build-visionos build-ios build-ipad
 ```
@@ -48,6 +51,9 @@ tests/               fixtures come from tools/make_fixtures.py
 - **At halftime and in a delay the scoreboard keeps the last down and distance.** `parse.game_record` drops the situation, so no ball is drawn.
 - **ESPN lists the drive in progress in both `previous` and `current`.** Dedupe on id.
 - **An id is only unique inside its source.** Key on `(source, id)`, because ESPN and CFBD ids collide.
+- **A play's `wallclock` turns a summary into a timeline.** Every play carries the instant it happened, so a day nobody recorded can be rebuilt from summaries afterwards (`cfb/reconstruct.py`). Checked against a real recorded board: 35 of 35 games identical.
+- **Trust ESPN's play order over its wallclocks.** A few stamps are wrong by hours - a Buffalo-Penn State third-quarter play is stamped two hours after the final - so sorting by them reorders a game around its worst stamp. The order is the sequence; the stamps are made monotone and the disagreeing ones interpolated.
+- **A reconstruction is never presented as a recording.** Every rebuilt board carries `saturdayProvenance`, every game carries `provenance` (`recorded` / `reconstructed` / `schedule`), the slate carries `reconstructed` with its caveats, and `reconstruct.CAVEATS` says what cannot be known. The recording wins wherever both cover a moment.
 - **A capture's frames are its timestamped scoreboards only.** `20260912-closing-backfill` was fetched the next morning and sorts before every stamp by name; reading it by name put the night's finals on an 8 PM board.
 - **Scores go down.** Six touchdowns came off the board on 2026-09-12 (penalties and reviews; Memphis-Boise State went 31, 37, 31, 38). A drop is a `correction` change, never ignored and never an error.
 - **A change's `id` is its frame, game, kind and team.** Clients animate an id once; never re-derive whether something changed on a client.

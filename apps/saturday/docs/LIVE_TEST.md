@@ -110,6 +110,57 @@ final/<event>.json.gz          one per game, a few minutes after it goes final
 record.log, heartbeat.json     what it did, and that it is alive
 ```
 
+## If the recorder starts late: backfill
+
+It did, on 19 September: it began at 16:49 ET, after Friday's three games and
+the whole early afternoon. A summary carries every play and every play carries
+its own `wallclock`, so the missing hours can be rebuilt after the fact.
+
+```bash
+python3 tools/backfill_slate.py both --slate 2026-09-19     # summaries, then frames
+python3 tools/verify_reconstruction.py --slate 2026-09-19   # against what was recorded
+```
+
+The backfill writes to `data/capture/<slate>-backfill` and never touches the
+folder the running recorder owns. It is idempotent: run `fetch` again as more
+games finish (`--refresh` re-fetches the ones that were still live), then
+`frames` again.
+
+**What a reconstruction cannot know** - in `manifest.json` and in every board
+it writes, never papered over:
+
+- a score corrected and then corrected back: only the surviving version is in
+  the summary, so a tile that flickered reads as one clean change;
+- a delay that started and ended: nothing in a summary records it, and it is
+  not drawn as a delay. The two games sitting in a delay at 16:49 on
+  19 September (UNC at Clemson, Mississippi State at South Carolina) have no
+  delay in their rebuilt hours;
+- the status ESPN published minute by minute. Halftime is inferred from the
+  gap between the last play of one period and the first of the next;
+- down, distance and possession where there is no next play yet;
+- anything about a game that never kicked off: that tile stays the schedule.
+
+## Merging the backfill with the recording
+
+Run it once the recorder has finished; it refuses while the recorder is still
+alive. Re-fetch the games that were still live when they were first backfilled,
+rebuild the frames, then merge:
+
+```bash
+python3 tools/backfill_slate.py fetch --slate 2026-09-19 --refresh
+python3 tools/backfill_slate.py frames --slate 2026-09-19
+python3 tools/merge_capture.py --slate 2026-09-19
+```
+
+The recording owns every moment it covers; the backfill only fills the hours
+before it started, and each frame says which it is. The merged night lands in
+`data/capture/2026-09-19-merged` with a `MERGE.json`, and replays as one:
+
+```bash
+PYTHONPATH=packages:apps/saturday python3 -m api serve \
+  --source capture:data/capture/2026-09-19-merged --host 0.0.0.0
+```
+
 ## Afterwards: comparing the recording to ESPN
 
 1. **Does the recording cover the night?**

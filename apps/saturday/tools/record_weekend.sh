@@ -22,6 +22,10 @@ if [[ ${1:-} == plist ]]; then
 fi
 
 SLATE=${1:?usage: record_weekend.sh YYYY-MM-DD [record_slate.py options]}
+if [[ ! $SLATE =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+  echo "usage: record_weekend.sh YYYY-MM-DD [record_slate.py options]" >&2
+  exit 2
+fi
 shift
 # The wrapper's log belongs beside the recording it wrapped, so a dry run
 # writing elsewhere does not leave a line in the real weekend's folder.
