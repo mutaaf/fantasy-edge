@@ -35,6 +35,8 @@ CAVEATS = [
     "is drawn.",
     "Win probability is ESPN's, keyed to plays, so it moves with them and not with the clock.",
     "A game that never kicked off has no plays, so its tile is the schedule, not a reconstruction.",
+    "A rebuilt board carries the slate it rebuilt - the Saturday and its Friday - so a game from "
+    "earlier in the week is absent rather than shown in a state nobody here recorded.",
     "Wallclocks are ESPN's and a few are wrong - one Buffalo-Penn State play is stamped two hours "
     "after the game ended. ESPN's play order is trusted over its stamps: the stamps that agree with "
     "the order are kept and the rest are placed evenly between their neighbours, so a handful of "
@@ -250,7 +252,12 @@ def board_at(reference: dict, events: dict[str, dict], summaries: dict[str, dict
             fresh = copy.deepcopy(event)
             fresh["saturdayProvenance"] = "schedule"
             by_id[event_id] = fresh
-    out["events"] = [by_id.get(str(ev.get("id")), ev) for ev in reference.get("events") or []]
+    # A reconstructed board carries the slate it rebuilt and nothing else. A
+    # game outside it - the Thursday game on a week board - was neither
+    # recorded nor rebuilt here, and passing its current state through would
+    # label somebody else's recording as ours.
+    out["events"] = [by_id[str(ev.get("id"))] for ev in reference.get("events") or []
+                     if str(ev.get("id")) in by_id]
     out["capturedAt"] = dt_to_stamp(when)
     out["saturdayProvenance"] = {
         "kind": "reconstructed",

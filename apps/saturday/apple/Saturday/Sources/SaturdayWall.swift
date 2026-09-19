@@ -132,15 +132,26 @@ private struct WallHeader: View {
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: 16) { title; Spacer(); pills }
-            VStack(alignment: .leading, spacing: 10) { title; HStack(spacing: 8) { pills } }
+            VStack(alignment: .leading, spacing: 10) {
+                title
+                // A phone gives the mark its own line: beside three count pills
+                // it had neither its word nor their words in full.
+                if let rebuilt = slate.reconstructed { RebuiltMark(rebuilt: rebuilt) }
+                HStack(spacing: 8) { pills }
+            }
         }
     }
 
     private var title: some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
             Text("SATURDAY").font(Typeface.display(compact ? 40 : 52, .black)).tracking(1)
+                .fixedSize(horizontal: true, vertical: false)
             Text(subtitle).font(Typeface.serif(compact ? 19 : 24)).foregroundStyle(.secondary)
                 .contentTransition(.numericText())
+                .fixedSize(horizontal: true, vertical: false)
+            // On a phone the mark rides with the counts; beside the clock there
+            // is not room for it and the word SATURDAY both.
+            if !compact, let rebuilt = slate.reconstructed { RebuiltMark(rebuilt: rebuilt) }
         }
     }
 
@@ -167,6 +178,8 @@ private struct CountPill: View {
             Text(text)
         }
         .font(Typeface.sans(15, .semibold))
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
         .padding(.horizontal, 16).frame(minHeight: 44)
         .background(.white.opacity(0.08), in: Capsule())
     }

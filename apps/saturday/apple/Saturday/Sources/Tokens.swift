@@ -50,6 +50,8 @@ enum Glyph {
     static let kickoff = "figure.american.football"
     static let resume = "play.fill"
     static let replay = "backward.end.alt"
+    /// A moment nobody recorded, worked out afterwards from each play's stamp.
+    static let rebuilt = "clock.arrow.2.circlepath"
     static let feed = "antenna.radiowaves.left.and.right"
     static let favorite = "star.fill"
     static let notFavorite = "star"

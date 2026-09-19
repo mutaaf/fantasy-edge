@@ -19,7 +19,11 @@ struct GameDetailView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     header(d)
                     Divider()
-                    if threeColumns {
+                    if d.status.state == "pre" {
+                        // Nothing has been played: a drive list, a win-probability
+                        // chart and a box score would all be empty headings.
+                        BoxColumn(detail: d)
+                    } else if threeColumns {
                         HStack(alignment: .top, spacing: 34) {
                             DrivesColumn(detail: d).frame(maxWidth: .infinity, alignment: .topLeading)
                             VStack(alignment: .leading, spacing: 18) { WinChart(detail: d); ScoringList(detail: d) }
@@ -80,7 +84,11 @@ struct GameDetailView: View {
         let slateGame = store.game(gameID)
         let status = VStack(spacing: 6) {
             ZStack {
-                Text(d.status.detail.replacingOccurrences(of: " - ", with: " · ")).font(Typeface.display(30, .heavy))
+                // Before kickoff the heading is the slate's own kickoff label,
+                // not ESPN's "9/19 - 7:30 PM EDT" in the device's zone.
+                Text(d.status.state == "pre" ? (store.game(gameID)?.kickoffLabel ?? d.status.detail)
+                                             : d.status.detail.replacingOccurrences(of: " - ", with: " · "))
+                    .font(Typeface.display(30, .heavy))
                     .opacity(flourish == nil ? 1 : 0)
                 if let flourish {
                     ChangeBadge(change: flourish, game: slateGame, size: 17)
@@ -119,6 +127,10 @@ struct GameDetailView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text([d.venue, store.game(gameID)?.tv, store.slate?.clock.map { "Replay · \($0.label)" }].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                 .font(Typeface.sans(14)).foregroundStyle(.secondary)
+            if store.game(gameID)?.provenance == .reconstructed {
+                Label("Rebuilt from timestamps, not recorded", systemImage: Glyph.rebuilt)
+                    .font(Typeface.sans(13, .medium)).foregroundStyle(.secondary)
+            }
             if let last = d.lastPlay, !d.status.completed {
                 Label { Text(last.text).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: last.scoring ? Glyph.score : "text.alignleft") }
                     .font(Typeface.sans(14, .medium))
@@ -295,10 +307,13 @@ private struct ScoringList: View {
 private struct BoxColumn: View {
     let detail: GameDetail
     private let rows = ["Total Yards", "1st Downs", "3rd down efficiency", "Turnovers", "Possession"]
+    private var played: Bool { !detail.boxscore.isEmpty }
+    private let seasonRows = ["Points Per Game", "Total Yards", "Yards Passing", "Yards Rushing",
+                              "Points Allowed Per Game", "Yards Allowed"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeading(title: "Box score", overline: "")
+            if played { SectionHeading(title: "Box score", overline: "") }
             if detail.boxscore.count == 2 {
                 let away = Dictionary(detail.boxscore[0].stats.map { ($0.label, $0.value) }, uniquingKeysWith: { a, _ in a })
                 let home = Dictionary(detail.boxscore[1].stats.map { ($0.label, $0.value) }, uniquingKeysWith: { a, _ in a })
@@ -312,7 +327,25 @@ private struct BoxColumn: View {
                     }
                 }
             }
-            SectionHeading(title: "Leaders", overline: "")
+            if !detail.seasonAverages.isEmpty {
+                // Before kickoff ESPN publishes the season, not the game. It is
+                // worth showing, as long as it is never called a box score.
+                SectionHeading(title: "Season so far", overline: "per game, before kickoff")
+                let away = Dictionary(detail.seasonAverages[0].stats.map { ($0.label, $0.value) }, uniquingKeysWith: { a, _ in a })
+                let home = Dictionary(detail.seasonAverages.count > 1
+                                      ? detail.seasonAverages[1].stats.map { ($0.label, $0.value) } : [],
+                                      uniquingKeysWith: { a, _ in a })
+                ForEach(seasonRows, id: \.self) { label in
+                    HStack {
+                        Text(away[label] ?? "–").font(Typeface.sans(14, .bold)).monospacedDigit()
+                        Spacer()
+                        Text(label).font(Typeface.sans(14)).foregroundStyle(.secondary)
+                        Spacer()
+                        Text(home[label] ?? "–").font(Typeface.sans(14, .bold)).monospacedDigit()
+                    }
+                }
+            }
+            if !detail.leaders.isEmpty { SectionHeading(title: "Leaders", overline: "") }
             ForEach(Array(detail.leaders.enumerated()), id: \.offset) { _, l in
                 HStack(spacing: 10) {
                     TeamChip(abbr: l.team, fill: l.team == detail.away.abbr ? (detail.away.fill ?? "#666666") : (detail.home.fill ?? "#666666"), width: 44, height: 20, fontSize: 13)

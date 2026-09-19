@@ -15,6 +15,8 @@ struct Slate: Decodable {
     let spotlight: String?
     let sections: [WallSection]
     let leverageCaveat: String
+    /// Non-nil when any tile on this board was rebuilt rather than recorded.
+    let reconstructed: Rebuilt?
     let changes: [Change]
     let feed: [FeedItem]
     let changesCaveat: String
@@ -23,6 +25,12 @@ struct Slate: Decodable {
     struct Counts: Decodable, Hashable {
         let live: Int, pre: Int, post: Int, delayed: Int
     }
+}
+
+/// What a replay of a rebuilt day must say about itself.
+struct Rebuilt: Decodable, Hashable {
+    let games: Int
+    let caveats: [String]
 }
 
 struct WallSection: Decodable, Identifiable, Hashable {
@@ -34,7 +42,13 @@ struct WallSection: Decodable, Identifiable, Hashable {
 
 struct Game: Decodable, Identifiable, Hashable {
     let id: String
+    /// Recorded live, rebuilt from play timestamps, or still just the
+    /// schedule. Decided by the API; see cfb/reconstruct.py.
+    let provenance: Provenance
     let kickoff: String
+    /// "Sat 7:30 PM ET": the slate's own clock, formatted on the server, so a
+    /// phone in another time zone shows the time the game actually kicks off.
+    let kickoffLabel: String
     let status: GameStatus
     let away: Side
     let home: Side
@@ -44,6 +58,10 @@ struct Game: Decodable, Identifiable, Hashable {
     let venue: Venue
     let flags: Flags
     let leverage: Leverage
+
+    enum Provenance: String, Decodable {
+        case recorded, reconstructed, schedule
+    }
 
     func side(id teamID: String?) -> Side? {
         guard let teamID else { return nil }
@@ -112,6 +130,9 @@ struct Leverage: Decodable, Hashable {
 // MARK: - game detail (GET /api/game/{id})
 
 struct GameDetail: Decodable {
+    /// Before kickoff ESPN publishes each team's season averages, not this
+    /// game's box score; the API keeps them apart.
+    let seasonAverages: [TeamBox]
     let event: String
     let replay: Bool
     let asOf: String

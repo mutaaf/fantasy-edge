@@ -95,6 +95,68 @@ private struct FeedCard: View {
     }
 }
 
+// MARK: - a rebuilt day
+
+/// A day rebuilt from play timestamps says so, quietly and always: a chip
+/// beside the replay clock, in the same slanted vocabulary as every other
+/// state. Tapping it gives the reasons, in the API's own words.
+struct RebuiltMark: View {
+    let rebuilt: Rebuilt
+    @State private var showing = false
+
+    var body: some View {
+        // Screenshot and UI-test hook, like -openGame: `-rebuiltNote YES`.
+        Button { showing = true } label: {
+            StateBadge(text: "Rebuilt", fill: Tokens.otFill, glyph: Glyph.rebuilt, size: 11)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(.white.opacity(0.35)).frame(height: 1).offset(y: 3)
+                }
+        }
+        .buttonStyle(.plain)
+        .frame(minHeight: Tokens.target)
+        .accessibilityLabel("Rebuilt from timestamps: \(rebuilt.games) games. What this means")
+        .sheet(isPresented: $showing) { RebuiltNote(rebuilt: rebuilt) }
+        .onAppear { showing = showing || UserDefaults.standard.bool(forKey: "rebuiltNote") }
+    }
+}
+
+private struct RebuiltNote: View {
+    let rebuilt: Rebuilt
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Rebuilt from timestamps").font(Typeface.serif(30))
+                    Text("\(rebuilt.games) of these games were not recorded as they happened. Every play carries the instant it happened, so this hour was worked out from those afterwards. It is not a recording, and it does not know everything a recording would.")
+                        .font(Typeface.sans(15)).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
+                VStack(alignment: .leading, spacing: 14) {
+                    ForEach(Array(rebuilt.caveats.enumerated()), id: \.offset) { _, line in
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: Glyph.rebuilt).font(.system(size: 12))
+                                .foregroundStyle(.secondary).padding(.top, 3)
+                            Text(line).font(Typeface.sans(14))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                Button("Done") { dismiss() }
+                    .buttonStyle(PillButtonStyle(primary: true))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(28)
+            .frame(maxWidth: 620, alignment: .leading)
+        }
+        #if !os(visionOS)
+        .background(Color.black)
+        #endif
+    }
+}
+
 // MARK: - the replay bar
 
 /// Play, pause, speed and a scrubber over the recorded night. The frames and

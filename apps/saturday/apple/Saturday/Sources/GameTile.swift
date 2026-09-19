@@ -96,11 +96,13 @@ struct StatusLine: View {
     let game: Game
     var fontSize: CGFloat = 13
 
+    private var rebuilt: Bool { game.provenance == .reconstructed }
+
     var body: some View {
         HStack(spacing: 6) {
             switch game.status.state {
             case "pre":
-                Text(kickoff).foregroundStyle(.secondary)
+                Text(game.kickoffLabel).foregroundStyle(.secondary)
             case "post":
                 Image(systemName: Glyph.final)
                 Text(game.status.detail)
@@ -109,7 +111,11 @@ struct StatusLine: View {
                     Image(systemName: Glyph.delayed)
                     Text("Delayed")
                 } else {
-                    Image(systemName: Glyph.live).foregroundStyle(Tokens.liveGlyph)
+                    // A rebuilt frame never had a live dot: nobody watched this
+                    // minute happen, it was worked out from the play's own
+                    // timestamp afterwards.
+                    Image(systemName: rebuilt ? Glyph.rebuilt : Glyph.live)
+                        .foregroundStyle(rebuilt ? AnyShapeStyle(.secondary) : AnyShapeStyle(Tokens.liveGlyph))
                     Text(game.status.detail.replacingOccurrences(of: " - ", with: " · "))
                 }
             }
@@ -119,14 +125,6 @@ struct StatusLine: View {
         .font(Typeface.sans(fontSize, .semibold))
     }
 
-    private var kickoff: String {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        guard let date = f.date(from: game.kickoff.replacingOccurrences(of: "Z", with: ":00Z")) ?? f.date(from: game.kickoff) else {
-            return game.status.detail
-        }
-        return date.formatted(date: .omitted, time: .shortened)
-    }
 }
 
 struct TeamRow: View {
