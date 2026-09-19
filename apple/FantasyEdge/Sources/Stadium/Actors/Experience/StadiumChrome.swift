@@ -87,7 +87,20 @@ struct ControlsPill: View {
         .buttonStyle(.plain)
         .glassBackgroundEffect()
         .accessibilityLabel("Show controls")
-        .accessibilityHint("Play, seat, sound, immersion and leave")
+        .accessibilityHint("Brings the panels to where you are looking, and opens play, seat, sound, immersion and leave")
+    }
+}
+
+/// Said once, the first time the wearer is looking well away from the dock:
+/// the panels are where they left them, and this is how to call them over.
+struct RecentreHint: View {
+    var body: some View {
+        Label("Pinch anywhere, or tap Controls, to bring the panels to you",
+              systemImage: "hand.pinch")
+            .font(.system(size: 19, weight: .semibold))
+            .padding(.horizontal, 24).padding(.vertical, 16)
+            .glassBackgroundEffect()
+            .accessibilityAddTraits(.isStaticText)
     }
 }
 

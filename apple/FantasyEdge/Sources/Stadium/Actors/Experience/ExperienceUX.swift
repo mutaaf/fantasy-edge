@@ -1,4 +1,6 @@
+import ARKit
 import Foundation
+import QuartzCore
 import RealityKit
 import simd
 
@@ -37,6 +39,13 @@ enum ExperiencePrefs {
         get { UserDefaults.standard.bool(forKey: hintKey) }
         set { UserDefaults.standard.set(newValue, forKey: hintKey) }
     }
+
+    private static let recentreKey = "fe.stadium.recentreHintShown"
+
+    static var recentreHintShown: Bool {
+        get { UserDefaults.standard.bool(forKey: recentreKey) }
+        set { UserDefaults.standard.set(newValue, forKey: recentreKey) }
+    }
 }
 
 /// The experience's beats, for the actors that score them (Moments & Audio
@@ -64,10 +73,59 @@ public enum ExperienceEvents {
     }
 }
 
+/// Which way the wearer's head is turned, in degrees about the vertical from
+/// the stadium's own forward, so a recentre can put the dock in front of where
+/// they are looking. Head pose, never gaze: the app still never learns where
+/// the wearer is looking within their view.
+///
+/// visionOS hands this out only to an app with an immersive space open, and
+/// only through ARKit, so this is best-effort: no session, no anchor, no yaw,
+/// and the dock recentres to the seat's own forward instead, which is the
+/// worst it can do and still useful.
+@MainActor
+final class HeadFacing {
+    private var session: ARKitSession?
+    private let provider = WorldTrackingProvider()
+    private var running = false
+
+    func start() async {
+        guard !running, WorldTrackingProvider.isSupported else { return }
+        running = true
+        let session = ARKitSession()
+        self.session = session
+        do {
+            try await session.run([provider])
+        } catch {
+            running = false
+            self.session = nil
+        }
+    }
+
+    func stop() {
+        session?.stop()
+        session = nil
+        running = false
+    }
+
+    /// Degrees to the right of the stadium's forward, or nil when ARKit has
+    /// nothing to say. `+z` is behind the wearer, matching StadiumLayout.at.
+    var yawDegrees: Double? {
+        guard running, provider.state == .running,
+              let anchor = provider.queryDeviceAnchor(atTimestamp: CACurrentMediaTime()) else { return nil }
+        let m = anchor.originFromAnchorTransform
+        let forward = SIMD3<Float>(-m.columns.2.x, -m.columns.2.y, -m.columns.2.z)
+        let flat = simd_length(SIMD2(forward.x, forward.z))
+        guard flat > 1e-4 else { return nil }
+        return Double(atan2(forward.x, -forward.z)) * 180 / .pi
+    }
+}
+
 extension StadiumLayout {
-    /// A slot from `visual.experience.layout`, as a point in the wearer's space.
-    static func position(_ slot: SceneSpec.Look.Slot) -> SIMD3<Float> {
-        at(degrees: Float(slot.yaw), distance: Float(slot.distance), height: eye + Float(slot.height))
+    /// A slot from `visual.experience.layout`, as a point in the wearer's
+    /// space. `facing` turns the whole dock to where a recentre put it; the
+    /// slot's own yaw is measured from that facing.
+    static func position(_ slot: SceneSpec.Look.Slot, facing: Double = 0) -> SIMD3<Float> {
+        at(degrees: Float(slot.yaw + facing), distance: Float(slot.distance), height: eye + Float(slot.height))
     }
 }
 

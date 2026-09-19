@@ -45,6 +45,17 @@ verify-scene:
 		$(STADIUM)/SceneMath.swift $(STADIUM)/Actors/Broadcast/BroadcastFlight.swift apple/verify_scene.swift
 	.work/verify-scene .work/scenes/*.json
 
+# The crowd's pose decision and the moment gate, swept in Swift. Both were
+# run by hand until the dock's round 6; the gates are the same commands.
+verify-crowd:
+	swiftc -parse-as-library -o .work/verify-crowd \
+		$(STADIUM)/Actors/Crowd/CrowdChoreography.swift apple/verify_crowd.swift
+	.work/verify-crowd
+
+verify-moment:
+	swiftc -parse-as-library -o .work/verify-moment $(STADIUM)/MomentGate.swift apple/verify_moment.swift
+	.work/verify-moment
+
 clean:
 	rm -rf data/*.db report.html
 	find . -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true

@@ -900,7 +900,10 @@ class ViewGrid:
     each is. Summed-area tables make a box's question constant-time."""
 
     RES = 0.5
-    YAW = (-50.0, 50.0)
+    # The whole circle: a recentred dock looks along a different facing, and in
+    # angle space that is only a shift along yaw, so one grid per seat answers
+    # every facing.
+    YAW = (-180.0, 180.0)
     BELOW = (-30.0, 45.0)
 
     def __init__(self, field_poly, hard_points, near_points):
@@ -990,8 +993,29 @@ class ViewGrid:
         return min((self.near[j][i] for j in range(j0, j1) for i in range(i0, i1)), default=math.inf)
 
 
+def seat_view(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float,
+              mounts: dict | None = None, seating: dict | None = None, shape: dict | None = None) -> "ViewGrid":
+    """Everything the dock must keep off, as this seat sees it: the painted
+    field, the video board, the ribbon, the rim light banks and whatever
+    stands within arm's length. Built once per seat and used for every facing
+    the dock can be recentred to."""
+    dock = layout["dock"]
+    hard = (video_board_points(seat, BOWL.get("videoBoard"), eye_meters, meters_per_yard)
+            + ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
+            + rim_points(seat, mounts, eye_meters, meters_per_yard))
+    near = near_occluders(seat, shape, seating, eye_meters, meters_per_yard) if shape and seating else []
+    # The keep-off region is the painted field, not the playing surface: a tab
+    # low over the white border read as lying on it from the field seat, twice
+    # over two checkpoints, however near it really was. `paintClearYards` of
+    # ground beyond the paint keeps a panel from hugging the white as well:
+    # a degree of margin is only a hand's width of grass at the field seat.
+    return ViewGrid(field_silhouette(seat, field, eye_meters, meters_per_yard,
+                                     grow=painted_border(field) + dock["paintClearYards"]), hard, near)
+
+
 def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters_per_yard: float,
-                mounts: dict | None = None, seating: dict | None = None, shape: dict | None = None) -> dict:
+                mounts: dict | None = None, seating: dict | None = None, shape: dict | None = None,
+                facing: float = 0.0, view: "ViewGrid | None" = None, seed: dict | None = None) -> dict:
     """Where every panel goes from this seat: the dock.
 
     Panels are one anchored layer, laid out by the same rule from every seat
@@ -1024,17 +1048,12 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
     ppm = layout["pointsPerMeter"]
     sizes = layout["panelSizes"]
     max_side, max_below, top = layout["maxSideDegrees"], layout["maxBelowDegrees"], dock["highestBelowDegrees"]
-    hard = (video_board_points(seat, BOWL.get("videoBoard"), eye_meters, meters_per_yard)
-            + ribbon_points(seat, field, BOWL.get("ribbon"), eye_meters, meters_per_yard)
-            + rim_points(seat, mounts, eye_meters, meters_per_yard))
-    near = near_occluders(seat, shape, seating, eye_meters, meters_per_yard) if shape and seating else []
-    # The keep-off region is the painted field, not the playing surface: a tab
-    # low over the white border read as lying on it from the field seat, twice
-    # over two checkpoints, however near it really was. `paintClearYards` of
-    # ground beyond the paint keeps a panel from hugging the white as well:
-    # a degree of margin is only a hand's width of grass at the field seat.
-    grid = ViewGrid(field_silhouette(seat, field, eye_meters, meters_per_yard,
-                                     grow=painted_border(field) + dock["paintClearYards"]), hard, near)
+    grid = view or seat_view(seat, field, layout, eye_meters, meters_per_yard, mounts, seating, shape)
+
+    def seen(box):
+        """The box as the stadium sees it: the dock's angles are measured from
+        where the wearer is facing, the grid's from the seat's own forward."""
+        return (box[0] + facing, box[1] + facing, box[2], box[3])
 
     def at(yaw, below, distance, scale=1.0):
         return {"yaw": round(yaw, 3), "distance": round(distance, 3),
@@ -1059,11 +1078,12 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
             return None
         if box[3] > max_below - 0.05 or box[2] < top:
             return None
-        if grid.covers_field(box, dock["fieldMarginDegrees"]) or grid.covers_hard(box, dock["hardMarginDegrees"]):
+        world = seen(box)
+        if grid.covers_field(world, dock["fieldMarginDegrees"]) or grid.covers_hard(world, dock["hardMarginDegrees"]):
             return None
         if any(_boxes_overlap(box, other, dock["gapDegrees"]) for other in avoid):
             return None
-        nearest = grid.nearest(box)
+        nearest = grid.nearest(world)
         if nearest - dock["nearClearanceMeters"] < distance:
             placed = nearest - dock["nearClearanceMeters"]
             if placed < dock["minDistance"]:
@@ -1078,8 +1098,26 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
                 return s
         return None
 
+    def below_of(slot):
+        return math.degrees(math.atan2(-slot["height"], slot["distance"]))
+
+    def again(slot, size, avoid=()):
+        """The same place as last time, if it is still clear. A recentred dock
+        starts from the facing beside it, so most panels keep their place and
+        the dock does not rearrange itself as the wearer turns."""
+        if not slot:
+            return None
+        height = (slot.get("maxHeightPoints") or size["maxHeightPoints"]) / size["maxHeightPoints"]
+        kept = fit(slot["yaw"], below_of(slot), slot["distance"],
+                   size if height >= 1.0 else {**size, "maxHeightPoints": size["maxHeightPoints"] * height},
+                   avoid, slot.get("scale", 1.0))
+        if kept and height < 1.0:
+            kept = {**kept, "maxHeightPoints": slot["maxHeightPoints"]}
+        return kept
+
     step = dock["stepDegrees"]
     belows_up = list(_frange(max_below, top, -step))
+    belows_all = list(belows_up)
     tab = sizes["tab"]
     rail, gallery, ctl = dock["rail"], dock["gallery"], dock["controls"]
     side_yaw = rail["sideYawDegrees"]
@@ -1087,6 +1125,11 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
 
     # The rail: the lowest band where all three stand on one line.
     band = []
+    if seed:
+        kept = {k: again(seed[k]["tab"], tab) for k in rail_yaws}
+        if all(kept.values()) and len({round(below_of(v), 3) for v in kept.values()}) == 1:
+            band = [(below_of(kept["controls"]), kept)]
+            belows_up = []
     for below in belows_up:
         slots = {k: fit(y, below, rail["distance"], tab) for k, y in rail_yaws.items()}
         if all(slots.values()):
@@ -1099,7 +1142,7 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
         rail_below, tabs = rail["preferredBelowDegrees"], {}
         for k, y in rail_yaws.items():
             cands = [(abs(yy - y) * 2 + abs(b - rail["preferredBelowDegrees"]), (yy, b, rail["distance"], tab))
-                     for yy in _frange(-max_side, max_side, step) for b in belows_up]
+                     for yy in _frange(-max_side, max_side, step) for b in belows_all]
             tabs[k] = first(cands, fit) or at(y, rail_below, rail["distance"])
     tab_box = {k: panel_box(s, tab, ppm) for k, s in tabs.items()}
 
@@ -1140,24 +1183,47 @@ def seat_panels(seat: dict, field: dict, layout: dict, eye_meters: float, meters
         right = left and place_side("trailing", 1, mag, below, distance, scale, height)
         return {"drive": left, "trailing": right} if left and right else None
 
-    side_cands = [(side_cost(m, b, d, k, h), (m, b, d, k, h))
-                  for m in yaw_mags for b in belows_up for d in distances for k in scales for h in heights]
-    opened = first(side_cands, pair)
+    opened = None
+    if seed:
+        left = again(seed["drive"], sizes["drive"], avoid_for["drive"]) if seed["drive"]["clear"] else None
+        right = again(seed["trailing"], sizes["trailing"], avoid_for["trailing"]) if seed["trailing"]["clear"] else None
+        if left and right:
+            opened = {"drive": left, "trailing": right}
+    # Full size and full height first, and only if nothing fits at all does
+    # the search widen to the shortened and then the smaller panel: a seat
+    # that needs neither never pays for the candidates that do.
+    def side_passes():
+        for h in heights:
+            for k in scales:
+                yield [(side_cost(m, b, d, k, h), (m, b, d, k, h))
+                       for m in yaw_mags for b in belows_all for d in distances]
+
     if opened is None:
-        opened = {}
-        for name, sign in (("drive", -1), ("trailing", 1)):
-            opened[name] = first(side_cands, lambda m, b, d, k, h, name=name, sign=sign:
-                                 place_side(name, sign, m, b, d, k, h))
+        for cands in side_passes():
+            opened = first(cands, pair)
+            if opened:
+                break
+        if opened is None:
+            opened = {}
+            for name, sign in (("drive", -1), ("trailing", 1)):
+                for cands in side_passes():
+                    opened[name] = first(cands, lambda m, b, d, k, h, name=name, sign=sign:
+                                         place_side(name, sign, m, b, d, k, h))
+                    if opened[name]:
+                        break
 
     # The controls open centred, nearest the pill, clear of whatever is open
     # or folded either side of them.
     others = [tab_box["drive"], tab_box["trailing"]] + [
         panel_box(s, shorter(sizes[k], (s.get("maxHeightPoints") or sizes[k]["maxHeightPoints"]) / sizes[k]["maxHeightPoints"]), ppm)
         for k, s in opened.items() if s]
-    ctl_cands = [(abs(b - rail_below) * 0.5 + abs(y) + 4 * (d / ctl["minDistance"] - 1), (y, b, d))
-                 for y in _frange(-ctl["maxYawDegrees"], ctl["maxYawDegrees"], step) for b in belows_up
-                 for d in _frange(ctl["minDistance"], ctl["maxDistance"], gallery["distanceStep"])]
-    opened["controls"] = first(ctl_cands, lambda y, b, d: fit(y, b, d, sizes["controls"], others))
+    kept_ctl = again(seed["controls"], sizes["controls"], others) if seed and seed["controls"]["clear"] else None
+    if kept_ctl is None:
+        ctl_cands = [(abs(b - rail_below) * 0.5 + abs(y) + 4 * (d / ctl["minDistance"] - 1), (y, b, d))
+                     for y in _frange(-ctl["maxYawDegrees"], ctl["maxYawDegrees"], step) for b in belows_all
+                     for d in _frange(ctl["minDistance"], ctl["maxDistance"], gallery["distanceStep"])]
+        kept_ctl = first(ctl_cands, lambda y, b, d: fit(y, b, d, sizes["controls"], others))
+    opened["controls"] = kept_ctl
 
     out = {}
     for name in ("drive", "trailing", "controls"):
@@ -1212,8 +1278,26 @@ def experience_visual(tokens: dict, field: dict) -> dict:
         shape = {**BOWL["shape"], "halfLength": field["length"] / 2 + field["endZone"], "halfWidth": field["width"] / 2}
         mounts = bowl_mounts(shape, tokens["visual"]["lighting"]["rim"])
         seating = bowl_seating(shape, tokens["visual"]["bowl"]["rows"])
-        _PANELS_CACHE[key] = {s["id"]: seat_panels(s, field, exp["layout"], eye, mpy, mounts, seating, shape)
-                              for s in PRESENTATION["stadium"]["seats"]}
+        rec = exp["layout"]["dock"]["recentre"]
+        step, reach = rec["bucketDegrees"], rec["maxYawDegrees"]
+        out = {}
+        for s in PRESENTATION["stadium"]["seats"]:
+            view = seat_view(s, field, exp["layout"], eye, mpy, mounts, seating, shape)
+            home = seat_panels(s, field, exp["layout"], eye, mpy, mounts, seating, shape, view=view)
+            # The dock again for every facing the wearer can recentre to. Each
+            # bucket starts from the one beside it: the bands a panel lives in
+            # are wide, so most facings keep the place they had and cost a
+            # check rather than a search.
+            buckets, seed = {"0": home}, home
+            for sign in (1, -1):
+                seed = home
+                for k in range(1, int(reach / step) + 1):
+                    facing = sign * k * step
+                    seed = seat_panels(s, field, exp["layout"], eye, mpy, mounts, seating, shape,
+                                       facing=facing, view=view, seed=seed)
+                    buckets[str(int(facing)) if facing == int(facing) else str(facing)] = seed
+            out[s["id"]] = {**home, "recentre": buckets}
+        _PANELS_CACHE[key] = out
     per = json.loads(json.dumps(_PANELS_CACHE[key]))
     return {**exp, "layout": {**exp["layout"], "perSeat": per}}
 
