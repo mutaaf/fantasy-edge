@@ -113,6 +113,20 @@ extension SceneSpec.Look {
         public let controls: PanelSlot
         /// The video board carries the score from this seat; the glass scorebug yields.
         public let scorebugHidden: Bool
+        /// The dock solved again for each facing a recentre can land on, keyed
+        /// by whole degrees of yaw from the seat's own forward ("0" is the
+        /// layout the seat starts with). Absent on a scene from before the
+        /// recentre, where the dock simply stays where the seat put it.
+        public let recentre: [String: SeatPanels]?
+
+        /// The facings this scene solved, in degrees, nearest first.
+        public var facings: [Double] { (recentre?.keys.compactMap(Double.init) ?? []).sorted { abs($0) < abs($1) } }
+
+        /// The dock at `facing`, or this one when the scene has no table.
+        public func at(facing: Double) -> SeatPanels {
+            guard let key = facings.first(where: { abs($0 - facing) < 0.001 }) else { return self }
+            return recentre?[String(Int(key))] ?? self
+        }
     }
 
     /// A panel's footprint contract: exactly this wide, at most this tall.
@@ -128,9 +142,24 @@ extension SceneSpec.Look {
         public let tab: PanelSize
     }
 
+    /// How a recentre behaves: how far apart the facings the scene solved are,
+    /// how far they reach, how long the dock takes to fade across, and how long
+    /// the wearer must be looking away before the gesture names itself.
+    public struct Recentre: Decodable, Equatable, Sendable {
+        public let bucketDegrees: Double
+        public let maxYawDegrees: Double
+        public let fadeSeconds: Double
+        public let hintAfterSeconds: Double
+    }
+
+    public struct Dock: Decodable, Equatable, Sendable {
+        public let recentre: Recentre?
+    }
+
     public struct Layout: Decodable, Equatable, Sendable {
         public let maxSideDegrees: Double
         public let maxBelowDegrees: Double
+        public let dock: Dock?
         public let slots: Slots
         /// Present on scenes that work panels out per seat; absent, the slots stand.
         public let perSeat: [String: SeatPanels]?

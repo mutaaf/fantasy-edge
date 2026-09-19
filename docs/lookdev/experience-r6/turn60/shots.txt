@@ -1,0 +1,1 @@
+redzone-trails: replay at 390s (redzone) -> docs/lookdev/experience-r6/turn60/redzone-trails-turn60.png

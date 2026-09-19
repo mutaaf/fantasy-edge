@@ -93,16 +93,35 @@ class Layout(unittest.TestCase):
             }
         return self._views[seat["id"]]
 
-    def dock_places(self):
-        """Every (seat, panel, folded, slot, size) the app can draw."""
+    def dock_places(self, facings=True):
+        """Every (seat, panel, folded, slot, size) the app can draw, at the
+        seat's own facing and - when `facings` - at every facing the dock can
+        be recentred to. A slot's yaw is measured from the facing, so the
+        caller shifts it by `self.facing` to ask the stadium about it."""
         sizes = self.layout["panelSizes"]
         for seat in self.seats:
             per = self.layout["perSeat"][seat["id"]]
-            self.assertEqual(set(per) - {"scorebugHidden", "rail"}, {"drive", "trailing", "controls"})
-            for name in ("drive", "trailing", "controls"):
-                if per[name]["clear"]:
-                    yield seat, name, False, per[name], sizes[name]
-                yield seat, name, True, per[name]["tab"], sizes["tab"]
+            self.assertEqual(set(per) - {"scorebugHidden", "rail", "recentre"},
+                             {"drive", "trailing", "controls"})
+            buckets = per["recentre"] if facings else {"0": per}
+            for facing, layout in sorted(buckets.items(), key=lambda kv: float(kv[0])):
+                self.facing = float(facing)
+                for name in ("drive", "trailing", "controls"):
+                    if layout[name]["clear"]:
+                        # A panel the dock shortened for a thin band draws at
+                        # its own height, so that is the box to judge.
+                        size = sizes[name]
+                        if "maxHeightPoints" in layout[name]:
+                            size = {**size, "maxHeightPoints": layout[name]["maxHeightPoints"]}
+                        yield seat, name, False, layout[name], size
+                    yield seat, name, True, layout[name]["tab"], sizes["tab"]
+        self.facing = 0.0
+
+    def seen(self, box):
+        """A dock box as the stadium sees it: the dock's angles are measured
+        from the wearer's facing, the view's from the seat's own forward."""
+        f = getattr(self, "facing", 0.0)
+        return (box[0] + f, box[1] + f, box[2], box[3])
 
     def test_every_panel_is_inside_the_comfort_limits(self):
         layout = EXPERIENCE["layout"]
@@ -175,7 +194,7 @@ class Layout(unittest.TestCase):
             with self.subTest(seat=seat["id"], panel=name, folded=folded):
                 self.assertLessEqual(abs(slot["yaw"]), self.layout["maxSideDegrees"])
                 self.assertLessEqual(below_degrees(slot), self.layout["maxBelowDegrees"] + 1e-6)
-                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                box = self.seen(sc.panel_box(slot, size, self.layout["pointsPerMeter"]))
                 self.assertFalse(sc.box_overlaps(box, self.view(seat)["field"]), f"covers the field from {seat['id']}")
                 self.assertFalse(sc.points_in_box(box, self.view(seat)["board"]), f"covers the video board from {seat['id']}")
 
@@ -186,7 +205,7 @@ class Layout(unittest.TestCase):
         however much nearer than the paint it really was."""
         for seat, name, folded, slot, size in self.dock_places():
             with self.subTest(seat=seat["id"], panel=name, folded=folded):
-                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                box = self.seen(sc.panel_box(slot, size, self.layout["pointsPerMeter"]))
                 self.assertFalse(sc.box_overlaps(box, self.view(seat)["painted"]),
                                  f"{name} overlaps the paint from {seat['id']}")
 
@@ -275,7 +294,7 @@ class Layout(unittest.TestCase):
         Both are hard rules now, open and folded."""
         for seat, name, folded, slot, size in self.dock_places():
             with self.subTest(seat=seat["id"], panel=name, folded=folded):
-                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                box = self.seen(sc.panel_box(slot, size, self.layout["pointsPerMeter"]))
                 self.assertFalse(sc.points_in_box(box, self.view(seat)["ribbon"]), f"covers the ribbon from {seat['id']}")
                 self.assertFalse(sc.points_in_box(box, self.view(seat)["rim"]), f"covers a light bank from {seat['id']}")
 
@@ -286,7 +305,7 @@ class Layout(unittest.TestCase):
         is nearer than whatever solid thing shares its box."""
         for seat, name, folded, slot, size in self.dock_places():
             with self.subTest(seat=seat["id"], panel=name, folded=folded):
-                box = sc.panel_box(slot, size, self.layout["pointsPerMeter"])
+                box = self.seen(sc.panel_box(slot, size, self.layout["pointsPerMeter"]))
                 inside = [d for y, b, d in self.view(seat)["near"] if box[0] <= y <= box[1] and box[2] <= b <= box[3]]
                 if inside:
                     self.assertLess(slot["distance"], min(inside), f"stands past something near from {seat['id']}")
@@ -298,9 +317,11 @@ class Layout(unittest.TestCase):
         none has to start folded for want of a place. Guards the search's
         reach as well as its rules."""
         for seat in self.seats:
-            for name in ("drive", "trailing", "controls"):
-                with self.subTest(seat=seat["id"], panel=name):
-                    self.assertTrue(self.layout["perSeat"][seat["id"]][name]["clear"])
+            per = self.layout["perSeat"][seat["id"]]
+            for facing, layout in per["recentre"].items():
+                for name in ("drive", "trailing", "controls"):
+                    with self.subTest(seat=seat["id"], panel=name, facing=facing):
+                        self.assertTrue(layout[name]["clear"])
 
     def test_the_rail_is_one_line_under_its_panels(self):
         """The tabs and the pill stand on one line at one height, the pill in
@@ -441,6 +462,65 @@ class Layout(unittest.TestCase):
         self.assertEqual(carried, EXPERIENCE["layout"])
         self.assertEqual([s["id"] for s in built["presentation"]["stadium"]["seats"]],
                          [s["id"] for s in sc.PRESENTATION["stadium"]["seats"]])
+
+    def test_a_recentre_covers_every_facing_the_wearer_can_ask_for(self):
+        """The dock is solved again for each facing the gesture can land on,
+        every bucketDegrees out to maxYawDegrees either side, so the rules hold
+        from wherever the wearer is looking rather than only from the seat."""
+        rec = self.layout["dock"]["recentre"]
+        want = {str(int(k * rec["bucketDegrees"]))
+                for k in range(-int(rec["maxYawDegrees"] / rec["bucketDegrees"]),
+                               int(rec["maxYawDegrees"] / rec["bucketDegrees"]) + 1)}
+        self.assertLessEqual(rec["bucketDegrees"], 15.0, "a coarser bucket lands the dock too far from the eye")
+        for seat in self.seats:
+            with self.subTest(seat=seat["id"]):
+                self.assertEqual(set(self.layout["perSeat"][seat["id"]]["recentre"]), want)
+
+    def test_recentring_from_the_seats_own_facing_changes_nothing(self):
+        """The gesture is its own undo: recentre while facing where the seat
+        faces and the dock lands exactly where it started, so a wearer can
+        always get back what they had."""
+        for seat in self.seats:
+            per = self.layout["perSeat"][seat["id"]]
+            home = {k: v for k, v in per.items() if k != "recentre"}
+            with self.subTest(seat=seat["id"]):
+                self.assertEqual(per["recentre"]["0"], home)
+
+    def test_the_dock_keeps_its_shape_as_the_wearer_turns(self):
+        """Each facing starts from the one beside it, so the dock holds its
+        arrangement across a recentre instead of rearranging itself: the rail
+        stays one line, and the side panels stay a mirrored pair."""
+        for seat in self.seats:
+            for facing, layout in self.layout["perSeat"][seat["id"]]["recentre"].items():
+                with self.subTest(seat=seat["id"], facing=facing):
+                    tabs = [layout[n]["tab"] for n in ("drive", "controls", "trailing")]
+                    belows = [below_degrees(t) for t in tabs]
+                    # A tenth of a degree: in the press box each tab is pulled
+                    # in front of the glass by its own hair's breadth.
+                    self.assertLess(max(belows) - min(belows), 0.15, "the rail broke into pieces")
+                    self.assertLess(layout["drive"]["yaw"], 0.0)
+                    self.assertGreater(layout["trailing"]["yaw"], 0.0)
+
+    def test_the_app_recentres_on_the_pill_and_the_room_without_moving_the_world(self):
+        """The gesture, in the app: a tap on the pill or a pinch anywhere in
+        the room re-seats the dock at the bucket nearest the head's yaw, with a
+        fade (reduce motion: at once). Only the dock moves; the world is never
+        turned under the wearer."""
+        folder = ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience"
+        views = (folder / "StadiumViews.swift").read_text()
+        experience = "".join(f.read_text() for f in sorted(folder.glob("*.swift")))
+        body = views.split("private func recentre", 1)[1].split("\n    }\n", 1)[0]
+        self.assertIn("reduceMotion", body, "reduce motion must place the dock at once")
+        self.assertIn("nearestFacing", body, "the dock must land on a solved facing")
+        self.assertNotIn("world.orientation", body, "the world may never turn under the wearer")
+        self.assertNotIn("pivot.orientation", body, "the world may never turn under the wearer")
+        self.assertIn("recentre()", views.split("ControlsPill", 1)[1][:200], "the pill must recentre")
+        self.assertIn("RecentreCatcher", views, "a pinch in the room must be able to bring the dock back")
+        self.assertIn("queryDeviceAnchor", experience, "the head's yaw is what the dock lands on")
+        self.assertIn("RecentreHint", experience, "the gesture must name itself once, without a tutorial")
+        # The dock is placed at its facing, and nothing else moves it.
+        self.assertIn("StadiumLayout.position(slot, facing: dockFacing)", views)
+        self.assertEqual(views.count("dockFacing = "), 3, "only a recentre and the shot argument set the facing")
 
 
 if __name__ == "__main__":

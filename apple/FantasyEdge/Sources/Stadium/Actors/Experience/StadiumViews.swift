@@ -568,6 +568,12 @@ public struct StadiumSpaceView<Trailing: View>: View {
     /// Where the dock last put each panel. A reference, so moving them from
     /// `update` never writes view state mid-update.
     @State private var placer = SeatPlacement()
+    /// Which way the dock is facing, in degrees from the seat's own forward.
+    /// A recentre moves it to the nearest facing the scene solved; nothing
+    /// else ever moves it, and the world never turns.
+    @State private var dockFacing: Double = 0
+    @State private var head = HeadFacing()
+    @State private var recentreHint = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// `look` is (yaw, pitch) in degrees, zero outside debug captures.
@@ -616,13 +622,17 @@ public struct StadiumSpaceView<Trailing: View>: View {
                     world.addChild(e)
                 }
             }
-            // A pinch out on the field brings the controls back: an invisible
-            // target far out ahead, behind every panel.
+            // A pinch anywhere in the room brings the dock to where the wearer
+            // is looking, and the controls back with it. The catcher is a
+            // sphere around the wearer rather than a panel ahead of them,
+            // because the gesture is needed exactly when the dock is off to
+            // the side: everything else sits nearer, so a pinch on a panel,
+            // the field or a hologram still reaches that first.
             if let c = ExperienceTokens.controls(nil)?.revealCatcher {
-                catcher.name = "experience.revealCatcher"
-                catcher.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(Float(c.width), Float(c.height), 0.1))]))
+                catcher.name = "experience.recentreCatcher"   // RecentreCatcher
+                catcher.components.set(CollisionComponent(shapes: [.generateSphere(radius: Float(c.distance))]))
                 catcher.components.set(InputTargetComponent())
-                catcher.position = SIMD3(0, StadiumLayout.eye, -Float(c.distance))
+                catcher.position = SIMD3(0, StadiumLayout.eye, 0)
                 world.addChild(catcher)
             }
             world.position = SIMD3(0, -StadiumLayout.eye, 0)
@@ -687,7 +697,7 @@ public struct StadiumSpaceView<Trailing: View>: View {
             Attachment(id: "controls") {
                 Group {
                     if controlsFolded || (yielding && reduceMotion) {
-                        ControlsPill { reveal() }
+                        ControlsPill { Task { await recentre() } }
                     } else {
                         controls
                     }
@@ -700,9 +710,16 @@ public struct StadiumSpaceView<Trailing: View>: View {
                                    close: { pickerOpen = false; touch() })
                 }
             }
-            Attachment(id: "hint") { CrownHint() }
+            Attachment(id: "hint") {
+                if recentreHint { RecentreHint() } else { CrownHint() }
+            }
         }
-        .gesture(SpatialTapGesture().targetedToEntity(catcher).onEnded { _ in reveal() })
+        .gesture(SpatialTapGesture().targetedToEntity(catcher).onEnded { _ in
+            Task { await recentre() }
+        })
+        .task { await head.start() }
+        .task(id: feed.spec.map { renderer.seat($0).id } ?? "") { await watchFacing() }
+        .onDisappear { head.stop() }
         // The stadium's moment, not the scene's: the composer holds it until
         // Broadcast has flown the play, so the panels yield and the celebration
         // shows as the ball lands rather than five seconds before it.
@@ -754,12 +771,84 @@ public struct StadiumSpaceView<Trailing: View>: View {
             }
             applySeatFolds(renderer.seat(spec).id)
             #if DEBUG
+            // A shot cannot pinch, so it may name the facing a recentre would
+            // have landed on: -stadiumRecentre <degrees>.
+            if let forced = StadiumShots.argument("-stadiumRecentre"), let yaw = Double(forced) {
+                dockFacing = nearestFacing(yaw, layout?.perSeat?[renderer.seat(spec).id])
+            }
             if ProcessInfo.processInfo.arguments.contains("-stadiumPicker") { pickerOpen = true }
             if ProcessInfo.processInfo.arguments.contains("-stadiumUnfold") { driveFolded = false; trailingFolded = false }
             if ProcessInfo.processInfo.arguments.contains("-stadiumControlsFolded") { controlsFolded = true }
             #endif
         }
         .onDisappear { feed.stop() }
+    }
+
+    /// Re-seat the dock in front of where the wearer is looking now: the
+    /// nearest facing the scene solved, so every rule the dock obeys from the
+    /// seat still holds from there. The dock fades out, moves and fades back
+    /// (reduce motion: it is simply placed); the world never moves, and the
+    /// wearer's head is not followed - nothing happens until they ask.
+    private func recentre() async {
+        reveal()
+        recentreHint = false
+        let solved = feed.spec.flatMap { layout?.perSeat?[renderer.seat($0).id] }
+        let wanted = nearestFacing(head.yawDegrees ?? 0, solved)
+        guard wanted != dockFacing else { return }
+        let fade = ExperienceTokens.layout(feed.spec)?.dock?.recentre?.fadeSeconds ?? 0.22
+        if reduceMotion {
+            dockFacing = wanted
+            return
+        }
+        for id in ["drive", "trailing", "controls"] {
+            dockOpacity(id, 0, seconds: fade / 2)
+        }
+        try? await Task.sleep(for: .seconds(fade / 2))
+        dockFacing = wanted
+        try? await Task.sleep(for: .seconds(0.02))
+        for id in ["drive", "trailing", "controls"] {
+            dockOpacity(id, 1, seconds: fade / 2)
+        }
+    }
+
+    /// The solved facing nearest the head, so the dock always lands somewhere
+    /// the rules were checked. Beyond the table's reach it lands on the
+    /// furthest solved facing, which is still in front of the wearer.
+    private func nearestFacing(_ yaw: Double, _ solved: SceneSpec.Look.SeatPanels?) -> Double {
+        let facings = solved?.facings ?? [0]
+        return facings.min { abs($0 - yaw) < abs($1 - yaw) } ?? 0
+    }
+
+    /// Fade one dock attachment. RealityKit animates an opacity component's
+    /// value, so setting it inside a withAnimation is all a fade needs.
+    private func dockOpacity(_ id: String, _ value: Float, seconds: Double) {
+        guard let e = placer.entities[id] else { return }
+        var opacity = e.components[OpacityComponent.self] ?? OpacityComponent(opacity: 1)
+        opacity.opacity = value
+        e.components.set(opacity)
+    }
+
+    /// Say once, and only when it would help: the first time the wearer is
+    /// looking well away from the dock, name the gesture that brings it back.
+    private func watchFacing() async {
+        guard !ExperiencePrefs.recentreHintShown else { return }
+        let limit = layout?.maxSideDegrees ?? 30
+        let after = ExperienceTokens.layout(feed.spec)?.dock?.recentre?.hintAfterSeconds ?? 1.5
+        var away = 0.0
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(0.25))
+            guard let yaw = head.yawDegrees else { continue }
+            away = abs(yaw - dockFacing) > limit ? away + 0.25 : 0
+            if away >= after {
+                ExperiencePrefs.recentreHintShown = true
+                recentreHint = true
+                hintShown = true
+                try? await Task.sleep(for: .seconds(4))
+                recentreHint = false
+                hintShown = false
+                return
+            }
+        }
     }
 
     /// How tall a side panel may be here: the seat's own height where the dock
@@ -806,7 +895,8 @@ public struct StadiumSpaceView<Trailing: View>: View {
     /// Called from `update` on every pass; an attachment moves only when its
     /// seat or its fold changes, and is never re-added.
     private func placeDock(_ seat: String, _ attachments: RealityViewAttachments) {
-        guard let per = layout?.perSeat?[seat] else { return }
+        guard let solved = layout?.perSeat?[seat] else { return }
+        let per = solved.at(facing: dockFacing)
         let asTab = yielding && reduceMotion
         let wanted: [(String, SceneSpec.Look.PanelSlot, Bool)] = [
             ("drive", per.drive, driveFolded || asTab),
@@ -814,11 +904,12 @@ public struct StadiumSpaceView<Trailing: View>: View {
             ("controls", per.controls, controlsFolded || asTab),
         ]
         for (id, p, folded) in wanted {
-            let key = "\(seat).\(folded)"
+            if let e = attachments.entity(for: id) { placer.entities[id] = e }
+            let key = "\(seat).\(folded).\(Int(dockFacing))"
             guard placer.placed[id] != key, let e = attachments.entity(for: id) else { continue }
             placer.placed[id] = key
             let (slot, scale) = p.place(folded: folded)
-            face(e, at: StadiumLayout.position(slot))
+            face(e, at: StadiumLayout.position(slot, facing: dockFacing))
             e.scale = SIMD3(repeating: Float(scale))
         }
     }
@@ -945,4 +1036,7 @@ struct StadiumStatus: View {
 @MainActor
 final class SeatPlacement {
     var placed: [String: String] = [:]
+    /// The dock's attachments, so a recentre can fade them without asking
+    /// the view for them again mid-update.
+    var entities: [String: Entity] = [:]
 }

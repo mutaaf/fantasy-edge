@@ -281,3 +281,35 @@ Two things the reviews kept flagging against the dock's own "never touches the f
 - **The press box** still draws everything at ×0.47 inside the glass; it needs a device to judge.
 - **`fg-club`** shows the pill clipped at the right frame edge, the same turned-head effect at -45°.
 
+## Round 6: the recentre (`docs/lookdev/experience-r6/`)
+
+Round 5 left one defect and two ways to fix it; the director chose the gesture over the drift, because a dock that moves on its own reads as the world moving, which the comfort rule exists to prevent.
+
+**The gesture.** A tap on the Controls pill, or a pinch anywhere in the room, re-seats the whole dock in front of where the wearer is looking. Nothing follows the head on its own: the dock sits where it was put until it is asked to move.
+
+- **The dock is solved for every facing it can land on.** `layout.dock.recentre` gives the buckets: every 15° out to 60° either side. `perSeat.<seat>.recentre["<degrees>"]` is the whole dock solved again from that facing, so **every rule is re-checked there** - off the painted field and border, off the board, the ribbon and the light banks, inside the comfort window, whole within the view window, nearer than any chair, rail, ground or glass. A test walks all nine facings at all seven seats.
+- **Cheap, because a turn is a shift.** `below` does not depend on which way the wearer faces and `yaw` only shifts, so one `seat_view` grid per seat answers every facing. Each bucket starts from the one beside it (`seed`), so the dock keeps its arrangement as it moves and most facings cost a check rather than a search. The scene carries all nine for about 42 kB.
+- **The app** reads the head's yaw from ARKit (`HeadFacing`, device anchor only - head pose, never gaze), lands on the nearest solved facing, and fades the dock across `recentre.fadeSeconds`. Reduce motion places it at once. No ARKit, no anchor, no yaw: it recentres to the seat's own forward, which is the worst it can do and still useful.
+- **Its own undo.** Recentring while facing where the seat faces lands on bucket 0, which is the layout the seat started with. A test holds bucket 0 equal to the seat's own dock.
+- **The world never moves.** Only the attachments are re-placed; a test asserts the recentre touches neither `world.orientation` nor `pivot.orientation`.
+
+**How the pill stays reachable when the dock is off to the side.** It does not have to be. The gesture has two surfaces, and the one that matters when the dock is out of view is the room itself: the reveal catcher became a sphere around the wearer (`RecentreCatcher`), so a pinch anywhere - not only at a panel ahead - brings the dock over. Everything else sits nearer than the catcher, so a pinch on a panel, the field or a hologram still reaches that first. The pill remains the labelled way when it is in view, and now recentres as well as unfolding the controls.
+
+**Discoverable without a tutorial.** The first time the wearer is looking more than the comfort window away from the dock for `recentre.hintAfterSeconds`, a hint appears once - "Pinch anywhere, or tap Controls, to bring the panels to you" - in the place and style the Crown hint already uses, and is never shown again. The pill's accessibility hint says the same thing.
+
+**Tests:** `make test` 677, four of them new: every facing solved and every rule re-checked from it; recentring from the seat's own facing changes nothing; the dock keeps its shape across a recentre; and the app recentres on the pill and on a pinch, lands on a solved facing, honours reduce motion and never turns the world.
+
+**Gates:** `make verify-scene`, `make verify-crowd`, `make verify-moment` (117 checks - the last two had no Makefile target until now, and do now), `contrast_check`, and `xcodebuild` on `generic/platform=visionOS Simulator` with one warning, the AppIntents notice that predates this work.
+
+**Shots.** A shot cannot pinch, so `-stadiumRecentre <degrees>` names the facing a recentre would have landed on.
+- `before/s-redzone-trails.png`: the head turned 22° and no recentre - the pill and the Elsewhere tab are in view, the drive log is off frame to the left. This is round 5's worst thing left.
+- `after/s-redzone-trails-recentred.png`: the same turn, recentred. The drive log is back, whole, with the pill and the tab beside it, between the ribbon and the far sideline.
+- `turn45/`, `turn-30/`, `turn60/`: recentred at three more facings. The dock is whole and clear of the field, the ribbon and the light banks at each one.
+- `seat-*/`: every preset unchanged from round 5.
+
+**Worst thing left.**
+- **The dock lands on a bucket, so it can sit up to 7.5° off where the wearer is looking.** Finer buckets cost build time (nine facings already take the scene about 8 s to solve for a field, cached thereafter); a client-side nudge within the bucket would need the solver in Swift.
+- **ARKit is the one thing that can be missing.** Without a device anchor the gesture still works but always returns the dock to the seat's forward. Worth checking on a device that the anchor is there in the progressive dial as well as in full immersion.
+- **The hint fires on head yaw**, so a wearer who never turns far never sees it; that is the intent, but it means the gesture is undiscovered until it is needed.
+- **The press box** still draws its dock at ×0.47 inside the glass, unchanged, and still wants a device.
+
