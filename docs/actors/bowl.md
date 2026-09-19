@@ -204,3 +204,44 @@ does not read as glazing - see `s-field-level-pressbox-from-field.png`, shot at
 `-stadiumPitch 25` from the field seat. `press_glass` is the fix and the
 paragraph above is its price. After that, the counter top is still a large
 untextured surface: it wants a laminate grain and something left on it.
+
+## Round 3: the glass was priced, bought, measured and given back
+
+Shots: `docs/lookdev/bowl-r3/`.
+
+**Binding `press_glass` cost exactly the one part predicted, and bought
+nothing a viewer can see.** It is bound, measured and reverted, so nobody
+spends that part on this again.
+
+- **Cost:** `stands` 10 -> 11 parts, Bowl 18 -> 19 of 20. Triangles unchanged.
+- **From the seat, looking out:** the field measured **68.7, 79.1, 51.2 with the
+  glass and 68.8, 79.1, 51.3 with it hidden** (`-bowlSkip mat:press_glass`, same
+  build). It costs the game nothing - and that is the tell, not the reassurance:
+  a surface that takes nothing from the field gives nothing to the box either.
+- **From the field:** magnified 5x, the band is indistinguishable from round 2.
+  Raising `pressGlassOpacity` to 0.32 made it **worse**, not better: the band
+  went 79.9 -> 75.4 mean, because at night you are looking at the *lit room*
+  through the glazing, so more glass only greys the room behind it.
+- **Why:** the box reads as a pale strip from the field because of its angular
+  size at 100 yd, not its material. Magnified, round 2 already shows warm
+  interior, mullion rhythm, a dark roof and a lit ceiling - it is a glazed room,
+  drawn 40 px tall. No material can fix a size.
+- **Left in place:** `press_glass` stays authored and unbound, now with a comment
+  at the glazing saying it was measured rather than overlooked.
+
+**The counter, though, was worth it.** A laptop open toward the glass and a page
+beside it at each work position, in `press_chair` and `trim` - materials the room
+already draws, so **no draw part**, 408 triangles. The counter is the largest
+surface in the room and being bare is most of why it read as a slab.
+
+- **Budget:** Bowl **18 of 20 parts**, 53,978-55,526 triangles of 62k. Stadium
+  100 parts, 228,840 triangles, ~67 MB.
+- **Not done:** laminate grain on the counter. It is free in parts but needs a
+  texture and UVs on quads that carry none, and at 0.7 yd under the eye and
+  receding it would be invisible past a few metres - the objects do that job at
+  any distance. Worth it only if the counter is ever seen close.
+
+**Worst thing left:** from the field the box is small and always will be; if it
+must read as more of a room, that is a size or a lighting change (a brighter
+interior reads further than any glazing), not a material. Inside, the counter top
+is still untextured.
