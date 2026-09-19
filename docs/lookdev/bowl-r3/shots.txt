@@ -1,0 +1,2 @@
+bowl-wide: replay at 240s (early) -> docs/lookdev/bowl-r3/bowl-wide.png
+sideline-props: replay at 240s (early) -> docs/lookdev/bowl-r3/sideline-props.png

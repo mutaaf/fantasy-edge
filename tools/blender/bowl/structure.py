@@ -593,7 +593,9 @@ def press_box(b: C.Builder) -> None:
                   pt(front - 0.2, ta, y0 + 0.6)), nin, "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.35), (u0 / 3, 0.35)))
         oquad(b, (pt(front - 0.2, ta, y0 - 0.5), pt(front - 0.2, tb, y0 - 0.5), pt(back, tb, y0 - 0.5),
                   pt(back, ta, y0 - 0.5)), (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
-        # canted glazing
+        # Canted glazing. `press_glass` is authored for exactly this and stays
+        # unbound: measured at bowl-r3, binding it costs Bowl's 19th of 20 draw
+        # parts and changes nothing a viewer can see. See docs/actors/bowl.md.
         oquad(b, (pt(front, ta, y0 + 0.6), pt(front, tb, y0 + 0.6), pt(front - cant, tb, y1), pt(front - cant, ta, y1)),
               C._norm((nin[0], 0.2, nin[2])), "glass")
         # the room: floor, lit back wall, desk line
@@ -719,6 +721,21 @@ def press_desk(b: C.Builder, ta, tb, nin, front, y0) -> None:
         # chairs only along the part of the run the box seat can see well; the
         # rest of the desk reads from outside without them (budget)
         if off_mid < 12.0:
+            # Left on the counter: a laptop open toward the glass, and a page
+            # beside it. The counter is the largest surface in this room and
+            # was bare, which is most of why it read as a slab rather than a
+            # desk somebody works at. Both reuse materials the room already
+            # draws, so they cost triangles and no draw part.
+            lx, lz = kit.bowl_point(d0 + 0.16, t)
+            lyaw = math.atan2(-nx, -nz)
+            b.box((lx, top + 0.012, lz), (0.30, 0.02, 0.21), "press_chair", yaw=lyaw, skip=("bottom",))
+            b.box((lx - nx * 0.10, top + 0.10, lz - nz * 0.10), (0.30, 0.19, 0.02), "press_chair", yaw=lyaw)
+            px_, pz_ = kit.bowl_point(d0 + 0.17, ring.angle(s + 0.26))
+            oquad(b, ((px_ - tx * 0.10, top + 0.006, pz_ - tz * 0.10),
+                      (px_ + tx * 0.10, top + 0.006, pz_ + tz * 0.10),
+                      (px_ + tx * 0.10 - nx * 0.14, top + 0.006, pz_ + tz * 0.10 - nz * 0.14),
+                      (px_ - tx * 0.10 - nx * 0.14, top + 0.006, pz_ - tz * 0.10 - nz * 0.14)),
+                  (0, 1, 0), "trim", band_uv("soffit", 0.0, 0.08, 0.0, 0.05))
             chx, chz = kit.bowl_point(front + R["chairBack"], t)
             yaw = math.atan2(-nx, -nz)
             # a task chair: star base, gas column, seat, curved back, arms
