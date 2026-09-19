@@ -140,6 +140,16 @@ it writes, never papered over:
 - down, distance and possession where there is no next play yet;
 - anything about a game that never kicked off: that tile stays the schedule.
 
+### What a rebuilt day looks like in the app
+
+- The wall carries a **REBUILT** chip beside the replay clock (its own line on
+  a phone). Pressing it opens "Rebuilt from timestamps" with the API's own
+  caveats, so the limits travel with the data rather than living in a doc.
+- A rebuilt live tile loses the green live dot and takes the rebuilt glyph:
+  nobody watched that minute, it was worked out afterwards.
+- A recorded board shows none of this. `docs/screenshots/rebuilt` has both,
+  side by side, on all three devices.
+
 ## Merging the backfill with the recording
 
 Run it once the recorder has finished; it refuses while the recorder is still
@@ -162,6 +172,17 @@ PYTHONPATH=packages:apps/saturday python3 -m api serve \
 ```
 
 ## Afterwards: comparing the recording to ESPN
+
+0. **Finish the night in one go.** After the recorder exits:
+   ```bash
+   python3 tools/backfill_slate.py fetch --slate 2026-09-19 --refresh
+   python3 tools/backfill_slate.py frames --slate 2026-09-19
+   python3 tools/verify_reconstruction.py --slate 2026-09-19 --boards 40
+   python3 tools/merge_capture.py --slate 2026-09-19
+   ```
+   The verify step compares the rebuilt hours against the recorded boards where
+   they overlap and exits 1 if any game disagrees; it was 35 of 35 identical
+   when the backfill was first built.
 
 1. **Does the recording cover the night?**
    ```bash
