@@ -225,6 +225,14 @@ final class BowlActor: StadiumActor {
             model.materials = model.materials.map { material in
                 guard var pbr = material as? PhysicallyBasedMaterial else { return material }
                 let n = material.name ?? ""
+                // Debug: `-bowlSkip mat:concrete,mat:trim` hides whole materials.
+                // The model-level skip answers "which model", which is rarely the
+                // question - a beige mass in a frame is one material somewhere in
+                // `stands`, and this is what names it in a single run.
+                if Self.skipped.contains(where: { $0.hasPrefix("mat:") && n.contains($0.dropFirst(4)) }) {
+                    pbr.blending = .transparent(opacity: .init(floatLiteral: 0))
+                    return pbr
+                }
                 if n.contains("seat_plastic") || n.contains("seat_band") {
                     pbr.baseColor.tint = seat
                     if inNear {

@@ -77,7 +77,7 @@ def materials():
         # glass in front is tinted and a little reflective.
         "press_room": C.material("bowl_press_room", color=(0.05, 0.045, 0.04, 1), emission="press_room_emission.jpg",
                                  emission_strength=1.6, roughness=0.9),
-        "press_desk": C.material("bowl_press_desk", color=(0.23, 0.15, 0.09, 1), roughness=0.45,
+        "press_desk": C.material("bowl_press_desk", color=(0.085, 0.075, 0.065, 1), roughness=0.4,
                                  emission_color=(0.94, 0.83, 0.68), emission_strength=0.08),
         "press_chair": C.material("bowl_press_chair", color=(0.04, 0.04, 0.045, 1), roughness=0.6,
                                   emission_color=(0.94, 0.83, 0.68), emission_strength=0.03),
@@ -659,6 +659,7 @@ def press_box(b: C.Builder) -> None:
 
 
 PRESS_ROOM = {"deskFront": 0.05, "deskDepth": 0.38, "deskTop": 0.6, "monitorEvery": 1.2,
+              "nosing": 0.03, "fin": (0.30, 0.16),
               "monitor": (0.62, 0.38), "chairBack": 1.55}
 
 
@@ -670,8 +671,17 @@ def press_desk(b: C.Builder, ta, tb, nin, front, y0) -> None:
     d0, d1 = front + R["deskFront"], front + R["deskFront"] + R["deskDepth"]
     top = y0 + R["deskTop"]
     out = (-nin[0], 0.0, -nin[2])
+    # The counter top, its dark fascia, and a nosing along the front edge.
+    # From the box seat this run is 60 m long and half a metre under the eye,
+    # so it reaches the vanishing line and fills the lower view - which is
+    # correct for a counter you are sitting at, and was the whole trouble
+    # while it was one unbroken beige plane with no edge to read. The fascia
+    # and nosing give it a near edge; the fins below break its length.
     oquad(b, (pt(d0, ta, top), pt(d0, tb, top), pt(d1, tb, top), pt(d1, ta, top)), (0, 1, 0), "press_desk")
-    oquad(b, (pt(d1, ta, y0), pt(d1, tb, y0), pt(d1, tb, top), pt(d1, ta, top)), out, "press_desk")
+    oquad(b, (pt(d1, ta, y0), pt(d1, tb, y0), pt(d1, tb, top), pt(d1, ta, top)), out, "press_chair")
+    nose = R["nosing"]
+    oquad(b, (pt(d1 - nose, ta, top + 0.004), pt(d1 - nose, tb, top + 0.004),
+              pt(d1, tb, top + 0.004), pt(d1, ta, top + 0.004)), (0, 1, 0), "press_chair")
     ring = kit.Ring(d0 + 0.2)
     s0, s1 = ring.arc_at(ta), ring.arc_at(tb)
     if s1 < s0:
@@ -690,6 +700,13 @@ def press_desk(b: C.Builder, ta, tb, nin, front, y0) -> None:
         def M(lat, up, back=0.0):
             return (cx + tx * lat - nx * back, top + 0.08 + up, cz + tz * lat - nz * back)
         off_mid = abs(((s - mid) + ring.length / 2) % ring.length - ring.length / 2)
+        # A fin between work positions, drawn the whole run: this is what stops
+        # the counter reading as one plane to the horizon, so it is worth its
+        # triangles even far down the room where the chairs are skipped.
+        fw, fh = R["fin"]
+        fx, fz = kit.bowl_point(d1 - fw / 2, ring.angle(s - R["monitorEvery"] / 2))
+        b.box((fx, top + fh / 2, fz), (fw, fh, 0.03), "press_chair",
+              yaw=math.atan2(-nx, -nz), skip=("bottom",))
         if off_mid < 1.4:
             k += 1
             continue

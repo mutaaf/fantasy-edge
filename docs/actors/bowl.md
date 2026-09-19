@@ -154,3 +154,53 @@ its own definition.
   bowl structure outside the glass, and I did not identify which. Whoever takes
   it next: `-bowlSkip` will bisect it in one run, and that is the shot's headline
   defect now that the room behind it reads.
+
+## Round 2: the beige mass was the desk, and it is a counter now
+
+Before: `docs/lookdev/sideline-r5/s-crowd-closeup-pressBox.png`. After:
+`docs/lookdev/bowl-r2/`.
+
+**Named it rather than guessed.** `-bowlSkip` only took model names
+(`stands,far,near,fills`), which answers "which model" when the question is
+always "which material". It now also takes `mat:<name>`, which hides a material
+wherever it is drawn. One run each settled it: `mat:concrete` and `mat:trim`
+changed nothing (120,106,88 before and after), and **`mat:press_desk` dropped
+the mass to 62,56,49** - it was the desk all along, not the sill and not the
+bowl outside the glass.
+
+**Why a correct desk read as a ramp.** The box seat's eye is
+`option.y + eyeMeters` = 49.0 + 1.31 = **50.31 yd**, the room floor is 49.0 and
+the counter 0.6 above it - so the counter sits 0.71 yd under the eye and runs
+58 yd end to end. A horizontal plane that close under the eye reaches the
+vanishing line: filling the lower view is what a counter you are sitting at
+*does*. The fault was that it did it as one unbroken beige plane with no near
+edge, no breaks and a warm lift - nothing to read scale or depth from. So this
+round changed how it reads, not where it is.
+
+- **Changes:** the fascia takes `press_chair` and a 0.03 yd nosing runs the
+  front edge, so the counter has a dark near edge; a fin (`PRESS_ROOM["fin"]`,
+  0.30 x 0.16) stands between work positions down the whole run, which is what
+  stops it reading as one plane to the horizon; the laminate darkens from
+  (0.23,0.15,0.09) to (0.085,0.075,0.065) and `visual.bowl.pressDeskLift` from
+  0.12 to 0.06.
+- **Measured from the box seat** (sRGB): desk top **120,106,88 -> 86,77,66**,
+  against floor 57,51,43 and chairs 82,75,66. The room now runs
+  floor < fascia (74) < desk ~ chairs, a tight dark ladder, where the desk used
+  to sit 40 points above everything else in the room.
+- **Budget:** no new material - the nosing and fins reuse `press_chair`. Bowl
+  **18 of 20 draw parts** (unchanged), 53,570 triangles of 62k (+522 for the
+  nosing and fins). Sideline untouched at 15 and 20,648.
+
+**The glass from the field: not done, and it needs a part.** `press_glass` is
+authored in `structure.py` and **never referenced** - the glazing uses the
+generic `glass`, exactly as `press_chair` sat unused before round 1. It is the
+right material for it (tinted, roughness 0.03, metallic 0.35, alpha 0.2,
+double-sided) and would give the box its own read from the field, but binding it
+is the **19th of 20 parts**. That is the director's call under the budget rule,
+not a cheap win, so it is left named rather than spent.
+
+**Worst thing left:** from the field the box is a pale band with a dark gap and
+does not read as glazing - see `s-field-level-pressbox-from-field.png`, shot at
+`-stadiumPitch 25` from the field seat. `press_glass` is the fix and the
+paragraph above is its price. After that, the counter top is still a large
+untextured surface: it wants a laminate grain and something left on it.
