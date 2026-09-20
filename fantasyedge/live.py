@@ -643,6 +643,17 @@ class EspnLiveSource(LiveSource):
                            "down": sit.get("down"),
                            "distance": sit.get("distance"),
                            "toEndzone": sit.get("yardsToEndzone"),
+                           # ESPN's own phrasing of the down, and the only
+                           # form of it that is dependable: measured over a
+                           # full Saturday's boards, `yardsToEndzone` was
+                           # absent from every live situation while this was
+                           # present in about three quarters of them. A
+                           # channel that composes its own caption from
+                           # down and distance alone therefore says nothing
+                           # about where the ball is; this says "1st & 10 at
+                           # OU 25". Null when ESPN is between plays.
+                           "downDistanceText": (sit.get("downDistanceText")
+                                                or sit.get("shortDownDistanceText")),
                            "redZone": bool(sit.get("isRedZone"))}
         return out
 
