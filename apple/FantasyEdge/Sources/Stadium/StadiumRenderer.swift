@@ -71,6 +71,8 @@ public final class StadiumRenderer {
     @ObservationIgnored private let broadcast = BroadcastActor()
     @ObservationIgnored private let actors: [any StadiumActor]
     @ObservationIgnored private var staticKey = ""
+    /// The building currently standing. See `StadiumVenue`.
+    @ObservationIgnored private var builtVenue: StadiumVenue?
     @ObservationIgnored private var preparing = false
     @ObservationIgnored private var pendingReduceMotion = false
     @ObservationIgnored private var lastRedZone = false
@@ -139,6 +141,30 @@ public final class StadiumRenderer {
     // MARK: apply
 
     public func apply(_ next: SceneSpec, reduceMotion: Bool) {
+        apply(next, reduceMotion: reduceMotion, swapping: false)
+    }
+
+    /// `swapping` is true only for the call the changeover makes at the dark,
+    /// which is what stops this deferring the same scene for ever: every other
+    /// caller with a new event id is held, and that one is let through.
+    private func apply(_ next: SceneSpec, reduceMotion: Bool, swapping: Bool) {
+        // A different game than the one on screen: take the bowl down before
+        // the clubs change under the wearer, and swap in the dark. This is the
+        // channel whipping around, and also the wearer picking a game, because
+        // both arrive here as a scene with a new event id and neither should
+        // cut. Nothing waits on the network - the scene is already in hand, so
+        // the dark lasts exactly as long as the repaint.
+        //
+        // A fade already running takes the newer scene instead: SwiftUI runs
+        // this closure again for its own reasons while the world is dark, and
+        // every one of those calls is for a game that is not yet on screen.
+        if !swapping, let shown = shownSpec, !shown.event.isEmpty,
+           next.event != shown.event, mode != .tabletop {
+            let began = experience.beginChangeover(context) { [weak self] in
+                self?.apply(next, reduceMotion: reduceMotion, swapping: true)
+            }
+            if began { return }
+        }
         let previous = shownSpec
         spec = next
         if openedAt == nil { openedAt = .now }
@@ -150,10 +176,16 @@ public final class StadiumRenderer {
         }
         // What the actors are handed is the scene with the status the stadium
         // is allowed to show: everything else is the scene as it arrived. A
-        // new matchup rebuilds, so there is nothing on screen to lag behind.
-        let key = [next.league, next.teams.home.chip, next.teams.away.chip,
-                   next.teams.home.abbr, next.teams.away.abbr].joined(separator: "|")
-        let shown = showing(next, fresh: key != staticKey)
+        // new matchup starts fresh, so there is nothing on screen to lag behind.
+        //
+        // Two things change, and they cost differently. The *venue* is the
+        // building; the *livery* is whose colours it is wearing. Changing the
+        // venue rebuilds, changing the livery repaints, and the difference is
+        // three seconds against a texture swap. A red-zone channel changes
+        // livery every few seconds and venue almost never. See `StadiumVenue`.
+        let venue = StadiumVenue(next)
+        let key = StadiumVenue.livery(next)
+        let shown = showing(next, fresh: venue != builtVenue || key != staticKey)
         let c: StadiumContext
         if let existing = context {
             existing.update(spec: shown, look: look, reduceMotion: reduceMotion)
@@ -168,9 +200,19 @@ public final class StadiumRenderer {
                 self.broadcast.redrawDrive(c)
             }
         }
-        if key != staticKey {
+        if venue != builtVenue || key != staticKey {
             if let openedAt { StadiumTiming.log("\(label) assets ready after open", since: openedAt) }
-            build(c)
+            if venue != builtVenue {
+                build(c)
+                builtVenue = venue
+            } else {
+                // Same building, new clubs. Actors that can repaint do; the
+                // rest fall through to their own build, which for everything
+                // but the crowd is a few hundredths of a second.
+                StadiumTiming.measure("\(label) relivery") {
+                    for actor in actors { actor.relivery(c) }
+                }
+            }
             staticKey = key
             gate.suppress(next.activeMoment?.playId)
             liveMoment = nil
@@ -438,10 +480,13 @@ public final class StadiumRenderer {
         experience.sit(id, context)
     }
 
+    /// The game whose scene is on screen, once any changeover has landed.
+    public var showingEvent: String { shownSpec?.event ?? "" }
+
     // MARK: the frame clock
 
     public func tick(_ dt: TimeInterval) {
-        guard let c = context, !staticKey.isEmpty else { return }
+        guard let c = context, builtVenue != nil else { return }
         c.shared.time += dt
         // Before the actors update, so a moment released this frame is acted on
         // in the same frame the ball lands. The score first, so the banner that

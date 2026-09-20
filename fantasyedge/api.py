@@ -33,6 +33,7 @@ from . import analytics, identity
 from .store import Store
 
 MOSAIC = pathlib.Path(__file__).parent / "templates" / "mosaic.html"
+REDZONE = pathlib.Path(__file__).parent / "templates" / "redzone.html"
 
 #: How wide a portrait is asked for when it is going in a list row rather than
 #: a hero. The bare path returns the full original, which for a page of
@@ -63,6 +64,7 @@ ROUTES = [
     ["GET", "/api/mosaic", "every league at once - the parent board"],
     ["GET", "/api/mosaic/{provider}/{id}", "static half of one league's board"],
     ["GET", "/api/live", "shared game state - identical for every user"],
+    ["GET", "/api/redzone", "every game ranked by urgency, and the one to watch"],
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
@@ -243,6 +245,9 @@ class Api:
         self._narrations: dict[str, dict] = {}
         self._last_call = 0.0
         self._calls = 0
+        # The channel's memory: which game is on screen, since when, and when
+        # each game last scored. One slot, because a channel shows one game.
+        self._whip: dict = {"focus": "", "since": 0.0, "scored": {}, "totals": {}}
 
     # ---------- plumbing ----------
 
@@ -581,6 +586,21 @@ class Api:
         out["replayControl"] = director.state()
         return out
 
+    def live_league(self) -> str:
+        """Which league the feed is serving, in the scene's own vocabulary.
+
+        ESPN states it on the board it just answered with (`leagues[0].slug`),
+        and its slugs are the names `scene.py` already branches on - `nfl` and
+        `college-football` - so this is a read, not a translation.
+
+        It is read rather than assumed because the difference reaches the
+        grass: a college field's hash marks are far wider than the NFL's, so a
+        Saturday drawn as a Sunday puts every play in the wrong place across
+        the field. A constant here is invisible until the day it is wrong.
+        """
+        board = self.live_source().scoreboard()
+        return ((board.get("leagues") or [{}])[0].get("slug") or "nfl")
+
     def scene(self, event: str) -> dict:
         from . import scene as sc
         # No league argument: the gamecast carries the game's own, and a
@@ -619,6 +639,79 @@ class Api:
 
     def live(self) -> dict:
         return self.live_source().snapshot()
+
+    def redzone(self) -> dict:
+        """Every game at once, ranked, with the one the channel is showing.
+
+        Shared bytes like `/api/live`, and for the same reason: which game is
+        most urgent is a fact about the slate, not about the viewer, so one
+        answer serves everybody and a cache can hold it. Pinning is the
+        viewer's own business and stays in the browser - the moment this
+        response varied by who asked, the cost model in `live.py` would
+        collapse.
+
+        The focus is decided here rather than in the page so that two screens
+        in the same room show the same game, and because the hysteresis needs
+        to remember what was on screen a moment ago. That memory is this one
+        slot: a channel has one current game by definition.
+        """
+        from . import live as livemod
+        from . import whip
+
+        with self._lock:
+            state = self._whip
+        now = time.time()
+        rows = whip.slate(self.live_source().games(), colors=livemod.team_color)
+
+        # When a score changed, so a touchdown can hold its own game on screen
+        # for a few seconds. Kept here because it is the only place that sees
+        # consecutive polls; the page is stateless between refreshes and a
+        # score is the one thing it cannot work out from a single frame.
+        scored = dict(state["scored"])
+        for row in rows:
+            key = row["event"]
+            total = row["homeScore"] + row["awayScore"]
+            if state["totals"].get(key) not in (None, total):
+                scored[key] = now
+            state["totals"][key] = total
+
+        ranked = whip.rank(rows, scored=scored, now=now)
+        held = now - state["since"] if state["focus"] else 0.0
+        focus = whip.choose(ranked, state["focus"], held=held)
+        if focus != state["focus"]:
+            state["focus"], state["since"] = focus, now
+        state["scored"] = {k: v for k, v in scored.items()
+                           if now - v <= whip.SCORE_HOLD}
+
+        live_now = [g for g in ranked if g["state"] == "in"]
+        # The feed states which league it is (`leagues[0].slug`), so the page
+        # is told rather than assuming. A constant here would be the thing
+        # that breaks the day this serves a college Saturday.
+        board = self.live_source().scoreboard()
+        league = ((board.get("leagues") or [{}])[0].get("slug") or "")
+        return {
+            "league": league,
+            "asOf": round(now, 3),
+            "source": "espn",
+            "error": self.live_source().last_error,
+            "focus": focus,
+            "counts": {"live": len(live_now), "total": len(ranked),
+                       "final": sum(1 for g in ranked if g["state"] == "post"),
+                       "redZone": sum(1 for g in live_now if g["redZone"])},
+            "games": ranked,
+        }
+
+    def redzone_page(self) -> bytes:
+        """The channel, served whole and static.
+
+        Nothing is inlined, unlike the mosaic: this page needs no database and
+        no league, so there is nothing personal to bake in. It asks
+        `/api/redzone` for everything and is therefore the same bytes for
+        every viewer, which is what lets a cache hold it.
+        """
+        if not REDZONE.exists():
+            return b"<p>redzone.html is missing from fantasyedge/templates/</p>"
+        return REDZONE.read_bytes()
 
     def mosaic_page(self) -> bytes:
         """The board, with every league's static half already inlined.
@@ -1968,6 +2061,10 @@ class Api:
             return self.health(), PRIVATE
         if rest == ["live"]:
             return self.live(), LIVE
+        if rest == ["redzone"]:
+            # Shared bytes on the live clock, like /api/live: the ranking is a
+            # fact about the slate, so every viewer may be handed the same one.
+            return self.redzone(), LIVE
         if rest == ["headlines"]:
             return self.headlines(), DERIVED
         if rest == ["injuries"]:
@@ -2150,6 +2247,15 @@ def make_handler(app: Api):
                 if path in ("/", "/index.html", "/mosaic"):
                     body = app.mosaic_page()
                     self._headers(body, 200, "", PRIVATE, "text/html")
+                    if self.command != "HEAD":
+                        self.wfile.write(body)
+                    return
+                if path in ("/redzone", "/redzone.html"):
+                    # Static: the page holds no data, it fetches /api/redzone.
+                    # That keeps it servable to a television or a phone on the
+                    # LAN without this process rendering anything per viewer.
+                    body = app.redzone_page()
+                    self._headers(body, 200, "", CONFIG, "text/html")
                     if self.command != "HEAD":
                         self.wfile.write(body)
                     return

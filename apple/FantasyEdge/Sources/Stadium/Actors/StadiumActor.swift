@@ -135,8 +135,14 @@ protocol StadiumActor: AnyObject {
     var name: String { get }
     /// Everything the actor draws hangs off this.
     var root: Entity { get }
-    /// Build for a matchup. Called again when the clubs change; clear and rebuild.
+    /// Build for a venue. Called when the league or the bowl changes; clear and rebuild.
     func build(_ c: StadiumContext)
+    /// Same venue, different clubs: new colours and lettering over the geometry
+    /// already standing. A channel that whips between games calls this many
+    /// times a minute, so an actor that can repaint instead of rebuilding
+    /// should - see `CrowdActor`, where the difference is three seconds.
+    /// The default rebuilds, which is always correct and sometimes slow.
+    func relivery(_ c: StadiumContext)
     /// A new scene arrived: numbers moved, a play landed, a tint changed.
     func apply(_ c: StadiumContext, previous: SceneSpec?)
     /// Every rendered frame.
@@ -146,6 +152,7 @@ protocol StadiumActor: AnyObject {
 }
 
 extension StadiumActor {
+    func relivery(_ c: StadiumContext) { build(c) }
     func apply(_ c: StadiumContext, previous: SceneSpec?) {}
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {}
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {}

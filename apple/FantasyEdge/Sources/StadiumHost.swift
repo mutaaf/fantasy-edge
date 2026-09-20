@@ -103,9 +103,15 @@ struct TabletopHost: View {
 struct StadiumHostSpace: View {
     @Environment(SceneFeed.self) private var feed
     @Environment(Board.self) private var board
+    @Environment(RedZoneChannel.self) private var channel
     @Environment(StadiumPassage.self) private var passage
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    /// Whether the channel is driving the stadium at all. Off by default: the
+    /// wearer who walked in from one game's tabletop came to watch that game,
+    /// and moving them off it without being asked would be a theft rather than
+    /// a feature. Turned on from the Elsewhere panel.
+    @State private var following = false
 
     var body: some View {
         // Only games the board has actually read. An unreachable board shows
@@ -119,15 +125,36 @@ struct StadiumHostSpace: View {
                 get: { board.stadiumStyle == .full ? .full : .dial },
                 set: { board.stadiumStyle = $0 == .full ? .full : .progressive }),
             look: Self.look,
-            trailingTitle: others.isEmpty ? nil : "Elsewhere",
+            trailingTitle: others.isEmpty && channel.games.isEmpty ? nil : "Red Zone",
             leave: {
                 let passage = passage, open = openWindow, dismiss = dismissImmersiveSpace
                 Task { @MainActor in await passage.leave(openWindow: open, dismissSpace: dismiss) }
             }
         ) {
-            if !others.isEmpty { Elsewhere(games: others, rows: rows) }
+            if !channel.games.isEmpty {
+                RedZonePanel(channel: channel, showing: currentEvent, rows: rows,
+                             following: $following, watch: watch)
+            } else if !others.isEmpty {
+                Elsewhere(games: others, rows: rows)
+            }
         }
         .task { board.start() }
+        .task { channel.start() }
+        // Follow the ball. The channel decides which game deserves the bowl;
+        // this only carries that decision to the feed, and the renderer fades
+        // the world down and back when the new scene lands. Nothing moves
+        // while the wearer has pinned a game or has not asked to follow.
+        .onChange(of: channel.wanted) { _, wanted in
+            guard following, !wanted.isEmpty, wanted != currentEvent else { return }
+            feed.target = .live(event: wanted)
+        }
+        .onChange(of: following) { _, on in
+            guard on, !channel.wanted.isEmpty, channel.wanted != currentEvent else { return }
+            feed.target = .live(event: channel.wanted)
+        }
+        .onChange(of: currentEvent, initial: true) { _, event in
+            channel.arrived(event)
+        }
         .task {
             #if DEBUG
             // `-stadiumLeaveAfter <seconds>`: press Leave without a pinch, so
@@ -138,10 +165,38 @@ struct StadiumHostSpace: View {
             }
             #endif
         }
+        .task {
+            #if DEBUG
+            // `-stadiumWhip a,b,c [-stadiumWhipEvery 8]`: walk the stadium
+            // between these games on a timer, so a changeover can be measured
+            // and captured without waiting for two real drives to reach the
+            // red zone at the same time. The channel's own choosing is tested
+            // on the server; this exercises the half that lives here.
+            guard let list = StadiumHost.argument("-stadiumWhip") else { return }
+            let events = list.split(separator: ",").map(String.init).filter { !$0.isEmpty }
+            guard events.count > 1 else { return }
+            let every = Double(StadiumHost.argument("-stadiumWhipEvery") ?? "") ?? 8
+            var i = 0
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(every))
+                i = (i + 1) % events.count
+                feed.target = .live(event: events[i])
+            }
+            #endif
+        }
         .onDisappear {
             board.stop()
+            channel.stop()
             passage.spaceDisappeared(openWindow: openWindow)
         }
+    }
+
+    /// Watch this game now: pin it, and go. Tapping the game already on screen
+    /// is how "stay here" is said, so it pins without moving anything.
+    private func watch(_ event: String) {
+        channel.pin(event)
+        guard event != currentEvent else { return }
+        feed.target = .live(event: event)
     }
 
     private var currentEvent: String { feed.spec?.event ?? "" }
@@ -154,6 +209,92 @@ struct StadiumHostSpace: View {
         #else
         return .zero
         #endif
+    }
+}
+
+/// The red-zone channel at the wearer's right hand: every game, the most
+/// urgent first, and the switch that lets the bowl follow the ball.
+///
+/// The Elsewhere panel this sits beside answers "what else is on". This
+/// answers "where should I be", which is a different question and the reason
+/// the channel exists: on a sixteen-game Sunday nobody can watch the right
+/// game by reading a list of scores.
+private struct RedZonePanel: View {
+    let channel: RedZoneChannel
+    /// The game the bowl is showing, which is not always the one wanted: a
+    /// changeover takes a moment and the panel must not lie during it.
+    let showing: String
+    var rows = 6
+    @Binding var following: Bool
+    let watch: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Red Zone").font(.system(size: 20, weight: .semibold))
+                Spacer()
+                Text(headline).font(.system(size: 14)).foregroundStyle(.secondary)
+            }
+            Toggle("Follow the ball", isOn: $following)
+                .font(.system(size: 15))
+                .frame(minHeight: 44)
+            if following, !channel.reason.isEmpty {
+                // Why the bowl is where it is. A channel that cuts without
+                // saying why reads as random, and on a headset the wearer
+                // cannot see the producer's reasoning anywhere else.
+                Text("Here because: \(channel.reason)")
+                    .font(.system(size: 14)).foregroundStyle(.secondary)
+            }
+            if let error = channel.error {
+                Text(error).font(.system(size: 13)).foregroundStyle(.secondary)
+            }
+            ForEach(ranked.prefix(rows)) { g in
+                Button { watch(g.event) } label: {
+                    HStack(spacing: 10) {
+                        if g.redZone {
+                            Text("RED ZONE")
+                                .font(.system(size: 10, weight: .heavy))
+                                .padding(.horizontal, 5).padding(.vertical, 2)
+                                .background(.red.opacity(0.85), in: .capsule)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(g.line).font(.system(size: 16, weight: .semibold))
+                            if !g.situation.isEmpty {
+                                Text(g.situation).font(.system(size: 12)).foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                        Text(g.live ? g.score : g.kickoffShort)
+                            .font(.system(size: 16, weight: .bold)).monospacedDigit()
+                        Text(g.event == showing ? "▶" : " ")
+                            .font(.system(size: 12)).foregroundStyle(.secondary)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(22)
+        .frame(width: 420, alignment: .leading)
+        .glassBackgroundEffect()
+    }
+
+    /// Live games by urgency - the channel's own order - then the rest by
+    /// kickoff. A final is not a destination and sinks to the bottom.
+    private var ranked: [RedZoneChannel.Game] {
+        let live = channel.games.filter(\.live)
+        let rest = channel.games.filter { !$0.live }
+            .sorted { ($0.state == "post" ? 1 : 0, $0.kickoff) < ($1.state == "post" ? 1 : 0, $1.kickoff) }
+        return live + rest
+    }
+
+    private var headline: String {
+        let c = channel.counts
+        if c.live == 0 { return c.total == 0 ? "" : "nothing live yet" }
+        let zone = c.redZone > 0 ? ", \(c.redZone) in the red zone" : ""
+        return "\(c.live) live\(zone)"
     }
 }
 
