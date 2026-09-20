@@ -418,6 +418,38 @@ final class CrowdActor: StadiumActor {
         StadiumLog.log.notice("[stadium] crowd support: home \(Int(Double(self.supportCounts[.home] ?? 0) / Double(seatsTaken) * 100))%, visiting \(Int(Double(self.supportCounts[.away] ?? 0) / Double(seatsTaken) * 100))%, neutral \(Int(Double(self.supportCounts[.neutral] ?? 0) / Double(seatsTaken) * 100))% of \(seatsTaken) seats taken")
     }
 
+    /// New clubs in the same bowl: change what the crowd wears, not where it sits.
+    ///
+    /// Placement is the expensive half - forty-odd thousand fans measured into
+    /// Bowl's own chairs, three seconds of it - and none of it depends on who
+    /// is playing. The support split is a fact about the building too: the
+    /// visiting block sits behind the visiting bench whoever is visiting. So a
+    /// matchup change is a texture swap, and a red-zone channel can leave a
+    /// game every six seconds without rebuilding the stand each time.
+    ///
+    /// The seat is the one thing that does move geometry - rings are measured
+    /// from the wearer and every card turns to face them - so a changed seat
+    /// still rebuilds.
+    func relivery(_ c: StadiumContext) {
+        guard !groups.isEmpty, let kit = CrowdKit.load(c.look.crowd) else { build(c); return }
+        let seat = c.shared.seat ?? seatKey
+        if let seat, let key = seatKey, simd_distance(seat, key) > 2 { build(c); return }
+        let s = c.spec
+        generation += 1
+        let token = generation
+        if let ready = kit.cachedDress(for: s, look: c.look) {
+            redress(ready)
+            return
+        }
+        // Nothing cached for these clubs: wear the quarter-size dress now so the
+        // stand is never the kit's own grey, and take the full one when it lands.
+        redress(kit.quickDress(for: s, look: c.look))
+        kit.composeDress(for: s, look: c.look) { [weak self] d in
+            guard let self, self.generation == token else { return }
+            self.redress(d)
+        }
+    }
+
     private func redress(_ d: CrowdKit.Dress) {
         for g in groups {
             let t: TextureResource = g.ring == .card ? (g.away ? d.cardAway : d.cardHome) : (g.away ? d.fanAway : d.fanHome)

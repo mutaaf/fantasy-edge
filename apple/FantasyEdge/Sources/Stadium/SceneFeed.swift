@@ -25,7 +25,18 @@ public final class SceneFeed {
     public private(set) var markers: ReplayMarkers?
     public private(set) var error: String?
     public var target: Target? {
-        didSet { if target != oldValue { spec = nil; error = nil; restart() } }
+        didSet {
+            guard target != oldValue else { return }
+            // Between two live games the old scene stays up until the new one
+            // lands, because a channel that whips from one game to another must
+            // not blink through "no scene" on the way: the stadium would tear
+            // down and the wearer would watch it rebuild. Anything else - into
+            // or out of a replay, or to nothing - still clears, because those
+            // are different kinds of thing to be looking at.
+            if case .live = target, case .live = oldValue {} else { spec = nil }
+            error = nil
+            restart()
+        }
     }
 
     @ObservationIgnored private let base: () -> String
@@ -79,10 +90,16 @@ public final class SceneFeed {
 
     public func refresh() async {
         guard let target, let url = URL(string: base() + path(for: target)) else { return }
+        // Which game this request is for. A switch mid-flight must not be
+        // overwritten by the answer to the question we stopped asking - and
+        // now that the old scene stays up across a switch, that answer would
+        // be indistinguishable from a fresh one.
+        let asked = target
         do {
             var request = URLRequest(url: url)
             request.cachePolicy = .reloadIgnoringLocalCacheData
             let (data, response) = try await URLSession.shared.data(for: request)
+            guard asked == self.target else { return }
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             guard code == 200 else {
                 error = Self.failure(data) ?? "The scene is unavailable (\(code))."

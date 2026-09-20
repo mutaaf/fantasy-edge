@@ -113,7 +113,10 @@ class DrawnScoreTest(unittest.TestCase):
                       "the boards draw in apply, so a score that changes between scenes must re-apply")
 
     def test_the_actors_are_handed_the_shown_status(self):
-        apply = RENDERER.split("public func apply(")[1].split("\n    private func")[0]
+        # The apply that does the work, not the one-line public wrapper in
+        # front of it: the wrapper exists so a changeover can re-enter this
+        # with `swapping: true` once the world is dark.
+        apply = RENDERER.split("private func apply(")[1].split("\n    private func")[0]
         self.assertIn("showing(next", apply)
         self.assertIn("spec: shown", apply,
                       "actors draw the stadium's status, never the scene's")

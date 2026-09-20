@@ -6,6 +6,9 @@ struct FantasyEdgeApp: App {
     /// One scene feed for the tabletop and the stadium together, so walking
     /// from one into the other keeps the same game and the same poll.
     @State private var scene: SceneFeed
+    /// Which live game deserves the stadium right now. One for the app, so the
+    /// channel's memory of what it is showing survives leaving the space.
+    @State private var channel: RedZoneChannel
     /// What was open before the stadium, so leaving it restores exactly that.
     @State private var passage = StadiumPassage()
 
@@ -13,6 +16,7 @@ struct FantasyEdgeApp: App {
         let b = Board()
         _board = State(initialValue: b)
         _scene = State(initialValue: SceneFeed(base: { "http://\(b.host)" }))
+        _channel = State(initialValue: RedZoneChannel(base: { "http://\(b.host)" }))
     }
 
     var body: some Scene {
@@ -24,7 +28,7 @@ struct FantasyEdgeApp: App {
             CommandView()
                 .tracksWindow(.board)
                 .modifier(StadiumLaunchArguments())
-                .environment(board).environment(scene).environment(passage)
+                .environment(board).environment(scene).environment(passage).environment(channel)
         }
         // .plain would mean painting our own background, which is exactly what
         // made the first version fight the room. Let the system own the glass.
@@ -48,7 +52,7 @@ struct FantasyEdgeApp: App {
         ImmersiveSpace(id: "board-space") {
             // The space owns its own detail panel now: a sheet cannot be
             // presented into an immersive space, so the card is placed in it.
-            ImmersiveBoard().environment(board).environment(scene).environment(passage)
+            ImmersiveBoard().environment(board).environment(scene).environment(passage).environment(channel)
         }
         // Mixed keeps the room; progressive lets the wearer dial it up with
         // the crown; full is there now too. Mixed stays the *default* for the
@@ -61,7 +65,7 @@ struct FantasyEdgeApp: App {
         // A game on the table: a real 3D field in a volume.
         WindowGroup(id: "tabletop", for: String.self) { $value in
             TabletopHost(value: value ?? StadiumHost.replayWindow)
-                .environment(board).environment(scene).environment(passage)
+                .environment(board).environment(scene).environment(passage).environment(channel)
         }
         .windowStyle(.volumetric)
         // presentation.tabletop.volume: sized for the two-deck bowl on its
@@ -73,7 +77,7 @@ struct FantasyEdgeApp: App {
         // offers 100% full as well. The dial never goes below 40%: under that
         // the room is the scene and the stadium is a smear at its edge.
         ImmersiveSpace(id: "stadium") {
-            StadiumHostSpace().environment(board).environment(scene).environment(passage)
+            StadiumHostSpace().environment(board).environment(scene).environment(passage).environment(channel)
         }
         .immersionStyle(selection: style(\.stadiumStyle, progressive: Self.stadiumDial),
                         in: Self.stadiumDial, .full)

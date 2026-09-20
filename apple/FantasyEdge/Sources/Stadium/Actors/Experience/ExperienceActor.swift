@@ -14,6 +14,8 @@ final class ExperienceActor: StadiumActor {
     let root = Entity()
     private(set) var seatID: String?
     private var fade: (elapsed: Double, duration: Double, swapped: Bool, seat: String?)?
+    /// A game change: fading out, swapping at the dark, fading back.
+    private var changeover: (elapsed: Double, swapped: Bool, swap: () -> Void)?
     /// Called at the dark middle of a seat change, so trails can be relaid
     /// for the new seat's near-seat rule.
     var onSeatChanged: (() -> Void)?
@@ -45,7 +47,35 @@ final class ExperienceActor: StadiumActor {
         fade = (0, max(0.1, c.look.experience.camera.seatFadeSeconds * 2), false, id)
     }
 
+    /// Leave one game for another: fade the bowl down, swap the clubs while
+    /// nothing can be seen, and fade back.
+    ///
+    /// The same shape as a seat change, and for the same reason - the wearer
+    /// never moves, the world does - but the swap is handed in rather than
+    /// being a transform this actor can do itself. The composer calls this
+    /// only once it is holding the new scene, so the dark is never a wait for
+    /// the network: it is exactly as long as it takes to repaint.
+    ///
+    /// Returns false when the caller should just swap now: the tabletop, where
+    /// there is no bowl around the wearer to fade, and reduce motion, which is
+    /// asked for by people for whom a fade is the problem.
+    @discardableResult
+    func beginChangeover(_ c: StadiumContext?, swap: @escaping () -> Void) -> Bool {
+        guard let c, !c.tabletop, !c.reduceMotion else { return false }
+        // Already going: take the newer destination and keep the one fade.
+        // Two fades over each other would read as a flicker.
+        if changeover != nil {
+            changeover?.swap = swap
+            return true
+        }
+        changeover = (elapsed: 0, swapped: false, swap: swap)
+        return true
+    }
+
+    var changingOver: Bool { changeover != nil }
+
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
+        updateChangeover(frame, c)
         guard var fd = fade else { return }
         fd.elapsed += frame.dt
         let half = fd.duration / 2
@@ -67,6 +97,40 @@ final class ExperienceActor: StadiumActor {
             fade = nil
         } else {
             fade = fd
+        }
+    }
+
+    /// Drive the changeover's opacity. A seat fade, if one is also running,
+    /// writes opacity after this and wins for its duration; the two never
+    /// overlap in practice, because a channel does not change seat and game at
+    /// the same instant, and if they did the seat fade is the shorter.
+    private func updateChangeover(_ frame: StadiumFrame, _ c: StadiumContext) {
+        guard var ch = changeover else { return }
+        var half = max(0.05, c.look.experience.camera.seatFadeSeconds)
+        #if DEBUG
+        // `-stadiumFadeScale 8`: stretch the changeover so a simulator
+        // screenshot, which costs about a second, can land inside a fade that
+        // is otherwise over in a third of one.
+        if let s = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), s > 0 { half *= s }
+        #endif
+        ch.elapsed += frame.dt
+        let opacity: Float
+        if ch.elapsed < half {
+            opacity = Float(1 - ch.elapsed / half)
+        } else {
+            if !ch.swapped {
+                ch.swapped = true
+                StadiumLog.log.notice("[stadium] changeover: dark at \(ch.elapsed, format: .fixed(precision: 2)) s, swapping")
+                ch.swap()
+            }
+            opacity = Float(min(1, (ch.elapsed - half) / half))
+        }
+        c.world.components.set(OpacityComponent(opacity: opacity))
+        if ch.elapsed >= half * 2 {
+            c.world.components.remove(OpacityComponent.self)
+            changeover = nil
+        } else {
+            changeover = ch
         }
     }
 

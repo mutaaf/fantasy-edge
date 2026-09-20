@@ -586,9 +586,24 @@ class Api:
         out["replayControl"] = director.state()
         return out
 
+    def live_league(self) -> str:
+        """Which league the feed is serving, in the scene's own vocabulary.
+
+        ESPN states it on the board it just answered with (`leagues[0].slug`),
+        and its slugs are the names `scene.py` already branches on - `nfl` and
+        `college-football` - so this is a read, not a translation.
+
+        It is read rather than assumed because the difference reaches the
+        grass: a college field's hash marks are far wider than the NFL's, so a
+        Saturday drawn as a Sunday puts every play in the wrong place across
+        the field. A constant here is invisible until the day it is wrong.
+        """
+        board = self.live_source().scoreboard()
+        return ((board.get("leagues") or [{}])[0].get("slug") or "nfl")
+
     def scene(self, event: str) -> dict:
         from . import scene as sc
-        return sc.build(self.gamecast(event), league="nfl", speed=1.0)
+        return sc.build(self.gamecast(event), league=self.live_league(), speed=1.0)
 
     def replay_scene(self) -> dict:
         from . import scene as sc

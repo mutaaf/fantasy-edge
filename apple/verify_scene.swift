@@ -45,6 +45,8 @@ struct VerifyScene {
         exit(2)
     }
     var arcsChecked = 0
+    /// Every scene's venue and livery, by event, for the check below.
+    var venues: [String: (venue: StadiumVenue, livery: String, name: String)] = [:]
     for path in paths {
         guard let blob = FileManager.default.contents(atPath: path) else {
             FileHandle.standardError.write(Data("no scene at \(path)\n".utf8))
@@ -53,6 +55,7 @@ struct VerifyScene {
         let spec = try JSONDecoder().decode(SceneSpec.self, from: blob)
         let name = URL(fileURLWithPath: path).lastPathComponent
         expect(spec.version == "1.3", "\(name): unexpected scene version \(spec.version)")
+        venues[spec.event] = (StadiumVenue(spec), StadiumVenue.livery(spec), name)
 
         // ---- arcs: the apex formula, drawn ----
         for drive in spec.drives {
@@ -364,6 +367,27 @@ struct VerifyScene {
             expect(second?.1 == 0, "\(name): reduce motion lands the ball rather than flying it")
             expect(motion.next(reduceMotion: false, floor: 0) == nil, "\(name): the queue drains")
             expect(motion.arrive(drive, initial: false).isEmpty, "\(name): a play never flies twice")
+        }
+    }
+
+    // ---- a venue is the building, not the clubs in it ----
+    //
+    // The whole reason the stadium can follow a red-zone channel: three
+    // different matchups in one league share one venue, so moving between
+    // them repaints rather than rebuilds - a fifth of a second against four.
+    // If a club-bearing value ever leaks into `StadiumVenue`, this is what
+    // says so, and the cost would otherwise only show up as a stadium that
+    // stutters every time the channel moves.
+    if venues.count > 1 {
+        let sorted = venues.sorted { $0.key < $1.key }
+        let (firstEvent, first) = sorted[0]
+        for (event, other) in sorted.dropFirst() {
+            expect(other.venue == first.venue,
+                   "\(other.name): \(event) is the same league and bowl as \(firstEvent) "
+                   + "but a different venue, so every switch between them rebuilds")
+            expect(other.livery != first.livery,
+                   "\(other.name): \(event) and \(firstEvent) are different clubs but the "
+                   + "same livery, so a switch between them would not repaint")
         }
     }
 
