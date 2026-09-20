@@ -5,7 +5,9 @@ __pycache__/
 apple/build/
 xcuserdata/
 data/capture/*/stdout.log
-# derived: rebuild it with tools/merge_capture.py
+# derived, both of them: rebuilt from the summaries and boards that are tracked
+# (tools/backfill_slate.py frames --slate <date>, then tools/merge_capture.py)
+data/capture/*-backfill/scoreboard/
 data/capture/*-merged/
 design/saturday-initial-views.html
 apps/saturday/apple/build/

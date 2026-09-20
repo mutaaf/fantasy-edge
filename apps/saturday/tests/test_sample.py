@@ -7,19 +7,25 @@ and everything has to keep working from exactly that.
 """
 from __future__ import annotations
 
+import datetime as dt
 import gzip
 import json
 import pathlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
-from api import handlers
-from cfb.sources import CaptureSource, FixtureSource
-from schema_lite import Validator
-
 REPO = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "tools"))
+
+import backfill_slate  # noqa: E402
+import merge_capture  # noqa: E402
+from api import handlers  # noqa: E402
+from cfb.sources import CaptureSource, FixtureSource  # noqa: E402
+from schema_lite import Validator  # noqa: E402
+
 CAPTURE = REPO / "data/capture/2026-09-19"
 CONTRACTS = Validator(REPO / "contracts")
 HAVE = (CAPTURE / "scoreboard").is_dir()
@@ -139,3 +145,53 @@ class FromTheCommittedTreeAlone(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(HAVE, "capture not present")
+class RebuildsWhatIsNotStored(unittest.TestCase):
+    """The backfill's frames are derived, so they are not in git. A clone has
+    the summaries they are built from, and has to be able to build them."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.root = pathlib.Path(tempfile.mkdtemp())
+        for folder in (CAPTURE, REPO / "data/capture/2026-09-19-backfill"):
+            names = tracked(folder)
+            if not names:
+                raise unittest.SkipTest(f"{folder.name} is not committed yet")
+            for name in names:
+                src, dst = REPO / name, cls.root / name
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+        cls.capture = cls.root / "data/capture/2026-09-19"
+        cls.backfill = cls.root / "data/capture/2026-09-19-backfill"
+
+    def test_a_clone_has_the_summaries_but_not_the_frames(self):
+        self.assertFalse((self.backfill / "scoreboard").exists(), "frames are derived, not stored")
+        self.assertEqual(len(list((self.backfill / "summary").glob("*.json.gz"))), 74)
+        self.assertTrue((self.backfill / "reference-board.json.gz").exists())
+
+    def test_the_frames_rebuild_and_the_night_replays_from_them(self):
+        """One command's worth of work, then the merged night end to end. A
+        coarser grid than the committed build: the point is that it rebuilds,
+        not that a test spends a minute reproducing 572 frames."""
+        board = backfill_slate.load(self.backfill / "reference-board.json.gz")
+        backfill_slate.build_frames(self.backfill, board, dt.date(2026, 9, 19),
+                                    backfill_slate.first_recorded_stamp(self.capture), every=600)
+        self.assertGreater(len(list((self.backfill / "scoreboard").glob("*.json.gz"))), 20)
+
+        merged = self.root / "merged"
+        report = merge_capture.merge(self.capture, self.backfill, merged)
+        self.assertEqual(report["frames"]["recorded"], 557)
+        self.assertEqual(report["frames"]["reconstructedDropped"], 0)
+
+        src = CaptureSource(merged, "99999999T999999Z")
+        stamps = src.frames()
+        self.assertEqual(stamps[0][:8], "20260918", "the night still starts on the Friday")
+        self.assertEqual(stamps[-1], "20260920T064612Z", "and ends on the closing board")
+        first = handlers.slate(src.at(stamps[0]))
+        self.assertEqual(CONTRACTS.validate(first, "slate.schema.json"), [])
+        self.assertIsNotNone(first["reconstructed"], "the rebuilt hours still say they were rebuilt")
+        last = handlers.slate(src.at(stamps[-1]))
+        self.assertIsNone(last["reconstructed"], "the recorded hours still say they were recorded")
+        self.assertEqual(last["counts"]["post"], 75)
