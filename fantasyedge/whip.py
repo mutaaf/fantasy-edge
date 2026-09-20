@@ -52,6 +52,33 @@ MIN_DWELL = 6.0
 SCORE_HOLD = 12.0
 
 
+def scoring_play(points: float) -> str:
+    """What a jump in a club's score must have been, named conservatively.
+
+    Only the scoreboard is consulted, so this says what the arithmetic
+    supports and nothing more. Seven is the trap: a touchdown and its extra
+    point usually land in the same poll, and a channel that reads the total
+    as an extra point announces the wrong thing on the biggest play of the
+    drive - the same mistake the Saturday recorder made and had pinned by a
+    test. Six through eight are therefore all touchdowns.
+
+    Two is left ambiguous on purpose: a safety and a two-point conversion are
+    both two, and the scoreboard cannot tell them apart.
+    """
+    p = int(round(points))
+    if p >= 6:
+        return "Touchdown"                      # 6, 7 with the kick, 8 with two
+    if p == 3:
+        return "Field goal"
+    if p == 2:
+        return "2 points"                       # safety or a conversion
+    if p == 1:
+        return "Extra point"
+    if p > 0:
+        return f"{p} points"
+    return ""
+
+
 def _num(value, default=0.0) -> float:
     """ESPN sends scores as strings and absent fields as null."""
     try:

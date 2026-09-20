@@ -76,6 +76,27 @@ class Urgency(unittest.TestCase):
             self.assertNotEqual(reason, whip.situation(g))
 
 
+class ScoringPlay(unittest.TestCase):
+    def test_seven_is_a_touchdown_not_an_extra_point(self):
+        """The trap. A touchdown and its kick usually land in the same poll,
+        and reading the total as the kick announces the wrong thing on the
+        biggest play of the drive - the mistake the Saturday recorder made.
+        Both were seen for real on 19 September: ARIZ 14 -> 21 in one frame,
+        and PUR 7 -> 13 -> 14 across two."""
+        self.assertEqual(whip.scoring_play(7), "Touchdown")
+        self.assertEqual(whip.scoring_play(6), "Touchdown")
+        self.assertEqual(whip.scoring_play(8), "Touchdown")
+        self.assertEqual(whip.scoring_play(1), "Extra point")
+
+    def test_the_ordinary_ones(self):
+        self.assertEqual(whip.scoring_play(3), "Field goal")
+        self.assertEqual(whip.scoring_play(2), "2 points")   # safety or a try
+
+    def test_nothing_gained_is_not_a_score(self):
+        self.assertEqual(whip.scoring_play(0), "")
+        self.assertEqual(whip.scoring_play(-6), "")
+
+
 class Situation(unittest.TestCase):
     def test_espns_own_words_win(self):
         """ESPN names the yard line; composing from down and distance cannot,
