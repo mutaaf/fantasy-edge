@@ -61,7 +61,8 @@ TOKENS_PATH = pathlib.Path(
 
 # ── sideline ──
 
-def _props(bench_from: float, bench_to: float, upright_above: float) -> dict:
+def _props(bench_from: float, bench_to: float, upright_above: float,
+           ground_markers: bool = False) -> dict:
     """The sideline furniture, in yards. Both codes share its shape; where
     they differ - the team area and the upright height - is an argument.
 
@@ -82,9 +83,13 @@ def _props(bench_from: float, bench_to: float, upright_above: float) -> dict:
         "pylon": {"size": 4 / 36, "height": 0.5, "color": "prop.pylon"},
         "benches": {"fromX": bench_from, "toX": bench_to, "offset": 3.8,
                     "height": 0.5, "depth": 0.7, "backHeight": 0.65, "color": "prop.bench"},
-        # The chain crew works the visitors' sideline.
+        # The chain crew works the visitors' sideline. `groundMarkers` is the
+        # pair of markers laid on the line to gain on both sidelines, which
+        # college uses and the NFL does not (NCAA 1-2-4-b). It is stated here,
+        # not decided in a renderer: which props a code puts on the field is a
+        # rule of that code, and the ports read the same answer.
         "chains": {"length": 10.0, "offset": 2.5, "poleHeight": 2.0, "markerWidth": 0.5,
-                   "side": "away", "color": "prop.chain"},
+                   "side": "away", "groundMarkers": ground_markers, "color": "prop.chain"},
     }
 
 
@@ -106,11 +111,51 @@ RULES = {
                   "hashFromSideline": 20.0, "goalPostWidth": 6.167},
         "overtimeSeconds": None,
         # The team area runs between the 20-yard lines (NCAA 1-2-4-a); posts
-        # are built 30 ft above the crossbar (1-2-5-a sets the 30 ft floor).
-        "props": _props(20.0, 80.0, 10.0),
-        "stub": True,
+        # are built 30 ft above the crossbar (1-2-5-a sets the 30 ft floor);
+        # and the line to gain is marked on the ground on both sidelines.
+        "props": _props(20.0, 80.0, 10.0, ground_markers=True),
     },
 }
+
+# What ESPN calls each league, in the places it says so. A summary's header
+# carries `league.abbreviation`, and every payload carries a `uid` of the form
+# `s:20~l:23~e:401858224`, where the `l:` is the league. Both are checked
+# because a gamecast keeps the uid when it has dropped the header.
+ESPN_LEAGUE = {"nfl": "nfl", "ncaaf": "college-football",
+               "college-football": "college-football"}
+ESPN_LEAGUE_UID = {"28": "nfl", "23": "college-football"}
+
+
+def league_of(payload: dict, default: str = "nfl") -> str:
+    """Which code this game is played under, read from the payload.
+
+    The league is a property of the game, not of the caller: a college game
+    drawn with NFL hash marks puts every play 3.58 yards off across, and does
+    it silently. So it is derived here, once, and `build` uses it unless a
+    caller insists otherwise.
+
+    Returns `default` when nothing in the payload says, which is honest for a
+    hand-built fixture and wrong for nothing: a real ESPN payload always says.
+    """
+    if not isinstance(payload, dict):
+        return default
+    stated = str(payload.get("league") or "").strip().lower()
+    if stated in RULES:
+        return stated
+    if stated in ESPN_LEAGUE:
+        return ESPN_LEAGUE[stated]
+    head = payload.get("header") or {}
+    league = head.get("league") if isinstance(head, dict) else None
+    if isinstance(league, dict):
+        abbr = str(league.get("abbreviation") or "").strip().lower()
+        if abbr in ESPN_LEAGUE:
+            return ESPN_LEAGUE[abbr]
+    for source in (payload, head):
+        uid = str((source or {}).get("uid") or "")
+        for part in uid.split("~"):
+            if part.startswith("l:") and part[2:] in ESPN_LEAGUE_UID:
+                return ESPN_LEAGUE_UID[part[2:]]
+    return default
 
 # ── field: painted art and pylon spots ──
 #
@@ -240,19 +285,32 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
 
 def pylon_spots(field: dict, league: str, size: float) -> list[list[float]]:
     """Pylon centres in (x, z) yards, each standing just outside the line it
-    marks, touching its inside edge (NFL Rule 1 §2 Art.3; NCAA 1-2-6)."""
+    marks, touching its inside edge.
+
+    Both codes put eight at the sidelines: the four front corners of the end
+    zones, where the goal lines meet the sidelines, and the four back corners,
+    where the end lines do (NFL Rule 1 §2 Art.3; NCAA 1-2-6). College adds
+    four more where the inbounds lines extended meet the end lines, three feet
+    beyond them (1-2-6); the NFL has none there.
+
+    This was wrong in both codes until the league audit, and the count hid it:
+    the NFL was drawn with its four back corners missing and four college hash
+    pylons standing in the end zone instead, which is 8 either way. A test that
+    counts pylons cannot see that, so `test_league.py` checks where they are.
+    """
     half = field["width"] / 2
     s = size / 2
     end = field["endZone"]
+    length = field["length"]
     spots = []
     for z in (-half - s, half + s):
-        spots += [[-s, z], [field["length"] + s, z]]                      # goal line x sideline
-        if league == "college-football":
-            spots += [[-end - s, z], [field["length"] + end + s, z]]      # end line x sideline
-    hash_z = half - field["hashFromSideline"]
-    back = 1.0 if league == "college-football" else 0.0                   # three feet off (1-2-6)
-    for z in (-hash_z, hash_z):
-        spots += [[-end - s - back, z], [field["length"] + end + s + back, z]]
+        spots += [[-s, z], [length + s, z]]                               # goal line x sideline
+        spots += [[-end - s, z], [length + end + s, z]]                   # end line x sideline
+    if league == "college-football":
+        hash_z = half - field["hashFromSideline"]
+        back = 1.0                                                        # three feet off (1-2-6)
+        for z in (-hash_z, hash_z):
+            spots += [[-end - s - back, z], [length + end + s + back, z]]
     return [[round(x, 4), round(z, 4)] for x, z in spots]
 
 
@@ -2160,10 +2218,16 @@ def active_cue(cues: list[dict], raw: list[dict], state: str, status: dict) -> d
 
 # ───────────────────────────── the scene ─────────────────────────────
 
-def build(game: dict, league: str = "nfl", speed: float = 1.0,
+def build(game: dict, league: str | None = None, speed: float = 1.0,
           tokens: dict | None = None) -> dict:
-    """The scene for one game at one instant. Pure: `game` is not touched."""
+    """The scene for one game at one instant. Pure: `game` is not touched.
+
+    `league` defaults to whatever the game says it is (`league_of`), so a
+    caller that does not care cannot silently draw a college game on an NFL
+    field. Pass one only to override the payload.
+    """
     tokens = tokens or load_tokens()
+    league = league or league_of(game)
     rules = RULES.get(league)
     if rules is None:
         raise ValueError(f"no field rules for {league!r}; known: {', '.join(RULES)}")
@@ -2304,10 +2368,23 @@ def build(game: dict, league: str = "nfl", speed: float = 1.0,
                            "color": "beacon.score" if scoring else "beacon"}}
         lasers.append({"kind": "scrimmage", "x": x, "color": "laser.scrimmage"})
         dist, to_goal = sit.get("distance"), sit.get("yardsToEndzone")
-        if holder and dist and (to_goal is None or _num(dist) < _num(to_goal)):
+        if holder and dist:
             step = 1.0 if holder == "home" else -1.0
-            lasers.append({"kind": "lineToGain", "x": x + step * _num(dist),
-                           "color": "laser.lineToGain"})
+            gain_x = x + step * _num(dist)
+            # Goal to go: there is no line to gain, because the goal line is
+            # nearer than it. Decided on where the line would fall, not on
+            # `yardsToEndzone`, which ESPN sends for the NFL and never for
+            # college - 0 of 887 live college situations carried one. Trusting
+            # it painted a line to gain on every college goal-to-go, and for
+            # 2nd and 8 from the 3 it painted it five yards inside the end
+            # zone. The geometry is in both codes and cannot go missing.
+            goal_line = field["length"] if step > 0 else 0.0
+            goal_to_go = gain_x >= goal_line if step > 0 else gain_x <= goal_line
+            if to_goal is not None:
+                goal_to_go = goal_to_go or _num(dist) >= _num(to_goal)
+            if not goal_to_go:
+                lasers.append({"kind": "lineToGain", "x": gain_x,
+                               "color": "laser.lineToGain"})
 
     props = json.loads(json.dumps(rules["props"]))
     props["pylon"]["at"] = pylon_spots(field, league, props["pylon"]["size"])

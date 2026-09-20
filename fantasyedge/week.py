@@ -53,7 +53,7 @@ import time
 
 from .live import _get_json, scoreboard_url, with_key
 from .replay import (_all_plays, _event, _num, capture, capture_is_complete,
-                     clock_seconds, period_lengths, play_seconds,
+                     clock_seconds, period_lengths, play_offsets, play_seconds,
                      scoreboard_path, total_seconds)
 
 # ESPN's season types. 1 preseason, 2 regular season, 3 postseason.
@@ -232,7 +232,7 @@ def _play_swing(summary: dict) -> dict:
     plays = _all_plays(summary)
     if not plays:
         return {}
-    lengths = period_lengths(summary)
+    lengths, offsets = period_lengths(summary), play_offsets(summary)
     scoring = [p for p in plays if p.get("scoringPlay")]
     lead, changes, last_change = 0, 0, None
     winning_at = None
@@ -265,7 +265,7 @@ def _play_swing(summary: dict) -> dict:
             "period": _num((ahead_since.get("period") or {}).get("number"), 0),
             "clock": ((ahead_since.get("clock") or {}).get("displayValue") or ""),
             "text": (ahead_since.get("text") or "")[:120],
-            "seconds": play_seconds(ahead_since, lengths)}
+            "seconds": play_seconds(ahead_since, lengths, offsets)}
     return {"changes": changes, "winning": winning_at,
             "lastChange": ({"period": _num((last_change.get("period") or {}).get("number"), 0),
                             "clock": ((last_change.get("clock") or {}).get("displayValue") or "")}

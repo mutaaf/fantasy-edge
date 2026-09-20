@@ -1,0 +1,3 @@
+bowl-wide: replay at 195s (early) -> docs/lookdev/league/college/bowl-wide.png
+field-level: replay at 345s (redzone) -> docs/lookdev/league/college/field-level.png
+sideline-props: replay at 195s (early) -> docs/lookdev/league/college/sideline-props.png

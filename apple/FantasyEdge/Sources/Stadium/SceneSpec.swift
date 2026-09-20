@@ -123,6 +123,11 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let poleHeight: Double
         public let markerWidth: Double
         public let side: String
+        /// Markers laid on the line to gain on both sidelines: college has
+        /// them, the NFL does not. The scene says which, so no actor has to
+        /// know one league's name to draw the other's field. Optional so a
+        /// scene written before 1.2 still decodes, and absent means none.
+        public let groundMarkers: Bool?
         public let color: String
     }
 

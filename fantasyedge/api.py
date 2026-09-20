@@ -583,13 +583,15 @@ class Api:
 
     def scene(self, event: str) -> dict:
         from . import scene as sc
-        return sc.build(self.gamecast(event), league="nfl", speed=1.0)
+        # No league argument: the gamecast carries the game's own, and a
+        # hardcoded one here drew every college game on an NFL field.
+        return sc.build(self.gamecast(event), speed=1.0)
 
     def replay_scene(self) -> dict:
         from . import scene as sc
         director = self._replay_loaded()
         out = sc.build(self.gamecast(director.event, src=self.replay_source()),
-                       league="nfl", speed=director.speed)
+                       speed=director.speed)
         control = director.state()
         # Where "replay this drive" seeks to: the game second of the shown
         # drive's first snap. Only the replay knows game seconds, so it is
@@ -910,6 +912,7 @@ class Api:
         else passes one, so the real routes can only ever read the real feed.
         """
         from .live import _num_score, headshot_url, logo_url
+        from .scene import league_of as sc_league_of
         from .scoring import boxscore_lines, score_boxscore
 
         src = src or self.live_source()
@@ -1057,6 +1060,10 @@ class Api:
         last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
         return {
             "event": str(event),
+            # Which code this game is played under, read from the summary
+            # rather than assumed. A college game drawn on an NFL field puts
+            # every play 3.58 yards off across, and says nothing about it.
+            "league": sc_league_of(data),
             # Whether this game's geometry is what happened or an estimate of
             # it, so a client can say so rather than implying the stronger one.
             "truth": truth_report,
