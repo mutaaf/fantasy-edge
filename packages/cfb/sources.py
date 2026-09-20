@@ -123,6 +123,12 @@ class CaptureSource(Source):
     def _stamped(self, folder: pathlib.Path) -> list[pathlib.Path]:
         return [p for p in sorted(folder.glob("*.json.gz")) if STAMP.match(p.name[:16])]
 
+    def _by_stamp(self, folder: pathlib.Path) -> dict[str, pathlib.Path]:
+        """Stamp to file. A frame is not always `<stamp>.json.gz`: the recorder
+        writes its last board as `<stamp>-closing.json.gz`, and a night that
+        ended crashed a replay that assumed the plain name."""
+        return {p.name[:16]: p for p in self._stamped(folder)}
+
     def _newest(self, folder: pathlib.Path) -> pathlib.Path | None:
         files = [p for p in self._stamped(folder) if p.name[:16] <= self._at[:16]]
         return files[-1] if files else None
@@ -148,8 +154,8 @@ class CaptureSource(Source):
         # Always the frame before this one, however long ago: across the
         # recorder's gap a change is still a change.
         keep = [s for i, s in enumerate(before) if i >= len(before) - 2 or seconds_between(s, now) <= seconds]
-        folder = self.root / "scoreboard"
-        return [(s, lambda s=s: _load(folder / f"{s}.json.gz")) for s in keep]
+        paths = self._by_stamp(self.root / "scoreboard")
+        return [(s, lambda p=paths[s]: _load(p)) for s in keep if s in paths]
 
     def summary(self, event: str) -> dict | None:
         live = self.root / "live" / event

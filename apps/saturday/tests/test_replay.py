@@ -8,9 +8,11 @@ when the capture is absent.
 from __future__ import annotations
 
 import copy
+import gzip
 import itertools
 import json
 import pathlib
+import tempfile
 import threading
 import time
 import unittest
@@ -64,6 +66,21 @@ class Timeline(unittest.TestCase):
         with self.assertRaises(handlers.NotFound):
             handlers.slate(early)
         self.assertIsNone(early.summary(WAKE_PUR), "a final fetched next morning is not on the board at 8 PM")
+
+    def test_the_closing_board_of_a_finished_night_replays(self):
+        """The recorder writes its last board as `<stamp>-closing.json.gz`, so
+        a frame is not always `<stamp>.json.gz`. Reading the last frame of the
+        finished 19 September night looked for a file nobody had written."""
+        root = pathlib.Path(tempfile.mkdtemp())
+        (root / "scoreboard").mkdir(parents=True)
+        for name in ("20260919T204914Z.json.gz", "20260920T064612Z-closing.json.gz"):
+            with gzip.open(root / "scoreboard" / name, "wt") as f:
+                json.dump({"events": []}, f)
+        src = CaptureSource(root, "99999999T999999Z")
+        self.assertEqual(src.frames(), ["20260919T204914Z", "20260920T064612Z"])
+        self.assertEqual(src.stamp(), "20260920T064612Z")
+        self.assertEqual(len(src.at("20260920T064612Z").history(1200)), 2)
+        self.assertEqual(handlers.slate(src.at("20260920T064612Z"))["clock"]["index"], 1)
 
     def test_marks_find_the_night(self):
         by_stamp = {f["stamp"]: f for f in self.timeline["frames"]}
