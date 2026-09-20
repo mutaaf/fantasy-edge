@@ -89,6 +89,15 @@ class Source:
         """Every frame stamp a replay can be positioned at; empty when live."""
         return []
 
+    def detail_for(self, event: str, state: str) -> str:
+        """Whether this source can answer for one game's play-by-play:
+        `available` now, `afterFinal` once it ends, or `unavailable` at all.
+
+        A live source can always ask ESPN. A capture only has what was kept,
+        and a capture that sampled its snapshots must say so rather than 404
+        as though the game did not exist."""
+        return "available"
+
     def at(self, stamp: str) -> "Source":
         raise BadStamp(f"{self.label} is live; only a replay can be read at a moment")
 
@@ -111,6 +120,7 @@ class CaptureSource(Source):
     def __init__(self, root: str | pathlib.Path, at: str):
         self.root, self._at = pathlib.Path(root), at
         self.label = f"capture:{self.root.name}@{at}"
+        self._coverage: tuple[frozenset[str], frozenset[str]] | None = None
 
     # `at` is both the frozen moment and the method that moves it.
     def at(self, stamp: str) -> "CaptureSource":
@@ -156,6 +166,23 @@ class CaptureSource(Source):
         keep = [s for i, s in enumerate(before) if i >= len(before) - 2 or seconds_between(s, now) <= seconds]
         paths = self._by_stamp(self.root / "scoreboard")
         return [(s, lambda p=paths[s]: _load(p)) for s in keep if s in paths]
+
+    def _sampled(self) -> tuple[frozenset[str], frozenset[str]]:
+        """Which games this capture kept snapshots for, and which have a final.
+        Read once: a slate asks about every game on the board."""
+        if self._coverage is None:
+            live = {p.name for p in (self.root / "live").glob("*") if p.is_dir()}
+            finals = {p.name.removesuffix(".json.gz") for p in (self.root / "final").glob("*.json.gz")}
+            self._coverage = (frozenset(live), frozenset(finals))
+        return self._coverage
+
+    def detail_for(self, event: str, state: str) -> str:
+        live, finals = self._sampled()
+        if event in live:
+            return "available"
+        if event in finals:
+            return "available" if state == "post" else "afterFinal"
+        return "unavailable"
 
     def summary(self, event: str) -> dict | None:
         live = self.root / "live" / event

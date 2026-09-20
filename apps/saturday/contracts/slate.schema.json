@@ -186,7 +186,8 @@
         "venue",
         "flags",
         "leverage",
-        "lastPlay"
+        "lastPlay",
+        "detail"
       ],
       "properties": {
         "id": {
@@ -386,6 +387,14 @@
             "schedule"
           ],
           "description": "Where this tile's state came from: a board recorded while the game was on ('recorded'), a rebuild from each play's own wallclock after the fact ('reconstructed'), or the schedule, because the game had not kicked off ('schedule'). A client must not show a reconstruction as a recording."
+        },
+        "detail": {
+          "enum": [
+            "available",
+            "afterFinal",
+            "unavailable"
+          ],
+          "description": "Whether this source can answer for the game's play-by-play now, only once it is final, or not at all. A capture that sampled its live snapshots says so here rather than letting a tile look complete."
         }
       }
     },

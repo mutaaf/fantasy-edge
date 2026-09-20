@@ -22,7 +22,7 @@ import merge_capture  # noqa: E402
 import verify_reconstruction as verify  # noqa: E402
 from api import handlers  # noqa: E402
 from cfb import parse, reconstruct  # noqa: E402
-from cfb.sources import CaptureSource  # noqa: E402
+from cfb.sources import CaptureSource, Source  # noqa: E402
 from schema_lite import Validator  # noqa: E402
 
 FIX = REPO / "tests/fixtures"
@@ -152,7 +152,7 @@ class Boards(unittest.TestCase):
         self.assertEqual([reconstruct.provenance_of(ev) for ev in board["events"]], ["reconstructed"])
 
     def test_the_slate_carries_the_provenance_and_the_caveats(self):
-        class Board(CaptureSource):
+        class Board(Source):
             replay = True
             label = "rebuilt"
 

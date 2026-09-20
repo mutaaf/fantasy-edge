@@ -100,6 +100,10 @@ def slate(source: Source, at: str | None = None) -> dict:
     counts = {"live": 0, "pre": 0, "post": 0, "delayed": 0}
     for g in games:
         s = g["status"]
+        # What this source can answer for that game. A capture that sampled its
+        # snapshots says "afterFinal" rather than letting a tile look complete
+        # and then fail when somebody opens it.
+        g["detail"] = source.detail_for(g["id"], s["state"])
         counts["delayed" if s["delayed"] else {"in": "live", "post": "post"}.get(s["state"], "pre")] += 1
     return {
         "version": VERSION,
@@ -130,7 +134,14 @@ def game(source: Source, event: str, at: str | None = None) -> dict:
     source = positioned(source, at)
     data = source.summary(event)
     if not data:
-        raise NotFound(f"No play data for event {event}.", "a game that has not kicked off, or is not in this source, has no summary")
+        state = next((g["status"]["state"] for g in _ranked_at(source, source.stamp(), source.scoreboard)
+                      if g["id"] == event), None)
+        reason = {"afterFinal": "this capture did not keep this game's snapshots; its play-by-play "
+                                "arrives with the final",
+                  "unavailable": "this capture kept nothing for this game"}.get(
+            source.detail_for(event, state or "pre"),
+            "a game that has not kicked off, or is not in this source, has no summary")
+        raise NotFound(f"No play data for event {event}.", reason)
     # INTEGRATE: shared gamecast shaping from fantasy-edge scene/replay branch
     out = game_from_summary(event, data)
     # Rank lives on the slate, not reliably in a summary header; take it from
