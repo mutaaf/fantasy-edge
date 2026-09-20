@@ -53,7 +53,8 @@ Pull CFBD data by season and store it forever. Only play-by-play backfill might 
    - Saturday Wall, game detail, SSE, on-demand summaries, replay end-to-end tests including overtime.
    - Also shipped: frame-to-frame changes (score, correction, lead, possession, kickoff, final, upset, delay) with a flourish per change and a reduce-motion equivalent; the "Around the country" whip-around feed; a replay bar that scrubs the recorded night.
    - *Exit:* the full recorded slate replays across every tile within the request budget. Held by `tests/test_replay.py`: 60 frames, 86 tiles, three clients, one scoreboard per 20 s and one summary per open game per 15 s.
-   - *Not yet proven:* a real Saturday against live ESPN end to end, and the stream on a device over the LAN. Both are booked for 18-19 September 2026: the plan, the checklist and the recording are in `docs/LIVE_TEST.md`.
+   - *Proven on 18-19 September 2026:* the API against live ESPN for a whole slate, the budget under three clients, and an unattended recording of 1,129 frames from Friday 19:36 to Sunday 02:46 ET. Write-up: `docs/LIVE_TEST_2026-09-19.md`.
+   - *Still not proven, deferred to the next slate:* the LAN device passes - the iPhone and Vision Pro checklist in `docs/LIVE_TEST.md` - which need a live Saturday and cannot be run against a replay. Also unexercised: a delay that begins while the recorder is running.
 2. **Real 3D.** *Blocked on fantasy-edge's scene branch landing* (`immersive/quality`; its `college-football` rules entry is still a stub).
    - Game Volume, then Stadium, plus a 3D placement harness. Test on a device.
    - Starts with integration steps 1-7 in `docs/ARCHITECTURE.md`, not with a renderer here: the scene spec and both renderers are built once, there.

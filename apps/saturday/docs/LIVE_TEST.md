@@ -1,4 +1,9 @@
-# The live test: Friday 18 and Saturday 19 September 2026
+# The live test: a Friday and Saturday slate
+
+*Ran for the first time on 18-19 September 2026; what it found is in
+`docs/LIVE_TEST_2026-09-19.md`. The device checklist below is still owed: it
+needs a live slate, so it carries to the next Saturday.*
+
 
 Everything so far has been proved against a recording. This is the first run
 against a Saturday as it happens: ESPN live, the API in live mode, the app on
