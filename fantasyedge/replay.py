@@ -117,29 +117,107 @@ def _period_start(period: int, lengths: dict[int, int] | None) -> int:
     return sum(_length(p, lengths) for p in range(1, period))
 
 
-def play_seconds(play: dict, lengths: dict[int, int] | None = None) -> int:
+def play_seconds(play: dict, lengths: dict[int, int] | None = None,
+                 offsets: dict[str, int] | None = None) -> int:
     """Absolute seconds into the game at which this play was snapped.
 
     `lengths` maps an overtime period to its length; see `period_lengths`.
     Without it every period is 900 seconds, which is exact for regulation.
+
+    `offsets` places the plays of an untimed overtime, which no clock can
+    order; see `play_offsets`. A play that has one is placed by it.
     """
     period = int(((play.get("period") or {}).get("number")) or 1)
+    fixed = (offsets or {}).get(str(play.get("id", "")))
+    if fixed is not None:
+        return _period_start(period, lengths) + fixed
     left = clock_seconds((play.get("clock") or {}).get("displayValue"))
     length = _length(period, lengths)
     return _period_start(period, lengths) + max(0, length - left)
 
 
-def period_lengths(summary: dict) -> dict[int, int]:
-    """Each overtime period's length, read off the clock its plays show."""
-    longest: dict[int, int] = {}
+# How far apart the plays of an untimed overtime are placed. Nothing measures
+# this - there is no clock to measure - so it is a spacing that lets a replay
+# scrub through them and lands "skip to the next score" (LEAD_SECONDS, 12)
+# before the play that scored rather than on top of it.
+UNTIMED_SNAP_SECONDS = 30
+
+
+def _is_clock_record(play: dict) -> bool:
+    """A timeout or an end-of-period marker: a record of the clock rather than
+    of football. `scene.NOT_A_PLAY` is the same set, and the one owner of it."""
+    from .scene import NOT_A_PLAY
+    return str((play.get("type") or {}).get("text") or "").strip().lower() in NOT_A_PLAY
+
+
+def _overtime_clocks(summary: dict, football_only: bool = False) -> dict[int, list[int]]:
+    """Every clock each overtime period's plays showed, in play order."""
+    seen: dict[int, list[int]] = {}
     for play in _all_plays(summary):
         period = _num((play.get("period") or {}).get("number"), 1)
         if period <= REGULATION_PERIODS:
             continue
-        left = clock_seconds((play.get("clock") or {}).get("displayValue"))
-        longest[period] = max(longest.get(period, 0), left)
-    return {p: (OVERTIME_SECONDS if top <= OVERTIME_SECONDS else PERIOD_SECONDS)
-            for p, top in longest.items()}
+        if football_only and _is_clock_record(play):
+            continue
+        seen.setdefault(period, []).append(
+            clock_seconds((play.get("clock") or {}).get("displayValue")))
+    return seen
+
+
+def untimed_overtimes(summary: dict) -> set[int]:
+    """Overtime periods whose clock never moves.
+
+    College overtime is alternating possessions from the 25 with no clock
+    running (NCAA 3-1-3), so ESPN reports the same value on every play of it -
+    usually 0:00. Read literally that puts every play of the period at the
+    same instant: a replay could not scrub through it, and "skip to the next
+    score" landed in the fourth quarter.
+
+    Timeouts are excluded before the clocks are compared, because they carry
+    their own. Toledo at Temple (401862774), a real overtime, shows 0:14 on a
+    Temple timeout and 0:00 on all six football plays around it: counting that
+    timeout made the period look timed and left five plays on one instant.
+    """
+    return {p for p, clocks in _overtime_clocks(summary, football_only=True).items()
+            if len(clocks) > 1 and len(set(clocks)) == 1}
+
+
+def play_offsets(summary: dict) -> dict[str, int]:
+    """Seconds into its own period for each play of an untimed overtime.
+
+    Empty for a game without one, which is every NFL game: the NFL's overtime
+    runs a clock, so its plays are placed by it like any other period.
+    """
+    untimed = untimed_overtimes(summary)
+    if not untimed:
+        return {}
+    out: dict[str, int] = {}
+    counted: dict[int, int] = {}
+    for play in _all_plays(summary):
+        period = _num((play.get("period") or {}).get("number"), 1)
+        if period not in untimed:
+            continue
+        index = counted.get(period, 0)
+        counted[period] = index + 1
+        out[str(play.get("id", ""))] = index * UNTIMED_SNAP_SECONDS
+    return out
+
+
+def period_lengths(summary: dict) -> dict[int, int]:
+    """Each overtime period's length, read off the clock its plays show.
+
+    An untimed overtime has no clock to read, so it is as long as the plays it
+    held, which is what keeps the period after it from starting on top of it.
+    """
+    untimed = untimed_overtimes(summary)
+    out: dict[int, int] = {}
+    for period, clocks in _overtime_clocks(summary).items():
+        if period in untimed:
+            out[period] = max(1, len(clocks)) * UNTIMED_SNAP_SECONDS
+            continue
+        top = max(clocks) if clocks else 0
+        out[period] = OVERTIME_SECONDS if top <= OVERTIME_SECONDS else PERIOD_SECONDS
+    return out
 
 
 def clock_at(game_seconds: int, lengths: dict[int, int] | None = None) -> tuple[int, int]:
@@ -173,7 +251,8 @@ def _all_plays(summary: dict) -> list[dict]:
 def total_seconds(summary: dict) -> int:
     """When the last recorded play was snapped - the end of a replay."""
     plays = _all_plays(summary)
-    return play_seconds(plays[-1], period_lengths(summary)) if plays else 0
+    return (play_seconds(plays[-1], period_lengths(summary), play_offsets(summary))
+            if plays else 0)
 
 
 def _num(raw, default=0):
@@ -1307,14 +1386,14 @@ def frame(scoreboard: dict, summary: dict, game_seconds: int,
     sm = copy.deepcopy(summary)
     event = str((sm.get("header") or {}).get("id") or "")
     game_seconds = max(0, int(game_seconds))
-    lengths = period_lengths(sm)
+    lengths, offsets = period_lengths(sm), play_offsets(sm)
 
     drives = _drives(sm)
     every = _all_plays(sm)
     included: list[list[dict]] = []
     for d in drives:
         included.append([p for p in (d.get("plays") or [])
-                         if play_seconds(p, lengths) <= game_seconds])
+                         if play_seconds(p, lengths, offsets) <= game_seconds])
     flat = [p for group in included for p in group]
     finished = bool(every) and len(flat) == len(every)
 
@@ -1895,6 +1974,7 @@ class ReplayDirector:
         with self._lock:
             self._need()
             lengths = period_lengths(self.summary)
+            offsets = play_offsets(self.summary)
             lead = int((self.summary.get("replayLeadSeconds") or 0) or LEAD_SECONDS)
             scores, drives = [], []
             for d in _drives(self.summary):
@@ -1902,13 +1982,13 @@ class ReplayDirector:
                 if not plays:
                     continue
                 team = ((d.get("team") or {}).get("abbreviation") or "").upper()
-                drives.append({"at": play_seconds(plays[0], lengths), "team": team,
+                drives.append({"at": play_seconds(plays[0], lengths, offsets), "team": team,
                                "result": d.get("displayResult") or d.get("result") or "",
                                "plays": len(plays)})
                 for p in plays:
                     if not p.get("scoringPlay"):
                         continue
-                    at = play_seconds(p, lengths)
+                    at = play_seconds(p, lengths, offsets)
                     scores.append({"at": max(0, at - lead), "playAt": at, "team": team,
                                    "period": _num((p.get("period") or {}).get("number"), 0),
                                    "clock": ((p.get("clock") or {}).get("displayValue") or "")})
@@ -1930,9 +2010,10 @@ class ReplayDirector:
         """The game second a play was snapped at, in the loaded game."""
         with self._lock:
             lengths = period_lengths(self.summary)
+            offsets = play_offsets(self.summary)
             for p in _all_plays(self.summary):
                 if str(p.get("id")) == str(play_id):
-                    return play_seconds(p, lengths)
+                    return play_seconds(p, lengths, offsets)
         return None
 
     # ── the stand-in fetch ──

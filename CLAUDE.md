@@ -192,6 +192,29 @@ and a correction only ever supplies a *relative* yardage, which carries no
 convention. The scene draws from ESPN's `yardLine`, which is fixed to the
 ground and right in both cases.
 
+**A game's league is the game's, not the caller's.** `scene.league_of` reads
+it from the payload - ESPN states it in `header.league.abbreviation` and in
+every `uid` (`l:23` college, `l:28` NFL) - and `scene.build` uses it unless a
+caller insists. `api.scene` used to insist on `"nfl"`, which drew every
+college game on an NFL field: hash marks 3.58 yards off on each side, and
+nothing said so. See `docs/LEAGUE_AGNOSTIC.md`.
+
+**ESPN sends `yardsToEndzone` on an NFL situation and never on a college
+one.** 0 of 749 live college situations in a Saturday's boards carried one,
+while `yardLine`, `down`, `distance` and `isRedZone` were in all 749. Anything
+that keys off it is NFL-only by accident: goal-to-go used to, and painted a
+line to gain five yards inside the end zone on 2nd and 8 from the 3. Use
+`yardLine`, which is fixed to the ground and always sent. A college *play
+record* does carry it, so the replay path is sound - this is the live
+scoreboard's `situation` block alone.
+
+**A college overtime has no clock, so its plays all report the same one.**
+Read literally that puts every play of the period at one instant, which broke
+scrubbing and sent "skip to the next score" back into the fourth quarter.
+`replay.untimed_overtimes` spots a period whose *football* plays share a
+clock - timeouts carry their own and are excluded first - and
+`replay.play_offsets` spaces them.
+
 **Regenerate fixtures with the script, never by hand.**
 `python3 tests/fixtures/make_fixtures.py` is deterministic. Hand-edited
 fixtures caused a real bug during development where duplicate players

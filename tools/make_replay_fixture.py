@@ -21,6 +21,7 @@ repository one silent 74% data loss.
 """
 
 import argparse
+import gzip
 import json
 import pathlib
 import sys
@@ -201,6 +202,23 @@ def trim_game(summary: dict, board: dict, event: str) -> dict:
     return {"event": event, "scoreboard": trim_scoreboard(board, event), "summary": out}
 
 
+def from_capture(root: pathlib.Path, event: str) -> tuple[dict, dict]:
+    """A game out of a weekend recorder's capture: `final/<event>.json.gz` and
+    the newest `scoreboard/*.json.gz` that carries it.
+
+    The recorder writes gzipped ESPN bytes in a layout of its own, which is
+    how a college fixture gets made at all: this repository's own captures are
+    NFL, and a fixture must never be assembled by hand.
+    """
+    summary = json.loads(gzip.decompress((root / "final" / f"{event}.json.gz").read_bytes()))
+    for path in sorted((root / "scoreboard").glob("*.json.gz"), reverse=True):
+        board = json.loads(gzip.decompress(path.read_bytes()))
+        events = [e for e in (board.get("events") or []) if str(e.get("id")) == event]
+        if events:
+            return {**board, "events": events}, summary
+    raise SystemExit(f"event {event} is on no scoreboard under {root}")
+
+
 def trim_scoreboard(board: dict, event: str) -> dict:
     ev = rp._event(board, event)
     if not ev:
@@ -268,6 +286,10 @@ def main() -> None:
                          "play-by-play rows, which correct a replay's geometry")
     ap.add_argument("--week", type=int,
                     help="write a week's slate fixture, tests/fixtures/week_slate_SEASON_TYPE_WEEK.json")
+    ap.add_argument("--from-capture", default="",
+                    help="build --game from a weekend recorder's capture directory "
+                         "(final/<event>.json.gz plus scoreboard/), rather than this "
+                         "repository's own data/replay/source")
     ap.add_argument("--season", type=int, default=2026)
     ap.add_argument("--seasontype", type=int, default=2)
     args = ap.parse_args()
@@ -302,7 +324,8 @@ def main() -> None:
         return
 
     if args.game:
-        board, summary = rp.load(CAPTURE, args.event)
+        board, summary = (from_capture(pathlib.Path(args.from_capture), args.event)
+                          if args.from_capture else rp.load(CAPTURE, args.event))
         out = FIX / f"replay_game_{args.event}.json"
         out.write_text(json.dumps(trim_game(summary, board, args.event), sort_keys=True,
                                   separators=(",", ":")))

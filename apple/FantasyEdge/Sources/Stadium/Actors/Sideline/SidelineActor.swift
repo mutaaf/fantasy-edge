@@ -204,7 +204,9 @@ final class SidelineActor: StadiumActor {
         let gain = s.lasers.first { $0.kind == "lineToGain" }?.x
         let scrimmage = s.lasers.first { $0.kind == "scrimmage" }?.x
         let down = s.status.down ?? 0
-        let key = "\(gain ?? -1)|\(scrimmage ?? -1)|\(down)|\(s.league)"
+        // Keyed on what the crew actually draws, not on the league that
+        // implies it, so a code whose markers differ cannot reuse another's.
+        let key = "\(gain ?? -1)|\(scrimmage ?? -1)|\(down)|\(p.chains.groundMarkers == true)"
         guard key != crewKey else { return }
         crewKey = key
         crew.children.removeAll()
@@ -226,7 +228,7 @@ final class SidelineActor: StadiumActor {
                 // the box carries four digit sets; show the down being played
                 !part.hasPrefix("down_") || part.hasPrefix("down_\(max(1, min(4, down)))__")
             }, remap: crewMap)
-        if s.league == "college-football" {
+        if s.field.props?.chains.groundMarkers == true {
             for (gs, gy) in [(1.0, Float(0)), (-1.0, Float.pi)] {
                 add(V.chains.ground, c, at: SceneMath.local(x: gain, y: 0, z: gs * (half + 0.5)), yaw: gy,
                     side: side, into: &bins, remap: crewMap)
