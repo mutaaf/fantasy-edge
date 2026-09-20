@@ -34,6 +34,13 @@ CAVEATS = [
     "play of a period, or at the moment a reconstruction ends, there is no next play and no ball "
     "is drawn.",
     "Win probability is ESPN's, keyed to plays, so it moves with them and not with the clock.",
+    "ESPN's play feed leads its own scoreboard by up to about a minute, and a touchdown's play "
+    "already carries the score after the extra point. A rebuild is therefore a little ahead of what "
+    "the board showed: it never passes through the six-point moment between a touchdown and its "
+    "conversion, and it posts a score the board had not published yet.",
+    "A game begins at its first play and ends at its last, not when ESPN flipped the board: a "
+    "kickoff stamped before the hour starts the game early, and a board still showing time left "
+    "after the last play reads as final here.",
     "A game that never kicked off has no plays, so its tile is the schedule, not a reconstruction.",
     "A rebuilt board carries the slate it rebuilt - the Saturday and its Friday - so a game from "
     "earlier in the week is absent rather than shown in a state nobody here recorded.",

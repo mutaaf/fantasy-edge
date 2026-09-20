@@ -5,5 +5,7 @@ __pycache__/
 apple/build/
 xcuserdata/
 data/capture/*/stdout.log
+# derived: rebuild it with tools/merge_capture.py
+data/capture/*-merged/
 design/saturday-initial-views.html
 apps/saturday/apple/build/

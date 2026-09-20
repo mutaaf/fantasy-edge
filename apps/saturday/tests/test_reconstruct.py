@@ -19,6 +19,7 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "tools"))
 
 import merge_capture  # noqa: E402
+import verify_reconstruction as verify  # noqa: E402
 from api import handlers  # noqa: E402
 from cfb import parse, reconstruct  # noqa: E402
 from cfb.sources import CaptureSource  # noqa: E402
@@ -193,6 +194,32 @@ class Boards(unittest.TestCase):
         self.assertEqual(instants, sorted(instants))
         stop = at("17:00")
         self.assertTrue(all(i <= stop for i in reconstruct.frame_instants(self.summaries, 60.0, stop)))
+
+
+class KnownLimits(unittest.TestCase):
+    """The rebuild differs from the board in three understood ways, all of them
+    the same thing: ESPN's play feed leads its own scoreboard."""
+
+    def row(self, recorded, rebuilt):
+        return {"recorded": recorded, "rebuilt": rebuilt}
+
+    def test_a_touchdown_carries_its_extra_point(self):
+        # WKU at Indiana, 20:51:14Z: the board said 6, the play already said 7.
+        self.assertEqual(verify.classify(self.row(("in", 0, 6), ("in", 0, 7))), "playFeedAheadOfBoard")
+        self.assertEqual(verify.classify(self.row(("in", 24, 14), ("in", 24, 21))), "playFeedAheadOfBoard")
+
+    def test_a_game_starts_at_its_first_play(self):
+        self.assertEqual(verify.classify(self.row(("pre", None, None), ("in", 0, 0))), "startsAtItsFirstPlay")
+
+    def test_a_game_ends_at_its_last_play(self):
+        self.assertEqual(verify.classify(self.row(("in", 16, 22), ("post", 16, 22))), "endsAtItsLastPlay")
+
+    def test_anything_else_is_unexplained(self):
+        self.assertEqual(verify.classify(self.row(("in", 21, 7), ("in", 14, 7))), "unexplained",
+                         "a rebuild behind the board is not a known limit")
+        self.assertEqual(verify.classify(self.row(("in", 0, 6), ("in", 0, 20))), "unexplained",
+                         "two scores adrift is not a conversion")
+        self.assertEqual(verify.classify(self.row(("post", 16, 22), ("in", 16, 22))), "unexplained")
 
 
 class Merge(unittest.TestCase):
