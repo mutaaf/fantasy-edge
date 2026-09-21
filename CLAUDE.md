@@ -100,6 +100,19 @@ python3 -m fantasyedge pull --provider manual \
   --draft draft.txt --standings standings.txt --league mine --season 2025
 ```
 
+**A whole day, replayed:**
+```bash
+python3 -m fantasyedge redzone-replay --date 2026-09-20 --pull   # 1 request per game
+python3 -m fantasyedge api --port 8790                           # open /redzone
+curl -s localhost:8790/api/day -d '{"action":"load","date":"2026-09-20"}'
+curl -s localhost:8790/api/day -d '{"action":"play"}'
+```
+
+Rebuilt from each play's own `wallclock`, so the red-zone channel whips around
+a finished Sunday exactly as it did live - `DayDirector.fetch` stands in for
+`EspnLiveSource._fetch` and nothing above it changes. `--from`/`--to`/`--slot`
+window it ("4pm" is both afternoon waves). See `docs/DAY_REPLAY.md`.
+
 **Last week, replayed:**
 ```bash
 python3 -m fantasyedge last-week --json            # the week, best game first
@@ -214,6 +227,15 @@ scrubbing and sent "skip to the next score" back into the fourth quarter.
 `replay.untimed_overtimes` spots a period whose *football* plays share a
 clock - timeouts carry their own and are excluded first - and
 `replay.play_offsets` spaces them.
+
+**ESPN blanks the score on some administrative plays, and counts a touchdown
+before its try.** On 2026-09-20 the "Two-Minute Warning" play of CIN at HOU
+carries 0-0 while the game stood at 20-6, and NO at BAL's touchdown carries
+17 - the score it would have been had the two-point attempt worked - before
+the failed attempt restates 15. `dayreplay.running_scores` carries the running
+score through a 0-0 on a game that has already scored, and leaves the
+downward correction alone: the first states a score nobody was ever on, the
+second states one everybody saw. Both would otherwise make a tile flicker.
 
 **Regenerate fixtures with the script, never by hand.**
 `python3 tests/fixtures/make_fixtures.py` is deterministic. Hand-edited

@@ -139,11 +139,22 @@ class ChannelTest(unittest.TestCase):
                       "a pinned game that ended must not strand the wearer on a final")
 
     def test_the_scene_takes_its_league_from_the_feed(self):
-        """A constant here draws a college Saturday with NFL hash marks."""
+        """A constant here draws a college Saturday with NFL hash marks.
+
+        This asserted on `league=self.live_league()` until the league audit
+        landed a better answer for the same bug: the league is a fact about
+        the *game*, so `scene.build` reads it from the payload and a mixed
+        slate cannot be wrong about one of its games. What must never come
+        back is the constant, so that is what is pinned - by behaviour rather
+        than by the spelling of a call, which is what made this brittle.
+        """
         body = API.split("def scene(self, event: str)")[1].split("def ")[0]
-        self.assertIn("league=self.live_league()", body)
         self.assertNotIn('league="nfl"', body)
-        self.assertIn("leagues", API.split("def live_league(")[1].split("def ")[0])
+
+        from fantasyedge import scene as sc
+        college = {"header": {"league": {"abbreviation": "NCAAF"}}}
+        self.assertEqual(sc.league_of(college), "college-football",
+                         "the game's own payload must decide its league")
 
 
 if __name__ == "__main__":

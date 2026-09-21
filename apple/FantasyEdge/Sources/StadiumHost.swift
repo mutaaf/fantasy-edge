@@ -232,8 +232,22 @@ private struct RedZonePanel: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Red Zone").font(.system(size: 20, weight: .semibold))
+                if let day = channel.day {
+                    // A rebuilt day is marked beside its own name, not once
+                    // on a screen the wearer may never have seen.
+                    Text("REBUILT \(day.label)")
+                        .font(.system(size: 10, weight: .heavy))
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(.orange.opacity(0.28), in: .capsule)
+                        .accessibilityLabel("Rebuilt from timestamps, \(day.label)")
+                }
                 Spacer()
                 Text(headline).font(.system(size: 14)).foregroundStyle(.secondary)
+            }
+            if let day = channel.day, let first = day.caveats.first {
+                Text("Rebuilt from play timestamps, not recorded. \(first)")
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Toggle("Follow the ball", isOn: $following)
                 .font(.system(size: 15))

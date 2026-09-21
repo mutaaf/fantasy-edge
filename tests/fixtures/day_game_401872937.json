@@ -1,0 +1,4191 @@
+{
+ "drives": {
+  "previous": [
+   {
+    "description": "9 plays, 55 yards, 3:57",
+    "displayResult": "Field Goal",
+    "id": "4018729371",
+    "plays": [
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 28",
+       "possessionText": "MIN 28",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 72,
+       "yardsToEndzone": 72
+      },
+      "homeScore": 0,
+      "id": "40187293740",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "4000",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 21,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Santos kicks 58 yards from CHI 35 to MIN 7. M.Price to MIN 28 for 21 yards (J.Sanborn; S.Thomas).",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:02:37Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:54"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "homeScore": 0,
+      "id": "40187293763",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "6300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 28",
+       "possessionText": "MIN 28",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 72,
+       "yardsToEndzone": 72
+      },
+      "statYardage": 8,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) A.Jones left tackle to MIN 36 for 8 yards (C.Lewis; T.Stevenson).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:03:22Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:04"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "homeScore": 0,
+      "id": "40187293785",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "8500",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "statYardage": 30,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass deep left to J.Jefferson pushed ob at CHI 34 for 30 yards (T.Stevenson).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:04:12Z",
+      "yardsAfterCatch": 0
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:32"
+      },
+      "end": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "homeScore": 0,
+      "id": "401872937115",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "11500",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Wentz pass incomplete short left.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:04:54Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:29"
+      },
+      "end": {
+       "distance": 4,
+       "down": 3,
+       "downDistanceText": "3rd & 4 at CHI 28",
+       "possessionText": "CHI 28",
+       "shortDownDistanceText": "3rd & 4",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 28,
+       "yardsToEndzone": 28
+      },
+      "homeScore": 0,
+      "id": "401872937138",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "13800",
+      "start": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "statYardage": 6,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass short left to J.Addison pushed ob at CHI 28 for 6 yards (J.Johnson).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:05:34Z",
+      "yardsAfterCatch": 3
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:51"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 21",
+       "possessionText": "CHI 21",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "homeScore": 0,
+      "id": "401872937168",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "16800",
+      "start": {
+       "distance": 4,
+       "down": 3,
+       "downDistanceText": "3rd & 4 at CHI 28",
+       "possessionText": "CHI 28",
+       "shortDownDistanceText": "3rd & 4",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 28,
+       "yardsToEndzone": 28
+      },
+      "statYardage": 7,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass short middle to T.Hockenson to CHI 21 for 7 yards (D.Bush).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:06:19Z",
+      "yardsAfterCatch": 3
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:06"
+      },
+      "end": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at CHI 21",
+       "possessionText": "CHI 21",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "homeScore": 0,
+      "id": "401872937193",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "19300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 21",
+       "possessionText": "CHI 21",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass incomplete short right to J.Addison (D.Bush).",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:07:04Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:03"
+      },
+      "end": {
+       "distance": 6,
+       "down": 3,
+       "downDistanceText": "3rd & 6 at CHI 17",
+       "possessionText": "CHI 17",
+       "shortDownDistanceText": "3rd & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "homeScore": 0,
+      "id": "401872937216",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "21600",
+      "start": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at CHI 21",
+       "possessionText": "CHI 21",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz scrambles right end to CHI 17 for 4 yards (D.Thieneman).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:07:47Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:13"
+      },
+      "end": {
+       "distance": 6,
+       "down": 4,
+       "downDistanceText": "4th & 6 at CHI 17",
+       "possessionText": "CHI 17",
+       "shortDownDistanceText": "4th & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "homeScore": 0,
+      "id": "401872937238",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "23800",
+      "start": {
+       "distance": 6,
+       "down": 3,
+       "downDistanceText": "3rd & 6 at CHI 17",
+       "possessionText": "CHI 17",
+       "shortDownDistanceText": "3rd & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass incomplete deep middle to J.Jefferson (D.Thieneman).",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:08:37Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": -1,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 0,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 0,
+      "id": "401872937261",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": true,
+      "scoringType": {
+       "abbreviation": "FG",
+       "displayName": "Field Goal",
+       "name": "field-goal"
+      },
+      "sequenceNumber": "26100",
+      "start": {
+       "distance": 6,
+       "down": 4,
+       "downDistanceText": "4th & 6 at CHI 17",
+       "possessionText": "CHI 17",
+       "shortDownDistanceText": "4th & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "statYardage": 35,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": " W.Reichard 35 yard field goal is GOOD, Center-A.DePaola, Holder-B.Thorson.",
+      "type": {
+       "abbreviation": "FG",
+       "id": "59",
+       "text": "Field Goal Good"
+      },
+      "wallclock": "2026-09-20T17:09:20Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "end": {
+       "distance": 0,
+       "down": -1,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 0,
+      "id": "401872937271",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "27100",
+      "start": {
+       "distance": 0,
+       "down": -1,
+       "downDistanceText": " & Goal at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": " & Goal",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 11:03.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:09:34Z"
+     }
+    ],
+    "result": "FG",
+    "team": {
+     "abbreviation": "MIN",
+     "displayName": "Minnesota Vikings",
+     "id": "16",
+     "name": "Vikings",
+     "shortDisplayName": "Vikings"
+    }
+   },
+   {
+    "description": "9 plays, 37 yards, 6:00",
+    "displayResult": "Field Goal",
+    "id": "4018729372",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "11:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 69
+      },
+      "homeScore": 0,
+      "id": "401872937281",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "28100",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 21,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "W.Reichard kicks 55 yards from MIN 35 to CHI 10. Z.Thomas to CHI 31 for 21 yards (T.Ingram-Dawkins).",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:12:39Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "10:57"
+      },
+      "end": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at CHI 38",
+       "possessionText": "CHI 38",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 38,
+       "yardsToEndzone": 62
+      },
+      "homeScore": 0,
+      "id": "401872937311",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "31100",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 69
+      },
+      "statYardage": 7,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass short right to D.Swift to CHI 38 for 7 yards (B.Murphy).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:13:30Z",
+      "yardsAfterCatch": 8
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "10:24"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 45",
+       "possessionText": "MIN 45",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 55,
+       "yardsToEndzone": 45
+      },
+      "homeScore": 0,
+      "id": "401872937336",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "33600",
+      "start": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at CHI 38",
+       "possessionText": "CHI 38",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 38,
+       "yardsToEndzone": 62
+      },
+      "statYardage": 17,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Williams FUMBLES (Aborted) at CHI 37, and recovers at CHI 36. C.Williams to MIN 45 for 19 yards (J.Metellus).",
+      "type": {
+       "id": "9",
+       "text": "Fumble Recovery (Own)"
+      },
+      "wallclock": "2026-09-20T17:14:02Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:42"
+      },
+      "end": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 38
+      },
+      "homeScore": 0,
+      "id": "401872937363",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "36300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 45",
+       "possessionText": "MIN 45",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 55,
+       "yardsToEndzone": 45
+      },
+      "statYardage": 7,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) D.Swift left tackle to MIN 38 for 7 yards (T.Ingram-Dawkins; J.Metellus).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:14:45Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:07"
+      },
+      "end": {
+       "distance": 1,
+       "down": 3,
+       "downDistanceText": "3rd & 1 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "3rd & 1",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 36
+      },
+      "homeScore": 0,
+      "id": "401872937385",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "38500",
+      "start": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 38
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "D.Swift right tackle to MIN 36 for 2 yards (B.Cashman).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:15:19Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "8:21"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 35
+      },
+      "homeScore": 0,
+      "id": "401872937407",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "40700",
+      "start": {
+       "distance": 1,
+       "down": 3,
+       "downDistanceText": "3rd & 1 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "3rd & 1",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 36
+      },
+      "statYardage": 1,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "D.Swift right end to MIN 35 for 1 yard (L.Rodriguez; D.Orange).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:16:05Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:42"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 35
+      },
+      "homeScore": 0,
+      "id": "401872937429",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "offsetting",
+        "text": "Offsetting"
+       },
+       "type": {
+        "slug": "offsetting",
+        "text": "Offsetting"
+       }
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "42900",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 35
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Williams pass incomplete short right [L.Rodriguez].Penalty on CHI-G.Bradbury, Offensive Holding, offsetting, enforced at MIN 35 - No Play.Penalty on MIN-L.Rodriguez, Roughing the Passer, offsetting.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:16:44Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:36"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at MIN 32",
+       "possessionText": "MIN 32",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "homeScore": 0,
+      "id": "401872937463",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "46300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 35
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "K.Monangai right tackle to MIN 32 for 3 yards (J.Metellus; D.Turner).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:18:17Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "7:00"
+      },
+      "end": {
+       "distance": 17,
+       "down": 2,
+       "downDistanceText": "2nd & 17 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "2nd & 17",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 42
+      },
+      "homeScore": 0,
+      "id": "401872937485",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "offensive-holding",
+        "text": "Offensive Holding"
+       },
+       "yards": 10
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "48500",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at MIN 32",
+       "possessionText": "MIN 32",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "statYardage": -10,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "K.Monangai left tackle to MIN 24 for 8 yards (I.Rodgers, J.Metellus).PENALTY on CHI-B.Jones, Offensive Holding, 10 yards, enforced at MIN 32 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:18:54Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "6:32"
+      },
+      "end": {
+       "distance": 13,
+       "down": 3,
+       "downDistanceText": "3rd & 13 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "3rd & 13",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 38
+      },
+      "homeScore": 0,
+      "id": "401872937518",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "51800",
+      "start": {
+       "distance": 17,
+       "down": 2,
+       "downDistanceText": "2nd & 17 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "2nd & 17",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 42
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass short left to K.Monangai to MIN 38 for 4 yards (B.Murphy; E.Wilson).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:19:47Z",
+      "yardsAfterCatch": 1
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:53"
+      },
+      "end": {
+       "distance": 7,
+       "down": 4,
+       "downDistanceText": "4th & 7 at MIN 32",
+       "possessionText": "MIN 32",
+       "shortDownDistanceText": "4th & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "homeScore": 0,
+      "id": "401872937543",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "54300",
+      "start": {
+       "distance": 13,
+       "down": 3,
+       "downDistanceText": "3rd & 13 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "3rd & 13",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 38
+      },
+      "statYardage": 6,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams scrambles right end pushed ob at MIN 32 for 6 yards (A.Van Ginkel).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:20:26Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": -1,
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 100,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 3,
+      "id": "401872937570",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": true,
+      "scoringType": {
+       "abbreviation": "FG",
+       "displayName": "Field Goal",
+       "name": "field-goal"
+      },
+      "sequenceNumber": "57000",
+      "start": {
+       "distance": 7,
+       "down": 4,
+       "downDistanceText": "4th & 7 at MIN 32",
+       "possessionText": "MIN 32",
+       "shortDownDistanceText": "4th & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "statYardage": 50,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Santos 50 yard field goal is GOOD, Center-B.Gardner, Holder-T.Taylor.",
+      "type": {
+       "abbreviation": "FG",
+       "id": "59",
+       "text": "Field Goal Good"
+      },
+      "wallclock": "2026-09-20T17:21:19Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:03"
+      },
+      "end": {
+       "distance": 0,
+       "down": -1,
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 3,
+      "id": "401872937580",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "58000",
+      "start": {
+       "distance": 0,
+       "down": -1,
+       "downDistanceText": " & Goal at CHI 35",
+       "possessionText": "CHI 35",
+       "shortDownDistanceText": " & Goal",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 05:03.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:21:33Z"
+     }
+    ],
+    "result": "FG",
+    "team": {
+     "abbreviation": "CHI",
+     "displayName": "Chicago Bears",
+     "id": "3",
+     "name": "Bears",
+     "shortDisplayName": "Bears"
+    }
+   },
+   {
+    "description": "3 plays, -14 yards, 2:06",
+    "displayResult": "Punt",
+    "id": "4018729373",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "5:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 26",
+       "possessionText": "MIN 26",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 74,
+       "yardsToEndzone": 74
+      },
+      "homeScore": 3,
+      "id": "401872937590",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "59000",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 21,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Santos kicks 60 yards from CHI 35 to MIN 5. M.Price pushed ob at MIN 26 for 21 yards (E.Hicks).",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:24:14Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "4:58"
+      },
+      "end": {
+       "distance": 6,
+       "down": 2,
+       "downDistanceText": "2nd & 6 at MIN 30",
+       "possessionText": "MIN 30",
+       "shortDownDistanceText": "2nd & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 70,
+       "yardsToEndzone": 70
+      },
+      "homeScore": 3,
+      "id": "401872937625",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "62500",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 26",
+       "possessionText": "MIN 26",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 74,
+       "yardsToEndzone": 74
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones right guard to MIN 30 for 4 yards (J.Lynch; C.Lewis).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:25:04Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "4:33"
+      },
+      "end": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at MIN 34",
+       "possessionText": "MIN 34",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 66,
+       "yardsToEndzone": 66
+      },
+      "homeScore": 3,
+      "id": "401872937647",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "64700",
+      "start": {
+       "distance": 6,
+       "down": 2,
+       "downDistanceText": "2nd & 6 at MIN 30",
+       "possessionText": "MIN 30",
+       "shortDownDistanceText": "2nd & 6",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 70,
+       "yardsToEndzone": 70
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones left tackle to MIN 34 for 4 yards (D.Bush; J.Lynch).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:25:29Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:47"
+      },
+      "end": {
+       "distance": 24,
+       "down": 4,
+       "downDistanceText": "4th & 24 at MIN 12",
+       "possessionText": "MIN 12",
+       "shortDownDistanceText": "4th & 24",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 88,
+       "yardsToEndzone": 88
+      },
+      "homeScore": 3,
+      "id": "401872937669",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "66900",
+      "start": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at MIN 34",
+       "possessionText": "MIN 34",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 66,
+       "yardsToEndzone": 66
+      },
+      "statYardage": -22,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz FUMBLES (Aborted) at MIN 29, and recovers at MIN 12. C.Wentz to MIN 12 for no gain (D.Bush).",
+      "type": {
+       "id": "9",
+       "text": "Fumble Recovery (Own)"
+      },
+      "wallclock": "2026-09-20T17:26:12Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "3:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 58
+      },
+      "homeScore": 3,
+      "id": "401872937696",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "69600",
+      "start": {
+       "distance": 24,
+       "down": 4,
+       "downDistanceText": "4th & 24 at MIN 12",
+       "possessionText": "MIN 12",
+       "shortDownDistanceText": "4th & 24",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 88,
+       "yardsToEndzone": 88
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "B.Thorson punts 46 yards to CHI 42, Center-A.DePaola, fair catch by K.Raymond.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:26:57Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:57"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 58
+      },
+      "homeScore": 3,
+      "id": "401872937706",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "70600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 02:57.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:27:17Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "MIN",
+     "displayName": "Minnesota Vikings",
+     "id": "16",
+     "name": "Vikings",
+     "shortDisplayName": "Vikings"
+    }
+   },
+   {
+    "description": "3 plays, -2 yards, 1:22",
+    "displayResult": "Interception",
+    "id": "4018729374",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:57"
+      },
+      "end": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at CHI 37",
+       "possessionText": "CHI 37",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 37,
+       "yardsToEndzone": 63
+      },
+      "homeScore": 3,
+      "id": "401872937716",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "false-start",
+        "text": "False Start"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "71600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 58
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "PENALTY on CHI-G.Bradbury, False Start, 5 yards, enforced at CHI 42 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:30:06Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:57"
+      },
+      "end": {
+       "distance": 15,
+       "down": 2,
+       "downDistanceText": "2nd & 15 at CHI 37",
+       "possessionText": "CHI 37",
+       "shortDownDistanceText": "2nd & 15",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 37,
+       "yardsToEndzone": 63
+      },
+      "homeScore": 3,
+      "id": "401872937747",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "74700",
+      "start": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at CHI 37",
+       "possessionText": "CHI 37",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 37,
+       "yardsToEndzone": 63
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "D.Swift right guard to CHI 37 for no gain (A.Van Ginkel).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:30:43Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "2:17"
+      },
+      "end": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 40",
+       "possessionText": "CHI 40",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 40,
+       "yardsToEndzone": 60
+      },
+      "homeScore": 3,
+      "id": "401872937769",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "76900",
+      "start": {
+       "distance": 15,
+       "down": 2,
+       "downDistanceText": "2nd & 15 at CHI 37",
+       "possessionText": "CHI 37",
+       "shortDownDistanceText": "2nd & 15",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 37,
+       "yardsToEndzone": 63
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass short right to C.Loveland pushed ob at CHI 40 for 3 yards (D.Turner). MIN-T.Ingram-Dawkins was injured during the play.",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:31:24Z",
+      "yardsAfterCatch": 0
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:53"
+      },
+      "end": {
+       "distance": 7,
+       "down": 3,
+       "downDistanceText": "3rd & 7 at CHI 45",
+       "possessionText": "CHI 45",
+       "shortDownDistanceText": "3rd & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 45,
+       "yardsToEndzone": 55
+      },
+      "homeScore": 3,
+      "id": "401872937802",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "defensive-offside",
+        "text": "Defensive Offside"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "80200",
+      "start": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 40",
+       "possessionText": "CHI 40",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 40,
+       "yardsToEndzone": 60
+      },
+      "statYardage": 5,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass incomplete deep left to R.Odunze.PENALTY on MIN-A.Van Ginkel, Defensive Offside, 5 yards, enforced at CHI 40 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:32:22Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:47"
+      },
+      "end": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 40",
+       "possessionText": "CHI 40",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 40,
+       "yardsToEndzone": 60
+      },
+      "homeScore": 3,
+      "id": "401872937836",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "delay-of-game",
+        "text": "Delay of Game"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "83600",
+      "start": {
+       "distance": 7,
+       "down": 3,
+       "downDistanceText": "3rd & 7 at CHI 45",
+       "possessionText": "CHI 45",
+       "shortDownDistanceText": "3rd & 7",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 45,
+       "yardsToEndzone": 55
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) PENALTY on CHI, Delay of Game, 5 yards, enforced at CHI 45 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:33:17Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:47"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "homeScore": 3,
+      "id": "401872937860",
+      "isPenalty": false,
+      "isTurnover": true,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "86000",
+      "start": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 40",
+       "possessionText": "CHI 40",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 40,
+       "yardsToEndzone": 60
+      },
+      "statYardage": -1,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass deep middle intended for L.Burden INTERCEPTED by B.Murphy [Jac.Thomas] at MIN 36. B.Murphy pushed ob at MIN 35 for -1 yards (R.Odunze).",
+      "type": {
+       "abbreviation": "INTR",
+       "id": "26",
+       "text": "Pass Interception Return"
+      },
+      "wallclock": "2026-09-20T17:33:55Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:35"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "homeScore": 3,
+      "id": "401872937876",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "87600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 01:35.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:34:43Z"
+     }
+    ],
+    "result": "INT",
+    "team": {
+     "abbreviation": "CHI",
+     "displayName": "Chicago Bears",
+     "id": "3",
+     "name": "Bears",
+     "shortDisplayName": "Bears"
+    }
+   },
+   {
+    "description": "3 plays, 7 yards, 1:32",
+    "displayResult": "Punt",
+    "id": "4018729375",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "1:35"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 62
+      },
+      "homeScore": 3,
+      "id": "401872937892",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "89200",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones right end to MIN 38 for 3 yards (K.Street; D.Jackson).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:37:12Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:57"
+      },
+      "end": {
+       "distance": 3,
+       "down": 3,
+       "downDistanceText": "3rd & 3 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "3rd & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "homeScore": 3,
+      "id": "401872937921",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "92100",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at MIN 38",
+       "possessionText": "MIN 38",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 62,
+       "yardsToEndzone": 62
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones right guard to MIN 42 for 4 yards (K.Street).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:37:50Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:16"
+      },
+      "end": {
+       "distance": 3,
+       "down": 4,
+       "downDistanceText": "4th & 3 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "4th & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "homeScore": 3,
+      "id": "401872937943",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "94300",
+      "start": {
+       "distance": 3,
+       "down": 3,
+       "downDistanceText": "3rd & 3 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "3rd & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass incomplete deep left to J.Addison.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:38:31Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:11"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 12",
+       "possessionText": "CHI 12",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 12,
+       "yardsToEndzone": 88
+      },
+      "homeScore": 3,
+      "id": "401872937966",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "96600",
+      "start": {
+       "distance": 3,
+       "down": 4,
+       "downDistanceText": "4th & 3 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "4th & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": " B.Thorson punts 46 yards to CHI 12, Center-A.DePaola, fair catch by K.Raymond.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:39:08Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "MIN",
+     "displayName": "Minnesota Vikings",
+     "id": "16",
+     "name": "Vikings",
+     "shortDisplayName": "Vikings"
+    }
+   },
+   {
+    "description": "3 plays, 2 yards, 1:00",
+    "displayResult": "Punt",
+    "id": "4018729376",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:03"
+      },
+      "end": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "homeScore": 3,
+      "id": "401872937986",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "98600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 12",
+       "possessionText": "CHI 12",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 12,
+       "yardsToEndzone": 88
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "K.Monangai right tackle to CHI 14 for 2 yards (J.Redmond).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:40:07Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "end": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "homeScore": 3,
+      "id": "4018729371018",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "101800",
+      "start": {
+       "distance": 8,
+       "down": 2,
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "END QUARTER 1",
+      "type": {
+       "abbreviation": "EP",
+       "id": "2",
+       "text": "End Period"
+      },
+      "wallclock": "2026-09-20T17:40:07Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "end": {
+       "distance": 8,
+       "down": 3,
+       "downDistanceText": "3rd & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "3rd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "homeScore": 3,
+      "id": "4018729371038",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "103800",
+      "start": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "K.Monangai left tackle to CHI 14 for no gain (B.Cashman).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:43:01Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:18"
+      },
+      "end": {
+       "distance": 8,
+       "down": 4,
+       "downDistanceText": "4th & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "4th & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "homeScore": 3,
+      "id": "4018729371060",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "106000",
+      "start": {
+       "distance": 8,
+       "down": 3,
+       "downDistanceText": "3rd & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "3rd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 86
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Williams pass incomplete short left to R.Odunze (J.Pierre).",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:43:43Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:14"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "homeScore": 3,
+      "id": "4018729371083",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "108300",
+      "start": {
+       "distance": 8,
+       "down": 4,
+       "downDistanceText": "4th & 8 at CHI 14",
+       "possessionText": "CHI 14",
+       "shortDownDistanceText": "4th & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 14
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "T.Taylor punts 50 yards to MIN 36, Center-B.Gardner, downed by CHI-S.Thomas.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:44:31Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "CHI",
+     "displayName": "Chicago Bears",
+     "id": "3",
+     "name": "Bears",
+     "shortDisplayName": "Bears"
+    }
+   },
+   {
+    "description": "11 plays, 33 yards, 5:45",
+    "displayResult": "Field Goal",
+    "id": "4018729377",
+    "plays": [
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "14:03"
+      },
+      "end": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "homeScore": 3,
+      "id": "4018729371103",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "110300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass incomplete short left to T.Hockenson.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:45:51Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "13:59"
+      },
+      "end": {
+       "distance": 4,
+       "down": 3,
+       "downDistanceText": "3rd & 4 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "3rd & 4",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "homeScore": 3,
+      "id": "4018729371126",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "112600",
+      "start": {
+       "distance": 10,
+       "down": 2,
+       "downDistanceText": "2nd & 10 at MIN 36",
+       "possessionText": "MIN 36",
+       "shortDownDistanceText": "2nd & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 64,
+       "yardsToEndzone": 64
+      },
+      "statYardage": 6,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones right guard to MIN 42 for 6 yards (T.Edwards; D.Thieneman).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:46:35Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "13:15"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 42
+      },
+      "homeScore": 3,
+      "id": "4018729371148",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "114800",
+      "start": {
+       "distance": 4,
+       "down": 3,
+       "downDistanceText": "3rd & 4 at MIN 42",
+       "possessionText": "MIN 42",
+       "shortDownDistanceText": "3rd & 4",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 58,
+       "yardsToEndzone": 58
+      },
+      "statYardage": 16,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass short middle to J.Jefferson to CHI 42 for 16 yards (C.Lewis) [D.Odeyingbo].Penalty on CHI-J.Johnson, Illegal Use of Hands, declined.",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:47:19Z",
+      "yardsAfterCatch": 6
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:47"
+      },
+      "end": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at CHI 35",
+       "possessionText": "CHI 35",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 35
+      },
+      "homeScore": 3,
+      "id": "4018729371184",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "118400",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 42",
+       "possessionText": "CHI 42",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 42,
+       "yardsToEndzone": 42
+      },
+      "statYardage": 7,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) A.Jones left tackle to CHI 35 for 7 yards (D.Thieneman; J.Lynch).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:48:12Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "12:06"
+      },
+      "end": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "homeScore": 3,
+      "id": "4018729371206",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "120600",
+      "start": {
+       "distance": 3,
+       "down": 2,
+       "downDistanceText": "2nd & 3 at CHI 35",
+       "possessionText": "CHI 35",
+       "shortDownDistanceText": "2nd & 3",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 35
+      },
+      "statYardage": 1,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) A.Jones right tackle to CHI 34 for 1 yard (D.Jackson; J.Lynch).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:48:53Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "11:23"
+      },
+      "end": {
+       "distance": 1,
+       "down": 4,
+       "downDistanceText": "4th & 1 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "4th & 1",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "homeScore": 3,
+      "id": "4018729371228",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "122800",
+      "start": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at CHI 34",
+       "possessionText": "CHI 34",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 34
+      },
+      "statYardage": 1,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) A.Jones right guard to CHI 33 for 1 yard (J.Lynch).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:49:37Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "10:40"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "homeScore": 3,
+      "id": "4018729371250",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "125000",
+      "start": {
+       "distance": 1,
+       "down": 4,
+       "downDistanceText": "4th & 1 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "4th & 1",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Wentz right guard to CHI 31 for 2 yards (N.Gallimore).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:50:19Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:56"
+      },
+      "end": {
+       "distance": 12,
+       "down": 2,
+       "downDistanceText": "2nd & 12 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "2nd & 12",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "homeScore": 3,
+      "id": "4018729371272",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "127200",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "statYardage": -2,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "A.Jones left end to CHI 33 for -2 yards (T.Stevenson, D.Thieneman).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:51:04Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:11"
+      },
+      "end": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "homeScore": 3,
+      "id": "4018729371294",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "129400",
+      "start": {
+       "distance": 12,
+       "down": 2,
+       "downDistanceText": "2nd & 12 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "2nd & 12",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass incomplete short left to J.Jefferson.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:51:48Z"
+     },
+     {
+      "awayScore": 3,
+      "clock": {
+       "displayValue": "9:08"
+      },
+      "end": {
+       "distance": 10,
+       "down": 4,
+       "downDistanceText": "4th & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "4th & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "homeScore": 3,
+      "id": "4018729371317",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "131700",
+      "start": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at CHI 33",
+       "possessionText": "CHI 33",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 33,
+       "yardsToEndzone": 33
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Wentz pass short right to D.Claiborne to CHI 31 for 2 yards (T.Edwards).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:52:31Z",
+      "yardsAfterCatch": 9
+     },
+     {
+      "awayScore": 6,
+      "clock": {
+       "displayValue": "8:18"
+      },
+      "end": {
+       "distance": 10,
+       "down": -1,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 0,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 3,
+      "id": "4018729371342",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": true,
+      "scoringType": {
+       "abbreviation": "FG",
+       "displayName": "Field Goal",
+       "name": "field-goal"
+      },
+      "sequenceNumber": "134200",
+      "start": {
+       "distance": 10,
+       "down": 4,
+       "downDistanceText": "4th & 10 at CHI 31",
+       "possessionText": "CHI 31",
+       "shortDownDistanceText": "4th & 10",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "statYardage": 49,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "W.Reichard 49 yard field goal is GOOD, Center-A.DePaola, Holder-B.Thorson.",
+      "type": {
+       "abbreviation": "FG",
+       "id": "59",
+       "text": "Field Goal Good"
+      },
+      "wallclock": "2026-09-20T17:53:16Z"
+     },
+     {
+      "awayScore": 6,
+      "clock": {
+       "displayValue": "8:18"
+      },
+      "end": {
+       "distance": 0,
+       "down": -1,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 3,
+      "id": "4018729371352",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "135200",
+      "start": {
+       "distance": 0,
+       "down": -1,
+       "downDistanceText": " & Goal at MIN 35",
+       "possessionText": "MIN 35",
+       "shortDownDistanceText": " & Goal",
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "16",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "3",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 08:18.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:53:30Z"
+     }
+    ],
+    "result": "FG",
+    "team": {
+     "abbreviation": "MIN",
+     "displayName": "Minnesota Vikings",
+     "id": "16",
+     "name": "Vikings",
+     "shortDisplayName": "Vikings"
+    }
+   },
+   {
+    "description": "13 plays, 33 yards, 6:33",
+    "displayResult": "Punt",
+    "id": "4018729378",
+    "plays": [
+     {
+      "awayScore": 6,
+      "clock": {
+       "displayValue": "8:18"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 18",
+       "possessionText": "CHI 18",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 18,
+       "yardsToEndzone": 82
+      },
+      "homeScore": 3,
+      "id": "4018729371362",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "136200",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "16"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 17,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "W.Reichard kicks 64 yards from MIN 35 to CHI 1. Z.Thomas to CHI 18 for 17 yards (B.Richter).",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:56:18Z"
+     },
+     {
+      "awayScore": 6,
+      "clock": {
+       "displayValue": "8:11"
+      },
+      "end": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at CHI 20",
+       "possessionText": "CHI 20",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 80
+      },
+      "homeScore": 3,
+      "id": "4018729371392",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "139200",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CHI 18",
+       "possessionText": "CHI 18",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "3"
+       },
+       "yardLine": 18,
+       "yardsToEndzone": 82
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "3",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "16",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "D.Swift right guard to CHI 20 for 2 yards (J.Redmond; C.Banks).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:57:04Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "CHI",
+     "displayName": "Chicago Bears",
+     "id": "3",
+     "name": "Bears",
+     "shortDisplayName": "Bears"
+    }
+   }
+  ]
+ },
+ "header": {
+  "competitions": [
+   {
+    "boxscoreAvailable": true,
+    "boxscoreMinutes": true,
+    "boxscoreSource": "full",
+    "commentaryAvailable": false,
+    "competitors": [
+     {
+      "homeAway": "home",
+      "id": "3",
+      "order": 0,
+      "score": "3",
+      "team": {
+       "abbreviation": "CHI",
+       "alternateColor": "e64100",
+       "color": "0b1c3a",
+       "displayName": "Chicago Bears",
+       "id": "3",
+       "location": "Chicago",
+       "name": "Bears",
+       "uid": "s:20~l:28~t:3"
+      },
+      "winner": false
+     },
+     {
+      "homeAway": "away",
+      "id": "16",
+      "order": 1,
+      "score": "9",
+      "team": {
+       "abbreviation": "MIN",
+       "alternateColor": "ffc62f",
+       "color": "4f2683",
+       "displayName": "Minnesota Vikings",
+       "id": "16",
+       "location": "Minnesota",
+       "name": "Vikings",
+       "uid": "s:20~l:28~t:16"
+      },
+      "winner": true
+     }
+    ],
+    "conferenceCompetition": false,
+    "date": "2026-09-20T17:00Z",
+    "id": "401872937",
+    "liveAvailable": false,
+    "neutralSite": false,
+    "onWatchESPN": false,
+    "playByPlaySource": "full",
+    "recent": false,
+    "status": {
+     "isTBDFlex": false,
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "shortDetail": "Final",
+      "state": "post"
+     }
+    },
+    "uid": "s:20~l:28~e:401872937~c:401872937",
+    "wallclockAvailable": true
+   }
+  ],
+  "id": "401872937",
+  "league": {
+   "abbreviation": "NFL",
+   "id": "28",
+   "isTournament": false,
+   "links": [
+    {
+     "href": "https://www.espn.com/nfl/",
+     "rel": [
+      "index",
+      "desktop",
+      "league"
+     ],
+     "text": "Index"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28",
+     "rel": [
+      "index",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Index"
+    },
+    {
+     "href": "https://www.espn.com/nfl/schedule",
+     "rel": [
+      "schedule",
+      "desktop",
+      "league"
+     ],
+     "text": "Schedule"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "rel": [
+      "schedule",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Schedule"
+    },
+    {
+     "href": "https://www.espn.com/nfl/standings",
+     "rel": [
+      "standings",
+      "desktop",
+      "league"
+     ],
+     "text": "Standings"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=standings",
+     "rel": [
+      "standings",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Standings"
+    },
+    {
+     "href": "https://www.espn.com/nfl/powerrankings",
+     "rel": [
+      "rankings",
+      "desktop",
+      "league"
+     ],
+     "text": "Power Rankings"
+    },
+    {
+     "href": "https://www.espn.com/nfl/scoreboard",
+     "rel": [
+      "scores",
+      "desktop",
+      "league"
+     ],
+     "text": "Scores"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "rel": [
+      "scores",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Scores"
+    },
+    {
+     "href": "https://www.espn.com/nfl/stats",
+     "rel": [
+      "stats",
+      "desktop",
+      "league"
+     ],
+     "text": "Stats"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=stats",
+     "rel": [
+      "stats",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Stats"
+    },
+    {
+     "href": "https://www.espn.com/nfl/teams",
+     "rel": [
+      "teams",
+      "desktop",
+      "league"
+     ],
+     "text": "Teams"
+    },
+    {
+     "href": "https://www.espn.com/nfl/players",
+     "rel": [
+      "athletes",
+      "desktop",
+      "league"
+     ],
+     "text": "Players"
+    },
+    {
+     "href": "https://www.espn.com/nfl/injuries",
+     "rel": [
+      "injuries",
+      "desktop",
+      "league"
+     ],
+     "text": "Injuries"
+    },
+    {
+     "href": "https://www.espn.com/nfl/odds",
+     "rel": [
+      "odds",
+      "desktop",
+      "league"
+     ],
+     "text": "Odds"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=odds",
+     "rel": [
+      "odds",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Odds"
+    },
+    {
+     "href": "https://www.espn.com/nfl/playoff-bracket",
+     "rel": [
+      "playoff-bracket",
+      "desktop",
+      "league"
+     ],
+     "text": "Bracket"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=bracket",
+     "rel": [
+      "playoff-bracket",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Bracket"
+    },
+    {
+     "href": "https://insider.espn.com/nfl/freeagency/",
+     "rel": [
+      "freeagency",
+      "desktop",
+      "league"
+     ],
+     "text": "Freeagency"
+    }
+   ],
+   "logos": [
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+     "rel": [
+      "full",
+      "default"
+     ]
+    },
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500-dark/nfl.png",
+     "rel": [
+      "full",
+      "dark"
+     ]
+    }
+   ],
+   "name": "National Football League",
+   "shortName": "NFL",
+   "slug": "nfl",
+   "uid": "s:20~l:28"
+  },
+  "season": {
+   "current": true,
+   "type": 2,
+   "year": 2026
+  },
+  "timeValid": true,
+  "uid": "s:20~l:28~e:401872937",
+  "week": 2
+ },
+ "scoringPlays": [
+  {
+   "awayScore": 3,
+   "clock": {
+    "displayValue": "11:03",
+    "value": 663.0
+   },
+   "homeScore": 0,
+   "id": "401872937261",
+   "period": {
+    "number": 1
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal",
+    "name": "field-goal"
+   },
+   "team": {
+    "abbreviation": "MIN",
+    "displayName": "Minnesota Vikings",
+    "id": "16",
+    "uid": "s:20~l:28~t:16"
+   },
+   "text": "Will Reichard 35 Yd Field Goal ",
+   "type": {
+    "abbreviation": "FG",
+    "id": "59",
+    "text": "Field Goal Good"
+   }
+  },
+  {
+   "awayScore": 3,
+   "clock": {
+    "displayValue": "5:03",
+    "value": 303.0
+   },
+   "homeScore": 3,
+   "id": "401872937570",
+   "period": {
+    "number": 1
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal",
+    "name": "field-goal"
+   },
+   "team": {
+    "abbreviation": "CHI",
+    "displayName": "Chicago Bears",
+    "id": "3",
+    "uid": "s:20~l:28~t:3"
+   },
+   "text": "Cairo Santos 50 Yd Field Goal",
+   "type": {
+    "abbreviation": "FG",
+    "id": "59",
+    "text": "Field Goal Good"
+   }
+  },
+  {
+   "awayScore": 6,
+   "clock": {
+    "displayValue": "8:18",
+    "value": 498.0
+   },
+   "homeScore": 3,
+   "id": "4018729371342",
+   "period": {
+    "number": 2
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal",
+    "name": "field-goal"
+   },
+   "team": {
+    "abbreviation": "MIN",
+    "displayName": "Minnesota Vikings",
+    "id": "16",
+    "uid": "s:20~l:28~t:16"
+   },
+   "text": "Will Reichard 49 Yd Field Goal",
+   "type": {
+    "abbreviation": "FG",
+    "id": "59",
+    "text": "Field Goal Good"
+   }
+  }
+ ]
+}

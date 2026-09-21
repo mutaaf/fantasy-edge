@@ -472,6 +472,75 @@ def cmd_replay(args, cfg) -> None:
                      f"{info['frames']} frame(s) written to {info['out']}")
 
 
+def cmd_redzone_replay(args, cfg) -> None:
+    """Pull a finished day and say how to watch it back.
+
+    The day is rebuilt from each play's own wallclock, so the channel whips
+    around it exactly as it did while the games were on - same ranking, same
+    hysteresis, same page. Needs no credential and no database.
+
+    Pulling costs one request for the board plus one per finished game, and is
+    free to re-run: a day already on disk opens with no network at all.
+    """
+    from . import dayreplay as dy
+
+    root = pathlib.Path(args.out)
+    date = args.date
+    out: dict = {"date": date}
+
+    if args.pull:
+        say = (lambda *_: None) if args.json else (lambda line: print(line))
+        if not args.json:
+            print(f"pulling {date} into {dy.day_dir(root, date)}")
+        out["pull"] = dy.pull_day(date, root, log=say, refresh=args.refresh,
+                                  league_path=args.league_path)
+
+    try:
+        board, summaries = dy.load_day(root, date)
+    except LookupError as exc:
+        if args.json:
+            emit({"error": str(exc),
+                  "fix": f"python3 -m fantasyedge redzone-replay --date {date} --pull"})
+        else:
+            print(f"{exc}\n  fix: python3 -m fantasyedge redzone-replay --date {date} --pull")
+        raise SystemExit(4)
+
+    span = dy.covered_span(summaries)
+    scores = dy.scoring_moments(summaries)
+    out.update({
+        "league": dy.league_of(board),
+        "games": len(summaries),
+        "scores": len(scores),
+        "span": {"from": span[0].astimezone(dy.ET).strftime("%-I:%M %p ET"),
+                 "to": span[1].astimezone(dy.ET).strftime("%-I:%M %p ET")} if span else None,
+        "slots": [{"label": s["label"], "games": s["games"]}
+                  for s in dy.kickoff_slots(board)],
+        "watch": {"serve": "python3 -m fantasyedge api --port 8790",
+                  "open": "http://127.0.0.1:8790/redzone",
+                  "load": {"method": "POST", "path": "/api/day",
+                           "body": {"action": "load", "date": date}}},
+    })
+
+    if args.json:
+        emit(out)
+        return
+
+    print(f"{date}: {out['games']} games, {out['scores']} scoring plays, "
+          f"{out['league'] or 'unknown league'}")
+    if out["span"]:
+        print(f"  {out['span']['from']} -> {out['span']['to']}")
+    if out["slots"]:
+        print("  kickoff waves: " +
+              ", ".join(f"{s['label']} ({s['games']})" for s in out["slots"]))
+    print()
+    print("  watch it back:")
+    print(f"    python3 -m fantasyedge api --port 8790")
+    print(f"    open http://127.0.0.1:8790/redzone  and press REPLAY A DAY")
+    print(f"  or drive it directly:")
+    print(f"""    curl -s localhost:8790/api/day -d '{{"action":"load","date":"{date}"}}'""")
+    print(f"""    curl -s localhost:8790/api/day -d '{{"action":"play"}}'""")
+
+
 def cmd_last_week(args, cfg) -> None:
     """List last week's games, pull them, or open one in the stadium.
 
@@ -912,6 +981,21 @@ def build_parser() -> argparse.ArgumentParser:
     rpl.add_argument("--capture", action="store_true",
                      help="re-download the game from ESPN before replaying")
     jsonify(rpl); rpl.set_defaults(fn=cmd_replay)
+
+    rz = sub.add_parser("redzone-replay",
+                        help="replay a finished day's whole slate through the red-zone channel")
+    rz.add_argument("--date", required=True, metavar="YYYY-MM-DD",
+                    help="the day to replay, e.g. 2026-09-20")
+    rz.add_argument("--pull", action="store_true",
+                    help="fetch the board and every finished game; free to re-run")
+    rz.add_argument("--refresh", action="store_true",
+                    help="re-download games already on disk")
+    rz.add_argument("--league-path", default=None, metavar="PATH",
+                    help="ESPN league path; default football/nfl, "
+                         "football/college-football for a Saturday")
+    rz.add_argument("--out", default="data/replay/day",
+                    help="where days are kept (default data/replay/day)")
+    jsonify(rz); rz.set_defaults(fn=cmd_redzone_replay)
 
     lw = sub.add_parser("last-week",
                         help="last week's games, why each is worth watching, and how to open one")

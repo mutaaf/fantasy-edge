@@ -1,0 +1,4219 @@
+{
+ "drives": {
+  "previous": [
+   {
+    "description": "1 play, 9 yards, 0:30",
+    "displayResult": "Fumble",
+    "id": "4018729331",
+    "plays": [
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 80
+      },
+      "homeScore": 0,
+      "id": "40187293340",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "4000",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "R.Fitzgerald kicks 65 yards from CAR 35 to landing zone to end zone, Touchback to the ATL 20.",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:02:57Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 35",
+       "possessionText": "ATL 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 35
+      },
+      "homeScore": 0,
+      "id": "40187293357",
+      "isPenalty": false,
+      "isTurnover": true,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "review": {
+       "type": "OFFICIAL",
+       "upheld": true
+      },
+      "scoringPlay": false,
+      "sequenceNumber": "5700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 80
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "C.Rush scrambles right end to ATL 29 for 9 yards (Z.Wheatley). FUMBLES (Z.Wheatley), RECOVERED by CAR-N.Scott at ATL 35. The Replay Official reviewed the runner was not down by contact ruling, and the play was Upheld. The ruling on the field stands.",
+      "type": {
+       "id": "29",
+       "text": "Fumble Recovery (Opponent)"
+      },
+      "wallclock": "2026-09-20T17:03:44Z"
+     }
+    ],
+    "result": "FUMBLE",
+    "team": {
+     "abbreviation": "ATL",
+     "displayName": "Atlanta Falcons",
+     "id": "1",
+     "name": "Falcons",
+     "shortDisplayName": "Falcons"
+    }
+   },
+   {
+    "description": "8 plays, 35 yards, 3:42",
+    "displayResult": "Touchdown",
+    "id": "4018729332",
+    "plays": [
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "14:30"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at ATL 27",
+       "possessionText": "ATL 27",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 27,
+       "yardsToEndzone": 27
+      },
+      "homeScore": 0,
+      "id": "401872933137",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "13700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 35",
+       "possessionText": "ATL 35",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 35,
+       "yardsToEndzone": 35
+      },
+      "statYardage": 8,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass short right to C.Hubbard to ATL 27 for 8 yards (M.Smith; M.Hughes).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:08:10Z",
+      "yardsAfterCatch": 13
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:53"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 24",
+       "possessionText": "ATL 24",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 24,
+       "yardsToEndzone": 24
+      },
+      "homeScore": 0,
+      "id": "401872933162",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "16200",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at ATL 27",
+       "possessionText": "ATL 27",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 27,
+       "yardsToEndzone": 27
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Hubbard up the middle to ATL 24 for 3 yards (L.London).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:08:47Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "13:13"
+      },
+      "end": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 29
+      },
+      "homeScore": 0,
+      "id": "401872933184",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "false-start",
+        "text": "False Start"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "18400",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 24",
+       "possessionText": "ATL 24",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 24,
+       "yardsToEndzone": 24
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) PENALTY on CAR-R.Hunt, False Start, 5 yards, enforced at ATL 24 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:09:27Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:56"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "homeScore": 0,
+      "id": "401872933208",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "20800",
+      "start": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 29
+      },
+      "statYardage": 8,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass short right to J.Coker pushed ob at ATL 21 for 8 yards (J.Bates).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:10:12Z",
+      "yardsAfterCatch": 4
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:17"
+      },
+      "end": {
+       "distance": 17,
+       "down": 2,
+       "downDistanceText": "2nd & 17 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "2nd & 17",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "homeScore": 0,
+      "id": "401872933238",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "illegal-use-of-hands",
+        "text": "Illegal Use of Hands"
+       },
+       "yards": 10
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "23800",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "statYardage": -10,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete short middle to J.Coker (K.Daniels).PENALTY on CAR-R.Hunt, Illegal Use of Hands, 10 yards, enforced at ATL 21 - No Play.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:10:59Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "12:03"
+      },
+      "end": {
+       "distance": 2,
+       "down": 1,
+       "downDistanceText": "1st & Goal at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "1st & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 2
+      },
+      "homeScore": 0,
+      "id": "401872933273",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "roughing-the-passer",
+        "text": "Roughing the Passer"
+       },
+       "yards": 3
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "27300",
+      "start": {
+       "distance": 17,
+       "down": 2,
+       "downDistanceText": "2nd & 17 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "2nd & 17",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "statYardage": 26,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass deep right to T.McMillan to ATL 5 for 26 yards (Aj.Terrell).PENALTY on ATL-G.Dexter, Roughing the Passer, 3 yards, enforced at ATL 5.",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:12:06Z",
+      "yardsAfterCatch": 5
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:39"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & Goal at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "2nd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 2
+      },
+      "homeScore": 0,
+      "id": "401872933309",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "30900",
+      "start": {
+       "distance": 2,
+       "down": 1,
+       "downDistanceText": "1st & Goal at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "1st & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 2
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete short right to T.McMillan (Aj.Terrell). ATL-Aj.Terrell was injured during the play.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:13:05Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:38"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & Goal at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "2nd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 2
+      },
+      "homeScore": 0,
+      "id": "401872933322",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "32200",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 11:38.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:13:54Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:38"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & Goal at ATL 7",
+       "possessionText": "ATL 7",
+       "shortDownDistanceText": "2nd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 7,
+       "yardsToEndzone": 7
+      },
+      "homeScore": 0,
+      "id": "401872933335",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "false-start",
+        "text": "False Start"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "33500",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & Goal at ATL 2",
+       "possessionText": "ATL 2",
+       "shortDownDistanceText": "2nd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 2,
+       "yardsToEndzone": 2
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "PENALTY on CAR-R.Walker, False Start, 5 yards, enforced at ATL 2 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:16:29Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "11:38"
+      },
+      "end": {
+       "distance": 3,
+       "down": 3,
+       "downDistanceText": "3rd & Goal at ATL 3",
+       "possessionText": "ATL 3",
+       "shortDownDistanceText": "3rd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 3,
+       "yardsToEndzone": 3
+      },
+      "homeScore": 0,
+      "id": "401872933366",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "36600",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & Goal at ATL 7",
+       "possessionText": "ATL 7",
+       "shortDownDistanceText": "2nd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 7,
+       "yardsToEndzone": 7
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Hubbard up the middle to ATL 3 for 4 yards (M.Smith; L.London).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:17:01Z"
+     },
+     {
+      "awayScore": 0,
+      "clock": {
+       "displayValue": "10:57"
+      },
+      "end": {
+       "distance": 3,
+       "down": 4,
+       "downDistanceText": "4th & Goal at ATL 3",
+       "possessionText": "ATL 3",
+       "shortDownDistanceText": "4th & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 3,
+       "yardsToEndzone": 3
+      },
+      "homeScore": 0,
+      "id": "401872933388",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "38800",
+      "start": {
+       "distance": 3,
+       "down": 3,
+       "downDistanceText": "3rd & Goal at ATL 3",
+       "possessionText": "ATL 3",
+       "shortDownDistanceText": "3rd & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 3,
+       "yardsToEndzone": 3
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete short left to J.Coker (C.Henderson).",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:17:43Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "10:48"
+      },
+      "end": {
+       "distance": 10,
+       "down": -1,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 0,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 0,
+      "id": "401872933411",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "pointAfterAttempt": {
+       "abbreviation": "Extra Point Good",
+       "id": 61,
+       "text": "Extra Point Good",
+       "value": 1
+      },
+      "priority": false,
+      "scoringPlay": true,
+      "scoringType": {
+       "abbreviation": "TD",
+       "displayName": "Touchdown",
+       "name": "touchdown"
+      },
+      "sequenceNumber": "41100",
+      "start": {
+       "distance": 3,
+       "down": 4,
+       "downDistanceText": "4th & Goal at ATL 3",
+       "possessionText": "ATL 3",
+       "shortDownDistanceText": "4th & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 3,
+       "yardsToEndzone": 3
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass short left to C.Hubbard for 3 yards, TOUCHDOWN. R.Fitzgerald extra point is GOOD, Center-J.Jansen, Holder-S.Martin.",
+      "type": {
+       "abbreviation": "TD",
+       "id": "67",
+       "text": "Passing Touchdown"
+      },
+      "wallclock": "2026-09-20T17:18:31Z",
+      "yardsAfterCatch": 1
+     }
+    ],
+    "result": "TD",
+    "team": {
+     "abbreviation": "CAR",
+     "displayName": "Carolina Panthers",
+     "id": "29",
+     "name": "Panthers",
+     "shortDisplayName": "Panthers"
+    }
+   },
+   {
+    "description": "4 plays, 19 yards, 1:49",
+    "displayResult": "Interception",
+    "id": "4018729333",
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "10:48"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 71
+      },
+      "homeScore": 0,
+      "id": "401872933452",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "45200",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 25,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "R.Fitzgerald kicks 61 yards from CAR 35 to ATL 4. O.Zaccheaus to ATL 29 for 25 yards (F.Franks).",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:20:55Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "10:43"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 43",
+       "possessionText": "ATL 43",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 43,
+       "yardsToEndzone": 57
+      },
+      "homeScore": 0,
+      "id": "401872933475",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "47500",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 71
+      },
+      "statYardage": 14,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "C.Rush pass short right to D.London pushed ob at ATL 43 for 14 yards (D.Lloyd).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:21:42Z",
+      "yardsAfterCatch": 13
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "10:12"
+      },
+      "end": {
+       "distance": 6,
+       "down": 2,
+       "downDistanceText": "2nd & 6 at ATL 47",
+       "possessionText": "ATL 47",
+       "shortDownDistanceText": "2nd & 6",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 47,
+       "yardsToEndzone": 53
+      },
+      "homeScore": 0,
+      "id": "401872933505",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "50500",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 43",
+       "possessionText": "ATL 43",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 43,
+       "yardsToEndzone": 57
+      },
+      "statYardage": 4,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(No Huddle) Bi.Robinson left guard to ATL 47 for 4 yards (N.Scott).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:22:20Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "9:41"
+      },
+      "end": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 48",
+       "possessionText": "ATL 48",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 48,
+       "yardsToEndzone": 52
+      },
+      "homeScore": 0,
+      "id": "401872933527",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "52700",
+      "start": {
+       "distance": 6,
+       "down": 2,
+       "downDistanceText": "2nd & 6 at ATL 47",
+       "possessionText": "ATL 47",
+       "shortDownDistanceText": "2nd & 6",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 47,
+       "yardsToEndzone": 53
+      },
+      "statYardage": 1,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Bi.Robinson right tackle to ATL 48 for 1 yard (D.Lloyd).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:22:52Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "9:07"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 44",
+       "possessionText": "CAR 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 56,
+       "yardsToEndzone": 56
+      },
+      "homeScore": 0,
+      "id": "401872933549",
+      "isPenalty": false,
+      "isTurnover": true,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "54900",
+      "start": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 48",
+       "possessionText": "ATL 48",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 48,
+       "yardsToEndzone": 52
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass short middle intended for Bi.Robinson INTERCEPTED by B.Okereke (D.Lloyd) at CAR 41. B.Okereke to CAR 44 for 3 yards (K.Pitts; D.London).",
+      "type": {
+       "abbreviation": "INTR",
+       "id": "26",
+       "text": "Pass Interception Return"
+      },
+      "wallclock": "2026-09-20T17:23:25Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:59"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 44",
+       "possessionText": "CAR 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 56,
+       "yardsToEndzone": 56
+      },
+      "homeScore": 0,
+      "id": "401872933563",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "56300",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 44",
+       "possessionText": "CAR 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 56,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 08:59.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:24:38Z"
+     }
+    ],
+    "result": "INT",
+    "team": {
+     "abbreviation": "ATL",
+     "displayName": "Atlanta Falcons",
+     "id": "1",
+     "name": "Falcons",
+     "shortDisplayName": "Falcons"
+    }
+   },
+   {
+    "description": "3 plays, -5 yards, 0:23",
+    "displayResult": "Punt",
+    "id": "4018729334",
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:59"
+      },
+      "end": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "homeScore": 0,
+      "id": "401872933576",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "false-start",
+        "text": "False Start"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "57600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 44",
+       "possessionText": "CAR 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 56,
+       "yardsToEndzone": 56
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "PENALTY on CAR-R.Hunt, False Start, 5 yards, enforced at CAR 44 - No Play.",
+      "type": {
+       "abbreviation": "PEN",
+       "id": "8",
+       "text": "Penalty"
+      },
+      "wallclock": "2026-09-20T17:26:53Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:59"
+      },
+      "end": {
+       "distance": 15,
+       "down": 2,
+       "downDistanceText": "2nd & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "2nd & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "homeScore": 0,
+      "id": "401872933607",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "60700",
+      "start": {
+       "distance": 15,
+       "down": 1,
+       "downDistanceText": "1st & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "1st & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete short right to T.McMillan.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:27:40Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:53"
+      },
+      "end": {
+       "distance": 15,
+       "down": 3,
+       "downDistanceText": "3rd & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "3rd & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "homeScore": 0,
+      "id": "401872933630",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "63000",
+      "start": {
+       "distance": 15,
+       "down": 2,
+       "downDistanceText": "2nd & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "2nd & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete deep right to T.McMillan.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:28:23Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:48"
+      },
+      "end": {
+       "distance": 15,
+       "down": 4,
+       "downDistanceText": "4th & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "4th & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "homeScore": 0,
+      "id": "401872933658",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "65800",
+      "start": {
+       "distance": 15,
+       "down": 3,
+       "downDistanceText": "3rd & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "3rd & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete short right to X.Legette (Z.Smith) [S.Ebukam].",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:29:10Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:43"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 16",
+       "possessionText": "ATL 16",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 16,
+       "yardsToEndzone": 84
+      },
+      "homeScore": 0,
+      "id": "401872933681",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "68100",
+      "start": {
+       "distance": 15,
+       "down": 4,
+       "downDistanceText": "4th & 15 at CAR 39",
+       "possessionText": "CAR 39",
+       "shortDownDistanceText": "4th & 15",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 61,
+       "yardsToEndzone": 61
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "S.Martin punts 45 yards to ATL 16, Center-J.Jansen, fair catch by Z.Branch.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:29:59Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:36"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 16",
+       "possessionText": "ATL 16",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 16,
+       "yardsToEndzone": 84
+      },
+      "homeScore": 0,
+      "id": "401872933691",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "69100",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 16",
+       "possessionText": "ATL 16",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 16,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 08:36.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:31:00Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "CAR",
+     "displayName": "Carolina Panthers",
+     "id": "29",
+     "name": "Panthers",
+     "shortDisplayName": "Panthers"
+    }
+   },
+   {
+    "description": "3 plays, 5 yards, 1:21",
+    "displayResult": "Punt",
+    "id": "4018729335",
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:36"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 81
+      },
+      "homeScore": 0,
+      "id": "401872933701",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "70100",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 16",
+       "possessionText": "ATL 16",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 16,
+       "yardsToEndzone": 84
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Bi.Robinson left guard to ATL 19 for 3 yards (C.Jackson).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:33:06Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "8:14"
+      },
+      "end": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 79
+      },
+      "homeScore": 0,
+      "id": "401872933730",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "73000",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 81
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(No Huddle) Bi.Robinson up the middle to ATL 21 for 2 yards (T.Edwards; J.Phillips).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:33:28Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "7:34"
+      },
+      "end": {
+       "distance": 5,
+       "down": 4,
+       "downDistanceText": "4th & 5 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "4th & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 79
+      },
+      "homeScore": 0,
+      "id": "401872933752",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "75200",
+      "start": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 79
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass incomplete short right to K.Pitts (Ja.Horn).",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:34:07Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "7:29"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 29
+      },
+      "homeScore": 0,
+      "id": "401872933775",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "illegal-formation",
+        "text": "Illegal Formation"
+       },
+       "yards": 5
+      },
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "77500",
+      "start": {
+       "distance": 5,
+       "down": 4,
+       "downDistanceText": "4th & 5 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "4th & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 21
+      },
+      "statYardage": 31,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "J.Bailey punts 49 yards to CAR 30, Center-L.McCullough. J.Coker to ATL 34 for 36 yards (J.Bailey; C.Woerner).PENALTY on ATL-H.Perkins, Illegal Formation, 5 yards, enforced at ATL 34.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:34:38Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "ATL",
+     "displayName": "Atlanta Falcons",
+     "id": "1",
+     "name": "Falcons",
+     "shortDisplayName": "Falcons"
+    }
+   },
+   {
+    "description": "7 plays, 10 yards, 2:46",
+    "displayResult": "Field Goal",
+    "id": "4018729336",
+    "plays": [
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "7:15"
+      },
+      "end": {
+       "distance": 1,
+       "down": 2,
+       "downDistanceText": "2nd & 1 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "2nd & 1",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 20
+      },
+      "homeScore": 0,
+      "id": "401872933817",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "81700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 29
+      },
+      "statYardage": 9,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "B.Young pass short left to X.Legette to ATL 20 for 9 yards (C.Henderson).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:35:55Z",
+      "yardsAfterCatch": 1
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "6:40"
+      },
+      "end": {
+       "distance": 1,
+       "down": 3,
+       "downDistanceText": "3rd & 1 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "3rd & 1",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 20
+      },
+      "homeScore": 0,
+      "id": "401872933842",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "84200",
+      "start": {
+       "distance": 1,
+       "down": 2,
+       "downDistanceText": "2nd & 1 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "2nd & 1",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 20
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "B.Young pass incomplete short left.",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:36:31Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "6:36"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 17",
+       "possessionText": "ATL 17",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "homeScore": 0,
+      "id": "401872933865",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "86500",
+      "start": {
+       "distance": 1,
+       "down": 3,
+       "downDistanceText": "3rd & 1 at ATL 20",
+       "possessionText": "ATL 20",
+       "shortDownDistanceText": "3rd & 1",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 20,
+       "yardsToEndzone": 20
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Bullock reported in as eligible.  C.Hubbard up the middle to ATL 17 for 3 yards (Z.Harrison).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:37:12Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "6:03"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 14",
+       "possessionText": "ATL 14",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 14
+      },
+      "homeScore": 0,
+      "id": "401872933889",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "88900",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 17",
+       "possessionText": "ATL 17",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 17,
+       "yardsToEndzone": 17
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "J.Brooks up the middle to ATL 14 for 3 yards (S.Ebukam; G.Dexter).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:37:46Z"
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "5:24"
+      },
+      "end": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 19
+      },
+      "homeScore": 0,
+      "id": "401872933911",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "91100",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at ATL 14",
+       "possessionText": "ATL 14",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 14,
+       "yardsToEndzone": 14
+      },
+      "statYardage": -5,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass short left to J.Brooks to ATL 19 for -5 yards (C.Henderson).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:38:25Z",
+      "yardsAfterCatch": 1
+     },
+     {
+      "awayScore": 7,
+      "clock": {
+       "displayValue": "4:39"
+      },
+      "end": {
+       "distance": 12,
+       "down": 4,
+       "downDistanceText": "4th & 12 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "4th & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 19
+      },
+      "homeScore": 0,
+      "id": "401872933936",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "93600",
+      "start": {
+       "distance": 12,
+       "down": 3,
+       "downDistanceText": "3rd & 12 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "3rd & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 19
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass incomplete deep left to X.Legette [B.Dorlus].",
+      "type": {
+       "id": "3",
+       "text": "Pass Incompletion"
+      },
+      "wallclock": "2026-09-20T17:39:11Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:29"
+      },
+      "end": {
+       "distance": 10,
+       "down": -1,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 0,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 0,
+      "id": "401872933959",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": true,
+      "scoringType": {
+       "abbreviation": "FG",
+       "displayName": "Field Goal",
+       "name": "field-goal"
+      },
+      "sequenceNumber": "95900",
+      "start": {
+       "distance": 12,
+       "down": 4,
+       "downDistanceText": "4th & 12 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "4th & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 19
+      },
+      "statYardage": 37,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "R.Fitzgerald 37 yard field goal is GOOD, Center-J.Jansen, Holder-S.Martin.",
+      "type": {
+       "abbreviation": "FG",
+       "id": "59",
+       "text": "Field Goal Good"
+      },
+      "wallclock": "2026-09-20T17:40:08Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:29"
+      },
+      "end": {
+       "distance": 0,
+       "down": -1,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "homeScore": 0,
+      "id": "401872933969",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "96900",
+      "start": {
+       "distance": 0,
+       "down": -1,
+       "downDistanceText": " & Goal at CAR 35",
+       "possessionText": "CAR 35",
+       "shortDownDistanceText": " & Goal",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 04:29.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:40:19Z"
+     }
+    ],
+    "result": "FG",
+    "team": {
+     "abbreviation": "CAR",
+     "displayName": "Carolina Panthers",
+     "id": "29",
+     "name": "Panthers",
+     "shortDisplayName": "Panthers"
+    }
+   },
+   {
+    "description": "7 plays, 37 yards, 3:49",
+    "displayResult": "Downs",
+    "id": "4018729337",
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:29"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 30",
+       "possessionText": "ATL 30",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 30,
+       "yardsToEndzone": 70
+      },
+      "homeScore": 0,
+      "id": "401872933979",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "97900",
+      "start": {
+       "distance": 0,
+       "down": 0,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 65,
+       "yardsToEndzone": 65
+      },
+      "statYardage": 21,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "R.Fitzgerald kicks 56 yards from CAR 35 to ATL 9. O.Zaccheaus to ATL 30 for 21 yards (B.Tremayne). CAR-C.Cherelus was injured during the play.",
+      "type": {
+       "abbreviation": "K",
+       "id": "53",
+       "text": "Kickoff"
+      },
+      "wallclock": "2026-09-20T17:43:10Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "4:23"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 44",
+       "possessionText": "ATL 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 44,
+       "yardsToEndzone": 56
+      },
+      "homeScore": 0,
+      "id": "4018729331012",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "101200",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 30",
+       "possessionText": "ATL 30",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 30,
+       "yardsToEndzone": 70
+      },
+      "statYardage": 14,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass short middle to D.London to ATL 44 for 14 yards (B.Okereke; L.Ransom).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:45:40Z",
+      "yardsAfterCatch": 6
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:49"
+      },
+      "end": {
+       "distance": 1,
+       "down": 2,
+       "downDistanceText": "2nd & 1 at CAR 47",
+       "possessionText": "CAR 47",
+       "shortDownDistanceText": "2nd & 1",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 53,
+       "yardsToEndzone": 47
+      },
+      "homeScore": 0,
+      "id": "4018729331042",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "104200",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 44",
+       "possessionText": "ATL 44",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 44,
+       "yardsToEndzone": 56
+      },
+      "statYardage": 9,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Br.Robinson left guard to CAR 47 for 9 yards (D.Lloyd).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:46:14Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "3:10"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 40",
+       "possessionText": "CAR 40",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 60,
+       "yardsToEndzone": 40
+      },
+      "homeScore": 0,
+      "id": "4018729331064",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "106400",
+      "start": {
+       "distance": 1,
+       "down": 2,
+       "downDistanceText": "2nd & 1 at CAR 47",
+       "possessionText": "CAR 47",
+       "shortDownDistanceText": "2nd & 1",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 53,
+       "yardsToEndzone": 47
+      },
+      "statYardage": 7,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Br.Robinson left guard to CAR 40 for 7 yards (A.Hall; J.Moon).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:46:54Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "2:31"
+      },
+      "end": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at CAR 37",
+       "possessionText": "CAR 37",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 63,
+       "yardsToEndzone": 37
+      },
+      "homeScore": 0,
+      "id": "4018729331086",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "108600",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 40",
+       "possessionText": "CAR 40",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 60,
+       "yardsToEndzone": 40
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass short right to Z.Branch to CAR 37 for 3 yards (Z.Wheatley).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:47:32Z",
+      "yardsAfterCatch": 7
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:56"
+      },
+      "end": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at CAR 32",
+       "possessionText": "CAR 32",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "homeScore": 0,
+      "id": "4018729331111",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "111100",
+      "start": {
+       "distance": 7,
+       "down": 2,
+       "downDistanceText": "2nd & 7 at CAR 37",
+       "possessionText": "CAR 37",
+       "shortDownDistanceText": "2nd & 7",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 63,
+       "yardsToEndzone": 37
+      },
+      "statYardage": 5,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) Bi.Robinson right guard to CAR 32 for 5 yards (A.Hall; D.Brown).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:48:08Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "1:20"
+      },
+      "end": {
+       "distance": 1,
+       "down": 4,
+       "downDistanceText": "4th & 1 at CAR 31",
+       "possessionText": "CAR 31",
+       "shortDownDistanceText": "4th & 1",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 69,
+       "yardsToEndzone": 31
+      },
+      "homeScore": 0,
+      "id": "4018729331133",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "113300",
+      "start": {
+       "distance": 2,
+       "down": 3,
+       "downDistanceText": "3rd & 2 at CAR 32",
+       "possessionText": "CAR 32",
+       "shortDownDistanceText": "3rd & 2",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 68,
+       "yardsToEndzone": 32
+      },
+      "statYardage": 1,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Bi.Robinson right guard to CAR 31 for 1 yard (D.Lloyd; B.Okereke).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:48:43Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:46"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 33",
+       "possessionText": "CAR 33",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 67,
+       "yardsToEndzone": 67
+      },
+      "homeScore": 0,
+      "id": "4018729331155",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "115500",
+      "start": {
+       "distance": 1,
+       "down": 4,
+       "downDistanceText": "4th & 1 at CAR 31",
+       "possessionText": "CAR 31",
+       "shortDownDistanceText": "4th & 1",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 69,
+       "yardsToEndzone": 31
+      },
+      "statYardage": -2,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "D.London left end to CAR 33 for -2 yards (D.Lloyd).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:49:18Z"
+     }
+    ],
+    "result": "DOWNS",
+    "team": {
+     "abbreviation": "ATL",
+     "displayName": "Atlanta Falcons",
+     "id": "1",
+     "name": "Falcons",
+     "shortDisplayName": "Falcons"
+    }
+   },
+   {
+    "description": "3 plays, -6 yards, 2:35",
+    "displayResult": "Punt",
+    "id": "4018729338",
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:40"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at CAR 41",
+       "possessionText": "CAR 41",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 59,
+       "yardsToEndzone": 59
+      },
+      "homeScore": 0,
+      "id": "4018729331177",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "117700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 33",
+       "possessionText": "CAR 33",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 67,
+       "yardsToEndzone": 67
+      },
+      "statYardage": 8,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young pass short left to T.McMillan to CAR 41 for 8 yards (D.Deablo).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T17:50:15Z",
+      "yardsAfterCatch": 5
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "0:00"
+      },
+      "end": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at CAR 41",
+       "possessionText": "CAR 41",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 59,
+       "yardsToEndzone": 59
+      },
+      "homeScore": 0,
+      "id": "4018729331202",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 1
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "120200",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 59,
+       "yardsToEndzone": 59
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "END QUARTER 1",
+      "type": {
+       "abbreviation": "EP",
+       "id": "2",
+       "text": "End Period"
+      },
+      "wallclock": "2026-09-20T17:50:15Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "15:00"
+      },
+      "end": {
+       "distance": 12,
+       "down": 2,
+       "downDistanceText": "2nd & 12 at CAR 31",
+       "possessionText": "CAR 31",
+       "shortDownDistanceText": "2nd & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 69,
+       "yardsToEndzone": 69
+      },
+      "homeScore": 0,
+      "id": "4018729331222",
+      "isPenalty": true,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "penalty": {
+       "status": {
+        "slug": "accepted",
+        "text": "Accepted"
+       },
+       "type": {
+        "slug": "offensive-holding",
+        "text": "Offensive Holding"
+       },
+       "yards": 10
+      },
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "122200",
+      "start": {
+       "distance": 2,
+       "down": 2,
+       "downDistanceText": "2nd & 2 at CAR 41",
+       "possessionText": "CAR 41",
+       "shortDownDistanceText": "2nd & 2",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 59,
+       "yardsToEndzone": 59
+      },
+      "statYardage": -10,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Hubbard left guard to CAR 47 for 6 yards (D.Deablo).PENALTY on CAR-L.Fortner, Offensive Holding, 10 yards, enforced at CAR 41 - No Play.",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:54:02Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "14:36"
+      },
+      "end": {
+       "distance": 21,
+       "down": 3,
+       "downDistanceText": "3rd & 21 at CAR 22",
+       "possessionText": "CAR 22",
+       "shortDownDistanceText": "3rd & 21",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 78,
+       "yardsToEndzone": 78
+      },
+      "homeScore": 0,
+      "id": "4018729331255",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "125500",
+      "start": {
+       "distance": 12,
+       "down": 2,
+       "downDistanceText": "2nd & 12 at CAR 31",
+       "possessionText": "CAR 31",
+       "shortDownDistanceText": "2nd & 12",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 69,
+       "yardsToEndzone": 69
+      },
+      "statYardage": -9,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) B.Young sacked at CAR 22 for -9 yards (sack split by S.Ebukam and G.Dexter).",
+      "type": {
+       "id": "7",
+       "text": "Sack"
+      },
+      "wallclock": "2026-09-20T17:54:59Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:52"
+      },
+      "end": {
+       "distance": 16,
+       "down": 4,
+       "downDistanceText": "4th & 16 at CAR 27",
+       "possessionText": "CAR 27",
+       "shortDownDistanceText": "4th & 16",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 73,
+       "yardsToEndzone": 73
+      },
+      "homeScore": 0,
+      "id": "4018729331275",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "127500",
+      "start": {
+       "distance": 21,
+       "down": 3,
+       "downDistanceText": "3rd & 21 at CAR 22",
+       "possessionText": "CAR 22",
+       "shortDownDistanceText": "3rd & 21",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 78,
+       "yardsToEndzone": 78
+      },
+      "statYardage": 5,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Hubbard up the middle to CAR 27 for 5 yards (B.Dorlus; H.Perkins).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:55:43Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:12"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 81
+      },
+      "homeScore": 0,
+      "id": "4018729331297",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "129700",
+      "start": {
+       "distance": 16,
+       "down": 4,
+       "downDistanceText": "4th & 16 at CAR 27",
+       "possessionText": "CAR 27",
+       "shortDownDistanceText": "4th & 16",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 73,
+       "yardsToEndzone": 73
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "S.Martin punts 54 yards to ATL 19, Center-J.Jansen, fair catch by Z.Branch.",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T17:56:23Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:05"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 81
+      },
+      "homeScore": 0,
+      "id": "4018729331307",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "130700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 13:05.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T17:57:00Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "CAR",
+     "displayName": "Carolina Panthers",
+     "id": "29",
+     "name": "Panthers",
+     "shortDisplayName": "Panthers"
+    }
+   },
+   {
+    "description": "5 plays, 12 yards, 3:35",
+    "displayResult": "Punt",
+    "id": "4018729339",
+    "plays": [
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "13:05"
+      },
+      "end": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 79
+      },
+      "homeScore": 0,
+      "id": "4018729331317",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "131700",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 19",
+       "possessionText": "ATL 19",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 19,
+       "yardsToEndzone": 81
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Bi.Robinson left tackle to ATL 21 for 2 yards (T.Edwards).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T17:59:36Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "12:30"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 71
+      },
+      "homeScore": 0,
+      "id": "4018729331346",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "134600",
+      "start": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at ATL 21",
+       "possessionText": "ATL 21",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 21,
+       "yardsToEndzone": 79
+      },
+      "statYardage": 8,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass short right to J.Dotson to ATL 29 for 8 yards (D.Lloyd).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T18:00:11Z",
+      "yardsAfterCatch": 1
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "11:36"
+      },
+      "end": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 69
+      },
+      "homeScore": 0,
+      "id": "4018729331371",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "137100",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at ATL 29",
+       "possessionText": "ATL 29",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 29,
+       "yardsToEndzone": 71
+      },
+      "statYardage": 2,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Bi.Robinson up the middle to ATL 31 for 2 yards (D.Brown; M.Jackson).",
+      "type": {
+       "abbreviation": "RUSH",
+       "id": "5",
+       "text": "Rush"
+      },
+      "wallclock": "2026-09-20T18:01:05Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:58"
+      },
+      "end": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 34",
+       "possessionText": "ATL 34",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 66
+      },
+      "homeScore": 0,
+      "id": "4018729331393",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "139300",
+      "start": {
+       "distance": 8,
+       "down": 2,
+       "downDistanceText": "2nd & 8 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "2nd & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 69
+      },
+      "statYardage": 3,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush pass short right to Bi.Robinson to ATL 34 for 3 yards (B.Okereke).",
+      "type": {
+       "abbreviation": "REC",
+       "id": "24",
+       "text": "Pass Reception"
+      },
+      "wallclock": "2026-09-20T18:01:43Z",
+      "yardsAfterCatch": 2
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "10:16"
+      },
+      "end": {
+       "distance": 8,
+       "down": 4,
+       "downDistanceText": "4th & 8 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "4th & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 69
+      },
+      "homeScore": 0,
+      "id": "4018729331418",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "141800",
+      "start": {
+       "distance": 5,
+       "down": 3,
+       "downDistanceText": "3rd & 5 at ATL 34",
+       "possessionText": "ATL 34",
+       "shortDownDistanceText": "3rd & 5",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 34,
+       "yardsToEndzone": 66
+      },
+      "statYardage": -3,
+      "teamParticipants": [
+       {
+        "id": "1",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "29",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "(Shotgun) C.Rush sacked at ATL 31 for -3 yards (D.Lloyd).",
+      "type": {
+       "id": "7",
+       "text": "Sack"
+      },
+      "wallclock": "2026-09-20T18:02:25Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:40"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 20",
+       "possessionText": "CAR 20",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 80,
+       "yardsToEndzone": 80
+      },
+      "homeScore": 0,
+      "id": "4018729331438",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "143800",
+      "start": {
+       "distance": 8,
+       "down": 4,
+       "downDistanceText": "4th & 8 at ATL 31",
+       "possessionText": "ATL 31",
+       "shortDownDistanceText": "4th & 8",
+       "team": {
+        "id": "1"
+       },
+       "yardLine": 31,
+       "yardsToEndzone": 31
+      },
+      "statYardage": 13,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "defense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "offense"
+       }
+      ],
+      "text": "J.Bailey punts 62 yards to CAR 7, Center-L.McCullough. J.Coker ran ob at CAR 20 for 13 yards (Y.Abdullah).",
+      "type": {
+       "abbreviation": "PUNT",
+       "id": "52",
+       "text": "Punt"
+      },
+      "wallclock": "2026-09-20T18:03:01Z"
+     },
+     {
+      "awayScore": 10,
+      "clock": {
+       "displayValue": "9:30"
+      },
+      "end": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 20",
+       "possessionText": "CAR 20",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 80,
+       "yardsToEndzone": 80
+      },
+      "homeScore": 0,
+      "id": "4018729331454",
+      "isPenalty": false,
+      "isTurnover": false,
+      "modified": "2026-09-20T21:19Z",
+      "period": {
+       "number": 2
+      },
+      "priority": false,
+      "scoringPlay": false,
+      "sequenceNumber": "145400",
+      "start": {
+       "distance": 10,
+       "down": 1,
+       "downDistanceText": "1st & 10 at CAR 20",
+       "possessionText": "CAR 20",
+       "shortDownDistanceText": "1st & 10",
+       "team": {
+        "id": "29"
+       },
+       "yardLine": 80,
+       "yardsToEndzone": 0
+      },
+      "statYardage": 0,
+      "teamParticipants": [
+       {
+        "id": "29",
+        "order": 1,
+        "type": "offense"
+       },
+       {
+        "id": "1",
+        "order": 2,
+        "type": "defense"
+       }
+      ],
+      "text": "Official Timeout at 09:30.",
+      "type": {
+       "abbreviation": "Off TO",
+       "id": "74",
+       "text": "Official Timeout"
+      },
+      "wallclock": "2026-09-20T18:03:40Z"
+     }
+    ],
+    "result": "PUNT",
+    "team": {
+     "abbreviation": "ATL",
+     "displayName": "Atlanta Falcons",
+     "id": "1",
+     "name": "Falcons",
+     "shortDisplayName": "Falcons"
+    }
+   }
+  ]
+ },
+ "header": {
+  "competitions": [
+   {
+    "boxscoreAvailable": true,
+    "boxscoreMinutes": true,
+    "boxscoreSource": "full",
+    "commentaryAvailable": false,
+    "competitors": [
+     {
+      "homeAway": "home",
+      "id": "1",
+      "order": 0,
+      "score": "3",
+      "team": {
+       "abbreviation": "ATL",
+       "alternateColor": "000000",
+       "color": "a71930",
+       "displayName": "Atlanta Falcons",
+       "id": "1",
+       "location": "Atlanta",
+       "name": "Falcons",
+       "uid": "s:20~l:28~t:1"
+      },
+      "winner": false
+     },
+     {
+      "homeAway": "away",
+      "id": "29",
+      "order": 1,
+      "score": "34",
+      "team": {
+       "abbreviation": "CAR",
+       "alternateColor": "000000",
+       "color": "0085ca",
+       "displayName": "Carolina Panthers",
+       "id": "29",
+       "location": "Carolina",
+       "name": "Panthers",
+       "uid": "s:20~l:28~t:29"
+      },
+      "winner": true
+     }
+    ],
+    "conferenceCompetition": false,
+    "date": "2026-09-20T17:00Z",
+    "id": "401872933",
+    "liveAvailable": false,
+    "neutralSite": false,
+    "onWatchESPN": false,
+    "playByPlaySource": "full",
+    "recent": false,
+    "status": {
+     "isTBDFlex": false,
+     "type": {
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "shortDetail": "Final",
+      "state": "post"
+     }
+    },
+    "uid": "s:20~l:28~e:401872933~c:401872933",
+    "wallclockAvailable": true
+   }
+  ],
+  "id": "401872933",
+  "league": {
+   "abbreviation": "NFL",
+   "id": "28",
+   "isTournament": false,
+   "links": [
+    {
+     "href": "https://www.espn.com/nfl/",
+     "rel": [
+      "index",
+      "desktop",
+      "league"
+     ],
+     "text": "Index"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28",
+     "rel": [
+      "index",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Index"
+    },
+    {
+     "href": "https://www.espn.com/nfl/schedule",
+     "rel": [
+      "schedule",
+      "desktop",
+      "league"
+     ],
+     "text": "Schedule"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "rel": [
+      "schedule",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Schedule"
+    },
+    {
+     "href": "https://www.espn.com/nfl/standings",
+     "rel": [
+      "standings",
+      "desktop",
+      "league"
+     ],
+     "text": "Standings"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=standings",
+     "rel": [
+      "standings",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Standings"
+    },
+    {
+     "href": "https://www.espn.com/nfl/powerrankings",
+     "rel": [
+      "rankings",
+      "desktop",
+      "league"
+     ],
+     "text": "Power Rankings"
+    },
+    {
+     "href": "https://www.espn.com/nfl/scoreboard",
+     "rel": [
+      "scores",
+      "desktop",
+      "league"
+     ],
+     "text": "Scores"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=scores",
+     "rel": [
+      "scores",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Scores"
+    },
+    {
+     "href": "https://www.espn.com/nfl/stats",
+     "rel": [
+      "stats",
+      "desktop",
+      "league"
+     ],
+     "text": "Stats"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=stats",
+     "rel": [
+      "stats",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Stats"
+    },
+    {
+     "href": "https://www.espn.com/nfl/teams",
+     "rel": [
+      "teams",
+      "desktop",
+      "league"
+     ],
+     "text": "Teams"
+    },
+    {
+     "href": "https://www.espn.com/nfl/players",
+     "rel": [
+      "athletes",
+      "desktop",
+      "league"
+     ],
+     "text": "Players"
+    },
+    {
+     "href": "https://www.espn.com/nfl/injuries",
+     "rel": [
+      "injuries",
+      "desktop",
+      "league"
+     ],
+     "text": "Injuries"
+    },
+    {
+     "href": "https://www.espn.com/nfl/odds",
+     "rel": [
+      "odds",
+      "desktop",
+      "league"
+     ],
+     "text": "Odds"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=odds",
+     "rel": [
+      "odds",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Odds"
+    },
+    {
+     "href": "https://www.espn.com/nfl/playoff-bracket",
+     "rel": [
+      "playoff-bracket",
+      "desktop",
+      "league"
+     ],
+     "text": "Bracket"
+    },
+    {
+     "href": "sportscenter://x-callback-url/showClubhouse?uid=s:20~l:28&section=bracket",
+     "rel": [
+      "playoff-bracket",
+      "sportscenter",
+      "app",
+      "league"
+     ],
+     "text": "Bracket"
+    },
+    {
+     "href": "https://insider.espn.com/nfl/freeagency/",
+     "rel": [
+      "freeagency",
+      "desktop",
+      "league"
+     ],
+     "text": "Freeagency"
+    }
+   ],
+   "logos": [
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500/nfl.png",
+     "rel": [
+      "full",
+      "default"
+     ]
+    },
+    {
+     "href": "https://a.espncdn.com/i/teamlogos/leagues/500-dark/nfl.png",
+     "rel": [
+      "full",
+      "dark"
+     ]
+    }
+   ],
+   "name": "National Football League",
+   "shortName": "NFL",
+   "slug": "nfl",
+   "uid": "s:20~l:28"
+  },
+  "season": {
+   "current": true,
+   "type": 2,
+   "year": 2026
+  },
+  "timeValid": true,
+  "uid": "s:20~l:28~e:401872933",
+  "week": 2
+ },
+ "scoringPlays": [
+  {
+   "awayScore": 7,
+   "clock": {
+    "displayValue": "10:48",
+    "value": 648.0
+   },
+   "homeScore": 0,
+   "id": "401872933411",
+   "period": {
+    "number": 1
+   },
+   "scoringType": {
+    "abbreviation": "TD",
+    "displayName": "Touchdown",
+    "name": "touchdown"
+   },
+   "team": {
+    "abbreviation": "CAR",
+    "displayName": "Carolina Panthers",
+    "id": "29",
+    "uid": "s:20~l:28~t:29"
+   },
+   "text": "Chuba Hubbard 3 Yd pass from Bryce Young (Ryan Fitzgerald Kick)",
+   "type": {
+    "abbreviation": "TD",
+    "id": "67",
+    "text": "Passing Touchdown"
+   }
+  },
+  {
+   "awayScore": 10,
+   "clock": {
+    "displayValue": "4:29",
+    "value": 269.0
+   },
+   "homeScore": 0,
+   "id": "401872933959",
+   "period": {
+    "number": 1
+   },
+   "scoringType": {
+    "abbreviation": "FG",
+    "displayName": "Field Goal",
+    "name": "field-goal"
+   },
+   "team": {
+    "abbreviation": "CAR",
+    "displayName": "Carolina Panthers",
+    "id": "29",
+    "uid": "s:20~l:28~t:29"
+   },
+   "text": "Ryan Fitzgerald 37 Yd Field Goal",
+   "type": {
+    "abbreviation": "FG",
+    "id": "59",
+    "text": "Field Goal Good"
+   }
+  }
+ ]
+}

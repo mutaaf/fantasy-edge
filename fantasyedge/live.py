@@ -274,17 +274,23 @@ class SimulatedSource(LiveSource):
 # so this is a host swap rather than a rewrite. ESPN_API_HOST overrides it if
 # the block ever moves.
 API_HOST = os.environ.get("ESPN_API_HOST", "site.web.api.espn.com")
-BASE = "https://{host}/apis/site/v2/sports/football/nfl"
+# The league's own path segment. NFL is the default because this module's
+# caller is a fantasy football league, but it is a default and not a constant:
+# ESPN serves the identical shapes at `football/college-football`, and a
+# `league_path` argument is the whole difference between the two. Everything
+# above these two functions reads the league from the payload it gets back.
+LEAGUE_PATH = "football/nfl"
+BASE = "https://{host}/apis/site/v2/sports/{league}"
 SCOREBOARD = BASE + "/scoreboard{q}"
 SUMMARY = BASE + "/summary?event={event}"
 
 
-def scoreboard_url(q: str = "") -> str:
-    return SCOREBOARD.format(host=API_HOST, q=q)
+def scoreboard_url(q: str = "", league_path: str | None = None) -> str:
+    return SCOREBOARD.format(host=API_HOST, league=league_path or LEAGUE_PATH, q=q)
 
 
-def summary_url(event: str) -> str:
-    return SUMMARY.format(host=API_HOST, event=event)
+def summary_url(event: str, league_path: str | None = None) -> str:
+    return SUMMARY.format(host=API_HOST, league=league_path or LEAGUE_PATH, event=event)
 GAME_LENGTH_MIN = 60.0          # four quarters of game clock
 
 
@@ -592,7 +598,14 @@ class EspnLiveSource(LiveSource):
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
         out: dict[str, dict] = {}
-        for ev in (self.scoreboard().get("events") or []):
+        board = self.scoreboard()
+        # The feed states which league it is, so a row can carry it rather
+        # than every reader assuming. `whip.slate` has always documented that
+        # the league rides along on each row; until this it silently rode
+        # along as "", and the one place it mattered - a channel serving a
+        # college Saturday - could not tell what it was looking at.
+        league = ((board.get("leagues") or [{}])[0].get("slug") or "")
+        for ev in (board.get("events") or []):
             comp = (ev.get("competitions") or [{}])[0]
             status = comp.get("status") or {}
             st = (status.get("type") or {})
@@ -632,7 +645,7 @@ class EspnLiveSource(LiveSource):
             for i, (ab, ha, score) in enumerate(sides):
                 other = sides[1 - i][0] if len(sides) == 2 else ""
                 out[ab] = {"played": round(played, 4), "state": state,
-                           "label": label[:18],
+                           "label": label[:18], "league": league,
                            "kickoff": (ev.get("date") or "")[:16],
                            "score": score, "opp": other, "home": ha == "home",
                            "event": str(ev.get("id") or ""),
