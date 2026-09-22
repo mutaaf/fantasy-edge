@@ -188,12 +188,22 @@ def main() -> None:
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     logs = []
     try:
-        for _ in range(50):
+        # Two minutes, not ten seconds: this machine runs several stadium
+        # simulators at once and has been seen at load 938, where the API takes
+        # far longer than ten seconds to answer. The old loop then fell through
+        # silently and the shoot failed later, somewhere unrelated - so this
+        # raises rather than continuing without an API.
+        for attempt in range(600):
             try:
                 get(args.port, "/api/health")
                 break
             except Exception:
+                if attempt and attempt % 50 == 0:
+                    print(f"  waiting for the API ({attempt // 5}s, load {os.getloadavg()[0]:.0f})")
                 time.sleep(0.2)
+        else:
+            raise SystemExit(f"the API never answered on port {args.port} in 120s "
+                             f"(load {os.getloadavg()[0]:.0f}) - nothing was shot")
         simctl("boot", args.device, check=False)
         simctl("install", args.device, str(args.app))
         post(args.port, {"action": "load", "event": args.event})
