@@ -407,13 +407,14 @@ public final class StadiumRenderer {
         }
     }
 
-    /// The scene's newest moment and the red-zone crossing, once each.
+    /// The scene's newest moment. The red-zone crossing is NOT dispatched here:
+    /// it belongs to the status the stadium is showing, and this runs on the
+    /// scene as it arrives. Dispatching from both meant this one fired first,
+    /// set `lastRedZone`, and left the gated site in `releaseStatus` a
+    /// permanent no-op - so the rumble and the crowd rose seconds before the
+    /// ball crossed the twenty, which is what StatusGate exists to prevent.
     private func dispatchEvents(_ c: StadiumContext) {
         let s = c.spec
-        if s.status.redZone && !lastRedZone {
-            for actor in actors { actor.moment(.redZoneEntered, c) }
-        }
-        lastRedZone = s.status.redZone
         if let cue = s.activeCue, cue.id != lastCue {
             lastCue = cue.id
             for actor in actors { actor.moment(.cue(cue), c) }

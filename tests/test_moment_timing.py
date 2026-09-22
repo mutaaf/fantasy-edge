@@ -217,6 +217,18 @@ class TokensTest(unittest.TestCase):
         motion = sc.load_tokens()["motion"]
         self.assertIn("momentHoldGraceSeconds", motion)
 
+    def test_the_red_zone_crossing_is_dispatched_from_one_place(self):
+        # It was dispatched from two: the gated status, and the raw scene as it
+        # arrived. The raw one ran first and set lastRedZone, which left the
+        # gated one a permanent no-op - so the rumble and the crowd rose
+        # seconds before the ball crossed the twenty. One site, and it is the
+        # one that waits.
+        self.assertEqual(1, RENDERER.count(".redZoneEntered, c)"),
+                         "two dispatch sites means the first one wins and it is the wrong one")
+        gated = RENDERER.split("private func dispatchEvents")[1]
+        self.assertNotIn("redZone", gated.split("private func")[0],
+                         "dispatchEvents runs on the arriving scene; the crossing belongs to the shown status")
+
 
 if __name__ == "__main__":
     unittest.main()
