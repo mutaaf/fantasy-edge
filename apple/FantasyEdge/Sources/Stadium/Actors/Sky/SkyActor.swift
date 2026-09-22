@@ -23,14 +23,20 @@ final class SkyActor: StadiumActor {
         guard !c.tabletop else { return }
         let V = c.look.sky, s = c.spec
         let yaw = simd_quatf(angle: Float(V.yawDegrees * .pi / 180), axis: SIMD3(0, 1, 0))
+        // `-lightSkip stars,clouds,dome`: the same debug set Lighting reads, so
+        // the three layers that brighten the band above the rim can be measured
+        // one at a time. See LightingActor.skipped.
+        let skip = LightingActor.skipped
 
-        var starMaterial = StadiumLook.emissive("#FFFFFF", scale: V.skyGain, texture: c.assets.texture("sky.sky"), tile: false)
-        starMaterial.faceCulling = .none
-        let stars = Self.dome(radius: Float(V.radiusYards)).entity("sky.stars", starMaterial)
-        stars.orientation = yaw
-        root.addChild(stars)
+        if !skip.contains("stars") {
+            var starMaterial = StadiumLook.emissive("#FFFFFF", scale: V.skyGain, texture: c.assets.texture("sky.sky"), tile: false)
+            starMaterial.faceCulling = .none
+            let stars = Self.dome(radius: Float(V.radiusYards)).entity("sky.stars", starMaterial)
+            stars.orientation = yaw
+            root.addChild(stars)
+        }
 
-        if let texture = c.assets.texture("sky.clouds") {
+        if !skip.contains("clouds"), let texture = c.assets.texture("sky.clouds") {
             // Clouds cover stars rather than add to them: alpha-blended, dark,
             // lifted a little by the colour the tokens give them.
             var m = UnlitMaterial(applyPostProcessToneMap: false)
@@ -45,7 +51,7 @@ final class SkyActor: StadiumActor {
             clouds = veil
         }
 
-        guard let top = c.tiers.last else { return }
+        guard !skip.contains("dome"), let top = c.tiers.last else { return }
         let rimOffset = top.outer + (s.bowl.rimLights.beyondOuter ?? 1) + V.domeInsetYards
         let standTop = top.rise[1]
         var dome = MeshBuilder()

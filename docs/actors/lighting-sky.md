@@ -143,3 +143,138 @@ prop Sideline moves.
 
 The additive beam overdraw is estimated per seat and capped at 2.0 screens, and
 logged at build: `[stadium] lighting beams k/n, overdraw ≈ x screens`.
+
+---
+
+# Round 2 — the value structure, measured
+
+`actor/lighting-r2`, off `immersive/quality` at `5fca925`. Shots in
+`docs/lookdev/lighting-r2/{before,after}/`; `before/` are integration-14's own
+frames, confirmed identical to a fresh baseline shot on this branch (the band
+above the rim measured 0.0542 in both).
+
+The brief carried two long-standing faults and one unmeasured rule. One fault
+was not real, the other was not reproducible, and the rule was broken.
+
+## The floodlight pool edge: there isn't one, and there cannot be
+
+integration-12 logged "the far half of the turf still has the floodlight pool's
+hard diagonal edge" on `s-bowl-wide`, and -13 and -14 carried it forward. It is
+not a lighting fault.
+
+**Geometry.** Each flood sits on a bank 116–150 yd from the field centre and
+54.8 yd up, aimed at the centre, with a 50° outer cone and a 260 yd
+attenuation radius. The cone's steeper edge meets the ground **118 yd from the
+centre** — out in the stands behind the bank — and its shallower edge is 28°
+*above* horizontal, so it never meets the ground at all. Laterally the cone is
+175 yd wide where it crosses the field, against a 27 yd half-width. Both
+boundaries miss the turf. The far end zone is 203 yd from the bank, inside the
+260 yd radius, so the attenuation does not terminate on the field either.
+
+**Measurement.** `tools/light_levels.py --edges` walks columns down the turf
+and reports the biggest row-to-row step in each. On integration-12, -13 and -14
+the largest steps are identical (0.041, 0.033, 0.031…) and their rows are
+scattered over 172 rows with no slope: periodic boundaries aligned to the yard
+lines, which is the mowing stripe. A single light terminator would put the same
+row in every column. Magnified (`.work/crops/far-half-big.png`), the far half
+shows evenly spaced stripes and no terminator.
+
+The stripes *are* diagonal in frame — perspective turns cross-field mowing into
+converging diagonals on the far half — which is what the note was seeing.
+
+## The end-zone haze: not reproducible
+
+integration-11 logged the haze as heavy from the end-zone seat. On this build
+the end-zone frame shows no heaviness (`after/crowd-closeup-endzone.png`, and
+the same seat in integration-14). The haze's measured contribution to the band
+above the rim was **0.4%** — the opposite problem: from the club seat it was
+too faint to read as anything, against a bar that asks for haze "visible
+against the sky".
+
+## The rule that was broken: the sky was as bright as the grass
+
+The art bible: "The field is the brightest thing in the bowl… The stands sit a
+stop darker, the sky two." Nobody had measured it. Measured
+(`tools/light_levels.py --bands`, and clean patches on `s-bowl-wide`):
+
+| | before | after | art bible |
+|---|---:|---:|---|
+| field, midfield | 0.0623 | 0.0623 | brightest |
+| band above the rim | 0.0542 (**+0.20 st**) | 0.0355 (**+0.81 st**) | a glow, below the field |
+| high sky | 0.0341 (**+0.87 st**) | 0.0140 (**+2.16 st**) | 2 stops |
+| zenith (`sky-dome`) | 0.0162 | 0.0051 | dark, not a void |
+| field → stands | +1.45 st | +1.45 st | 1 stop |
+
+The night sat 0.2 stops under the floodlit grass. It read washed rather than
+deep, and the field was not the brightest thing in the bowl.
+
+**Which layer owned it, measured rather than guessed.** `-lightSkip
+dome,haze,clouds,beams,glow,fill,floods,stars` (and `LIGHT_SKIP`) leaves a
+layer out, the way `-bowlSkip` does; `SkyActor` reads the same set. Shooting
+`bowl-wide` once per layer:
+
+| layer skipped | band above the rim | its share |
+|---|---:|---:|
+| none | 0.0542 | – |
+| dome | 0.0528 | **3%** |
+| haze | 0.0540 | **0.4%** |
+| dome + haze | 0.0526 | 3% |
+| clouds | 0.0554 | *darkens by 2%* |
+
+**97% of it was the sky texture itself** — its zenith-to-horizon gradient at the
+6× display exposure baked into `sky_night.png`. My first hypothesis, that the
+dome and the haze were stacking in the same band, was wrong by a factor of
+thirty. The dome — the bible's signature "warm light dome over the rim" — was
+contributing almost nothing, which is backwards.
+
+**The change**, three numbers, no asset rebuild, so the web and Android ports
+get it from the same tokens:
+
+- `visual.sky.skyGain` 1.0 → **0.6**. `StadiumLook.emissive(scale:)` tints the
+  sky texture, so this scales the *displayed* dome only. The probe is the EXR,
+  untouched: image-based lighting on every other actor is exactly as it was.
+- `visual.sky.domeOpacity` 0.2 → **0.4**, so the glow above the rim is drawn by
+  the dome that exists for it rather than by the whole sky being bright.
+- `visual.lighting.haze.opacity` 0.08 → **0.12**, so the lit air reads.
+
+`skyGain` 0.45 was tried first and over-darkened: the zenith fell to 0.0025 and
+began to read as a void, against "nothing reads as a void". 0.6 keeps the stars
+on a navy that still has tone (`after/sky-dome.png`).
+
+## Judged on the frames
+
+- `after/bowl-wide.png` — the field is plainly the brightest thing; a warm band
+  sits above the rim and fades into deep navy.
+- `after/lights-haze.png` — the glow band above the stands now reads as lit air
+  over the bowl; before, the whole sky was that value so there was no band.
+- `after/sky-dome.png` — stars as points on navy, the veil visible, a glow
+  rising from the rim. Not a void.
+- `after/td-moment-t5.5.png` — the strobe is punchy against the darker sky, the
+  ribbon flashing TOUCHDOWN.
+- `after/crowd-closeup-endzone.png` — no heaviness, no fog on the field.
+
+## Budget (`-stadiumStats`)
+
+| Actor | Draw parts | Triangles | Budget |
+|---|---:|---:|---|
+| lighting | 12 | 9,500 | 20 parts, 10k tris, ≤4 spots, ≤1 shadow caster |
+| sky | 3 | 4,800 | 3 parts, 5k tris |
+
+4 spot lights, 0 shadow casters. Beam overdraw 0.97 of the 1.2 cap at the
+end-zone seat, 18 of 20 beams kept. Nothing was spent: the change is three
+token values.
+
+## Worst thing left, per shot
+
+- `bowl-wide` — the stands sit 1.45 stops under the field where the bible asks
+  for 1. The spill and concourse fill are Lighting's own levers and were not
+  touched this round; a round that raises them should re-measure this table.
+- `field-level` — at this seat the stands read 1.93 stops under the field, the
+  widest gap of any framing.
+- `lights-haze` — the glow band's colour is warm in the middle and cool-grey at
+  the sides, where the sky's own horizon tint shows through the dome.
+- `sky-dome` — the cloud veil reads as soft grey blotches rather than
+  wind-stretched cirrus.
+- `td-moment-t5.5` — the strobe reads, but the frame is one sample; whether it
+  is "brief" is a timing question a still cannot answer.
+- `crowd-closeup-endzone` — nothing to fault in Lighting's own work here.
