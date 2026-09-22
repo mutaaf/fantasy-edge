@@ -28,6 +28,10 @@ extension SceneSpec {
         public let tint: String
         /// Whose colour paints this end: the home club, at both ends.
         public let fill: String
+        /// The paint itself, as the club's own colour rather than its chip:
+        /// a chip is solved onto a luminance band for a panel, and across an
+        /// end zone that lightens a club past what it is.
+        public let paint: String?
 
         var layout: ArtText {
             ArtText(text: text, capHeight: capHeight, origin: origin, along: along, up: up, tint: tint)
@@ -39,6 +43,8 @@ extension SceneSpec {
         public let outer: Double
         public let inner: Double
         public let tint: String
+        /// The ring's own colour, as the club's rather than its chip.
+        public let paint: String?
         public let text: ArtText?
     }
 

@@ -288,3 +288,90 @@ the veil, and the numbers above are why this round's fix is in
   It is finer and half the veil, but a 12 x 9 m net a few metres in front of you
   spans that view in life too, and at review-image resolution its cords can only
   ever mip to a wash. Judge this one on the headset before spending more on it.
+
+## Field round 2: the paint is the club's colour, and the ink is chosen
+
+Before: `docs/lookdev/field-r2/before/`. After: `docs/lookdev/field-r2/after/`.
+Both leagues, five shots each; the before frames are the league audit's own
+(`docs/lookdev/league/`), shot at the same seats one commit earlier, so the
+only difference across the pair is this round.
+
+**The defect.** End-zone paint, the midfield ring and the lettering all took
+the club's *chip*. `chip()` solves a club onto one luminance band so that white
+text clears 4.5:1 inside a panel. That is right for a panel and wrong for a
+thousand square yards: it lightened every club past what it is. Chicago's navy
+`#0B1C3A` painted `#366CCD`; Las Vegas and Pittsburgh both state `#000000` and
+painted `#6F6F6F`, a grey end zone for two clubs whose colour is black.
+
+**The rule now.** The paint is the colour the club states. The lettering ink is
+*chosen* - the better of the field's own white `#DADAD3` and a new dark
+`#12140F` - against the paint as it is actually seen, which is one alpha blend
+over `color.turf.a` at `endZoneOpacity`. `scene.letter_ink` decides it, so the
+web and Android get the same answer, and both ends and midfield share it: a
+club does not letter one end white and the other dark.
+
+**Measured over all 34 club colours a fixture here states** (`tools/field_paint.py`):
+
+| | chip, before | club colour, after |
+|---|---:|---:|
+| worst separation from the grass (CIE76 dE) | 7.8 | **15.3** |
+| worst lettering, ink chosen | 3.8:1 | 3.8:1 |
+| worst lettering, white assumed | 3.8:1 | **1.7:1** |
+
+The first row is the surprise and the reason this is not a trade: the chip band
+sits near the grass's own luminance, so solving a club onto it moved every club
+*toward* the turf. Green Bay's forest green is further from the grass as itself
+than as a lightened chip. The third row is why the ink cannot be assumed - New
+Orleans' old gold takes white lettering to 1.7:1, unreadable at any size. Six
+clubs letter dark: Miami, New Orleans, Tennessee, Carolina, the Chargers and
+Cincinnati. The binding club for lettering is Detroit at 3.8:1, which clears the
+3:1 large-text floor and is not comfortable; end-zone type is as large as type
+gets, so it stands.
+
+**Cost:** one draw part per *distinct* ink. A field needing one ink costs what
+it did; only a club whose midfield and end zones disagreed would cost two, and
+the rule forbids that. Field measures 693 triangles / 10 parts against 2k / 12.
+
+### The grass, judged against the bar
+
+Item by item, on `after/nfl-field-level.png` and `after/nfl-redzone-trails.png`:
+
+- **Reads as floodlit grass rather than a green plane, from the club seat** -
+  passes. The mowing bands carry it at that distance.
+- **The stripe changes with viewing angle as well as colour** - passes; the
+  bands invert across the halfway line in `bowl-wide`.
+- **No tiling visible from any seat** - passes. Nothing repeats visibly at
+  0.4374 yd per tile.
+- **Numbers' weight and scale** - passes against a real field; Graduate at the
+  NFL's 6 ft cap.
+- **Paint worn, with blades through it** - partial. The wear and the ragged
+  hash edges are there; blades through the paint are not resolvable at review
+  size.
+- **Up close at field level, blades rather than a blurred photo** - **fails.**
+  A 1200 x 700 crop of the near field of play at full resolution
+  (`after/nfl-field-level.png`, near the bottom of frame) is a flat olive tint
+  carrying a fine grain, with no blade reading as a blade. The albedo, both
+  normals and the roughness map all load, and `TurfSheen` is bound on 3 meshes,
+  so this is not a missing asset: at 0.4374 yd per tile the blade frequency mips
+  to an average at anything past a couple of yards, and what survives is the
+  stripe. Fixing it is a turf-authoring round - a coarser near-field detail
+  layer, or a distance-blended second tile - and it is too large to do safely
+  behind a colour change, so it is left named rather than half-tuned.
+
+**Worst thing left, per shot:**
+
+- `after/nfl-field-level.png`: the near grass is flat; no blades survive (above).
+  The border is clean but still lit a flat mid-grey, which is Lighting's near
+  field fill, not Field's albedo - unchanged from round 1 and now being worked
+  in parallel.
+- `after/nfl-bowl-wide.png`, `after/college-bowl-wide.png`: nothing in Field's
+  hands. The college frame's crosshatch is its own dense yard markings and is
+  present in the before frame too.
+- `after/nfl-redzone-trails.png`: the midfield ring reads well in navy, but a
+  club whose colour is close to the grass would put the ring near the turf -
+  untested on a frame, because no fixture here has such a club at home.
+- `after/*-tabletop.png`: no regression; the paint reads at table scale.
+- **Untested on a frame in either league: the dark-ink case.** No fixture here
+  has a light-coloured club at home, so New Orleans' gold and Miami's aqua are
+  covered by `tests/test_field_paint.py` and by nothing you can look at. A
+  fixture for one of them is the cheapest way to close that.

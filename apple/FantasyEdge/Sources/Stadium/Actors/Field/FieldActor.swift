@@ -82,12 +82,14 @@ final class FieldActor: StadiumActor {
         // is never painted on it; the scene says so per end (`fill`), and the
         // away side wears its colour in the stands instead.
         for (end, x0, x1) in [("home", -f.endZone, 0.0), ("away", f.length, f.length + f.endZone)] {
-            let fill = f.art?.endZones.first { $0.side == end }?.fill ?? "home"
-            let team = s.teams.side(fill) ?? s.teams.home
+            let zone = f.art?.endZones.first { $0.side == end }
+            let team = s.teams.side(zone?.fill ?? "home") ?? s.teams.home
             var b = MeshBuilder()
             b.floor(x0: x0, x1: x1, z0: -half, z1: half, y: L.endZone, tile: tile)
             var m = PhysicallyBasedMaterial()
-            m.baseColor = .init(tint: StadiumLook.color(team.chip))
+            // The club's own colour, which the scene states; its chip only if
+            // an older scene has no paint to give.
+            m.baseColor = .init(tint: StadiumLook.color(zone?.paint ?? team.chip))
             m.roughness = .init(floatLiteral: Float(P.roughness))
             m.blending = .transparent(opacity: .init(floatLiteral: Float(P.endZoneOpacity)))
             add(b.entity("endzone.\(end)", m), order: 3)
@@ -107,7 +109,7 @@ final class FieldActor: StadiumActor {
                 ring.triangle(p(mid.outer, a0), p(mid.inner, a1), p(mid.inner, a0))
             }
             var m = PhysicallyBasedMaterial()
-            m.baseColor = .init(tint: StadiumLook.color(s.teams.home.chip))
+            m.baseColor = .init(tint: StadiumLook.color(mid.paint ?? s.teams.home.chip))
             m.roughness = .init(floatLiteral: Float(P.roughness))
             add(ring.entity("midfield.ring", m), order: 3)
         }
@@ -137,17 +139,29 @@ final class FieldActor: StadiumActor {
             add(over.entity("paint.grass", m), order: 5)
         }
 
-        // Lettering: each club's name across its end zone, the home name at midfield.
+        // Lettering: each club's name across its end zone, the home name at
+        // midfield. Grouped by ink, not drawn in white: the scene chooses the
+        // ink per club, because a light paint - New Orleans' old gold, say -
+        // takes white lettering to 1.7:1, and a club letters its own field in
+        // whatever reads on it. One mesh per distinct ink, so a field that
+        // needs only one still costs one draw part.
         if let art = f.art, let font = FieldGlyphs.load(art.glyphs) {
-            var letters = MeshBuilder()
-            for z in art.endZones { font.set(z.layout, tracking: art.tracking, lift: L.art, into: &letters) }
-            if let t = art.midfield.text { font.set(t, tracking: art.tracking, lift: L.art, into: &letters) }
-            var m = PhysicallyBasedMaterial()
-            m.baseColor = .init(tint: StadiumLook.color(P.white))
-            m.roughness = .init(floatLiteral: Float(P.roughness))
-            let lettering = letters.entity("lettering", m)
-            add(lettering, order: 4)
-            paintTargets.append((lettering, P.white, false, nil))
+            var byInk: [String: MeshBuilder] = [:]
+            var order: [String] = []
+            let lay = art.endZones.map { $0.layout } + (art.midfield.text.map { [$0] } ?? [])
+            for t in lay {
+                let ink = t.tint.hasPrefix("#") ? t.tint : P.white
+                if byInk[ink] == nil { byInk[ink] = MeshBuilder(); order.append(ink) }
+                font.set(t, tracking: art.tracking, lift: L.art, into: &byInk[ink]!)
+            }
+            for (i, ink) in order.enumerated() {
+                var m = PhysicallyBasedMaterial()
+                m.baseColor = .init(tint: StadiumLook.color(ink))
+                m.roughness = .init(floatLiteral: Float(P.roughness))
+                let lettering = byInk[ink]!.entity("lettering.\(i)", m)
+                add(lettering, order: 4)
+                paintTargets.append((lettering, ink, false, nil))
+            }
         }
 
         // The league's maps, loaded once and then handed to the meshes waiting for them.
