@@ -142,3 +142,130 @@ These are real scenes from `tools/audio/cue_frames.py`: the replay is parked bef
 `actor/crowd` @ `ac9e77f` is merged. The moment timelines call `stand` (the scorers, or the side that took the ball) and `groan` (the side that gave it up); `shared.surge` stays, for the Lighting wash. Cues call `clap` (third down), `stand` (red zone) and, at the final, `stand(.sections)` for the winners until the end and `sit(.sections)` for the losers. The scene serves those section lists on the final cue (`cues[].crowd`, from `fan_sections`). Durations live in `timeline.*.standSeconds` and `groanSeconds`, and in `cues.*.seconds`.
 - Frames: the touchdown is the real pick-six; the others use `-crowdCue`, because the composer does not dispatch cues yet.
 - `apple/verify_scene.swift`'s header command now also needs `Actors/Field/FieldArtSpec.swift` (after the Field merge). Director.
+
+## Round 2: measuring what nobody can hear
+
+Audio has carried "**unverified: anything heard**" through six rounds, because
+the simulator runs muted and a sound cannot be screenshotted. That is true and
+it is not an excuse: a sound still has a time, a place, a level and a reason,
+and every rule in the art bible except timbre is about one of those.
+
+### The instrument, and two wrong versions of it
+
+`tools/audio/inspect_mix.py files` decodes every `.caf` and measures it.
+`... trace <log>` reads the new `[stadium-audio]` lines back.
+
+The seam measurement took three attempts, and the first two **both produced a
+false alarm** that would have been committed as a fix:
+
+1. **Head versus tail over 50 ms.** Reported `clap_bed` stepping 9.3 dB. Wrong:
+   at 120 bpm the first 50 ms is a clap attack and the last 50 ms is the gap
+   after one, so it measured the rhythm.
+2. **Head versus tail over 1 s, or against the median step.** Wrong for a
+   different reason: a loop is seamless when the signal *continues* across the
+   join, not when its two ends are at the same level. A swell sitting in its
+   trough before the wrap and rising after it is perfectly continuous.
+3. **What it does now:** the envelope step at the join, in units of the step
+   that material takes anyway (95th percentile, 100 ms windows). Validated
+   against three constructed controls before being believed - a seamless
+   swell (1.4x), one truncated mid-cycle (3.2x), and a rhythmic loop that must
+   not be flagged for having a beat (1.0x).
+
+**Measured on the beds as they shipped, with the correct instrument: all four
+already looped inaudibly by level** - 0.8, 1.0, 0.3, 0.5 against a 3.0
+threshold. The 9.3 dB defect never existed.
+
+### One real defect, and it was a click not a step
+
+`clap_bed` was the only bed that never called `loop_seam`, and its comment
+claimed the thing it did not do: "the tail of beat 16 wraps into beat 1" while
+`[:n]` threw the reverb tail away. The loop restarted a full clap against a
+dead room.
+
+That is inaudible as a *level* step - the metric above scores it 1.0x, because
+a clap after a gap is what the file does sixteen times - but it is a waveform
+discontinuity, which is heard as a click:
+
+| | click, as a fraction of RMS |
+|---|---|
+| before | **0.2529** |
+| after `wrap_tail` | **0.0019** |
+
+`wrap_tail` folds everything past the loop point back onto the head - circular
+convolution, which is what a loop does in a room: the decay of the last beat is
+still sounding when the first comes round again. No crossfade: at 120 bpm a
+1 s fade lays two copies of the beat over each other.
+
+Only `clap_bed.{caf,ogg}` changed. `crowd_bed` and `wind_bed` were rebuilt from
+reverted generators and are **byte-identical** to what shipped, which also
+confirms the build is deterministic as it claims. (`.ogg` is not: Opus encoding
+differs run to run, so the untouched ones were restored rather than re-encoded.)
+
+### `-stadiumAudioTrace`
+
+`AudioActor` had no logging of any kind, which is the deeper reason nobody
+could check it. Every sound now records verb, key, time, where in the bowl,
+level in dB, and - when it does not play - why: muted, leaving, tabletop, no
+asset, or the voice budget with its count. Beds and mute changes log too.
+
+`inspect_mix.py trace` reads a run's log and checks the rules that are about
+when and where: whether any celebration sound (roar, cheer, fireworks, sting)
+played before its moment fired, and how many voices were live.
+
+**It compiles and has not been run.** The machine reached a load average of
+526 while the other actor agents worked, and three attempts at a shot run
+timed out talking to their own API. Exercising it is the first thing the next
+round should do, and it needs nothing but a quiet machine.
+
+### Licences
+
+Confirmed against `assets/LICENSES.md`: every sound is synthesised by
+`tools/audio/build.py` from noise, oscillators and a synthetic impulse
+response. No recordings, no samples, no downloads, no chants, songs, PA voices
+or brand sounds. The CC0-or-original bar is met by construction.
+
+### Cost, measured at last
+
+The one actor whose cost nobody had measured: **4.3 MB** of `.caf` across 16
+sounds, against a 40 MB budget. `maxSources` is 12, against the art bible's
+16 voices - the ceiling is the token, and it is already stricter than the bar.
+
+### Moments, judged against the bar
+
+Read from `visual.moments.timeline`, every kind lands inside
+`motion.momentSeconds` (6.0):
+
+| | whistle | surge | strobe | particles | banner | settle |
+|---|---|---|---|---|---|---|
+| touchdown | 0.0 | 0.1 | 0.2 (2.6 s) | 0.4 fireworks | 0.3 | 5.4 |
+| fieldGoal | 0.0 | 0.25 | 0.35 (1.0 s) | 0.5 sparks | 0.4 | 3.4 |
+| safety | 0.0 | 0.15 | 0.3 (1.0 s) | none | 0.4 | 3.4 |
+| turnover | 0.0 | 0.12 | **off** | **none** | **off** | 3.0 |
+
+A field goal is smaller than a touchdown in every dimension - a third of the
+strobe, sparks rather than shells, two seconds less. **A turnover is sound
+only**: strobe, particles and banner are all disabled, leaving the sting from
+the side that took it and the groan from the side that lost it. Reduce motion
+sets `strobe` and `particles` false and drops the swell 8 dB, keeping the
+tint and the sound. The bar is met on the timeline; the frames that would
+confirm it on screen are what the load average cost.
+
+### A defect this pass found and did not fix: the red zone still leads the ball
+
+`StadiumRenderer` dispatches `.redZoneEntered` from **two** places:
+
+- `releaseStatus` (~line 307), off `caught` - the gated status, correct;
+- `dispatchEvents` (~line 411), off `c.spec.status.redZone` - the raw scene.
+
+`apply` calls `dispatchEvents` when a scene arrives, so the **raw** site fires
+first and sets `lastRedZone`, which makes the gated site a no-op forever. The
+red-zone rumble and the crowd rising on it therefore fire when the scene
+arrives, seconds before the ball crosses the twenty - the class of defect
+`StatusGate` exists to prevent, and which integration-14 recorded as fixed for
+the drawn flag.
+
+It is a two-line change in the composer, which is the director's file, so it
+is described rather than made: `dispatchEvents` should read the shown status,
+or the raw site should be deleted and the gated one left to do its job.
+Whoever makes it should confirm with `-stadiumAudioTrace` that `rumble` now
+plays after the ball lands, which is exactly what the trace was built for.

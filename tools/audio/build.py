@@ -160,12 +160,32 @@ def envelope(n: int, points: list[tuple[float, float]]) -> np.ndarray:
 
 
 def loop_seam(x: np.ndarray, fade: float = 1.0) -> np.ndarray:
-    """Crossfade the tail into the head, equal power, so a bed loops unheard."""
+    """Crossfade the tail into the head, equal power, so a bed loops unheard.
+
+    Measured by `tools/audio/inspect_mix.py files`: every bed that uses this
+    joins within its own normal motion. A rhythmic bed must not use it - see
+    `wrap_tail` - because a crossfade lays two copies of the beat over itself.
+    """
     k = seconds(fade)
     head, tail = x[:k], x[-k:]
     w = np.sin(np.linspace(0, np.pi / 2, k))
     out = x[:-k].copy()
     out[:k] = head * w + tail * np.cos(np.linspace(0, np.pi / 2, k))
+    return out
+
+
+def wrap_tail(y: np.ndarray, n: int) -> np.ndarray:
+    """Fold everything past `n` back onto the head: circular convolution.
+
+    For a bed with a rhythm, a crossfade is the wrong tool - it lays two
+    copies of the beat over each other. Wrapping a reverb tail onto the
+    beginning is what a loop actually does in the room: the decay of the last
+    beat is still sounding when the first comes round again.
+    """
+    out = y[:n].copy()
+    over = y[n:]
+    if len(over):
+        out[:len(over)] += over[:n]
     return out
 
 
@@ -280,8 +300,11 @@ def clap_bed(r):
     beats = np.arange(0, 8, 0.5)
     x = claps(n, r, beats, people=90, jitter=0.022)
     x += crowd_body(n, r) * 0.08
-    x = reverb(x, impulse(2.0, 0.55, r), wet=0.45)[:n]
-    # The tail of beat 16 wraps into beat 1: fold the reverb over the seam.
+    # The tail of beat 16 wraps into beat 1. It said so before and did not do
+    # it: `[:n]` threw the reverb tail away, so the loop restarted a full clap
+    # against a dead room and stepped 9.3 dB - the one bed you could hear go
+    # round. No crossfade here: at 120 bpm a fade would double the beats.
+    x = wrap_tail(reverb(x, impulse(2.0, 0.55, r), wet=0.45), n)
     return x, True
 
 

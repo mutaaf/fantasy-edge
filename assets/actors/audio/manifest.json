@@ -36,7 +36,7 @@
       },
       "loop": true,
       "made": "tools/audio/build.py",
-      "peak": -9.59,
+      "peak": -9.61,
       "rms": -30.03,
       "seconds": 8.0,
       "seed": 3624
