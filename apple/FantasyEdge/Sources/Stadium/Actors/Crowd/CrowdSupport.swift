@@ -133,7 +133,14 @@ public enum CrowdSupport {
                        &+ (seat / max(1, C.emptySeats.blockSeats)) &* 6_211) &* 0x9E3779B97F4A7C15
         h ^= h >> 27; h = h &* 0xD6E8FEB86659FD93; h ^= h >> 32
         let block = Double(h % 10_000) / 10_000
-        if block < 1 - keep { keep *= C.emptySeats.blockEmptiness }
+        if block < 1 - keep {
+            // A thinned block empties from its middle out: an aisle seat is the last a stand
+            // gives up, so what is left is a ragged edge along the gangway. At integration-14
+            // the thinning was even inside the block, which read as scatter.
+            let span = max(1, seats - 1)
+            let toAisle = Double(min(seat, span - seat)) / Double(max(1, span / 2))
+            keep *= C.emptySeats.blockEmptiness + C.emptySeats.aislePull * (1 - min(1, toAisle))
+        }
         let ends = C.emptySeats.runEndSeats
         if ends > 0, seat < ends || seat >= seats - ends { keep *= C.emptySeats.runEndFactor }
         return min(1, keep)

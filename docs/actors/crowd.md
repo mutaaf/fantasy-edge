@@ -602,3 +602,71 @@ ranked into upper *midfield* sections, which put a violet block a row in front o
 | `crowd-r6/s-td-moment-p7-visitors.png` | The blocks brighten in their own time, but every block still reaches the same final brightness. |
 | Dress time | 6.9-8.7 s under load; needs a quiet-machine number. |
 | `crowd-r6/s-crowd-closeup-pressBox.png` | Still Bowl's featureless beige desk, unchanged since integration-11. |
+
+## Round 7 (hair, and three refinements)
+
+A refinement pass on my own list and the checkpoints'. Before:
+`docs/lookdev/integration-14/`. After: `docs/lookdev/crowd-r7/`.
+
+### 1. Hair, in order of what is most wrong with a near fan
+
+MakeHuman's hair is single-sided alpha cards. Drawn opaque and decimated to a crowd's budget they
+read as a stack of flat slabs at 2-3 m, which has been the oldest complaint against a near fan
+since round 4; round 5's 6 mm of thickness only made the slabs thicker.
+
+**The fix is to close the cards into a solid.** `mh.hair_shell` thickens each hairstyle to 16 mm,
+voxel-remeshes it at 6 mm - half the thickness, because a voxel wider than the hair erases it, and
+an 11 mm voxel deleted an afro outright - smooths the result and trims it to 900 triangles. The
+style each CC0 asset carries survives: a fringe is a fringe, an afro is a dome. Nothing is
+invented; the shape is the one MakeHuman shipped.
+
+Three things the shell needs that the cards did not:
+
+- **It has no UVs**, so `build.py` projects it into the cell like the fitted hat and scarf, and
+  bakes the cards' own colour onto it from the full-resolution copy. The atlas rectangles were
+  re-laid to give the projected parts room.
+- **It must be built after the fit and the height scale are baked.** Remeshed before them it
+  freezes at the asset's unfitted size and floats above the head, which is exactly what the first
+  attempt did.
+- **A remesh throws the fitted weights away**, and an unweighted part stays at the rest pose while
+  its fan sits down - hair hovering where the standing head used to be. The shell is weighted to
+  the head bone, as the hat already was.
+
+**Cost:** 135,643-136,289 triangles against 133,497, so about 2.4k for the hair, inside the 150k
+budget with 14k still spare. No draw parts (the shell is part of the same merged mesh), and no
+dress time (it is geometry, not texture): 2.18-2.45 s against 2.39-3.67 s.
+
+### 2. The blocks all reached the same brightness
+
+The staggered rise arrived in turn and then levelled off, so the moment ended on the rectangle it
+had avoided. Each group now also *takes its own time* (`tintRiseSpread` 0.7 of `tintRiseSeconds`)
+and settles at its own brightness (`tintJitter` 0.14, was 0.06).
+
+### 3. Empty seats scattered inside a block
+
+Round 6 thinned whole blocks, but evenly inside them, which still read as scatter. A thinned block
+now empties from its middle outwards (`aislePull`): the seats by a gangway are the last a stand
+gives up, so what is left is a ragged edge along the aisle. Judged done at bowl-wide distance -
+the stands carry patches and gangway bands where integration-14 carried even speckle.
+
+### 4. The foam finger as a bar
+
+Seen from the next seat along a real foam finger *is* a bar - that part was honest. What was not
+was the silhouette: a plain rectangle. The mitt now tapers toward the wrist and deepens at the
+knuckles, and the thumb stands out of the mitt's face as well as its side, so the edge-on shape
+has a notch and a taper.
+
+### Machine
+
+Three actor agents were building in parallel throughout. Load averages ran 592-638 at times, and
+two shoot attempts died in the harness's red-zone scan, whose client timeout is a fixed 10 s: the
+API could not answer in time. The frames here were taken in a window where the one-minute average
+was 11, with the simulator shut down between attempts.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r7/s-crowd-closeup.png` | The hair shell reads as a single mass: a hairline parting and a few strands at the edge would sell it at 2 m, and it is now the head's flattest surface. |
+| `crowd-r7/s-bowl-wide.png` | The empty patches are the right shape but the same shade as a shadowed seat, so they read as shadow at this distance rather than as empty. |
+| `crowd-r7/s-td-moment-p7-visitors.png` | The visiting block brightens well, but the home sections around it do not dim, so the contrast comes entirely from one side. |
+| `crowd-r7/s-crowd-closeup-pressBox.png` | Still Bowl's beige mass, identified at integration-14 and not the crowd's. |
+| Dress time | 2.2-2.5 s is three quarters tint, and the tint is still a scalar loop at -Onone. |

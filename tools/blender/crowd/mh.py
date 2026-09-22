@@ -207,6 +207,49 @@ def face_material(name, skin_image, eyes):
 
 # ── assembly ───────────────────────────────────────────────────────────────
 
+def hair_shell(ob, height):
+    """Turn MakeHuman's hair cards into a solid head of hair.
+
+    The cards are single-sided planes with an alpha texture. Drawn opaque, and
+    decimated to a crowd's triangle budget, they read as a stack of flat slabs
+    at 2-3 m - the oldest complaint against a near fan, and 6 mm of thickness
+    in round 5 only made the slabs thicker. A voxel remesh closes the cards
+    into one surface at the hair's own scale, so a fringe is a fringe and an
+    afro is a dome, and the style each CC0 asset carries survives: nothing is
+    invented, the shape is the one MakeHuman shipped.
+
+    The shell has no UVs; build.py projects it into its own cell rectangle and
+    bakes the cards' own colour onto it from the full-resolution copy.
+    """
+    k = height / 1.75
+    thick = ob.modifiers.new("hairThickness", "SOLIDIFY")
+    thick.thickness = 0.016 * k            # the shell closes around this; a voxel wider than it eats the hair
+    thick.offset = 0.0
+    remesh = ob.modifiers.new("hairShell", "REMESH")
+    remesh.mode = "VOXEL"
+    remesh.voxel_size = 0.006 * k          # half the thickness: coarser than that and an afro disappears
+    remesh.adaptivity = 0.15
+    smooth = ob.modifiers.new("hairSmooth", "SMOOTH")
+    smooth.factor = 0.6
+    smooth.iterations = 3
+    bpy.context.view_layer.objects.active = ob
+    for m in ("hairThickness", "hairShell", "hairSmooth"):
+        bpy.ops.object.modifier_apply(modifier=m)
+    # A shell of a few hundred triangles: the fan's own decimate takes it from here.
+    tris = sum(len(poly.vertices) - 2 for poly in ob.data.polygons)
+    if tris > 900:
+        dec = ob.modifiers.new("hairTrim", "DECIMATE")
+        dec.ratio = 900 / tris
+        bpy.ops.object.modifier_apply(modifier="hairTrim")
+    for poly in ob.data.polygons:
+        poly.use_smooth = True
+    # A remesh throws the fitted asset's weights away, and an unweighted part stays at the
+    # rest pose while its fan sits down. Hair belongs to the head, so weight it there.
+    for group in list(ob.vertex_groups):
+        ob.vertex_groups.remove(group)
+    ob.vertex_groups.new(name="head").add(list(range(len(ob.data.vertices))), 1.0, "REPLACE")
+
+
 def _apply_modifiers(ob, keep=("ARMATURE",)):
     bpy.ops.object.select_all(action="DESELECT")
     ob.select_set(True)
@@ -410,12 +453,8 @@ def assemble(f: dict, index: int):
     hair = HAIR[sex].get(f["hair"]) if f["hat"] in ("none", "visor") or f["hair"] in ("long", "ponytail") else HAIR[sex].get("buzz")
     if hair:
         parts["hair"] = HS.add_mhclo_asset(str(SYS / f"hair/{hair}/{hair}.mhclo"), base, asset_type="Hair", subdiv_levels=0)
-        # MakeHuman hair is single-sided alpha cards. Decimated and drawn opaque they read as
-        # flat planes at 2-3 m (integration-12), so give them a little thickness to catch light.
-        if parts["hair"]:
-            sol = parts["hair"].modifiers.new("hairThickness", "SOLIDIFY")
-            sol.thickness = 0.006
-            sol.offset = 0.0
+        # The shell is built after the fit and the height scale are baked (below): remeshed
+        # here it would freeze at the asset's unfitted size and float above the head.
     parts["eyes"] = HS.add_mhclo_asset(str(SYS / "eyes/low-poly/low-poly.mhclo"), base, asset_type="Eyes", subdiv_levels=0)
     teeth = SYS / "teeth/teeth_base/teeth_base.mhclo"
     if teeth.exists():
@@ -436,6 +475,8 @@ def assemble(f: dict, index: int):
     built = max(v.z for v in _verts([base]))
     scale = scale_to_height(rig, [base, *[p for p in parts.values() if p]], built, f["height"])
     height = f["height"]
+    if parts.get("hair"):
+        hair_shell(parts["hair"], f["height"])
     bones = rig.data.bones
     W = rig.matrix_world
     eyes = {s: W @ bones[f"eye.{s}"].head_local for s in ("L", "R")}

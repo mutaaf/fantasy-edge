@@ -545,7 +545,10 @@ final class CrowdActor: StadiumActor {
             // rises after its own ripple delay, and settles a little away from its neighbours'.
             if tintSide != nil, let started = momentStart?.time {
                 let since = time - started - input.delay
-                let rise = max(0, min(1, since / max(0.01, C.tintRiseSeconds)))
+                // Each group takes its own time to arrive and settles at its own brightness:
+                // rising in turn and ending level put the rectangle back (integration-14).
+                let pace = C.tintRiseSeconds * (1 - C.tintRiseSpread / 2 + C.tintRiseSpread * g.phase)
+                let rise = max(0, min(1, since / max(0.01, pace)))
                 let jitter = 1 + (g.phase - 0.5) * 2 * C.tintJitter
                 bright = C.tint.normal + (bright * jitter - C.tint.normal) * rise
             }

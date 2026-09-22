@@ -183,11 +183,10 @@ def unwrap_into_cell(mesh, cell, face_z=None):
 PART_RECTS = {
     "skin": (0.00, 0.36, 0.62, 0.64),
     "suit": (0.62, 0.36, 0.38, 0.64),        # the trousers and the top share the suit's layout
-    "shoes": (0.00, 0.18, 0.22, 0.18),
-    "hair": (0.22, 0.18, 0.24, 0.18),
-    "eyes": (0.46, 0.27, 0.16, 0.09),
-    "teeth": (0.46, 0.18, 0.16, 0.09),
-    "extras": (0.00, 0.00, 0.62, 0.18),      # fitted hat, scarf and prop: projected, then packed here
+    "shoes": (0.62, 0.18, 0.38, 0.18),
+    "eyes": (0.62, 0.09, 0.19, 0.09),
+    "teeth": (0.81, 0.09, 0.19, 0.09),
+    "extras": (0.00, 0.00, 0.62, 0.36),      # the hair shell, hat, scarf and prop: projected, then packed here
 }
 PART_GAP = 0.006
 
@@ -196,6 +195,10 @@ def _part_of(material_name, fid):
     rest = material_name[len(fid) + 1:].rsplit("_", 1)[0]     # "fan03_top_base" -> "top"
     if rest in ("pants", "top"):
         return "suit"
+    if rest == "hair":
+        # Round 7: the hair is a remeshed shell, so it arrives with no UVs of its own
+        # and is projected into its rectangle like the fitted hat and scarf.
+        return "extras"
     if rest in PART_RECTS:
         return rest
     return "extras"                                          # "hat", "scarf", "prop"
