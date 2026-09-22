@@ -1,0 +1,3 @@
+bowl-wide-p6: replay at 698s (touchdown) -> docs/lookdev/broadcast-r8/before/bowl-wide-p6-ball.png
+field-level-p6: replay at 698s (touchdown) -> docs/lookdev/broadcast-r8/before/field-level-p6-ball.png
+redzone-trails-p6: replay at 698s (touchdown) -> docs/lookdev/broadcast-r8/before/redzone-trails-p6-ball.png

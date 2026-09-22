@@ -492,3 +492,64 @@ brief says. Adding them is a one-line change each and belongs to the director.
 - The board's rule has no test: it is a UIKit drawing path, so `verify_scene`
   cannot reach it. `newestLaid` and the new score-acknowledgement rule want a
   file that does not import UIKit.
+
+## Round 8: the objects, judged at the distance they are seen (`docs/lookdev/broadcast-r8/`)
+
+Shot `before/` and `after/` with one binary: the app takes its look from the
+scene the API serves, so a token edit between runs changes the render without
+a rebuild. The night is two stops darker and the paint is the clubs' own now,
+which is what these objects are judged against.
+
+**The uprights re-check (Sideline widened them to 18 ft 6 in inside-to-inside,
+6.167 yd).** Every kick in the three replayed games, at the plane of the posts:
+good kicks cross **4.83-5.53 yd** up, i.e. 1.5-2.2 yd clear of the 3.333 yd
+crossbar, all on the centre line (lane 0.00, inside the 3.083 yd half-width);
+the two wide misses sit at **±5.58 yd**, outside the posts, as their text says.
+The widening does not touch clearance, and `goal_kick`'s wide offset is
+`half + wideYards`, so it follows the rule width automatically.
+
+| Object | Before | After |
+|---|---|---|
+| **The ball** | **2.6x life size everywhere** - 0.8 yd long, about a yard in the hands of a close seat. A cartoon at any seat that can see it is a ball. | Life size (0.31 yd) within `nearYards` 14, easing to 2.6x by `farYards` 45, so it stays findable where it would be a speck. Its **light** does the finding (r5), not its size. `before/field-level-p6-ball` vs `after/`. |
+| **Trails** | The newest play reads; the drive behind it had faded under the darker grass - a drive read as one arc. | `age.minOpacity` 0.30 → 0.42 and `historyOpacity` 0.32 → 0.46: the older plays read as a drive again without competing with the live one. `before/redzone-trails` vs `after/`. |
+| **Lines in light** | — | Pass. Feathered, on the grass, no z-fighting, and they hold against the clubs' real paint: the blue scrimmage line and yellow line to gain both read over navy end-zone paint and over the mowing stripe (`after/field-level`). |
+| **Ribbon** | — | Pass. Whole words from the club seat and from field level: "MIN 0 CHI 0 · 8:30 - 1ST · 1ST & 10 AT MIN 13 · RED ZONE", no clipping, no seam. |
+| **Video board** | — | Pass as a screen: score leads, down strip red in the red zone, the newest **laid** play in words (r6/r7), drive diagram at the right. Legible from the end-zone seat across the field. |
+| **Win-probability horizon** | — | Pass: one band, labelled with the club chip and a percentage, and it tells you who is ahead at a glance. |
+| **Beacon and tag** | — | Pass. The beacon reads as a column of light on the ball's spot; "1ST & 10" is painted on the far half and legible from the club seat. |
+
+**Budget, from an erased simulator log** (the stale-line trap): Broadcast is
+**6 draw parts / 4,422 triangles idle** and **18 / 7,428 mid-kick**, against
+25 and 30k. The ball's scale change spends nothing; the trail lift spends
+nothing.
+
+**The double whistle is real, and it is Audio's to fix.** Two paths fire on a
+scoring play:
+- `AudioActor.apply` schedules a per-play whistle at `arc.flightSeconds +
+  playWhistle.afterFlight` (0.15 s), at the play's end spot, gain -24 dB.
+- `AudioActor.choreograph` plays the moment's whistle at `timeline.whistle`
+  (0.0 for touchdown, field goal, safety and turnover), at the field anchor,
+  gain -14 dB.
+Since score-timing, the moment fires when the play lands, so the two land
+about 0.15 s apart, from two positions, at two gains - "twice at one instant
+from slightly different positions". The fix belongs in Audio: skip the
+per-play whistle when that play carries a moment that will whistle (its
+`playId` is the moment's), or set `timeline.whistle` to -1 for kinds whose
+play already whistles. Broadcast supplies the landing both of them key off,
+and needs no change.
+
+**The wall LED boards still have no seat that judges them.** They are
+Sideline's object on the wall below the stands; the nearest preset is the
+field seat, which looks *along* the wall, so they sit at a grazing angle in
+every frame we have. A seat facing the wall square-on would settle it - a
+`wall` preset behind the bench, or `sideline-props` re-aimed at the wall.
+That is a `presentation.stadium.seats` change, so it belongs to Experience or
+the director; Broadcast only notes that no existing shot can answer it.
+
+**Worst thing left:**
+- No seat preset stands within 10 yd of the ball: the closest is the field
+  seat at about 25 yd, so "the ball at 10 yd" is still unjudged. The formula
+  is honest there (life size under 14 yd), but no frame proves it.
+- The drive log still narrates a play in the air (r6's hook, Experience's).
+- `verify_moment`'s header compile line is stale - it now needs `SceneSpec`
+  and `LaidPlay` too, and neither it nor `verify_crowd` is a Makefile target.

@@ -113,7 +113,12 @@ extension SceneSpec.Look {
     public struct BallLook: Decodable, Equatable, Sendable {
         public let lengthYards: Double
         public let widthYards: Double
+        /// The magnification at `farYards` and beyond.
         public let scale: SceneSpec.PerMode<Double>
+        /// Life size within `nearYards`, easing to `scale` by `farYards`.
+        public let nearScale: Double
+        public let nearYards: Double
+        public let farYards: Double
         public let modelMetersPerYard: Double
         public let liftYards: Double
         public let color: String
