@@ -92,11 +92,34 @@ final class LightingActor: StadiumActor {
         }
         c.shared.banks = banks.filter(\.front).map(\.position)
 
+        let skip = Self.skipped
         buildRigs(c)
-        buildGlows(c)
-        buildBeams(c)
-        if !tabletop { buildHaze(c); buildFill(c) }
-        buildFloods(c)
+        if !skip.contains("glow") { buildGlows(c) }
+        if !skip.contains("beams") { buildBeams(c) }
+        if !tabletop {
+            if !skip.contains("haze") { buildHaze(c) }
+            if !skip.contains("fill") { buildFill(c) }
+        }
+        if !skip.contains("floods") { buildFloods(c) }
+    }
+
+    /// Debug: `-lightSkip haze,dome,beams,glow,fill,floods` (or `LIGHT_SKIP`)
+    /// leaves a layer out, so its share of a frame can be measured rather than
+    /// guessed. The night's brightness above the rim is drawn by three things
+    /// at once - the sky texture's own city glow, Sky's dome and this haze -
+    /// and which of them owns it is not a question an eye can answer.
+    /// `SkyActor` reads the same set for `stars`, `clouds` and `dome`.
+    static var skipped: Set<String> {
+        let args = ProcessInfo.processInfo.arguments
+        let value: String
+        if let i = args.firstIndex(of: "-lightSkip"), i + 1 < args.count {
+            value = args[i + 1]
+        } else if let env = ProcessInfo.processInfo.environment["LIGHT_SKIP"] {
+            value = env                               // SIMCTL_CHILD_LIGHT_SKIP from a harness
+        } else {
+            return []
+        }
+        return Set(value.split(separator: ",").map(String.init))
     }
 
     /// Merge every bank of one model into one mesh per material.
