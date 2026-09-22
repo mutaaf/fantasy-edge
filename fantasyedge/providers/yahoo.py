@@ -67,9 +67,13 @@ class YahooAuth:
         return base64.b64encode(raw).decode()
 
     def authorize_url(self) -> str:
+        # `scope` is not optional: without it Yahoo issues a token that refreshes
+        # happily and then 401s `additional_authorization_required` on every
+        # Fantasy call, because the consent screen was never asked to grant
+        # Fantasy read. `fspt-r` is read-only; nothing here writes to a league.
         q = urllib.parse.urlencode({
             "client_id": self.client_id, "redirect_uri": self.redirect_uri,
-            "response_type": "code", "language": "en-us",
+            "response_type": "code", "language": "en-us", "scope": "fspt-r",
         })
         return f"{AUTH}?{q}"
 
