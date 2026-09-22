@@ -331,7 +331,10 @@ def accessory(f: dict, J: dict[str, Vector]):
         # index finger offset from the middle, so the silhouette is unmistakable end-on.
         mitt = bmesh.ops.create_cube(bm, size=1.0)
         for v in mitt["verts"]:
-            v.co = Vector((v.co.x * 0.26, v.co.y * 0.085, v.co.z * 0.24)) + Vector((0.0, 0.0, -0.09))
+            # Tapered toward the wrist and a little deeper at the knuckles, so the edge-on
+            # silhouette a neighbour sees is a hand rather than a bar (integration-13).
+            taper = 0.78 if v.co.z > 0 else 1.0
+            v.co = Vector((v.co.x * 0.26 * taper, v.co.y * (0.075 + 0.03 * (1 - taper) * 4), v.co.z * 0.24)) + Vector((0.0, 0.0, -0.09))
         bmesh.ops.bevel(bm, geom=list(mitt["verts"]) + [e for e in bm.edges], offset=0.045, segments=3, affect="EDGES")
         finger = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.052, radius2=0.045, depth=0.20)
         for v in finger["verts"]:
@@ -339,10 +342,13 @@ def accessory(f: dict, J: dict[str, Vector]):
         tip = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=4, radius=0.045)
         for v in tip["verts"]:
             v.co += Vector((0.055, 0.0, -0.39))
-        thumb = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.05, radius2=0.042, depth=0.15)
+        # The thumb stands out of the mitt's face as well as its side, so the prop keeps a
+        # silhouette when a fan is seen from the next seat along.
+        thumb = bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.055, radius2=0.045, depth=0.16)
         for v in thumb["verts"]:
             v.co = Matrix.Rotation(math.radians(64), 4, "Y") @ v.co
-            v.co += Vector((-0.15, 0.0, -0.10))
+            v.co = Matrix.Rotation(math.radians(26), 4, "Z") @ v.co
+            v.co += Vector((-0.145, -0.035, -0.10))
         origin = hand
     elif kind == "towel":
         # Cloth, not a paddle: gathered in the fist, widening, curling as it

@@ -108,6 +108,8 @@ extension SceneSpec.Look {
         public let blockEmptiness: Double
         public let runEndSeats: Int
         public let runEndFactor: Double
+        /// How strongly a thinned block empties from its middle rather than evenly.
+        public let aislePull: Double
         public let blowout: CrowdBlowout
     }
 
@@ -182,6 +184,8 @@ extension SceneSpec.Look {
         public let momentRippleAbout: String
         public let tintRiseSeconds: Double
         public let tintJitter: Double
+        /// How much groups differ in how long their tint takes to arrive.
+        public let tintRiseSpread: Double
     }
 }
 
