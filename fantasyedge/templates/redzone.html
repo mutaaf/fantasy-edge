@@ -131,6 +131,29 @@
   @media (prefers-reduced-motion: no-preference) {
     .dot { animation: pulse 2s ease-in-out infinite; }
     @keyframes pulse { 50% { opacity: .35; } }
+
+  /* A rebuilt day is marked wherever the day is named, never once at the top
+     and then forgotten. The chip is slanted like the game tags so it reads as
+     the same family, and it is a button because the caveats are the point:
+     what a rebuild cannot know has to be one press away, not in a README. */
+  .rebuilt {
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 600 11px/1 var(--ui); letter-spacing: .09em; text-transform: uppercase;
+    color: #ffd76e; background: rgba(255, 190, 60, .13);
+    border: 1px solid rgba(255, 190, 60, .42); border-radius: 3px;
+    padding: 4px 7px; transform: skewX(-9deg); cursor: pointer;
+  }
+  .rebuilt span { transform: skewX(9deg); }
+  .rebuilt .clock { color: var(--ink); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+  .note {
+    margin: 0 18px 14px; padding: 14px 16px; border-radius: 8px;
+    background: rgba(255, 190, 60, .07); border: 1px solid rgba(255, 190, 60, .25);
+    color: var(--dim); font: 13px/1.55 var(--ui); max-width: 78ch;
+  }
+  .note h2 { margin: 0 0 6px; font: 600 14px/1.3 var(--ui); color: #ffd76e; }
+  .note ul { margin: 8px 0 0; padding-left: 18px; }
+  .note li { margin: 4px 0; }
+  .note[hidden] { display: none; }
   }
 </style>
 </head>
@@ -139,9 +162,14 @@
   <h1>Red Zone</h1>
   <div class="counts" id="counts"></div>
   <div class="mode">
+    <button class="rebuilt" id="rebuilt" hidden aria-expanded="false"
+            title="This day was rebuilt from play timestamps. Press for what that cannot know.">
+      <span>Rebuilt</span><span class="clock" id="dayclock"></span>
+    </button>
     <button id="auto" aria-pressed="true">Auto</button>
   </div>
 </header>
+<div class="note" id="note" hidden></div>
 
 <section class="focus" id="focus" aria-live="polite"><div class="idle">Loading the slate…</div></section>
 <div class="grid" id="grid"></div>
@@ -242,12 +270,38 @@ function paint(data) {
     `<b>${(c.total || 0) - (c.live || 0) - (c.final || 0)}</b> to come` +
     (c.redZone ? ` · <span class="rzcount">${c.redZone} in the red zone</span>` : "");
 
+  // A rebuilt day is labelled here rather than by whoever started the
+  // server: the claim travels with the payload, so a page that reconnects to
+  // a live feed stops claiming it, and one that reconnects to a day starts.
+  const day = data.day;
+  $("rebuilt").hidden = !day;
+  if (day) {
+    $("dayclock").textContent = day.label || "";
+    if (!noteFilled && day.caveats) {
+      $("note").innerHTML =
+        `<h2>Rebuilt from timestamps, not recorded</h2>` +
+        `<p>${esc(day.date || "")} is played back from each play's own timestamp. ` +
+        `It is not a recording, and it does not know everything a recording would.</p>` +
+        `<ul>${day.caveats.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>`;
+      noteFilled = true;
+    }
+  }
+
   const when = new Date().toLocaleTimeString();
   $("foot").innerHTML = data.error
     ? `<span class="err">${esc(data.error)}</span> · last good frame ${when}`
-    : `${esc((data.league || "").toUpperCase())} · updated ${when} · ` +
+    : `${esc((data.league || "").toUpperCase())} · ` +
+      (day ? `rebuilt day ${esc(day.date || "")} at ${esc(day.label || "")} · `
+           : `updated ${when} · `) +
       `click a game to pin it, Auto to let it follow the ball`;
 }
+
+let noteFilled = false;
+$("rebuilt").addEventListener("click", () => {
+  const note = $("note"), open = note.hidden;
+  note.hidden = !open;
+  $("rebuilt").setAttribute("aria-expanded", String(open));
+});
 
 async function tick() {
   try {

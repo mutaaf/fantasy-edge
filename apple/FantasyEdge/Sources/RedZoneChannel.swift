@@ -62,17 +62,32 @@ public final class RedZoneChannel {
         public let redZone: Int
     }
 
+    /// What the server says when the slate it is serving was rebuilt from
+    /// play timestamps rather than watched. Absent on a live Sunday.
+    public struct Day: Decodable {
+        public let date: String
+        public let label: String
+        public let provenance: String
+        public let caveats: [String]
+    }
+
     struct Payload: Decodable {
         let league: String
         let focus: String
         let counts: Counts
         let games: [Game]
         let error: String?
+        let day: Day?
     }
 
     public private(set) var games: [Game] = []
     public private(set) var counts = Counts(live: 0, total: 0, final: 0, redZone: 0)
     public private(set) var league = ""
+    /// Set when the slate is a rebuilt day. The panel must say so: a wearer
+    /// sitting in the stadium has no other way to tell a Sunday being played
+    /// back from one happening now, and letting them assume is the one thing
+    /// a reconstruction must never do.
+    public private(set) var day: Day?
     public private(set) var error: String?
     /// The server's choice: the game the channel is on.
     public private(set) var focus = ""
@@ -164,6 +179,7 @@ public final class RedZoneChannel {
             games = fresh.games
             counts = fresh.counts
             league = fresh.league
+            day = fresh.day
             focus = fresh.focus
             error = fresh.error
         } catch is CancellationError {

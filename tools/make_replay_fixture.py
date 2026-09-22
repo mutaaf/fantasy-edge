@@ -284,6 +284,13 @@ def main() -> None:
     ap.add_argument("--nflverse", action="store_true",
                     help="write tests/fixtures/nflverse_pbp_EVENT.json: the game's published "
                          "play-by-play rows, which correct a replay's geometry")
+    ap.add_argument("--day", metavar="YYYY-MM-DD",
+                    help="write tests/fixtures/day_slate.json and day_game_*.json: a "
+                         "pulled day trimmed to two games, for the day-replay tests")
+    ap.add_argument("--day-root", default="data/replay/day",
+                    help="where --day reads the pulled day from")
+    ap.add_argument("--day-games", type=int, default=2, help="how many games to keep")
+    ap.add_argument("--day-plays", type=int, default=60, help="plays per game to keep")
     ap.add_argument("--week", type=int,
                     help="write a week's slate fixture, tests/fixtures/week_slate_SEASON_TYPE_WEEK.json")
     ap.add_argument("--from-capture", default="",
@@ -308,6 +315,51 @@ def main() -> None:
                                   indent=1, sort_keys=True))
         print(f"event {args.event}: {sched['game_id']}, {len(rows)} nflverse plays "
               f"-> {out} ({out.stat().st_size // 1024} KB)")
+        return
+
+    if args.day:
+        from fantasyedge import dayreplay as dy
+
+        board, summaries = dy.load_day(pathlib.Path(args.day_root), args.day)
+        keep = [str(ev.get("id")) for ev in (board.get("events") or [])
+                if str(ev.get("id")) in summaries][:args.day_games]
+        slim_board = {k: v for k, v in board.items() if k != "events"}
+        slim_board["events"] = [ev for ev in board["events"] if str(ev.get("id")) in keep]
+        out = FIX / "day_slate.json"
+        out.write_text(json.dumps(slim_board, indent=1, sort_keys=True))
+        print(f"{args.day}: {len(keep)} games -> {out} ({out.stat().st_size // 1024} KB)")
+        for event in keep:
+            summary = summaries[event]
+            drives, left = [], args.day_plays
+            for d in ((summary.get("drives") or {}).get("previous") or []):
+                if left <= 0:
+                    break
+                plays = [slim_play(p) for p in (d.get("plays") or [])][:left]
+                left -= len(plays)
+                drives.append({**{k: v for k, v in d.items()
+                                  if k in ("id", "description", "displayResult", "result")},
+                               "team": slim_team(d.get("team") or {}), "plays": plays})
+            ids = {str(p.get("id")) for d in drives for p in d["plays"]}
+            head = dict(summary.get("header") or {})
+            head.pop("links", None)
+            comp = dict((head.get("competitions") or [{}])[0])
+            for key in COMP_DROP:
+                comp.pop(key, None)
+            comp["competitors"] = [
+                {**{k: v for k, v in c.items()
+                    if k in ("id", "order", "homeAway", "winner", "score")},
+                 "team": slim_team(c.get("team") or {})}
+                for c in (comp.get("competitors") or [])]
+            head["competitions"] = [comp]
+            trimmed = {"header": head, "drives": {"previous": drives},
+                       "scoringPlays": [{**{k: v for k, v in sp.items() if k != "team"},
+                                         "team": slim_team(sp.get("team") or {})}
+                                        for sp in (summary.get("scoringPlays") or [])
+                                        if str(sp.get("id")) in ids]}
+            path = FIX / f"day_game_{event}.json"
+            path.write_text(json.dumps(trimmed, indent=1, sort_keys=True))
+            print(f"  {event}: {len(ids)} plays -> {path} "
+                  f"({path.stat().st_size // 1024} KB)")
         return
 
     if args.week:

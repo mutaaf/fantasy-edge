@@ -65,6 +65,8 @@ ROUTES = [
     ["GET", "/api/mosaic/{provider}/{id}", "static half of one league's board"],
     ["GET", "/api/live", "shared game state - identical for every user"],
     ["GET", "/api/redzone", "every game ranked by urgency, and the one to watch"],
+    ["GET", "/api/day", "the finished day being replayed, if any"],
+    ["GET", "/api/day/markers", "every score on that day, for a scrub bar"],
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
@@ -84,6 +86,7 @@ ROUTES = [
     ["GET", "/api/lastweek", "last week's games and why each is worth replaying (?spoilers=&offline=)"],
     ["GET", "/api/replay", "the replay being driven, and every captured game"],
     ["POST", "/api/replay", "load, play, pause, seek, speed - loopback only, see the handler"],
+    ["POST", "/api/day", "replay a whole finished day - loopback only, see the handler"],
     ["GET", "/api/replay/markers", "the loaded replay's scores and drives, in game seconds"],
     ["GET", "/api/replay/live", "the replay's own /api/live - labelled, never the real one"],
     ["GET", "/api/replay/gamecast", "the replayed game's gamecast, with the controls' state"],
@@ -531,6 +534,53 @@ class Api:
                 self._replay_src = src
         return src
 
+    def day_director(self):
+        """The one finished day this process can be driven through.
+
+        Reads what `redzone-replay --pull` wrote under
+        `FANTASYEDGE_DAY_DIR`, `data/replay/day` by default, so a day pulled
+        on the command line is already loadable here.
+        """
+        with self._lock:
+            director = getattr(self, "_day", None)
+            if director is None:
+                from .dayreplay import DayDirector
+                root = os.environ.get("FANTASYEDGE_DAY_DIR", "data/replay/day")
+                director = self._day = DayDirector(pathlib.Path(root))
+        return director
+
+    def day_source(self):
+        """A live source of its own, reading the day instead of ESPN.
+
+        Separate from `live_source()` for the reason `replay_source()` is:
+        the real routes must never be able to serve a rebuilt Sunday as
+        though it were happening. The two instances cannot meet.
+        """
+        from . import live as livemod
+
+        with self._lock:
+            src = getattr(self, "_day_src", None)
+        if src is None:
+            src = livemod.EspnLiveSource([], ttl=0.0, box_ttl=0.0,
+                                         http=self.day_director().fetch,
+                                         scoring=self._scoring())
+            with self._lock:
+                self._day_src = src
+        return src
+
+    def channel_source(self):
+        """What the red-zone channel reads: a loaded day, or the live feed.
+
+        The channel itself does not branch. It is handed a source and a note
+        saying whether that source is a rebuild, and the note travels all the
+        way to the page - which is the only difference a viewer should see
+        between watching a Sunday and watching it back.
+        """
+        director = getattr(self, "_day", None)
+        if director is not None and director.date:
+            return self.day_source(), director
+        return self.live_source(), None
+
     def _replay_loaded(self):
         director = self.replay_director()
         if not director.event:
@@ -661,7 +711,8 @@ class Api:
         with self._lock:
             state = self._whip
         now = time.time()
-        rows = whip.slate(self.live_source().games(), colors=livemod.team_color)
+        src, day = self.channel_source()
+        rows = whip.slate(src.games(), colors=livemod.team_color)
 
         # When a score changed, so a touchdown can hold its own game on screen
         # for a few seconds. Kept here because it is the only place that sees
@@ -687,19 +738,56 @@ class Api:
         # The feed states which league it is (`leagues[0].slug`), so the page
         # is told rather than assuming. A constant here would be the thing
         # that breaks the day this serves a college Saturday.
-        board = self.live_source().scoreboard()
+        board = src.scoreboard()
         league = ((board.get("leagues") or [{}])[0].get("slug") or "")
-        return {
+        out = {
             "league": league,
             "asOf": round(now, 3),
-            "source": "espn",
-            "error": self.live_source().last_error,
+            "source": "espn" if day is None else "day-replay",
+            "error": src.last_error,
             "focus": focus,
             "counts": {"live": len(live_now), "total": len(ranked),
                        "final": sum(1 for g in ranked if g["state"] == "post"),
                        "redZone": sum(1 for g in live_now if g["redZone"])},
             "games": ranked,
         }
+        if day is not None:
+            # A rebuilt day says so in the payload, the way `live.snapshot`
+            # labels a replayed frame rather than letting it pass as ESPN's.
+            # The page reads this to draw its REBUILT mark and to carry the
+            # caveats, so the claim travels with the data rather than being
+            # remembered by whoever started the server.
+            out["day"] = day.state()
+        return out
+
+    def day_state(self) -> dict:
+        """What day is loaded and where it has got to."""
+        return self.day_director().state()
+
+    def day_markers(self) -> dict:
+        try:
+            return self.day_director().markers()
+        except LookupError as exc:
+            raise HttpError(404, str(exc),
+                            'POST /api/day {"action": "load", "date": "2026-09-20"}')
+
+    def day_control(self, body: dict) -> dict:
+        director = self.day_director()
+        try:
+            state = director.control(body)
+        except (ValueError, TypeError) as exc:
+            raise HttpError(400, str(exc),
+                            'actions: load {date, from?, to?, slot?, at?}, play, '
+                            'pause, seek {at|time}, speed {speed}, next, previous')
+        except LookupError as exc:
+            raise HttpError(404, str(exc),
+                            "pull it first: python3 -m fantasyedge redzone-replay "
+                            "--date 2026-09-20 --pull")
+        # A day and a single game cannot both drive the channel. Loading one
+        # clears the other rather than leaving two clocks running.
+        with self._lock:
+            self._whip = {"focus": "", "since": 0.0, "scored": {}, "totals": {}}
+        return state
 
     def redzone_page(self) -> bytes:
         """The channel, served whole and static.
@@ -2082,6 +2170,10 @@ class Api:
             # and a pull swaps a row's reasons from quarter to play
             # resolution - so this is derived, not immutable.
             return self.last_week(qs), DERIVED
+        if rest == ["day"]:
+            return self.day_state(), REPLAY
+        if rest == ["day", "markers"]:
+            return self.day_markers(), REPLAY
         if rest == ["replay"]:
             return self.replay_state(), REPLAY
         if rest == ["replay", "markers"]:
@@ -2337,6 +2429,25 @@ def make_handler(app: Api):
                     return self._send({"error": exc.message, "fix": exc.fix},
                                       exc.code)
 
+            if path == "/api/day":
+                # The same loopback rule as /api/replay and for the same
+                # reasons: it can make this machine fetch from ESPN, and it
+                # moves what every screen watching the channel sees.
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_REPLAY") != "1":
+                    return self._send(
+                        {"error": "A day may only be driven from this machine.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_REPLAY=1 to allow it"}, 403)
+                try:
+                    body = self._body(4_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": '{"action": "play"}'}, 400)
+                try:
+                    return self._send(app.day_control(body), 200, REPLAY)
+                except HttpError as exc:
+                    return self._send({"error": exc.message, "fix": exc.fix}, exc.code)
+
             if path == "/api/replay":
                 # A third write, with the same loopback rule and its own escape
                 # hatch. It spends nothing and holds no credential, but it can
@@ -2360,7 +2471,7 @@ def make_handler(app: Api):
                     return self._send({"error": exc.message, "fix": exc.fix}, exc.code)
 
             return self._send({"error": f"No route {path}.",
-                               "fix": "POST /api/prefs, /api/intel/narrate or /api/replay"},
+                               "fix": "POST /api/prefs, /api/intel/narrate, /api/replay or /api/day"},
                               404)
 
         do_GET = do_HEAD = _handle
