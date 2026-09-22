@@ -290,15 +290,26 @@ def goalpost(league: str):
     objs.append(cylinder(base_r, base_top, (0, -back, base_top / 2), gold, verts=16))
     objs.append(tube([(0, -back, base_top - 0.05), (0, -back, crossbar_h - 0.25), (0, -back * 0.45, crossbar_h + 0.05),
                       (0, 0, crossbar_h - 0.02)], neck_r, gold, sides=12, resolution=8))
-    objs.append(cylinder(0.08, width, (0, 0, crossbar_h), gold, verts=14, rot=(0, math.pi / 2, 0)))
+    # The bar runs out to the uprights' centres, which moved out by up_r above.
+    objs.append(cylinder(0.08, width + 2 * up_r, (0, 0, crossbar_h), gold, verts=14, rot=(0, math.pi / 2, 0)))
     for sx in (-1, 1):
-        x = sx * width / 2
+        # 18 ft 6 in is measured INSIDE to inside (NFL Rule 1 §3 Art.2; NCAA
+        # 1-2-5-a), so the uprights stand outside that span by their own
+        # radius. Placing their centres on it made the gap a ball must pass
+        # 18 ft 2 in - four inches narrow on the one object a kick is judged
+        # against.
+        x = sx * (width / 2 + up_r)
         objs.append(cylinder(up_r, above, (x, 0, crossbar_h + above / 2), gold, verts=10))
         objs.append(sphere(0.085, (x, 0, crossbar_h), gold, segs=10, rings=6))       # elbow sleeve
         rb = plane((0.1016, 1.0668), (x + 0.02, 0, crossbar_h + above - 1.02), ribbon, rot=(0.12, 0, 0.3 * sx))
         objs.append(rb)
     pad_h = max(P.get("padHeightMin", 6 * rules.FT), 6 * rules.FT) * M_YD
-    objs.append(box((0.46, 0.46, pad_h), (0, -back, pad_h / 2), pad, bevel=0.06))
+    # A wrap, not a crate: the padding on a goal post is a foam cylinder round
+    # the base pole. As a box it read from behind the posts as two blue slabs
+    # with the gold pole standing between them - the camera-side face gave no
+    # silhouette to close it, so the eye joined the two visible side walls
+    # instead. A cylinder has no flat face to lose.
+    objs.append(cylinder(0.23, pad_h, (0, -back, pad_h / 2), pad, verts=16))
     return objs
 
 

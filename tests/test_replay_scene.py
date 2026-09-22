@@ -33,6 +33,17 @@ FIX = pathlib.Path(__file__).parent / "fixtures"
 REGULATION, OVERTIME, PICK_SIX = "401772510", "401772949", "401772810"
 
 
+def _prop_ids(sideline: dict) -> set:
+    """Every prop id SidelineActor can place, from the tokens it reads: the
+    league-dependent posts and pylons, the benches, the team-area dressing,
+    the end-line props and the chain crew."""
+    ids = {"goalpost_nfl", "goalpost_college", "pylon_nfl", "pylon_college", "bench"}
+    ids |= {d["model"] for d in sideline["dressing"]}
+    ids |= {d["model"] for d in sideline["endLine"]}
+    ids |= {sideline["chains"][k] for k in ("set", "box", "ground")}
+    return ids
+
+
 def setUpModule():
     # The same promise as the rest of the suite: no network. The replay routes
     # never touch the real source, but the real source is asserted on below.
@@ -804,6 +815,28 @@ class TestSceneGeometry(unittest.TestCase):
         self.assertLessEqual(gain, 1.0, "CordGain fattens near cords into a grid")
         # so the veil over the field stays a haze at any distance
         self.assertLessEqual(coverage * gain * net["minOpacity"], 0.10)
+
+    def test_every_prop_mesh_the_stadium_can_ask_for_is_declared(self):
+        """A model id the tokens do not declare loads as nothing, and a prop
+        that loads as nothing is simply absent - no error, no warning.
+
+        This round moved the team-area dressing to LOD1 in the stadium and
+        every one of those props vanished, because `models` declared each
+        prop's full mesh and its `_lod2` and never its `_lod1`. It showed up
+        as the sideline shedding half its triangles, which is the only reason
+        anyone looked. Declare what can be asked for.
+        """
+        S = self.final["visual"]["sideline"]
+        models, lod = S["models"], S["lodSuffix"]
+        wanted = {p + lod["stadium"] for p in _prop_ids(S)}
+        wanted |= {p + lod["tabletop"] for p in _prop_ids(S)}
+        wanted |= {p + suffix for p, suffix in (lod.get("stadiumByModel") or {}).items()}
+        missing = sorted(w for w in wanted if w not in models)
+        self.assertEqual([], missing, f"asked for but never declared: {missing}")
+
+        root = pathlib.Path(__file__).resolve().parents[1] / "assets"
+        absent = sorted(k for k, v in models.items() if not (root / v).exists())
+        self.assertEqual([], absent, f"declared but not on disk: {absent}")
 
     def test_field_paint_is_paint_not_white(self):
         """Pure white albedo blows out under the floods, and grey paint reads
