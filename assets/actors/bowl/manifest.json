@@ -62,7 +62,7 @@
     "stands": 37298
    },
    "parts": {
-    "stands": 10
+    "stands": 11
    },
    "triangles": 37298,
    "materials": [
@@ -74,12 +74,13 @@
     "bowl_press_floor",
     "bowl_press_room",
     "bowl_screens",
+    "bowl_soffit",
     "bowl_steel",
     "bowl_trim"
    ],
    "bytes": {
-    "usdz": 5654874,
-    "glb": 5881008
+    "usdz": 5655245,
+    "glb": 5882008
    },
    "about": "The whole bowl's structure in one entity."
   },
@@ -194,7 +195,7 @@
     "seat_plastic"
    ],
    "bytes": {
-    "usdz": 3494721,
+    "usdz": 3494852,
     "glb": 3750300
    },
    "about": "Foreground detail per preset (`near_<preset>`): show only the wearer's."

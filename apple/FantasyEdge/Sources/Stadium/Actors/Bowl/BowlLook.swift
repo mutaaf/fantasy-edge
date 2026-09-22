@@ -16,6 +16,11 @@ extension SceneSpec.Look {
         public let nearLift: Double
         public let nearDeckLift: Double
         public let nearDeckColor: String
+        /// Undersides - the deck's overhang, the fascia, the lip - carry a low
+        /// self-light. Nothing in a night bowl lights a surface that faces the
+        /// ground, so without this they render black whatever their albedo.
+        public let soffitLift: Double
+        public let soffitColor: String
         public let pressRoomLift: Double
         /// Fractions of `pressRoomLift` the room's own surfaces take from its
         /// ceiling strips: the desk catches the most, the carpet the least.

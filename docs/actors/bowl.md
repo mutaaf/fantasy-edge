@@ -245,3 +245,74 @@ surface in the room and being bare is most of why it read as a slab.
 must read as more of a room, that is a size or a lighting change (a brighter
 interior reads further than any glazing), not a material. Inside, the counter top
 is still untextured.
+
+## Round 4: the bowl under the new lighting, and who owes the 1.45 stops
+
+Before and after: `docs/lookdev/bowl-r4/{before,after}/`.
+
+**The stands are not dark because the bowl is dark.** Measured off
+`bowl-wide` in linear luminance against the field:
+
+| surface | stops under the field |
+|---|---:|
+| parapet cap, near | **-0.30** (brighter than the grass) |
+| far stands, crowd | 0.35 |
+| upper-deck crowd | 0.42 |
+| far stands, crowd (side) | 0.74 |
+| wall under the ribbon | 1.40 |
+| vomitory mouth | 3.08 |
+
+So the bowl's albedo is **not** a contributor worth chasing: the same concrete
+family renders *brighter than the grass* where light reaches it, and the crowd
+- which is most of what "the stands" means by area - sits only 0.35-0.74 stops
+down. What sits at 1.40 and 3.08 is the bowl's **occluded** structure: the wall
+under the ribbon and the vomitory mouths, dark because nothing lights them, not
+because of what they are painted. Lighting's 1.45 is an average over a band that
+includes them. A round that raises the concourse fill should re-measure it; no
+albedo change here would move it.
+
+**Undersides were black, and could not be fixed with paint.** Every soffit
+(`band_uv("soffit")`, six down-facing quads: the deck's overhang, the fascia,
+the lip, the tunnel head, the press box slab) was drawn on `trim` and lit by
+nothing - a night bowl has no light that faces up. Brightening albedo cannot
+help a surface no light reaches, so they needed a self-light, and that needed a
+material of their own.
+
+- **Spent:** one draw part, Bowl **18 -> 19 of 20**. Triangles unchanged
+  (55,526 of 62k): the six quads already existed and only changed material.
+- **What it bought, measured:** at the club level looking up at the overhang,
+  with the geometry identical and only `visual.bowl.soffitLift` moved 0 -> 0.22,
+  the soffit band goes **0.0144 -> 0.0184, +0.35 stops**, across the lower third
+  of the view (`before/after/s-crowd-closeup-clubLevel-up.png` - the honest A/B,
+  lift off against lift on, not material hidden against material shown).
+- Unlike round 3's glass, this one earns its part: the glass measured 0.1/255
+  and this measures a third of a stop on a surface you sit under.
+
+**Verdicts against the bar**
+
+- **Seating architecture:** holds. From the upper deck the near rows are seats
+  with backs, rows, aisle steps and a handrail (`after/s-crowd-closeup-upper.png`);
+  the far bowl is crowd, as a sold-out house is.
+- **Overhang with an underside:** the geometry was always there; it now reads as
+  concrete rather than a void.
+- **Vomitories:** present and legible as openings from the upper deck.
+- **Concrete weathering:** the textures carry it and the parapet cap shows it;
+  it is invisible where the surface is 1.4 stops down, which is a light problem.
+- **Fascia, concourse, wall cap, back wall:** no flat grey wall from any seat
+  shot this round - the failure mode here is flat *black*, not flat grey.
+
+**Worst thing left, per shot**
+
+- `bowl-wide` - the wall under the ribbon still sits 1.40 stops under the field
+  and reads as a dark band rather than concrete. It is the next soffit-shaped
+  problem, but it faces the field, so it is Lighting's spill rather than a lift.
+- `field-level` - the vomitory mouths are 3.08 stops down and read as holes cut
+  in the crowd; a little concourse light behind them would make them tunnels.
+- `crowd-closeup` (club) - nothing in Bowl's own work; the near rows read.
+- `crowd-closeup-upper` - the aisle treads directly under the wearer are the
+  flattest concrete in any frame.
+- `crowd-closeup-endzone` - the corner where the two tiers meet has no
+  expansion joint or change of plane; it reads as one poured surface.
+- `sideline-props` - Bowl is only backdrop here and does not fault.
+- `crowd-closeup-clubLevel-up` - the soffit now reads, but it is one flat tone;
+  a real one is banded by its beams.

@@ -52,6 +52,14 @@ def materials():
                            orm="bowl_trim_orm.png", color=(1, 1, 1, 1)),
         "concrete": C.material("bowl_concrete", albedo="concrete_wall_albedo.jpg", normal="concrete_wall_normal.png",
                                orm="concrete_wall_orm.png", color=(1, 1, 1, 1)),
+        # Every underside: the upper deck's overhang, the fascia and the lip.
+        # Trim's own texture, so it reads as the same concrete - it is a
+        # separate material only so the actor can give it `visual.bowl
+        # .soffitLift`. Nothing lights an underside in a night bowl, and
+        # brightening its albedo cannot help a surface no light reaches, so a
+        # soffit that is not self-lit renders black however it is painted.
+        "soffit": C.material("bowl_soffit", albedo="bowl_trim_albedo.jpg", normal="bowl_trim_normal.png",
+                             orm="bowl_trim_orm.png", color=(1, 1, 1, 1)),
         "steel": C.material("bowl_steel", color=(0.05, 0.053, 0.058, 1), roughness=0.4, metallic=0.7),
         # tinted and a little reflective: rails, suites and the press box glazing
         "glass": C.material("bowl_glass", color=(0.27, 0.27, 0.25, 1), roughness=0.03, metallic=0.3, alpha=0.24,
@@ -299,7 +307,7 @@ def vomitories(b: C.Builder, tier_name: str) -> None:
         oquad(b, (Q(f0, -half, landing), Q(f0, half, landing), Q(outer, half, landing), Q(outer, -half, landing)),
               (0, 1, 0), "trim", band_uv("tread", 0, v["width"] / 4.4))
         oquad(b, (Q(nxt["front"], -half, roof), Q(nxt["front"], half, roof), Q(outer, half, roof), Q(outer, -half, roof)),
-              (0, -1, 0), "trim", band_uv("soffit", 0, 0.5, 0, 0.5))
+              (0, -1, 0), "soffit", band_uv("soffit", 0, 0.5, 0, 0.5))
         for side in (-1, 1):
             oquad(b, (Q(b1, side * half, landing), Q(outer, side * half, landing), Q(outer, side * half, roof),
                       Q(b1, side * half, roof)), (-tan[0] * side, 0, -tan[2] * side), "trim",
@@ -370,7 +378,7 @@ def team_tunnels(b: C.Builder) -> None:
                   Q(nxt["front"], -wide, nxt["riserFrom"])), (nx, 0, nz), "trim", band_uv("riser", 0, 2 * wide / 4.4, 0, 0.4))
         oquad(b, (Q(wall_m, -half, 0.01), Q(wall_m, half, 0.01), Q(end, half, 0.01), Q(end, -half, 0.01)), (0, 1, 0),
               "trim", band_uv("tread", 0, 1.5))
-        oquad(b, (Q(wall_m, -half, h), Q(wall_m, half, h), Q(end, half, h), Q(end, -half, h)), (0, -1, 0), "trim",
+        oquad(b, (Q(wall_m, -half, h), Q(wall_m, half, h), Q(end, half, h), Q(end, -half, h)), (0, -1, 0), "soffit",
               band_uv("soffit", 0, 1.2, 0, 1))
         # padded walls at the mouth, then the corridor's light coming on
         # toward the end, so the arch reads as a deep lit tunnel, not a box
@@ -429,7 +437,7 @@ def club(b: C.Builder) -> None:
             oquad(b, (pt(glass_m, ta, y0), pt(glass_m, tb, y0), pt(glass_m, tb, ceil), pt(glass_m, ta, ceil)), nin, "glass")
         oquad(b, (pt(back, ta, y0), pt(back, tb, y0), pt(back, tb, ceil), pt(back, ta, ceil)), nin, "interiors",
               atlas_uv(region, u0, u1))
-        oquad(b, (pt(glass_m, ta, ceil), pt(glass_m, tb, ceil), pt(back, tb, ceil), pt(back, ta, ceil)), (0, -1, 0), "trim",
+        oquad(b, (pt(glass_m, ta, ceil), pt(glass_m, tb, ceil), pt(back, tb, ceil), pt(back, ta, ceil)), (0, -1, 0), "soffit",
               band_uv("soffit", u0 / 6, u1 / 6, 0, 0.6))
         # the ribbon fascia: steel trim, the screen, concrete, and its underside
         fm, fb = fas["front"], glass_m
@@ -443,7 +451,7 @@ def club(b: C.Builder) -> None:
               (0, -1, 0), "concrete")
         # the lip: underside with a light cove, a thin front, glass on top
         oquad(b, (pt(lip_m, ta, lip_under), pt(lip_m, tb, lip_under), pt(fm, tb, lip_under), pt(fm, ta, lip_under)),
-              (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+              (0, -1, 0), "soffit", band_uv("soffit", u0 / 6, u1 / 6))
         oquad(b, (pt(lip_m + 0.35, ta, lip_under - 0.02), pt(lip_m + 0.35, tb, lip_under - 0.02),
                   pt(lip_m + 0.6, tb, lip_under - 0.02), pt(lip_m + 0.6, ta, lip_under - 0.02)), (0, -1, 0), "interiors",
               atlas_uv("glow", u0, u1, 0.6, 0.9))
@@ -543,7 +551,7 @@ def press_face(b: C.Builder, ta, tb, u0, u1, nin, y0) -> None:
               pt(P["glassTop"] - 0.1, tb, fb), pt(P["glassTop"] - 0.1, ta, fb)), nin, "trim",
           band_uv("steel", u0 / 3, u1 / 3, 0.3, 0.6))
     oquad(b, (pt(P["glassTop"] - 0.1, ta, fb), pt(P["glassTop"] - 0.1, tb, fb), pt(kit.FASCIA["front"], tb, fb),
-              pt(kit.FASCIA["front"], ta, fb)), (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+              pt(kit.FASCIA["front"], ta, fb)), (0, -1, 0), "soffit", band_uv("soffit", u0 / 6, u1 / 6))
     # inside: a floor, and the desk line lit by its monitors
     oquad(b, (pt(P["upstand"] + 0.45, ta, P["sill"] - 0.4), pt(P["upstand"] + 0.45, tb, P["sill"] - 0.4),
               pt(P["desk"], tb, P["sill"] - 0.4), pt(P["desk"], ta, P["sill"] - 0.4)), (0, 1, 0), "trim",
@@ -592,7 +600,7 @@ def press_box(b: C.Builder) -> None:
         oquad(b, (pt(front - 0.2, ta, y0 - 0.5), pt(front - 0.2, tb, y0 - 0.5), pt(front - 0.2, tb, y0 + 0.6),
                   pt(front - 0.2, ta, y0 + 0.6)), nin, "concrete", ((u0 / 3, 0), (u1 / 3, 0), (u1 / 3, 0.35), (u0 / 3, 0.35)))
         oquad(b, (pt(front - 0.2, ta, y0 - 0.5), pt(front - 0.2, tb, y0 - 0.5), pt(back, tb, y0 - 0.5),
-                  pt(back, ta, y0 - 0.5)), (0, -1, 0), "trim", band_uv("soffit", u0 / 6, u1 / 6))
+                  pt(back, ta, y0 - 0.5)), (0, -1, 0), "soffit", band_uv("soffit", u0 / 6, u1 / 6))
         # Canted glazing. `press_glass` is authored for exactly this and stays
         # unbound: measured at bowl-r3, binding it costs Bowl's 19th of 20 draw
         # parts and changes nothing a viewer can see. See docs/actors/bowl.md.

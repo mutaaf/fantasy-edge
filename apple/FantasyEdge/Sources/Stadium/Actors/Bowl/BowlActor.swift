@@ -247,6 +247,12 @@ final class BowlActor: StadiumActor {
                 } else if inNear && (n.contains("plaque") || n.contains("stair") || n.contains("seat_hardware")) {
                     pbr.emissiveColor = .init(color: .init(white: 0.55, alpha: 1))
                     pbr.emissiveIntensity = Float(B.nearLift)
+                } else if n.contains("soffit") {
+                    // The overhang's underside, read from every lower-bowl seat
+                    // and from the field. It is concrete catching the spill the
+                    // bowl throws up at it, not a void.
+                    pbr.emissiveColor = .init(color: StadiumLook.color(B.soffitColor))
+                    pbr.emissiveIntensity = Float(B.soffitLift)
                 } else if n.contains("press_room") {
                     pbr.emissiveIntensity = Float(B.pressRoomLift)
                 } else if n.contains("bowl_glass") {
