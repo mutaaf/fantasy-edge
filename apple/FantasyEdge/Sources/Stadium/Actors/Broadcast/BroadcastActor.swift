@@ -112,6 +112,7 @@ final class BroadcastActor: StadiumActor {
             return
         }
         ball.isEnabled = true
+        placeBall(c)
         let rest = SceneMath.local(x: b.x, y: look.broadcast.ball.liftYards * 0.5, z: b.z)
         // Orientation first: writing a transform while move(to:) runs cancels
         // the animation, and the ball stayed wherever it started - the fifty.
@@ -291,12 +292,12 @@ extension BroadcastActor {
         if let cut = f.cut, real > 0, t * real >= cut { t = 1 }
         let seconds = min(t * real, f.cut ?? real)
         let look = c.look.broadcast.ball
-        let scale = Float(look.scale.value(tabletop: tabletop))
         let pose = BallFlight.pose(f.arc, seconds: seconds, flight: look.flight,
-                                   floor: Float(look.widthYards) * scale / 2)
+                                   floor: Float(look.widthYards) * ball.scale.x / 2)
         ball.isEnabled = true
         ball.position = pose.position
         ball.orientation = pose.orientation
+        placeBall(c)
         placeMarker(f.arc, seconds: seconds, ball: pose.position, c)
         if t >= 1 {
             Self.trace(c, "land \(f.arc.id) at y \(ball.position.y) cut=\(f.cut.map { String(format: "%.1f", $0) } ?? "-")")
@@ -398,6 +399,29 @@ extension BroadcastActor {
         }
     }
 
+    /// How big to draw the ball from where it is being watched: life size
+    /// within `nearYards`, easing to `scale` by `farYards`. A ball magnified
+    /// 2.6x everywhere is a yard long in the hands of a club seat; its light
+    /// is what makes it findable at distance, not its size.
+    private func ballScale(_ c: StadiumContext) -> Float {
+        let look = c.look.broadcast.ball
+        let far = look.scale.value(tabletop: tabletop)
+        guard let seat = c.shared.seat, !c.tabletop else { return Float(far) }
+        let d = Double(simd_distance(seat, ball.position))
+        let span = max(1e-3, look.farYards - look.nearYards)
+        let u = max(0, min(1, (d - look.nearYards) / span))
+        let eased = u * u * (3 - 2 * u)
+        return Float(look.nearScale + (far - look.nearScale) * eased)
+    }
+
+    /// Draw the ball at that size, keeping its light the world size the glow
+    /// asked for: the glow's mesh was cut for the far scale, so it carries the
+    /// ratio back.
+    private func placeBall(_ c: StadiumContext) {
+        let want = ballScale(c)
+        if abs(ball.scale.x - want) > 1e-4 { ball.scale = SIMD3(repeating: want) }
+    }
+
     /// The ball's light: bigger while it flies, and never smaller at the eye
     /// than `glow.minArcMinutes`, so it reads from the upper deck as well as
     /// from the front row. It also sits `glow.coverYards` toward the wearer:
@@ -418,7 +442,10 @@ extension BroadcastActor {
                 toward = simd_normalize(away) * Float(look.coverYards)
             }
         }
-        let scale = Float(want / max(1e-3, base))
+        // The glow's plane was cut for the far scale; the ball may be drawn
+        // smaller than that now, so the ratio comes back here.
+        let built = Float(c.look.broadcast.ball.scale.value(tabletop: tabletop))
+        let scale = Float(want / max(1e-3, base)) * built / max(1e-3, ball.scale.x)
         if abs(glow.scale.x - scale) > 1e-3 { glow.scale = SIMD3(repeating: scale) }
         // The child sits in the ball's own space, which spins with the
         // spiral: without undoing that rotation the light swam behind the
