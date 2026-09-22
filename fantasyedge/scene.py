@@ -214,7 +214,8 @@ def club_lines(club: dict) -> tuple[str, str]:
     return one, one
 
 
-def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
+def field_art(field: dict, league: str, home: dict, away: dict,
+              paint: dict | None = None, turf: str = "#1E6A34") -> dict | None:
     """Where the home club's name and the midfield ring are painted.
 
     **The field belongs to the home club.** Both end zones carry its name and
@@ -223,6 +224,16 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
     (`bowl.crowd`), not on the grass. `away` is still taken because the end
     zone the visitors defend is named for them positionally (`side`), not
     lettered for them.
+
+    **The paint is the club's own colour, not its chip.** A chip is solved
+    onto one luminance band so white text clears 4.5:1 in a panel; across a
+    thousand square yards it lightens a club past what it is - it painted
+    Chicago's navy `#0B162A` as `#366CCD` and both Las Vegas and Pittsburgh's
+    black as a mid-grey. Measured over all 34 clubs a fixture here states, the
+    club's own colour is the better answer on both counts that matter: the
+    worst separation from the grass rises from dE 7.8 to 15.3, because the
+    chip band sits near the grass's own luminance, and the lettering stays
+    readable because its ink is chosen per club rather than assumed white.
 
     A text layout maps glyph space to the field: a glyph point (gx, gy) in
     em units lands at origin + (gx * along + gy * up) * capHeight, in (x, z)
@@ -237,6 +248,11 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
     font = _glyphs()
     if not font:
         return None
+    paint = paint or {"white": "#DADAD3", "ink": "#12140F", "endZoneOpacity": 0.8}
+    club = (home.get("color") or "").strip() or home.get("chip", "#DADAD3")
+    if not club.startswith("#"):
+        club = "#" + club
+    ink = letter_ink(club, turf, paint["endZoneOpacity"], paint)
     tracking = 0.08
     w = field["width"]
     clear = 4 * _FT
@@ -260,7 +276,7 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
         oz = 0.0 - (width * cap / 2) * along[1] - (cap / 2) * up[1]
         zones.append({"side": side, "text": text, "capHeight": round(cap, 4),
                       "origin": [round(ox, 4), round(oz, 4)], "along": list(along), "up": list(up),
-                      "tint": "white", "fill": "home"})
+                      "tint": ink, "fill": "home", "paint": club})
     hash_in = field["hashFromSideline"]
     if league == "college-football":
         half_span = w / 2 - hash_in - 1 * _FT
@@ -273,12 +289,13 @@ def field_art(field: dict, league: str, home: dict, away: dict) -> dict | None:
     name = club_lines(home)[0] or (home.get("name") or home.get("abbr") or "").upper()
     width = text_width(name, font, tracking)
     inner = radius * 0.86
-    mid = {"center": [50.0, 0.0], "outer": round(radius, 4), "inner": round(inner, 4), "tint": "home"}
+    mid = {"center": [50.0, 0.0], "outer": round(radius, 4), "inner": round(inner, 4),
+           "tint": "home", "paint": club}
     if width:
         cap = min(inner * 0.55, (2 * inner * 0.8) / width)
         mid["text"] = {"text": name, "capHeight": round(cap, 4),
                        "origin": [round(50.0 - width * cap / 2, 4), round(cap / 2, 4)],
-                       "along": [1.0, 0.0], "up": [0.0, -1.0], "tint": "white"}
+                       "along": [1.0, 0.0], "up": [0.0, -1.0], "tint": ink}
     return {"glyphs": "actors/field/fonts/glyphs.json", "tracking": tracking,
             "endZones": zones, "midfield": mid}
 
@@ -1416,6 +1433,31 @@ def chip(hexs: str, band: dict) -> str:
     return _hex(colorsys.hsv_to_rgb(h, s, (lo + hi) / 2))
 
 
+def paint_over(paint: str, ground: str, opacity: float) -> str:
+    """Paint composited over the grass: what an eye is actually asked to read.
+
+    One alpha blend, which is what the renderer does before it lays blades
+    back over the top. The blades and the floods are not modelled, so this is
+    an approximation - but the ink is chosen against the same approximation
+    the test measures, so the two cannot disagree.
+    """
+    p, g = _rgb(paint), _rgb(ground)
+    return _hex(tuple(opacity * p[i] + (1 - opacity) * g[i] for i in range(3)))
+
+
+def letter_ink(paint: str, ground: str, opacity: float, inks: dict) -> str:
+    """Which ink a club letters its end zone in.
+
+    White is the common answer and not the universal one: New Orleans' old
+    gold is light enough that white lettering measures 1.7:1 on it, which is
+    unreadable at any size. So the ink is *chosen* - the better of the field's
+    own white and its dark - rather than assumed, and a club whose paint is
+    light gets dark letters, the way a real light-coloured end zone does.
+    """
+    seen = paint_over(paint, ground, opacity)
+    return max((inks["white"], inks["ink"]), key=lambda i: contrast(i, seen))
+
+
 def clash(a: str, b: str, band: dict) -> bool:
     (ha, sa, _), (hb, sb, _) = (colorsys.rgb_to_hsv(*_rgb(x)) for x in (a, b))
     if sa < band["neutralBelow"] and sb < band["neutralBelow"]:
@@ -2431,7 +2473,9 @@ def build(game: dict, league: str | None = None, speed: float = 1.0,
                  "y": "yards up"},
         "field": {**field, "league": league, "stripeEvery": 5, "numbersEvery": 10,
                   "props": props,
-                  "art": field_art(field, league, home, away),
+                  "art": field_art(field, league, home, away,
+                                   paint=tokens["visual"]["field"]["paint"],
+                                   turf=tokens["color"]["turf.a"]),
                   "markings": f"actors/field/markings/{league}",
                   "homeEndZone": [-field["endZone"], 0.0],
                   "awayEndZone": [field["length"], field["length"] + field["endZone"]]},
