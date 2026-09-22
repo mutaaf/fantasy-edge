@@ -123,6 +123,7 @@ final class AudioActor: StadiumActor {
         let controller = e.playAudio(sound)
         if muted { controller.pause() }
         beds.append((e, controller, key, level(key, c)))
+        trace("bed", key, position, level(key, c), c, why: muted ? "paused, muted" : "")
     }
 
     // MARK: frame
@@ -131,6 +132,7 @@ final class AudioActor: StadiumActor {
         if c.shared.muted != muted {
             muted = c.shared.muted
             if !pausedByLeave { beds.forEach { muted ? $0.controller.pause() : $0.controller.play() } }
+            trace("mute", muted ? "on" : "off", .zero, 0, c, why: "\(beds.count) beds")
         }
         if !steps.isEmpty {
             let due = steps.filter { $0.at <= frame.time }
@@ -315,10 +317,19 @@ final class AudioActor: StadiumActor {
     private func play(_ key: String, at position: SIMD3<Float>, extra: Double = 0, _ c: StadiumContext) {
         let A = c.look.audio
         guard !c.shared.muted, !pausedByLeave, !(c.tabletop && !A.tabletop.effects),
-              let sound = c.assets.audio["audio.\(key)"] else { return }
+              let sound = c.assets.audio["audio.\(key)"] else {
+            trace("drop", key, position, 0, c,
+                  why: c.shared.muted ? "muted" : pausedByLeave ? "leaving"
+                     : c.tabletop && !A.tabletop.effects ? "tabletop" : "no asset")
+            return
+        }
         // One-shots share the source budget with the beds; a whistle or a
         // chime is the first thing dropped when the stadium is already loud.
-        guard beds.count + active < A.maxSources else { return }
+        guard beds.count + active < A.maxSources else {
+            trace("drop", key, position, 0, c, why: "budget \(beds.count + active)/\(A.maxSources)")
+            return
+        }
+        trace("play", key, position, level(key, c) + extra + envelope.value(at: c.shared.time), c)
         let e = Entity()
         e.position = position
         e.components.set(spatial(level(key, c) + extra + envelope.value(at: c.shared.time), c))
@@ -330,6 +341,31 @@ final class AudioActor: StadiumActor {
             self?.active -= 1
         }
     }
+
+    /// What the mix did, for ears that are not there.
+    ///
+    /// The simulator runs muted and a sound cannot be screenshotted, so six
+    /// rounds of this actor's log read "unverified: anything heard". A sound
+    /// still has a time, a place, a level and a reason, and those can be
+    /// checked: that the roar comes from the side that scored, that nothing
+    /// celebrates before the ball lands, that mute silences everything, that
+    /// the voice budget holds. `-stadiumAudioTrace` prints them and
+    /// `tools/audio/inspect_mix.py trace` reads them back.
+    private func trace(_ verb: String, _ key: String, _ at: SIMD3<Float>, _ gain: Double,
+                       _ c: StadiumContext, why: String = "") {
+        guard Self.tracing else { return }
+        // Which part of the bowl a sound came from, in the terms the rules are
+        // written in, so a reader need not do trigonometry: the field is the
+        // middle, and a side is the half the scoring team sits in.
+        let where_ = abs(at.z) < 12 ? "field"
+            : at.z > 0 ? "near side" : "far side"
+        let line = String(format: "[stadium-audio] %@ %@ at t=%.2f %@ x=%.0f z=%.0f gain=%.1f dB%@",
+                          verb, key, c.shared.time, where_, at.x, at.z, gain,
+                          why.isEmpty ? "" : " (\(why))")
+        StadiumLog.log.notice("\(line, privacy: .public)")
+    }
+
+    private static let tracing = ProcessInfo.processInfo.arguments.contains("-stadiumAudioTrace")
 
     private func level(_ key: String, _ c: StadiumContext) -> Double {
         let A = c.look.audio
