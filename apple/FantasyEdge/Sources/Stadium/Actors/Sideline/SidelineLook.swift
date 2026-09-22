@@ -30,6 +30,13 @@ extension SceneSpec.Look {
     public struct SidelineLodSuffix: Decodable, Equatable, Sendable {
         public let stadium: String
         public let tabletop: String
+        /// Per model, the suffix the stadium uses instead of `stadium`. The
+        /// team-area dressing is never approached: a cooler on the far
+        /// sideline is 40+ yd from every seat, and its LOD1 - which was
+        /// exported all along and used by nothing - costs 45% of its full
+        /// mesh. Which props a viewer gets close to is a judgement about this
+        /// stadium, so it is stated here rather than decided in the renderer.
+        public let stadiumByModel: [String: String]?
     }
 
     public struct SidelineBenches: Decodable, Equatable, Sendable {

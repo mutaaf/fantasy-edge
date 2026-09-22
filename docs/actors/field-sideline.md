@@ -375,3 +375,87 @@ Item by item, on `after/nfl-field-level.png` and `after/nfl-redzone-trails.png`:
   has a light-coloured club at home, so New Orleans' gold and Miami's aqua are
   covered by `tests/test_field_paint.py` and by nothing you can look at. A
   fixture for one of them is the cheapest way to close that.
+
+## Sideline round 6: the objects round
+
+Before: `docs/lookdev/sideline-r6/before/`. After: `.../after/`. Both leagues.
+Numbers in `.../stats.txt`.
+
+**The net was not the problem, and has not been since round 5.** Three
+checkpoints have carried "the grid still crosses the view" as this actor's
+worst thing. `-sidelineSkip fieldgoal_net` (new, below) shoots the same frame
+without it: the net raises everything behind it by **1.1 of 255** and does not
+move the variance at all. The wash that makes the far stands milky from behind
+the posts is still there with the net gone - it is Lighting's haze on a
+sightline that crosses the whole bowl, not the net's veil. Round 5's re-weave
+worked; the note outlived it. **Routed to Lighting**, whose own round measured
+haze at 0.4% of the *sky* from the club seat, which is a different path
+entirely.
+
+**College was 648 triangles over its ceiling and nobody had measured it.** The
+league audit correctly gave college its four extra hash pylons (1-2-6); that
+put the actor at 21,648 against 21,000, while the NFL sat at 20,776 under it.
+Every sideline measurement in this repo had been an NFL one.
+
+**Where the budget went, and where it came from.** `bench` x8 is 6,336
+triangles - 30% of the actor - and the team-area dressing another 5,800. An
+LOD1 tier has been exported for every prop since the actor was built and used
+by *nothing*: `lodSuffix` had `stadium` and `tabletop` only. The dressing (a
+cooler 40+ yd from every seat) now draws LOD1 through a new
+`lodSuffix.stadiumByModel`, which is a token because which props a viewer gets
+near is a judgement about this stadium, not a renderer's business. The posts,
+pylons, chain crew and benches keep their full mesh.
+
+  NFL 20,776 -> 14,972; college 21,648 -> 15,844. Both leagues now sit ~5k
+  under, where the actor has had no headroom since integration-11.
+
+Judged on frames, not assumed: the dressing crop before and after is
+indistinguishable (`before/sideline-props-nfl.png` against
+`after/sideline-props-nfl.png`, the far team area).
+
+**A bug the saving exposed.** The first measurement came back at 11,092 - half
+the actor - and 13 draw parts instead of 15. `models` declared every prop's
+full mesh and its `_lod2` and **never its `_lod1`**, so `assets.model` returned
+nil, `add` returned early, and the entire team-area dressing was *absent*. No
+error: a model that does not load simply is not drawn. Only the implausible
+size of the saving gave it away. `test_every_prop_mesh_the_stadium_can_ask_for_is_declared`
+now walks every id the actor can place against `models` and against the disk,
+and fails on a missing declaration.
+
+**Goal posts: 4 inches too narrow, on the one object a kick is judged
+against.** 18 ft 6 in is measured inside-to-inside; the uprights were placed
+with their *centres* on it, so the gap a ball must pass was 18 ft 2 in.
+Measured off the exported .glb: 18.167 -> 18.517 ft (the rule is 18.500; the
+0.2 in over is the 10-sided cylinder's facets). The crossbar now runs out to
+the uprights' new centres so it does not end short of them. No kick call
+changes - a good kick is drawn on the centre line and a miss at half the post
+width plus 2.5 yd - so this was accuracy, not judging.
+
+**The base pad was a crate.** From behind the posts it read as two blue slabs
+with the gold pole standing between them. It is now a cylinder wrapping the
+base, which is what padding on a goal post actually is: 12 -> 60 triangles for
+the pair, and it reads as a wrap.
+
+**New: `-sidelineSkip`,** DEBUG only, matching Bowl's `-bowlSkip` and
+Lighting's `-lightSkip`: `-sidelineSkip fieldgoal_net,bench` leaves props out
+and `mat:prop_net` hides a palette entry. Every claim above about what
+something contributes was measured with it.
+
+**Worst thing left, per shot:**
+
+- `after/sideline-props-nfl.png` and `after/pad-nfl.png`: a gold strip still
+  crosses the new pad. The pad is a 0.23 m cylinder and the base pole it wraps
+  is 0.115 m, so the pole cannot be outside it; the strip is most likely the
+  gooseneck projecting down across the pad from a camera above the pad's top,
+  or the team chip drawing without depth against it. `-sidelineSkip
+  mat:prop_gold` settles which in one shot - I ran out of run budget before it
+  and am not guessing in the log.
+- `after/sideline-props-*.png`: the view from behind the posts is washed by
+  haze. Lighting's, measured above.
+- `after/field-level-college.png`: the visitors' benches read as one purple
+  rail at 50 yd. Right colour, right place, no bench detail at that distance;
+  LOD is not the cause (benches keep their full mesh).
+- `after/bowl-wide-nfl.png`: the LED boards along the wall were not judged
+  this round - they never fall close enough to any shot's seat to read their
+  pixel grid, which is itself the finding: the bar asks for a grid "up close"
+  and no shot gets up close.

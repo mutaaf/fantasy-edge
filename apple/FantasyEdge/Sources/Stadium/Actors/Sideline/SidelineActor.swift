@@ -1,3 +1,4 @@
+import Foundation
 import RealityKit
 import simd
 
@@ -33,6 +34,24 @@ final class SidelineActor: StadiumActor {
     private var footprints: [String: SIMD2<Float>] = [:]
     /// Faked floodlight shadows under every static prop, one merged decal.
     private var shadows = MeshBuilder()
+
+    /// Debug, DEBUG builds only: `-sidelineSkip fieldgoal_net,bench` leaves
+    /// named props out, and `mat:prop_net` hides a whole palette entry, the
+    /// way Bowl's `-bowlSkip` and Lighting's `-lightSkip` do. It exists
+    /// because "the net curtains the view" is a claim about a difference,
+    /// and a difference needs the frame without it.
+    static var skipped: Set<String> {
+        let args = ProcessInfo.processInfo.arguments
+        let value: String
+        if let i = args.firstIndex(of: "-sidelineSkip"), i + 1 < args.count {
+            value = args[i + 1]
+        } else if let env = ProcessInfo.processInfo.environment["SIDELINE_SKIP"] {
+            value = env                           // SIMCTL_CHILD_SIDELINE_SKIP from a harness
+        } else {
+            return []
+        }
+        return Set(value.split(separator: ",").map(String.init))
+    }
 
     init() {
         root.name = "actor.sideline"
@@ -271,8 +290,10 @@ final class SidelineActor: StadiumActor {
     /// footprint, one yaw for every prop so the lobes keep to the banks.
     private func shadow(_ id: String, _ c: StadiumContext, x: Double, z: Double) {
         let V = c.look.sideline, S = V.shadow
-        let modelId = id + (c.tabletop ? V.lodSuffix.tabletop : V.lodSuffix.stadium)
-        guard let foot = footprints[modelId] else { return }
+        // The same id `add` loaded: a footprint is keyed by the mesh that was
+        // measured, so reading `bench` while `add` loaded `bench_lod1` finds
+        // nothing and the prop silently loses its shadow.
+        guard let foot = footprints[Self.modelId(id, c)] else { return }
         let yards = Double(max(foot.x, foot.y)) * 2 / V.metresPerYard
         let size = min(S.maxYards, max(S.minYards, yards * S.footprintScale))
         let h = size / 2
@@ -284,12 +305,23 @@ final class SidelineActor: StadiumActor {
 
     // MARK: models into merged meshes
 
+    /// Which mesh of a prop this scene draws. The tabletop takes its own
+    /// suffix for everything; the stadium takes `stadiumByModel` where the
+    /// tokens name one - the team-area dressing, which no seat gets near -
+    /// and the full mesh otherwise.
+    static func modelId(_ id: String, _ c: StadiumContext) -> String {
+        let L = c.look.sideline.lodSuffix
+        return id + (c.tabletop ? L.tabletop : (L.stadiumByModel?[id] ?? L.stadium))
+    }
+
     private func add(_ id: String, _ c: StadiumContext, at position: SIMD3<Float>, yaw: Float, side: String,
                      into bins: inout [String: Bin], only: ((String) -> Bool)? = nil,
                      remap: [String: String] = [:]) {
         let V = c.look.sideline
-        let modelId = id + (c.tabletop ? V.lodSuffix.tabletop : V.lodSuffix.stadium)
-        guard let parts = parts(modelId, c) else { return }
+        #if DEBUG
+        if Self.skipped.contains(id) { return }
+        #endif
+        guard let parts = parts(Self.modelId(id, c), c) else { return }
         let scale = Float(1 / V.metresPerYard)
         let turn = simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
         for (partName, mesh) in parts {
@@ -298,6 +330,9 @@ final class SidelineActor: StadiumActor {
             var material = String(partName.split(separator: "__").last ?? "")
             if let r = material.range(of: #"_\d{3}$"#, options: .regularExpression) { material.removeSubrange(r) }
             guard var entry = V.palette[material] else { continue }
+            #if DEBUG
+            if Self.skipped.contains("mat:\(material)") { continue }
+            #endif
             if let alias = entry.alias, let target = V.palette[alias] { material = alias; entry = target }
             if let to = remap[material], let target = V.palette[to] { material = to; entry = target }
             // Every team-tinted surface wears the same chip, so a club's pads,
