@@ -1,0 +1,1 @@
+crowd-closeup: replay at 240s (early) -> docs/lookdev/bowl-r4/after/crowd-closeup-endzone.png

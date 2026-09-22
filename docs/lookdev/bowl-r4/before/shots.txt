@@ -1,0 +1,4 @@
+bowl-wide: replay at 240s (early) -> docs/lookdev/bowl-r4/before/bowl-wide.png
+field-level: replay at 390s (redzone) -> docs/lookdev/bowl-r4/before/field-level.png
+crowd-closeup: replay at 240s (early) -> docs/lookdev/bowl-r4/before/crowd-closeup.png
+sideline-props: replay at 240s (early) -> docs/lookdev/bowl-r4/before/sideline-props.png
