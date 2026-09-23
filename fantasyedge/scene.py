@@ -42,9 +42,11 @@ TOKENS_PATH = pathlib.Path(
     os.environ.get("FANTASYEDGE_TOKENS")
     or pathlib.Path(__file__).resolve().parent.parent / "design" / "tokens.json")
 
-# What differs between codes of football, and nothing else. College is stubbed:
-# its field geometry is here because the stadium is shared, and everything the
-# scene does not yet use for it is left out rather than guessed.
+# What differs between codes of football, and nothing else. Both codes are
+# stated in full: a college field's hash marks are 60 ft in rather than 70 ft
+# 9 in, its uprights stand 30 ft above the crossbar rather than 35, its team
+# area runs between the 20s rather than the 30s, and its overtime has no clock.
+# The league is read from the game (`league_of`), never from the caller.
 # ═══════════════════════ actor sections (docs/ART_BIBLE.md) ═══════════════════════
 # Each block below is owned by one stadium actor. The spec's shape does not
 # change with this layout; it only says whose numbers are whose.

@@ -12,16 +12,27 @@ from __future__ import annotations
 
 import re
 
-from . import text as words
+from . import league, text as words
 from .parse import _int, status_of, team_record
 
 TURNOVER_RESULTS = {"Fumble", "Interception", "Downs", "Turnover on Downs", "Blocked Punt", "Blocked FG"}
 
 
-def _play(pl: dict) -> dict:
+def _play(pl: dict, abbr_of: dict[str, str] | None = None) -> dict:
     st, en = pl.get("start") or {}, pl.get("end") or {}
     return {
         "id": str(pl.get("id") or ""),
+        # Yards from the HOME goal line - ESPN's own `yardLine` - which is what
+        # the shared scene draws from. Unlike `yardsToEndzone` below it is
+        # fixed to the field: it does not flip with possession, and it is not
+        # the placeholder a timeout carries or the punter's own line a punt
+        # does. `from`/`to` stay for the 2D field bar, which is drawn from the
+        # offence's point of view.
+        "fromYard": st.get("yardLine"),
+        "toYard": en.get("yardLine"),
+        # Who snapped it. A drive's team is not enough: a pick-six is in the
+        # offence's drive and scored by the defence.
+        "team": (abbr_of or {}).get(str((st.get("team") or {}).get("id") or ""), ""),
         "text": words.play(pl.get("text")),
         "type": (pl.get("type") or {}).get("text", ""),
         "clock": (pl.get("clock") or {}).get("displayValue", ""),
@@ -40,7 +51,7 @@ def _play(pl: dict) -> dict:
     }
 
 
-def game_from_summary(event: str, data: dict) -> dict:
+def game_from_summary(event: str, data: dict, situation: dict | None = None) -> dict:
     head = data.get("header") or {}
     comp = (head.get("competitions") or [{}])[0]
     st = status_of(comp.get("status") or {})
@@ -50,6 +61,7 @@ def game_from_summary(event: str, data: dict) -> dict:
         t["linescores"] = [_int(l.get("displayValue"), 0) for l in c.get("linescores") or []]
         sides[(c.get("homeAway") or "").lower()] = t
 
+    abbr_of = {str(t.get("id") or ""): t.get("abbr", "") for t in sides.values()}
     raw = data.get("drives") or {}
     current = raw.get("current")
     previous = raw.get("previous") or []
@@ -61,7 +73,7 @@ def game_from_summary(event: str, data: dict) -> dict:
         ordered.append(current)
     drives = []
     for d in ordered:
-        plays = [_play(p) for p in d.get("plays") or []
+        plays = [_play(p, abbr_of) for p in d.get("plays") or []
                  if (p.get("type") or {}).get("text") not in ("End Period", "End of Half", "End of Game")]
         result = d.get("displayResult") or d.get("result") or ""
         drives.append({
@@ -99,6 +111,21 @@ def game_from_summary(event: str, data: dict) -> dict:
     info = data.get("gameInfo") or {}
     return {
         "event": str(event),
+        # The scene reads the code of football from the game, not from the
+        # caller: college hash marks are 3.58 yards wider than the NFL's, and a
+        # Saturday drawn as a Sunday puts every play off across the field.
+        "league": league.LEAGUE,
+        # What the shared scene reads at the top level: it draws a pre-game
+        # field empty, a live one with the ball where the situation says, and
+        # a finished one with the whole night's arcs laid down.
+        "state": st["state"],
+        "period": st["period"],
+        "clock": st["clock"],
+        # ESPN's own situation block, passed through rather than reshaped: the
+        # scene wants `yardLine` (fixed to the field) and the down and
+        # distance, and a summary's header does not carry them - the board
+        # does, which is why the handler hands it in.
+        "situation": situation or {},
         "status": st,
         "home": sides.get("home"),
         "away": sides.get("away"),

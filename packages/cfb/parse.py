@@ -86,6 +86,10 @@ def team_record(comp: dict) -> dict:
                                       t.get("shortDisplayName"), (t.get("abbreviation") or "").upper()),
         "color": "#" + (t.get("color") or "666666").upper(),
         "alternateColor": "#" + (t.get("alternateColor") or "666666").upper(),
+        # The shared scene's names for the same two things: the club's second
+        # colour, and the half of its name the end zone is lettered with.
+        "altColor": "#" + (t.get("alternateColor") or "666666").upper(),
+        "nickname": t.get("name") or "",
         "logo": t.get("logo") or ((t.get("logos") or [{}])[0].get("href")) or LOGO.format(id=tid),
         "conferenceId": str(t.get("conferenceId")) if t.get("conferenceId") is not None else None,
         "rank": rank if rank and rank <= 25 else None,

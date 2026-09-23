@@ -142,12 +142,18 @@ def game(source: Source, event: str, at: str | None = None) -> dict:
             source.detail_for(event, state or "pre"),
             "a game that has not kicked off, or is not in this source, has no summary")
         raise NotFound(f"No play data for event {event}.", reason)
-    # INTEGRATE: shared gamecast shaping from fantasy-edge scene/replay branch
-    out = game_from_summary(event, data)
-    # Rank lives on the slate, not reliably in a summary header; take it from
-    # the board so a tile and its detail never show two different ranks.
+    # The board carries the live situation - where the ball is, the down and
+    # the distance - which a summary's header does not.
     stamp = source.stamp()
     board = {g["id"]: g for g in _ranked_at(source, stamp, source.scoreboard)}
+    raw_situation = {}
+    for ev in (source.scoreboard().get("events") or []):
+        if str(ev.get("id")) == event:
+            raw_situation = ((ev.get("competitions") or [{}])[0].get("situation") or {})
+            break
+    out = game_from_summary(event, data, raw_situation)
+    # Rank lives on the slate, not reliably in a summary header; take it from
+    # the board so a tile and its detail never show two different ranks.
     if event in board:
         for side in ("away", "home"):
             if out.get(side) and out[side].get("rank") is None:
@@ -158,6 +164,19 @@ def game(source: Source, event: str, at: str | None = None) -> dict:
     return {"version": VERSION, "source": source.label, "replay": bool(source.replay),
             "asOf": _iso(stamp) if stamp else _iso(_now_stamp()),
             "winProbabilityCaveat": "ESPN's model, reproduced as published; not computed here.", **out}
+
+
+def scene(source: Source, event: str, at: str | None = None) -> dict:
+    """One college game as renderable geometry, from the shared scene package.
+
+    `fantasyedge.scene` owns the stadium: the field and its rules, the bowl,
+    the drives as arcs, the moments. Nothing about geometry is decided here -
+    this route hands it a gamecast and returns what it builds, so a college
+    Saturday and an NFL Sunday are drawn by one renderer from one spec.
+    """
+    from fantasyedge import scene as shared
+
+    return shared.build(game(source, event, at))
 
 
 def teams(source: Source) -> dict:
