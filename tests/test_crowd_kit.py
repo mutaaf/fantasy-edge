@@ -318,6 +318,39 @@ class CrowdKitTest(unittest.TestCase):
         self.assertNotIn("import RealityKit", src)
         self.assertTrue((ROOT / "apple/verify_crowd_support.swift").is_file())
 
+    def test_no_card_stands_nearer_than_a_mesh_fan(self):
+        """A row seen end-on holds more fans inside the mesh radius than the caps allow. When the
+        caps decided mesh against card, that overflow stood among solid fans as flat billboards
+        with the field showing through them (docs/lookdev/experience-r7/crowd-cards-near-crop.png).
+        The nearest fans are meshes and the boundary is a circle; the caps only say how wide."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        rings = src[src.index("// Rings: the nearest fans"):src.index("// Near rings: one merged mesh")]
+        self.assertIn("let order = placed.indices.sorted { placed[$0].dist < placed[$1].dist }", rings)
+        self.assertIn("where rank < meshes", rings, "mesh against card is decided by rank in distance, not by cap")
+        # The dither may pick which mesh ring a fan lands in; it must not push one out to a card.
+        loop = rings[rings.index("let d = Double(placed[i].dist)"):rings.index("#if DEBUG")]
+        self.assertNotIn(".card", loop, "the dither must not decide mesh against card")
+
+    def test_a_card_is_alpha_tested_and_never_blended(self):
+        """Only the card material carries alpha. Blended, a fan reads as a window onto the field."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        start = src.index("for (key, mb) in cards.sorted")
+        cards = src[start:src.index("let e = ModelEntity(mesh: res", start)]
+        self.assertIn("mat.opacityThreshold", cards)
+        self.assertIn("mat.blending = .opaque", cards)
+
+    def test_the_mesh_circle_is_as_wide_as_the_budget_allows(self):
+        """lod2Max is what buys the circle's radius, so it should sit at the budget's edge."""
+        C, M = self.C, self.M
+        r = C["rings"]
+        lod0 = max(f["lod0"]["triangles"] for f in M["fans"])
+        lod1 = max(f["lod1"]["triangles"] for f in M["fans"])
+        lod2 = max(f["lod2"]["triangles"] for f in M["fans"])
+        used = r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + r["lod2Max"] * lod2 + 50_000
+        self.assertLessEqual(used, 150_000)
+        # Within one more lod2 fan of the ceiling: anything less is budget left on the table.
+        self.assertGreater(used + lod2, 150_000, "there is room for another lod2 fan")
+
 
 if __name__ == "__main__":
     unittest.main()

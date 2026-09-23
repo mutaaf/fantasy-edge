@@ -237,24 +237,35 @@ final class CrowdActor: StadiumActor {
             }
         }
 
-        // Rings: the nearest fans become meshes, up to the budget's caps.
+        // Rings: the nearest fans are meshes, and the boundary is a circle.
+        //
+        // The caps used to decide mesh against card, and the distance rule only tidied up
+        // inside `minCardYards`. A row seen end-on holds far more fans within the mesh radius
+        // than the caps allow, so the overflow became cards *among* solid fans, at six or eight
+        // yards, with the field showing through them (docs/lookdev/experience-r7). The count
+        // cannot be allowed to beat the distance: whoever is nearest is a mesh, and a card may
+        // never stand closer than a mesh fan. The caps now set how far that circle reaches,
+        // not which fans inside it are flat.
         var ringOf = [Ring](repeating: .card, count: placed.count)
         if !c.tabletop {
             let order = placed.indices.sorted { placed[$0].dist < placed[$1].dist }
-            var n0 = 0, n1 = 0, n2 = 0
-            for i in order {
-                // Dithered: each fan's ring distance wanders by up to ditherYards,
-                // so a ring's edge is a ragged band, never a line of cards meeting meshes.
+            let meshes = max(0, C.rings.lod0Max + C.rings.lod1Max + C.rings.lod2Max)
+            var n0 = 0, n1 = 0
+            for (rank, i) in order.enumerated() where rank < meshes {
+                // Dithered: each fan's ring distance wanders by up to ditherYards, so the seam
+                // between lod0, lod1 and lod2 is a ragged band. It never decides mesh or card.
                 var hd = UInt64(truncatingIfNeeded: i) &* 0x9E3779B97F4A7C15
                 hd ^= hd >> 31
                 let d = Double(placed[i].dist) + (Double(hd % 1000) / 1000 - 0.5) * 2 * C.rings.ditherYards
                 if d < C.rings.lod0Yards && n0 < C.rings.lod0Max { ringOf[i] = .lod0; n0 += 1 }
                 else if d < C.rings.lod1Yards && n1 < C.rings.lod1Max { ringOf[i] = .lod1; n1 += 1 }
-                else if d < C.rings.lod2Yards && n2 < C.rings.lod2Max { ringOf[i] = .lod2; n2 += 1 }
-                // Never a card within arm's reach of the wearer, whatever the caps say:
-                // a magnified card beside you is worse than a few thousand triangles.
-                else if Double(placed[i].dist) < C.rings.minCardYards { ringOf[i] = .lod2; n2 += 1 }
+                else { ringOf[i] = .lod2 }
             }
+            #if DEBUG
+            if let edge = order.first(where: { ringOf[$0] == .card }).map({ placed[$0].dist }) {
+                StadiumLog.log.notice("[stadium] crowd rings: meshes out to \(String(format: "%.1f", edge)) yd, then cards")
+            }
+            #endif
         }
 
         // Near rings: one merged mesh per group per pose.
@@ -367,6 +378,9 @@ final class CrowdActor: StadiumActor {
             if let normal { mat.normal = .init(texture: .init(normal)) }
             mat.roughness = .init(floatLiteral: Float(C.roughness))
             mat.opacityThreshold = Float(C.impostor.alphaCutoff)
+            // Alpha-tested, never blended: a card that blends is a fan you can see the field
+            // through, which is what gave the near rows their ghosts.
+            mat.blending = .opaque
             // Spill in the club's colour, not the texture's: an emissive texture read grey here,
             // and at a hundred metres the albedo carries the mottle anyway.
             let spill = SceneMath.rgba(key.support == .away ? s.bowl.crowd.away

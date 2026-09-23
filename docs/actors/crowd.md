@@ -670,3 +670,58 @@ was 11, with the simulator shut down between attempts.
 | `crowd-r7/s-td-moment-p7-visitors.png` | The visiting block brightens well, but the home sections around it do not dim, so the contrast comes entirely from one side. |
 | `crowd-r7/s-crowd-closeup-pressBox.png` | Still Bowl's beige mass, identified at integration-14 and not the crowd's. |
 | Dress time | 2.2-2.5 s is three quarters tint, and the tint is still a scalar loop at -Onone. |
+
+## Round 8 (no flat fan among solid ones)
+
+Experience found flat card fans standing among solid mesh fans at six to eight yards, the field
+showing through them, and proved whose they were five ways rather than guessing
+(`docs/lookdev/experience-r7/crowd-cards-near-crop.png`). Before and after:
+`docs/lookdev/crowd-r8/`.
+
+### The rule that was inverted
+
+`visual.crowd.rings` says no card within `minCardYards` and caps meshes at 14/24/130. **The caps
+decided mesh against card; the distance rule only tidied up inside 5.5 yd.** A row seen end-on
+holds far more fans inside the mesh radius than the caps allow - 375 within 13 yd at the sideline
+seat, 360 at the club seat - so the overflow became cards wherever it happened to stand, including
+among solid fans a few yards away.
+
+### What I chose, and why
+
+Covering a whole end-on row needs 94k triangles of lod2 alone, six times the headroom, so raising
+the caps far enough was never affordable. Instead **the distance beats the count**: the nearest
+`lod0Max + lod1Max + lod2Max` fans are meshes and everyone beyond is a card, so the boundary is a
+circle and no card can stand nearer than a mesh fan. The dither still ragged-edges the seams
+between mesh rings, where it costs nothing; it no longer decides whether a fan is flat.
+
+`lod2Max` goes 130 → 145, which is exactly what the budget allows at 250 triangles a lod2 fan
+(14 x 3000 + 24 x 900 + 145 x 250 + 50,000 of cards = 150,000). Measured cost: **140,132-140,145
+triangles against 136,412-136,419**, 36 draw parts unchanged, and the dress *fell* to 1.64-2.46 s
+from 2.03-2.71 s (no texture changed; that is the machine being quiet). The app logs what the
+circle reached: `meshes out to 7.6 yd, then cards`.
+
+### And the second half of it
+
+A card that blends is a fan you can see the field through. The card material was alpha-tested but
+never told not to blend, so `mat.blending = .opaque` is now explicit. That costs nothing and is
+what actually removes the transparency; the ordering fix is what removes the interleaving. Both
+are held by tests: one reads the ring loop and fails if the dither can decide mesh against card,
+one fails if the card material loses either line.
+
+### What I did not take from my round-7 list
+
+- **The hair shell still reads as one mass.** A parting and a few edge strands need a kit rebuild
+  and a reshoot; the card defect had evidence and a user behind it, and I spent the quiet window
+  on measuring and fixing that properly instead.
+- **Empty patches still read as shadow** at bowl-wide distance: right shape, wrong value. The
+  value is Bowl's seat colour showing through, so it wants a conversation with that actor rather
+  than a crowd-side fudge.
+- **The home sections do dim on a visiting score** (`tint.dim` 0.55 for cards): integration-14
+  rated that frame a 4 and I had no evidence the number is wrong, so I left it rather than fiddle.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r8/s-crowd-closeup-sideline.png` | The mesh circle reaches 7.6 yd, so cards begin closer than they should on a row seen end-on. A cheaper lod3 tier at about 120 triangles would roughly double the radius for the same budget; that is the next real move. |
+| `crowd-r8/s-crowd-closeup.png` | Hair is volume now but one mass: no parting, no edge strands. |
+| `crowd-r8/s-bowl-wide.png` | Empty patches read as shadow rather than as empty. |
+| `crowd-r8/s-crowd-closeup-pressBox.png` | Bowl's beige mass, identified at integration-14 and not the crowd's. |
