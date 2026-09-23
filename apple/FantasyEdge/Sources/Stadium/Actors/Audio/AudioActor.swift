@@ -246,6 +246,13 @@ final class AudioActor: StadiumActor {
         guard !first else { return }
         landed += 1
         guard landed % A.playWhistle.every == 0 else { return }
+        // A play that carries a whistling moment gets one whistle, not two.
+        // Since the moment gate began firing on the landing, this one and the
+        // moment's arrived 0.15 s apart, from two places, at two gains: the
+        // referee twice. The moment's is the louder and is anchored at the
+        // field, so it is the one that keeps the play.
+        if let m = c.spec.activeMoment, m.playId == arc.id,
+           let T = c.look.moments.timeline[m.kind], T.whistle >= 0 { return }
         let at = SceneMath.local(x: arc.toX, y: 1, z: arc.lane)
         schedule(c.shared.time + arc.flightSeconds + A.playWhistle.afterFlight) { [weak self, c] in
             self?.play("whistle", at: at, extra: A.playWhistle.gain - (A.gains["whistle"] ?? 0), c)
