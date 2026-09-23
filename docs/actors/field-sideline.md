@@ -459,3 +459,118 @@ something contributes was measured with it.
   this round - they never fall close enough to any shot's seat to read their
   pixel grid, which is itself the finding: the bar asks for a grid "up close"
   and no shot gets up close.
+
+## Field round 3: blades at field level, as geometry
+
+The one Field criterion still failing after r2: *up close at field level, the
+grass has blades, not a blurred photo.*
+
+**Measured first, because the obvious fix was the wrong one.** r2 blamed mip
+averaging and proposed either a coarser near-field detail layer or a
+distance-blended second tile. Both are more texture, and more texture does not
+survive. Measuring the rendered near turf against its own source settles it:
+
+| | horizontal high-frequency (0-255 luminance, mean step between neighbouring pixels) |
+|---|---:|
+| turf albedo, native 1024 px | 10.61 |
+| the same albedo at mip 3 (128 px) | 12.12 |
+| the same albedo at mip 5 (32 px) | 4.69 |
+| **rendered near turf, field seat** | **0.60** |
+
+The texture still carries 8x the delivered detail even at mip 5, so the tile is
+not what is failing and a finer or coarser tile would not have helped.
+Simulating `TurfSheen`'s own arithmetic over the real albedo and ORM at the
+seat's angles accounts for part of it and not the rest:
+
+| view distance from the field seat | grazing term | high-frequency left |
+|---|---:|---:|
+| 4.5 yd (the nearest field of play) | 0.374 | 7.65 (72% of raw) |
+| 20 yd | 0.816 | 4.76 (45% of raw) |
+
+So the sheen costs 28-55% by design, and the remaining ~85% is the graze
+itself: at 16 degrees the sampler averages along the depth axis over many
+texels whatever the tile holds. **That is why this round puts the blades in
+geometry rather than in a texture** - the two candidate approaches from r2
+were both texture, and both were measured out before any of them was built.
+
+**The blades already existed, switched off.** `visual.field.shells` is six
+alpha-tested layers of the eight baked coverage slices, one draw part and 24
+triangles, built two rounds ago and shipped `enabled: false` because "from the
+field-level seat the 24x10 yd patch still reads as a darker rectangle".
+
+**Why it was a darker rectangle, read out of the graph rather than guessed.**
+`FieldShells.usda` ended at `Base = mix(PaintColor, TurfSample x GrassTint)`
+and bound that straight to the surface. `TurfSheen.usda` lifts the flat turf
+toward `SheenColor` as the view flattens. So the field around the patch was
+lifted and the blades inside it were not: the patch read as a hole in a
+brighter field, and no tint tuned at one distance could fix it, because the
+lift varies with angle across the patch.
+
+**The fix.** The shells take the same sheen, by the same arithmetic, from the
+same tokens: `Geometric . View -> abs -> 1-x -> ^SheenPower -> x Sheen ->
+mix toward SheenColor`, and the surface binds `Sheened` instead of `Base`.
+Only the sheen term is copied; the gap fill belongs to the ground plane, whose
+soil the shells alpha-test away rather than paint. The two surfaces now agree
+at every angle by construction.
+
+**And the patch was too small to hide its own edges.** At 24 yd wide it ended
+inside the frame: the field seat is 4.5 yd outside the near sideline, so at the
+patch's far edge the eye is `depth + 4.5` yd away and a 90 degree view spans
+that either side of centre. 32-68 yd (36 wide) against a 16.5 yd half-view
+clears it, with `depth` 12 yd and `fade` 4 yd so the far edge dissolves where
+blades stop resolving anyway. Enlarging the patch adds no triangles - the same
+six quads, larger - only fill.
+
+**Cost, measured.** Field goes 10 draw parts to 11 and 693 triangles to 717,
+against a budget of 12 and 2k. The shell atlas is the only new texture:
+1024x512 RGBA = 2.10 MB, 2.80 MB with mips; the stadium's reported texture
+memory is ~67 MB of 300 before and after, so it does not move the figure. The
+turf albedo and the paint mask were already resident. Enlarging the patch cost
+no triangles - the same six quads, larger - only fill.
+
+**Two things were wrong, not one, and the second only showed on a frame.**
+With the sheen matched the patch stopped reading as a darker rectangle - the
+near band's mean luminance is 90.66 without shells and 94.82 with them, four
+levels on 255 - but a banded measurement of the field-level frame showed the
+blades reaching only one thin strip: +116% high-frequency at one band and
+*bit-identical* everywhere else. The shader fades in from `PatchZ0` over
+`fade` and out to `PatchZ1` over `fade`, and with depth 12 and fade 4 the two
+ends met: only four yards in the middle of the patch ever drew at full
+strength, and the near edge - the sideline, where the wearer is closest to the
+grass - faded to nothing. `FieldActor` now sets `PatchZ1` to `half + fade`, so
+the sideline end is not faded at all. The fade is there to hide an edge that
+would read as a line drawn across the grass; the sideline is not such an edge,
+because the grass really does stop there and the border takes over.
+
+I also got this wrong once on the way: I read `canvasQuad`'s `y0`/`y1` as
+canvas y and "fixed" the mesh to `0...depth`, which moved the patch to the
+middle of the field and made it vanish entirely. They are field z, converted
+inside the function. The original placement was right; the fade was not.
+
+**Measured, field-level seat, the same crop with shells the only difference:**
+
+| band (screen y of 3840 x 2160) | HF off | HF on | gain |
+|---|---:|---:|---:|
+| 1450 (mid-field) | 0.490 | 1.066 | +117% |
+| 1550 | 0.650 | 1.272 | +96% |
+| 1620 | 0.866 | 1.505 | +74% |
+| 1680 (nearest grass) | 1.257 | 2.050 | +63% |
+
+College measures the same within a point or two (+118 / +97 / +78 / +64%), so
+it is the seat's geometry doing the work and not one fixture's field.
+
+**Does it meet the bar?** Yes, at the seat the bar names. `crop/nfl-near-turf-
+before.png` against `crop/nfl-near-turf-after.png`, both 2x from the full-
+resolution frame: the before is a flat olive tint carrying a fine grain, and
+the after is a dense, broken, directional texture with blade tips reading
+individually and blades breaking into the yard line's edge. That last part is
+the *paint worn, with blades through it* criterion, which r2 could only call
+partial.
+
+**Tests.** `tests/test_turf_shells.py` pins the bug rather than the numbers:
+both surfaces take the same `SheenColor` and `SheenPower`; the shells' single
+`Sheen` lies between the turf's per-stripe pair; the surface actually binds
+through the sheen mix (a parameter the tokens set and the graph ignores is the
+same bug with a passing test); the patch reaches past the frustum; and the far
+edge fade is a real fraction of the depth. One of them caught a reversed
+assertion of mine before the first build.

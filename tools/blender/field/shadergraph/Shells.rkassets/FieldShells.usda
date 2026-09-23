@@ -25,6 +25,9 @@ def Xform "Root"
     #   Edge        (float)   distance value at the paint's edge
     #   PatchX0..Z1 (float)   the patch in object units, set from visual.field.shells
     #   PatchFade   (float)   blades thin out over this distance inside the patch edge
+    #   SheenColor  (color3)  blades lit from the side, as TurfSheen's
+    #   SheenPower  (float)   how sharply the sheen comes on as the view flattens
+    #   Sheen       (float)   how much SheenColor a fully grazing blade takes
     def Material "FieldShells"
     {
         asset inputs:Atlas = @./textures/placeholder_atlas.png@
@@ -41,13 +44,16 @@ def Xform "Root"
         float inputs:PatchZ0 = 16
         float inputs:PatchZ1 = 26.67
         float inputs:PatchFade = 3
+        color3f inputs:SheenColor = (0.4, 0.48, 0.25)
+        float inputs:SheenPower = 3
+        float inputs:Sheen = 0.28
 
         token outputs:mtlx:surface.connect = </Root/FieldShells/Surface.outputs:out>
 
         def Shader "Surface"
         {
             uniform token info:id = "ND_realitykit_pbr_surfaceshader"
-            color3f inputs:baseColor.connect = </Root/FieldShells/Base.outputs:out>
+            color3f inputs:baseColor.connect = </Root/FieldShells/Sheened.outputs:out>
             float inputs:roughness = 0.8
             float inputs:specular = 0.2
             float inputs:opacity.connect = </Root/FieldShells/Cover.outputs:out>
@@ -354,6 +360,74 @@ def Xform "Root"
             color3f inputs:fg.connect = </Root/FieldShells.inputs:PaintColor>
             color3f inputs:bg.connect = </Root/FieldShells/Blades.outputs:out>
             float inputs:mix.connect = </Root/FieldShells/Painted.outputs:out>
+            color3f outputs:out
+        }
+
+        # The same grazing sheen the flat turf takes (TurfSheen.usda), for the
+        # same reason and by the same arithmetic. Without it the shells were a
+        # darker rectangle on a brighter field: the turf around the patch is
+        # lifted toward SheenColor as the view flattens, and blades drawn from
+        # the raw albedo were not, so the patch read as a hole rather than as
+        # grass. Only the sheen term is copied - the gap fill belongs to the
+        # ground plane, whose soil the shells alpha-test away rather than paint.
+        def Shader "Geometric"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            string inputs:space = "world"
+            float3 outputs:out
+        }
+
+        def Shader "View"
+        {
+            uniform token info:id = "ND_realitykit_viewdirection_vector3"
+            float3 outputs:out
+        }
+
+        def Shader "Facing"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/FieldShells/Geometric.outputs:out>
+            float3 inputs:in2.connect = </Root/FieldShells/View.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Abs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/FieldShells/Facing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Edge"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/FieldShells/Abs.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Grazing"
+        {
+            uniform token info:id = "ND_power_float"
+            float inputs:in1.connect = </Root/FieldShells/Edge.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells.inputs:SheenPower>
+            float outputs:out
+        }
+
+        def Shader "SheenAmount"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/FieldShells/Grazing.outputs:out>
+            float inputs:in2.connect = </Root/FieldShells.inputs:Sheen>
+            float outputs:out
+        }
+
+        def Shader "Sheened"
+        {
+            uniform token info:id = "ND_mix_color3"
+            color3f inputs:fg.connect = </Root/FieldShells.inputs:SheenColor>
+            color3f inputs:bg.connect = </Root/FieldShells/Base.outputs:out>
+            float inputs:mix.connect = </Root/FieldShells/SheenAmount.outputs:out>
             color3f outputs:out
         }
     }
