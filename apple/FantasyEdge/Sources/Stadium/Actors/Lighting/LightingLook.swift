@@ -92,6 +92,7 @@ extension SceneSpec.Look {
         public let color: String
         public let overdrawCapScreens: Double
         public let facing: LightingBeamFacing
+        public let washTargetScreens: Double
         public let startInsideOffsetYards: Double
         public let endHeightYards: SceneSpec.PerMode<Double>
         public let shader: LightingBeamShader
@@ -132,6 +133,12 @@ extension SceneSpec.Look {
         public let tunnelScale: Double
         public let opacity: Double
         public let color: String
+        /// The vomitory mouths, lit from the concourse behind them.
+        public let vomitoryOpacity: Double
+        public let vomitoryColor: String
+        public let vomitoryInsetYards: Double
+        public let vomitoryHeadYards: Double
+        public let vomitoryWidthScale: Double
     }
 
     public struct LightingLook: Decodable, Equatable, Sendable {
