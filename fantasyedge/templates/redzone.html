@@ -88,6 +88,16 @@
   .focus .sit { font-size: 20px; margin-top: 10px; font-weight: 600; }
   .focus.rz .sit { color: var(--rz); }
   .idle { color: var(--dim); }
+  /* A score, announced once the scoreboard carries it. Loud on purpose: the
+     whole reason to sit in front of this is not to miss one. */
+  .scored {
+    display: inline-block; margin-bottom: 8px; padding: 4px 12px;
+    background: var(--ball); color: #12160c; border-radius: 6px;
+    font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    font-size: 13px;
+  }
+  .scoretag { color: var(--ball); }
+  .tile.scoring { border-color: var(--ball); }
 
   /* The ball's distance to the goal line, drawn rather than described. */
   .track { margin-top: 14px; height: 6px; background: #0a0d11;
@@ -198,7 +208,8 @@ function sideHtml(side, poss) {
 
 function tile(g) {
   const cls = ["tile", g.state === "in" ? "live" : g.state];
-  if (g.redZone) cls.push("rz");
+  if (g.scored) cls.push("scoring");
+  else if (g.redZone) cls.push("rz");
   if (g.event === pinned) cls.push("pinned");
   else if (auto && g.focus) cls.push("on");
 
@@ -214,8 +225,9 @@ function tile(g) {
     <div class="meta">
       ${live ? '<i class="dot"></i>' : ""}
       <span>${label}</span>
-      ${g.redZone ? '<span class="tag sep">Red zone</span>'
-                  : (live && g.situation ? `<span class="sep">${esc(g.situation)}</span>` : "")}
+      ${g.scored ? `<span class="tag sep scoretag">${esc(g.scored.what)}</span>`
+        : g.redZone ? '<span class="tag sep">Red zone</span>'
+        : (live && g.situation ? `<span class="sep">${esc(g.situation)}</span>` : "")}
     </div>
   </button>`;
 }
@@ -230,7 +242,12 @@ function focusHtml(g, why) {
   const track = (ez != null && ez <= 20)
     ? `<div class="track"><i style="width:${Math.max(4, 100 - ez * 5)}%"></i></div>` : "";
   const pin = g.event === pinned ? " · pinned" : "";
-  return `<div class="why">${g.state === "in" ? '<i class="dot"></i>' : ""}
+  // The score is announced only once the scoreboard carries it, which is the
+  // stadium's rule: nothing is announced before it has happened.
+  const banner = g.scored
+    ? `<div class="scored">${esc(g.scored.what)} · ${esc(g.scored.team)}</div>` : "";
+  return `${banner}
+    <div class="why">${g.state === "in" ? '<i class="dot"></i>' : ""}
       <span>${esc(g.reason)}${pin}</span></div>
     <div class="teams">
       <div class="side"><i class="chip" style="height:30px;background:${esc(g.away.color)}"></i>

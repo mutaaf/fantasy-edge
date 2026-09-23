@@ -250,7 +250,8 @@ class Api:
         self._calls = 0
         # The channel's memory: which game is on screen, since when, and when
         # each game last scored. One slot, because a channel shows one game.
-        self._whip: dict = {"focus": "", "since": 0.0, "scored": {}, "totals": {}}
+        self._whip: dict = {"focus": "", "since": 0.0, "scored": {},
+                            "totals": {}, "last": {}}
 
     # ---------- plumbing ----------
 
@@ -721,18 +722,40 @@ class Api:
         scored = dict(state["scored"])
         for row in rows:
             key = row["event"]
-            total = row["homeScore"] + row["awayScore"]
-            if state["totals"].get(key) not in (None, total):
+            pair = (row["homeScore"], row["awayScore"])
+            was = state["totals"].get(key)
+            if was is not None and was != pair:
                 scored[key] = now
-            state["totals"][key] = total
+                # Which club moved, and by how much. Only a club that gained
+                # is named: a correction that takes points *off* the board is
+                # real (six came off in one college Saturday) and must not be
+                # announced as a score.
+                gained = [("home", pair[0] - was[0]), ("away", pair[1] - was[1])]
+                side, delta = max(gained, key=lambda g: g[1])
+                if delta > 0:
+                    state["last"][key] = {
+                        "side": side, "points": delta, "at": now,
+                        "what": whip.scoring_play(delta),
+                        "team": row[side]["abbr"]}
+            state["totals"][key] = pair
 
         ranked = whip.rank(rows, scored=scored, now=now)
+        # A score rides along on its own game for as long as it is worth
+        # announcing, so the page needs no memory of its own to draw a banner.
+        for row in ranked:
+            last = state["last"].get(row["event"])
+            if last and now - last["at"] <= whip.SCORE_HOLD:
+                row["scored"] = {"team": last["team"], "what": last["what"],
+                                 "points": last["points"],
+                                 "ago": round(now - last["at"], 1)}
         held = now - state["since"] if state["focus"] else 0.0
         focus = whip.choose(ranked, state["focus"], held=held)
         if focus != state["focus"]:
             state["focus"], state["since"] = focus, now
         state["scored"] = {k: v for k, v in scored.items()
                            if now - v <= whip.SCORE_HOLD}
+        state["last"] = {k: v for k, v in state["last"].items()
+                         if now - v["at"] <= whip.SCORE_HOLD}
 
         live_now = [g for g in ranked if g["state"] == "in"]
         # The feed states which league it is (`leagues[0].slug`), so the page
