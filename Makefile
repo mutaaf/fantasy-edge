@@ -1,4 +1,5 @@
-.PHONY: test doctor demo publish-demo report docs api board clean verify-scene \
+.PHONY: test test-all saturday-test saturday-doctor saturday-replay \
+	doctor demo publish-demo report docs api board clean verify-scene \
 	sim sim-doctor sim-shots sim-clean \
 	device device-build device-stats device-list
 
@@ -8,6 +9,21 @@
 # tested against fixtures cut by tools/make_replay_fixture.py --nflverse.
 test:
 	FANTASYEDGE_CORRECT_PLAYS=0 python3 -m unittest discover -s tests
+
+# --- apps/saturday (college football; see apps/saturday/CLAUDE.md) ---
+
+saturday-test:
+	$(MAKE) -C apps/saturday test
+
+saturday-doctor:
+	$(MAKE) -C apps/saturday doctor
+
+saturday-replay:
+	$(MAKE) -C apps/saturday replay
+
+# Both products. The stadium is shared, so a change to packages/ has to keep
+# fantasy-edge and Saturday green together.
+test-all: test saturday-test
 
 doctor:
 	python3 -m fantasyedge doctor

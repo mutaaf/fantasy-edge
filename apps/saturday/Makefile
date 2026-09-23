@@ -1,5 +1,9 @@
 PY ?= python3
-export PYTHONPATH := packages:apps/saturday:tests
+# Saturday lives at apps/saturday in the monorepo; `cfb` and the other shared
+# packages live at its root. Run these from this directory, or use the root
+# Makefile's saturday-* targets.
+MONO := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))../..)
+export PYTHONPATH := $(MONO)/packages:$(CURDIR):$(CURDIR)/tests
 
 .PHONY: test fixtures doctor serve replay live live-test record-weekend record-dry-run record-plan \
 	project build-visionos build-ios build-ipad mockups

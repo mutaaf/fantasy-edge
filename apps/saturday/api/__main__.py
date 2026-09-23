@@ -16,7 +16,7 @@ from cfb.sources import from_spec
 
 from . import doctor, server
 
-REPO = pathlib.Path(__file__).resolve().parents[3]
+REPO = pathlib.Path(__file__).resolve().parents[1]      # apps/saturday, where its data and fixtures live
 
 
 def main(argv=None) -> int:

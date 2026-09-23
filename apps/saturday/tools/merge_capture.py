@@ -25,8 +25,8 @@ import pathlib
 import shutil
 import sys
 
-REPO = pathlib.Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO / "packages"))
+REPO = pathlib.Path(__file__).resolve().parent.parent          # apps/saturday
+sys.path.insert(0, str(REPO.parents[1] / "packages"))           # the monorepo's shared packages
 sys.path.insert(0, str(REPO / "tools"))
 
 from record_slate import ET  # noqa: E402
