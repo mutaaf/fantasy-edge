@@ -1,4 +1,5 @@
 import SwiftUI
+import StadiumKit
 
 // Where Fantasy Edge meets the stadium. Everything under `Stadium/` is generic
 // and knows nothing about leagues; this file is the app's side of the seam:

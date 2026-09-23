@@ -25,6 +25,9 @@ enum WallFilter: String, CaseIterable, Identifiable {
 
 struct SaturdayWall: View {
     @Environment(SaturdayStore.self) private var store
+    #if os(visionOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filter: WallFilter = .all
     @State private var path = NavigationPath()
@@ -79,9 +82,22 @@ struct SaturdayWall: View {
         .onAppear {
             store.watch()
             // Screenshot and UI-test hook: `-openGame <event id>` opens a game.
-            if let id = UserDefaults.standard.string(forKey: "openGame"), path.isEmpty { path.append(Route.game(id)) }
+            let defaults = UserDefaults.standard
+            if let id = defaults.string(forKey: "openGame"), path.isEmpty { path.append(Route.game(id)) }
+            // `-openTabletop <event id>` puts one game straight on the table.
+            if let id = defaults.string(forKey: "openTabletop"), path.isEmpty { openTabletop(id) }
         }
         .onDisappear { store.unwatch() }
+    }
+
+    /// The stadium lives in its own volume on visionOS; elsewhere the
+    /// placeholder is still the honest answer.
+    private func openTabletop(_ id: String) {
+        #if os(visionOS)
+        openWindow(id: "tabletop", value: id)
+        #else
+        path.append(Route.tabletop(id))
+        #endif
     }
 
     private var filterPicker: some View {
@@ -111,12 +127,12 @@ struct SaturdayWall: View {
 
     @ViewBuilder private func layout(_ slate: Slate) -> some View {
         #if os(visionOS)
-        VisionWall(slate: slate, filter: filter, path: $path)
+        VisionWall(slate: slate, filter: filter, path: $path, onTabletop: openTabletop)
         #else
         if sizeClass == .regular {
-            PadWall(slate: slate, filter: filter, path: $path)
+            PadWall(slate: slate, filter: filter, path: $path, onTabletop: openTabletop)
         } else {
-            PhoneWall(slate: slate, filter: filter, path: $path)
+            PhoneWall(slate: slate, filter: filter, path: $path, onTabletop: openTabletop)
         }
         #endif
     }
@@ -230,6 +246,9 @@ private struct VisionWall: View {
     let slate: Slate
     let filter: WallFilter
     @Binding var path: NavigationPath
+    /// Opening the stadium is the wall's business, not a tile's: on visionOS
+    /// it opens a volume, elsewhere it pushes the placeholder.
+    let onTabletop: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -240,7 +259,7 @@ private struct VisionWall: View {
                     VStack(alignment: .leading, spacing: 20) {
                         if let id = slate.spotlight, let g = store.game(id), filter.keeps(g, favorites: store.favorites) {
                             SpotlightCard(game: g, onDetail: { path.append(Route.game(id)) },
-                                          onTabletop: { path.append(Route.tabletop(id)) })
+                                          onTabletop: { onTabletop(id) })
                         }
                         if let finals = slate.section("finals") {
                             SectionBlock(section: finals, filter: filter, columns: 2, path: $path)
@@ -270,6 +289,9 @@ private struct PadWall: View {
     let slate: Slate
     let filter: WallFilter
     @Binding var path: NavigationPath
+    /// Opening the stadium is the wall's business, not a tile's: on visionOS
+    /// it opens a volume, elsewhere it pushes the placeholder.
+    let onTabletop: (String) -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
@@ -277,7 +299,7 @@ private struct PadWall: View {
                 VStack(alignment: .leading, spacing: 20) {
                     if let id = slate.spotlight, let g = store.game(id), filter.keeps(g, favorites: store.favorites) {
                         SpotlightCard(game: g, compact: true, onDetail: { path.append(Route.game(id)) },
-                                      onTabletop: { path.append(Route.tabletop(id)) })
+                                      onTabletop: { onTabletop(id) })
                     }
                     if let finals = slate.section("finals") {
                         SectionBlock(section: finals, filter: filter, columns: 1, path: $path)
@@ -309,6 +331,9 @@ private struct PhoneWall: View {
     let slate: Slate
     let filter: WallFilter
     @Binding var path: NavigationPath
+    /// Opening the stadium is the wall's business, not a tile's: on visionOS
+    /// it opens a volume, elsewhere it pushes the placeholder.
+    let onTabletop: (String) -> Void
 
     var body: some View {
         ScrollView {
@@ -316,7 +341,7 @@ private struct PhoneWall: View {
                 WallHeader(slate: slate, compact: true)
                 if let id = slate.spotlight, let g = store.game(id), filter.keeps(g, favorites: store.favorites) {
                     SpotlightCard(game: g, compact: true, onDetail: { path.append(Route.game(id)) },
-                                  onTabletop: { path.append(Route.tabletop(id)) })
+                                  onTabletop: { onTabletop(id) })
                 }
                 WhipAround(items: slate.feed) { path.append(Route.game($0)) }
                 ForEach(slate.sections) { s in

@@ -54,7 +54,7 @@ fixtures:
 
 # Decode every replayed scene with the Swift client's own types and check the
 # maths (seats, facing, trails) against scene.py. Needs Xcode's swiftc.
-STADIUM = apple/FantasyEdge/Sources/Stadium
+STADIUM = packages/swift/StadiumKit/Sources/StadiumKit
 verify-scene:
 	mkdir -p .work/scenes
 	python3 tools/scene_samples.py .work/scenes

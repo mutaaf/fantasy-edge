@@ -66,7 +66,7 @@ and then the arc stays, the lasers move up, and a beam marks the ball. A score
 lights the scoring side's section and dims the other. No players are drawn:
 the feed has no tracking data.
 
-Nothing in `Sources/Stadium/` knows about fantasy football. It renders
+Nothing in `packages/swift/StadiumKit` knows about fantasy football. It renders
 `GET /api/scene/{event}` (or `/api/replay/scene`), the platform-neutral scene
 built by `fantasyedge/scene.py`, so a web or Android client draws the same
 primitives. `StadiumHost.swift` is the app's side of that seam.

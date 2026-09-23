@@ -1,6 +1,6 @@
 // Checks the crowd's pose decision (CrowdChoreography) exhaustively.
 //
-//     swiftc -parse-as-library -o /tmp/verify-crowd apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdChoreography.swift \
+//     swiftc -parse-as-library -o /tmp/verify-crowd packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdChoreography.swift \
 //         apple/verify_crowd.swift && /tmp/verify-crowd
 //
 // The contract: while either team's touchdown or field goal is on, and as it

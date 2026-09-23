@@ -40,7 +40,7 @@ anyone's stadium, branding, crowd art or broadcast package.
 ## Rules between actors
 
 1. **Stay in your folders.** An actor's specialist writes only to:
-   - `apple/FantasyEdge/Sources/Stadium/Actors/<Actor>/`
+   - `packages/swift/StadiumKit/Sources/StadiumKit/Actors/<Actor>/`
    - `assets/actors/<actor>/`
    - `tools/blender/<actor>/`
    - their own `visual.<actor>` block in `design/tokens.json`

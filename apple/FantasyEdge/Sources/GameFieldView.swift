@@ -1,4 +1,5 @@
 import SwiftUI
+import StadiumKit
 
 /// One game, on a field, with its play-by-play and the win probability the
 /// feed published beside it.

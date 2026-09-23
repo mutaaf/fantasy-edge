@@ -47,7 +47,7 @@ class Seats(unittest.TestCase):
         # which faces away from the play, and the camera well, where the
         # painted field fills the view and the dock has nowhere to stand.
         self.assertEqual({sid for sid, s in self.seats.items() if s.get("lookdev")}, {"wall", "goalLine"})
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumChrome.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumChrome.swift").read_text()
         self.assertIn("$0.lookdev != true", src, "the picker offers a seat that faces the wall")
 
     def test_the_camera_well_is_the_one_seat_inside_the_balls_life_size_band(self):
@@ -75,7 +75,7 @@ class Seats(unittest.TestCase):
         self.assertGreater(min(others), 20.0, "another seat is now nearer a goal line than the well")
 
     def test_the_look_dev_shots_still_find_their_seats(self):
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumShots.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumShots.swift").read_text()
         body = src.split("// SHOTS-BEGIN", 1)[1].split("// SHOTS-END", 1)[0]
         for used in set(__import__("re").findall(r'seat: "(\w+)"', body)):
             self.assertIn(used, self.seats, f"a shot sits in {used!r}, which the scene no longer offers")
@@ -303,7 +303,7 @@ class Layout(unittest.TestCase):
                 self.assertGreaterEqual(per["maxHeightPoints"],
                                         full * self.layout["dock"]["gallery"]["minHeightFraction"] - 1e-6)
                 self.assertEqual(per.get("scale", 1.0), 1.0, "shortened and shrunk; rows come first")
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumViews.swift").read_text()
         self.assertIn("slot?.maxHeightPoints", src, "the app ignores the seat's own panel height")
 
     def test_a_panel_drawn_smaller_is_still_legible(self):
@@ -394,7 +394,7 @@ class Layout(unittest.TestCase):
         per = self.layout["perSeat"]["upper"]
         self.assertNotEqual((per["trailing"]["tab"]["yaw"], per["trailing"]["tab"]["height"]),
                             (per["trailing"]["yaw"], per["trailing"]["height"]))
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumViews.swift").read_text()
         body = src.split("private func placeDock", 1)[1].split("\n    }\n", 1)[0]
         for folded in ("driveFolded", "trailingFolded", "controlsFolded"):
             self.assertIn(folded, body, f"the dock ignores {folded}")
@@ -553,7 +553,7 @@ class Layout(unittest.TestCase):
         the room re-seats the dock at the bucket nearest the head's yaw, with a
         fade (reduce motion: at once). Only the dock moves; the world is never
         turned under the wearer."""
-        folder = ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience"
+        folder = ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience"
         views = (folder / "StadiumViews.swift").read_text()
         experience = "".join(f.read_text() for f in sorted(folder.glob("*.swift")))
         body = views.split("private func recentre", 1)[1].split("\n    }\n", 1)[0]
@@ -596,7 +596,7 @@ class Layout(unittest.TestCase):
         they would be seen to jump, which is the one thing the fade is for.
         The scorebug does not move, so it does not fade: the score is never
         away while the world is dark. Reduce motion places, as everywhere."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumViews.swift").read_text()
         body = src.split("private func sit(", 1)[1].split("\n    }\n", 1)[0]
         self.assertIn("dockOpacity", body, "the dock stays lit while its panels move")
         self.assertIn("reduceMotion", body, "reduce motion must not animate the change")

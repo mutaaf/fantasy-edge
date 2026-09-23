@@ -12,12 +12,12 @@
 //
 //     python3 tools/scene_samples.py /tmp/scenes     # writes replayed scenes
 //     swiftc -o /tmp/verify-scene \
-//         apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
-//         apple/FantasyEdge/Sources/Stadium/SceneLook.swift \
-//         apple/FantasyEdge/Sources/Stadium/Actors/*/*Look.swift \
-//         apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldArtSpec.swift \
-//         apple/FantasyEdge/Sources/Stadium/SceneMath.swift \
-//         apple/FantasyEdge/Sources/Stadium/Actors/Broadcast/BroadcastFlight.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/SceneSpec.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/SceneLook.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/Actors/*/*Look.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/Actors/Field/FieldArtSpec.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/SceneMath.swift \
+//         packages/swift/StadiumKit/Sources/StadiumKit/Actors/Broadcast/BroadcastFlight.swift \
 //         apple/verify_scene.swift && /tmp/verify-scene /tmp/scenes/*.json
 //
 // Nothing is synthetic: a scene that does not decode fails, because a

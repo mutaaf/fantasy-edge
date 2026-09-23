@@ -26,3 +26,6 @@ data/replay/
 
 # Look-dev shots, scratch scenes and derived data
 .work/
+
+# SwiftPM's own build directory (the package is built by Xcode)
+packages/swift/*/.build/

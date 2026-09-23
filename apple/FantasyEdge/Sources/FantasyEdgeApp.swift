@@ -1,4 +1,5 @@
 import SwiftUI
+import StadiumKit
 
 @main
 struct FantasyEdgeApp: App {

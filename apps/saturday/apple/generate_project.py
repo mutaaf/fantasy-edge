@@ -23,6 +23,13 @@ BUNDLE = "com.mutaaf.saturday"
 XROS, IOS, SWIFT = "2.0", "17.0", "5.0"
 
 
+# The stadium is a package now (packages/swift/StadiumKit), visionOS only.
+# This project links it for visionOS and not for iOS: the platform filter on
+# the build file is what keeps an iPhone build from trying to link a library
+# that has no iPhone version. The renderer itself is never copied here.
+STADIUM_PACKAGE = "../../../packages/swift/StadiumKit"
+
+
 def oid(*parts: str) -> str:
     return hashlib.sha1("/".join(parts).encode()).hexdigest()[:24].upper()
 
@@ -33,6 +40,8 @@ def main() -> None:
     if not sources:
         raise SystemExit("no sources found")
 
+    assets = ROOT.parents[2] / "assets"          # the monorepo's one copy
+    has_assets = (assets / "actors").is_dir()
     file_refs, build_files, src_children, font_children, src_phase, res_phase = [], [], [], [], [], []
     for rel in sources + resources:
         name = pathlib.PurePosixPath(rel).name
@@ -48,7 +57,36 @@ def main() -> None:
     ids = {k: oid(k) for k in (
         "project", "target", "productRef", "mainGroup", "sourcesGroup", "fontsGroup", "productsGroup",
         "sourcesBuildPhase", "frameworksBuildPhase", "resourcesBuildPhase", "configListProject",
+        "stadiumPackage", "stadiumProduct", "stadiumBuildFile", "assetsBuildPhase",
         "configListTarget", "debugProject", "releaseProject", "debugTarget", "releaseTarget")}
+
+    # The stadium's models, textures and sounds. Copied rather than referenced
+    # so the bundle holds what StadiumAssets looks for (`assets/` beside the
+    # executable), and rsync'd so a build costs milliseconds when nothing
+    # changed. `.glb` is the web/Android twin of every `.usdz`; an Apple build
+    # never opens one.
+    assets_phase = assets_in_target = ""
+    if has_assets:
+        script = ("set -e\\n"
+                  'DEST=\\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/assets\\"\\n'
+                  'mkdir -p \\"$DEST\\"\\n'
+                  "rsync -a --delete --exclude='*.glb' --exclude='review/' "
+                  '\\"$SRCROOT/../../../assets/\\" \\"$DEST/\\"\\n')
+        assets_phase = (
+            f"\t\t{ids['assetsBuildPhase']} /* Copy StadiumAssets */ = {{\n"
+            f"\t\t\tisa = PBXShellScriptBuildPhase;\n"
+            f"\t\t\talwaysOutOfDate = 1;\n"
+            f"\t\t\tbuildActionMask = 2147483647;\n"
+            f"\t\t\tfiles = ();\n"
+            f"\t\t\tinputPaths = ();\n"
+            f'\t\t\tname = "Copy StadiumAssets";\n'
+            f"\t\t\toutputPaths = ();\n"
+            f"\t\t\trunOnlyForDeploymentPostprocessing = 0;\n"
+            f"\t\t\tshellPath = /bin/sh;\n"
+            f'\t\t\tshellScript = "{script}";\n'
+            f"\t\t}};\n")
+        assets_in_target = f"\t\t\t\t{ids['assetsBuildPhase']},\n"
+
 
     common = (
         '\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
@@ -90,6 +128,7 @@ def main() -> None:
 \tobjects = {{
 
 /* Begin PBXBuildFile section */
+\t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */ = {{isa = PBXBuildFile; platformFilters = (xros, ); productRef = {ids['stadiumProduct']} /* StadiumKit */; }};
 {nl.join(build_files)}
 /* End PBXBuildFile section */
 
@@ -102,7 +141,9 @@ def main() -> None:
 \t\t{ids['frameworksBuildPhase']} = {{
 \t\t\tisa = PBXFrameworksBuildPhase;
 \t\t\tbuildActionMask = 2147483647;
-\t\t\tfiles = ();
+\t\t\tfiles = (
+\t\t\t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */,
+\t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
 /* End PBXFrameworksBuildPhase section */
@@ -151,10 +192,13 @@ def main() -> None:
 \t\t\t\t{ids['sourcesBuildPhase']},
 \t\t\t\t{ids['frameworksBuildPhase']},
 \t\t\t\t{ids['resourcesBuildPhase']},
-\t\t\t);
+{assets_in_target}\t\t\t);
 \t\t\tbuildRules = ();
 \t\t\tdependencies = ();
 \t\t\tname = {NAME};
+\t\t\tpackageProductDependencies = (
+\t\t\t\t{ids['stadiumProduct']} /* StadiumKit */,
+\t\t\t);
 \t\t\tproductName = {NAME};
 \t\t\tproductReference = {ids['productRef']} /* {NAME}.app */;
 \t\t\tproductType = "com.apple.product-type.application";
@@ -164,6 +208,9 @@ def main() -> None:
 /* Begin PBXProject section */
 \t\t{ids['project']} = {{
 \t\t\tisa = PBXProject;
+\t\t\tpackageReferences = (
+\t\t\t\t{ids['stadiumPackage']} /* XCLocalSwiftPackageReference "{STADIUM_PACKAGE}" */,
+\t\t\t);
 \t\t\tattributes = {{
 \t\t\t\tBuildIndependentTargetsInParallel = 1;
 \t\t\t\tLastSwiftUpdateCheck = 1600;
@@ -194,6 +241,9 @@ def main() -> None:
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+{assets_phase}/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 \t\t{ids['sourcesBuildPhase']} = {{
@@ -240,6 +290,20 @@ def main() -> None:
 \t\t\tname = Release;
 \t\t}};
 /* End XCBuildConfiguration section */
+
+/* Begin XCLocalSwiftPackageReference section */
+\t\t{ids['stadiumPackage']} /* XCLocalSwiftPackageReference "{STADIUM_PACKAGE}" */ = {{
+\t\t\tisa = XCLocalSwiftPackageReference;
+\t\t\trelativePath = {STADIUM_PACKAGE};
+\t\t}};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+\t\t{ids['stadiumProduct']} /* StadiumKit */ = {{
+\t\t\tisa = XCSwiftPackageProductDependency;
+\t\t\tproductName = StadiumKit;
+\t\t}};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCConfigurationList section */
 \t\t{ids['configListProject']} = {{

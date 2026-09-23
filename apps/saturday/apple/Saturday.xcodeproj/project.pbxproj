@@ -6,6 +6,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4EB6FC9DE714F4CC745B9967 /* StadiumKit in Frameworks */ = {isa = PBXBuildFile; platformFilters = (xros, ); productRef = 5F0434C5DD25E2283073583D /* StadiumKit */; };
 		0118C2914C6121BE3E44CF45 /* Chips.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFABF6E1DC84357961AF326B /* Chips.swift */; };
 		BB553F1FF36B767511037009 /* GameDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19C47FD91AD82B11DB32B2D /* GameDetailView.swift */; };
 		358725298EF1C4087866A4C1 /* GameTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005085A5F8E52622CE0F3DE7 /* GameTile.swift */; };
@@ -16,6 +17,7 @@
 		15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA9051C81335C8D903D40AE /* SaturdayWall.swift */; };
 		13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */; };
 		B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 936D5053E2A50560B42233F7 /* Spotlight.swift */; };
+		CB6BE1D2640E2D67869027A3 /* StadiumVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */; };
 		C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D4FB59DE7619B0CE12329B /* Tokens.swift */; };
 		E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */; };
 		2DEA3DB01E067F79B332E1D8 /* BigShouldersDisplay.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */; };
@@ -36,6 +38,7 @@
 		0CA9051C81335C8D903D40AE /* SaturdayWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayWall.swift"; path = "Saturday/Sources/SaturdayWall.swift"; sourceTree = SOURCE_ROOT; };
 		8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SharedRendererPlaceholder.swift"; path = "Saturday/Sources/SharedRendererPlaceholder.swift"; sourceTree = SOURCE_ROOT; };
 		936D5053E2A50560B42233F7 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Spotlight.swift"; path = "Saturday/Sources/Spotlight.swift"; sourceTree = SOURCE_ROOT; };
+		E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StadiumVolume.swift"; path = "Saturday/Sources/StadiumVolume.swift"; sourceTree = SOURCE_ROOT; };
 		12D4FB59DE7619B0CE12329B /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Tokens.swift"; path = "Saturday/Sources/Tokens.swift"; sourceTree = SOURCE_ROOT; };
 		7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "WallChrome.swift"; path = "Saturday/Sources/WallChrome.swift"; sourceTree = SOURCE_ROOT; };
 		BCD1E5CD5E5C1CDA7D7ADEC5 /* BigShouldersDisplay.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BigShouldersDisplay.ttf"; path = "Saturday/Fonts/BigShouldersDisplay.ttf"; sourceTree = SOURCE_ROOT; };
@@ -48,7 +51,9 @@
 		CC931E1219AD275C20F3632C = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
-			files = ();
+			files = (
+				4EB6FC9DE714F4CC745B9967 /* StadiumKit in Frameworks */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -76,6 +81,7 @@
 				0CA9051C81335C8D903D40AE /* SaturdayWall.swift */,
 				8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */,
 				936D5053E2A50560B42233F7 /* Spotlight.swift */,
+				E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */,
 				12D4FB59DE7619B0CE12329B /* Tokens.swift */,
 				7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */,
 			);
@@ -111,10 +117,14 @@
 				E66CB3B8F89DAB928E81ABB5,
 				CC931E1219AD275C20F3632C,
 				59078AB1F481882BED053FC9,
+				8CFFBB14392A4351044A5404,
 			);
 			buildRules = ();
 			dependencies = ();
 			name = Saturday;
+			packageProductDependencies = (
+				5F0434C5DD25E2283073583D /* StadiumKit */,
+			);
 			productName = Saturday;
 			productReference = 85673086EF6CFD3A1F8591AF /* Saturday.app */;
 			productType = "com.apple.product-type.application";
@@ -124,6 +134,9 @@
 /* Begin PBXProject section */
 		98F54143AB4E86B28C3AFEE0 = {
 			isa = PBXProject;
+			packageReferences = (
+				3F1D5205D6ED56D4625A68C3 /* XCLocalSwiftPackageReference "../../../packages/swift/StadiumKit" */,
+			);
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1600;
@@ -158,6 +171,21 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		8CFFBB14392A4351044A5404 /* Copy StadiumAssets */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ();
+			name = "Copy StadiumAssets";
+			outputPaths = ();
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nDEST=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/assets\"\nmkdir -p \"$DEST\"\nrsync -a --delete --exclude='*.glb' --exclude='review/' \"$SRCROOT/../../../assets/\" \"$DEST/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E66CB3B8F89DAB928E81ABB5 = {
 			isa = PBXSourcesBuildPhase;
@@ -173,6 +201,7 @@
 				15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */,
 				13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */,
 				B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */,
+				CB6BE1D2640E2D67869027A3 /* StadiumVolume.swift in Sources */,
 				C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */,
 				E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */,
 			);
@@ -270,6 +299,20 @@
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3F1D5205D6ED56D4625A68C3 /* XCLocalSwiftPackageReference "../../../packages/swift/StadiumKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../packages/swift/StadiumKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5F0434C5DD25E2283073583D /* StadiumKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = StadiumKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCConfigurationList section */
 		3A3AA46345CA81460312FF60 = {

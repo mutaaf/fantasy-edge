@@ -895,7 +895,7 @@ class TestSceneGeometry(unittest.TestCase):
         import re
 
         root = pathlib.Path(__file__).resolve().parents[1]
-        stadium = root / "apple/FantasyEdge/Sources/Stadium"
+        stadium = root / "packages/swift/StadiumKit/Sources/StadiumKit"
         files = [stadium / "SceneLook.swift"] + sorted(stadium.glob("Actors/*/*Look.swift"))
         self.assertEqual(len(files), 11, "SceneLook.swift plus one <Actor>Look.swift per actor")
         swift = set()
@@ -941,7 +941,7 @@ class TestSceneGeometry(unittest.TestCase):
         import importlib.util
 
         root = pathlib.Path(__file__).resolve().parents[1]
-        src = (root / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumShots.swift").read_text()
+        src = (root / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience/StadiumShots.swift").read_text()
         block = src.split("// SHOTS-BEGIN", 1)[1].split("// SHOTS-END", 1)[0]
         swift = set(re.findall(r'"([a-z-]+)": Shot\(', block))
         spec = importlib.util.spec_from_file_location("lookdev", root / "tools" / "lookdev.py")

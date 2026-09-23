@@ -21,7 +21,7 @@ class CrowdChoreographyTest(unittest.TestCase):
             exe = pathlib.Path(tmp) / "verify-crowd"
             build = subprocess.run(
                 ["swiftc", "-parse-as-library", "-o", str(exe),
-                 str(ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdChoreography.swift"),
+                 str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdChoreography.swift"),
                  str(ROOT / "apple/verify_crowd.swift")], capture_output=True, text=True)
             self.assertEqual(build.returncode, 0, build.stderr[-2000:])
             run = subprocess.run([str(exe)], capture_output=True, text=True, timeout=120)
@@ -29,7 +29,7 @@ class CrowdChoreographyTest(unittest.TestCase):
             self.assertIn("OK", run.stdout)
 
     def test_the_actor_decides_through_the_choreography(self):
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         self.assertIn("CrowdChoreography.pose(", src)
         self.assertNotIn("case .groan: pose = groan", src, "a standing groan reads as cheering")
 
@@ -43,12 +43,12 @@ class CrowdChoreographyTest(unittest.TestCase):
                                    capture_output=True, text=True, cwd=ROOT)
             self.assertEqual(build.returncode, 0, build.stderr[-2000:])
             exe = pathlib.Path(tmp) / "verify-crowd-support"
-            sources = [str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneSpec.swift"),
-                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneLook.swift"),
-                       *[str(p) for p in sorted((ROOT / "apple/FantasyEdge/Sources/Stadium/Actors").glob("*/*Look.swift"))],
-                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldArtSpec.swift"),
-                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/SceneMath.swift"),
-                       str(ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift"),
+            sources = [str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/SceneSpec.swift"),
+                       str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/SceneLook.swift"),
+                       *[str(p) for p in sorted((ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors").glob("*/*Look.swift"))],
+                       str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Field/FieldArtSpec.swift"),
+                       str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/SceneMath.swift"),
+                       str(ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift"),
                        str(ROOT / "apple/verify_crowd_support.swift")]
             compiled = subprocess.run(["swiftc", "-parse-as-library", "-o", str(exe), *sources],
                                       capture_output=True, text=True)
