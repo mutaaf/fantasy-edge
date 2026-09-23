@@ -1,0 +1,10 @@
+td-moment-p4.2: replay at 1032s (touchdown) -> .work/shots/integration-15/fg/td-moment-p4.2-fg-endzone.png
+td-moment-p5.0: replay at 1032s (touchdown) -> .work/shots/integration-15/fg/td-moment-p5.0-fg-endzone.png
+td-moment-t0.5: replay at 1929s (touchdown) -> .work/shots/integration-15/main/td-moment-t0.5.png
+td-moment-t5.1: replay at 1929s (touchdown) -> .work/shots/integration-15/main/td-moment-t5.1.png
+td-moment-t8.5: replay at 1929s (touchdown) -> .work/shots/integration-15/main/td-moment-t8.5.png
+bowl-wide: replay at 1590s (early) -> .work/shots/integration-15/phi/bowl-wide-phi.png
+field-level: replay at 1740s (redzone) -> .work/shots/integration-15/phi/field-level-phi.png
+sideline-props: replay at 1590s (early) -> .work/shots/integration-15/phi/sideline-props-phi.png
+bowl-wide-p4: replay at 0s (touchdown) -> .work/shots/integration-15/play/bowl-wide-p4-kickoff.png
+bowl-wide-p6: replay at 0s (touchdown) -> .work/shots/integration-15/play/bowl-wide-p6-kickoff.png
