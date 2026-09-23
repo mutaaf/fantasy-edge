@@ -119,9 +119,11 @@ extension SceneSpec.Look {
         public let aboutPeriod: Int
     }
 
-    public struct CrowdLuma: Decodable, Equatable, Sendable {
-        public let min: Double
-        public let max: Double
+    /// The one number a club colour is allowed to move by before it dresses a
+    /// stand: the HSV value below which a full stand reads as a single dark
+    /// shape at bowl-wide distance. Hue and saturation are the club's own.
+    public struct CrowdValue: Decodable, Equatable, Sendable {
+        public let floor: Double
     }
 
     public struct CrowdLook: Decodable, Equatable, Sendable {
@@ -144,11 +146,11 @@ extension SceneSpec.Look {
         public let sliceJitter: Double
         public let secondary: String
         public let shirtShade: [Double]
-        public let rawShare: Double
+        public let altShare: Double
         public let neutralShare: Double
         public let neutrals: [String]
         public let desaturate: [Double]
-        public let clubLuma: CrowdLuma
+        public let clubValue: CrowdValue
         public let cardContrast: Double
         public let tint: CrowdTint
         public let roughness: Double
@@ -195,6 +197,37 @@ extension SceneSpec.Look {
 /// `forward`, measured at export); this turns +Z onto the seat's facing. One
 /// definition, used by CrowdActor to place fans and by apple/verify_scene.swift
 /// to check that every placed fan faces the field.
+/// What a club's supporters wear, from what the club says its colour is.
+///
+/// The field and the crowd are painted from the same stated colour and do not
+/// read alike, because they are not the same surface. Paint on grass is one
+/// flat plane: under the floods it returns one radiance, and it reads as dark
+/// as the ink. A stand is thousands of separate fabric surfaces at every angle
+/// to the light, threaded with hats, sleeves, forearms, faces and the gaps
+/// between people - so the same dye returns a spread of radiances, and the
+/// darkest cloth a stadium holds still reads as charcoal rather than as a hole.
+///
+/// That spread is the whole of the licence the crowd takes. Hue and saturation
+/// are the club's and are never touched; the only thing lifted is HSV value,
+/// which is r, g and b scaled together and cannot move a hue. It is lifted no
+/// further than `visual.crowd.clubValue.floor`, measured as the value below
+/// which a full stand collapses into one dark shape at bowl-wide distance.
+/// A club already above the floor is worn exactly as stated.
+///
+/// A club dark enough that the floor still leaves it nearly flat - a black
+/// club - is worn as charcoal and its stand reads dark. That is the club, not
+/// a fault: no lift that keeps the colour can make black a light colour.
+public enum CrowdCloth {
+    public static func of(_ colour: SIMD4<Float>, floor: Float) -> SIMD4<Float> {
+        let v = max(colour.x, max(colour.y, colour.z))
+        guard v < floor else { return colour }
+        // Black has no hue or saturation to keep, so it lifts to neutral grey.
+        guard v > 1e-4 else { return SIMD4(floor, floor, floor, colour.w) }
+        let k = floor / v
+        return SIMD4(colour.x * k, colour.y * k, colour.z * k, colour.w)
+    }
+}
+
 public enum CrowdFacing {
     public static let kitForward = SIMD3<Float>(0, 0, 1)
 
