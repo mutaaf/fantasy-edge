@@ -814,15 +814,11 @@ public struct StadiumSpaceView<Trailing: View>: View {
             dockFacing = wanted
             return
         }
-        for id in ["drive", "trailing", "controls"] {
-            dockOpacity(id, 0, seconds: fade / 2)
-        }
+        for id in dockIDs { dockOpacity(id, 0, seconds: fade / 2) }
         try? await Task.sleep(for: .seconds(fade / 2))
         dockFacing = wanted
         try? await Task.sleep(for: .seconds(0.02))
-        for id in ["drive", "trailing", "controls"] {
-            dockOpacity(id, 1, seconds: fade / 2)
-        }
+        for id in dockIDs { dockOpacity(id, 1, seconds: fade / 2) }
     }
 
     /// The solved facing nearest the head, so the dock always lands somewhere
@@ -900,7 +896,28 @@ public struct StadiumSpaceView<Trailing: View>: View {
         ExperienceEvents.post(.seatChanging(to: id, fadeSeconds: reduceMotion ? 0 : fade))
         renderer.sit(id)
         applySeatFolds(id)
+        // The dock goes through the dark with the world. It is the wearer's,
+        // not the room's, so it could have stayed lit - but the dock is solved
+        // per seat, so at the dark middle of the change its panels move. Lit,
+        // they would be seen to jump; the fade exists to hide exactly that.
+        // The scorebug does not move and does not fade, so the score is never
+        // away during the change.
+        guard !reduceMotion else { return }
+        var half = fade
+        #if DEBUG
+        // The world's fade honours -stadiumFadeScale so a screenshot can land
+        // inside it; the dock's must stretch with it or the two come apart,
+        // which is the one thing a single gesture may not do.
+        if let k = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), k > 0 { half *= k }
+        #endif
+        Task {
+            for id in dockIDs { dockOpacity(id, 0, seconds: half) }
+            try? await Task.sleep(for: .seconds(half * 2))
+            for id in dockIDs { dockOpacity(id, 1, seconds: half) }
+        }
     }
+
+    private var dockIDs: [String] { ["drive", "trailing", "controls"] }
 
     /// Put the side panels and the controls where the dock says for this seat:
     /// on the rail while folded, in the gallery while open. A tab stands where

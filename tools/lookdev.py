@@ -48,6 +48,10 @@ SHOTS = {
     "td-moment": "touchdown",
     "redzone-trails": "redzone",
     "sideline-props": "early",
+    # The pick-six carries the ball across the goal line in front of the camera
+    # well, which is the only place a frame can hold a life-size ball.
+    "goal-line": "goalline",
+    "wall-boards": "early",
 }
 
 
@@ -64,12 +68,15 @@ def stage_replays() -> pathlib.Path:
 def post(port: int, body: dict) -> dict:
     req = urllib.request.Request(f"http://127.0.0.1:{port}/api/replay", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=10) as r:
+    with urllib.request.urlopen(req, timeout=90) as r:
         return json.load(r)
 
 
 def get(port: int, path: str) -> dict:
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as r:
+    # A cold scene costs about nine seconds to build - the dock is solved for
+    # every seat and every facing a recentre can land on - and more when the
+    # machine is busy. Ten seconds made the harness fail at the first request.
+    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=90) as r:
         return json.load(r)
 
 
@@ -118,6 +125,25 @@ def red_zone_second(port: int) -> int:
                 and len(s["drives"][s["currentDrive"]]["arcs"]) >= 5:
             return at
     return 1800
+
+
+def goal_line_second() -> int:
+    """The snap nearest the away goal line, where the camera well stands 13 yd
+    off. Nothing else in the fixtures rests the ball inside Broadcast's
+    life-size band: the pick-six's ball is reset upfield the instant it
+    scores, and the red-zone snap is at the other end."""
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    best = None
+    for play in rp._all_plays(summary):
+        line = (play.get("start") or {}).get("yardLine")
+        text = (play.get("text") or "").strip()
+        if line is None or line < 95 or not text or "Timeout" in text:
+            continue
+        at = int(rp.play_seconds(play, lengths))
+        if best is None or line > best[0]:
+            best = (line, at)
+    return best[1] if best else 1800
 
 
 def simctl(*args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -210,6 +236,7 @@ def main() -> None:
         post(args.port, {"action": "pause"})
         positions = {"touchdown": (play_second(args.play) if args.play else
                                    field_goal_second() if args.moment == "fieldGoal" else pick_six_second()),
+                     "goalline": goal_line_second(),
                      "redzone": red_zone_second(args.port)}
         positions["early"] = positions["redzone"] - 150
         if args.seat:

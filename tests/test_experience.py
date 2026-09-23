@@ -34,6 +34,46 @@ class Seats(unittest.TestCase):
             self.assertIn(sid, self.seats)
         self.assertIn(self.stadium["defaultSeat"], self.seats)
 
+    def test_a_seat_that_faces_away_from_the_play_is_not_offered(self):
+        """The wall preset exists so the LED boards can be shot square on. It
+        faces the wall, not the field, so the picker must not offer it as a
+        place to watch from - and the app must be the one filtering, since the
+        scene has to keep shipping it for the harness."""
+        wall = self.seats["wall"]
+        self.assertTrue(wall["lookdev"])
+        toward_field = wall["lookAt"]["z"] < wall["z"]
+        self.assertFalse(toward_field, "the wall preset is supposed to face the wall")
+        # Two seats exist for the harness rather than for a wearer: the wall,
+        # which faces away from the play, and the camera well, where the
+        # painted field fills the view and the dock has nowhere to stand.
+        self.assertEqual({sid for sid, s in self.seats.items() if s.get("lookdev")}, {"wall", "goalLine"})
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumChrome.swift").read_text()
+        self.assertIn("$0.lookdev != true", src, "the picker offers a seat that faces the wall")
+
+    def test_the_camera_well_is_the_one_seat_inside_the_balls_life_size_band(self):
+        """Broadcast holds the ball life size within 14 yd and eases to 2.6x by
+        45. Every seat before this one stood 25 yd or more from a ball on the
+        goal line, so the close half of that formula had never been in a frame.
+        The camera well is 12.2 yd from it, and off the centre line so the near
+        upright is not in the middle of the view."""
+        import math
+        length = sc.RULES["nfl"]["field"]["length"]
+        well = self.seats["goalLine"]
+
+        def to_goal(seat):
+            return min(math.hypot(seat["x"], seat["z"]), math.hypot(seat["x"] - length, seat["z"]))
+
+        self.assertLess(to_goal(well), 14.0, "the camera well is outside the life-size band")
+        self.assertGreater(to_goal(well), 8.0, "a wearer cannot stand on the end line")
+        self.assertTrue(well["x"] > length + 10 or well["x"] < -10,
+                        "the well must be behind an end line, off the playing surface")
+        self.assertGreater(abs(well["z"]), 3.0, "on the centre line the upright stands in the middle of the view")
+        # And it is the end the look-dev touchdown is scored in, or the ball is
+        # never close in a frame: the pick-six ends at yard line 100.
+        self.assertGreater(well["x"], length, "the fixtures score in the away end; the well must watch that one")
+        others = [to_goal(s) for sid, s in self.seats.items() if sid != "goalLine"]
+        self.assertGreater(min(others), 20.0, "another seat is now nearer a goal line than the well")
+
     def test_the_look_dev_shots_still_find_their_seats(self):
         src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumShots.swift").read_text()
         body = src.split("// SHOTS-BEGIN", 1)[1].split("// SHOTS-END", 1)[0]
@@ -93,13 +133,20 @@ class Layout(unittest.TestCase):
             }
         return self._views[seat["id"]]
 
+    @property
+    def wearer_seats(self):
+        """The seats the picker offers. The look-dev presets stand where a
+        wearer never would - facing a wall, or a yard behind an end line - and
+        the dock's promises are made to a wearer."""
+        return [s for s in self.seats if not s.get("lookdev")]
+
     def dock_places(self, facings=True):
         """Every (seat, panel, folded, slot, size) the app can draw, at the
         seat's own facing and - when `facings` - at every facing the dock can
         be recentred to. A slot's yaw is measured from the facing, so the
         caller shifts it by `self.facing` to ask the stadium about it."""
         sizes = self.layout["panelSizes"]
-        for seat in self.seats:
+        for seat in self.wearer_seats:
             per = self.layout["perSeat"][seat["id"]]
             self.assertEqual(set(per) - {"scorebugHidden", "rail", "recentre"},
                              {"drive", "trailing", "controls"})
@@ -316,7 +363,7 @@ class Layout(unittest.TestCase):
         """The dock finds room for every panel, open, from all seven presets -
         none has to start folded for want of a place. Guards the search's
         reach as well as its rules."""
-        for seat in self.seats:
+        for seat in self.wearer_seats:
             per = self.layout["perSeat"][seat["id"]]
             for facing, layout in per["recentre"].items():
                 for name in ("drive", "trailing", "controls"):
@@ -480,7 +527,7 @@ class Layout(unittest.TestCase):
         """The gesture is its own undo: recentre while facing where the seat
         faces and the dock lands exactly where it started, so a wearer can
         always get back what they had."""
-        for seat in self.seats:
+        for seat in self.wearer_seats:
             per = self.layout["perSeat"][seat["id"]]
             home = {k: v for k, v in per.items() if k != "recentre"}
             with self.subTest(seat=seat["id"]):
@@ -490,7 +537,7 @@ class Layout(unittest.TestCase):
         """Each facing starts from the one beside it, so the dock holds its
         arrangement across a recentre instead of rearranging itself: the rail
         stays one line, and the side panels stay a mirrored pair."""
-        for seat in self.seats:
+        for seat in self.wearer_seats:
             for facing, layout in self.layout["perSeat"][seat["id"]]["recentre"].items():
                 with self.subTest(seat=seat["id"], facing=facing):
                     tabs = [layout[n]["tab"] for n in ("drive", "controls", "trailing")]
@@ -540,6 +587,24 @@ class Layout(unittest.TestCase):
         self.assertGreaterEqual(base["rimOpacity"], 0.8)
         self.assertGreaterEqual(base["edgeOpacity"], 0.8)
         self.assertLessEqual(base["marginScale"], 1.02, "a wide margin is table, not jewel")
+
+
+    def test_the_dock_goes_through_the_dark_with_the_world(self):
+        """Decided in round 8. The dock is the wearer's rather than the room's,
+        so it could have stayed lit through a seat change - but it is solved
+        per seat, so at the dark middle of the change its panels move. Lit,
+        they would be seen to jump, which is the one thing the fade is for.
+        The scorebug does not move, so it does not fade: the score is never
+        away while the world is dark. Reduce motion places, as everywhere."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Experience/StadiumViews.swift").read_text()
+        body = src.split("private func sit(", 1)[1].split("\n    }\n", 1)[0]
+        self.assertIn("dockOpacity", body, "the dock stays lit while its panels move")
+        self.assertIn("reduceMotion", body, "reduce motion must not animate the change")
+        # The set that fades is the dock's, and the scorebug is not in it.
+        ids = src.split("private var dockIDs", 1)[1].split("\n", 1)[0]
+        for name in ("drive", "trailing", "controls"):
+            self.assertIn(name, ids)
+        self.assertNotIn("scorebug", ids, "the scorebug does not move, so it does not fade")
 
 
 if __name__ == "__main__":

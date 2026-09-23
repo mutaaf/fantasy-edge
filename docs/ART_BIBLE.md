@@ -308,6 +308,8 @@ python3 tools/lookdev.py --device <your simulator udid> --out .work/shots/<actor
 | `td-moment` | club seat, turned 30° toward the scoring end | the Bears pick-six at 1x (`--moment fieldGoal` for the game's first made kick) | Moments, Crowd, Lighting, Broadcast, Audio |
 | `redzone-trails` | club seat, turned toward the red zone | red-zone snap | Broadcast, Field |
 | `sideline-props` | behind the home end zone | a normal snap | Sideline, Field |
+| `goal-line` | the camera well behind the away end line, 12 yd from the goal line | the snap on the 1-yard line, 13 yd from the well | Broadcast (the ball at life size), Field, Sideline |
+| `wall-boards` | the apron at the home 20, square on to the wall 2.6 yd away | a normal snap | Sideline (the LED boards up close), Bowl |
 
 The seats are the scene's own (`presentation.stadium.seats`). The club seat is the
 50-yard line in the lower bowl, 24 yd back from the sideline; it is the seat every
