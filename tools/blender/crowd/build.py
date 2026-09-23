@@ -40,6 +40,12 @@ OUT = common.OUT
 # Fewer, better near meshes (round 4): 14 x 3000 + 24 x 900 + 130 x 250 = 96.1k, inside the
 # 100k the crowd keeps for meshes beside its 50k of cards (tests/test_crowd_kit.py).
 LOD0_TRIS, LOD1_TRIS, LOD2_TRIS = 3000, 900, 250
+# Round 10: a fourth tier, because the mesh circle is bought in fans and 250 is the price of
+# one. At the club seat 183 mesh fans reach 7.6 yd and everyone beyond is a flat card, which
+# read through among solid fans. A tier at this price roughly trebles the fans the same
+# triangles buy; what it gives up is the last of the silhouette's detail, which at 8-13 yd is
+# a head, two shoulders and whether the arms are up.
+LOD3_TRIS = 120
 MESH_ATLAS = 2048                    # baked at 2x, shipped at this size
 MESH_COLS, MESH_ROWS = 6, 4          # 24 cells, 341 x 512 px each
 IMP_CELL = (64, 128)                 # px per impostor cell
@@ -69,7 +75,7 @@ BAKE_MARGIN = 40 * BAKE_SCALE
 WELD_PARTS = ("hair", "prop", "hat", "scarf")
 # A sign's lettering grid is a 5.8 cm lattice and a foam finger's mitt is 26 cm across: at LOD2
 # the weld has to be coarse enough to swallow both, or they set the floor for the whole ring.
-WELD = {1: 0.025, 2: 0.09}
+WELD = {1: 0.025, 2: 0.09, 3: 0.20}
 AO_STRENGTH = 0.6
 AO_WARM = (0.62, 0.42, 0.36)
 
@@ -506,8 +512,16 @@ def build_meshes(cast, mpfb=True):
         weld_parts(lod2, f["id"], WELD_PARTS, WELD[2])
         decimate(lod2, LOD2_TRIS)
         soften(lod2)
-        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "rig": rig, "cell": cell, "info": info, "hi": hi})
-        log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, lod2 {R.triangles(lod2)} tris")
+        lod3 = lod2.copy(); lod3.data = lod2.data.copy(); lod3.name = f"{f['id']}_lod3"; lod3.data.name = lod3.name
+        bpy.context.scene.collection.objects.link(lod3)
+        lod3.parent = rig
+        weld_parts(lod3, f["id"], WELD_PARTS, WELD[3])
+        decimate(lod3, LOD3_TRIS)
+        soften(lod3)
+        built.append({"f": f, "mesh": mesh, "lod1": lod1, "lod2": lod2, "lod3": lod3, "rig": rig,
+                      "cell": cell, "info": info, "hi": hi})
+        log(f"{f['id']}: lod0 {R.triangles(mesh)} tris, lod1 {R.triangles(lod1)} tris, "
+            f"lod2 {R.triangles(lod2)} tris, lod3 {R.triangles(lod3)} tris")
     # Warm occlusion: cavities go a little red-brown, which reads as skin on
     # skin and as fold shadow on cloth, rather than grey dirt.
     W, H = albedo.size
@@ -527,7 +541,7 @@ def build_meshes(cast, mpfb=True):
 def finalise_materials(built, albedo):
     mat = runtime_material("crowd_fan", albedo)
     for b in built:
-        for ob in (b["mesh"], b["lod1"], b["lod2"]):
+        for ob in (b["mesh"], b["lod1"], b["lod2"], b["lod3"]):
             ob.data.materials.clear()
             ob.data.materials.append(mat)
             for p in ob.data.polygons:
@@ -628,7 +642,7 @@ def export_pose_meshes(built, lod, poses=None):
     frozen = []
     for b in built:
         f, rig = b["f"], b["rig"]
-        source = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"]}[lod]
+        source = {0: b["mesh"], 1: b["lod1"], 2: b["lod2"], 3: b["lod3"]}[lod]
         rig.animation_data.action = None
         for pose in poses:
             P.apply_pose(rig, pose, f["height"], built.index(b))
@@ -767,6 +781,7 @@ def render_impostors(built, albedo, mask):
                 b["rig"].rotation_euler = (0, 0, th)
                 b["lod1"].hide_render = True
                 b["lod2"].hide_render = True
+                b["lod3"].hide_render = True
                 b["mesh"].hide_render = False
             layers = {}
             # Each fan is rendered twice a view: as the left member of its own
@@ -859,6 +874,7 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast, forward=None
             "lod0": {"mesh": f["id"], "triangles": R.triangles(b["mesh"])},
             "lod1": {"mesh": f"{f['id']}_lod1", "triangles": R.triangles(b["lod1"])},
             "lod2": {"mesh": f"{f['id']}_lod2", "triangles": R.triangles(b["lod2"])},
+            "lod3": {"mesh": f"{f['id']}_lod3", "triangles": R.triangles(b["lod3"])},
             "uvCell": [round(x0, 5), round(y0, 5), round(w, 5), round(h, 5)],
             "impostorBlock": [(i % layout["per_row"]) * layout["block_px"][0], (i // layout["per_row"]) * layout["block_px"][1]],
             "impostorMate": built[pair_mate(i, len(built))]["f"]["id"],
@@ -911,8 +927,10 @@ def write_manifest(built, clips, lod1_tris, impostor, layout, cast, forward=None
         "lod0": {"model": "lod0_poses.usdz", "gltf": "lod0_poses.glb", "meshName": "<fanId>_lod0_<pose>"},
         "lod1": {"model": "lod1_poses.usdz", "gltf": "lod1_poses.glb", "meshName": "<fanId>_lod1_<pose>"},
         "lod2": {"model": "lod2_poses.usdz", "gltf": "lod2_poses.glb", "meshName": "<fanId>_lod2_<pose>"},
+        "lod3": {"model": "lod3_poses.usdz", "gltf": "lod3_poses.glb", "meshName": "<fanId>_lod3_<pose>"},
         "poses": NEAR_POSES},
         "lod": {"lod0Triangles": LOD0_TRIS, "lod1Triangles": LOD1_TRIS,
+                "lod2Triangles": LOD2_TRIS, "lod3Triangles": LOD3_TRIS,
                 "suggestedRings": {"lod0MaxMetres": 7, "lod1MaxMetres": 16, "impostorBeyondMetres": 16}},
     }
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=1))
@@ -939,6 +957,7 @@ def main():
     lod1_tris = export_pose_meshes(built, 1)
     lod0_tris = export_pose_meshes(built, 0)
     export_pose_meshes(built, 2)
+    export_pose_meshes(built, 3)
     impostor, layout = ({}, {"per_row": 8, "block_px": [0, 0], "atlas_px": [0, 0]})
     if stage in ("all", "impostors"):
         impostor, layout = render_impostors(built, albedo, mask)
@@ -946,7 +965,7 @@ def main():
         pad_atlas.pad_kit(OUT)
     variation_map(len(cast))
     forward = {}
-    for lod in (0, 1, 2):
+    for lod in (0, 1, 2, 3):
         for ext in ("usdz", "glb"):
             axis, offsets = measured_forward(OUT / f"lod{lod}_poses.{ext}")
             forward[f"lod{lod}.{ext}"] = axis

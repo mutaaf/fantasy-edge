@@ -48,11 +48,13 @@ extension SceneSpec.Look {
         public let lod0Yards: Double
         public let lod1Yards: Double
         public let lod2Yards: Double
+        public let lod3Yards: Double
         public let ditherYards: Double
         public let minCardYards: Double
         public let lod0Max: Int
         public let lod1Max: Int
         public let lod2Max: Int
+        public let lod3Max: Int
     }
 
     /// How a fan sits in Bowl's chair (visual.crowd.chair).

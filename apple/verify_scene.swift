@@ -342,7 +342,7 @@ struct VerifyScene {
         if let blob = FileManager.default.contents(atPath: "assets/actors/crowd/manifest.json"),
            let kit = try? JSONDecoder().decode(KitManifest.self, from: blob) {
             let files = (kit.forward ?? [:]).filter { $0.key != "about" }
-            expect(files.count == 6, "the crowd kit's manifest should record the measured forward of all six pose files, has \(files.keys.sorted())")
+            expect(files.count == 8, "the crowd kit's manifest should record the measured forward of all eight pose files, has \(files.keys.sorted())")
             for (file, axis) in files {
                 expect(axis == "+Z", "the crowd kit's \(file) faces \(axis): CrowdFacing turns +Z onto the seat, so those fans sit backwards")
             }

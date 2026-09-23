@@ -45,7 +45,7 @@ Club colour is never baked in. Clothing that takes a club colour carries a
 | File | What | Budget |
 |---|---|---|
 | `fanNN.usdz` / `.glb` | skinned LOD0 (3000 tris) + LOD1 (900 tris), MakeHuman's rig, 10 clips | per fan |
-| `lod{0,1,2}_poses.usdz` / `.glb` | every fan frozen in each of the 9 near poses, static, shading normals transferred from the full-resolution body | 29 / 10 / 3.6 MB |
+| `lod{0,1,2,3}_poses.usdz` / `.glb` | every fan frozen in each of the 9 near poses, static, shading normals transferred from the full-resolution body | 29 / 10 / 3.6 / 2 MB |
 | `fan_albedo.png` | mesh UV atlas, 2048², 6 x 4 fan cells, faces at 1.75x texel density | 16 MB RGBA in GPU |
 | `fan_mask.png` | tint mask, 2048² (full size: a half mask left white wedges on near fans) | composed on load, not kept |
 | `impostor_albedo.png` | 2560x2304: 8 fan blocks per row, 5 views x 6 poses, 64x128 px cells, each cell two neighbours at 0.503 m seat pitch | 23.6 MB RGBA |
@@ -78,15 +78,18 @@ Fans move by group, never per fan on the CPU (docs/ART_BIBLE.md):
 
 - **Near** (a few rows around the wearer): LOD0 pose meshes merged per group. A
   group swaps which merged pose mesh it shows.
-- **Mid** (to ~12 yd): LOD1 pose meshes, the same way.
+- **Mid** (to ~12 yd): LOD1, then LOD2, then LOD3 pose meshes, the same way. The
+  radius of that circle is bought in fans, not in detail: LOD3 costs 120 triangles
+  against LOD2's 250, so the same budget reaches about 40% further, and what it
+  gives up at 8-13 yd is a silhouette nobody reads that closely.
 - **Far**: one quad per pair of neighbouring seats, cut from the view the pair
   is seen at, merged per section-aligned slice of the bowl in two interleaved
   variants. A group changes pose by moving its material's texture transform
   down one atlas row, and its edge is a section's aisle.
 
-At the actor's default rings (16 LOD0, 55 LOD1, the rest paired cards) a
-sold-out bowl of about 50k seats draws roughly 24k + 36k tris of mesh plus
-2 tris per pair: about 110k tris in 34 draw parts.
+At the actor's rings (14 LOD0, 24 LOD1, 40 LOD2, 286 LOD3, the rest paired
+cards) a sold-out bowl of about 50k seats draws 108k tris of mesh plus 2 tris
+per pair of far seats - see `docs/actors/crowd.md` for what that measures at.
 
 Axes: both exports are +Y up with fans facing +Z, metres, origin on the floor
 under the pelvis. Seated, the pelvis sits 0.30 m behind and 0.52 m above the
