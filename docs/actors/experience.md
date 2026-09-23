@@ -313,3 +313,49 @@ Round 5 left one defect and two ways to fix it; the director chose the gesture o
 - **The hint fires on head yaw**, so a wearer who never turns far never sees it; that is the intent, but it means the gesture is undiscovered until it is needed.
 - **The press box** still draws its dock at ×0.47 inside the glass, unchanged, and still wants a device.
 
+## Round 7: the table as an object (`docs/lookdev/experience-r7/`)
+
+The dock is settled, so this round is the rest of what Experience owns, judged against the bar rather than against the last frame.
+
+### The tabletop: a mirror, not a plinth
+
+**Verdict before:** the cutaway works - the near sideline is left out and you do look into the bowl - but the plinth failed the bar. The palette asks for near-black stone (`baseplate` is `#101216`) and the frame showed a **light grey slab**, wider than the model needed, with a rim you had to look for. On a table in a beige room the plinth was the brightest thing in the volume, which is the opposite of a jewel on a lit plinth.
+
+**Cause, measured rather than guessed:** the plinth drew at `metallic: 0.55`, `roughness: 0.28`. A polished metal takes its colour from what it reflects, so in a warm room it reads as the room, whatever the palette says. Two shots either side of one change settle it: at metallic 0.08 and roughness 0.22 it was still light (`after/s-tabletop.png`), because a smooth dielectric still carries the room's whole specular lobe; at **metallic 0, roughness 0.62** it is stone (`after-matte/s-tabletop.png`).
+
+**What changed** (all `visual.experience.baseplate`, all now tokens rather than numbers in Swift):
+- `topRoughness` 0.62, `topMetallic` 0 - stone, not chrome. The band and bevel likewise, the bevel keeping a little sheen (0.38 / 0.05) so the chamfer still catches the room.
+- `marginScale` 1.03 → 1.015: the plinth hugs the model instead of leaving a ring of grey table.
+- `rimOpacity` 0.6 → 0.85 and `rimRadiusYards` 0.9 → 0.7: a thinner, brighter lit edge.
+- `edgeOpacity` 0.55 → 0.85: the clubs' edge light reads at a glance.
+
+**Verdict after:** the field and the lit ribbon are the brightest things on the table, the bowl reads as a miniature you lean into, and the club's blue edge names the home side. At the second distance (`after/tabletop-far/`, `-tabletopScale 0.62`) it holds: smaller, still a jewel. A test keeps the plinth a dielectric, so it cannot quietly become a mirror again.
+
+### The seat change, the ramp, the controls
+
+- **Seat change:** holds, including with the changeover the red-zone work added. `after/seat-change/s-crowd-closeup-seatchange.png` is a frame from inside the fade (`-stadiumFadeScale 10 -stadiumSitAfter 5:upper`, both new debug arguments): the world is dimmed mid-fade, the wearer has not moved, and the dock and scorebug stay lit above it, because they hang off the wearer rather than the world. The seat fade now honours `-stadiumFadeScale`, as the changeover already did.
+- **The ramp:** `StadiumPassage.leave` reopens the windows before dismissing the space, and `spaceDisappeared` does the same when the Crown closes it instead, so the way out is covered from both directions. `-stadiumLeaveAfter` presses Leave without a pinch for a capture.
+- **The controls:** unchanged this round. Glanceable, in reach, inside comfort, and now the pill also recentres (round 6).
+
+### The transparent fans are Crowd's
+
+Not a guess, and not mine:
+1. They appear in **Crowd's own frame** (`docs/lookdev/crowd-r7/crowd-closeup.png`), which has no dock in it.
+2. At full resolution (`crowd-cards-near-crop.png`) the see-through figures are **flat billboards** standing among solid mesh fans: the field shows through their torsos and arms, and their silhouettes are photographic rather than geometric. They are impostor cards, drawn in the front rows.
+3. Only the card material is alpha-tested (`CrowdActor` sets `opacityThreshold` on cards and nothing on mesh fans, whose atlas is RGB and forced opaque at composition), so cards are the only fans that can read through.
+4. `visual.crowd.rings` says `minCardYards: 5.5` - never a card within five and a half yards - while `lod0Max`/`lod1Max`/`lod2Max` cap the mesh fans at 14/24/130. Looking along a row at the club seat there are more fans inside 13 yd than those caps allow, so the overflow becomes cards **inside the distance floor**. The count caps beat the distance rule.
+5. Experience's only opacity writes are on the world (seat change, arrival dim) and on dock attachments; both are all-or-nothing and would dim the stands and field too.
+
+**Routed to Crowd** with those five points. The fix is theirs: either the ring assignment must honour `minCardYards` before it honours the caps, or the caps must rise to cover a row seen end-on.
+
+### Budget
+
+Unchanged where it matters: Experience is **0 draw parts and 0 triangles in the stadium**; on the table it is **6 parts and 2,856 triangles** of the shared **67 parts / 23,778 triangles** (targets 110 and 80k), and this round moved none of it - the plinth's geometry is the same, only its material. Stadium total this round: 101 parts, 225–227k triangles, ~67 MB.
+
+### Worst thing left
+
+- **The press box** still draws its dock at ×0.47 inside the glass and has never been judged on a device (`after/seat-pressBox/`). Unchanged, and still the one thing a simulator cannot answer.
+- **The recentre lands on a 15° bucket**, so it can sit up to 7.5° off where the wearer is looking.
+- **The win-probability horizon on the table** reads as a streak floating behind the model rather than as part of it (`after/s-tabletop.png`). It is inside the volume and inside its rails, so it obeys its contract; it is Broadcast's to judge whether it belongs on the table at all.
+- **During a seat change the panels stay lit while the world fades.** It is defensible - they are the wearer's, not the room's - but nobody has decided it, and the mid-fade frame is the first time it has been looked at.
+

@@ -285,7 +285,9 @@ public struct TabletopView: View {
     @State private var holder = Entity()
     @State private var gate = ArrivalGate()
     @State private var gateClock: EventSubscription?
-    @State private var scale: Float = 1
+    /// `-tabletopScale 0.6`: a shot's second distance, since the simulator's
+    /// camera cannot move and the model is scaled by pinch in use.
+    @State private var scale: Float = Float(StadiumShots.argument("-tabletopScale").flatMap(Double.init) ?? 1)
     @State private var gestureScale: Float?
     @State private var yaw: Float = 0
     @State private var gestureYaw: Float?
@@ -775,6 +777,18 @@ public struct StadiumSpaceView<Trailing: View>: View {
             // have landed on: -stadiumRecentre <degrees>.
             if let forced = StadiumShots.argument("-stadiumRecentre"), let yaw = Double(forced) {
                 dockFacing = nearestFacing(yaw, layout?.perSeat?[renderer.seat(spec).id])
+            }
+            // `-stadiumSitAfter 3:upper`: a shot cannot work the picker, so it
+            // may ask for a seat change and, with -stadiumFadeScale, catch it
+            // mid-fade.
+            if let arg = StadiumShots.argument("-stadiumSitAfter") {
+                let parts = arg.split(separator: ":").map(String.init)
+                if parts.count == 2, let after = Double(parts[0]) {
+                    Task {
+                        try? await Task.sleep(for: .seconds(after))
+                        sit(parts[1])
+                    }
+                }
             }
             if ProcessInfo.processInfo.arguments.contains("-stadiumPicker") { pickerOpen = true }
             if ProcessInfo.processInfo.arguments.contains("-stadiumUnfold") { driveFolded = false; trailingFolded = false }

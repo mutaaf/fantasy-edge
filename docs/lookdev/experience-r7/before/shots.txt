@@ -1,0 +1,3 @@
+tabletop: replay at 390s (redzone) -> docs/lookdev/experience-r7/before/tabletop.png
+bowl-wide: replay at 240s (early) -> docs/lookdev/experience-r7/before/bowl-wide.png
+crowd-closeup: replay at 240s (early) -> docs/lookdev/experience-r7/before/crowd-closeup.png

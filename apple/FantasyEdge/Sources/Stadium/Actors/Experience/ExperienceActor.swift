@@ -44,7 +44,13 @@ final class ExperienceActor: StadiumActor {
             if let c { place(c) }
             return
         }
-        fade = (0, max(0.1, c.look.experience.camera.seatFadeSeconds * 2), false, id)
+        var seconds = max(0.1, c.look.experience.camera.seatFadeSeconds * 2)
+        #if DEBUG
+        // The same stretch the changeover honours, so a screenshot can land
+        // inside a seat change too (`-stadiumFadeScale 8`).
+        if let k = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), k > 0 { seconds *= k }
+        #endif
+        fade = (0, seconds, false, id)
     }
 
     /// Leave one game for another: fade the bowl down, swap the clubs while
@@ -193,10 +199,10 @@ final class ExperienceActor: StadiumActor {
         }
         rim.append(rim[0])
         let stone = s.palette["baseplate"] ?? "#101216"
-        root.addChild(top.entity("baseplate.top", StadiumLook.solid(stone, roughness: 0.28, metallic: 0.55, cull: false)))
-        root.addChild(band.entity("baseplate.band", StadiumLook.solid(stone, roughness: 0.4, metallic: 0.6, cull: false)))
+        root.addChild(top.entity("baseplate.top", StadiumLook.solid(stone, roughness: P.topRoughness ?? 0.22, metallic: P.topMetallic ?? 0.08, cull: false)))
+        root.addChild(band.entity("baseplate.band", StadiumLook.solid(stone, roughness: P.bandRoughness ?? 0.45, metallic: P.bandMetallic ?? 0.05, cull: false)))
         if !chamfer.isEmpty {
-            root.addChild(chamfer.entity("baseplate.bevel", StadiumLook.solid(stone, roughness: 0.18, metallic: 0.75, cull: false)))
+            root.addChild(chamfer.entity("baseplate.bevel", StadiumLook.solid(stone, roughness: P.bevelRoughness ?? 0.16, metallic: P.bevelMetallic ?? 0.15, cull: false)))
         }
         var ring = MeshBuilder()
         ring.tube(rim, radius: Float(P.rimRadiusYards), sides: 6)
