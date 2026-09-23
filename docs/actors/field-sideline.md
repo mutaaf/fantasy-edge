@@ -574,3 +574,65 @@ through the sheen mix (a parameter the tokens set and the graph ignores is the
 same bug with a passing test); the patch reaches past the frustum; and the far
 edge fade is a real fraction of the depth. One of them caught a reversed
 assertion of mine before the first build.
+
+## Round 7: the boards were never the problem, the wall in front of them was
+
+Before and after: `docs/lookdev/sideline-r7/`.
+
+**Both diagnoses were wrong, and a third was true.** The brief offered two: that
+`StadiumText.boards` returns nil and every frame has shown the solid-colour
+fallback (Experience's), or that one strip is stretched across the whole wall so
+a close seat sees one slice (the director's).
+
+- The texture path has always been taken. `buildBoards` now says so:
+  `[stadium] sideline: boards 1097x128 repeating every 12 yd`, and the fallback
+  logs an error if it is ever hit. It never is.
+- The UVs already repeated - `u0 = run / panelYards` - so nothing was stretched.
+- What actually happened: **Bowl builds the wall from the same `bowl.wall`
+  spec, and the boards were laid exactly on its face.** Coincident surfaces are
+  won by whoever draws last, and it was never Sideline. Proof:
+  `-bowlSkip stands` at the wall seat shows the boards, content and all, while
+  the same frame with the bowl present shows a flat band
+  (`.work/nostands` against `before/s-wall-boards.png`).
+
+The fix is one number: `visual.sideline.boards.proudYards` 0.06, so the ribbon
+hangs off the wall's face the way a real one is mounted on it. No draw part.
+
+**What the boards show, and from where.** One repeat carries what a ribbon
+carries: away chip and score, home chip and score, the clock and period, the
+down and distance, and RED ZONE when the scene says so. Every value comes from
+`s.status` - which is the *shown* status, because `StadiumRenderer` writes
+`shownStatus` into the spec it hands each actor. So the boards cannot announce
+a score before the ball lands, by the same mechanism as the ribbon and the video
+board, and `apply` redraws the strip only when that status changes.
+
+**Repeat length and resolution, chosen from distance rather than by eye.**
+
+- **12 yd**, halved from 24. The wall seat is 2.8 yd out and sees about 5.6 yd
+  of wall, so at 24 yd it could never see a whole message; at 12 it sees nearly
+  half of one, which is what you see from that distance in life. From the upper
+  deck a repeat subtends about 5.7°, so the wall reads as a rhythm of chips
+  rather than one long smear.
+- **1097 x 128**, from `heightPixels` 128 with the width following `panelYards`
+  over the wall's 1.4 yd height, so the texels are square: **91 texels per yard**
+  both ways, against 42.7 before. At the wall seat that is a 1 cm texel, about
+  3.5 review-image pixels - text with an edge, not a blur.
+- **Texture memory:** 1097x128 RGBA is 0.56 MB, 0.75 MB with mips, against
+  0.34 MB before: **about +0.4 MB**, inside the rounding of the stadium's ~67 MB
+  of 300.
+
+**Budget:** Sideline **15 of 15 draw parts** and 14,844-14,972 triangles of 21k,
+both unchanged - the boards already owned their material, so this was texture
+and one offset.
+
+**Worst thing left, per shot**
+
+- `wall-boards` - the strip is drawn at one brightness, so it reads as a lit
+  print rather than an LED array; up this close the bar's "subtle pixel grid" is
+  absent, and it is the next thing to add now the content is there.
+- `bowl-wide` - the repeat reads correctly from the far side and the still shows
+  no shimmer, but aliasing is a motion artefact and a still cannot settle it;
+  judge it on the headset while panning.
+- `field-level` - the boards are edge-on here and nearly invisible, which is
+  honest, but it means this framing cannot judge them.
+- `sideline-props` - Sideline's props are unchanged this round and do not fault.

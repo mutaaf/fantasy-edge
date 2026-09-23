@@ -64,23 +64,57 @@ enum StadiumText {
         try? tex.replace(withImage: img, options: .init(semantic: .color))
     }
 
-    /// The LED boards along the front wall: each club's colours and name, in turn.
-    static func boards(_ s: SceneSpec) -> TextureResource? {
-        texture(image(width: 1024, height: 64) { ctx, size in
-            let half = size.width / 2
-            for (i, t) in [s.teams.home, s.teams.away].enumerated() {
-                let rect = CGRect(x: CGFloat(i) * half, y: 0, width: half, height: size.height)
-                UIColor(white: 0.03, alpha: 1).setFill()
-                ctx.fill(rect)
+    /// The LED boards along the front wall. One repeat carries what a real
+    /// ribbon carries - both clubs with their scores, the clock, and the down
+    /// and distance - and the wall tiles it every `visual.sideline.boards
+    /// .panelYards`.
+    ///
+    /// The score is `s.status`, which is the status the stadium is *showing*:
+    /// `StadiumRenderer` writes `shownStatus` into the spec it hands every
+    /// actor, so these boards cannot announce a touchdown before the ball has
+    /// landed any more than the ribbon or the video board can.
+    static func boardsImage(_ s: SceneSpec, look: SceneSpec.Look) -> CGImage? {
+        let B = look.sideline.boards
+        let h = B.heightPixels
+        // Square-ish texels: the panel is `panelYards` long and the wall
+        // `wall.height` tall, so the width follows that ratio.
+        let rise = max(0.1, s.bowl.wall?.height ?? 1.4)
+        let w = Int((Double(h) * B.panelYards / rise).rounded())
+        return image(width: max(256, w), height: h) { ctx, size in
+            UIColor(white: 0.02, alpha: 1).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            let ink = UIColor(white: 0.94, alpha: 1)
+            let font = UIFont.systemFont(ofSize: size.height * 0.5, weight: .heavy)
+            var x = size.height * 0.5
+            func chip(_ t: SceneSpec.Team, _ score: Double) {
+                let rect = CGRect(x: x, y: size.height * 0.2, width: size.height * 1.5, height: size.height * 0.6)
                 StadiumLook.color(t.chip).setFill()
-                ctx.fill(CGRect(x: rect.minX, y: 0, width: half * 0.12, height: size.height))
-                ctx.fill(CGRect(x: rect.maxX - half * 0.04, y: 0, width: half * 0.04, height: size.height))
-                let label = NSAttributedString(string: t.name.uppercased(), attributes: [
-                    .font: UIFont.systemFont(ofSize: size.height * 0.52, weight: .heavy),
-                    .foregroundColor: UIColor(white: 0.92, alpha: 1), .kern: 6])
-                let ls = label.size()
-                label.draw(at: CGPoint(x: rect.minX + half * 0.18, y: (size.height - ls.height) / 2))
+                UIBezierPath(roundedRect: rect, cornerRadius: size.height * 0.08).fill()
+                let abbr = NSAttributedString(string: t.abbr, attributes: [
+                    .font: UIFont.systemFont(ofSize: size.height * 0.4, weight: .black), .foregroundColor: UIColor.white])
+                let ab = abbr.size()
+                abbr.draw(at: CGPoint(x: rect.midX - ab.width / 2, y: rect.midY - ab.height / 2))
+                x = rect.maxX + size.height * 0.25
+                let n = NSAttributedString(string: "\(Int(score))", attributes: [.font: font, .foregroundColor: ink])
+                n.draw(at: CGPoint(x: x, y: (size.height - n.size().height) / 2))
+                x += n.size().width + size.height * 0.8
             }
-        })
+            chip(s.teams.away, s.status.awayScore)
+            chip(s.teams.home, s.status.homeScore)
+            var tail = [s.status.label, s.status.downDistance].filter { !$0.isEmpty }.joined(separator: "   ·   ")
+            if s.status.redZone { tail += "   ·   RED ZONE" }
+            let t = NSAttributedString(string: tail.uppercased(), attributes: [
+                .font: UIFont.systemFont(ofSize: size.height * 0.42, weight: .bold), .foregroundColor: ink])
+            t.draw(at: CGPoint(x: x, y: (size.height - t.size().height) / 2))
+        }
+    }
+
+    static func boards(_ s: SceneSpec, look: SceneSpec.Look) -> TextureResource? {
+        boardsImage(s, look: look).flatMap { texture($0) }
+    }
+
+    static func updateBoards(_ tex: TextureResource, _ s: SceneSpec, look: SceneSpec.Look) {
+        guard let img = boardsImage(s, look: look) else { return }
+        try? tex.replace(withImage: img, options: .init(semantic: .color))
     }
 }
