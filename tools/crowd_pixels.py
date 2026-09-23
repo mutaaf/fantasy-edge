@@ -125,15 +125,67 @@ def shares(path: pathlib.Path, home: str, away: str, top: float, bottom: float, 
             "ambiguous": counts["ambiguous"] / total if total else 0.0}
 
 
+def structure(path: pathlib.Path, box: tuple[float, float, float, float]) -> dict:
+    """Whether a stand reads as a crowd or as one shape, in 8-bit luma levels.
+
+    Round 9 had to choose the value a club colour is lifted to, and "it looks
+    flat" is not a number. Two are measured inside a fixed window on the far
+    stand, so the same window can be read across a sweep:
+
+    `detail` - the mean absolute difference between neighbouring pixels along a
+    row. A single dark shape has nothing between its pixels; people sitting in
+    rows have an edge every few pixels, so this is the one that collapses. One
+    8-bit level is about the smallest step an eye finds in a dark field, so
+    `detail` near 1 is a stand with nothing in it.
+
+    `spread` - p90 minus p10, the range the window offers at all. It falls with
+    the mean, which is why it cannot be read alone: a dark stand is allowed to
+    be dark. What it may not be is featureless.
+
+    Nothing is excluded by brightness: excluding dark pixels would throw away
+    exactly the case being measured.
+    """
+    w, h, rows = read_png(path)
+    x0, y0, x1, y1 = int(w * box[0]), int(h * box[1]), int(w * box[2]), int(h * box[3])
+    lumas, diffs = [], []
+    for y in range(y0, y1):
+        row = rows[y]
+        last = None
+        for x in range(x0, x1):
+            r, g, b = row[x * 3], row[x * 3 + 1], row[x * 3 + 2]
+            l = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            lumas.append(l)
+            if last is not None:
+                diffs.append(abs(l - last))
+            last = l
+    lumas.sort()
+    n = len(lumas)
+    return {"file": path.name, "pixels": n,
+            "mean": sum(lumas) / n, "p10": lumas[n // 10], "p90": lumas[n * 9 // 10],
+            "spread": lumas[n * 9 // 10] - lumas[n // 10],
+            "detail": sum(diffs) / len(diffs)}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("frames", nargs="+", type=pathlib.Path)
-    ap.add_argument("--home", required=True, help="the home crowd chip, #rrggbb (scene bowl.crowd.home)")
-    ap.add_argument("--away", required=True, help="the away crowd chip, #rrggbb")
+    ap.add_argument("--structure", nargs=4, type=float, metavar=("X0", "Y0", "X1", "Y1"),
+                    help="measure how much a stand reads as a crowd inside this window "
+                         "(fractions of the frame) instead of counting supports")
+    ap.add_argument("--home", help="the home crowd chip, #rrggbb (scene bowl.crowd.home)")
+    ap.add_argument("--away", help="the away crowd chip, #rrggbb")
     ap.add_argument("--top", type=float, default=0.12, help="ignore above this fraction of the frame (sky)")
     ap.add_argument("--bottom", type=float, default=0.72, help="ignore below this (field, near rows, controls)")
     ap.add_argument("--gap", type=float, default=0.02, help="hue gap under which a pixel belongs to neither club")
     args = ap.parse_args()
+    if args.structure:
+        for frame in args.frames:
+            s = structure(frame, tuple(args.structure))
+            print(f"{s['file']}: detail {s['detail']:.2f} levels, spread {s['spread']:.1f} "
+                  f"(p10 {s['p10']:.1f}, mean {s['mean']:.1f}, p90 {s['p90']:.1f}) over {s['pixels']} pixels")
+        return
+    if not (args.home and args.away):
+        raise SystemExit("--home and --away are needed to count supports")
     for frame in args.frames:
         s = shares(frame, args.home, args.away, args.top, args.bottom, args.gap)
         print(f"{s['file']}: visiting {s['away'] * 100:.1f}% of attributable stand pixels "

@@ -351,6 +351,50 @@ class CrowdKitTest(unittest.TestCase):
         # Within one more lod2 fan of the ceiling: anything less is budget left on the table.
         self.assertGreater(used + lod2, 150_000, "there is room for another lod2 fan")
 
+    def test_a_stand_wears_its_own_clubs_stated_colour(self):
+        """Round 9: the crowd dressed from `bowl.crowd`'s chips, which scene.py solves for
+        white text on a panel - so a club that paints its field black had a #6F6F6F crowd and
+        two clubs whose chips collided were pushed apart in hue. Cloth comes from
+        `teams.*.color` and nothing else."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        dress = src[src.index("func quickDress(for s: SceneSpec"):src.index("let tinted = Date()")]
+        self.assertIn("clubCloth(s.teams.home.color", dress)
+        self.assertIn("clubCloth(s.teams.away.color", dress)
+        self.assertNotIn("s.bowl.crowd.home", dress, "a panel chip is not what a supporter wears")
+        self.assertNotIn("s.bowl.crowd.away", dress)
+        # The chips still key the dress cache in no way: a matchup is its two stated colours.
+        key = src[src.index("private static func key(_ s: SceneSpec"):]
+        key = key[:key.index("\n    }")]
+        self.assertIn("s.teams.home.color", key)
+        self.assertNotIn("s.bowl.crowd.home", key)
+
+    def test_the_only_thing_a_crowd_moves_is_value(self):
+        """Hue and saturation are the club's. The lift is one scale of r, g and b - which is
+        what HSV value is - so it cannot move a hue, and it stops at the measured floor."""
+        C = self.C["clubValue"]
+        self.assertGreater(C["floor"], 0.0)
+        self.assertLess(C["floor"], 0.5, "past here a club is not wearing its own colour any more")
+        self.assertIn("measured", C["about"].lower())
+        look = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdLook.swift").read_text()
+        body = look[look.index("/// What a club's supporters wear"):]
+        body = body[:body.index("\npublic enum CrowdFacing")]
+        self.assertIn("let k = floor / v", body, "the lift must be one scale of all three channels")
+        self.assertIn("guard v < floor else { return colour }", body, "a club above the floor is worn as stated")
+        # The reasoning the ruling asked for, in the code: a stand is not a painted plane.
+        for word in ("paint", "fabric", "value"):
+            self.assertIn(word, body.lower(), f"the comment should say why a crowd lifts at all ({word})")
+
+    def test_a_club_colour_mottles_around_its_floor(self):
+        """The old band clamped every fan into [min, max] *after* the per-fan shade, so a dark
+        club's fans all landed on the band's floor exactly: one paint chip, 24k times."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        loop = src[src.index("for person in 0..<persons"):src.index("let sr = P.secondary.x")]
+        self.assertNotIn("P.luma", loop, "the luma band is what flattened a dark club")
+        self.assertIn("P.shade.0 + (P.shade.1 - P.shade.0)", loop, "each fan still gets its own shade")
+        shade = self.C["shirtShade"]
+        self.assertLess(shade[0], 1.0)
+        self.assertGreater(shade[1], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

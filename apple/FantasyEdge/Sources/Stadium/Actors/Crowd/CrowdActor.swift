@@ -383,9 +383,9 @@ final class CrowdActor: StadiumActor {
             mat.blending = .opaque
             // Spill in the club's colour, not the texture's: an emissive texture read grey here,
             // and at a hundred metres the albedo carries the mottle anyway.
-            let spill = SceneMath.rgba(key.support == .away ? s.bowl.crowd.away
-                                       : key.support == .neutral ? (s.palette[s.bowl.crowd.neutral] ?? s.bowl.crowd.neutral)
-                                       : s.bowl.crowd.home)
+            let spill = key.support == .away ? CrowdKit.clubCloth(s.teams.away.color, C)
+                      : key.support == .neutral ? SceneMath.rgba(s.palette[s.bowl.crowd.neutral] ?? s.bowl.crowd.neutral)
+                      : CrowdKit.clubCloth(s.teams.home.color, C)
             mat.emissiveColor = .init(color: UIColor(red: CGFloat(spill.x), green: CGFloat(spill.y), blue: CGFloat(spill.z), alpha: 1))
             mat.emissiveIntensity = Float(C.impostor.floodFill)
             mat.faceCulling = .none
@@ -817,27 +817,34 @@ final class CrowdKit {
         let C = look.crowd
         let key = Self.key(s, C)
         if let d = quick[key] { return d }
-        let home = SceneMath.rgba(s.bowl.crowd.home), away = SceneMath.rgba(s.bowl.crowd.away)
-        let homeRaw = SceneMath.rgba(s.teams.home.color), awayRaw = SceneMath.rgba(s.teams.away.color)
+        let home = Self.clubCloth(s.teams.home.color, C), away = Self.clubCloth(s.teams.away.color, C)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Self.cardLayout(C)
         let fa = Self.pixels(fanAlbedo), fm = Self.pixels(fanMask)
         let ca = Self.pixels(cardAlbedo), cm = Self.pixels(cardMask)
-        func make(_ a: Pixels, _ m: Pixels, _ chip: SIMD4<Float>, _ raw: SIMD4<Float>, _ layout: Layout, away: Bool, card: Bool) -> CGImage? {
-            Self.tint(a, m, chip: chip, raw: raw, palette: Palette(C, salt: away ? 2 : 1, card: card), layout: layout, divisor: 4)
+        func make(_ a: Pixels, _ m: Pixels, _ cloth: SIMD4<Float>, _ layout: Layout, away: Bool, card: Bool) -> CGImage? {
+            // A club has one colour, so it is both the cloth and the alternate.
+            Self.tint(a, m, cloth: cloth, alt: cloth, palette: Palette(C, salt: away ? 2 : 1, card: card), layout: layout, divisor: 4)
         }
         let plain = plainDress()
-        let d = Dress(fanHome: StadiumText.texture(make(fa, fm, home, homeRaw, fanLayout, away: false, card: false)) ?? plain.fanHome,
-                      fanAway: StadiumText.texture(make(fa, fm, away, awayRaw, fanLayout, away: true, card: false)) ?? plain.fanAway,
-                      cardHome: StadiumText.texture(make(ca, cm, home, homeRaw, cardLayout, away: false, card: true)) ?? plain.cardHome,
-                      cardAway: StadiumText.texture(make(ca, cm, away, awayRaw, cardLayout, away: true, card: true)) ?? plain.cardAway,
+        let d = Dress(fanHome: StadiumText.texture(make(fa, fm, home, fanLayout, away: false, card: false)) ?? plain.fanHome,
+                      fanAway: StadiumText.texture(make(fa, fm, away, fanLayout, away: true, card: false)) ?? plain.fanAway,
+                      cardHome: StadiumText.texture(make(ca, cm, home, cardLayout, away: false, card: true)) ?? plain.cardHome,
+                      cardAway: StadiumText.texture(make(ca, cm, away, cardLayout, away: true, card: true)) ?? plain.cardAway,
                       fanNeutral: plain.fanNeutral, cardNeutral: plain.cardNeutral)
         quick[key] = d
         return d
     }
 
+    /// What a club's stand wears: the club's stated colour, lifted to the floor.
+    /// The chips in `bowl.crowd` are solved for text legibility on a panel and
+    /// are a different colour from the club's; a crowd is not a panel.
+    nonisolated static func clubCloth(_ hex: String, _ C: SceneSpec.Look.CrowdLook) -> SIMD4<Float> {
+        CrowdCloth.of(SceneMath.rgba(hex), floor: Float(C.clubValue.floor))
+    }
+
     private static func key(_ s: SceneSpec, _ C: SceneSpec.Look.CrowdLook) -> String {
-        "\(s.bowl.crowd.home)|\(s.bowl.crowd.away)|\(s.teams.home.color)|\(s.teams.away.color)|\(C.secondary)|\(C.rawShare)|\(C.shirtShade)|\(C.clubLuma)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
+        "\(s.teams.home.color)|\(s.teams.away.color)|\(s.bowl.crowd.neutral)|\(s.bowl.crowd.dark)|\(C.secondary)|\(C.altShare)|\(C.shirtShade)|\(C.clubValue.floor)|\(C.neutralShare)|\(C.neutrals)|\(C.desaturate)|\(C.cardContrast)"
     }
 
     func cachedDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress? {
@@ -858,11 +865,13 @@ final class CrowdKit {
         let C = look.crowd
         let key = Self.key(s, C)
         if let d = Self.dressCache[key] { done(d); return }
-        let home = SceneMath.rgba(s.bowl.crowd.home), away = SceneMath.rgba(s.bowl.crowd.away)
-        let homeRaw = SceneMath.rgba(s.teams.home.color), awayRaw = SceneMath.rgba(s.teams.away.color)
-        // Neither club: the scene's own neutral and dark crowd colours.
+        // Each side wears its own club's stated colour, not its panel chip.
+        let home = Self.clubCloth(s.teams.home.color, C), away = Self.clubCloth(s.teams.away.color, C)
+        // Neither club: the scene's own neutral and dark crowd colours, worn as
+        // stated. They are already two colours across six neutrals, so that
+        // section never reads as one surface and needs no floor.
         let neutral = SceneMath.rgba(s.palette[s.bowl.crowd.neutral] ?? s.bowl.crowd.neutral)
-        let neutralRaw = SceneMath.rgba(s.palette[s.bowl.crowd.dark] ?? s.bowl.crowd.dark)
+        let neutralDark = SceneMath.rgba(s.palette[s.bowl.crowd.dark] ?? s.bowl.crowd.dark)
         let src = Sources(fanAlbedo: fanAlbedo, fanMask: fanMask, cardAlbedo: cardAlbedo, cardMask: cardMask)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Self.cardLayout(C)
@@ -877,14 +886,14 @@ final class CrowdKit {
             // The away section is always across the bowl, so its copies are
             // composed at half size: it keeps the crowd inside its 60 MB.
             let images = Images(
-                fanHome: CrowdKit.tint(fa, fm, chip: home, raw: homeRaw, palette: homeFan, layout: fanLayout, divisor: 1),
-                fanAway: CrowdKit.tint(fa, fm, chip: away, raw: awayRaw, palette: awayFan, layout: fanLayout, divisor: 2),
-                cardHome: CrowdKit.tint(ca, cm, chip: home, raw: homeRaw, palette: homeCard, layout: cardLayout, divisor: 1),
-                cardAway: CrowdKit.tint(ca, cm, chip: away, raw: awayRaw, palette: awayCard, layout: cardLayout, divisor: 2),
+                fanHome: CrowdKit.tint(fa, fm, cloth: home, alt: home, palette: homeFan, layout: fanLayout, divisor: 1),
+                fanAway: CrowdKit.tint(fa, fm, cloth: away, alt: away, palette: awayFan, layout: fanLayout, divisor: 2),
+                cardHome: CrowdKit.tint(ca, cm, cloth: home, alt: home, palette: homeCard, layout: cardLayout, divisor: 1),
+                cardAway: CrowdKit.tint(ca, cm, cloth: away, alt: away, palette: awayCard, layout: cardLayout, divisor: 2),
                 // The unaligned sit highest and farthest of anyone: a quarter is plenty, and it keeps
                 // both the crowd's texture budget and the time it takes to dress where round 4 left them.
-                fanNeutral: CrowdKit.tint(fa, fm, chip: neutral, raw: neutralRaw, palette: neutralFan, layout: fanLayout, divisor: 4),
-                cardNeutral: CrowdKit.tint(ca, cm, chip: neutral, raw: neutralRaw, palette: neutralCard, layout: cardLayout, divisor: 4))
+                fanNeutral: CrowdKit.tint(fa, fm, cloth: neutral, alt: neutralDark, palette: neutralFan, layout: fanLayout, divisor: 4),
+                cardNeutral: CrowdKit.tint(ca, cm, cloth: neutral, alt: neutralDark, palette: neutralCard, layout: cardLayout, divisor: 4))
             let tinted = Date()
             await MainActor.run {
                 let hop = Date()
@@ -966,18 +975,18 @@ final class CrowdKit {
         return Pixels(width: W, height: H, stride: W * 4, data: out as CFData, premultiplied: true, alpha: true)
     }
 
-    /// albedo x chip through the mask. Each fan gets its own shade of the
-    /// chip, and some wear the raw club colour, so a section is mottled.
+    /// albedo x cloth through the mask. Each fan gets its own shade of the
+    /// club's colour, and a quarter of them wear neutrals, so a section is mottled.
     /// How a side dresses: which fans wear neutrals, and how far each club colour wanders.
     struct Palette: Sendable {
         let secondary: SIMD4<Float>
         let fans: Int
-        let rawShare: Float
+        let altShare: Float
         let shade: (Float, Float)
         let neutralShare: Float
         let neutrals: [SIMD4<Float>]
         let desaturate: (Float, Float)
-        let luma: (Float, Float)
+        let valueFloor: Float
         /// 1 keeps the kit's contrast; less pulls each fan toward its own mean.
         let contrast: Float
         let salt: UInt64
@@ -985,12 +994,12 @@ final class CrowdKit {
         init(_ C: SceneSpec.Look.CrowdLook, salt: UInt64, card: Bool) {
             secondary = SceneMath.rgba(C.secondary)
             fans = C.fans
-            rawShare = Float(C.rawShare)
+            altShare = Float(C.altShare)
             shade = (Float(C.shirtShade[0]), Float(C.shirtShade[1]))
             neutralShare = Float(C.neutralShare)
             neutrals = C.neutrals.map { SceneMath.rgba($0) }
             desaturate = (Float(C.desaturate[0]), Float(C.desaturate[1]))
-            luma = (Float(C.clubLuma.min), Float(C.clubLuma.max))
+            valueFloor = Float(C.clubValue.floor)
             contrast = card ? Float(C.cardContrast) : 1
             self.salt = salt
         }
@@ -1005,7 +1014,7 @@ final class CrowdKit {
     /// exactly one person's rect (or half of a pair cell), so the writes never
     /// overlap. Every texel is tinted, transparent ones too, so the padding
     /// build.py grew around each figure wears the same colour as the figure.
-    nonisolated static func tint(_ albedo: Pixels, _ mask: Pixels, chip: SIMD4<Float>, raw: SIMD4<Float>,
+    nonisolated static func tint(_ albedo: Pixels, _ mask: Pixels, cloth: SIMD4<Float>, alt: SIMD4<Float>,
                                  palette P: Palette, layout: Layout, divisor k: Int) -> CGImage? {
         let W = albedo.width / k, H = albedo.height / k
         guard W > 0, H > 0, mask.width > 0, mask.height > 0 else { return nil }
@@ -1025,14 +1034,15 @@ final class CrowdKit {
             let r3 = Float((h / 1_000_000) % 1000) / 1000, r4 = Float((h / 1_000_000_000) % 1000) / 1000
             let wearsNeutral = r3 < P.neutralShare && !P.neutrals.isEmpty
             var colour = wearsNeutral ? P.neutrals[Int(r4 * Float(P.neutrals.count)) % P.neutrals.count]
-                                      : (r2 < P.rawShare ? raw : chip)
-            colour *= P.shade.0 + (P.shade.1 - P.shade.0) * r1
+                                      : (r2 < P.altShare ? alt : cloth)
+            // The cloth colour arrives already at its floor, so every fan's
+            // shade mottles *around* it. Clamping each fan into a band instead
+            // flattened a dark club: every shade fell below the band and every
+            // fan came out the same colour - a stand of one paint chip.
+            let shade = P.shade.0 + (P.shade.1 - P.shade.0) * r1
+            colour = SIMD4(min(1, colour.x * shade), min(1, colour.y * shade), min(1, colour.z * shade), colour.w)
             if !wearsNeutral {
-                // Into the club luma band first, so the shade below still mottles within it.
-                let y = max(1e-4, colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722)
-                let target = min(P.luma.1, max(P.luma.0, y))
-                let lift = target / y
-                colour = SIMD4(min(1, colour.x * lift), min(1, colour.y * lift), min(1, colour.z * lift), colour.w)
+                // Fabric, not legibility: a per-fan fade, never a shift of the club's hue.
                 let d = P.desaturate.0 + (P.desaturate.1 - P.desaturate.0) * r4
                 let l = colour.x * 0.2126 + colour.y * 0.7152 + colour.z * 0.0722
                 colour = colour + (SIMD4(l, l, l, colour.w) - colour) * d

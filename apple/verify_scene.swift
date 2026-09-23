@@ -350,6 +350,31 @@ struct VerifyScene {
             expect(false, "run verify_scene from the repository root: assets/actors/crowd/manifest.json not found")
         }
 
+        // ---- a stand wears its own club's colour ----
+        // The crowd dresses from `teams.*.color`, the club's stated colour, and is allowed
+        // to move exactly one thing about it: HSV value, up to the measured floor. Round 9
+        // found both sides dressed instead from `bowl.crowd`'s panel chips, which are solved
+        // for white text on a card - so a club that paints its field black had a mid-grey
+        // crowd, and two clubs whose chips collided were pushed apart in hue.
+        let floor = Float(spec.look?.crowd.clubValue.floor ?? 0)
+        for team in [spec.teams.home, spec.teams.away] where spec.look != nil {
+            let stated = SceneMath.rgba(team.color), worn = CrowdCloth.of(stated, floor: floor)
+            let vIn = max(stated.x, max(stated.y, stated.z)), vOut = max(worn.x, max(worn.y, worn.z))
+            expect(vOut >= min(floor, max(vIn, floor)) - 1e-4,
+                   "\(name): \(team.abbr) is worn at value \(vOut), under the floor \(floor)")
+            expect(vOut <= max(vIn, floor) + 1e-4,
+                   "\(name): \(team.abbr) is worn at value \(vOut), lighter than its own \(vIn) and the floor \(floor)")
+            // Hue and saturation survive a value lift exactly, because the lift is one
+            // scale of all three channels. Compare the channel ratios, which is what a hue is.
+            if vIn > 1e-4 && vOut > 1e-4 {
+                for c in 0..<3 {
+                    let a = stated[c] / vIn, b = worn[c] / vOut
+                    expect(abs(a - b) < 2e-3,
+                           "\(name): dressing \(team.abbr) moved channel \(c) from \(a) to \(b) of its value: that is a hue or saturation shift, not a lift")
+                }
+            }
+        }
+
         // ---- the ball's queue ----
         if let drive = spec.shownDrive, drive.arcs.count > 2 {
             var motion = PlayMotion()
