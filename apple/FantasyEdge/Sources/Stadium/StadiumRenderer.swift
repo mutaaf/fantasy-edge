@@ -126,6 +126,10 @@ public final class StadiumRenderer {
     /// With -stadiumStats, the CPU cost of `tick` over the 120 frames after a build.
     @ObservationIgnored private var statsFrames = 0
     @ObservationIgnored private var frameCost: Duration = .zero
+    /// With -stadiumStats, how fast the stadium actually runs and how much it
+    /// holds. Only worth reading on a headset; the line says which machine it
+    /// came from (StadiumDeviceStats).
+    @ObservationIgnored private var deviceStats: StadiumDeviceStats.Sampler?
 
     public init(mode: Mode) {
         self.mode = mode
@@ -345,6 +349,10 @@ public final class StadiumRenderer {
             StadiumStats.report(actors, label: c.tabletop ? "tabletop" : "stadium", assets: assets)
             statsFrames = 120
             frameCost = .zero
+            if deviceStats == nil {
+                StadiumDeviceStats.announce(label)
+                deviceStats = StadiumDeviceStats.Sampler(label: label)
+            }
         }
         if ProcessInfo.processInfo.arguments.contains("-shaderGraphProof") { shaderGraphProof(c) }
     }
@@ -519,6 +527,9 @@ public final class StadiumRenderer {
                 let line = "[stadium-timing] \(label) main-thread tick: \(String(format: "%.3f", ms)) ms mean over 120 frames"
                 StadiumLog.log.notice("\(line, privacy: .public)")
             }
+        }
+        if let line = deviceStats?.tick(), !line.isEmpty {
+            StadiumLog.log.notice("\(line, privacy: .public)")
         }
         while let next = statsDue.first, next.at <= c.shared.time {
             statsDue.removeFirst()

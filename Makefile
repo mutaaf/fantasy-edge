@@ -1,5 +1,6 @@
 .PHONY: test doctor demo publish-demo report docs api board clean verify-scene \
-	sim sim-doctor sim-shots sim-clean
+	sim sim-doctor sim-shots sim-clean \
+	device device-build device-stats device-list
 
 # FANTASYEDGE_CORRECT_PLAYS=0 keeps the promise the suite is built on: no
 # network. Correcting a finished game's plays reads nflverse (truth.py), and a
@@ -77,6 +78,22 @@ sim-shots:
 
 sim-clean:
 	apple/sim.sh clean
+# On a real Apple Vision Pro. The simulator cannot measure frame time, so the
+# 90 fps the art bible asks for has never been checked anywhere else.
+# docs/DEVICE.md is the guide; `device-build` needs no headset.
+device:
+	apple/device.sh
+
+device-build:
+	apple/device.sh --build-only
+
+# The same, with -stadiumStats, streaming the [stadium-device] lines: real fps,
+# the frames that missed 11.1 ms, and peak memory.
+device-stats:
+	apple/device.sh --stats
+
+device-list:
+	apple/device.sh --list
 
 clean:
 	rm -rf data/*.db report.html
