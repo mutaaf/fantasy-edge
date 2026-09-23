@@ -1,0 +1,11 @@
+{
+ "at": "2026-09-15T19:26:29-04:00",
+ "pid": 96309,
+ "slate": "2026-09-19",
+ "requests": 2,
+ "errors": 0,
+ "lastError": null,
+ "finalsSaved": 0,
+ "phase": "stopped",
+ "reason": "hard stop"
+}

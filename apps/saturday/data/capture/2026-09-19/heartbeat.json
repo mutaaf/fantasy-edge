@@ -1,0 +1,20 @@
+{
+ "at": "2026-09-20T02:46:12-04:00",
+ "pid": 64630,
+ "slate": "2026-09-19",
+ "requests": 4031,
+ "errors": 2,
+ "lastError": null,
+ "finalsSaved": 74,
+ "phase": "stopped",
+ "reason": "all final",
+ "games": 74,
+ "live": 0,
+ "pre": 0,
+ "delayed": 0,
+ "final": 74,
+ "done": 74,
+ "watching": [],
+ "nextKickoff": null,
+ "idle": true
+}

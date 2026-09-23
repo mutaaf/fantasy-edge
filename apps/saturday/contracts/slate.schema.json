@@ -1,0 +1,521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "slate.schema.json",
+  "title": "GET /api/slate",
+  "type": "object",
+  "required": [
+    "version",
+    "league",
+    "asOf",
+    "source",
+    "replay",
+    "counts",
+    "spotlight",
+    "sections",
+    "leverageCaveat",
+    "games",
+    "clock",
+    "changes",
+    "feed",
+    "changesCaveat",
+    "reconstructed"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "league": {
+      "const": "college-football"
+    },
+    "asOf": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "replay": {
+      "type": "boolean"
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "live",
+        "pre",
+        "post",
+        "delayed"
+      ],
+      "properties": {
+        "live": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pre": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "post": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "delayed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "spotlight": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "leverageCaveat": {
+      "type": "string",
+      "minLength": 1
+    },
+    "games": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/game"
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Wall groups in display order; every non-spotlight game appears in exactly one.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "overline",
+          "games"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "closeLate",
+              "rankedLive",
+              "live",
+              "upcoming",
+              "finals"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "overline": {
+            "type": "string"
+          },
+          "games": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "clock": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "replay.schema.json#/$defs/frame"
+        }
+      ],
+      "description": "Where a replay stands in its recorded night; null for a live source. A client scrubs by asking for another frame's stamp with ?at=, and never interpolates between frames."
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/change"
+      },
+      "description": "What changed on the board since the previous scoreboard frame, in wall order. Each id is stable across polls of the same frame, so a client animates a change once."
+    },
+    "feed": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/feedItem"
+      },
+      "description": "The whip-around: recent scores, lead changes, finals, upsets and ranked kickoffs across the slate, newest first."
+    },
+    "changesCaveat": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reconstructed": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "games",
+        "caveats"
+      ],
+      "description": "Present when any tile on this board was rebuilt rather than recorded.",
+      "properties": {
+        "games": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "game": {
+      "type": "object",
+      "required": [
+        "id",
+        "provenance",
+        "kickoff",
+        "kickoffLabel",
+        "status",
+        "away",
+        "home",
+        "situation",
+        "tv",
+        "venue",
+        "flags",
+        "leverage",
+        "lastPlay",
+        "detail"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kickoff": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "common.schema.json#/$defs/status"
+        },
+        "away": {
+          "$ref": "common.schema.json#/$defs/side"
+        },
+        "home": {
+          "$ref": "common.schema.json#/$defs/side"
+        },
+        "situation": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "possession",
+            "down",
+            "distance",
+            "text",
+            "yardsToGoal",
+            "redZone"
+          ],
+          "properties": {
+            "possession": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "down": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "distance": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "yardsToGoal": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "redZone": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tv": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "venue": {
+          "type": "object",
+          "required": [
+            "name",
+            "city",
+            "state"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            }
+          }
+        },
+        "neutralSite": {
+          "type": "boolean"
+        },
+        "conferenceGame": {
+          "type": "boolean"
+        },
+        "flags": {
+          "type": "object",
+          "required": [
+            "live",
+            "redZone",
+            "overtime",
+            "delayed",
+            "upset",
+            "upsetAlert",
+            "oneScore",
+            "ranked"
+          ],
+          "properties": {
+            "live": {
+              "type": "boolean"
+            },
+            "redZone": {
+              "type": "boolean"
+            },
+            "overtime": {
+              "type": "boolean"
+            },
+            "delayed": {
+              "type": "boolean"
+            },
+            "upset": {
+              "type": "boolean"
+            },
+            "upsetAlert": {
+              "type": "boolean"
+            },
+            "oneScore": {
+              "type": "boolean"
+            },
+            "ranked": {
+              "type": "boolean"
+            }
+          }
+        },
+        "leverage": {
+          "type": "object",
+          "required": [
+            "score",
+            "reasons",
+            "rank"
+          ],
+          "properties": {
+            "score": {
+              "type": "number"
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rank": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "lastPlay": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "text",
+            "type",
+            "scoring"
+          ],
+          "description": "ESPN's last play on the scoreboard; null before kickoff, at halftime, in a delay and after the final",
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^#()]*$",
+              "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
+            },
+            "type": {
+              "type": "string"
+            },
+            "scoring": {
+              "type": "boolean"
+            }
+          }
+        },
+        "kickoffLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The kickoff in the East Coast clock a college Saturday is scheduled on, with the day: 'Sat 7:30 PM ET'. 'TBA' when ESPN has not fixed the time. Clients draw it and never format kickoff themselves."
+        },
+        "provenance": {
+          "enum": [
+            "recorded",
+            "reconstructed",
+            "schedule"
+          ],
+          "description": "Where this tile's state came from: a board recorded while the game was on ('recorded'), a rebuild from each play's own wallclock after the fact ('reconstructed'), or the schedule, because the game had not kicked off ('schedule'). A client must not show a reconstruction as a recording."
+        },
+        "detail": {
+          "enum": [
+            "available",
+            "afterFinal",
+            "unavailable"
+          ],
+          "description": "Whether this source can answer for the game's play-by-play now, only once it is final, or not at all. A capture that sampled its live snapshots says so here rather than letting a tile look complete."
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "required": [
+        "id",
+        "game",
+        "kind",
+        "team",
+        "points",
+        "label",
+        "at",
+        "time"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "game": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "score",
+            "correction",
+            "lead",
+            "possession",
+            "kickoff",
+            "final",
+            "upset",
+            "redZone",
+            "delay",
+            "resume"
+          ]
+        },
+        "team": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the team the change belongs to: scorer, new leader, new possession, winner"
+        },
+        "points": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string",
+          "description": "when it happened on the East Coast clock the slate is scheduled in, e.g. 9:14 PM ET; empty when the source has no stamp. Clients draw it and never reformat at."
+        }
+      }
+    },
+    "feedItem": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/change"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "away",
+        "home"
+      ],
+      "properties": {
+        "away": {
+          "$ref": "#/$defs/feedSide"
+        },
+        "home": {
+          "$ref": "#/$defs/feedSide"
+        }
+      }
+    },
+    "feedSide": {
+      "type": "object",
+      "required": [
+        "id",
+        "abbr",
+        "rank",
+        "score",
+        "fill",
+        "hatch"
+      ],
+      "description": "the side as it stood when the change happened, not as it stands now",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "abbr": {
+          "type": "string"
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "fill": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        },
+        "hatch": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stream.schema.json",
+  "title": "GET /api/stream (text/event-stream)",
+  "description": "Server-sent events. Query: games=<id,id> for the games a client has open (summaries are fetched only for those); on a replay, at=<stamp> to start from and speed=<multiplier>. Each event's data is one JSON document.",
+  "$defs": {
+    "slate": {
+      "$ref": "slate.schema.json"
+    },
+    "game": {
+      "$ref": "game.schema.json"
+    },
+    "clock": {
+      "allOf": [
+        {
+          "$ref": "replay.schema.json#/$defs/frame"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "speed"
+      ],
+      "properties": {
+        "speed": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "end": {
+      "type": "object",
+      "required": [
+        "stamp",
+        "reason"
+      ],
+      "properties": {
+        "stamp": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "required": [
+        "requests",
+        "limits",
+        "within"
+      ],
+      "properties": {
+        "requests": {
+          "type": "object"
+        },
+        "limits": {
+          "type": "object"
+        },
+        "within": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
