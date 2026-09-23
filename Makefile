@@ -1,4 +1,5 @@
-.PHONY: test doctor demo publish-demo report docs api board clean verify-scene
+.PHONY: test doctor demo publish-demo report docs api board clean verify-scene \
+	sim sim-doctor sim-shots sim-clean
 
 # FANTASYEDGE_CORRECT_PLAYS=0 keeps the promise the suite is built on: no
 # network. Correcting a finished game's plays reads nflverse (truth.py), and a
@@ -60,6 +61,22 @@ verify-crowd:
 	swiftc -parse-as-library -o .work/verify-crowd \
 		$(STADIUM)/Actors/Crowd/CrowdChoreography.swift apple/verify_crowd.swift
 	.work/verify-crowd
+
+# The local visionOS rig. apple/sim.sh holds the defaults every agent used to
+# re-derive from comments: the generic destination that actually builds, the
+# device by name, one derived-data path, and a wait for the machine to be quiet
+# enough that the simulator's own home screen is not killed mid-frame.
+sim:
+	apple/sim.sh run
+
+sim-doctor:
+	apple/sim.sh doctor
+
+sim-shots:
+	apple/sim.sh shots --out .work/shots/local
+
+sim-clean:
+	apple/sim.sh clean
 
 clean:
 	rm -rf data/*.db report.html
