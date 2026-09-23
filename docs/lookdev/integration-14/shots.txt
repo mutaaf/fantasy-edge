@@ -1,0 +1,5 @@
+bowl-wide: replay at 1590s (early) -> .work/shots/integration-14/main/bowl-wide-phi.png
+field-level: replay at 1740s (redzone) -> .work/shots/integration-14/main/field-level-phi.png
+td-moment-t6: replay at 1032s (touchdown) -> .work/shots/integration-14/fg-late/td-moment-t6-fg-club.png
+td-moment-t10: replay at 1032s (touchdown) -> .work/shots/integration-14/fg-late/td-moment-t10-fg-club.png
+td-moment-t14: replay at 1032s (touchdown) -> .work/shots/integration-14/fg-late/td-moment-t14-fg-club.png

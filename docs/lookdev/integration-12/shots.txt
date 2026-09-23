@@ -1,0 +1,4 @@
+bowl-wide-p4: replay at 0s (touchdown) -> .work/shots/integration-12/bowl-wide-p4-kickoff.png
+bowl-wide-p6: replay at 0s (touchdown) -> .work/shots/integration-12/bowl-wide-p6-kickoff.png
+bowl-wide-p8: replay at 0s (touchdown) -> .work/shots/integration-12/bowl-wide-p8-kickoff.png
+bowl-wide-p10: replay at 0s (touchdown) -> .work/shots/integration-12/bowl-wide-p10-kickoff.png

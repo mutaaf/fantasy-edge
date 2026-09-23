@@ -1,0 +1,3 @@
+bowl-wide: replay at 240s (early) -> docs/lookdev/sideline-r5/bowl-wide.png
+field-level: replay at 390s (redzone) -> docs/lookdev/sideline-r5/field-level.png
+sideline-props: replay at 240s (early) -> docs/lookdev/sideline-r5/sideline-props.png

@@ -1,0 +1,1 @@
+crowd-closeup: replay at 240s (early) -> docs/lookdev/experience-r5/seat-upper/crowd-closeup-upper.png

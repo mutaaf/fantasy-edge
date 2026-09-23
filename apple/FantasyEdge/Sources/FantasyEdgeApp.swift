@@ -2,11 +2,33 @@ import SwiftUI
 
 @main
 struct FantasyEdgeApp: App {
-    @State private var board = Board()
+    @State private var board: Board
+    /// One scene feed for the tabletop and the stadium together, so walking
+    /// from one into the other keeps the same game and the same poll.
+    @State private var scene: SceneFeed
+    /// Which live game deserves the stadium right now. One for the app, so the
+    /// channel's memory of what it is showing survives leaving the space.
+    @State private var channel: RedZoneChannel
+    /// What was open before the stadium, so leaving it restores exactly that.
+    @State private var passage = StadiumPassage()
+
+    init() {
+        let b = Board()
+        _board = State(initialValue: b)
+        _scene = State(initialValue: SceneFeed(base: { "http://\(b.host)" }))
+        _channel = State(initialValue: RedZoneChannel(base: { "http://\(b.host)" }))
+    }
 
     var body: some Scene {
         WindowGroup(id: "board") {
-            CommandView().environment(board)
+            // The environment goes outermost: the two modifiers read the board
+            // and the passage themselves, and an environment applied inside
+            // them is invisible to them (the first launch trapped on exactly
+            // that).
+            CommandView()
+                .tracksWindow(.board)
+                .modifier(StadiumLaunchArguments())
+                .environment(board).environment(scene).environment(passage).environment(channel)
         }
         // .plain would mean painting our own background, which is exactly what
         // made the first version fight the room. Let the system own the glass.
@@ -30,7 +52,7 @@ struct FantasyEdgeApp: App {
         ImmersiveSpace(id: "board-space") {
             // The space owns its own detail panel now: a sheet cannot be
             // presented into an immersive space, so the card is placed in it.
-            ImmersiveBoard().environment(board)
+            ImmersiveBoard().environment(board).environment(scene).environment(passage).environment(channel)
         }
         // Mixed keeps the room; progressive lets the wearer dial it up with
         // the crown; full is there now too. Mixed stays the *default* for the
@@ -40,7 +62,29 @@ struct FantasyEdgeApp: App {
         // other way round, because a hall is somewhere you go.
         .immersionStyle(selection: style(\.boardStyle), in: .mixed, .progressive, .full)
 
+        // A game on the table: a real 3D field in a volume.
+        WindowGroup(id: "tabletop", for: String.self) { $value in
+            TabletopHost(value: value ?? StadiumHost.replayWindow)
+                .environment(board).environment(scene).environment(passage).environment(channel)
+        }
+        .windowStyle(.volumetric)
+        // presentation.tabletop.volume: sized for the two-deck bowl on its
+        // plinth (fantasyedge/scene.py). Change both together.
+        .defaultSize(width: 1.12, height: 0.45, depth: 0.86, in: .meters)
+
+        // Seated at the fifty. From the tabletop it opens progressive, so the
+        // Digital Crown walks you from the room into the bowl; the ornament
+        // offers 100% full as well. The dial never goes below 40%: under that
+        // the room is the scene and the stadium is a smear at its edge.
+        ImmersiveSpace(id: "stadium") {
+            StadiumHostSpace().environment(board).environment(scene).environment(passage).environment(channel)
+        }
+        .immersionStyle(selection: style(\.stadiumStyle, progressive: Self.stadiumDial),
+                        in: Self.stadiumDial, .full)
     }
+
+    /// The stadium's Crown dial: 40% to 100%, opening at 85%.
+    static let stadiumDial = ProgressiveImmersionStyle.progressive(0.4...1.0, initialAmount: 0.85)
 
     /// Bridge between the app's stored choice and SwiftUI's existential.
     ///
@@ -51,13 +95,14 @@ struct FantasyEdgeApp: App {
     /// here, which is what this used to be, means the scene never re-reads the
     /// choice and the control does nothing.
     private func style(
-        _ key: ReferenceWritableKeyPath<Board, RoomStyle>
+        _ key: ReferenceWritableKeyPath<Board, RoomStyle>,
+        progressive: ProgressiveImmersionStyle = .progressive
     ) -> Binding<any ImmersionStyle> {
         Binding(
             get: {
                 switch board[keyPath: key] {
                 case .full:        return .full
-                case .progressive: return .progressive
+                case .progressive: return progressive
                 case .mixed:       return .mixed
                 }
             },

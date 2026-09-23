@@ -15,7 +15,11 @@ struct LiveView: View {
     /// Owned by the command centre, because a scoreline tapped on another tab
     /// has to be able to say which game it meant before this view exists.
     @Binding var event: String
-    @State private var mode: Mode = .mine
+    /// `-openLastWeek` has to land in Game, because the picker it opens is
+    /// GameFieldView's sheet: landing on "My Team" left the flag doing
+    /// nothing, which is why nobody had ever seen the picker drawn.
+    @State private var mode: Mode = ProcessInfo.processInfo.arguments
+        .contains("-openLastWeek") ? .game : .mine
     /// Whether the field stays put while the rest of the mode is read.
     ///
     /// On by default. The field is what the tab is *for*, and the two modes

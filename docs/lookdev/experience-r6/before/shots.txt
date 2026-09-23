@@ -1,0 +1,5 @@
+tabletop: replay at 390s (redzone) -> docs/lookdev/experience-r6/before/tabletop.png
+bowl-wide: replay at 240s (early) -> docs/lookdev/experience-r6/before/bowl-wide.png
+field-level: replay at 390s (redzone) -> docs/lookdev/experience-r6/before/field-level.png
+crowd-closeup: replay at 240s (early) -> docs/lookdev/experience-r6/before/crowd-closeup.png
+redzone-trails: replay at 390s (redzone) -> docs/lookdev/experience-r6/before/redzone-trails.png

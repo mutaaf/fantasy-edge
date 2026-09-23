@@ -1,0 +1,31 @@
+sideline round 6 — the objects round
+
+Measured with -stadiumStats, visionOS 26.5 simulator, clone fe-sideline-r6,
+own derived data (.work/dd-sl6), harness given --app.
+
+                      before    after    ceiling
+NFL      triangles    20,776   14,972     21,000
+         draw parts       15       15         15
+college  triangles    21,648   15,844     21,000   <- was 648 OVER
+         draw parts       15       15         15
+stadium  triangles   228,840  223,036    287,000
+
+The chain crew, measured by leaving it out (-sidelineSkip chain_set,down_marker):
+864 triangles and 3 of the 15 draw parts. It is drawn.
+
+The net's own contribution, measured by leaving it out
+(-sidelineSkip fieldgoal_net), sideline-props, mean luminance of 0..255:
+
+  region          with net   no net   net adds
+  upper stands        74.4     73.3       +1.1
+  ribbon band         68.0     67.0       +1.0
+  field, mid          80.3     79.5       +0.8
+
+Goal post uprights, inside-to-inside, measured off the exported .glb:
+  before  18.167 ft      after  18.517 ft      rule  18.500 ft
+(the 0.2 in over is the 10-sided cylinder's facets, not placement)
+
+A trap for the next round: stats.txt can carry [stadium-stats] lines from
+EARLIER launches on the same simulator. A run that looked like it had lost
+the whole LOD saving (20,776 again) was reading a previous launch's lines.
+Shoot into a clean --out and read the line that matches the run.

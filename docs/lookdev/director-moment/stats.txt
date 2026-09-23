@@ -1,0 +1,30 @@
+[stadium-stats] stadium.crowd: draw parts 33, triangles 143753, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s: models 96, draw parts 110, triangles 247045, texture memory ~67 MB
+[stadium-stats] stadium@fieldGoal+0.5s: models 99, draw parts 113, triangles 242392, texture memory ~67 MB
+[stadium-stats] stadium@fieldGoal+0.5s.crowd: draw parts 33, triangles 143753, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+0.5s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.crowd: draw parts 33, triangles 143753, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+3.0s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+6.0s.crowd: draw parts 33, triangles 143753, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@fieldGoal+6.0s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+0.5s: models 99, draw parts 113, triangles 241154, texture memory ~67 MB
+[stadium-stats] stadium@touchdown+0.5s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+3.0s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium@touchdown+6.0s.crowd: draw parts 36, triangles 143728, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.crowd: draw parts 22, triangles 1746, spot lights 0, emitters 0, shadow casters 0
+[stadium-timing] stadium apply.crowd: 0.000 s
+[stadium-timing] stadium build.crowd: 4.763 s
+[stadium-timing] stadium build.crowd: 4.818 s
+[stadium-timing] stadium build.crowd: 4.860 s
+[stadium-timing] stadium first update.crowd: 0.001 s
+[stadium-timing] tabletop apply.crowd: 0.000 s
+[stadium-timing] tabletop build.crowd: 0.113 s
+[stadium-timing] tabletop build.crowd: 0.117 s
+[stadium-timing] tabletop build.crowd: 0.149 s
+[stadium] crowd: 1620 fans, lod0 0, lod1 0, lod2 0, cards 1620, groups 22
+[stadium] crowd: 44892 fans, lod0 14, lod1 24, lod2 130, cards 44724, groups 33
+[stadium] crowd: 44892 fans, lod0 14, lod1 24, lod2 130, cards 44724, groups 36
+[stadium] moment fieldGoal fired at t=23.87, held 4.40 s for its play to land
+[stadium] moment fieldGoal fired at t=25.48, held 4.38 s for its play to land
+[stadium] moment touchdown fired at t=25.19, held 5.14 s for its play to land

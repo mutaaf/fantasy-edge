@@ -274,17 +274,23 @@ class SimulatedSource(LiveSource):
 # so this is a host swap rather than a rewrite. ESPN_API_HOST overrides it if
 # the block ever moves.
 API_HOST = os.environ.get("ESPN_API_HOST", "site.web.api.espn.com")
-BASE = "https://{host}/apis/site/v2/sports/football/nfl"
+# The league's own path segment. NFL is the default because this module's
+# caller is a fantasy football league, but it is a default and not a constant:
+# ESPN serves the identical shapes at `football/college-football`, and a
+# `league_path` argument is the whole difference between the two. Everything
+# above these two functions reads the league from the payload it gets back.
+LEAGUE_PATH = "football/nfl"
+BASE = "https://{host}/apis/site/v2/sports/{league}"
 SCOREBOARD = BASE + "/scoreboard{q}"
 SUMMARY = BASE + "/summary?event={event}"
 
 
-def scoreboard_url(q: str = "") -> str:
-    return SCOREBOARD.format(host=API_HOST, q=q)
+def scoreboard_url(q: str = "", league_path: str | None = None) -> str:
+    return SCOREBOARD.format(host=API_HOST, league=league_path or LEAGUE_PATH, q=q)
 
 
-def summary_url(event: str) -> str:
-    return SUMMARY.format(host=API_HOST, event=event)
+def summary_url(event: str, league_path: str | None = None) -> str:
+    return SUMMARY.format(host=API_HOST, league=league_path or LEAGUE_PATH, event=event)
 GAME_LENGTH_MIN = 60.0          # four quarters of game clock
 
 
@@ -592,7 +598,14 @@ class EspnLiveSource(LiveSource):
     def games(self) -> dict:
         """Per club: how far through its game it is, and what to call that."""
         out: dict[str, dict] = {}
-        for ev in (self.scoreboard().get("events") or []):
+        board = self.scoreboard()
+        # The feed states which league it is, so a row can carry it rather
+        # than every reader assuming. `whip.slate` has always documented that
+        # the league rides along on each row; until this it silently rode
+        # along as "", and the one place it mattered - a channel serving a
+        # college Saturday - could not tell what it was looking at.
+        league = ((board.get("leagues") or [{}])[0].get("slug") or "")
+        for ev in (board.get("events") or []):
             comp = (ev.get("competitions") or [{}])[0]
             status = comp.get("status") or {}
             st = (status.get("type") or {})
@@ -632,7 +645,7 @@ class EspnLiveSource(LiveSource):
             for i, (ab, ha, score) in enumerate(sides):
                 other = sides[1 - i][0] if len(sides) == 2 else ""
                 out[ab] = {"played": round(played, 4), "state": state,
-                           "label": label[:18],
+                           "label": label[:18], "league": league,
                            "kickoff": (ev.get("date") or "")[:16],
                            "score": score, "opp": other, "home": ha == "home",
                            "event": str(ev.get("id") or ""),
@@ -643,6 +656,17 @@ class EspnLiveSource(LiveSource):
                            "down": sit.get("down"),
                            "distance": sit.get("distance"),
                            "toEndzone": sit.get("yardsToEndzone"),
+                           # ESPN's own phrasing of the down, and the only
+                           # form of it that is dependable: measured over a
+                           # full Saturday's boards, `yardsToEndzone` was
+                           # absent from every live situation while this was
+                           # present in about three quarters of them. A
+                           # channel that composes its own caption from
+                           # down and distance alone therefore says nothing
+                           # about where the ball is; this says "1st & 10 at
+                           # OU 25". Null when ESPN is between plays.
+                           "downDistanceText": (sit.get("downDistanceText")
+                                                or sit.get("shortDownDistanceText")),
                            "redZone": bool(sit.get("isRedZone"))}
         return out
 
@@ -681,15 +705,23 @@ class EspnLiveSource(LiveSource):
                     "r": round(1.0 - info["played"], 4),
                     "g": info["label"]}
         sb = self.scoreboard()
+        # A replay frame says so in the scoreboard it rewrote. Before this the
+        # snapshot served from `replay` files read `"source": "espn"`, which is
+        # a recorded game wearing the label of a live one.
+        note = sb.get("replay")
         payload = {
             "asOf": 0.0,
             "window": (sb.get("week") or {}).get("number", 0),
-            "source": "espn" if ok else "espn-unavailable",
+            "source": ("replay" if note else "espn") if ok else "espn-unavailable",
             "error": self.last_error,
             "scored": len(pts) + len(dst),
             "games": g,
             "players": players,
         }
+        if note:
+            payload["replay"] = {k: note.get(k) for k in
+                                 ("event", "gameSeconds", "state", "clock", "period",
+                                  "homeScore", "awayScore")}
         payload["version"] = hashlib.sha1(
             json.dumps(players, sort_keys=True,
                        separators=(",", ":")).encode()).hexdigest()[:16]

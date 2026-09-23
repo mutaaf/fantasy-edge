@@ -1,0 +1,105 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    # A view-angle opacity falloff: opaque where the surface is seen edge-on,
+    # clear where it faces the eye (or the inverse, with Invert = 1). Unlit, so
+    # it reads as light or a fine net rather than a lit surface.
+    #
+    # Parameters, all set from tokens with setParameter:
+    #   Color     (color3f)  tint
+    #   Opacity   (float)    peak opacity
+    #   Power     (float)    falloff exponent; higher is a tighter rim
+    #   Invert    (float)    0 = edges opaque, 1 = faces opaque
+    def Material "Fresnel"
+    {
+        color3f inputs:Color = (1, 1, 1)
+        float inputs:Opacity = 0.6
+        float inputs:Power = 2
+        float inputs:Invert = 0
+
+        token outputs:mtlx:surface.connect = </Root/Fresnel/Surface.outputs:out>
+
+        def Shader "Surface"
+        {
+            uniform token info:id = "ND_realitykit_unlit_surfaceshader"
+            color3f inputs:color.connect = </Root/Fresnel.inputs:Color>
+            float inputs:opacity.connect = </Root/Fresnel/Final.outputs:out>
+            bool inputs:applyPostProcessToneMap = 0
+            bool inputs:hasPremultipliedAlpha = 0
+            token outputs:out
+        }
+
+        def Shader "Normal"
+        {
+            uniform token info:id = "ND_normal_vector3"
+            string inputs:space = "world"
+            float3 outputs:out
+        }
+
+        def Shader "View"
+        {
+            uniform token info:id = "ND_realitykit_viewdirection_vector3"
+            float3 outputs:out
+        }
+
+        def Shader "Facing"
+        {
+            uniform token info:id = "ND_dotproduct_vector3"
+            float3 inputs:in1.connect = </Root/Fresnel/Normal.outputs:out>
+            float3 inputs:in2.connect = </Root/Fresnel/View.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Abs"
+        {
+            uniform token info:id = "ND_absval_float"
+            float inputs:in.connect = </Root/Fresnel/Facing.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Edge"
+        {
+            uniform token info:id = "ND_subtract_float"
+            float inputs:in1 = 1
+            float inputs:in2.connect = </Root/Fresnel/Abs.outputs:out>
+            float outputs:out
+        }
+
+        def Shader "Falloff"
+        {
+            uniform token info:id = "ND_power_float"
+            float inputs:in1.connect = </Root/Fresnel/Edge.outputs:out>
+            float inputs:in2.connect = </Root/Fresnel.inputs:Power>
+            float outputs:out
+        }
+
+        def Shader "Choose"
+        {
+            uniform token info:id = "ND_mix_float"
+            float inputs:fg.connect = </Root/Fresnel/Abs.outputs:out>
+            float inputs:bg.connect = </Root/Fresnel/Falloff.outputs:out>
+            float inputs:mix.connect = </Root/Fresnel.inputs:Invert>
+            float outputs:out
+        }
+
+        def Shader "Final"
+        {
+            uniform token info:id = "ND_multiply_float"
+            float inputs:in1.connect = </Root/Fresnel/Choose.outputs:out>
+            float inputs:in2.connect = </Root/Fresnel.inputs:Opacity>
+            float outputs:out
+        }
+    }
+
+    def Sphere "Preview"
+    {
+        rel material:binding = </Root/Fresnel>
+        double radius = 0.1
+    }
+}

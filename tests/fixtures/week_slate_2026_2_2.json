@@ -1,0 +1,1163 @@
+{
+ "events": [
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "2",
+       "score": "0",
+       "team": {
+        "abbreviation": "BUF",
+        "alternateColor": "d50a0a",
+        "color": "00338d",
+        "displayName": "Buffalo Bills",
+        "id": "2",
+        "location": "Buffalo",
+        "name": "Bills",
+        "shortDisplayName": "Bills",
+        "uid": "s:20~l:28~t:2"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "8",
+       "score": "0",
+       "team": {
+        "abbreviation": "DET",
+        "alternateColor": "bbbbbb",
+        "color": "0076b6",
+        "displayName": "Detroit Lions",
+        "id": "8",
+        "location": "Detroit",
+        "name": "Lions",
+        "shortDisplayName": "Lions",
+        "uid": "s:20~l:28~t:8"
+       }
+      }
+     ],
+     "date": "2026-09-18T00:15Z",
+     "id": "401872932",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Thu, September 17th at 8:15 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/17 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-18T00:15Z",
+   "id": "401872932",
+   "name": "Detroit Lions at Buffalo Bills",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "DET @ BUF",
+   "uid": "s:20~l:28~e:401872932",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "1",
+       "score": "0",
+       "team": {
+        "abbreviation": "ATL",
+        "alternateColor": "000000",
+        "color": "a71930",
+        "displayName": "Atlanta Falcons",
+        "id": "1",
+        "location": "Atlanta",
+        "name": "Falcons",
+        "shortDisplayName": "Falcons",
+        "uid": "s:20~l:28~t:1"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "29",
+       "score": "0",
+       "team": {
+        "abbreviation": "CAR",
+        "alternateColor": "000000",
+        "color": "0085ca",
+        "displayName": "Carolina Panthers",
+        "id": "29",
+        "location": "Carolina",
+        "name": "Panthers",
+        "shortDisplayName": "Panthers",
+        "uid": "s:20~l:28~t:29"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872933",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872933",
+   "name": "Carolina Panthers at Atlanta Falcons",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "CAR @ ATL",
+   "uid": "s:20~l:28~e:401872933",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "3",
+       "score": "0",
+       "team": {
+        "abbreviation": "CHI",
+        "alternateColor": "e64100",
+        "color": "0b1c3a",
+        "displayName": "Chicago Bears",
+        "id": "3",
+        "location": "Chicago",
+        "name": "Bears",
+        "shortDisplayName": "Bears",
+        "uid": "s:20~l:28~t:3"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "16",
+       "score": "0",
+       "team": {
+        "abbreviation": "MIN",
+        "alternateColor": "ffc62f",
+        "color": "4f2683",
+        "displayName": "Minnesota Vikings",
+        "id": "16",
+        "location": "Minnesota",
+        "name": "Vikings",
+        "shortDisplayName": "Vikings",
+        "uid": "s:20~l:28~t:16"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872937",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872937",
+   "name": "Minnesota Vikings at Chicago Bears",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "MIN @ CHI",
+   "uid": "s:20~l:28~e:401872937",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "10",
+       "score": "0",
+       "team": {
+        "abbreviation": "TEN",
+        "alternateColor": "001532",
+        "color": "4495d2",
+        "displayName": "Tennessee Titans",
+        "id": "10",
+        "location": "Tennessee",
+        "name": "Titans",
+        "shortDisplayName": "Titans",
+        "uid": "s:20~l:28~t:10"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "21",
+       "score": "0",
+       "team": {
+        "abbreviation": "PHI",
+        "alternateColor": "000000",
+        "color": "06424d",
+        "displayName": "Philadelphia Eagles",
+        "id": "21",
+        "location": "Philadelphia",
+        "name": "Eagles",
+        "shortDisplayName": "Eagles",
+        "uid": "s:20~l:28~t:21"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872939",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872939",
+   "name": "Philadelphia Eagles at Tennessee Titans",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "PHI @ TEN",
+   "uid": "s:20~l:28~e:401872939",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "17",
+       "score": "0",
+       "team": {
+        "abbreviation": "NE",
+        "alternateColor": "c60c30",
+        "color": "002a5c",
+        "displayName": "New England Patriots",
+        "id": "17",
+        "location": "New England",
+        "name": "Patriots",
+        "shortDisplayName": "Patriots",
+        "uid": "s:20~l:28~t:17"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "23",
+       "score": "0",
+       "team": {
+        "abbreviation": "PIT",
+        "alternateColor": "ffb612",
+        "color": "000000",
+        "displayName": "Pittsburgh Steelers",
+        "id": "23",
+        "location": "Pittsburgh",
+        "name": "Steelers",
+        "shortDisplayName": "Steelers",
+        "uid": "s:20~l:28~t:23"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872946",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872946",
+   "name": "Pittsburgh Steelers at New England Patriots",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "PIT @ NE",
+   "uid": "s:20~l:28~e:401872946",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "20",
+       "score": "0",
+       "team": {
+        "abbreviation": "NYJ",
+        "alternateColor": "ffffff",
+        "color": "115740",
+        "displayName": "New York Jets",
+        "id": "20",
+        "location": "New York",
+        "name": "Jets",
+        "shortDisplayName": "Jets",
+        "uid": "s:20~l:28~t:20"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "9",
+       "score": "0",
+       "team": {
+        "abbreviation": "GB",
+        "alternateColor": "ffb612",
+        "color": "204e32",
+        "displayName": "Green Bay Packers",
+        "id": "9",
+        "location": "Green Bay",
+        "name": "Packers",
+        "shortDisplayName": "Packers",
+        "uid": "s:20~l:28~t:9"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872936",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872936",
+   "name": "Green Bay Packers at New York Jets",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "GB @ NYJ",
+   "uid": "s:20~l:28~e:401872936",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "27",
+       "score": "0",
+       "team": {
+        "abbreviation": "TB",
+        "alternateColor": "3e3a35",
+        "color": "bd1c36",
+        "displayName": "Tampa Bay Buccaneers",
+        "id": "27",
+        "location": "Tampa Bay",
+        "name": "Buccaneers",
+        "shortDisplayName": "Buccaneers",
+        "uid": "s:20~l:28~t:27"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "5",
+       "score": "0",
+       "team": {
+        "abbreviation": "CLE",
+        "alternateColor": "ff3c00",
+        "color": "472a08",
+        "displayName": "Cleveland Browns",
+        "id": "5",
+        "location": "Cleveland",
+        "name": "Browns",
+        "shortDisplayName": "Browns",
+        "uid": "s:20~l:28~t:5"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872935",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872935",
+   "name": "Cleveland Browns at Tampa Bay Buccaneers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "CLE @ TB",
+   "uid": "s:20~l:28~e:401872935",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "33",
+       "score": "0",
+       "team": {
+        "abbreviation": "BAL",
+        "alternateColor": "000000",
+        "color": "29126f",
+        "displayName": "Baltimore Ravens",
+        "id": "33",
+        "location": "Baltimore",
+        "name": "Ravens",
+        "shortDisplayName": "Ravens",
+        "uid": "s:20~l:28~t:33"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "18",
+       "score": "0",
+       "team": {
+        "abbreviation": "NO",
+        "alternateColor": "000000",
+        "color": "d3bc8d",
+        "displayName": "New Orleans Saints",
+        "id": "18",
+        "location": "New Orleans",
+        "name": "Saints",
+        "shortDisplayName": "Saints",
+        "uid": "s:20~l:28~t:18"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872938",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872938",
+   "name": "New Orleans Saints at Baltimore Ravens",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NO @ BAL",
+   "uid": "s:20~l:28~e:401872938",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "34",
+       "score": "0",
+       "team": {
+        "abbreviation": "HOU",
+        "alternateColor": "eb0028",
+        "color": "021018",
+        "displayName": "Houston Texans",
+        "id": "34",
+        "location": "Houston",
+        "name": "Texans",
+        "shortDisplayName": "Texans",
+        "uid": "s:20~l:28~t:34"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "4",
+       "score": "0",
+       "team": {
+        "abbreviation": "CIN",
+        "alternateColor": "000000",
+        "color": "fb4f14",
+        "displayName": "Cincinnati Bengals",
+        "id": "4",
+        "location": "Cincinnati",
+        "name": "Bengals",
+        "shortDisplayName": "Bengals",
+        "uid": "s:20~l:28~t:4"
+       }
+      }
+     ],
+     "date": "2026-09-20T17:00Z",
+     "id": "401872934",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 1:00 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 1:00 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T17:00Z",
+   "id": "401872934",
+   "name": "Cincinnati Bengals at Houston Texans",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "CIN @ HOU",
+   "uid": "s:20~l:28~e:401872934",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "7",
+       "score": "0",
+       "team": {
+        "abbreviation": "DEN",
+        "alternateColor": "fc4c02",
+        "color": "0a2343",
+        "displayName": "Denver Broncos",
+        "id": "7",
+        "location": "Denver",
+        "name": "Broncos",
+        "shortDisplayName": "Broncos",
+        "uid": "s:20~l:28~t:7"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "30",
+       "score": "0",
+       "team": {
+        "abbreviation": "JAX",
+        "alternateColor": "d7a22a",
+        "color": "007487",
+        "displayName": "Jacksonville Jaguars",
+        "id": "30",
+        "location": "Jacksonville",
+        "name": "Jaguars",
+        "shortDisplayName": "Jaguars",
+        "uid": "s:20~l:28~t:30"
+       }
+      }
+     ],
+     "date": "2026-09-20T20:05Z",
+     "id": "401872940",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 4:05 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 4:05 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T20:05Z",
+   "id": "401872940",
+   "name": "Jacksonville Jaguars at Denver Broncos",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "JAX @ DEN",
+   "uid": "s:20~l:28~e:401872940",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "24",
+       "score": "0",
+       "team": {
+        "abbreviation": "LAC",
+        "alternateColor": "ffc20e",
+        "color": "0080c6",
+        "displayName": "Los Angeles Chargers",
+        "id": "24",
+        "location": "Los Angeles",
+        "name": "Chargers",
+        "shortDisplayName": "Chargers",
+        "uid": "s:20~l:28~t:24"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "13",
+       "score": "0",
+       "team": {
+        "abbreviation": "LV",
+        "alternateColor": "a5acaf",
+        "color": "000000",
+        "displayName": "Las Vegas Raiders",
+        "id": "13",
+        "location": "Las Vegas",
+        "name": "Raiders",
+        "shortDisplayName": "Raiders",
+        "uid": "s:20~l:28~t:13"
+       }
+      }
+     ],
+     "date": "2026-09-20T20:05Z",
+     "id": "401872941",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 4:05 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 4:05 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T20:05Z",
+   "id": "401872941",
+   "name": "Las Vegas Raiders at Los Angeles Chargers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "LV @ LAC",
+   "uid": "s:20~l:28~e:401872941",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "6",
+       "score": "0",
+       "team": {
+        "abbreviation": "DAL",
+        "alternateColor": "b0b7bc",
+        "color": "002a5c",
+        "displayName": "Dallas Cowboys",
+        "id": "6",
+        "location": "Dallas",
+        "name": "Cowboys",
+        "shortDisplayName": "Cowboys",
+        "uid": "s:20~l:28~t:6"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "28",
+       "score": "0",
+       "team": {
+        "abbreviation": "WSH",
+        "alternateColor": "ffb612",
+        "color": "5a1414",
+        "displayName": "Washington Commanders",
+        "id": "28",
+        "location": "Washington",
+        "name": "Commanders",
+        "shortDisplayName": "Commanders",
+        "uid": "s:20~l:28~t:28"
+       }
+      }
+     ],
+     "date": "2026-09-20T20:25Z",
+     "id": "401872944",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 4:25 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 4:25 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T20:25Z",
+   "id": "401872944",
+   "name": "Washington Commanders at Dallas Cowboys",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "WSH @ DAL",
+   "uid": "s:20~l:28~e:401872944",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "22",
+       "score": "0",
+       "team": {
+        "abbreviation": "ARI",
+        "alternateColor": "ffffff",
+        "color": "a40227",
+        "displayName": "Arizona Cardinals",
+        "id": "22",
+        "location": "Arizona",
+        "name": "Cardinals",
+        "shortDisplayName": "Cardinals",
+        "uid": "s:20~l:28~t:22"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "26",
+       "score": "0",
+       "team": {
+        "abbreviation": "SEA",
+        "alternateColor": "69be28",
+        "color": "002a5c",
+        "displayName": "Seattle Seahawks",
+        "id": "26",
+        "location": "Seattle",
+        "name": "Seahawks",
+        "shortDisplayName": "Seahawks",
+        "uid": "s:20~l:28~t:26"
+       }
+      }
+     ],
+     "date": "2026-09-20T20:25Z",
+     "id": "401872943",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 4:25 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 4:25 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T20:25Z",
+   "id": "401872943",
+   "name": "Seattle Seahawks at Arizona Cardinals",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "SEA @ ARI",
+   "uid": "s:20~l:28~e:401872943",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "25",
+       "score": "0",
+       "team": {
+        "abbreviation": "SF",
+        "alternateColor": "b3995d",
+        "color": "aa0000",
+        "displayName": "San Francisco 49ers",
+        "id": "25",
+        "location": "San Francisco",
+        "name": "49ers",
+        "shortDisplayName": "49ers",
+        "uid": "s:20~l:28~t:25"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "15",
+       "score": "0",
+       "team": {
+        "abbreviation": "MIA",
+        "alternateColor": "fc4c02",
+        "color": "008e97",
+        "displayName": "Miami Dolphins",
+        "id": "15",
+        "location": "Miami",
+        "name": "Dolphins",
+        "shortDisplayName": "Dolphins",
+        "uid": "s:20~l:28~t:15"
+       }
+      }
+     ],
+     "date": "2026-09-20T20:25Z",
+     "id": "401872942",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 4:25 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 4:25 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-20T20:25Z",
+   "id": "401872942",
+   "name": "Miami Dolphins at San Francisco 49ers",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "MIA @ SF",
+   "uid": "s:20~l:28~e:401872942",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "12",
+       "score": "0",
+       "team": {
+        "abbreviation": "KC",
+        "alternateColor": "ffb612",
+        "color": "e31837",
+        "displayName": "Kansas City Chiefs",
+        "id": "12",
+        "location": "Kansas City",
+        "name": "Chiefs",
+        "shortDisplayName": "Chiefs",
+        "uid": "s:20~l:28~t:12"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "11",
+       "score": "0",
+       "team": {
+        "abbreviation": "IND",
+        "alternateColor": "ffffff",
+        "color": "003b75",
+        "displayName": "Indianapolis Colts",
+        "id": "11",
+        "location": "Indianapolis",
+        "name": "Colts",
+        "shortDisplayName": "Colts",
+        "uid": "s:20~l:28~t:11"
+       }
+      }
+     ],
+     "date": "2026-09-21T00:20Z",
+     "id": "401872945",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sun, September 20th at 8:20 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/20 - 8:20 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-21T00:20Z",
+   "id": "401872945",
+   "name": "Indianapolis Colts at Kansas City Chiefs",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "IND @ KC",
+   "uid": "s:20~l:28~e:401872945",
+   "week": {
+    "number": 2
+   }
+  },
+  {
+   "competitions": [
+    {
+     "attendance": 0,
+     "competitors": [
+      {
+       "homeAway": "home",
+       "id": "14",
+       "score": "0",
+       "team": {
+        "abbreviation": "LAR",
+        "alternateColor": "ffd100",
+        "color": "003594",
+        "displayName": "Los Angeles Rams",
+        "id": "14",
+        "location": "Los Angeles",
+        "name": "Rams",
+        "shortDisplayName": "Rams",
+        "uid": "s:20~l:28~t:14"
+       }
+      },
+      {
+       "homeAway": "away",
+       "id": "19",
+       "score": "0",
+       "team": {
+        "abbreviation": "NYG",
+        "alternateColor": "c9243f",
+        "color": "003c7f",
+        "displayName": "New York Giants",
+        "id": "19",
+        "location": "New York",
+        "name": "Giants",
+        "shortDisplayName": "Giants",
+        "uid": "s:20~l:28~t:19"
+       }
+      }
+     ],
+     "date": "2026-09-22T00:15Z",
+     "id": "401872947",
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "isTBDFlex": false,
+      "period": 0,
+      "type": {
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Mon, September 21st at 8:15 PM EDT",
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "9/21 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-09-22T00:15Z",
+   "id": "401872947",
+   "name": "New York Giants at Los Angeles Rams",
+   "season": {
+    "slug": "regular-season",
+    "type": 2,
+    "year": 2026
+   },
+   "shortName": "NYG @ LAR",
+   "uid": "s:20~l:28~e:401872947",
+   "week": {
+    "number": 2
+   }
+  }
+ ],
+ "leagues": [
+  {
+   "season": {
+    "displayName": "2026",
+    "endDate": "2027-02-16T07:59Z",
+    "startDate": "2026-08-06T07:00Z",
+    "type": {
+     "abbreviation": "reg",
+     "id": "2",
+     "name": "Regular Season",
+     "type": 2
+    },
+    "year": 2026
+   }
+  }
+ ],
+ "season": {
+  "type": 2,
+  "year": 2026
+ },
+ "week": {
+  "number": 2
+ }
+}

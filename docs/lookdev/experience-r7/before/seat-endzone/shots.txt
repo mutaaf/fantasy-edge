@@ -1,0 +1,1 @@
+crowd-closeup: replay at 240s (early) -> docs/lookdev/experience-r7/before/seat-endzone/crowd-closeup-endzone.png

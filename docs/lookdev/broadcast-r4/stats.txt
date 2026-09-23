@@ -1,0 +1,868 @@
+[shadergraph] /Root/Beam loaded from actors/lighting/Beams.reality via Entity(contentsOf:)
+[shadergraph] /Root/FieldPaint loaded from actors/field/shadergraph/Field.reality via Entity(contentsOf:)
+[shadergraph] /Root/NetFresnel loaded from actors/sideline/shadergraph/Sideline.reality via Entity(contentsOf:)
+[shadergraph] /Root/TurfSheen loaded from actors/field/shadergraph/Turf.reality via Entity(contentsOf:)
+[shadergraph] field paint on 3 meshes
+[shadergraph] lighting beams: Shader Graph in use on rim.beams
+[shadergraph] net falloff on 3 meshes
+[shadergraph] turf sheen on 3 meshes
+[stadium-stats] stadium.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 16, triangles 53048, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.broadcast: draw parts 6, triangles 4422, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 144376, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9508, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium: models 84, draw parts 98, triangles 237916, texture memory ~67 MB
+[stadium-timing] asset bowl.concrete: 1.159 s
+[stadium-timing] asset bowl.seats: 1.160 s
+[stadium-timing] asset broadcast.beam: 1.363 s
+[stadium-timing] asset broadcast.football: 1.363 s
+[stadium-timing] asset broadcast.glow: 1.364 s
+[stadium-timing] asset broadcast.line: 1.364 s
+[stadium-timing] asset broadcast.marker: 1.365 s
+[stadium-timing] asset broadcast.paint: 1.397 s
+[stadium-timing] asset broadcast.trailCore: 1.400 s
+[stadium-timing] asset broadcast.trailHalo: 1.404 s
+[stadium-timing] asset crowd.impostorNormal: 1.193 s
+[stadium-timing] asset field.turfAgainstNormal: 1.083 s
+[stadium-timing] asset field.turfAlbedo: 1.111 s
+[stadium-timing] asset field.turfRoughness: 1.125 s
+[stadium-timing] asset field.turfWithNormal: 1.142 s
+[stadium-timing] asset lighting.beam: 1.213 s
+[stadium-timing] asset lighting.beamDust: 1.214 s
+[stadium-timing] asset lighting.bloom: 1.214 s
+[stadium-timing] asset lighting.face: 1.230 s
+[stadium-timing] asset lighting.fill: 1.230 s
+[stadium-timing] asset lighting.glowCore: 1.241 s
+[stadium-timing] asset lighting.glowHalo: 1.265 s
+[stadium-timing] asset lighting.haze: 1.265 s
+[stadium-timing] asset lighting.lens: 1.265 s
+[stadium-timing] asset lighting.probe: 1.596 s
+[stadium-timing] asset lighting.spill: 1.265 s
+[stadium-timing] asset sideline.netMask: 1.150 s
+[stadium-timing] asset sideline.propShadow: 1.151 s
+[stadium-timing] asset sky.clouds: 1.310 s
+[stadium-timing] asset sky.dome: 1.310 s
+[stadium-timing] asset sky.sky: 1.363 s
+[stadium-timing] assets models: 2.334 s
+[stadium-timing] assets textures, probe and sound: 1.600 s
+[stadium-timing] assets total: 2.334 s
+[stadium-timing] look programs: 0.207 s
+[stadium-timing] model bowl.near: 0.674 s
+[stadium-timing] model bowl.seatsFar: 0.460 s
+[stadium-timing] model bowl.stands: 0.692 s
+[stadium-timing] model bowl.table: 0.479 s
+[stadium-timing] model broadcast.footballCollege: 0.895 s
+[stadium-timing] model broadcast.footballNFL: 0.893 s
+[stadium-timing] model crowd.lod0Poses: 2.097 s
+[stadium-timing] model crowd.lod1Poses: 1.682 s
+[stadium-timing] model crowd.lod2Poses: 1.692 s
+[stadium-timing] model lighting.bankFar: 0.891 s
+[stadium-timing] model lighting.bankNear: 0.891 s
+[stadium-timing] model sideline.ball_bag: 0.371 s
+[stadium-timing] model sideline.ball_bag_lod2: 0.370 s
+[stadium-timing] model sideline.bench: 0.398 s
+[stadium-timing] model sideline.bench_lod2: 0.398 s
+[stadium-timing] model sideline.cable_run: 0.398 s
+[stadium-timing] model sideline.cable_run_lod2: 0.383 s
+[stadium-timing] model sideline.camera_cart: 0.397 s
+[stadium-timing] model sideline.camera_cart_lod2: 0.369 s
+[stadium-timing] model sideline.chain_set: 0.397 s
+[stadium-timing] model sideline.chain_set_lod2: 0.369 s
+[stadium-timing] model sideline.cooler_station: 0.397 s
+[stadium-timing] model sideline.cooler_station_lod2: 0.398 s
+[stadium-timing] model sideline.down_marker: 0.397 s
+[stadium-timing] model sideline.down_marker_lod2: 0.397 s
+[stadium-timing] model sideline.endzone_platform: 0.397 s
+[stadium-timing] model sideline.endzone_platform_lod2: 0.398 s
+[stadium-timing] model sideline.fieldgoal_net: 0.445 s
+[stadium-timing] model sideline.fieldgoal_net_lod2: 0.445 s
+[stadium-timing] model sideline.goalpost_college: 0.397 s
+[stadium-timing] model sideline.goalpost_college_lod2: 0.444 s
+[stadium-timing] model sideline.goalpost_nfl: 0.414 s
+[stadium-timing] model sideline.goalpost_nfl_lod2: 0.397 s
+[stadium-timing] model sideline.ground_marker: 0.414 s
+[stadium-timing] model sideline.ground_marker_lod2: 0.414 s
+[stadium-timing] model sideline.heater_fan: 0.444 s
+[stadium-timing] model sideline.heater_fan_lod2: 0.446 s
+[stadium-timing] model sideline.kicking_net: 0.445 s
+[stadium-timing] model sideline.kicking_net_lod2: 0.445 s
+[stadium-timing] model sideline.medical_tent: 0.444 s
+[stadium-timing] model sideline.medical_tent_lod2: 0.444 s
+[stadium-timing] model sideline.pylon_college: 0.444 s
+[stadium-timing] model sideline.pylon_college_lod2: 0.444 s
+[stadium-timing] model sideline.pylon_nfl: 0.444 s
+[stadium-timing] model sideline.pylon_nfl_lod2: 0.445 s
+[stadium-timing] model sideline.tablet_station: 0.431 s
+[stadium-timing] model sideline.tablet_station_lod2: 0.432 s
+[stadium-timing] shadergraph /Root/Beam: 1.634 s
+[stadium-timing] shadergraph /Root/FieldPaint: 1.252 s
+[stadium-timing] shadergraph /Root/NetFresnel: 1.449 s
+[stadium-timing] shadergraph /Root/TurfSheen: 1.044 s
+[stadium-timing] stadium apply.audio: 0.000 s
+[stadium-timing] stadium apply.bowl: 0.000 s
+[stadium-timing] stadium apply.broadcast: 0.092 s
+[stadium-timing] stadium apply.crowd: 0.000 s
+[stadium-timing] stadium apply.experience: 0.000 s
+[stadium-timing] stadium apply.field: 0.000 s
+[stadium-timing] stadium apply.lighting: 0.000 s
+[stadium-timing] stadium apply.moments: 0.000 s
+[stadium-timing] stadium apply.sideline: 0.000 s
+[stadium-timing] stadium apply.sky: 0.000 s
+[stadium-timing] stadium assets ready after open: 2.747 s
+[stadium-timing] stadium build total: 3.133 s
+[stadium-timing] stadium build.audio: 0.064 s
+[stadium-timing] stadium build.bowl: 0.030 s
+[stadium-timing] stadium build.broadcast: 0.031 s
+[stadium-timing] stadium build.crowd: 2.858 s
+[stadium-timing] stadium build.experience: 0.000 s
+[stadium-timing] stadium build.field: 0.036 s
+[stadium-timing] stadium build.lighting: 0.028 s
+[stadium-timing] stadium build.moments: 0.000 s
+[stadium-timing] stadium build.probeReceivers: 0.002 s
+[stadium-timing] stadium build.sideline: 0.073 s
+[stadium-timing] stadium build.sky: 0.010 s
+[stadium-timing] stadium first tick after open: 5.978 s
+[stadium-timing] stadium first update.audio: 0.000 s
+[stadium-timing] stadium first update.bowl: 0.000 s
+[stadium-timing] stadium first update.broadcast: 0.000 s
+[stadium-timing] stadium first update.crowd: 0.001 s
+[stadium-timing] stadium first update.experience: 0.000 s
+[stadium-timing] stadium first update.field: 0.000 s
+[stadium-timing] stadium first update.lighting: 0.001 s
+[stadium-timing] stadium first update.moments: 0.000 s
+[stadium-timing] stadium first update.sideline: 0.000 s
+[stadium-timing] stadium first update.sky: 0.000 s
+[stadium-timing] stadium main-thread tick: 0.250 ms mean over 120 frames
+[stadium-trace] t=0.00 scene drive=4017728105 shown= arcs=8 last=401772810961 lost=false next=false flight=-
+[stadium-trace] t=12.05 scene drive=4017728105 shown=4017728105 arcs=8 last=401772810961 lost=false next=false flight=-
+[stadium-trace] t=16.24 scene drive=4017728105 shown=4017728105 arcs=8 last=401772810961 lost=false next=false flight=-
+[stadium-trace] t=20.40 fly 401772810981 Kickoff 11.613s
+[stadium-trace] t=20.40 scene drive=4017728106 shown=4017728105 arcs=2 last=4017728101027 lost=false next=true flight=-
+[stadium-trace] t=20.41 ballpos 401772810981 s=0.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.53 ballpos 401772810981 s=0.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.54 ballpos 401772810981 s=0.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.55 ballpos 401772810981 s=0.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.56 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.57 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.58 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.59 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.60 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.61 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.62 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.63 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.64 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.65 ballpos 401772810981 s=0.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.66 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.67 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.68 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.69 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.70 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.71 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.72 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.73 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.74 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.75 ballpos 401772810981 s=0.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.76 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.77 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.78 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.79 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.81 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.82 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.83 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.84 ballpos 401772810981 s=0.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.86 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.87 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.88 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.89 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.91 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.92 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.93 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.94 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.95 ballpos 401772810981 s=0.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.96 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.97 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.98 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=20.99 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.01 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.02 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.03 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.04 ballpos 401772810981 s=0.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.06 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.07 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.08 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.09 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.11 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.12 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.13 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.14 ballpos 401772810981 s=0.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.16 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.17 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.18 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.19 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.21 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.22 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.23 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.24 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.25 ballpos 401772810981 s=0.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.26 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.27 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.28 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.29 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.30 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.31 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.32 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.33 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.34 ballpos 401772810981 s=0.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.36 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.37 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.38 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.39 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.41 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.42 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.43 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.44 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.45 ballpos 401772810981 s=1.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.46 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.47 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.48 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.49 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.51 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.52 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.53 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.54 ballpos 401772810981 s=1.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.56 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.57 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.58 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.59 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.60 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.61 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.62 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.63 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.64 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.65 ballpos 401772810981 s=1.2 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.66 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.67 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.68 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.69 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.71 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.72 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.73 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.74 ballpos 401772810981 s=1.3 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.76 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.77 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.78 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.79 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.81 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.82 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.83 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.84 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.85 ballpos 401772810981 s=1.4 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.86 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.87 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.88 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.89 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.90 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.91 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.92 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.93 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.94 ballpos 401772810981 s=1.5 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.96 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.97 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.98 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=21.99 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.00 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.01 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.02 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.03 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.04 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.05 ballpos 401772810981 s=1.6 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.06 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.07 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.08 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.09 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.11 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.12 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.13 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.14 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.15 ballpos 401772810981 s=1.7 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.16 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.17 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.18 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.19 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.20 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.21 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.22 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.23 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.24 ballpos 401772810981 s=1.8 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.26 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.27 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.28 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.29 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.30 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.31 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.32 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.33 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.34 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.35 ballpos 401772810981 s=1.9 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.36 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.37 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.38 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.39 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.40 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.41 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.42 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.43 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.44 ballpos 401772810981 s=2.0 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.46 ballpos 401772810981 s=2.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.47 ballpos 401772810981 s=2.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.48 ballpos 401772810981 s=2.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.49 ballpos 401772810981 s=2.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.50 ballpos 401772810981 s=2.1 p=SIMD3<Float>(15.0, 0.247, -9.067) live=0 trails=0
+[stadium-trace] t=22.51 ballpos 401772810981 s=2.1 p=SIMD3<Float>(14.91369, 0.247, -9.058572) live=0 trails=0
+[stadium-trace] t=22.52 ballpos 401772810981 s=2.1 p=SIMD3<Float>(14.74091, 0.43449655, -9.0417) live=0 trails=0
+[stadium-trace] t=22.53 ballpos 401772810981 s=2.1 p=SIMD3<Float>(14.481741, 0.71684307, -9.016394) live=46 trails=0
+[stadium-trace] t=22.53 ballpos 401772810981 s=2.1 p=SIMD3<Float>(14.5681305, 0.62297595, -9.02483) live=46 trails=0
+[stadium-trace] t=22.54 ballpos 401772810981 s=2.1 p=SIMD3<Float>(14.308961, 0.90383434, -8.999522) live=46 trails=0
+[stadium-trace] t=22.56 ballpos 401772810981 s=2.2 p=SIMD3<Float>(14.04979, 1.1824573, -8.9742155) live=46 trails=0
+[stadium-trace] t=22.56 ballpos 401772810981 s=2.2 p=SIMD3<Float>(14.13618, 1.0898321, -8.982652) live=46 trails=0
+[stadium-trace] t=22.57 ballpos 401772810981 s=2.2 p=SIMD3<Float>(13.87701, 1.3669648, -8.957344) live=46 trails=0
+[stadium-trace] t=22.60 ballpos 401772810981 s=2.2 p=SIMD3<Float>(13.44506, 1.8238859, -8.915166) live=46 trails=0
+[stadium-trace] t=22.61 ballpos 401772810981 s=2.2 p=SIMD3<Float>(13.272279, 2.0049162, -8.898294) live=46 trails=0
+[stadium-trace] t=22.62 ballpos 401772810981 s=2.2 p=SIMD3<Float>(13.0995, 2.1849508, -8.881424) live=46 trails=0
+[stadium-trace] t=22.63 ballpos 401772810981 s=2.2 p=SIMD3<Float>(12.926722, 2.363992, -8.8645525) live=46 trails=0
+[stadium-trace] t=22.64 ballpos 401772810981 s=2.2 p=SIMD3<Float>(12.753941, 2.5420415, -8.847681) live=46 trails=0
+[stadium-trace] t=22.65 ballpos 401772810981 s=2.2 p=SIMD3<Float>(12.667551, 2.630693, -8.839246) live=46 trails=0
+[stadium-trace] t=22.66 ballpos 401772810981 s=2.3 p=SIMD3<Float>(12.494771, 2.8072522, -8.822374) live=46 trails=0
+[stadium-trace] t=22.67 ballpos 401772810981 s=2.3 p=SIMD3<Float>(12.408381, 2.8951585, -8.813938) live=46 trails=0
+[stadium-trace] t=22.68 ballpos 401772810981 s=2.3 p=SIMD3<Float>(12.149211, 3.1573887, -8.788631) live=46 trails=0
+[stadium-trace] t=22.68 ballpos 401772810981 s=2.3 p=SIMD3<Float>(12.2356, 3.0702276, -8.797067) live=46 trails=0
+[stadium-trace] t=22.69 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.976431, 3.3309674, -8.77176) live=46 trails=0
+[stadium-trace] t=22.71 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.71726, 3.589472, -8.746453) live=46 trails=0
+[stadium-trace] t=22.72 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.54448, 3.7605672, -8.729582) live=46 trails=0
+[stadium-trace] t=22.73 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.371701, 3.9306667, -8.71271) live=46 trails=0
+[stadium-trace] t=22.73 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.458091, 3.845741, -8.721147) live=46 trails=0
+[stadium-trace] t=22.74 ballpos 401772810981 s=2.3 p=SIMD3<Float>(11.19892, 4.099775, -8.695839) live=46 trails=0
+[stadium-trace] t=22.76 ballpos 401772810981 s=2.4 p=SIMD3<Float>(11.02614, 4.2678895, -8.678967) live=46 trails=0
+[stadium-trace] t=22.77 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.76697, 4.5181975, -8.653661) live=46 trails=0
+[stadium-trace] t=22.78 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.59419, 4.6838284, -8.636789) live=46 trails=0
+[stadium-trace] t=22.79 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.421411, 4.848464, -8.619919) live=46 trails=0
+[stadium-trace] t=22.81 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.162241, 5.093556, -8.594611) live=46 trails=0
+[stadium-trace] t=22.81 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.24863, 5.012108, -8.603047) live=46 trails=0
+[stadium-trace] t=22.82 ballpos 401772810981 s=2.4 p=SIMD3<Float>(10.075851, 5.174756, -8.586176) live=46 trails=0
+[stadium-trace] t=22.83 ballpos 401772810981 s=2.4 p=SIMD3<Float>(9.816681, 5.4168677, -8.560869) live=46 trails=0
+[stadium-trace] t=22.83 ballpos 401772810981 s=2.4 p=SIMD3<Float>(9.90307, 5.336413, -8.569304) live=46 trails=0
+[stadium-trace] t=22.84 ballpos 401772810981 s=2.4 p=SIMD3<Float>(9.643901, 5.5770345, -8.543998) live=46 trails=0
+[stadium-trace] t=22.85 ballpos 401772810981 s=2.4 p=SIMD3<Float>(9.557511, 5.656744, -8.535562) live=46 trails=0
+[stadium-trace] t=22.86 ballpos 401772810981 s=2.5 p=SIMD3<Float>(9.38473, 5.81542, -8.51869) live=46 trails=0
+[stadium-trace] t=22.87 ballpos 401772810981 s=2.5 p=SIMD3<Float>(9.21195, 5.973103, -8.50182) live=46 trails=0
+[stadium-trace] t=22.89 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.86639, 6.285486, -8.468077) live=46 trails=0
+[stadium-trace] t=22.91 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.607221, 6.517166, -8.44277) live=46 trails=0
+[stadium-trace] t=22.91 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.69361, 6.4401884, -8.451205) live=46 trails=0
+[stadium-trace] t=22.92 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.520831, 6.5938954, -8.434334) live=46 trails=0
+[stadium-trace] t=22.93 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.34805, 6.7466106, -8.417462) live=46 trails=0
+[stadium-trace] t=22.94 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.17527, 6.898332, -8.400591) live=46 trails=0
+[stadium-trace] t=22.95 ballpos 401772810981 s=2.5 p=SIMD3<Float>(8.002489, 7.0490603, -8.38372) live=46 trails=0
+[stadium-trace] t=22.96 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.8297086, 7.1987953, -8.366849) live=46 trails=0
+[stadium-trace] t=22.97 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.743319, 7.273289, -8.358413) live=46 trails=0
+[stadium-trace] t=22.98 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.484151, 7.4952807, -8.333106) live=46 trails=0
+[stadium-trace] t=22.98 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.5705385, 7.4215336, -8.341541) live=46 trails=0
+[stadium-trace] t=22.99 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.3113704, 7.6420345, -8.316235) live=46 trails=0
+[stadium-trace] t=23.00 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.224981, 7.7150383, -8.307799) live=46 trails=0
+[stadium-trace] t=23.01 ballpos 401772810981 s=2.6 p=SIMD3<Float>(7.0522003, 7.8603024, -8.290928) live=46 trails=0
+[stadium-trace] t=23.02 ballpos 401772810981 s=2.6 p=SIMD3<Float>(6.9658113, 7.932561, -8.282493) live=46 trails=0
+[stadium-trace] t=23.03 ballpos 401772810981 s=2.6 p=SIMD3<Float>(6.7930303, 8.076334, -8.265621) live=46 trails=0
+[stadium-trace] t=23.04 ballpos 401772810981 s=2.6 p=SIMD3<Float>(6.6202497, 8.219114, -8.24875) live=46 trails=0
+[stadium-trace] t=23.07 ballpos 401772810981 s=2.7 p=SIMD3<Float>(6.188301, 8.571715, -8.206572) live=46 trails=0
+[stadium-trace] t=23.08 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.929131, 8.780296, -8.181265) live=46 trails=0
+[stadium-trace] t=23.08 ballpos 401772810981 s=2.7 p=SIMD3<Float>(6.0155206, 8.711019, -8.1897) live=46 trails=0
+[stadium-trace] t=23.09 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.7563505, 8.918109, -8.164393) live=46 trails=0
+[stadium-trace] t=23.11 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.4971805, 9.122965, -8.139086) live=46 trails=0
+[stadium-trace] t=23.12 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.410791, 9.190752, -8.1306505) live=46 trails=0
+[stadium-trace] t=23.13 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.2380104, 9.325584, -8.113779) live=46 trails=0
+[stadium-trace] t=23.14 ballpos 401772810981 s=2.7 p=SIMD3<Float>(5.06523, 9.459423, -8.096908) live=46 trails=0
+[stadium-trace] t=23.15 ballpos 401772810981 s=2.7 p=SIMD3<Float>(4.892449, 9.592268, -8.080036) live=46 trails=0
+[stadium-trace] t=23.16 ballpos 401772810981 s=2.8 p=SIMD3<Float>(4.80606, 9.658317, -8.071601) live=46 trails=0
+[stadium-trace] t=23.17 ballpos 401772810981 s=2.8 p=SIMD3<Float>(4.633279, 9.789672, -8.054729) live=46 trails=0
+[stadium-trace] t=23.18 ballpos 401772810981 s=2.8 p=SIMD3<Float>(4.4604983, 9.9200325, -8.037858) live=46 trails=0
+[stadium-trace] t=23.19 ballpos 401772810981 s=2.8 p=SIMD3<Float>(4.2877197, 10.049399, -8.020987) live=46 trails=0
+[stadium-trace] t=23.20 ballpos 401772810981 s=2.8 p=SIMD3<Float>(4.114941, 10.177772, -8.004116) live=46 trails=0
+[stadium-trace] t=23.21 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.9421604, 10.305153, -7.9872446) live=46 trails=0
+[stadium-trace] t=23.22 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.8557708, 10.368469, -7.978809) live=46 trails=0
+[stadium-trace] t=23.23 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.596601, 10.556932, -7.953502) live=46 trails=0
+[stadium-trace] t=23.23 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.6829903, 10.49436, -7.9619374) live=46 trails=0
+[stadium-trace] t=23.24 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.4238203, 10.681333, -7.9366307) live=46 trails=0
+[stadium-trace] t=23.25 ballpos 401772810981 s=2.8 p=SIMD3<Float>(3.337431, 10.743159, -7.928195) live=46 trails=0
+[stadium-trace] t=23.26 ballpos 401772810981 s=2.9 p=SIMD3<Float>(3.1646502, 10.866069, -7.9113235) live=46 trails=0
+[stadium-trace] t=23.27 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.9918697, 10.987986, -7.894452) live=46 trails=0
+[stadium-trace] t=23.29 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.6463103, 11.228836, -7.8607097) live=46 trails=0
+[stadium-trace] t=23.30 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.5599208, 11.288427, -7.852274) live=46 trails=0
+[stadium-trace] t=23.31 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.3871403, 11.406867, -7.835403) live=46 trails=0
+[stadium-trace] t=23.32 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.300751, 11.4657135, -7.8269672) live=46 trails=0
+[stadium-trace] t=23.33 ballpos 401772810981 s=2.9 p=SIMD3<Float>(2.1279702, 11.582662, -7.810096) live=46 trails=0
+[stadium-trace] t=23.34 ballpos 401772810981 s=2.9 p=SIMD3<Float>(1.8688002, 11.756222, -7.7847886) live=46 trails=0
+[stadium-trace] t=23.36 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.6960195, 11.870687, -7.7679176) live=46 trails=0
+[stadium-trace] t=23.37 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.5232408, 11.984158, -7.751046) live=46 trails=0
+[stadium-trace] t=23.38 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.2640709, 12.152501, -7.7257395) live=46 trails=0
+[stadium-trace] t=23.38 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.3504602, 12.096636, -7.7341747) live=46 trails=0
+[stadium-trace] t=23.39 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.0912902, 12.263489, -7.708868) live=46 trails=0
+[stadium-trace] t=23.40 ballpos 401772810981 s=3.0 p=SIMD3<Float>(1.0049008, 12.318609, -7.7004323) live=46 trails=0
+[stadium-trace] t=23.41 ballpos 401772810981 s=3.0 p=SIMD3<Float>(0.8321202, 12.428107, -7.683561) live=46 trails=0
+[stadium-trace] t=23.42 ballpos 401772810981 s=3.0 p=SIMD3<Float>(0.65933955, 12.536612, -7.66669) live=46 trails=0
+[stadium-trace] t=23.43 ballpos 401772810981 s=3.0 p=SIMD3<Float>(0.48656082, 12.64412, -7.6498184) live=46 trails=0
+[stadium-trace] t=23.43 ballpos 401772810981 s=3.0 p=SIMD3<Float>(0.5729502, 12.59049, -7.658254) live=46 trails=0
+[stadium-trace] t=23.44 ballpos 401772810981 s=3.0 p=SIMD3<Float>(0.31378016, 12.750638, -7.632947) live=46 trails=0
+[stadium-trace] t=23.46 ballpos 401772810981 s=3.1 p=SIMD3<Float>(0.14100146, 12.85616, -7.616076) live=46 trails=0
+[stadium-trace] t=23.47 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.031779196, 12.96069, -7.5992045) live=46 trails=0
+[stadium-trace] t=23.48 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.20455985, 13.064226, -7.582333) live=46 trails=0
+[stadium-trace] t=23.49 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.37734053, 13.166769, -7.5654616) live=46 trails=0
+[stadium-trace] t=23.49 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.46372986, 13.217668, -7.5570264) live=46 trails=0
+[stadium-trace] t=23.51 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.6365105, 13.318721, -7.540155) live=46 trails=0
+[stadium-trace] t=23.52 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-0.89568055, 13.468436, -7.5148478) live=46 trails=0
+[stadium-trace] t=23.53 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-1.0684612, 13.567005, -7.497977) live=46 trails=0
+[stadium-trace] t=23.54 ballpos 401772810981 s=3.1 p=SIMD3<Float>(-1.2412418, 13.66458, -7.4811053) live=46 trails=0
+[stadium-trace] t=23.56 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-1.4140205, 13.761161, -7.464234) live=46 trails=0
+[stadium-trace] t=23.57 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-1.5867993, 13.856749, -7.447363) live=46 trails=0
+[stadium-trace] t=23.59 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.01875, 14.0913725, -7.4051847) live=46 trails=0
+[stadium-trace] t=23.60 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.1051393, 14.137551, -7.396749) live=46 trails=0
+[stadium-trace] t=23.61 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.27792, 14.229166, -7.3798776) live=46 trails=0
+[stadium-trace] t=23.62 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.3643093, 14.2746, -7.371442) live=46 trails=0
+[stadium-trace] t=23.63 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.5370898, 14.364724, -7.3545704) live=46 trails=0
+[stadium-trace] t=23.64 ballpos 401772810981 s=3.2 p=SIMD3<Float>(-2.7962599, 14.498047, -7.3292637) live=46 trails=0
+[stadium-trace] t=23.66 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-2.9690406, 14.585688, -7.312392) live=46 trails=0
+[stadium-trace] t=23.66 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.05543, 14.629134, -7.3039565) live=46 trails=0
+[stadium-trace] t=23.67 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.1418192, 14.672334, -7.2955213) live=46 trails=0
+[stadium-trace] t=23.68 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.3146, 14.757987, -7.27865) live=46 trails=0
+[stadium-trace] t=23.68 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.4009893, 14.80044, -7.270214) live=46 trails=0
+[stadium-trace] t=23.69 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.57377, 14.8846035, -7.2533426) live=46 trails=0
+[stadium-trace] t=23.70 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.6601593, 14.9263115, -7.2449074) live=46 trails=0
+[stadium-trace] t=23.71 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-3.8329399, 15.008985, -7.228036) live=46 trails=0
+[stadium-trace] t=23.72 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-4.0057206, 15.090664, -7.2111645) live=46 trails=0
+[stadium-trace] t=23.73 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-4.178501, 15.17135, -7.194293) live=46 trails=0
+[stadium-trace] t=23.75 ballpos 401772810981 s=3.3 p=SIMD3<Float>(-4.437671, 15.290515, -7.1689863) live=46 trails=0
+[stadium-trace] t=23.76 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-4.6104517, 15.368717, -7.152115) live=46 trails=0
+[stadium-trace] t=23.77 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-4.6968393, 15.407444, -7.1436796) live=46 trails=0
+[stadium-trace] t=23.78 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-4.86962, 15.484156, -7.126808) live=46 trails=0
+[stadium-trace] t=23.79 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.042401, 15.559874, -7.1099367) live=46 trails=0
+[stadium-trace] t=23.81 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.3015704, 15.671588, -7.0846295) live=46 trails=0
+[stadium-trace] t=23.82 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.4743514, 15.7448225, -7.0677586) live=46 trails=0
+[stadium-trace] t=23.83 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.64713, 15.817062, -7.050887) live=46 trails=0
+[stadium-trace] t=23.84 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.8199105, 15.88831, -7.0340157) live=46 trails=0
+[stadium-trace] t=23.84 ballpos 401772810981 s=3.4 p=SIMD3<Float>(-5.9063, 15.923561, -7.0255804) live=46 trails=0
+[stadium-trace] t=23.87 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-6.3382506, 16.09609, -6.983402) live=46 trails=0
+[stadium-trace] t=23.88 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-6.42464, 16.12985, -6.9749665) live=46 trails=0
+[stadium-trace] t=23.89 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-6.5974207, 16.196629, -6.958095) live=46 trails=0
+[stadium-trace] t=23.90 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-6.770201, 16.262411, -6.9412236) live=46 trails=0
+[stadium-trace] t=23.91 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-6.94298, 16.3272, -6.924352) live=46 trails=0
+[stadium-trace] t=23.92 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-7.115761, 16.390995, -6.907481) live=46 trails=0
+[stadium-trace] t=23.93 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-7.20215, 16.422522, -6.8990455) live=46 trails=0
+[stadium-trace] t=23.93 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-7.2885394, 16.453798, -6.8906097) live=46 trails=0
+[stadium-trace] t=23.94 ballpos 401772810981 s=3.5 p=SIMD3<Float>(-7.46132, 16.515606, -6.8737383) live=46 trails=0
+[stadium-trace] t=23.96 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-7.634101, 16.576422, -6.8568673) live=46 trails=0
+[stadium-trace] t=23.96 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-7.72049, 16.606457, -6.8484316) live=46 trails=0
+[stadium-trace] t=23.97 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-7.8932705, 16.665783, -6.83156) live=46 trails=0
+[stadium-trace] t=23.98 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.0660515, 16.724113, -6.8146887) live=46 trails=0
+[stadium-trace] t=23.99 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.23883, 16.781452, -6.7978177) live=46 trails=0
+[stadium-trace] t=24.01 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.411611, 16.837797, -6.7809463) live=46 trails=0
+[stadium-trace] t=24.01 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.498, 16.865597, -6.7725105) live=46 trails=0
+[stadium-trace] t=24.02 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.58439, 16.893147, -6.7640753) live=46 trails=0
+[stadium-trace] t=24.03 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.75717, 16.947506, -6.747204) live=46 trails=0
+[stadium-trace] t=24.03 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-8.843559, 16.974312, -6.738768) live=46 trails=0
+[stadium-trace] t=24.04 ballpos 401772810981 s=3.6 p=SIMD3<Float>(-9.01634, 17.027178, -6.7218966) live=46 trails=0
+[stadium-trace] t=24.06 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.189121, 17.079052, -6.705025) live=46 trails=0
+[stadium-trace] t=24.07 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.361901, 17.129932, -6.688154) live=46 trails=0
+[stadium-trace] t=24.07 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.448291, 17.155, -6.6797185) live=46 trails=0
+[stadium-trace] t=24.08 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.621072, 17.204391, -6.662847) live=46 trails=0
+[stadium-trace] t=24.09 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.793852, 17.252787, -6.6459756) live=46 trails=0
+[stadium-trace] t=24.10 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-9.8802395, 17.276613, -6.6375403) live=46 trails=0
+[stadium-trace] t=24.11 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-10.0530205, 17.323519, -6.620669) live=46 trails=0
+[stadium-trace] t=24.12 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-10.139409, 17.3466, -6.612233) live=46 trails=0
+[stadium-trace] t=24.13 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-10.31219, 17.392015, -6.595362) live=46 trails=0
+[stadium-trace] t=24.13 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-10.39858, 17.41435, -6.5869265) live=46 trails=0
+[stadium-trace] t=24.14 ballpos 401772810981 s=3.7 p=SIMD3<Float>(-10.571361, 17.458277, -6.570055) live=46 trails=0
+[stadium-trace] t=24.16 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-10.744141, 17.50121, -6.5531836) live=46 trails=0
+[stadium-trace] t=24.16 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-10.83053, 17.522303, -6.5447483) live=46 trails=0
+[stadium-trace] t=24.17 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-10.91692, 17.543148, -6.5363126) live=46 trails=0
+[stadium-trace] t=24.18 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-11.0897, 17.584093, -6.519441) live=46 trails=0
+[stadium-trace] t=24.18 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-11.176089, 17.604193, -6.5110054) live=46 trails=0
+[stadium-trace] t=24.21 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-11.60804, 17.700968, -6.4688272) live=46 trails=0
+[stadium-trace] t=24.22 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-11.780821, 17.73794, -6.451956) live=46 trails=0
+[stadium-trace] t=24.23 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-11.86721, 17.756052, -6.44352) live=46 trails=0
+[stadium-trace] t=24.24 ballpos 401772810981 s=3.8 p=SIMD3<Float>(-12.03999, 17.791533, -6.426649) live=46 trails=0
+[stadium-trace] t=24.28 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-12.73111, 17.923521, -6.3591638) live=46 trails=0
+[stadium-trace] t=24.29 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-12.903891, 17.954035, -6.3422923) live=46 trails=0
+[stadium-trace] t=24.31 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-13.16306, 17.997942, -6.3169856) live=46 trails=0
+[stadium-trace] t=24.32 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-13.335841, 18.025972, -6.300114) live=46 trails=0
+[stadium-trace] t=24.33 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-13.508619, 18.053009, -6.2832427) live=46 trails=0
+[stadium-trace] t=24.34 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-13.6814, 18.079052, -6.2663717) live=46 trails=0
+[stadium-trace] t=24.35 ballpos 401772810981 s=3.9 p=SIMD3<Float>(-13.76779, 18.0917, -6.257936) live=46 trails=0
+[stadium-trace] t=24.36 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-13.94057, 18.116253, -6.2410645) live=46 trails=0
+[stadium-trace] t=24.37 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.026959, 18.128157, -6.232629) live=46 trails=0
+[stadium-trace] t=24.38 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.19974, 18.151218, -6.215758) live=46 trails=0
+[stadium-trace] t=24.39 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.372521, 18.173286, -6.1988864) live=46 trails=0
+[stadium-trace] t=24.39 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.45891, 18.183949, -6.1904507) live=46 trails=0
+[stadium-trace] t=24.40 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.5453, 18.194363, -6.182015) live=46 trails=0
+[stadium-trace] t=24.41 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.7180805, 18.214443, -6.165144) live=46 trails=0
+[stadium-trace] t=24.42 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.80447, 18.224112, -6.1567082) live=46 trails=0
+[stadium-trace] t=24.43 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-14.97725, 18.242702, -6.139837) live=46 trails=0
+[stadium-trace] t=24.43 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-15.06364, 18.251627, -6.131401) live=46 trails=0
+[stadium-trace] t=24.44 ballpos 401772810981 s=4.0 p=SIMD3<Float>(-15.236421, 18.268726, -6.1145296) live=46 trails=0
+[stadium-trace] t=24.46 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-15.409201, 18.284836, -6.0976586) live=46 trails=0
+[stadium-trace] t=24.46 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-15.49559, 18.292517, -6.089223) live=46 trails=0
+[stadium-trace] t=24.47 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-15.668371, 18.307133, -6.0723515) live=46 trails=0
+[stadium-trace] t=24.49 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.013931, 18.333387, -6.038609) live=46 trails=0
+[stadium-trace] t=24.50 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.100319, 18.33933, -6.0301733) live=46 trails=0
+[stadium-trace] t=24.51 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.2731, 18.35047, -6.013302) live=46 trails=0
+[stadium-trace] t=24.52 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.35949, 18.355667, -6.0048666) live=46 trails=0
+[stadium-trace] t=24.53 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.53227, 18.365318, -5.987995) live=46 trails=0
+[stadium-trace] t=24.54 ballpos 401772810981 s=4.1 p=SIMD3<Float>(-16.791441, 18.37793, -5.962688) live=46 trails=0
+[stadium-trace] t=24.56 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-16.964222, 18.385096, -5.9458165) live=46 trails=0
+[stadium-trace] t=24.56 scene drive=4017728106 shown=4017728106 arcs=2 last=4017728101027 lost=false next=false flight=401772810981
+[stadium-trace] t=24.57 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-17.137, 18.391268, -5.9289455) live=46 trails=0
+[stadium-trace] t=24.60 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-17.65534, 18.403824, -5.8783317) live=46 trails=0
+[stadium-trace] t=24.61 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-17.828121, 18.406023, -5.86146) live=46 trails=0
+[stadium-trace] t=24.62 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-18.0009, 18.407228, -5.8445888) live=46 trails=0
+[stadium-trace] t=24.63 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-18.08729, 18.407457, -5.8361535) live=46 trails=0
+[stadium-trace] t=24.64 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-18.26007, 18.407173, -5.819282) live=46 trails=0
+[stadium-trace] t=24.64 ballpos 401772810981 s=4.2 p=SIMD3<Float>(-18.34646, 18.406658, -5.8108463) live=46 trails=0
+[stadium-trace] t=24.66 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-18.519241, 18.404882, -5.793975) live=46 trails=0
+[stadium-trace] t=24.68 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-18.864801, 18.398352, -5.7602324) live=46 trails=0
+[stadium-trace] t=24.68 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-18.951189, 18.396097, -5.7517967) live=46 trails=0
+[stadium-trace] t=24.69 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.12397, 18.390844, -5.7349257) live=46 trails=0
+[stadium-trace] t=24.71 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.296751, 18.384598, -5.7180543) live=46 trails=0
+[stadium-trace] t=24.72 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.469532, 18.377357, -5.701183) live=46 trails=0
+[stadium-trace] t=24.72 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.555922, 18.373365, -5.692747) live=46 trails=0
+[stadium-trace] t=24.73 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.728703, 18.364635, -5.6758757) live=46 trails=0
+[stadium-trace] t=24.74 ballpos 401772810981 s=4.3 p=SIMD3<Float>(-19.90148, 18.354912, -5.6590047) live=46 trails=0
+[stadium-trace] t=24.76 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.07426, 18.344194, -5.642133) live=46 trails=0
+[stadium-trace] t=24.77 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.247042, 18.332485, -5.625262) live=46 trails=0
+[stadium-trace] t=24.77 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.333431, 18.326256, -5.6168265) live=46 trails=0
+[stadium-trace] t=24.78 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.50621, 18.313057, -5.599955) live=46 trails=0
+[stadium-trace] t=24.79 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.678991, 18.298862, -5.5830836) live=46 trails=0
+[stadium-trace] t=24.81 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.85177, 18.283674, -5.5662127) live=46 trails=0
+[stadium-trace] t=24.81 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-20.93816, 18.275707, -5.557777) live=46 trails=0
+[stadium-trace] t=24.82 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-21.02455, 18.267492, -5.549341) live=46 trails=0
+[stadium-trace] t=24.83 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-21.19733, 18.250319, -5.5324697) live=46 trails=0
+[stadium-trace] t=24.83 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-21.28372, 18.241358, -5.5240345) live=46 trails=0
+[stadium-trace] t=24.84 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-21.456501, 18.222692, -5.507163) live=46 trails=0
+[stadium-trace] t=24.85 ballpos 401772810981 s=4.4 p=SIMD3<Float>(-21.54289, 18.212988, -5.4987273) live=46 trails=0
+[stadium-trace] t=24.86 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-21.71567, 18.192833, -5.481856) live=46 trails=0
+[stadium-trace] t=24.87 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-21.88845, 18.171682, -5.4649844) live=46 trails=0
+[stadium-trace] t=24.88 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-21.97484, 18.160736, -5.456549) live=46 trails=0
+[stadium-trace] t=24.88 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.06123, 18.149542, -5.4481134) live=46 trails=0
+[stadium-trace] t=24.89 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.23401, 18.126406, -5.431242) live=46 trails=0
+[stadium-trace] t=24.90 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.3204, 18.114464, -5.4228063) live=46 trails=0
+[stadium-trace] t=24.91 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.493181, 18.089838, -5.4059353) live=46 trails=0
+[stadium-trace] t=24.92 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.66596, 18.064219, -5.389064) live=46 trails=0
+[stadium-trace] t=24.93 ballpos 401772810981 s=4.5 p=SIMD3<Float>(-22.838741, 18.037605, -5.3721924) live=46 trails=0
+[stadium-trace] t=24.96 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.1843, 17.9814, -5.33845) live=46 trails=0
+[stadium-trace] t=24.97 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.35708, 17.951805, -5.3215785) live=46 trails=0
+[stadium-trace] t=24.98 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.529861, 17.921219, -5.3047075) live=46 trails=0
+[stadium-trace] t=24.98 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.61625, 17.905552, -5.296272) live=46 trails=0
+[stadium-trace] t=24.99 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.78903, 17.873474, -5.2794003) live=46 trails=0
+[stadium-trace] t=25.01 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-23.961811, 17.840405, -5.262529) live=46 trails=0
+[stadium-trace] t=25.02 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-24.134592, 17.80634, -5.2456574) live=46 trails=0
+[stadium-trace] t=25.02 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-24.220982, 17.788935, -5.237222) live=46 trails=0
+[stadium-trace] t=25.03 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-24.393763, 17.75338, -5.2203507) live=46 trails=0
+[stadium-trace] t=25.04 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-24.56654, 17.716831, -5.2034793) live=46 trails=0
+[stadium-trace] t=25.05 ballpos 401772810981 s=4.6 p=SIMD3<Float>(-24.65293, 17.698185, -5.195044) live=46 trails=0
+[stadium-trace] t=25.09 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.257662, 17.560703, -5.1359944) live=46 trails=0
+[stadium-trace] t=25.10 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.430443, 17.519188, -5.119123) live=46 trails=0
+[stadium-trace] t=25.11 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.51683, 17.498058, -5.1106873) live=46 trails=0
+[stadium-trace] t=25.12 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.689611, 17.455051, -5.093816) live=46 trails=0
+[stadium-trace] t=25.13 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.86239, 17.411053, -5.076945) live=46 trails=0
+[stadium-trace] t=25.13 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-25.94878, 17.38868, -5.068509) live=46 trails=0
+[stadium-trace] t=25.14 ballpos 401772810981 s=4.7 p=SIMD3<Float>(-26.121561, 17.343191, -5.0516376) live=46 trails=0
+[stadium-trace] t=25.16 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-26.294342, 17.296707, -5.034766) live=46 trails=0
+[stadium-trace] t=25.17 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-26.55351, 17.225119, -5.0094595) live=46 trails=0
+[stadium-trace] t=25.18 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-26.726292, 17.176151, -4.992588) live=46 trails=0
+[stadium-trace] t=25.19 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-26.89907, 17.126192, -4.975717) live=46 trails=0
+[stadium-trace] t=25.21 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.071852, 17.075237, -4.9588456) live=46 trails=0
+[stadium-trace] t=25.21 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.158241, 17.049389, -4.95041) live=46 trails=0
+[stadium-trace] t=25.22 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.24463, 17.02329, -4.941974) live=46 trails=0
+[stadium-trace] t=25.23 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.41741, 16.970348, -4.925103) live=46 trails=0
+[stadium-trace] t=25.23 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.5038, 16.943506, -4.9166675) live=46 trails=0
+[stadium-trace] t=25.24 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.67658, 16.889074, -4.899796) live=46 trails=0
+[stadium-trace] t=25.25 ballpos 401772810981 s=4.8 p=SIMD3<Float>(-27.76297, 16.861486, -4.8913603) live=46 trails=0
+[stadium-trace] t=25.26 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-27.935751, 16.805565, -4.8744893) live=46 trails=0
+[stadium-trace] t=25.27 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-28.108532, 16.74865, -4.857618) live=46 trails=0
+[stadium-trace] t=25.31 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-28.626871, 16.571943, -4.807004) live=46 trails=0
+[stadium-trace] t=25.32 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-28.799652, 16.511055, -4.7901325) live=46 trails=0
+[stadium-trace] t=25.32 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-28.886042, 16.480238, -4.781697) live=46 trails=0
+[stadium-trace] t=25.33 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-29.058823, 16.417858, -4.7648253) live=46 trails=0
+[stadium-trace] t=25.34 ballpos 401772810981 s=4.9 p=SIMD3<Float>(-29.231602, 16.354486, -4.7479544) live=46 trails=0
+[stadium-trace] t=25.36 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-29.40438, 16.29012, -4.731083) live=46 trails=0
+[stadium-trace] t=25.36 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-29.49077, 16.257563, -4.722647) live=46 trails=0
+[stadium-trace] t=25.37 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-29.57716, 16.22476, -4.714212) live=46 trails=0
+[stadium-trace] t=25.38 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-29.74994, 16.158405, -4.6973405) live=46 trails=0
+[stadium-trace] t=25.39 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-29.922722, 16.091059, -4.680469) live=46 trails=0
+[stadium-trace] t=25.41 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-30.181892, 15.988175, -4.655162) live=46 trails=0
+[stadium-trace] t=25.42 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-30.354671, 15.9183445, -4.638291) live=46 trails=0
+[stadium-trace] t=25.43 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-30.52745, 15.847521, -4.6214194) live=46 trails=0
+[stadium-trace] t=25.44 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-30.700232, 15.775703, -4.604548) live=46 trails=0
+[stadium-trace] t=25.44 ballpos 401772810981 s=5.0 p=SIMD3<Float>(-30.786621, 15.739422, -4.5961127) live=46 trails=0
+[stadium-trace] t=25.46 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.045792, 15.629087, -4.5708055) live=46 trails=0
+[stadium-trace] t=25.47 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.13218, 15.591813, -4.56237) live=46 trails=0
+[stadium-trace] t=25.48 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.30496, 15.516518, -4.545499) live=46 trails=0
+[stadium-trace] t=25.48 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.39135, 15.478498, -4.537063) live=46 trails=0
+[stadium-trace] t=25.49 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.56413, 15.401713, -4.5201917) live=46 trails=0
+[stadium-trace] t=25.51 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.736912, 15.323934, -4.50332) live=46 trails=0
+[stadium-trace] t=25.52 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-31.996082, 15.205403, -4.4780135) live=46 trails=0
+[stadium-trace] t=25.53 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-32.16886, 15.12514, -4.461142) live=46 trails=0
+[stadium-trace] t=25.54 ballpos 401772810981 s=5.1 p=SIMD3<Float>(-32.34164, 15.043885, -4.444271) live=46 trails=0
+[stadium-trace] t=25.56 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-32.514423, 14.961636, -4.4273996) live=46 trails=0
+[stadium-trace] t=25.57 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-32.687202, 14.878392, -4.410528) live=46 trails=0
+[stadium-trace] t=25.57 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-32.77359, 14.836398, -4.4020925) live=46 trails=0
+[stadium-trace] t=25.58 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-32.946373, 14.751665, -4.385221) live=46 trails=0
+[stadium-trace] t=25.59 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-33.119152, 14.665938, -4.36835) live=46 trails=0
+[stadium-trace] t=25.61 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-33.29193, 14.579218, -4.3514786) live=46 trails=0
+[stadium-trace] t=25.61 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-33.378323, 14.535486, -4.343043) live=46 trails=0
+[stadium-trace] t=25.62 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-33.46471, 14.491505, -4.3346076) live=46 trails=0
+[stadium-trace] t=25.63 ballpos 401772810981 s=5.2 p=SIMD3<Float>(-33.63749, 14.402798, -4.317736) live=46 trails=0
+[stadium-trace] t=25.66 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-34.069443, 14.176682, -4.275558) live=46 trails=0
+[stadium-trace] t=25.67 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-34.24222, 14.084497, -4.2586865) live=46 trails=0
+[stadium-trace] t=25.67 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-34.328613, 14.0380335, -4.250251) live=46 trails=0
+[stadium-trace] t=25.68 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-34.50139, 13.944359, -4.23338) live=46 trails=0
+[stadium-trace] t=25.71 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-34.84695, 13.754029, -4.199637) live=46 trails=0
+[stadium-trace] t=25.72 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-35.01973, 13.657374, -4.1827655) live=46 trails=0
+[stadium-trace] t=25.73 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-35.192513, 13.559725, -4.1658945) live=46 trails=0
+[stadium-trace] t=25.73 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-35.2789, 13.510529, -4.157459) live=46 trails=0
+[stadium-trace] t=25.74 ballpos 401772810981 s=5.3 p=SIMD3<Float>(-35.45168, 13.411388, -4.1405873) live=46 trails=0
+[stadium-trace] t=25.77 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-35.79724, 13.21013, -4.106845) live=46 trails=0
+[stadium-trace] t=25.78 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-35.970024, 13.108009, -4.0899734) live=46 trails=0
+[stadium-trace] t=25.78 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.05641, 13.056578, -4.0815377) live=46 trails=0
+[stadium-trace] t=25.79 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.229195, 12.952968, -4.0646663) live=46 trails=0
+[stadium-trace] t=25.80 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.31558, 12.900791, -4.056231) live=46 trails=0
+[stadium-trace] t=25.81 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.48836, 12.795691, -4.0393596) live=46 trails=0
+[stadium-trace] t=25.82 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.57475, 12.742768, -4.030924) live=46 trails=0
+[stadium-trace] t=25.83 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.74753, 12.636178, -4.0140524) live=46 trails=0
+[stadium-trace] t=25.83 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-36.83392, 12.582511, -4.005617) live=46 trails=0
+[stadium-trace] t=25.84 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-37.006702, 12.47443, -3.9887457) live=46 trails=0
+[stadium-trace] t=25.85 ballpos 401772810981 s=5.4 p=SIMD3<Float>(-37.09309, 12.420017, -3.98031) live=46 trails=0
+[stadium-trace] t=25.86 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.26587, 12.310446, -3.9634387) live=46 trails=0
+[stadium-trace] t=25.87 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.35226, 12.255288, -3.955003) live=46 trails=0
+[stadium-trace] t=25.88 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.52504, 12.144227, -3.9381318) live=46 trails=0
+[stadium-trace] t=25.89 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.697823, 12.032172, -3.9212604) live=46 trails=0
+[stadium-trace] t=25.90 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.8706, 11.919124, -3.9043891) live=46 trails=0
+[stadium-trace] t=25.91 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-37.956993, 11.862227, -3.8959534) live=46 trails=0
+[stadium-trace] t=25.92 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-38.129772, 11.747688, -3.879082) live=46 trails=0
+[stadium-trace] t=25.93 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-38.30255, 11.632156, -3.8622108) live=46 trails=0
+[stadium-trace] t=25.94 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-38.47533, 11.515632, -3.8453395) live=46 trails=0
+[stadium-trace] t=25.95 ballpos 401772810981 s=5.5 p=SIMD3<Float>(-38.64811, 11.398113, -3.8284683) live=46 trails=0
+[stadium-trace] t=25.96 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-38.820892, 11.279601, -3.8115969) live=46 trails=0
+[stadium-trace] t=25.97 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-38.90728, 11.219973, -3.8031614) live=46 trails=0
+[stadium-trace] t=25.98 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.080063, 11.099969, -3.78629) live=46 trails=0
+[stadium-trace] t=25.98 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.16645, 11.039596, -3.7778544) live=46 trails=0
+[stadium-trace] t=25.99 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.33923, 10.918102, -3.760983) live=46 trails=0
+[stadium-trace] t=26.00 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.42562, 10.856984, -3.7525475) live=46 trails=0
+[stadium-trace] t=26.01 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.5984, 10.734, -3.735676) live=46 trails=0
+[stadium-trace] t=26.02 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.771183, 10.6100235, -3.7188048) live=46 trails=0
+[stadium-trace] t=26.03 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-39.943962, 10.485054, -3.7019336) live=46 trails=0
+[stadium-trace] t=26.04 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-40.11674, 10.35909, -3.6850622) live=46 trails=0
+[stadium-trace] t=26.05 ballpos 401772810981 s=5.6 p=SIMD3<Float>(-40.20313, 10.295736, -3.6766267) live=46 trails=0
+[stadium-trace] t=26.06 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-40.37591, 10.168282, -3.6597552) live=46 trails=0
+[stadium-trace] t=26.07 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-40.4623, 10.104182, -3.6513197) live=46 trails=0
+[stadium-trace] t=26.08 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-40.635082, 9.975238, -3.6344483) live=46 trails=0
+[stadium-trace] t=26.09 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-40.80786, 9.8453, -3.6175768) live=46 trails=0
+[stadium-trace] t=26.10 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-40.980644, 9.714368, -3.6007056) live=46 trails=0
+[stadium-trace] t=26.11 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.153423, 9.582442, -3.5838342) live=46 trails=0
+[stadium-trace] t=26.12 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.23981, 9.5161085, -3.5753987) live=46 trails=0
+[stadium-trace] t=26.13 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.412594, 9.382692, -3.5585272) live=46 trails=0
+[stadium-trace] t=26.13 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.49898, 9.315615, -3.5500917) live=46 trails=0
+[stadium-trace] t=26.14 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.67176, 9.180709, -3.5332205) live=46 trails=0
+[stadium-trace] t=26.15 ballpos 401772810981 s=5.7 p=SIMD3<Float>(-41.758152, 9.1128845, -3.5247848) live=46 trails=0
+[stadium-trace] t=26.16 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-41.93093, 8.976488, -3.5079136) live=46 trails=0
+[stadium-trace] t=26.17 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-42.01732, 8.907918, -3.4994779) live=46 trails=0
+[stadium-trace] t=26.18 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-42.1901, 8.770032, -3.4826066) live=46 trails=0
+[stadium-trace] t=26.19 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-42.36288, 8.631152, -3.4657352) live=46 trails=0
+[stadium-trace] t=26.23 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-42.96761, 8.137252, -3.4066858) live=46 trails=0
+[stadium-trace] t=26.24 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-43.140392, 7.9939013, -3.3898144) live=46 trails=0
+[stadium-trace] t=26.25 ballpos 401772810981 s=5.8 p=SIMD3<Float>(-43.31317, 7.849557, -3.372943) live=46 trails=0
+[stadium-trace] t=26.26 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-43.48595, 7.7042212, -3.3560717) live=46 trails=0
+[stadium-trace] t=26.27 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-43.658733, 7.55789, -3.3392005) live=46 trails=0
+[stadium-trace] t=26.28 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-43.74512, 7.4843526, -3.3307648) live=46 trails=0
+[stadium-trace] t=26.28 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-43.831512, 7.410567, -3.3223293) live=46 trails=0
+[stadium-trace] t=26.29 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-44.00429, 7.262249, -3.3054578) live=46 trails=0
+[stadium-trace] t=26.31 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-44.17707, 7.1129375, -3.2885866) live=46 trails=0
+[stadium-trace] t=26.32 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-44.43624, 6.887108, -3.2632797) live=46 trails=0
+[stadium-trace] t=26.33 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-44.609024, 6.7353125, -3.2464082) live=46 trails=0
+[stadium-trace] t=26.34 ballpos 401772810981 s=5.9 p=SIMD3<Float>(-44.781803, 6.5825253, -3.229537) live=46 trails=0
+[stadium-trace] t=26.36 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-44.954582, 6.428743, -3.2126656) live=46 trails=0
+[stadium-trace] t=26.36 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-45.04097, 6.35148, -3.20423) live=46 trails=0
+[stadium-trace] t=26.39 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-45.472923, 5.9614363, -3.1620517) live=46 trails=0
+[stadium-trace] t=26.40 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-45.645702, 5.80368, -3.1451805) live=46 trails=0
+[stadium-trace] t=26.41 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-45.732094, 5.72443, -3.1367447) live=46 trails=0
+[stadium-trace] t=26.42 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-45.904873, 5.565183, -3.1198735) live=46 trails=0
+[stadium-trace] t=26.43 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-46.077652, 5.404945, -3.1030023) live=46 trails=0
+[stadium-trace] t=26.44 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-46.25043, 5.243711, -3.0861309) live=46 trails=0
+[stadium-trace] t=26.44 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-46.336823, 5.1627226, -3.0776954) live=46 trails=0
+[stadium-trace] t=26.45 ballpos 401772810981 s=6.0 p=SIMD3<Float>(-46.42321, 5.0814857, -3.0692596) live=46 trails=0
+[stadium-trace] t=26.46 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-46.595993, 4.918265, -3.0523884) live=46 trails=0
+[stadium-trace] t=26.47 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-46.768772, 4.7540507, -3.035517) live=46 trails=0
+[stadium-trace] t=26.49 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-47.027943, 4.5058675, -3.01021) live=46 trails=0
+[stadium-trace] t=26.50 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-47.20072, 4.3391695, -2.9933386) live=46 trails=0
+[stadium-trace] t=26.51 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-47.287113, 4.255449, -2.984903) live=46 trails=0
+[stadium-trace] t=26.52 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-47.459892, 4.0872602, -2.9680316) live=46 trails=0
+[stadium-trace] t=26.53 ballpos 401772810981 s=6.1 p=SIMD3<Float>(-47.632675, 3.9180784, -2.9511604) live=46 trails=0
+[stadium-trace] t=26.56 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.151012, 3.4045758, -2.9005466) live=46 trails=0
+[stadium-trace] t=26.57 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.2374, 3.318123, -2.892111) live=46 trails=0
+[stadium-trace] t=26.58 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.410183, 3.1444705, -2.8752396) live=46 trails=0
+[stadium-trace] t=26.58 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.49657, 3.0572727, -2.8668041) live=46 trails=0
+[stadium-trace] t=26.59 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.66935, 2.8821297, -2.8499327) live=46 trails=0
+[stadium-trace] t=26.61 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-48.842133, 2.7059934, -2.8330615) live=46 trails=0
+[stadium-trace] t=26.62 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-49.01491, 2.5288634, -2.81619) live=46 trails=0
+[stadium-trace] t=26.62 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-49.101303, 2.4399269, -2.8077543) live=46 trails=0
+[stadium-trace] t=26.63 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-49.274082, 2.261309, -2.7908833) live=46 trails=0
+[stadium-trace] t=26.64 ballpos 401772810981 s=6.2 p=SIMD3<Float>(-49.44686, 2.081695, -2.7740119) live=46 trails=0
+[stadium-trace] t=26.66 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.70603, 1.8104129, -2.748705) live=46 trails=0
+[stadium-trace] t=26.67 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.79242, 1.7194895, -2.7402694) live=46 trails=0
+[stadium-trace] t=26.68 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.965202, 1.5368953, -2.723398) live=46 trails=0
+[stadium-trace] t=26.69 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.99961, 1.6207515, -2.7202692) live=46 trails=0
+[stadium-trace] t=26.70 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.998024, 1.6026818, -2.721363) live=46 trails=0
+[stadium-trace] t=26.71 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.996773, 1.5923326, -2.7222245) live=65 trails=0
+[stadium-trace] t=26.72 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.993366, 1.569432, -2.7245736) live=65 trails=0
+[stadium-trace] t=26.73 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.988754, 1.5442281, -2.7277544) live=65 trails=0
+[stadium-trace] t=26.74 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.982944, 1.5175478, -2.7317624) live=65 trails=0
+[stadium-trace] t=26.75 ballpos 401772810981 s=6.3 p=SIMD3<Float>(-49.975937, 1.5090249, -2.7365937) live=65 trails=0
+[stadium-trace] t=26.76 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.97199, 1.5224968, -2.739317) live=65 trails=0
+[stadium-trace] t=26.78 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.95324, 1.5733693, -2.7522469) live=65 trails=0
+[stadium-trace] t=26.79 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.936096, 1.6054679, -2.764069) live=65 trails=0
+[stadium-trace] t=26.79 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.942104, 1.5955361, -2.759927) live=65 trails=0
+[stadium-trace] t=26.80 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.9298, 1.6145188, -2.7684119) live=65 trails=0
+[stadium-trace] t=26.81 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.916336, 1.6296885, -2.7776973) live=65 trails=0
+[stadium-trace] t=26.82 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.90917, 1.63568, -2.7826388) live=65 trails=0
+[stadium-trace] t=26.83 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.88595, 1.6467077, -2.798653) live=65 trails=0
+[stadium-trace] t=26.83 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.893974, 1.6442255, -2.7931173) live=65 trails=0
+[stadium-trace] t=26.84 ballpos 401772810981 s=6.4 p=SIMD3<Float>(-49.869038, 1.647984, -2.810315) live=65 trails=0
+[stadium-trace] t=26.86 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.85099, 1.6443181, -2.8227608) live=65 trails=0
+[stadium-trace] t=26.87 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.8218, 1.6298407, -2.8428905) live=65 trails=0
+[stadium-trace] t=26.87 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.83181, 1.6358217, -2.8359866) live=65 trails=0
+[stadium-trace] t=26.88 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.800938, 1.6146516, -2.857278) live=65 trails=0
+[stadium-trace] t=26.89 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.778957, 1.5955826, -2.8724353) live=65 trails=0
+[stadium-trace] t=26.90 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.76755, 1.5847821, -2.8803008) live=65 trails=0
+[stadium-trace] t=26.91 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.74391, 1.5610827, -2.896604) live=65 trails=0
+[stadium-trace] t=26.92 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.731678, 1.5483779, -2.9050407) live=65 trails=0
+[stadium-trace] t=26.93 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.693333, 1.5080825, -2.9314837) live=65 trails=0
+[stadium-trace] t=26.93 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.706387, 1.5217699, -2.922481) live=65 trails=0
+[stadium-trace] t=26.94 ballpos 401772810981 s=6.5 p=SIMD3<Float>(-49.666405, 1.5096917, -2.950052) live=65 trails=0
+[stadium-trace] t=26.96 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.62399, 1.5486755, -2.9793026) live=65 trails=0
+[stadium-trace] t=26.96 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.638397, 1.5359877, -2.9693668) live=65 trails=0
+[stadium-trace] t=26.97 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.609314, 1.5609131, -2.9894238) live=65 trails=0
+[stadium-trace] t=26.98 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.563683, 1.5939225, -3.0208929) live=65 trails=0
+[stadium-trace] t=26.98 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.57916, 1.5836322, -3.0102196) live=65 trails=0
+[stadium-trace] t=26.99 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.531933, 1.6119353, -3.042788) live=65 trails=0
+[stadium-trace] t=27.00 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.51566, 1.6195043, -3.054009) live=65 trails=0
+[stadium-trace] t=27.01 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.48233, 1.631449, -3.0769947) live=65 trails=0
+[stadium-trace] t=27.02 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.447952, 1.6388096, -3.1007023) live=65 trails=0
+[stadium-trace] t=27.03 ballpos 401772810981 s=6.6 p=SIMD3<Float>(-49.412533, 1.641327, -3.1251276) live=65 trails=0
+[stadium-trace] t=27.08 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.260574, 1.6033838, -3.229921) live=65 trails=0
+[stadium-trace] t=27.09 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.220043, 1.583367, -3.257872) live=65 trails=0
+[stadium-trace] t=27.10 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.17851, 1.5602195, -3.2865157) live=65 trails=0
+[stadium-trace] t=27.11 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.135975, 1.5346808, -3.3158484) live=65 trails=0
+[stadium-trace] t=27.12 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.092445, 1.5075704, -3.3458652) live=65 trails=0
+[stadium-trace] t=27.13 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.04793, 1.4922374, -3.3765624) live=65 trails=0
+[stadium-trace] t=27.13 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.070312, 1.4936965, -3.361129) live=65 trails=0
+[stadium-trace] t=27.14 ballpos 401772810981 s=6.7 p=SIMD3<Float>(-49.002438, 1.5185211, -3.4079359) live=65 trails=0
+[stadium-trace] t=27.16 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.932373, 1.5556059, -3.4562547) live=65 trails=0
+[stadium-trace] t=27.17 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.884453, 1.5775521, -3.4893005) live=65 trails=0
+[stadium-trace] t=27.18 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.835575, 1.5963978, -3.523008) live=65 trails=0
+[stadium-trace] t=27.19 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.785744, 1.6114987, -3.5573728) live=65 trails=0
+[stadium-trace] t=27.21 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.734962, 1.622336, -3.5923913) live=65 trails=0
+[stadium-trace] t=27.22 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.657032, 1.6298051, -3.6461346) live=65 trails=0
+[stadium-trace] t=27.23 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.60391, 1.6286521, -3.6827683) live=65 trails=0
+[stadium-trace] t=27.24 ballpos 401772810981 s=6.8 p=SIMD3<Float>(-48.549862, 1.6225834, -3.7200413) live=65 trails=0
+[stadium-trace] t=27.26 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.494892, 1.6117731, -3.7579486) live=65 trails=0
+[stadium-trace] t=27.27 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.41073, 1.5874255, -3.815991) live=65 trails=0
+[stadium-trace] t=27.27 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.43901, 1.5965497, -3.7964869) live=65 trails=0
+[stadium-trace] t=27.28 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.35348, 1.56651, -3.855467) live=65 trails=0
+[stadium-trace] t=27.29 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.29534, 1.5426012, -3.8955631) live=65 trails=0
+[stadium-trace] t=27.30 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.265934, 1.529757, -3.9158425) live=65 trails=0
+[stadium-trace] t=27.31 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.20645, 1.5028026, -3.9568615) live=65 trails=0
+[stadium-trace] t=27.32 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.146088, 1.4748743, -3.9984906) live=65 trails=0
+[stadium-trace] t=27.34 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-48.053894, 1.5096568, -4.0620685) live=65 trails=0
+[stadium-trace] t=27.35 ballpos 401772810981 s=6.9 p=SIMD3<Float>(-47.991344, 1.534288, -4.105204) live=65 trails=0
+[stadium-trace] t=27.36 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.927933, 1.5568117, -4.148935) live=65 trails=0
+[stadium-trace] t=27.37 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.863663, 1.5764545, -4.193257) live=65 trails=0
+[stadium-trace] t=27.38 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.831207, 1.5849794, -4.215638) live=65 trails=0
+[stadium-trace] t=27.39 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.765663, 1.5990684, -4.2608395) live=65 trails=0
+[stadium-trace] t=27.40 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.699272, 1.6088109, -4.3066216) live=65 trails=0
+[stadium-trace] t=27.41 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.665768, 1.6119357, -4.329729) live=65 trails=0
+[stadium-trace] t=27.42 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.598125, 1.6145449, -4.3763742) live=65 trails=0
+[stadium-trace] t=27.43 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.495117, 1.6092106, -4.447411) live=65 trails=0
+[stadium-trace] t=27.43 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.52966, 1.6122177, -4.4235907) live=65 trails=0
+[stadium-trace] t=27.44 ballpos 401772810981 s=7.0 p=SIMD3<Float>(-47.425423, 1.5996107, -4.4954753) live=65 trails=0
+[stadium-trace] t=27.46 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.319355, 1.5768478, -4.5686207) live=65 trails=0
+[stadium-trace] t=27.46 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.35491, 1.5854816, -4.5441) live=65 trails=0
+[stadium-trace] t=27.47 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.283596, 1.5672545, -4.59328) live=65 trails=0
+[stadium-trace] t=27.48 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.21148, 1.5454936, -4.643012) live=65 trails=0
+[stadium-trace] t=27.49 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.13857, 1.5208778, -4.693292) live=65 trails=0
+[stadium-trace] t=27.51 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-47.02773, 1.4803158, -4.76973) live=65 trails=0
+[stadium-trace] t=27.52 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-46.95286, 1.458287, -4.8213615) live=65 trails=0
+[stadium-trace] t=27.53 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-46.87722, 1.4841943, -4.873525) live=65 trails=0
+[stadium-trace] t=27.54 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-46.762318, 1.5209124, -4.9527626) live=65 trails=0
+[stadium-trace] t=27.54 ballpos 401772810981 s=7.1 p=SIMD3<Float>(-46.800808, 1.509103, -4.926219) live=65 trails=0
+[stadium-trace] t=27.56 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.68477, 1.5427331, -5.0062423) live=65 trails=0
+[stadium-trace] t=27.57 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.567036, 1.5695981, -5.0874324) live=65 trails=0
+[stadium-trace] t=27.57 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.60647, 1.5615366, -5.0602403) live=65 trails=0
+[stadium-trace] t=27.58 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.487617, 1.5826845, -5.142201) live=65 trails=0
+[stadium-trace] t=27.59 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.407463, 1.5913455, -5.1974773) live=65 trails=0
+[stadium-trace] t=27.60 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.36711, 1.59391, -5.2253046) live=65 trails=0
+[stadium-trace] t=27.61 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.28586, 1.5953764, -5.2813363) live=65 trails=0
+[stadium-trace] t=27.62 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.203888, 1.5919038, -5.3378663) live=65 trails=0
+[stadium-trace] t=27.63 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.162632, 1.5883324, -5.3663163) live=65 trails=0
+[stadium-trace] t=27.64 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-46.07959, 1.577641, -5.4235854) live=65 trails=0
+[stadium-trace] t=27.65 ballpos 401772810981 s=7.2 p=SIMD3<Float>(-45.99584, 1.5624949, -5.481342) live=65 trails=0
+[stadium-trace] t=27.66 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.953697, 1.5533879, -5.5104012) live=65 trails=0
+[stadium-trace] t=27.67 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.868896, 1.5324559, -5.568882) live=65 trails=0
+[stadium-trace] t=27.68 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.740402, 1.4955279, -5.657495) live=65 trails=0
+[stadium-trace] t=27.68 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.783405, 1.5084522, -5.6278386) live=65 trails=0
+[stadium-trace] t=27.69 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.65388, 1.4683415, -5.7171607) live=65 trails=0
+[stadium-trace] t=27.71 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.566685, 1.4400853, -5.7772937) live=65 trails=0
+[stadium-trace] t=27.72 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.478817, 1.4553794, -5.8378882) live=65 trails=0
+[stadium-trace] t=27.73 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.345768, 1.4925241, -5.92964) live=65 trails=0
+[stadium-trace] t=27.73 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.39028, 1.4805075, -5.8989425) live=65 trails=0
+[stadium-trace] t=27.74 ballpos 401772810981 s=7.3 p=SIMD3<Float>(-45.25625, 1.5149459, -5.9913745) live=65 trails=0
+[stadium-trace] t=27.76 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-45.16608, 1.5345757, -6.053557) live=65 trails=0
+[stadium-trace] t=27.77 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-45.02962, 1.5573077, -6.147662) live=65 trails=0
+[stadium-trace] t=27.77 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-45.075264, 1.5507241, -6.1161838) live=65 trails=0
+[stadium-trace] t=27.78 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.93785, 1.5671979, -6.2109475) live=65 trails=0
+[stadium-trace] t=27.79 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.845455, 1.572425, -6.274666) live=65 trails=0
+[stadium-trace] t=27.81 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.752434, 1.5727726, -6.3388143) live=65 trails=0
+[stadium-trace] t=27.82 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.611748, 1.5640664, -6.4358335) live=65 trails=0
+[stadium-trace] t=27.82 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.658794, 1.5681845, -6.4033885) live=65 trails=0
+[stadium-trace] t=27.83 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.517197, 1.5523227, -6.5010376) live=65 trails=0
+[stadium-trace] t=27.84 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.422043, 1.5362012, -6.5666575) live=65 trails=0
+[stadium-trace] t=27.85 ballpos 401772810981 s=7.4 p=SIMD3<Float>(-44.374245, 1.5266457, -6.5996213) live=65 trails=0
+[stadium-trace] t=27.86 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-44.2782, 1.5049059, -6.665856) live=65 trails=0
+[stadium-trace] t=27.87 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-44.181564, 1.4802325, -6.7324953) live=65 trails=0
+[stadium-trace] t=27.88 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-44.08435, 1.4533875, -6.7995358) live=65 trails=0
+[stadium-trace] t=27.89 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-44.03553, 1.4394113, -6.8332043) live=65 trails=0
+[stadium-trace] t=27.90 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.937454, 1.4108912, -6.9008374) live=65 trails=0
+[stadium-trace] t=27.91 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.838818, 1.4364263, -6.968861) live=65 trails=0
+[stadium-trace] t=27.92 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.789288, 1.4489582, -7.003017) live=65 trails=0
+[stadium-trace] t=27.93 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.639866, 1.4841328, -7.106061) live=65 trails=0
+[stadium-trace] t=27.93 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.68981, 1.4729165, -7.071618) live=65 trails=0
+[stadium-trace] t=27.94 ballpos 401772810981 s=7.5 p=SIMD3<Float>(-43.539562, 1.5045472, -7.175231) live=65 trails=0
+[stadium-trace] t=27.96 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.3881, 1.5288255, -7.279684) live=65 trails=0
+[stadium-trace] t=27.97 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.286453, 1.5399355, -7.34978) live=65 trails=0
+[stadium-trace] t=27.98 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.184284, 1.5464811, -7.420239) live=65 trails=0
+[stadium-trace] t=27.98 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.23543, 1.5437987, -7.3849645) live=65 trails=0
+[stadium-trace] t=27.99 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.08159, 1.5481989, -7.4910574) live=65 trails=0
+[stadium-trace] t=28.00 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-43.030052, 1.5472077, -7.5266) live=65 trails=0
+[stadium-trace] t=28.01 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-42.92659, 1.5415353, -7.5979495) live=65 trails=0
+[stadium-trace] t=28.02 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-42.87467, 1.5368879, -7.6337547) live=65 trails=0
+[stadium-trace] t=28.03 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-42.770447, 1.5241305, -7.7056265) live=65 trails=0
+[stadium-trace] t=28.04 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-42.665733, 1.507081, -7.77784) live=65 trails=0
+[stadium-trace] t=28.05 ballpos 401772810981 s=7.6 p=SIMD3<Float>(-42.560524, 1.4862463, -7.850393) live=65 trails=0
+[stadium-trace] t=28.06 ballpos 401772810981 s=7.7 p=SIMD3<Float>(-42.50774, 1.474604, -7.886794) live=65 trails=0
+[stadium-trace] t=3.35 scene drive=4017728105 shown=4017728105 arcs=8 last=401772810961 lost=false next=false flight=-
+[stadium-trace] t=4.32 scene drive=4017728105 shown=4017728105 arcs=8 last=401772810961 lost=false next=false flight=-
+[stadium] assets: 30 textures, 16 sounds, probe loaded, ~67 MB
+[stadium] crowd dress composed in 1.34 s (decode 0.01, tint 1.27, main-actor wait 0.00, textures 0.06)
+[stadium] crowd: 44892 fans, lod0 16, lod1 32, lod2 150, cards 44694, groups 36
+[stadium] lighting beams 20/20, overdraw ≈ 0.46 screens (cap 1.2; all 20 as crossed pairs ≈ 0.76)
+[stadium] models: 47

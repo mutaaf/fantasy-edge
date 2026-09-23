@@ -100,6 +100,40 @@ python3 -m fantasyedge pull --provider manual \
   --draft draft.txt --standings standings.txt --league mine --season 2025
 ```
 
+**A whole day, replayed:**
+```bash
+python3 -m fantasyedge redzone-replay --date 2026-09-20 --pull   # 1 request per game
+python3 -m fantasyedge api --port 8790                           # open /redzone
+curl -s localhost:8790/api/day -d '{"action":"load","date":"2026-09-20"}'
+curl -s localhost:8790/api/day -d '{"action":"play"}'
+```
+
+Rebuilt from each play's own `wallclock`, so the red-zone channel whips around
+a finished Sunday exactly as it did live - `DayDirector.fetch` stands in for
+`EspnLiveSource._fetch` and nothing above it changes. `--from`/`--to`/`--slot`
+window it ("4pm" is both afternoon waves). See `docs/DAY_REPLAY.md`.
+
+**Last week, replayed:**
+```bash
+python3 -m fantasyedge last-week --json            # the week, best game first
+python3 -m fantasyedge last-week --pull            # all of it, one request per game
+python3 -m fantasyedge last-week --open 401872660  # how to open that one
+python3 -m fantasyedge last-week --offline         # from disk, no requests
+```
+
+Needs no credential and no database. The week is read off ESPN's own board -
+the most recent one whose every game is final, so a Thursday with one game
+played offers the week before it rather than a half-played one. `--pull` costs
+one request per game and is free to re-run; a pulled week then lists and opens
+with no network at all.
+
+**Final scores are hidden unless `--spoilers` is passed**, on the command line
+and at `/api/lastweek`, because a picker for games you have not seen must not
+be a results page. Each row carries a reason to watch that survives that
+rule - "3 lead changes", "won on a touchdown in the last minute" - and a
+`precision` saying which answer it is: `quarter` from the slate alone, `play`
+once the game is pulled and its play-by-play can be read.
+
 ## Rules
 
 **Never write credentials into a file in this repo.** `ESPN_S2`, `ESPN_SWID`,
@@ -142,9 +176,66 @@ through `identity.py`, which is the single owner of name folding - do not add
 a fourth copy of it. A roster whose ids resolve to nothing does not raise; it
 reports every player as scoreless, which looks like a quiet Sunday.
 
+**ESPN stamps a stale score on the plays after a score.** On event 401772949
+the two timeouts following the winning touchdown carry 37-36, the score before
+its two-point try, and the game's own last record carries 37-38. Walking every
+play in order therefore counts two lead changes that never happened and puts
+the winning score on "END GAME". A lead can only change on a play that scores,
+so `week._play_swing` reads `scoringPlay` plays alone.
+
 **Do not add third-party dependencies.** Zero-dependency is a deliberate
 constraint: stdlib only, Python 3.11+. If something seems to need `requests`
-or `pandas`, it doesn't.
+or `pandas`, it doesn't. nflverse publishes parquet beside its CSV, and
+parquet is the one that would need pandas: read the `.csv.gz` releases.
+
+**ESPN never says where a pass was caught, so a live scene estimates it.**
+The estimate is wrong by the yards after the catch - 4.4 yards on average and
+31 at worst, measured over three games. `truth.py` corrects a finished game
+from nflverse's published rows, and every play and arc carries whether it is a
+`live` estimate or `corrected`. Never present one as the other, and never
+present lateral placement as measured: nobody publishes it. See
+`docs/PLAY_ACCURACY.md`.
+
+**ESPN and nflverse mean different things by a spot on a change of
+possession.** On a kickoff from a team's own 35, ESPN says 65 (the distance to
+the end zone) and nflverse says 35 (the marker); on one punt ESPN reported 16
+where nflverse reported 84. Both are self-consistent statements, not bugs. So
+special-teams plays are matched on kind and clock rather than on their spot,
+and a correction only ever supplies a *relative* yardage, which carries no
+convention. The scene draws from ESPN's `yardLine`, which is fixed to the
+ground and right in both cases.
+
+**A game's league is the game's, not the caller's.** `scene.league_of` reads
+it from the payload - ESPN states it in `header.league.abbreviation` and in
+every `uid` (`l:23` college, `l:28` NFL) - and `scene.build` uses it unless a
+caller insists. `api.scene` used to insist on `"nfl"`, which drew every
+college game on an NFL field: hash marks 3.58 yards off on each side, and
+nothing said so. See `docs/LEAGUE_AGNOSTIC.md`.
+
+**ESPN sends `yardsToEndzone` on an NFL situation and never on a college
+one.** 0 of 749 live college situations in a Saturday's boards carried one,
+while `yardLine`, `down`, `distance` and `isRedZone` were in all 749. Anything
+that keys off it is NFL-only by accident: goal-to-go used to, and painted a
+line to gain five yards inside the end zone on 2nd and 8 from the 3. Use
+`yardLine`, which is fixed to the ground and always sent. A college *play
+record* does carry it, so the replay path is sound - this is the live
+scoreboard's `situation` block alone.
+
+**A college overtime has no clock, so its plays all report the same one.**
+Read literally that puts every play of the period at one instant, which broke
+scrubbing and sent "skip to the next score" back into the fourth quarter.
+`replay.untimed_overtimes` spots a period whose *football* plays share a
+clock - timeouts carry their own and are excluded first - and
+`replay.play_offsets` spaces them.
+
+**ESPN blanks the score on some administrative plays, and counts a touchdown
+before its try.** On 2026-09-20 the "Two-Minute Warning" play of CIN at HOU
+carries 0-0 while the game stood at 20-6, and NO at BAL's touchdown carries
+17 - the score it would have been had the two-point attempt worked - before
+the failed attempt restates 15. `dayreplay.running_scores` carries the running
+score through a 0-0 on a game that has already scored, and leaves the
+downward correction alone: the first states a score nobody was ever on, the
+second states one everybody saw. Both would otherwise make a tile flicker.
 
 **Regenerate fixtures with the script, never by hand.**
 `python3 tests/fixtures/make_fixtures.py` is deterministic. Hand-edited
@@ -166,6 +257,8 @@ fantasyedge/
   serve.py               localhost draft board, polls ESPN itself
   leagues.py             followed leagues + board config read from the db
   advanced.py            nflverse opportunity metrics
+  nflverse.py            the one owner of talking to nflverse: releases, cache
+  truth.py               ESPN's live estimate, corrected by what was published
   templates/             draft_report.html, board.html
   cli.py                 argparse wiring
 tests/                   25 tests, fixture-driven, no network

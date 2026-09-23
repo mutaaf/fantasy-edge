@@ -58,13 +58,24 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from .live import _get_json, scoreboard_url, summary_url, with_key
 
-# A play's absolute game time is encoded against a fixed 900-second period,
-# because that is the only encoding the payload itself supports: a play knows
-# its period number and the clock showing at the snap, and nothing else. The
-# inverse is exact for any instant that lands on a play, including overtime -
-# an OT play at 8:00 round-trips to period 5, 8:00 - which is why there is no
-# special case for a ten-minute overtime here.
+# A play's absolute game time is the length of every period before it plus the
+# time gone in its own. A play knows only its period number and the clock at
+# the snap, so each period's length has to be known, and regulation is fixed:
+# four periods of 900 seconds.
+#
+# Overtime is not. A regular-season NFL overtime is ten minutes, and encoding
+# it against 900 seconds put its opening snap at 3900 rather than 3600: every
+# overtime replay sat on "0:00 4th" for five minutes of game clock - five wall
+# seconds at 60x - before anything happened. `period_lengths` reads each
+# overtime's length off its own plays instead: an overtime whose clock never
+# shows more than 10:00 is 600 seconds, and anything longer is a full period.
 PERIOD_SECONDS = 900
+REGULATION_PERIODS = 4
+OVERTIME_SECONDS = 600
+
+# How long before a scoring play "skip to the next score" lands. Landing on
+# the play itself shows you the celebration and not the score.
+LEAD_SECONDS = 12
 
 BOXSCORE_NOTE = (
     "Player stats in `boxscore` are DERIVED from the play-by-play text as of "
@@ -98,11 +109,124 @@ def clock_display(remaining: int) -> str:
     return f"{remaining // 60}:{remaining % 60:02d}"
 
 
-def play_seconds(play: dict) -> int:
-    """Absolute seconds into the game at which this play was snapped."""
+def _length(period: int, lengths: dict[int, int] | None) -> int:
+    return (lengths or {}).get(period, PERIOD_SECONDS)
+
+
+def _period_start(period: int, lengths: dict[int, int] | None) -> int:
+    return sum(_length(p, lengths) for p in range(1, period))
+
+
+def play_seconds(play: dict, lengths: dict[int, int] | None = None,
+                 offsets: dict[str, int] | None = None) -> int:
+    """Absolute seconds into the game at which this play was snapped.
+
+    `lengths` maps an overtime period to its length; see `period_lengths`.
+    Without it every period is 900 seconds, which is exact for regulation.
+
+    `offsets` places the plays of an untimed overtime, which no clock can
+    order; see `play_offsets`. A play that has one is placed by it.
+    """
     period = int(((play.get("period") or {}).get("number")) or 1)
+    fixed = (offsets or {}).get(str(play.get("id", "")))
+    if fixed is not None:
+        return _period_start(period, lengths) + fixed
     left = clock_seconds((play.get("clock") or {}).get("displayValue"))
-    return (period - 1) * PERIOD_SECONDS + (PERIOD_SECONDS - left)
+    length = _length(period, lengths)
+    return _period_start(period, lengths) + max(0, length - left)
+
+
+# How far apart the plays of an untimed overtime are placed. Nothing measures
+# this - there is no clock to measure - so it is a spacing that lets a replay
+# scrub through them and lands "skip to the next score" (LEAD_SECONDS, 12)
+# before the play that scored rather than on top of it.
+UNTIMED_SNAP_SECONDS = 30
+
+
+def _is_clock_record(play: dict) -> bool:
+    """A timeout or an end-of-period marker: a record of the clock rather than
+    of football. `scene.NOT_A_PLAY` is the same set, and the one owner of it."""
+    from .scene import NOT_A_PLAY
+    return str((play.get("type") or {}).get("text") or "").strip().lower() in NOT_A_PLAY
+
+
+def _overtime_clocks(summary: dict, football_only: bool = False) -> dict[int, list[int]]:
+    """Every clock each overtime period's plays showed, in play order."""
+    seen: dict[int, list[int]] = {}
+    for play in _all_plays(summary):
+        period = _num((play.get("period") or {}).get("number"), 1)
+        if period <= REGULATION_PERIODS:
+            continue
+        if football_only and _is_clock_record(play):
+            continue
+        seen.setdefault(period, []).append(
+            clock_seconds((play.get("clock") or {}).get("displayValue")))
+    return seen
+
+
+def untimed_overtimes(summary: dict) -> set[int]:
+    """Overtime periods whose clock never moves.
+
+    College overtime is alternating possessions from the 25 with no clock
+    running (NCAA 3-1-3), so ESPN reports the same value on every play of it -
+    usually 0:00. Read literally that puts every play of the period at the
+    same instant: a replay could not scrub through it, and "skip to the next
+    score" landed in the fourth quarter.
+
+    Timeouts are excluded before the clocks are compared, because they carry
+    their own. Toledo at Temple (401862774), a real overtime, shows 0:14 on a
+    Temple timeout and 0:00 on all six football plays around it: counting that
+    timeout made the period look timed and left five plays on one instant.
+    """
+    return {p for p, clocks in _overtime_clocks(summary, football_only=True).items()
+            if len(clocks) > 1 and len(set(clocks)) == 1}
+
+
+def play_offsets(summary: dict) -> dict[str, int]:
+    """Seconds into its own period for each play of an untimed overtime.
+
+    Empty for a game without one, which is every NFL game: the NFL's overtime
+    runs a clock, so its plays are placed by it like any other period.
+    """
+    untimed = untimed_overtimes(summary)
+    if not untimed:
+        return {}
+    out: dict[str, int] = {}
+    counted: dict[int, int] = {}
+    for play in _all_plays(summary):
+        period = _num((play.get("period") or {}).get("number"), 1)
+        if period not in untimed:
+            continue
+        index = counted.get(period, 0)
+        counted[period] = index + 1
+        out[str(play.get("id", ""))] = index * UNTIMED_SNAP_SECONDS
+    return out
+
+
+def period_lengths(summary: dict) -> dict[int, int]:
+    """Each overtime period's length, read off the clock its plays show.
+
+    An untimed overtime has no clock to read, so it is as long as the plays it
+    held, which is what keeps the period after it from starting on top of it.
+    """
+    untimed = untimed_overtimes(summary)
+    out: dict[int, int] = {}
+    for period, clocks in _overtime_clocks(summary).items():
+        if period in untimed:
+            out[period] = max(1, len(clocks)) * UNTIMED_SNAP_SECONDS
+            continue
+        top = max(clocks) if clocks else 0
+        out[period] = OVERTIME_SECONDS if top <= OVERTIME_SECONDS else PERIOD_SECONDS
+    return out
+
+
+def clock_at(game_seconds: int, lengths: dict[int, int] | None = None) -> tuple[int, int]:
+    """(period, seconds left on its clock) at an absolute game second."""
+    period, start = 1, 0
+    while game_seconds >= start + _length(period, lengths) and period < 99:
+        start += _length(period, lengths)
+        period += 1
+    return period, _length(period, lengths) - (game_seconds - start)
 
 
 def ordinal(period: int) -> str:
@@ -127,7 +251,8 @@ def _all_plays(summary: dict) -> list[dict]:
 def total_seconds(summary: dict) -> int:
     """When the last recorded play was snapped - the end of a replay."""
     plays = _all_plays(summary)
-    return play_seconds(plays[-1]) if plays else 0
+    return (play_seconds(plays[-1], period_lengths(summary), play_offsets(summary))
+            if plays else 0)
 
 
 def _num(raw, default=0):
@@ -297,9 +422,9 @@ _PARTICLES = {"st", "van", "von", "de", "del", "della", "da", "di", "le", "la",
 # continuation is `[A-Z][a-z]` rather than `[A-Z]` so that "R.Shaheed to SEA
 # 24" does not swallow the club abbreviation into the surname and "for 2
 # yards, TOUCHDOWN" does not swallow the TOUCHDOWN.
-_NM = (r"(?<![A-Za-z])[A-Z]\.\s?[A-Z][A-Za-z'.\-]*"
+_NM = (r"(?<![A-Za-z])[A-Z][a-z]?\.\s?[A-Z][A-Za-z'.\-]*"
        r"(?:\s[A-Z][a-z][A-Za-z'.\-]*)*")
-_PLAY_NAME = re.compile(r"([A-Z])\.\s?([A-Z][A-Za-z'.\-]*"
+_PLAY_NAME = re.compile(r"([A-Z][a-z]?)\.\s?([A-Z][A-Za-z'.\-]*"
                         r"(?:\s[A-Z][a-z][A-Za-z'.\-]*)*)")
 
 _SPOT = r"(?:[A-Z][A-Za-z]{1,3}\s)?-?\d+"
@@ -391,30 +516,56 @@ class Roster:
         self.info = boxscore_names(summary)
         self.by_club: dict[tuple, set] = {}
         self.anywhere: dict[tuple, set] = {}
+        self.first: dict[str, str] = {}
         for pid, who in self.info.items():
             initial, keys = _name_keys(who.get("name") or "")
+            self.first[pid] = _fold((who.get("name") or "").split(" ")[0])
             for key in keys:
                 self.by_club.setdefault((who.get("team"), initial, key), set()).add(pid)
                 self.anywhere.setdefault((initial, key), set()).add(pid)
+        # Which statistical categories each athlete appears in. Two men with
+        # one initial and one surname on one club are ordinary - Chicago has
+        # Caleb and Chris Williams, and every one of Caleb's 43 plays was
+        # refused as ambiguous - but a passer is in the passing block and a
+        # defensive tackle is not, and the grammar always knows which slot a
+        # name was written in.
+        self.cats: dict[str, set] = {}
+        for team in ((summary.get("boxscore") or {}).get("players") or []):
+            for cat in (team.get("statistics") or []):
+                for ath in (cat.get("athletes") or []):
+                    pid = str(((ath.get("athlete") or {}).get("id")) or "")
+                    if pid:
+                        self.cats.setdefault(pid, set()).add(cat.get("name") or "")
         self.misses: dict[str, int] = {}
 
     def club(self, pid: str | None) -> str | None:
         return (self.info.get(pid) or {}).get("team") if pid else None
 
-    def find(self, token: str | None, club: str | None = None) -> str | None:
+    def _narrow(self, found: set, prefix: str, role: str | None) -> set:
+        """Break a tie on the longer initial ("Ch.Williams"), then on role."""
+        if len(found) > 1 and len(prefix) > 1:
+            found = {p for p in found if self.first.get(p, "").startswith(prefix)} or found
+        if len(found) > 1 and role:
+            found = {p for p in found if role in self.cats.get(p, set())} or found
+        return found
+
+    def find(self, token: str | None, club: str | None = None,
+             role: str | None = None) -> str | None:
         m = _PLAY_NAME.fullmatch((token or "").strip())
         if not m:
             if token:
                 self._miss(token.strip())
             return None
+        prefix = _fold(m.group(1))
         initial, key = m.group(1)[0].upper(), _fold(m.group(2))
         scoped = self.by_club.get((club, initial, key)) if club else None
         if scoped:
+            scoped = self._narrow(scoped, prefix, role)
             if len(scoped) == 1:
                 return next(iter(scoped))
             self._miss(f"{token} (ambiguous in {club})")
             return None
-        loose = self.anywhere.get((initial, key)) or set()
+        loose = self._narrow(self.anywhere.get((initial, key)) or set(), prefix, role)
         if len(loose) == 1:
             return next(iter(loose))
         self._miss(token.strip() + (" (ambiguous)" if loose else ""))
@@ -462,7 +613,11 @@ def _yards(m: re.Match) -> int:
 
 
 def _names(blob: str) -> list[str]:
-    return [n.strip() for n in (blob or "").split(";") if n.strip()]
+    """Tacklers as written. ESPN separates them with a semicolon almost always
+    and with a comma sometimes - "(A.Mukuba, J.Campbell)" in 401772510 - and a
+    split on the semicolon alone read that as one man named "A.Mukuba,
+    J.Campbell" who is in nobody's box score, costing both of them the tackle."""
+    return [n.strip() for n in re.split(r"[;,]", blob or "") if n.strip()]
 
 
 class _Tally:
@@ -504,7 +659,7 @@ class _Tally:
         names = _names(m.group("names"))
         solo = len(names) == 1
         for name in names:
-            pid = self.roster.find(name, club)
+            pid = self.roster.find(name, club, "defensive")
             self.add(pid, "totalTackles")
             if solo:
                 self.add(pid, "soloTackles")
@@ -516,7 +671,7 @@ class _Tally:
         if not m:
             return rest or ""
         for name in _names(m.group("names")):
-            self.add(self.roster.find(name, club), "passesDefended")
+            self.add(self.roster.find(name, club, "defensive"), "passesDefended")
         return rest[m.end():]
 
 
@@ -535,13 +690,13 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
 
     m = _RE_PASS_INT.search(text)
     if m:
-        passer = find(m.group("passer"), off)
+        passer = find(m.group("passer"), off, "passing")
         oc = t.roster.club(passer) or off
         dc = t.other(oc)
         t.add(passer, "passingAttempts")
         t.add(passer, "intThrown")
-        t.add(find(m.group("rec"), oc), "receivingTargets")
-        who = find(m.group("who"), dc)
+        t.add(find(m.group("rec"), oc, "receiving"), "receivingTargets")
+        who = find(m.group("who"), dc, "interceptions")
         t.add(who, "defInterceptions")
         # ESPN credits the interceptor with a pass defended as well as the
         # interception: N.Pritchett's two in event 401872656 are one deflected
@@ -549,7 +704,7 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
         t.add(who, "passesDefended")
         rest = t.defended(text[m.end():], dc)
         r = _RE_RETURN.search(rest)
-        if r and find(r.group("who"), dc) == who:
+        if r and find(r.group("who"), dc, "interceptions") == who:
             t.add(who, "interceptionYards", _yards(r))
             if _touchdown(rest[r.end():]):
                 t.add(who, "interceptionTouchdowns")
@@ -559,7 +714,7 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
 
     m = _RE_SACK.search(text)
     if m:
-        passer = find(m.group("passer"), off)
+        passer = find(m.group("passer"), off, "passing")
         oc = t.roster.club(passer) or off
         dc = t.other(oc)
         lost = -_yards(m)
@@ -576,7 +731,7 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
         names = _names(tk.group("names")) if tk else []
         share = 1.0 / len(names) if names else 0.0
         for name in names:
-            pid = find(name, dc)
+            pid = find(name, dc, "defensive")
             t.add(pid, "defSacks", share)
             t.add(pid, "totalTackles")
             if len(names) == 1:
@@ -587,10 +742,10 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
 
     m = _RE_PASS_COMP.search(text)
     if m:
-        passer = find(m.group("passer"), off)
+        passer = find(m.group("passer"), off, "passing")
         oc = t.roster.club(passer) or off
         dc = t.other(oc)
-        rec = find(m.group("rec"), oc)
+        rec = find(m.group("rec"), oc, "receiving")
         gain = _yards(m)
         t.add(passer, "passingAttempts")
         t.add(passer, "completions")
@@ -608,16 +763,17 @@ def _scrimmage(text: str, t: _Tally, off: str | None) -> str | None:
 
     m = _RE_PASS_INC.search(text)
     if m:
-        passer = find(m.group("passer"), off)
+        passer = find(m.group("passer"), off, "passing")
         oc = t.roster.club(passer) or off
         t.add(passer, "passingAttempts")
-        t.add(find(m.group("rec"), oc) if m.group("rec") else None, "receivingTargets")
+        t.add(find(m.group("rec"), oc, "receiving") if m.group("rec") else None,
+              "receivingTargets")
         t.defended(text[m.end():], t.other(oc))
         return None
 
     m = _RE_RUSH.search(text)
     if m:
-        who = find(m.group("who"), off)
+        who = find(m.group("who"), off, "rushing")
         oc = t.roster.club(who) or off
         gain = _yards(m)
         t.add(who, "rushingAttempts")
@@ -645,7 +801,7 @@ def _special(text: str, t: _Tally, off: str | None) -> tuple[bool, str | None]:
         r = _RE_RETURN.search(rest)
         if not r:
             return True, None
-        ret = find(r.group("who"), t.other(kc))
+        ret = find(r.group("who"), t.other(kc), "kickReturns")
         gain = _yards(r)
         t.add(ret, "kickReturns")
         t.add(ret, "kickReturnYards", gain)
@@ -657,7 +813,7 @@ def _special(text: str, t: _Tally, off: str | None) -> tuple[bool, str | None]:
 
     m = _RE_PUNT.search(text)
     if m:
-        punter = find(m.group("who"), off)
+        punter = find(m.group("who"), off, "punting")
         pc = t.roster.club(punter) or off
         dist = int(m.group("dist"))
         t.add(punter, "punts")
@@ -671,7 +827,7 @@ def _special(text: str, t: _Tally, off: str | None) -> tuple[bool, str | None]:
         r = _RE_RETURN.search(rest)
         if not r:
             return True, None
-        ret = find(r.group("who"), t.other(pc))
+        ret = find(r.group("who"), t.other(pc), "puntReturns")
         gain = _yards(r)
         t.add(ret, "puntReturns")
         t.add(ret, "puntReturnYards", gain)
@@ -683,7 +839,7 @@ def _special(text: str, t: _Tally, off: str | None) -> tuple[bool, str | None]:
 
     m = _RE_FG.search(text)
     if m:
-        who = find(m.group("who"), off)
+        who = find(m.group("who"), off, "kicking")
         t.add(who, "fieldGoalAttempts")
         if m.group("res").upper() == "GOOD":
             t.add(who, "fieldGoalsMade")
@@ -710,10 +866,10 @@ def tally(plays: list[dict], roster: Roster, clubs: dict, pair: tuple) -> _Tally
             # already one, which is why the sack branch credits it itself.
             for br in _RE_BRACKET.finditer(text):
                 for name in _names(br.group("names")):
-                    t.add(roster.find(name, t.other(off)), "QBHits")
+                    t.add(roster.find(name, t.other(off), "defensive"), "QBHits")
         xp = _RE_XP.search(text)
         if xp:
-            kicker = roster.find(xp.group("who"), off)
+            kicker = roster.find(xp.group("who"), off, "kicking")
             t.add(kicker, "extraPointAttempts")
             if xp.group("res").upper() == "GOOD":
                 t.add(kicker, "extraPointsMade")
@@ -722,7 +878,7 @@ def tally(plays: list[dict], roster: Roster, clubs: dict, pair: tuple) -> _Tally
             t.add(carrier, "fumbles")
             rec = _RE_RECOVERED.search(text)
             if rec:
-                pid = roster.find(rec.group("who"), t.club_of(rec.group("club")))
+                pid = roster.find(rec.group("who"), t.club_of(rec.group("club")), "fumbles")
                 t.add(pid, "fumblesRecovered")
                 if pid and roster.club(pid) != roster.club(carrier):
                     t.add(carrier, "fumblesLost")
@@ -1001,8 +1157,35 @@ _GAME_OVER = {"End of Game", "End of Regulation"}
 
 
 def capture_is_complete(summary: dict) -> bool:
+    """Whether this capture holds the whole game.
+
+    ESPN closes an NFL game with an "End of Game" record, including in
+    overtime, and that is still accepted on its own. It is not the only way a
+    game ends in this payload, though: a college overtime ends on the scoring
+    play itself, with no closing record, and a capture judged on the last
+    play's text alone was called incomplete and never reconciled. So the
+    header is asked as well - but a header saying FINAL is not enough by
+    itself, because a trimmed capture of a finished game carries that same
+    header. The last play has to reach the final period and carry the final
+    score too.
+    """
     plays = _all_plays(summary)
-    return bool(plays) and ((plays[-1].get("type") or {}).get("text") in _GAME_OVER)
+    if not plays:
+        return False
+    last = plays[-1]
+    if (last.get("type") or {}).get("text") in _GAME_OVER:
+        return True
+    comp = ((summary.get("header") or {}).get("competitions") or [{}])[0]
+    status = comp.get("status") or {}
+    kind = status.get("type") or {}
+    if not (kind.get("completed") or kind.get("state") == "post"):
+        return False
+    if _num((last.get("period") or {}).get("number"), 0) < _num(status.get("period"), 0):
+        return False
+    final = {(c.get("homeAway") or "").lower(): _num(c.get("score"), -1)
+             for c in (comp.get("competitors") or [])}
+    return (final.get("home") == _num(last.get("homeScore"), -2)
+            and final.get("away") == _num(last.get("awayScore"), -2))
 
 
 def _boxscore_note(checked: dict | None) -> dict:
@@ -1187,24 +1370,30 @@ def reconcile(summary: dict, limit: int = 40) -> dict:
         "unresolved": dict(sorted(roster.misses.items())),
     }
 
-def frame(scoreboard: dict, summary: dict, game_seconds: int) -> tuple[dict, dict]:
+def frame(scoreboard: dict, summary: dict, game_seconds: int,
+          reconciled: dict | None = None) -> tuple[dict, dict]:
     """Both payloads as they looked `game_seconds` into the game.
 
     Pure: the inputs are not touched. Every number here is read off a play that
     had already been snapped at that instant - nothing is interpolated, and
     nothing that had not happened yet survives into the output.
+
+    `reconciled` is `reconcile(summary)` when the caller already has it. It is
+    a whole-game parse and depends on nothing but the summary, so a replay
+    that draws a frame a second has no reason to redo it every time.
     """
     sb = copy.deepcopy(scoreboard)
     sm = copy.deepcopy(summary)
     event = str((sm.get("header") or {}).get("id") or "")
     game_seconds = max(0, int(game_seconds))
+    lengths, offsets = period_lengths(sm), play_offsets(sm)
 
     drives = _drives(sm)
     every = _all_plays(sm)
     included: list[list[dict]] = []
     for d in drives:
         included.append([p for p in (d.get("plays") or [])
-                         if play_seconds(p) <= game_seconds])
+                         if play_seconds(p, lengths, offsets) <= game_seconds])
     flat = [p for group in included for p in group]
     finished = bool(every) and len(flat) == len(every)
 
@@ -1227,7 +1416,10 @@ def frame(scoreboard: dict, summary: dict, game_seconds: int) -> tuple[dict, dic
     derivable = bool(roster.info) and bool(every)
     checked = None
     if derivable:
-        checked = reconcile(summary) if capture_is_complete(sm) else "partial"
+        if capture_is_complete(sm):
+            checked = reconciled if reconciled is not None else reconcile(summary)
+        else:
+            checked = "partial"
 
     note = {"event": event, "gameSeconds": game_seconds,
             "playsIncluded": len(flat), "playsTotal": len(every),
@@ -1266,8 +1458,7 @@ def frame(scoreboard: dict, summary: dict, game_seconds: int) -> tuple[dict, dic
         status = comp.get("status") or {}
         period_now = _num(status.get("period"), last_period)
     else:
-        period_now = game_seconds // PERIOD_SECONDS + 1
-        remaining = PERIOD_SECONDS - (game_seconds % PERIOD_SECONDS)
+        period_now, remaining = clock_at(game_seconds, lengths)
         if period_now != last_period:
             # Between the end of a period and the first snap of the next one
             # the derived period runs ahead of the game. The last play is the
@@ -1385,30 +1576,66 @@ def _set_scores(sides: dict, ev_comp: dict, home: int, away: int) -> None:
 
 # ──────────────────────────── capture ────────────────────────────
 
-def capture(event: str, dest: pathlib.Path) -> dict:
+def _board_days(summary: dict) -> list[str]:
+    """The scoreboard dates a game could be filed under.
+
+    ESPN stamps kickoff in UTC and files the scoreboard by US Eastern date, so
+    every night game - Thursday, Sunday and Monday - kicks off on the next UTC
+    day: 401772949 is dated 2025-12-19T01:15Z and was played on the 18th.
+    Asking for the UTC date alone misses all of them, so the day before is
+    tried too.
+    """
+    import datetime as dt
+
+    raw = ((summary.get("header") or {}).get("competitions") or [{}])[0].get("date", "")
+    try:
+        when = dt.datetime.strptime(raw[:10], "%Y-%m-%d")
+    except ValueError:
+        return []
+    return [d.strftime("%Y%m%d") for d in (when, when - dt.timedelta(days=1))]
+
+
+def scoreboard_path(source: pathlib.Path, event: str) -> pathlib.Path:
+    return pathlib.Path(source) / f"scoreboard-{event}.json"
+
+
+def capture(event: str, dest: pathlib.Path, http=None) -> dict:
     """Download one finished game and the slate it sits on, once.
 
-    The slate is fetched first because it is what decides whether the event is
-    even on this week's board: a replay whose event is missing from the
-    scoreboard drives nothing, since the live tier walks the slate and never
-    asks for a game it cannot see. If the current week does not carry it, the
-    single-date board for the game's own kickoff does.
+    The slate matters because a replay whose event is missing from the
+    scoreboard drives nothing: the live tier walks the slate and never asks
+    for a game it cannot see. The game's own date is asked for first, since
+    that is the board that certainly carries it; the current week is a
+    fallback for a game with no date.
+
+    The slate is written per event. It used to be one `scoreboard.json` per
+    source directory, and every capture overwrote it - so capturing a second
+    game from another week silently broke the replay of the first, whose
+    event was no longer on the board it was paired with.
     """
+    get = http or (lambda url: _get_json(with_key(url)))
+    dest = pathlib.Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
-    summary = _get_json(with_key(summary_url(event)))
+    summary = get(summary_url(event))
     if not _all_plays(summary):
         raise SystemExit(f"Event {event} has no play-by-play to replay.")
-    board = _get_json(with_key(scoreboard_url()))
-    if not _event(board, event):
-        date = ((summary.get("header") or {}).get("competitions") or [{}])[0].get("date", "")
-        day = date[:10].replace("-", "")
-        if not day:
-            raise SystemExit(f"Event {event} is not on this week's scoreboard "
-                             "and carries no date to look it up by.")
-        board = _get_json(with_key(scoreboard_url(f"?dates={day}")))
-        if not _event(board, event):
-            raise SystemExit(f"Event {event} is not on the scoreboard for {day}.")
-    (dest / "scoreboard.json").write_text(json.dumps(board))
+    board = None
+    tried = []
+    for day in _board_days(summary):
+        tried.append(day)
+        candidate = get(scoreboard_url(f"?dates={day}"))
+        if _event(candidate, event):
+            board = candidate
+            break
+    if board is None:
+        candidate = get(scoreboard_url())
+        tried.append("this week")
+        if _event(candidate, event):
+            board = candidate
+    if board is None:
+        raise SystemExit(f"Event {event} is not on the scoreboard for "
+                         f"{', '.join(tried) or 'any date it carries'}.")
+    scoreboard_path(dest, event).write_text(json.dumps(board))
     (dest / f"{event}.json").write_text(json.dumps(summary))
     return {"event": event, "plays": len(_all_plays(summary)),
             "drives": len(_drives(summary)), "seconds": total_seconds(summary),
@@ -1416,11 +1643,51 @@ def capture(event: str, dest: pathlib.Path) -> dict:
 
 
 def load(source: pathlib.Path, event: str) -> tuple[dict, dict]:
-    board = source / "scoreboard.json"
+    """A captured game and its slate. A legacy shared `scoreboard.json` is
+    still read, but only if it actually carries this event."""
+    source = pathlib.Path(source)
     game = source / f"{event}.json"
-    if not (board.exists() and game.exists()):
-        raise SystemExit(f"No capture in {source}. Run with --capture first.")
-    return json.loads(board.read_text()), json.loads(game.read_text())
+    if not game.exists():
+        raise SystemExit(f"No capture of {event} in {source}. Run with --capture first.")
+    for board_file in (scoreboard_path(source, event), source / "scoreboard.json"):
+        if board_file.exists():
+            board = json.loads(board_file.read_text())
+            if _event(board, event):
+                return board, json.loads(game.read_text())
+    raise SystemExit(f"No scoreboard carrying {event} in {source}. "
+                     "Run with --capture to fetch it again.")
+
+
+def find_event(season: int, week: int, team: str, seasontype: int = 2,
+               http=None) -> str:
+    """The ESPN event id for one club's game in one week.
+
+    `seasontype` is ESPN's: 1 preseason, 2 regular season, 3 postseason.
+    """
+    get = http or (lambda url: _get_json(with_key(url)))
+    board = get(scoreboard_url(f"?dates={int(season)}&seasontype={int(seasontype)}"
+                               f"&week={int(week)}"))
+    want = (team or "").upper()
+    for ev in (board.get("events") or []):
+        for c in ((ev.get("competitions") or [{}])[0].get("competitors") or []):
+            if ((c.get("team") or {}).get("abbreviation") or "").upper() == want:
+                return str(ev.get("id"))
+    raise SystemExit(f"No {want} game in {season} week {week} (seasontype {seasontype}).")
+
+
+def matchup(summary: dict) -> dict:
+    """Who played, the final, and when - what a picker needs to show a capture."""
+    comp = ((summary.get("header") or {}).get("competitions") or [{}])[0]
+    sides = {(c.get("homeAway") or "").lower(): c for c in (comp.get("competitors") or [])}
+
+    def side(key):
+        c = sides.get(key) or {}
+        return {"abbr": ((c.get("team") or {}).get("abbreviation") or "").upper(),
+                "score": _num(c.get("score"), 0)}
+    status = (comp.get("status") or {}).get("type") or {}
+    return {"away": side("away"), "home": side("home"),
+            "date": comp.get("date", ""), "final": status.get("shortDetail", ""),
+            "complete": capture_is_complete(summary)}
 
 
 def write_frame(out: pathlib.Path, event: str, sb: dict, sm: dict) -> None:
@@ -1488,3 +1755,275 @@ def run(event: str, out: pathlib.Path, speed: float = 60.0, at: int | None = Non
     return {"event": event, "frames": frames, "length": length, "state": last_state,
             "out": str(out), "run": run_hint(out), "boxscore": BOXSCORE_NOTE,
             "reconciliation": sm["replay"]["boxscore"]}
+
+
+# ──────────────────────────── the director ────────────────────────────
+
+class ReplayDirector:
+    """One replay an app can drive: load a game, play, pause, seek, set speed.
+
+    `run()` above is a daemon that writes files for a whole process to read,
+    which suits a television left on the board. A headset wants a remote
+    control instead - pick a game, press play, scrub back to the touchdown -
+    and a remote control needs the replay's position to be state the API owns
+    rather than a loop in another process.
+
+    The position is never stored as a number that ticks. It is an anchor - a
+    game second and the monotonic instant it was true - plus a speed, and the
+    current game second is computed from those when asked. Pausing, seeking
+    and changing speed each just move the anchor, so nothing drifts and no
+    thread has to run.
+
+    A replay is served beside the live tier, never through it. `fetch` stands
+    in for `EspnLiveSource._fetch` on a *separate* source instance, and the
+    board it returns carries only the replayed game: the rest of that week's
+    slate is left out, because a real Sunday's finals sitting next to a game in
+    its first quarter would put the other results on screen before they
+    happened, and would read as live.
+    """
+
+    SPEEDS = (1.0, 5.0, 15.0, 30.0, 60.0, 120.0, 300.0)
+
+    def __init__(self, root: pathlib.Path, clock=time.monotonic, http=None):
+        import threading
+
+        self.root = pathlib.Path(root)
+        self.clock = clock
+        self.http = http
+        self._lock = threading.RLock()
+        self.event = ""
+        self.board: dict = {}
+        self.summary: dict = {}
+        self.length = 0
+        self.speed = 60.0
+        self.playing = False
+        self._anchor_game = 0
+        self._anchor_wall = 0.0
+        self._reconciled: dict | None = None
+        self._frames: dict[int, tuple[dict, dict]] = {}
+        self._catalog: dict[str, tuple[float, dict]] = {}
+
+    # ── what can be replayed ──
+
+    def catalog(self) -> list[dict]:
+        """Every game captured under `root`, newest first."""
+        out = []
+        if not self.root.is_dir():
+            return out
+        for path in self.root.glob("*.json"):
+            event = path.stem
+            if not event.isdigit():
+                continue
+            stamp = path.stat().st_mtime
+            hit = self._catalog.get(event)
+            if not hit or hit[0] != stamp:
+                try:
+                    summary = json.loads(path.read_text())
+                except (OSError, ValueError):
+                    continue
+                hit = (stamp, {"event": event, **matchup(summary),
+                               "plays": len(_all_plays(summary)),
+                               "length": total_seconds(summary)})
+                self._catalog[event] = hit
+            out.append(hit[1])
+        return sorted(out, key=lambda g: g.get("date", ""), reverse=True)
+
+    # ── the controls ──
+
+    def load(self, event: str, capture_first: bool = False, at: int = 0) -> dict:
+        event = str(event or "").strip()
+        if not event.isdigit():
+            raise ValueError("event must be an ESPN event id")
+        if capture_first or not (self.root / f"{event}.json").exists():
+            capture(event, self.root, http=self.http)
+        board, summary = load(self.root, event)
+        reconciled = (reconcile(summary)
+                      if Roster(summary).info and capture_is_complete(summary) else None)
+        with self._lock:
+            self.event, self.summary, self.length = event, summary, total_seconds(summary)
+            ev = _event(board, event)
+            self.board = {k: v for k, v in board.items() if k != "events"}
+            self.board["events"] = [ev]
+            self._reconciled = reconciled
+            self._frames = {}
+            self.playing = False
+            self._set(at)
+        return self.state()
+
+    def play(self) -> dict:
+        with self._lock:
+            self._need()
+            now = self._now()
+            self._set(0 if now >= self.length else now)
+            self.playing = True
+        return self.state()
+
+    def pause(self) -> dict:
+        with self._lock:
+            self._need()
+            self._set(self._now())
+            self.playing = False
+        return self.state()
+
+    def seek(self, at: int) -> dict:
+        with self._lock:
+            self._need()
+            self._set(at)
+        return self.state()
+
+    def set_speed(self, speed: float) -> dict:
+        speed = float(speed)
+        if not (0.25 <= speed <= 600):
+            raise ValueError("speed must be between 0.25 and 600 game seconds per second")
+        with self._lock:
+            now = self._now()
+            self.speed = speed
+            self._set(now)
+        return self.state()
+
+    def control(self, body: dict) -> dict:
+        """One POST body, one action. Unknown actions are refused, not ignored."""
+        action = str(body.get("action") or "")
+        if action == "load":
+            return self.load(body.get("event"), bool(body.get("capture")),
+                             int(body.get("at") or 0))
+        if action == "play":
+            return self.play()
+        if action == "pause":
+            return self.pause()
+        if action == "seek":
+            return self.seek(int(body.get("at") or 0))
+        if action == "speed":
+            return self.set_speed(body.get("speed") or 60)
+        if action in ("next", "previous"):
+            return self.skip(forward=action == "next")
+        raise ValueError(f"unknown action {action!r}: load, play, pause, seek, speed, next or previous")
+
+    # ── position ──
+
+    def _need(self) -> None:
+        if not self.event:
+            raise LookupError("no replay loaded")
+
+    def _set(self, at) -> None:
+        self._anchor_game = max(0, min(int(at), self.length))
+        self._anchor_wall = self.clock()
+
+    def _now(self) -> int:
+        if not self.playing:
+            return self._anchor_game
+        at = self._anchor_game + (self.clock() - self._anchor_wall) * self.speed
+        return max(0, min(int(at), self.length))
+
+    def game_seconds(self) -> int:
+        with self._lock:
+            now = self._now()
+            if self.playing and now >= self.length:
+                # The end of the game stops the tape rather than looping it.
+                self._set(self.length)
+                self.playing = False
+            return now
+
+    def frame_now(self) -> tuple[dict, dict]:
+        """The replayed payloads as of now, memoised by game second."""
+        with self._lock:
+            self._need()
+            at = self.game_seconds()
+            hit = self._frames.get(at)
+            if hit is None:
+                hit = frame(self.board, self.summary, at, self._reconciled)
+                if len(self._frames) > 8:
+                    self._frames.clear()
+                self._frames[at] = hit
+            return hit
+
+    def state(self) -> dict:
+        """What a remote control shows. Always labelled as a replay."""
+        with self._lock:
+            if not self.event:
+                return {"replay": True, "loaded": False, "playing": False,
+                        "speed": self.speed, "speeds": list(self.SPEEDS)}
+            at = self.game_seconds()
+            _, sm = self.frame_now()
+            note = sm.get("replay") or {}
+            state = note.get("state")
+            return {"replay": True, "loaded": True, "event": self.event,
+                    "playing": self.playing, "speed": self.speed,
+                    "speeds": list(self.SPEEDS),
+                    "gameSeconds": at, "length": self.length,
+                    "progress": round(at / self.length, 4) if self.length else 0.0,
+                    "state": state, "clock": note.get("clock"),
+                    "period": note.get("period"),
+                    "label": (f"{note.get('clock')} {ordinal(note.get('period') or 1)}"
+                              if state == "in" else
+                              "Final" if state == "post" else "Pre-game"),
+                    "homeScore": note.get("homeScore", 0),
+                    "awayScore": note.get("awayScore", 0),
+                    "matchup": matchup(self.summary)}
+
+    def markers(self) -> dict:
+        """Where the scores and the drives are, in game seconds.
+
+        What "skip to the next score" and "jump to that drive" are made of. It
+        is computed from the loaded game rather than asked for per press, so a
+        scrub costs nothing and the bar can draw its own ticks.
+
+        A score's marker sits a beat *before* the play, not on it, so pressing
+        skip lands you in time to watch it happen rather than on the aftermath.
+        """
+        with self._lock:
+            self._need()
+            lengths = period_lengths(self.summary)
+            offsets = play_offsets(self.summary)
+            lead = int((self.summary.get("replayLeadSeconds") or 0) or LEAD_SECONDS)
+            scores, drives = [], []
+            for d in _drives(self.summary):
+                plays = d.get("plays") or []
+                if not plays:
+                    continue
+                team = ((d.get("team") or {}).get("abbreviation") or "").upper()
+                drives.append({"at": play_seconds(plays[0], lengths, offsets), "team": team,
+                               "result": d.get("displayResult") or d.get("result") or "",
+                               "plays": len(plays)})
+                for p in plays:
+                    if not p.get("scoringPlay"):
+                        continue
+                    at = play_seconds(p, lengths, offsets)
+                    scores.append({"at": max(0, at - lead), "playAt": at, "team": team,
+                                   "period": _num((p.get("period") or {}).get("number"), 0),
+                                   "clock": ((p.get("clock") or {}).get("displayValue") or "")})
+            return {"scores": scores, "drives": drives, "length": self.length}
+
+    def skip(self, forward: bool = True) -> dict:
+        """Seek to the next scoring play, or the previous one."""
+        with self._lock:
+            self._need()
+            at = self.game_seconds()
+            marks = [m["at"] for m in self.markers()["scores"]]
+            if forward:
+                nxt = next((m for m in marks if m > at + 1), self.length)
+            else:
+                nxt = next((m for m in reversed(marks) if m < at - 1), 0)
+            return self.seek(nxt)
+
+    def seconds_of(self, play_id: str) -> int | None:
+        """The game second a play was snapped at, in the loaded game."""
+        with self._lock:
+            lengths = period_lengths(self.summary)
+            offsets = play_offsets(self.summary)
+            for p in _all_plays(self.summary):
+                if str(p.get("id")) == str(play_id):
+                    return play_seconds(p, lengths, offsets)
+        return None
+
+    # ── the stand-in fetch ──
+
+    def fetch(self, url: str) -> dict:
+        """`EspnLiveSource._fetch` for the replay's own source instance."""
+        sb, sm = self.frame_now()
+        if "summary?event=" in url:
+            event = url.split("summary?event=", 1)[1].split("&")[0]
+            if event != self.event:
+                raise LookupError(f"event {event} is not the game being replayed")
+            return sm
+        return sb

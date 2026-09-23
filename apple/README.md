@@ -55,6 +55,36 @@ and makes **importance depth** - a cell that can still change your week stands
 forward, a decided one falls back. On a flat screen that has to be faked with
 blur; here it is simply where the thing is.
 
+## The tabletop and the stadium
+
+**View in 3D** on the Live tab opens the chosen game as a volume on the table
+in front of you (about 0.9 × 0.4 × 0.6 m). **Enter stadium** puts you at the
+fifty in a code-generated bowl at night, in full immersion; the Crown takes it
+back to progressive. Both draw the drive as it happens: each new play's ball
+flies its arc - a pass peaks at 3 + 0.35 yards per yard, a run at 0.8 + 0.12 -
+and then the arc stays, the lasers move up, and a beam marks the ball. A score
+lights the scoring side's section and dims the other. No players are drawn:
+the feed has no tracking data.
+
+Nothing in `Sources/Stadium/` knows about fantasy football. It renders
+`GET /api/scene/{event}` (or `/api/replay/scene`), the platform-neutral scene
+built by `fantasyedge/scene.py`, so a web or Android client draws the same
+primitives. `StadiumHost.swift` is the app's side of that seam.
+
+**Replay a game** on the Live tab lists every capture and drives it: play,
+pause, scrub, speed. The controls are a POST, so a headset on the LAN needs
+the API started with `FANTASYEDGE_ALLOW_REMOTE_REPLAY=1`. Capture a game first:
+
+    python3 -m fantasyedge replay --season 2025 --week 16 --team SEA --at 0
+
+A simulator cannot pinch, so the views open from launch arguments:
+
+    xcrun simctl launch booted com.mutaaf.fantasyedge \
+        -fe.host 127.0.0.1:8770 -openTabletop replay -openStadium
+
+`apple/verify_scene.swift` checks the geometry against real replayed scenes
+(`python3 tools/scene_samples.py /tmp/scenes` writes them); see its header.
+
 ## The player card is a hologram, not a card
 
 ESPN's headshots are cut-out PNGs with a transparent surround, so on a headset

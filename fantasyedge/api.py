@@ -33,11 +33,23 @@ from . import analytics, identity
 from .store import Store
 
 MOSAIC = pathlib.Path(__file__).parent / "templates" / "mosaic.html"
+REDZONE = pathlib.Path(__file__).parent / "templates" / "redzone.html"
 
 #: How wide a portrait is asked for when it is going in a list row rather than
 #: a hero. The bare path returns the full original, which for a page of
 #: twenty-three of them is several megabytes of image to draw at 44 points.
 CARD_WIDTH = 200
+
+def correct_finished() -> bool:
+    """Whether a finished game's plays are corrected against nflverse.
+
+    On by default, because a replayed game should be drawn from what happened
+    rather than from what its text implied; off with
+    FANTASYEDGE_CORRECT_PLAYS=0 for a run that must not touch the network.
+    Read per call, not at import, so a test can turn it off after this module
+    is loaded. A live game is never affected: nothing is published yet.
+    """
+    return os.environ.get("FANTASYEDGE_CORRECT_PLAYS", "1") != "0"
 
 ROUTES = [
     ["GET", "/api", "this index"],
@@ -52,6 +64,9 @@ ROUTES = [
     ["GET", "/api/mosaic", "every league at once - the parent board"],
     ["GET", "/api/mosaic/{provider}/{id}", "static half of one league's board"],
     ["GET", "/api/live", "shared game state - identical for every user"],
+    ["GET", "/api/redzone", "every game ranked by urgency, and the one to watch"],
+    ["GET", "/api/day", "the finished day being replayed, if any"],
+    ["GET", "/api/day/markers", "every score on that day, for a scrub bar"],
     ["GET", "/api/headlines", "NFL news, tagged with the players you roster"],
     ["GET", "/api/injuries", "which of your starters got hurt, and the damage"],
     ["GET", "/api/players", "every player you roster, across every league"],
@@ -67,6 +82,15 @@ ROUTES = [
     ["GET", "/api/intel", "the computed brief: insights, caveats, provenance"],
     ["GET", "/api/intel/models", "which model providers are configured"],
     ["POST", "/api/intel/narrate", "narrate the brief - loopback only, costs money"],
+    ["GET", "/api/scene/{event}", "one live game as renderable geometry: field, arcs, lasers, moments"],
+    ["GET", "/api/lastweek", "last week's games and why each is worth replaying (?spoilers=&offline=)"],
+    ["GET", "/api/replay", "the replay being driven, and every captured game"],
+    ["POST", "/api/replay", "load, play, pause, seek, speed - loopback only, see the handler"],
+    ["POST", "/api/day", "replay a whole finished day - loopback only, see the handler"],
+    ["GET", "/api/replay/markers", "the loaded replay's scores and drives, in game seconds"],
+    ["GET", "/api/replay/live", "the replay's own /api/live - labelled, never the real one"],
+    ["GET", "/api/replay/gamecast", "the replayed game's gamecast, with the controls' state"],
+    ["GET", "/api/replay/scene", "the replayed game as renderable geometry, paced to its speed"],
 ]
 
 RASTER = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic")
@@ -107,6 +131,11 @@ DERIVED = "public, max-age=60, stale-while-revalidate=86400"
 CONFIG = "public, max-age=30, stale-while-revalidate=300"
 LIVE = "public, max-age=2, stale-while-revalidate=8"
 PRIVATE = "no-cache"
+# A replay is shared bytes like the live tier, but it moves when someone
+# presses a button, and a cache serving the frame from before a scrub for
+# eight seconds of stale-while-revalidate is a remote control that ignores
+# you. Nothing between here and the screen may keep it.
+REPLAY = "no-store"
 
 # ── model spend ──────────────────────────────────────────────────────────────
 #
@@ -219,6 +248,10 @@ class Api:
         self._narrations: dict[str, dict] = {}
         self._last_call = 0.0
         self._calls = 0
+        # The channel's memory: which game is on screen, since when, and when
+        # each game last scored. One slot, because a channel shows one game.
+        self._whip: dict = {"focus": "", "since": 0.0, "scored": {},
+                            "totals": {}, "last": {}}
 
     # ---------- plumbing ----------
 
@@ -413,26 +446,7 @@ class Api:
         if src is None:
             from . import live as livemod
 
-            store = self.store()
-            # Grouped by provider as well as id. A player id is only unique
-            # within the provider that issued it, so grouping on the id alone
-            # merges two different people the moment a second provider is
-            # followed - ESPN's 4262921 and a Sleeper id are unrelated numbers
-            # that collide as strings.
-            rows = store.q(
-                """SELECT r.provider, r.player_id, p.name, p.pos, p.nfl_team,
-                          MAX(COALESCE(r.projected, r.points, 0)) AS proj
-                   FROM roster_slot r
-                   LEFT JOIN player p ON p.provider=r.provider
-                                     AND p.player_id=r.player_id
-                   WHERE p.name IS NOT NULL
-                   GROUP BY r.provider, r.player_id""")
-            players = [{"player_id": r["player_id"], "name": r["name"],
-                        "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
-                        # Only ESPN's fantasy ids double as site athlete ids.
-                        # Everyone else joins to a box score by name.
-                        "espn_ids": r["provider"] == "espn",
-                        "projected": r["proj"] or 0.0} for r in rows]
+            players = self._live_players()
             # Real game state by default. It needs no credential - this is the
             # same public feed espn.com renders - so it belongs in this
             # credential-free process rather than in `serve`. The simulator
@@ -443,21 +457,372 @@ class Api:
                 src = livemod.SimulatedSource(players, seed=7, speed=90.0,
                                               start=time.time() - 100.0)
             else:
-                # The league's own scoring, so a half-PPR board is not told it
-                # is winning by a point it does not actually score.
-                from .cli import load_config
-                from .scoring import Scoring
-                try:
-                    rules = Scoring.from_config(load_config())
-                except Exception:
-                    rules = Scoring()
-                src = livemod.EspnLiveSource(players, scoring=rules)
+                src = livemod.EspnLiveSource(players, scoring=self._scoring())
             with self._lock:
                 self._live = src
         return src
 
+    def _live_players(self) -> list[dict]:
+        from . import live as livemod
+
+        # Grouped by provider as well as id. A player id is only unique
+        # within the provider that issued it, so grouping on the id alone
+        # merges two different people the moment a second provider is
+        # followed - ESPN's 4262921 and a Sleeper id are unrelated numbers
+        # that collide as strings.
+        rows = self.store().q(
+            """SELECT r.provider, r.player_id, p.name, p.pos, p.nfl_team,
+                      MAX(COALESCE(r.projected, r.points, 0)) AS proj
+               FROM roster_slot r
+               LEFT JOIN player p ON p.provider=r.provider
+                                 AND p.player_id=r.player_id
+               WHERE p.name IS NOT NULL
+               GROUP BY r.provider, r.player_id""")
+        return [{"player_id": r["player_id"], "name": r["name"],
+                 "pos": r["pos"] or "", "team": livemod.team_abbr(r["nfl_team"]),
+                 # Only ESPN's fantasy ids double as site athlete ids.
+                 # Everyone else joins to a box score by name.
+                 "espn_ids": r["provider"] == "espn",
+                 "projected": r["proj"] or 0.0} for r in rows]
+
+    def _scoring(self):
+        # The league's own scoring, so a half-PPR board is not told it is
+        # winning by a point it does not actually score.
+        from .cli import load_config
+        from .scoring import Scoring
+        try:
+            return Scoring.from_config(load_config())
+        except Exception:
+            return Scoring()
+
+    # ---------- replay ----------
+
+    def replay_director(self):
+        """The one replay this process can be driven through.
+
+        Captures live under `FANTASYEDGE_REPLAY_DIR`, `data/replay/source` by
+        default - the same directory `replay --capture` fills, so a game
+        captured on the command line is already in the app's picker.
+        """
+        with self._lock:
+            director = getattr(self, "_replay", None)
+            if director is None:
+                from .replay import ReplayDirector
+                root = os.environ.get("FANTASYEDGE_REPLAY_DIR", "data/replay/source")
+                director = self._replay = ReplayDirector(pathlib.Path(root))
+        return director
+
+    def replay_source(self):
+        """A live source of its own, reading the director instead of ESPN.
+
+        Separate from `live_source()` on purpose. Routing a replay through the
+        real source would be one environment variable away from a recorded
+        game showing up on `/api/live` as though it were being played. Here
+        the two cannot meet: the real routes never see this instance.
+
+        No cache: the director already memoises frames by game second, and a
+        scrub must show on the next poll, not twenty seconds later.
+        """
+        from . import live as livemod
+
+        with self._lock:
+            src = getattr(self, "_replay_src", None)
+        if src is None:
+            src = livemod.EspnLiveSource(self._live_players(), ttl=0.0, box_ttl=0.0,
+                                         http=self.replay_director().fetch,
+                                         scoring=self._scoring())
+            with self._lock:
+                self._replay_src = src
+        return src
+
+    def day_director(self):
+        """The one finished day this process can be driven through.
+
+        Reads what `redzone-replay --pull` wrote under
+        `FANTASYEDGE_DAY_DIR`, `data/replay/day` by default, so a day pulled
+        on the command line is already loadable here.
+        """
+        with self._lock:
+            director = getattr(self, "_day", None)
+            if director is None:
+                from .dayreplay import DayDirector
+                root = os.environ.get("FANTASYEDGE_DAY_DIR", "data/replay/day")
+                director = self._day = DayDirector(pathlib.Path(root))
+        return director
+
+    def day_source(self):
+        """A live source of its own, reading the day instead of ESPN.
+
+        Separate from `live_source()` for the reason `replay_source()` is:
+        the real routes must never be able to serve a rebuilt Sunday as
+        though it were happening. The two instances cannot meet.
+        """
+        from . import live as livemod
+
+        with self._lock:
+            src = getattr(self, "_day_src", None)
+        if src is None:
+            src = livemod.EspnLiveSource([], ttl=0.0, box_ttl=0.0,
+                                         http=self.day_director().fetch,
+                                         scoring=self._scoring())
+            with self._lock:
+                self._day_src = src
+        return src
+
+    def channel_source(self):
+        """What the red-zone channel reads: a loaded day, or the live feed.
+
+        The channel itself does not branch. It is handed a source and a note
+        saying whether that source is a rebuild, and the note travels all the
+        way to the page - which is the only difference a viewer should see
+        between watching a Sunday and watching it back.
+        """
+        director = getattr(self, "_day", None)
+        if director is not None and director.date:
+            return self.day_source(), director
+        return self.live_source(), None
+
+    def _replay_loaded(self):
+        director = self.replay_director()
+        if not director.event:
+            raise HttpError(404, "No replay is loaded.",
+                            'POST /api/replay {"action": "load", "event": "401772949"}')
+        return director
+
+    def replay_state(self) -> dict:
+        director = self.replay_director()
+        return {**director.state(), "games": director.catalog()}
+
+    def last_week(self, qs: dict | None = None) -> dict:
+        """Last week's slate as a picker reads it.
+
+        Scores are withheld unless `?spoilers=1`, so the default answer can be
+        put on screen beside a "watch it" button without ending the game for
+        whoever presses it. `?offline=1` answers from the pulled slate alone.
+
+        The week is *not* pulled here. A GET that spends sixteen requests on
+        ESPN because somebody opened a screen is a GET that will be opened
+        sixteen times; pulling stays an explicit act, on the command line or
+        through POST /api/replay's own capture.
+        """
+        qs = qs or {}
+        flag = lambda k: (qs.get(k) or ["0"])[0] not in ("0", "", "false")  # noqa: E731
+        root = pathlib.Path(os.environ.get("FANTASYEDGE_REPLAY_DIR",
+                                           "data/replay/source"))
+        from . import week as wk
+
+        try:
+            out = wk.last_week(source=root, reveal=flag("spoilers"),
+                               offline=flag("offline"))
+        except SystemExit as exc:
+            raise HttpError(503, str(exc),
+                            "python3 -m fantasyedge last-week --pull") from exc
+        out["open"] = {"method": "POST", "path": "/api/replay",
+                       "body": {"action": "load", "event": "<event>"}}
+        return out
+
+    def replay_markers(self) -> dict:
+        """Where the scores and drives are in the loaded game."""
+        return self._replay_loaded().markers()
+
+    def replay_live(self) -> dict:
+        self._replay_loaded()
+        snap = self.replay_source().snapshot()
+        snap["source"] = "replay"
+        return snap
+
+    def replay_gamecast(self) -> dict:
+        director = self._replay_loaded()
+        out = self.gamecast(director.event, src=self.replay_source())
+        out["replayControl"] = director.state()
+        return out
+
+    def live_league(self) -> str:
+        """Which league the feed is serving, in the scene's own vocabulary.
+
+        ESPN states it on the board it just answered with (`leagues[0].slug`),
+        and its slugs are the names `scene.py` already branches on - `nfl` and
+        `college-football` - so this is a read, not a translation.
+
+        It is read rather than assumed because the difference reaches the
+        grass: a college field's hash marks are far wider than the NFL's, so a
+        Saturday drawn as a Sunday puts every play in the wrong place across
+        the field. A constant here is invisible until the day it is wrong.
+        """
+        board = self.live_source().scoreboard()
+        return ((board.get("leagues") or [{}])[0].get("slug") or "nfl")
+
+    def scene(self, event: str) -> dict:
+        from . import scene as sc
+        # No league argument: the gamecast carries the game's own, and a
+        # hardcoded one here drew every college game on an NFL field.
+        return sc.build(self.gamecast(event), speed=1.0)
+
+    def replay_scene(self) -> dict:
+        from . import scene as sc
+        director = self._replay_loaded()
+        out = sc.build(self.gamecast(director.event, src=self.replay_source()),
+                       speed=director.speed)
+        control = director.state()
+        # Where "replay this drive" seeks to: the game second of the shown
+        # drive's first snap. Only the replay knows game seconds, so it is
+        # stated here rather than rebuilt from clock strings on each client.
+        drive = (out["drives"][out["currentDrive"]] if out["currentDrive"] is not None
+                 else (out["drives"][-1] if out["drives"] else None))
+        control["driveStart"] = director.seconds_of(drive["arcs"][0]["id"]) \
+            if drive and drive["arcs"] else None
+        out["replayControl"] = control
+        return out
+
+    def replay_control(self, body: dict) -> dict:
+        director = self.replay_director()
+        try:
+            state = director.control(body)
+        except (ValueError, TypeError) as exc:
+            raise HttpError(400, str(exc), 'actions: load {event, capture?, at?}, '
+                                           'play, pause, seek {at}, speed {speed}')
+        except LookupError as exc:
+            raise HttpError(404, str(exc), 'load a game first: {"action": "load", "event": ...}')
+        except SystemExit as exc:
+            raise HttpError(404, str(exc), "capture it with `python3 -m fantasyedge "
+                                           "replay --game EVENT --at 0`")
+        return {**state, "games": director.catalog()}
+
     def live(self) -> dict:
         return self.live_source().snapshot()
+
+    def redzone(self) -> dict:
+        """Every game at once, ranked, with the one the channel is showing.
+
+        Shared bytes like `/api/live`, and for the same reason: which game is
+        most urgent is a fact about the slate, not about the viewer, so one
+        answer serves everybody and a cache can hold it. Pinning is the
+        viewer's own business and stays in the browser - the moment this
+        response varied by who asked, the cost model in `live.py` would
+        collapse.
+
+        The focus is decided here rather than in the page so that two screens
+        in the same room show the same game, and because the hysteresis needs
+        to remember what was on screen a moment ago. That memory is this one
+        slot: a channel has one current game by definition.
+        """
+        from . import live as livemod
+        from . import whip
+
+        with self._lock:
+            state = self._whip
+        now = time.time()
+        src, day = self.channel_source()
+        rows = whip.slate(src.games(), colors=livemod.team_color)
+
+        # When a score changed, so a touchdown can hold its own game on screen
+        # for a few seconds. Kept here because it is the only place that sees
+        # consecutive polls; the page is stateless between refreshes and a
+        # score is the one thing it cannot work out from a single frame.
+        scored = dict(state["scored"])
+        for row in rows:
+            key = row["event"]
+            pair = (row["homeScore"], row["awayScore"])
+            was = state["totals"].get(key)
+            if was is not None and was != pair:
+                scored[key] = now
+                # Which club moved, and by how much. Only a club that gained
+                # is named: a correction that takes points *off* the board is
+                # real (six came off in one college Saturday) and must not be
+                # announced as a score.
+                gained = [("home", pair[0] - was[0]), ("away", pair[1] - was[1])]
+                side, delta = max(gained, key=lambda g: g[1])
+                if delta > 0:
+                    state["last"][key] = {
+                        "side": side, "points": delta, "at": now,
+                        "what": whip.scoring_play(delta),
+                        "team": row[side]["abbr"]}
+            state["totals"][key] = pair
+
+        ranked = whip.rank(rows, scored=scored, now=now)
+        # A score rides along on its own game for as long as it is worth
+        # announcing, so the page needs no memory of its own to draw a banner.
+        for row in ranked:
+            last = state["last"].get(row["event"])
+            if last and now - last["at"] <= whip.SCORE_HOLD:
+                row["scored"] = {"team": last["team"], "what": last["what"],
+                                 "points": last["points"],
+                                 "ago": round(now - last["at"], 1)}
+        held = now - state["since"] if state["focus"] else 0.0
+        focus = whip.choose(ranked, state["focus"], held=held)
+        if focus != state["focus"]:
+            state["focus"], state["since"] = focus, now
+        state["scored"] = {k: v for k, v in scored.items()
+                           if now - v <= whip.SCORE_HOLD}
+        state["last"] = {k: v for k, v in state["last"].items()
+                         if now - v["at"] <= whip.SCORE_HOLD}
+
+        live_now = [g for g in ranked if g["state"] == "in"]
+        # The feed states which league it is (`leagues[0].slug`), so the page
+        # is told rather than assuming. A constant here would be the thing
+        # that breaks the day this serves a college Saturday.
+        board = src.scoreboard()
+        league = ((board.get("leagues") or [{}])[0].get("slug") or "")
+        out = {
+            "league": league,
+            "asOf": round(now, 3),
+            "source": "espn" if day is None else "day-replay",
+            "error": src.last_error,
+            "focus": focus,
+            "counts": {"live": len(live_now), "total": len(ranked),
+                       "final": sum(1 for g in ranked if g["state"] == "post"),
+                       "redZone": sum(1 for g in live_now if g["redZone"])},
+            "games": ranked,
+        }
+        if day is not None:
+            # A rebuilt day says so in the payload, the way `live.snapshot`
+            # labels a replayed frame rather than letting it pass as ESPN's.
+            # The page reads this to draw its REBUILT mark and to carry the
+            # caveats, so the claim travels with the data rather than being
+            # remembered by whoever started the server.
+            out["day"] = day.state()
+        return out
+
+    def day_state(self) -> dict:
+        """What day is loaded and where it has got to."""
+        return self.day_director().state()
+
+    def day_markers(self) -> dict:
+        try:
+            return self.day_director().markers()
+        except LookupError as exc:
+            raise HttpError(404, str(exc),
+                            'POST /api/day {"action": "load", "date": "2026-09-20"}')
+
+    def day_control(self, body: dict) -> dict:
+        director = self.day_director()
+        try:
+            state = director.control(body)
+        except (ValueError, TypeError) as exc:
+            raise HttpError(400, str(exc),
+                            'actions: load {date, from?, to?, slot?, at?}, play, '
+                            'pause, seek {at|time}, speed {speed}, next, previous')
+        except LookupError as exc:
+            raise HttpError(404, str(exc),
+                            "pull it first: python3 -m fantasyedge redzone-replay "
+                            "--date 2026-09-20 --pull")
+        # A day and a single game cannot both drive the channel. Loading one
+        # clears the other rather than leaving two clocks running.
+        with self._lock:
+            self._whip = {"focus": "", "since": 0.0, "scored": {}, "totals": {}}
+        return state
+
+    def redzone_page(self) -> bytes:
+        """The channel, served whole and static.
+
+        Nothing is inlined, unlike the mosaic: this page needs no database and
+        no league, so there is nothing personal to bake in. It asks
+        `/api/redzone` for everything and is therefore the same bytes for
+        every viewer, which is what lets a cache hold it.
+        """
+        if not REDZONE.exists():
+            return b"<p>redzone.html is missing from fantasyedge/templates/</p>"
+        return REDZONE.read_bytes()
 
     def mosaic_page(self) -> bytes:
         """The board, with every league's static half already inlined.
@@ -734,7 +1099,7 @@ class Api:
                 "ties": mine["ties"] or 0, "rank": mine["rank"],
                 "of": len(rows), "pointsFor": mine["points_for"] or 0.0}
 
-    def gamecast(self, event: str) -> dict:
+    def gamecast(self, event: str, src=None) -> dict:
         """One game, in the shape a field wants to draw.
 
         Everything here comes from the summary the live tier has already
@@ -746,11 +1111,15 @@ class Api:
 
         Shared, not personal: this is the same payload for every reader, which
         is what lets it cache like the rest of the live tier.
+
+        `src` is the replay's own source when the replay routes ask; nothing
+        else passes one, so the real routes can only ever read the real feed.
         """
         from .live import _num_score, headshot_url, logo_url
+        from .scene import league_of as sc_league_of
         from .scoring import boxscore_lines, score_boxscore
 
-        src = self.live_source()
+        src = src or self.live_source()
         if not hasattr(src, "summary"):
             raise HttpError(404, "This live source has no play data.",
                             "the simulated source cannot animate a real game")
@@ -769,21 +1138,46 @@ class Api:
                 "id": str(t.get("id") or ""),
                 "abbr": (t.get("abbreviation") or "").upper(),
                 "name": t.get("displayName") or t.get("name") or "",
+                # The same name in its two parts, which the field letters its
+                # end zones with (scene.club_lines). ESPN states both, so they
+                # are passed through rather than split out of `displayName`.
+                "location": t.get("location") or "",
+                "nickname": t.get("name") or "",
                 "logo": ((t.get("logos") or [{}])[0].get("href", "")
                          if t.get("logos") else logo_url(t.get("abbreviation") or "")),
                 "color": "#" + (t.get("color") or "444444"),
+                "altColor": "#" + t["alternateColor"] if t.get("alternateColor") else "",
                 "score": _num_score(c.get("score")),
             }
+        abbr_of = {s["id"]: s["abbr"] for s in sides.values()}
 
         # Drives, flattened to the fields a field animation actually uses.
         drives = []
         raw = data.get("drives") or {}
-        for d in (raw.get("previous") or []) + ([raw["current"]] if raw.get("current") else []):
+        # ESPN lists the drive in progress in `previous` as well as in
+        # `current` (seen on college live snapshots, and nothing in the NFL
+        # payload rules it out), so a live game drew that drive twice and
+        # counted its score twice. `current` is the fresher copy and wins.
+        current = raw.get("current")
+        ordered = [d for d in (raw.get("previous") or [])
+                   if not (current and str(d.get("id")) == str(current.get("id")))]
+        for d in ordered + ([current] if current else []):
             plays = []
             for pl in (d.get("plays") or []):
                 st, en = pl.get("start") or {}, pl.get("end") or {}
                 plays.append({
                     "id": str(pl.get("id") or ""),
+                    "type": (pl.get("type") or {}).get("text", ""),
+                    # Who snapped it. A drive's team is not enough: a pick-six
+                    # is in the offence's drive and scored by the defence.
+                    "team": abbr_of.get(str((st.get("team") or {}).get("id") or ""), ""),
+                    # Yards from the HOME goal line, which is what ESPN's
+                    # `yardLine` is. Unlike `yardsToEndzone` it is fixed to
+                    # the field: it does not flip with possession, and it is
+                    # not the placeholder 0 a timeout carries or the punter's
+                    # own yard line a punt carries.
+                    "fromYard": st.get("yardLine"),
+                    "toYard": en.get("yardLine"),
                     "text": pl.get("text") or "",
                     "clock": (pl.get("clock") or {}).get("displayValue", ""),
                     "period": (pl.get("period") or {}).get("number", 0),
@@ -841,9 +1235,45 @@ class Api:
              for pid, row in lines.items()),
             key=lambda r: (-r["points"], r["name"]))
 
+        # A finished game can be drawn from what happened rather than from
+        # what the text implied. nflverse publishes the NFL's own row for
+        # every play, including the one number ESPN never states - where the
+        # ball was caught - so once a game is final its plays are corrected in
+        # place and each carries which it is. A game still being played has no
+        # published rows, and is left as the estimate it is.
+        #
+        # Never fatal, and never blocking a live Sunday: an unreachable or
+        # unpublished source leaves every play exactly as ESPN shaped it.
+        state = (status.get("type") or {}).get("state", "pre")
+        truth_report = None
+        if state == "post" and correct_finished():
+            try:
+                from . import truth
+                # Corrected in one pass over the whole game, not per drive: the
+                # match is a game-wide assignment, and a drive at a time would
+                # let two drives claim the same row.
+                flat = [p for d in drives for p in d["plays"]]
+                fixed, truth_report = truth.correct_for_espn(flat, str(event))
+                by_id = {str(p.get("id")): p for p in fixed}
+                for d in drives:
+                    d["plays"] = [by_id.get(str(p.get("id")), p) for p in d["plays"]]
+            except Exception as exc:                   # noqa: BLE001
+                truth_report = {"event": str(event), "covered": False,
+                                "error": type(exc).__name__}
+
         last = drives[-1]["plays"][-1] if drives and drives[-1]["plays"] else None
         return {
             "event": str(event),
+            # Which code this game is played under, read from the summary
+            # rather than assumed. A college game drawn on an NFL field puts
+            # every play 3.58 yards off across, and says nothing about it.
+            "league": sc_league_of(data),
+            # Whether this game's geometry is what happened or an estimate of
+            # it, so a client can say so rather than implying the stronger one.
+            "truth": truth_report,
+            # Present only on a replay, and then always: a client must never
+            # be able to mistake a recorded game for one being played.
+            "replay": data.get("replay"),
             "state": (status.get("type") or {}).get("state", "pre"),
             "label": (status.get("type") or {}).get("shortDetail", ""),
             "clock": status.get("displayClock", ""),
@@ -1742,6 +2172,10 @@ class Api:
             return self.health(), PRIVATE
         if rest == ["live"]:
             return self.live(), LIVE
+        if rest == ["redzone"]:
+            # Shared bytes on the live clock, like /api/live: the ranking is a
+            # fact about the slate, so every viewer may be handed the same one.
+            return self.redzone(), LIVE
         if rest == ["headlines"]:
             return self.headlines(), DERIVED
         if rest == ["injuries"]:
@@ -1752,6 +2186,27 @@ class Api:
             return self.universe(qs), DERIVED
         if len(rest) == 2 and rest[0] == "gamecast":
             return self.gamecast(rest[1]), LIVE
+        if len(rest) == 2 and rest[0] == "scene":
+            return self.scene(rest[1]), LIVE
+        if rest == ["lastweek"]:
+            # A finished week never changes, but which week is last does,
+            # and a pull swaps a row's reasons from quarter to play
+            # resolution - so this is derived, not immutable.
+            return self.last_week(qs), DERIVED
+        if rest == ["day"]:
+            return self.day_state(), REPLAY
+        if rest == ["day", "markers"]:
+            return self.day_markers(), REPLAY
+        if rest == ["replay"]:
+            return self.replay_state(), REPLAY
+        if rest == ["replay", "markers"]:
+            return self.replay_markers(), REPLAY
+        if rest == ["replay", "live"]:
+            return self.replay_live(), REPLAY
+        if rest == ["replay", "gamecast"]:
+            return self.replay_gamecast(), REPLAY
+        if rest == ["replay", "scene"]:
+            return self.replay_scene(), REPLAY
         if len(rest) == 2 and rest[0] == "player":
             return self.profile(rest[1]), DERIVED
         if rest == ["context"]:
@@ -1910,6 +2365,15 @@ def make_handler(app: Api):
                     if self.command != "HEAD":
                         self.wfile.write(body)
                     return
+                if path in ("/redzone", "/redzone.html"):
+                    # Static: the page holds no data, it fetches /api/redzone.
+                    # That keeps it servable to a television or a phone on the
+                    # LAN without this process rendering anything per viewer.
+                    body = app.redzone_page()
+                    self._headers(body, 200, "", CONFIG, "text/html")
+                    if self.command != "HEAD":
+                        self.wfile.write(body)
+                    return
                 if path == "/api/live/stream":
                     return self._stream(qs)
                 payload, policy = app.dispatch(path, qs)
@@ -1988,8 +2452,49 @@ def make_handler(app: Api):
                     return self._send({"error": exc.message, "fix": exc.fix},
                                       exc.code)
 
+            if path == "/api/day":
+                # The same loopback rule as /api/replay and for the same
+                # reasons: it can make this machine fetch from ESPN, and it
+                # moves what every screen watching the channel sees.
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_REPLAY") != "1":
+                    return self._send(
+                        {"error": "A day may only be driven from this machine.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_REPLAY=1 to allow it"}, 403)
+                try:
+                    body = self._body(4_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": '{"action": "play"}'}, 400)
+                try:
+                    return self._send(app.day_control(body), 200, REPLAY)
+                except HttpError as exc:
+                    return self._send({"error": exc.message, "fix": exc.fix}, exc.code)
+
+            if path == "/api/replay":
+                # A third write, with the same loopback rule and its own escape
+                # hatch. It spends nothing and holds no credential, but it can
+                # make this machine fetch from ESPN (`capture`), and it moves
+                # what every screen watching the replay sees. A headset on the
+                # LAN needs FANTASYEDGE_ALLOW_REMOTE_REPLAY=1, which is a
+                # separate decision from letting it edit your prefs.
+                if not self._loopback() and \
+                        os.environ.get("FANTASYEDGE_ALLOW_REMOTE_REPLAY") != "1":
+                    return self._send(
+                        {"error": "A replay may only be driven from this machine.",
+                         "fix": "set FANTASYEDGE_ALLOW_REMOTE_REPLAY=1 to allow it"}, 403)
+                try:
+                    body = self._body(4_000)
+                except Exception as exc:
+                    return self._send({"error": f"Bad JSON: {exc}",
+                                       "fix": '{"action": "play"}'}, 400)
+                try:
+                    return self._send(app.replay_control(body), 200, REPLAY)
+                except HttpError as exc:
+                    return self._send({"error": exc.message, "fix": exc.fix}, exc.code)
+
             return self._send({"error": f"No route {path}.",
-                               "fix": "POST /api/prefs or POST /api/intel/narrate"},
+                               "fix": "POST /api/prefs, /api/intel/narrate, /api/replay or /api/day"},
                               404)
 
         do_GET = do_HEAD = _handle

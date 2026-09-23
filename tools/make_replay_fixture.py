@@ -21,6 +21,7 @@ repository one silent 74% data loss.
 """
 
 import argparse
+import gzip
 import json
 import pathlib
 import sys
@@ -160,6 +161,64 @@ def trim_pbp(summary: dict) -> dict:
     }
 
 
+# A whole game for the scene and the director: every drive and play, win
+# probability and scoring plays, and no box score. The box score is the
+# reconciliation fixture's job; here it would be 300KB of stat lines that the
+# geometry never reads.
+GAME_PLAY_KEEP = ("id", "text", "statYardage", "scoringPlay", "isTurnover", "isPenalty",
+                  "awayScore", "homeScore")
+GAME_SIDE_KEEP = ("down", "distance", "yardLine", "yardsToEndzone", "downDistanceText",
+                  "possessionText")
+
+
+def trim_game(summary: dict, board: dict, event: str) -> dict:
+    drives = []
+    for d in rp._drives(summary):
+        plays = []
+        for p in (d.get("plays") or []):
+            keep = {k: p[k] for k in GAME_PLAY_KEEP if k in p}
+            keep["type"] = {"text": (p.get("type") or {}).get("text")}
+            keep["period"] = {"number": (p.get("period") or {}).get("number")}
+            keep["clock"] = {"displayValue": (p.get("clock") or {}).get("displayValue")}
+            for side in ("start", "end"):
+                raw = p.get(side) or {}
+                keep[side] = {k: raw[k] for k in GAME_SIDE_KEEP if k in raw}
+                keep[side]["team"] = {"id": str(((raw.get("team") or {}).get("id")) or "")}
+            plays.append(keep)
+        drives.append({**{k: d[k] for k in ("id", "description", "displayResult", "result",
+                                           "isScore", "yards") if k in d},
+                       "team": slim_team(d.get("team") or {}), "plays": plays})
+    out = trim_summary(summary, 0)
+    out.pop("boxscore", None)
+    out["drives"] = {"previous": drives}
+    out["winprobability"] = [{"homeWinPercentage": w.get("homeWinPercentage"),
+                              "playId": w.get("playId")}
+                             for w in (summary.get("winprobability") or [])]
+    out["scoringPlays"] = [{**{k: v for k, v in sp.items() if k in
+                               ("id", "text", "awayScore", "homeScore", "period", "clock",
+                                "type", "scoringType")},
+                            "team": slim_team(sp.get("team") or {})}
+                           for sp in (summary.get("scoringPlays") or [])]
+    return {"event": event, "scoreboard": trim_scoreboard(board, event), "summary": out}
+
+
+def from_capture(root: pathlib.Path, event: str) -> tuple[dict, dict]:
+    """A game out of a weekend recorder's capture: `final/<event>.json.gz` and
+    the newest `scoreboard/*.json.gz` that carries it.
+
+    The recorder writes gzipped ESPN bytes in a layout of its own, which is
+    how a college fixture gets made at all: this repository's own captures are
+    NFL, and a fixture must never be assembled by hand.
+    """
+    summary = json.loads(gzip.decompress((root / "final" / f"{event}.json.gz").read_bytes()))
+    for path in sorted((root / "scoreboard").glob("*.json.gz"), reverse=True):
+        board = json.loads(gzip.decompress(path.read_bytes()))
+        events = [e for e in (board.get("events") or []) if str(e.get("id")) == event]
+        if events:
+            return {**board, "events": events}, summary
+    raise SystemExit(f"event {event} is on no scoreboard under {root}")
+
+
 def trim_scoreboard(board: dict, event: str) -> dict:
     ev = rp._event(board, event)
     if not ev:
@@ -180,6 +239,37 @@ def trim_scoreboard(board: dict, event: str) -> dict:
             "events": [ev]}
 
 
+def trim_week(board: dict) -> dict:
+    """A whole week's slate, every game, with only what a picker reads.
+
+    `trim_scoreboard` keeps one event because a replay drives one game. A week
+    fixture is the opposite shape - sixteen games and no play-by-play - and it
+    is what `week.py` is tested against: the states that decide whether a week
+    is finished, and the `linescores` every quarter-resolution reason is read
+    from.
+    """
+    events = []
+    for ev in (board.get("events") or []):
+        ev = {k: v for k, v in ev.items()
+              if k in ("id", "uid", "date", "name", "shortName", "season", "week")}
+        src = rp._event(board, str(ev.get("id")))
+        comp = dict(((src or {}).get("competitions") or [{}])[0])
+        for key in COMP_DROP:
+            comp.pop(key, None)
+        comp = {k: v for k, v in comp.items()
+                if k in ("id", "date", "status", "competitors", "attendance")}
+        comp["competitors"] = [
+            {**{k: v for k, v in c.items()
+                if k in ("id", "homeAway", "winner", "score", "linescores")},
+             "team": slim_team(c.get("team") or {})}
+            for c in (comp.get("competitors") or [])]
+        ev["competitions"] = [comp]
+        events.append(ev)
+    return {"leagues": [{"season": ((board.get("leagues") or [{}])[0].get("season"))}],
+            "season": board.get("season"), "week": board.get("week"),
+            "events": events}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--event", default="401872656")
@@ -188,10 +278,117 @@ def main() -> None:
                     help="write the whole-game reconciliation fixture instead")
     ap.add_argument("--offline", action="store_true",
                     help="require a local capture rather than fetching")
+    ap.add_argument("--game", action="store_true",
+                    help="write the whole-game scene fixture, tests/fixtures/replay_game_EVENT.json, "
+                         "from a capture made with `replay --capture`")
+    ap.add_argument("--nflverse", action="store_true",
+                    help="write tests/fixtures/nflverse_pbp_EVENT.json: the game's published "
+                         "play-by-play rows, which correct a replay's geometry")
+    ap.add_argument("--day", metavar="YYYY-MM-DD",
+                    help="write tests/fixtures/day_slate.json and day_game_*.json: a "
+                         "pulled day trimmed to two games, for the day-replay tests")
+    ap.add_argument("--day-root", default="data/replay/day",
+                    help="where --day reads the pulled day from")
+    ap.add_argument("--day-games", type=int, default=2, help="how many games to keep")
+    ap.add_argument("--day-plays", type=int, default=60, help="plays per game to keep")
+    ap.add_argument("--week", type=int,
+                    help="write a week's slate fixture, tests/fixtures/week_slate_SEASON_TYPE_WEEK.json")
+    ap.add_argument("--from-capture", default="",
+                    help="build --game from a weekend recorder's capture directory "
+                         "(final/<event>.json.gz plus scoreboard/), rather than this "
+                         "repository's own data/replay/source")
+    ap.add_argument("--season", type=int, default=2026)
+    ap.add_argument("--seasontype", type=int, default=2)
     args = ap.parse_args()
 
+    if args.nflverse:
+        from fantasyedge import nflverse as nv
+        rows, sched = nv.plays_for_espn(args.event, refresh=True)
+        if not sched:
+            raise SystemExit(f"event {args.event} is not in nflverse's schedules")
+        if not rows:
+            raise SystemExit(f"{sched['game_id']} is not published yet")
+        out = FIX / f"nflverse_pbp_{args.event}.json"
+        out.write_text(json.dumps({"event": args.event, "gameId": sched["game_id"],
+                                   "source": nv.PBP.format(season=int(sched["season"])),
+                                   "plays": rows},
+                                  indent=1, sort_keys=True))
+        print(f"event {args.event}: {sched['game_id']}, {len(rows)} nflverse plays "
+              f"-> {out} ({out.stat().st_size // 1024} KB)")
+        return
+
+    if args.day:
+        from fantasyedge import dayreplay as dy
+
+        board, summaries = dy.load_day(pathlib.Path(args.day_root), args.day)
+        keep = [str(ev.get("id")) for ev in (board.get("events") or [])
+                if str(ev.get("id")) in summaries][:args.day_games]
+        slim_board = {k: v for k, v in board.items() if k != "events"}
+        slim_board["events"] = [ev for ev in board["events"] if str(ev.get("id")) in keep]
+        out = FIX / "day_slate.json"
+        out.write_text(json.dumps(slim_board, indent=1, sort_keys=True))
+        print(f"{args.day}: {len(keep)} games -> {out} ({out.stat().st_size // 1024} KB)")
+        for event in keep:
+            summary = summaries[event]
+            drives, left = [], args.day_plays
+            for d in ((summary.get("drives") or {}).get("previous") or []):
+                if left <= 0:
+                    break
+                plays = [slim_play(p) for p in (d.get("plays") or [])][:left]
+                left -= len(plays)
+                drives.append({**{k: v for k, v in d.items()
+                                  if k in ("id", "description", "displayResult", "result")},
+                               "team": slim_team(d.get("team") or {}), "plays": plays})
+            ids = {str(p.get("id")) for d in drives for p in d["plays"]}
+            head = dict(summary.get("header") or {})
+            head.pop("links", None)
+            comp = dict((head.get("competitions") or [{}])[0])
+            for key in COMP_DROP:
+                comp.pop(key, None)
+            comp["competitors"] = [
+                {**{k: v for k, v in c.items()
+                    if k in ("id", "order", "homeAway", "winner", "score")},
+                 "team": slim_team(c.get("team") or {})}
+                for c in (comp.get("competitors") or [])]
+            head["competitions"] = [comp]
+            trimmed = {"header": head, "drives": {"previous": drives},
+                       "scoringPlays": [{**{k: v for k, v in sp.items() if k != "team"},
+                                         "team": slim_team(sp.get("team") or {})}
+                                        for sp in (summary.get("scoringPlays") or [])
+                                        if str(sp.get("id")) in ids]}
+            path = FIX / f"day_game_{event}.json"
+            path.write_text(json.dumps(trimmed, indent=1, sort_keys=True))
+            print(f"  {event}: {len(ids)} plays -> {path} "
+                  f"({path.stat().st_size // 1024} KB)")
+        return
+
+    if args.week:
+        from fantasyedge import week as wk
+
+        board = _get_json(with_key(wk.week_url(args.season, args.week, args.seasontype)))
+        out = FIX / f"week_slate_{args.season}_{args.seasontype}_{args.week}.json"
+        FIX.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(trim_week(board), indent=1, sort_keys=True))
+        print(f"{args.season} type {args.seasontype} week {args.week}: "
+              f"{len(board.get('events') or [])} games, state "
+              f"{wk.week_state(board)} -> {out} ({out.stat().st_size // 1024} KB)")
+
+        return
+
+    if args.game:
+        board, summary = (from_capture(pathlib.Path(args.from_capture), args.event)
+                          if args.from_capture else rp.load(CAPTURE, args.event))
+        out = FIX / f"replay_game_{args.event}.json"
+        out.write_text(json.dumps(trim_game(summary, board, args.event), sort_keys=True,
+                                  separators=(",", ":")))
+        print(f"event {args.event}: {len(rp._all_plays(summary))} plays, "
+              f"{rp.total_seconds(summary)}s -> {out} ({out.stat().st_size // 1024} KB)")
+        return
+
     game = CAPTURE / f"{args.event}.json"
-    board_file = CAPTURE / "scoreboard.json"
+    board_file = rp.scoreboard_path(CAPTURE, args.event)
+    if not board_file.exists():
+        board_file = CAPTURE / "scoreboard.json"
     if not game.exists():
         alt = pathlib.Path(f"/tmp/rp{args.event[-3:]}/source/{args.event}.json")
         if alt.exists():

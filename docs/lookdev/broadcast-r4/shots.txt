@@ -1,0 +1,7 @@
+bowl-wide-p4: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p4-kick-deep.png
+bowl-wide-p6: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p6-kick-deep.png
+bowl-wide-p8: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p8-kick-deep.png
+bowl-wide-p10: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p10-kick-deep.png
+bowl-wide-p13: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p13-kick-deep.png
+bowl-wide-p14.5: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p14.5-kick-deep.png
+bowl-wide-p16: replay at 1039s (touchdown) -> docs/lookdev/broadcast-r4/bowl-wide-p16-kick-deep.png

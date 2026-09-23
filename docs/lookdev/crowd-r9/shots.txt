@@ -1,0 +1,2 @@
+bowl-wide: replay at 240s (early) -> docs/lookdev/crowd-r9/bowl-wide-chi-after.png
+crowd-closeup: replay at 240s (early) -> docs/lookdev/crowd-r9/crowd-closeup-chi-after.png

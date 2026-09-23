@@ -1,0 +1,58 @@
+[shadergraph] /Root/Beam loaded from actors/lighting/Beams.reality via Entity(contentsOf:)
+[shadergraph] /Root/FieldPaint loaded from actors/field/shadergraph/Field.reality via Entity(contentsOf:)
+[shadergraph] /Root/NetFresnel loaded from actors/sideline/shadergraph/Sideline.reality via Entity(contentsOf:)
+[shadergraph] /Root/TurfSheen loaded from actors/field/shadergraph/Turf.reality via Entity(contentsOf:)
+[shadergraph] field paint on 3 meshes
+[shadergraph] lighting beams: Shader Graph in use on rim.beams
+[shadergraph] net falloff on 3 meshes
+[shadergraph] turf sheen on 3 meshes
+[stadium-stats] stadium.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 14, triangles 47326, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 20, triangles 53048, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 20, triangles 54596, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.bowl: draw parts 20, triangles 55044, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.broadcast: draw parts 5, triangles 4420, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 140277, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 140964, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 141385, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.crowd: draw parts 36, triangles 141729, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.experience: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.field: draw parts 10, triangles 1114, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9540, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9556, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.lighting: draw parts 12, triangles 9588, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] stadium.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20648, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sideline: draw parts 15, triangles 20776, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] stadium.sky: draw parts 3, triangles 4800, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] stadium: models 87, draw parts 101, triangles 234023, texture memory ~70 MB
+[stadium-stats] stadium: models 87, draw parts 101, triangles 236226, texture memory ~70 MB
+[stadium-stats] stadium: models 87, draw parts 101, triangles 237343, texture memory ~70 MB
+[stadium-stats] stadium: models 87, draw parts 101, triangles 237471, texture memory ~70 MB
+[stadium-stats] stadium: models 87, draw parts 95, triangles 229233, texture memory ~70 MB
+[stadium-stats] tabletop.audio: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.bowl: draw parts 3, triangles 2648, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.broadcast: draw parts 4, triangles 4418, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.crowd: draw parts 22, triangles 1746, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.experience: draw parts 6, triangles 2856, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.field: draw parts 10, triangles 954, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.lighting: draw parts 12, triangles 8672, spot lights 4, emitters 0, shadow casters 0
+[stadium-stats] tabletop.moments: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop.sideline: draw parts 15, triangles 2885, spot lights 0, emitters 0, shadow casters 1
+[stadium-stats] tabletop.sky: draw parts 0, triangles 0, spot lights 0, emitters 0, shadow casters 0
+[stadium-stats] tabletop: models 69, draw parts 72, triangles 24179, texture memory ~70 MB
+[stadium] assets: 30 textures, 16 sounds, probe loaded, ~70 MB
+[stadium] crowd dress composed in 32.74 s
+[stadium] crowd dress composed in 34.22 s
+[stadium] crowd dress composed in 35.08 s
+[stadium] crowd dress composed in 35.69 s
+[stadium] crowd dress composed in 36.64 s
+[stadium] crowd dress composed in 42.12 s
+[stadium] crowd: 1620 fans, lod0 0, lod1 0, lod2 0, cards 1620, groups 22
+[stadium] crowd: 44855 fans, lod0 16, lod1 32, lod2 150, cards 44657, groups 36
+[stadium] lighting beams 0/0, overdraw ≈ 0.00 screens (cap 2.000000)
+[stadium] lighting beams 14/20, overdraw ≈ 1.96 screens (cap 2.000000)
+[stadium] lighting beams 16/20, overdraw ≈ 1.98 screens (cap 2.000000)
+[stadium] lighting beams 20/20, overdraw ≈ 1.06 screens (cap 2.000000)
+[stadium] lighting beams 20/20, overdraw ≈ 1.85 screens (cap 2.000000)
+[stadium] models: 47

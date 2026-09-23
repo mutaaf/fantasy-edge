@@ -1,0 +1,30 @@
+{
+ "about": "Footballs for the Broadcast actor; see tools/blender/broadcast/build.py.",
+ "axes": "long axis +x, laces +y, metres; scale by 1/0.9144 into scene yards",
+ "models": {
+  "nfl": {
+   "usdz": "actors/broadcast/football_nfl.usdz",
+   "glb": "actors/broadcast/football_nfl.glb",
+   "triangles": 3528,
+   "parts": 2,
+   "bytes": {
+    "usdz": 757597,
+    "glb": 354120
+   },
+   "lengthMeters": 0.2819,
+   "girthMeters": 0.5359
+  },
+  "college": {
+   "usdz": "actors/broadcast/football_college.usdz",
+   "glb": "actors/broadcast/football_college.glb",
+   "triangles": 3848,
+   "parts": 3,
+   "bytes": {
+    "usdz": 770634,
+    "glb": 364864
+   },
+   "lengthMeters": 0.2819,
+   "girthMeters": 0.5359
+  }
+ }
+}

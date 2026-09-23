@@ -260,6 +260,21 @@ class TestAuthorizeUrl(unittest.TestCase):
         self.assertEqual(y.AUTH, oauth.PROVIDERS["yahoo"].authorize_url)
         self.assertEqual(y.TOKEN, oauth.PROVIDERS["yahoo"].token_url)
 
+    def test_the_provider_asks_for_the_same_scope(self):
+        # It did not, and the two drifted in the one direction that cannot be
+        # seen from here: the token refreshed forever and every Fantasy call
+        # returned 401 additional_authorization_required, because the consent
+        # screen was never asked for Fantasy read.
+        import pathlib
+        import urllib.parse
+        from fantasyedge.providers import yahoo as y
+        auth = y.YahooAuth(client_id="id", client_secret="secret",
+                           token_path=pathlib.Path("/nonexistent/yahoo.json"),
+                           redirect_uri=ALLOWED)
+        asked = urllib.parse.parse_qs(
+            urllib.parse.urlparse(auth.authorize_url()).query).get("scope", [""])[0]
+        self.assertEqual(oauth.PROVIDERS["yahoo"].scope, asked)
+
 
 class TestRedirectAllowlist(unittest.TestCase):
     def test_exact_match_only(self):

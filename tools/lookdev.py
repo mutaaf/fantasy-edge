@@ -1,0 +1,308 @@
+"""Shoot the stadium's fixed look-dev shots in a visionOS simulator.
+
+Serves the committed whole-game fixtures through the real API as a replay,
+positions the replay for each shot, launches the app with `-shot <name>` and
+saves a screenshot. No network, no capture. The shot names are the ones the
+app's `StadiumShots` knows; a test keeps the two lists identical, and
+docs/ART_BIBLE.md says which actor each one judges.
+
+    python3 tools/lookdev.py --device <udid> --out .work/shots/iter5
+    python3 tools/lookdev.py --device <udid> --out .work/shots/crowd --only crowd-closeup td-moment
+
+Each shot writes `<name>.png` and a 1400-wide `s-<name>.png` for review, and
+`stats.txt` gathers the per-actor draw counts the app logs with -stadiumStats.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from fantasyedge import replay as rp          # noqa: E402
+
+FIX = ROOT / "tests" / "fixtures"
+PICK_SIX = "401772810"
+BUNDLE = "com.mutaaf.fantasyedge"
+
+# name -> where the replay sits: "redzone" (a red-zone snap with a drive on
+# the field), "early" (a normal snap before it), or "touchdown" (the pick-six,
+# played in at 1x so the moment fires while the camera watches).
+SHOTS = {
+    "tabletop": "redzone",
+    "bowl-wide": "early",
+    "field-level": "redzone",
+    "crowd-closeup": "early",
+    "lights-haze": "early",
+    "sky-dome": "early",
+    "td-moment": "touchdown",
+    "redzone-trails": "redzone",
+    "sideline-props": "early",
+    # The pick-six carries the ball across the goal line in front of the camera
+    # well, which is the only place a frame can hold a life-size ball.
+    "goal-line": "goalline",
+    "wall-boards": "early",
+}
+
+
+def stage_replays() -> pathlib.Path:
+    source = pathlib.Path(tempfile.mkdtemp(prefix="lookdev-replay-"))
+    for path in FIX.glob("replay_game_*.json"):
+        event = path.stem.split("_")[-1]
+        g = json.loads(path.read_text())
+        (source / f"{event}.json").write_text(json.dumps(g["summary"]))
+        rp.scoreboard_path(source, event).write_text(json.dumps(g["scoreboard"]))
+    return source
+
+
+def post(port: int, body: dict) -> dict:
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/api/replay", data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=90) as r:
+        return json.load(r)
+
+
+def get(port: int, path: str) -> dict:
+    # A cold scene costs about nine seconds to build - the dock is solved for
+    # every seat and every facing a recentre can land on - and more when the
+    # machine is busy. Ten seconds made the harness fail at the first request.
+    with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=90) as r:
+        return json.load(r)
+
+
+def pick_six_second() -> int:
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    play = next(p for p in rp._all_plays(summary) if "INTERCEPTED by N.Wright" in (p.get("text") or ""))
+    return int(rp.play_seconds(play, lengths))
+
+
+def field_goal_second() -> int:
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    play = next(p for p in rp._all_plays(summary) if "field goal is GOOD" in (p.get("text") or ""))
+    return int(rp.play_seconds(play, lengths))
+
+
+def play_second(needle: str) -> int:
+    """The replay second of the first play whose text contains `needle`."""
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    play = next((p for p in rp._all_plays(summary) if needle in (p.get("text") or "")), None)
+    if play is None:
+        raise SystemExit(f"--play {needle!r}: no play in {PICK_SIX} says that")
+    return int(rp.play_seconds(play, lengths))
+
+
+def wait_for_moment(port: int, kind: str, timeout: float = 20.0) -> float:
+    """Poll the replay until the scene's active moment is `kind`; the time it
+    appeared, or now if it never does."""
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        m = get(port, "/api/replay/scene").get("activeMoment") or {}
+        if m.get("kind") == kind:
+            return time.monotonic()
+        time.sleep(0.1)
+    print(f"no {kind} moment within {timeout}s", flush=True)
+    return time.monotonic()
+
+
+def red_zone_second(port: int) -> int:
+    for at in range(300, 3600, 45):
+        post(port, {"action": "seek", "at": at})
+        s = get(port, "/api/replay/scene")
+        if s["status"]["redZone"] and s.get("ball") and len(s["lasers"]) == 2 and s["currentDrive"] is not None \
+                and len(s["drives"][s["currentDrive"]]["arcs"]) >= 5:
+            return at
+    return 1800
+
+
+def goal_line_second() -> int:
+    """The snap nearest the away goal line, where the camera well stands 13 yd
+    off. Nothing else in the fixtures rests the ball inside Broadcast's
+    life-size band: the pick-six's ball is reset upfield the instant it
+    scores, and the red-zone snap is at the other end."""
+    summary = json.loads((FIX / f"replay_game_{PICK_SIX}.json").read_text())["summary"]
+    lengths = rp.period_lengths(summary)
+    best = None
+    for play in rp._all_plays(summary):
+        line = (play.get("start") or {}).get("yardLine")
+        text = (play.get("text") or "").strip()
+        if line is None or line < 95 or not text or "Timeout" in text:
+            continue
+        at = int(rp.play_seconds(play, lengths))
+        if best is None or line > best[0]:
+            best = (line, at)
+    return best[1] if best else 1800
+
+
+def simctl(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(["xcrun", "simctl", *args], capture_output=True, text=True, check=check)
+
+
+def app_log(device: str, since: str) -> str:
+    return subprocess.run(["xcrun", "simctl", "spawn", device, "log", "show", "--start", since, "--style", "compact",
+                           "--predicate", 'subsystem == "com.mutaaf.fantasyedge"'],
+                          capture_output=True, text=True).stdout
+
+
+def wait_for_build(device: str, since: str, tabletop: bool, timeout: float) -> float:
+    """Wait until the launched app says its stadium is built (the -stadiumStats
+    totals line) and, in the stadium, that the crowd has dressed. A fixed delay
+    rendered black worlds under load. Returns the seconds waited."""
+    started = time.monotonic()
+    built = "[stadium-stats] tabletop: models" if tabletop else "[stadium-stats] stadium: models"
+    needs = [built] if tabletop else [built, "crowd dress composed"]
+    # The crowd used to dress in 25 s, which hid every slower load behind it;
+    # at 2 s a shot could beat the field's Shader Graph paint, which draws
+    # nothing until it swaps in. Wait for it, or for its own fallback.
+    paint = ("[shadergraph] field paint on", "[shadergraph] field paint unavailable")
+    while time.monotonic() - started < timeout:
+        text = app_log(device, since)
+        if all(n in text for n in needs) and (tabletop or any(p in text for p in paint)):
+            return time.monotonic() - started
+        time.sleep(2.0)
+    print(f"  not built after {timeout:.0f}s; shooting anyway", flush=True)
+    return timeout
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--device", required=True)
+    ap.add_argument("--out", required=True, type=pathlib.Path)
+    ap.add_argument("--port", type=int, default=8795)
+    ap.add_argument("--app", type=pathlib.Path,
+                    default=ROOT / ".work/dd/Build/Products/Debug-xrsimulator/FantasyEdge.app")
+    ap.add_argument("--only", nargs="*", choices=sorted(SHOTS))
+    ap.add_argument("--settle", type=float, default=4.0, help="seconds to let the scene settle once the app says it is built")
+    ap.add_argument("--build-timeout", type=float, default=60.0, help="longest wait for the built signal")
+    ap.add_argument("--extra", default="", help="launch arguments after -shot, one quoted string: --extra=\"-stadiumPitch -40\"")
+    ap.add_argument("--suffix", default="", help="appended to each shot's file name")
+    ap.add_argument("--moment", default="touchdown", choices=["touchdown", "fieldGoal"],
+                    help="which moment td-moment plays in: the pick-six, or the game's first made field goal")
+    ap.add_argument("--times", default="",
+                    help="comma-separated seconds after the moment appears, one screenshot each (td-moment-t<s>.png)")
+    ap.add_argument("--seat", default="",
+                    help="sit in this preset (any id in presentation.stadium.seats) instead of the shot's own seat")
+    ap.add_argument("--during-moment", action="store_true",
+                    help="play every selected shot through the --moment, not only td-moment")
+    ap.add_argument("--play", default="",
+                    help="play every selected shot through the first play whose text contains this, at 1x; "
+                         "use p-times (--times p4,p6) for frames mid-play")
+    ap.add_argument("--event", default=PICK_SIX,
+                    help="which committed fixture to replay, for a shot that has to hold for more than one "
+                         "pair of clubs (401772510 DAL@PHI, 401772949 LAR@SEA, 401772810 MIN@CHI). The "
+                         "moment and play positions are the pick-six's, so --moment and --play stay on it.")
+    args = ap.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
+
+    source = stage_replays()
+    env = {**os.environ, "FANTASYEDGE_REPLAY_DIR": str(source)}
+    db = pathlib.Path(tempfile.mkdtemp()) / "lookdev.db"
+    api = subprocess.Popen([sys.executable, "-m", "fantasyedge", "--db", str(db), "api", "--host", "127.0.0.1",
+                            "--port", str(args.port)], cwd=ROOT, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    logs = []
+    try:
+        # Two minutes, not ten seconds: this machine runs several stadium
+        # simulators at once and has been seen at load 938, where the API takes
+        # far longer than ten seconds to answer. The old loop then fell through
+        # silently and the shoot failed later, somewhere unrelated - so this
+        # raises rather than continuing without an API.
+        for attempt in range(600):
+            try:
+                get(args.port, "/api/health")
+                break
+            except Exception:
+                if attempt and attempt % 50 == 0:
+                    print(f"  waiting for the API ({attempt // 5}s, load {os.getloadavg()[0]:.0f})")
+                time.sleep(0.2)
+        else:
+            raise SystemExit(f"the API never answered on port {args.port} in 120s "
+                             f"(load {os.getloadavg()[0]:.0f}) - nothing was shot")
+        simctl("boot", args.device, check=False)
+        simctl("install", args.device, str(args.app))
+        post(args.port, {"action": "load", "event": args.event})
+        post(args.port, {"action": "pause"})
+        positions = {"touchdown": (play_second(args.play) if args.play else
+                                   field_goal_second() if args.moment == "fieldGoal" else pick_six_second()),
+                     "goalline": goal_line_second(),
+                     "redzone": red_zone_second(args.port)}
+        positions["early"] = positions["redzone"] - 150
+        if args.seat:
+            seats = [x["id"] for x in get(args.port, "/api/replay/scene")["presentation"]["stadium"].get("seats", [])]
+            if args.seat not in seats:
+                raise SystemExit(f"--seat {args.seat}: the scene's seats are {', '.join(seats)}")
+        started = time.strftime("%Y-%m-%d %H:%M:%S")
+        for name, where in SHOTS.items():
+            if args.only and name not in args.only:
+                continue
+            if args.during_moment or args.play:
+                where = "touchdown"
+            at = positions[where]
+            simctl("terminate", args.device, BUNDLE, check=False)
+            # The touchdown is held paused a few seconds before the snap until
+            # the stadium has built, then played at 1x: the moment is only an
+            # event if it arrives after the build, and it holds for
+            # motion.momentSeconds, so the shot is taken inside that window.
+            post(args.port, {"action": "seek", "at": at - 3 if where == "touchdown" else at})
+            post(args.port, {"action": "pause"})
+            launched = time.strftime("%Y-%m-%d %H:%M:%S")
+            simctl("launch", "--terminate-running-process", args.device, BUNDLE,
+                   "-fe.host", f"127.0.0.1:{args.port}", "-stadiumStats", "-stadiumMute", "-shot", name, *(["-stadiumSeat", args.seat] if args.seat else []), *args.extra.split(), check=False)
+            waited = wait_for_build(args.device, launched, name == "tabletop", args.build_timeout)
+            time.sleep(args.settle)
+            print(f"  {name}: built after {waited:.0f}s", flush=True)
+            def shoot(tag: str, due: float = 0.0) -> None:
+                if due:
+                    time.sleep(max(0.0, due - time.monotonic()))
+                shot = args.out / f"{name}{tag}{args.suffix}.png"
+                simctl("io", args.device, "screenshot", str(shot), check=False)
+                subprocess.run(["sips", "-Z", "1400", str(shot), "--out", str(args.out / f"s-{shot.name}")],
+                               capture_output=True)
+                logs.append(f"{name}{tag}: replay at {at}s ({where}) -> {shot}")
+                print(logs[-1], flush=True)
+
+            if where != "touchdown":
+                shoot("")
+                continue
+            post(args.port, {"action": "speed", "speed": 1})
+            post(args.port, {"action": "play"})
+            played = time.monotonic()
+            if not args.times:
+                shoot("", played + 6.0)
+                continue
+            # "p1.5" is 1.5 s after play resumes (3 s before the snap): frames
+            # in flight, before the moment exists. Plain numbers count from the
+            # moment appearing in the scene.
+            times = args.times.split(",")
+            for t in sorted((t for t in times if t.startswith("p")), key=lambda t: float(t[1:])):
+                shoot(f"-{t}", played + float(t[1:]))
+            late = [t for t in times if not t.startswith("p")] if not args.play else []
+            if late:
+                fired = wait_for_moment(args.port, args.moment)
+                for t in late:
+                    shoot(f"-t{t}", fired + float(t))
+        stats = app_log(args.device, started)
+        # Per-actor draw counts, and which path loaded each Shader Graph material.
+        lines = sorted({line[line.index(tag):] for line in stats.splitlines()
+                        for tag in ("[stadium", "[shadergraph") if tag in line})
+        (args.out / "stats.txt").write_text("\n".join(lines) + "\n")
+        (args.out / "shots.txt").write_text("\n".join(logs) + "\n")
+    finally:
+        api.terminate()
+        shutil.rmtree(source, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    main()

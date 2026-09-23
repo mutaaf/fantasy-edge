@@ -17,7 +17,10 @@ struct CommandView: View {
     @Environment(\.dismissWindow) private var dismissWindow
     @State private var showSettings = false
     @State var focus: String?
-    @State var tab: Tab = .command
+    /// `-openLastWeek` lands on Live, because that is where the picker it
+    /// opens lives. A simulator cannot tap a tab any more than it can pinch.
+    @State var tab: Tab = ProcessInfo.processInfo.arguments
+        .contains("-openLastWeek") ? .live : .command
     /// Whether the ranked rail and the week digest are showing everything.
     /// Only reachable at five leagues and up; below that there is nothing
     /// folded away for them to unfold.

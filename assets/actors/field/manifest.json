@@ -1,0 +1,527 @@
+{
+  "actor": "field",
+  "canvas": {
+    "axes": "x yards from the left goal line, y yards from the near sideline, top row = far edge",
+    "x0": -16.0,
+    "x1": 116.0,
+    "y0": -14.020833333333332,
+    "y1": 67.35416666666667
+  },
+  "discrepanciesWithScene": [
+    {
+      "key": "props.benches.fromX/toX",
+      "league": "college-football",
+      "rule": [
+        20.0,
+        80.0
+      ],
+      "scene": [
+        25.0,
+        75.0
+      ],
+      "source": "NCAA 1-2-4-a: team area between the 20-yard lines"
+    },
+    {
+      "key": "props.benches.fromX/toX",
+      "league": "nfl",
+      "rule": [
+        30.0,
+        70.0
+      ],
+      "scene": [
+        32.0,
+        68.0
+      ],
+      "source": "NFL diagram note 8: benches between the 30-yard lines"
+    },
+    {
+      "key": "props.goalpost.uprightAbove",
+      "league": "nfl",
+      "rule": 11.666666666666666,
+      "scene": 10.0,
+      "source": "NFL \u00a73 Art.2: uprights extend 35 ft above the crossbar"
+    },
+    {
+      "key": "props.goalpost.uprightAbove",
+      "league": "college-football",
+      "rule": 10.0,
+      "scene": 10.0,
+      "source": "NCAA 1-2-5-a sets tops at least 30 ft up; 30 ft above the bar is standard build"
+    }
+  ],
+  "files": [
+    {
+      "bytes": 59296,
+      "path": "fonts/Graduate-Regular.ttf",
+      "role": "font source and licence"
+    },
+    {
+      "bytes": 4513,
+      "path": "fonts/OFL-Graduate.txt",
+      "role": "font source and licence"
+    },
+    {
+      "bytes": 167003,
+      "path": "fonts/glyphs.json",
+      "role": "Graduate glyph triangles for runtime team lettering"
+    },
+    {
+      "bytes": 325381,
+      "bytesPerTexel": 4,
+      "gpuMB": 0.92,
+      "height": 326,
+      "path": "maps/college-football/field_maps.png",
+      "role": "R macro variation G wear B mow crispness A divot density",
+      "width": 528
+    },
+    {
+      "bytes": 65097,
+      "bytesPerTexel": 4,
+      "gpuMB": 0.92,
+      "height": 326,
+      "path": "maps/college-football/mow_patterns.png",
+      "role": "mowing patterns: R 5 yd G 10 yd B checker A diamond",
+      "width": 528
+    },
+    {
+      "bytes": 68795,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.23,
+      "height": 326,
+      "path": "maps/college-football/variation_opacity.png",
+      "role": "",
+      "width": 528
+    },
+    {
+      "bytes": 62854,
+      "bytesPerTexel": 4,
+      "gpuMB": 1.4,
+      "height": 512,
+      "path": "maps/divots.png",
+      "role": "divot decal atlas 2x2, straight alpha",
+      "width": 512
+    },
+    {
+      "bytes": 31018,
+      "bytesPerTexel": 3,
+      "gpuMB": 1.05,
+      "height": 512,
+      "path": "maps/divots_normal.png",
+      "role": "divot decal normals",
+      "width": 512
+    },
+    {
+      "bytes": 256918,
+      "bytesPerTexel": 4,
+      "gpuMB": 0.92,
+      "height": 326,
+      "path": "maps/nfl/field_maps.png",
+      "role": "R macro variation G wear B mow crispness A divot density",
+      "width": 528
+    },
+    {
+      "bytes": 72075,
+      "bytesPerTexel": 4,
+      "gpuMB": 0.92,
+      "height": 326,
+      "path": "maps/nfl/mow_patterns.png",
+      "role": "mowing patterns: R 5 yd G 10 yd B checker A diamond",
+      "width": 528
+    },
+    {
+      "bytes": 67877,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.23,
+      "height": 326,
+      "path": "maps/nfl/variation_opacity.png",
+      "role": "",
+      "width": 528
+    },
+    {
+      "bytes": 426984,
+      "path": "markings/college-football/markings.json",
+      "role": "every marking as polygons in field yards with its rule"
+    },
+    {
+      "bytes": 2338074,
+      "bytesPerTexel": 3,
+      "gpuMB": 11.0,
+      "height": 1302,
+      "path": "markings/college-football/paint_sdf.png",
+      "role": "painted markings, signed distance: R white G yellow, 0.5 = edge",
+      "width": 2112
+    },
+    {
+      "bytes": 946838,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.86,
+      "height": 1302,
+      "path": "markings/college-football/paint_white_half.png",
+      "role": "",
+      "width": 1072
+    },
+    {
+      "bytes": 709705,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.86,
+      "height": 1302,
+      "path": "markings/college-football/paint_yellow_half.png",
+      "role": "",
+      "width": 1072
+    },
+    {
+      "bytes": 497168,
+      "path": "markings/nfl/markings.json",
+      "role": "every marking as polygons in field yards with its rule"
+    },
+    {
+      "bytes": 1794106,
+      "bytesPerTexel": 3,
+      "gpuMB": 11.0,
+      "height": 1302,
+      "path": "markings/nfl/paint_sdf.png",
+      "role": "painted markings, signed distance: R white G yellow, 0.5 = edge",
+      "width": 2112
+    },
+    {
+      "bytes": 812784,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.86,
+      "height": 1302,
+      "path": "markings/nfl/paint_white_half.png",
+      "role": "",
+      "width": 1072
+    },
+    {
+      "bytes": 726718,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.86,
+      "height": 1302,
+      "path": "markings/nfl/paint_yellow_half.png",
+      "role": "",
+      "width": 1072
+    },
+    {
+      "bytes": 587,
+      "path": "turf/natural/bake.json",
+      "role": "bake parameters"
+    },
+    {
+      "bytes": 845186,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/natural/paint_breakup.png",
+      "role": "paint carried per turf texel; perturbs the paint SDF edge",
+      "width": 1024
+    },
+    {
+      "bytes": 138871,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/paint_grassthrough.png",
+      "role": "",
+      "width": 512
+    },
+    {
+      "bytes": 2683025,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_against_normal.png",
+      "role": "natural turf normal, blades leaning against the mower",
+      "width": 1024
+    },
+    {
+      "bytes": 37441,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_0.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 108667,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_1.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 188223,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_2.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 233216,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_3.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 242537,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_4.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 235175,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_5.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 226303,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_6.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 219901,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/natural/turf_natural_shell_7.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 2513920,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_albedo.png",
+      "role": "natural turf albedo (sRGB), tile 0.40 m",
+      "width": 1024
+    },
+    {
+      "bytes": 2776690,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_normal.png",
+      "role": "natural turf normal, blades leaning with the mower (OpenGL)",
+      "width": 1024
+    },
+    {
+      "bytes": 886093,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_occlusion.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 2859386,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_orm.png",
+      "role": "natural turf R occlusion G roughness B height",
+      "width": 1024
+    },
+    {
+      "bytes": 843698,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/natural/turf_natural_with_roughness.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 575004,
+      "bytesPerTexel": 3,
+      "gpuMB": 1.05,
+      "height": 512,
+      "path": "turf/natural/turf_worn_any_albedo.png",
+      "role": "worn turf albedo, blended in by maps.G",
+      "width": 512
+    },
+    {
+      "bytes": 639544,
+      "bytesPerTexel": 3,
+      "gpuMB": 1.05,
+      "height": 512,
+      "path": "turf/natural/turf_worn_any_normal.png",
+      "role": "worn turf normal",
+      "width": 512
+    },
+    {
+      "bytes": 701232,
+      "bytesPerTexel": 3,
+      "gpuMB": 1.05,
+      "height": 512,
+      "path": "turf/natural/turf_worn_any_orm.png",
+      "role": "worn turf ORM",
+      "width": 512
+    },
+    {
+      "bytes": 373,
+      "path": "turf/synthetic/bake.json",
+      "role": "bake parameters"
+    },
+    {
+      "bytes": 576362,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/synthetic/paint_breakup.png",
+      "role": "paint carried per synthetic texel",
+      "width": 1024
+    },
+    {
+      "bytes": 2256063,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_albedo.png",
+      "role": "synthetic turf albedo with crumb-rubber infill",
+      "width": 1024
+    },
+    {
+      "bytes": 2802723,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_normal.png",
+      "role": "synthetic turf normal",
+      "width": 1024
+    },
+    {
+      "bytes": 935679,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_occlusion.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 2883450,
+      "bytesPerTexel": 3,
+      "gpuMB": 4.19,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_orm.png",
+      "role": "synthetic turf ORM",
+      "width": 1024
+    },
+    {
+      "bytes": 761823,
+      "bytesPerTexel": 1,
+      "gpuMB": 1.4,
+      "height": 1024,
+      "path": "turf/synthetic/turf_synthetic_any_roughness.png",
+      "role": "",
+      "width": 1024
+    },
+    {
+      "bytes": 57502,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_0.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 74699,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_1.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 157504,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_2.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 233535,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_3.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 222705,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_4.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 190098,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_5.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 183187,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_6.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    },
+    {
+      "bytes": 181610,
+      "bytesPerTexel": 1,
+      "gpuMB": 0.35,
+      "height": 512,
+      "path": "turf/synthetic/turf_synthetic_shell_7.png",
+      "role": "shell coverage slice for field-level grass (shell_0 tallest)",
+      "width": 512
+    }
+  ],
+  "gpuBudgetMB": {
+    "field": 40,
+    "measuredUncompressed": {
+      "fullShaderPath": 39.75,
+      "headset": 18.27,
+      "headsetAsLoaded": 39.57
+    }
+  },
+  "leagues": [
+    "nfl",
+    "college-football"
+  ],
+  "units": {
+    "textures": "0.40 m turf tile; field-space maps in yards over the markings canvas"
+  }
+}

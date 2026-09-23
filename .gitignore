@@ -14,8 +14,15 @@ __pycache__/
 apple/build/
 *.xcuserdatad
 xcuserdata/
+# Which Apple developer team this particular Mac signs with: a local fact, not
+# a project one. generate_project.py works it out from the installed
+# provisioning profiles when this is absent (docs/DEVICE.md).
+apple/signing.json
 
 # replay captures: several hundred KB of ESPN payload per game, re-downloadable
 # with `replay --capture`. The trimmed fixture under tests/ is the committed one.
 data/replay/
 .vercel
+
+# Look-dev shots, scratch scenes and derived data
+.work/
