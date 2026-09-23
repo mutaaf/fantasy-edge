@@ -15,6 +15,14 @@ extension SceneSpec.Look {
     }
 
     public struct Baseplate: Decodable, Equatable, Sendable {
+        /// Stone, not chrome. At metallic 0.55 the plinth mirrored the room and
+        /// read light grey in a beige one, whatever the palette said.
+        public let topRoughness: Double?
+        public let topMetallic: Double?
+        public let bandRoughness: Double?
+        public let bandMetallic: Double?
+        public let bevelRoughness: Double?
+        public let bevelMetallic: Double?
         public let marginScale: Double
         public let thicknessMeters: Double
         public let rimOpacity: Double

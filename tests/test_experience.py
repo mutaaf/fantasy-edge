@@ -523,5 +523,24 @@ class Layout(unittest.TestCase):
         self.assertEqual(views.count("dockFacing = "), 3, "only a recentre and the shot argument set the facing")
 
 
+    def test_the_plinth_is_stone_rather_than_a_mirror(self):
+        """The palette asks for near-black stone. Drawn at metallic 0.55 the
+        plinth mirrored the room instead, and read light grey on a table in a
+        beige room whatever the colour said, which is the opposite of a jewel
+        on a lit plinth. A dielectric, matte enough not to carry the room's
+        whole reflection, keeps it stone."""
+        base = EXPERIENCE["baseplate"]
+        for part in ("top", "band", "bevel"):
+            with self.subTest(part=part):
+                self.assertLessEqual(base[f"{part}Metallic"], 0.2, "a plinth that metallic mirrors the room")
+                self.assertGreaterEqual(base[f"{part}Roughness"], 0.15)
+        self.assertGreaterEqual(base["topRoughness"], 0.5, "a polished top carries the room's whole reflection")
+        # The model is the bright thing: the rim and the club edge read against
+        # a dark plinth, so they may not be dimmer than they were.
+        self.assertGreaterEqual(base["rimOpacity"], 0.8)
+        self.assertGreaterEqual(base["edgeOpacity"], 0.8)
+        self.assertLessEqual(base["marginScale"], 1.02, "a wide margin is table, not jewel")
+
+
 if __name__ == "__main__":
     unittest.main()
