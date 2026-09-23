@@ -108,6 +108,58 @@ class LightingSky(unittest.TestCase):
         self.assertLessEqual(sh["dustAmount"], 0.5, "high-contrast dust reads as rain")
         self.assertGreaterEqual(sh["viewPower"], 2.5, "edge-on quads must fade hard")
 
+    def test_the_vomitory_mouths_can_be_found_where_the_seats_are_not(self):
+        """Lighting lights the mouths Bowl leaves dark, and finds them by the
+        hole in the seating rather than by `bowl.seating.vomitory`'s row list,
+        which SceneSpec does not decode. That only works if a flagged section
+        really is empty over *some* of its rows and not all of them - all of
+        them would be an aisle. This pins the data the renderer relies on."""
+        scene = sc.build({"home": {"id": "1", "abbr": "CHI"}, "away": {"id": "2", "abbr": "MIN"}})
+        seating = scene["bowl"].get("seating")
+        self.assertIsNotNone(seating, "bowl.seating carries the sections Lighting reads")
+
+        def seated(row, frm, to):
+            mid = ((frm + to) / 2) % 1
+            for run in row["runs"]:
+                if len(run) < 2:
+                    continue
+                start = run[0] / max(1e-6, row["length"])
+                end = (run[0] + run[1] * row["pitch"]) / max(1e-6, row["length"])
+                if start <= mid < end or (end > 1 and mid < end - 1):
+                    return True
+            return False
+
+        mouths = 0
+        for tier in seating["tiers"]:
+            rows = sorted(tier["rows"], key=lambda r: r["row"])
+            for section in tier.get("sections") or []:
+                if not section.get("vomitory"):
+                    continue
+                empty = [r for r in rows if not seated(r, section["from"], section["to"])]
+                self.assertTrue(empty, f"section {section['id']} is flagged a vomitory but has no gap")
+                self.assertLess(len(empty), len(rows),
+                                f"section {section['id']} is empty in every row, which is an aisle")
+                mouths += 1
+        self.assertGreaterEqual(mouths, 8, "a bowl this size has vomitories on both decks")
+
+    def test_the_vomitory_fill_is_lit_and_warm(self):
+        fill = TOKENS["visual"]["lighting"]["fill"]
+        self.assertGreater(fill["vomitoryOpacity"], 0, "Bowl measured the mouths 3.08 stops under the field")
+        r, g, b = (int(fill["vomitoryColor"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        self.assertGreater(r, b, "concourse light is warm, not daylight")
+
+    def test_the_beam_wash_target_can_actually_fire(self):
+        """A seat that looks along the bowl stacks every shaft on one
+        sightline: behind the posts the kept set measured 0.97 screens against
+        0.46-0.63 from the club seat, and that stack is the wash over the far
+        stands. elevationFade only answers how high a seat is, so a low seat at
+        one end gets none of it. The target has to sit below the cap or it can
+        never bite, and above zero or a shaft is never drawn."""
+        beams = TOKENS["visual"]["lighting"]["beams"]
+        self.assertGreater(beams["washTargetScreens"], 0)
+        self.assertLess(beams["washTargetScreens"], beams["overdrawCapScreens"],
+                        "a target at or above the cap can never fade anything")
+
     def test_every_lighting_and_sky_file_is_shipped(self):
         for actor in ("lighting", "sky"):
             section = TOKENS["visual"][actor]

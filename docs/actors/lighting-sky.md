@@ -278,3 +278,119 @@ token values.
 - `td-moment-t5.5` — the strobe reads, but the frame is one sample; whether it
   is "brief" is a timing question a still cannot answer.
 - `crowd-closeup-endzone` — nothing to fault in Lighting's own work here.
+
+---
+
+# Round 3 — the wash is the beams, and the stands are barely lit
+
+`actor/lighting-r3`, off `immersive/quality` at `016a7eb` (integration-16).
+Frames in `docs/lookdev/lighting-r3/{before,after,isolation}/`; `before/` are
+integration-16's own, so every number here is measured with the same tool
+(`tools/light_levels.py --bands`) on the same shot the checkpoint used.
+
+## The wash over the far stands is the beams
+
+Three checkpoints blamed the goal net. Sideline disproved that — skipping the
+net moves the far stands by 1.1 of 255 — and attributed it to the haze. The
+first half is right and the second is not, and elevation geometry settles it
+without a render. From behind the posts:
+
+| | elevation from that eye |
+|---|---|
+| far stands | −4.0° to **+14.1°** |
+| haze rings | **+17.4° to +25.7°** (above the stands entirely) |
+| beam shafts | **+4.1° to +17.1°** (across them almost exactly) |
+
+The haze cannot wash a band it does not cover. `-lightSkip beams` proves the
+rest: the far stands fall from **0.0816 to 0.0378**, so **54% of that band's
+luminance is beam**. (`isolation/sideline-props-beams-off.png`.)
+
+**Why that seat and not the club seat.** Every shaft lies along one sightline
+from behind the posts: r2 measured 0.97 screens of additive overdraw there
+against 0.46–0.63 from the club seat. `elevationFade` only answers how *high*
+a seat is, so a low seat at one end gets none of it. `beams.washTargetScreens`
+(0.6) now fades the kept set by whatever it is over that. Measured: far stands
+**0.0816 → 0.0655**, variance **0.0953 → 0.0751**. The club seat logs
+`wash x0.97` — untouched, as intended.
+
+**A fix I rejected before building it.** The first idea was to keep only the
+run of a shaft with sky behind it. Simulated across the seat presets it keeps
+62% of a shaft from the end zone but 33% from the club seat and 18% from the
+upper deck: it would have gutted the shafts where they read best to fix the
+seat where they read worst. These beams are meant to be seen over the bowl;
+"sky only" is the wrong rule for this stadium.
+
+## The stands: 1.66 → 1.51, and the rest is not Lighting's to give
+
+| | integration-15 | integration-16 | here |
+|---|---:|---:|---:|
+| field → stands | +1.43 | +1.66 | **+1.51** |
+
+Two things were added, both light on *structure* rather than on people:
+
+- **The vomitory mouths** (`fill.vomitory*`), which Bowl measured at 3.08 stops
+  under the field because nothing lights them. Where they are is read from
+  where the seats are *not*: for a section the spec flags `vomitory`, the rows
+  whose seat runs leave its arc empty are the mouth, and a gap in *every* row
+  is an aisle. That recovers Bowl's own configuration without reading it —
+  rows 11–17 lower and 7–12 upper against a config of 11–16 and 7–11 — finds
+  all 22, and needs no change to `SceneSpec`, the director's file. Alone:
+  1.66 → 1.55.
+- **A band lying on the seating rake** (`fill.rake*`), at the tier's own depth,
+  the way `buildFill`'s band hugs the guard wall. 1.55 → 1.51.
+
+**The obvious lever is a trap.** `glow.spill` is already "the banks' light on
+the seats", but it is a 78 × 40 yd card turned to face the wearer. Raising it
+*does* reach the bar — 0.48 measures a clean **+1.01 stops** — by fogging the
+whole bowl: the crowd loses its colour, the sky above the rim goes pale, the
+field flattens. `isolation/bowl-wide-spill-0.40-fog.png` and `-0.48-fog.png`
+are what +1.18 and +1.01 stops look like. **The metric is satisfiable the wrong
+way, and a number alone would have shipped it.**
+
+**Why Lighting cannot close the gap.** `-lightSkip floods` turns the four spot
+lights off: the **field** falls 0.0713 → 0.0254 (−1.49 stops) and the **far
+stands** only 0.0078 → 0.0071 (−0.13). The stadium's lights light the grass and
+barely touch the far stands, which are impostor cards carrying their own value.
+So no light Lighting can add raises them; only something *in front* of them can,
+and that is fog by construction. The honest levers left are the crowd's own
+impostor value (Crowd's, constrained by club colour) and lighting the structure
+between the fans, which is what this round did. **Sequencing note for the
+director: the remaining 0.5 stops is Crowd's or nobody's.**
+
+Judged on the frames: `after/bowl-wide.png` lifts the stands with the crowd's
+colour intact and no veil; at `rakeOpacity` 0.85 it measures 1.42 but the lower
+bowl begins to read as a lit ramp, so 0.55 is what ships and 0.85 is the
+director's if the number matters more than the read.
+
+## Budget (`-stadiumStats`)
+
+| Actor | Draw parts | Triangles | Budget |
+|---|---:|---:|---|
+| lighting | 14 | 9,808 | 20 parts, 10k tris, ≤4 spots, ≤1 shadow caster |
+| sky | 3 | 4,800 | 3 parts, 5k tris |
+
+The rake band at the fill band's 128 segments put the actor at **10,064** — 64
+over the ceiling. At 64 segments it is 9,808 and shows no facets, a soft glow
+round a superellipse being what it is. 4 spot lights, 0 shadow casters.
+
+## Two things worth carrying
+
+- **A look change needs no rebuild.** The app reads `design/tokens.json`
+  through the scene payload, so a token sweep is shoot-measure-repeat. Two
+  rounds were spent rebuilding between values before this was noticed.
+- **`-lightSkip` now takes `vomitory` and `rake`**, so each of this round's
+  additions can be measured on its own.
+
+## Worst thing left, per shot
+
+- `bowl-wide` — 1.51 stops against the bible's 1, and the last of it is not
+  Lighting's, per the floods test above.
+- `sideline-props` — the wash is down a fifth and the beams are still 54% of
+  that band; fading harder trades against the stands, which the same seat wants
+  brighter. A genuine tension for the director rather than a number to tune.
+- `lights-haze` — the glow band is warm in the middle and cool-grey at the
+  sides, unchanged from round 2.
+- `field-level` — the stands read widest of any framing here.
+- `crowd-closeup-upper` — the vomitory mouths now read as lit openings rather
+  than holes; no before frame exists at this seat, so it is judged against the
+  3.08-stop measurement Bowl reported rather than against a picture.

@@ -54,6 +54,9 @@ final class LightingActor: StadiumActor {
     private var dustTick: Double = 0
     private var glowSeat: SIMD3<Float>?
     private var beamSeat: SIMD3<Float>?
+    /// How far the kept shafts are faded for this seat, so the additive light
+    /// they stack along one sightline stays near `beams.washTargetScreens`.
+    private var beamWash: Double = 1
     private var applied = (gain: -1.0, wash: -1.0, away: false)
 
     init() { root.name = "actor.lighting" }
@@ -68,6 +71,7 @@ final class LightingActor: StadiumActor {
         glowLayers.removeAll(); billboards.removeAll()
         glowSeat = nil
         beamSeat = nil
+        beamWash = 1
         applied = (-1, -1, false)
         let s = c.spec, V = c.look.lighting, lights = s.bowl.rimLights
         let tabletop = c.tabletop
@@ -103,7 +107,7 @@ final class LightingActor: StadiumActor {
         if !skip.contains("floods") { buildFloods(c) }
     }
 
-    /// Debug: `-lightSkip haze,dome,beams,glow,fill,floods` (or `LIGHT_SKIP`)
+    /// Debug: `-lightSkip haze,dome,beams,glow,fill,vomitory,floods` (or `LIGHT_SKIP`)
     /// leaves a layer out, so its share of a frame can be measured rather than
     /// guessed. The night's brightness above the rim is drawn by three things
     /// at once - the sky texture's own city glow, Sky's dome and this haze -
@@ -422,7 +426,18 @@ final class LightingActor: StadiumActor {
                 dustMesh.quad(q.0, q.1, q.2, q.3, uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, v), SIMD2(u0, v)))
             }
         }
+        // A seat that looks *along* the bowl stacks every shaft on one
+        // sightline: from behind the posts the kept set measured 0.97 screens
+        // against 0.46-0.63 from the club seat, and that stack is the milky
+        // wash over the far stands - blamed on the goal net for three
+        // checkpoints (it moves them by 1.1 of 255) and then on the haze
+        // (which sits at +17.4 to +25.7 degrees, above the stands entirely).
+        // elevationFade only answers how *high* a seat is, so a low seat at
+        // one end gets none of it. Fade what is over the cap instead, which
+        // needs no new geometry and tunes itself per seat.
+        beamWash = t ? 1 : min(1, Bm.washTargetScreens / max(1e-6, screens))
         let line = "[stadium] lighting beams \(kept.count)/\(all.count), overdraw ≈ \(String(format: "%.2f", screens)) screens "
+            + "(wash x\(String(format: "%.2f", beamWash)); after \(String(format: "%.2f", screens * beamWash))) "
             + "(cap \(Bm.overdrawCapScreens); all \(all.count) as crossed pairs ≈ \(String(format: "%.2f", crossedAll)))"
         StadiumLog.log.notice("\(line, privacy: .public)")
         return mesh.isEmpty ? nil : (mesh, dustMesh)
@@ -505,7 +520,7 @@ final class LightingActor: StadiumActor {
         let G = c.look.lighting.beams.shader
         StadiumShaderGraph.set(&m, "Color", tint ?? G.color)
         StadiumShaderGraph.set(&m, "Opacity", G.opacity.value(tabletop: c.tabletop) * facingScale(c, shader: true)
-                               * gain * elevationScale(c))
+                               * gain * elevationScale(c) * beamWash)
         StadiumShaderGraph.set(&m, "DustRepeat", G.dustRepeat)
         StadiumShaderGraph.set(&m, "DustSpeed", c.reduceMotion ? 0.0 : G.dustSpeed)
         StadiumShaderGraph.set(&m, "DustFloor", G.dustFloor)
@@ -518,7 +533,7 @@ final class LightingActor: StadiumActor {
     private func dustMaterial(_ c: StadiumContext, gain: Double, tint: String?) -> UnlitMaterial {
         let Bm = c.look.lighting.beams
         var m = StadiumLook.glow(tint ?? Bm.color, opacity: Bm.dustOpacity.value(tabletop: c.tabletop) * facingScale(c, shader: false)
-                                 * gain * elevationScale(c),
+                                 * gain * elevationScale(c) * beamWash,
                                  texture: c.assets.texture("lighting.beamDust"), tile: true)
         m.textureCoordinateTransform.offset = SIMD2(0, dustOffset)
         return m
@@ -570,7 +585,7 @@ final class LightingActor: StadiumActor {
         let Bm = c.look.lighting.beams
         let colour = tint ?? Bm.color
         return StadiumLook.glow(colour, opacity: Bm.opacity.value(tabletop: c.tabletop) * facingScale(c, shader: false)
-                                * gain * elevationScale(c),
+                                * gain * elevationScale(c) * beamWash,
                                 texture: c.assets.texture("lighting.beam"))
     }
 
@@ -647,6 +662,132 @@ final class LightingActor: StadiumActor {
         }
         let material = StadiumLook.glow(F.color, opacity: F.opacity, texture: c.assets.texture("lighting.fill"), tile: true)
         root.addChild(mesh.entity("rim.concourseFill", material))
+        buildVomitoryFill(c)
+        buildRakeFill(c)
+    }
+
+    /// The floodlights' spill lying on the seating itself.
+    ///
+    /// The art bible asks the stands to sit a stop under the field; at
+    /// integration-16 they measured 1.66, the stadium's widest miss, and the
+    /// crowd cannot close it because a club's colour is the club's. The one
+    /// lever that raises a stand without touching a colour is light.
+    ///
+    /// `glow.spill` was already meant to be that light, but it is a 78x40 yd
+    /// card turned to face the wearer: raising it to reach the bar (0.48, which
+    /// measures a clean +1.01 stops) veils the whole bowl in grey - the crowd
+    /// loses its colour, the sky above the rim goes pale, and the number is met
+    /// by fogging the view rather than by lighting anything. The frames are in
+    /// docs/lookdev/lighting-r3/. So this band lies *on* the rake instead, at
+    /// the tier's own depth, the way `buildFill`'s band hugs the guard wall:
+    /// it cannot fog the field or the sky, because it is never between the eye
+    /// and them - it is coincident with the stand it lifts.
+    private func buildRakeFill(_ c: StadiumContext) {
+        let F = c.look.lighting.fill, s = c.spec
+        guard F.rakeOpacity > 0, !Self.skipped.contains("rake") else { return }
+        var mesh = MeshBuilder()
+        // 64, not the fill band's 128: two tiers at 128 put the actor 64
+        // triangles over its 10k ceiling, and a soft glow round a superellipse
+        // shows no facets at half that.
+        let segments = 64
+        let repeats = Float(max(1, F.rakeRepeatsAround))
+        let lift = Float(F.rakeLiftYards)
+        for tier in c.tiers {
+            for k in 0..<segments {
+                let t0 = Double(k) / Double(segments) * 2 * .pi
+                let t1 = Double(k + 1) / Double(segments) * 2 * .pi
+                let i0 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.inner, angle: t0)
+                let i1 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.inner, angle: t1)
+                let o0 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.outer, angle: t0)
+                let o1 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.outer, angle: t1)
+                let yLo = Float(tier.rise[0]) + lift, yHi = Float(tier.rise[1]) + lift
+                let u0 = Float(k) / Float(segments) * repeats, u1 = Float(k + 1) / Float(segments) * repeats
+                // Up the rake: v runs 0 at the front row to 1 at the back, and
+                // the fill texture fades at both, so the band has no hard edge.
+                mesh.quad(SIMD3(Float(i0.x), yLo, Float(i0.z)), SIMD3(Float(i1.x), yLo, Float(i1.z)),
+                          SIMD3(Float(o1.x), yHi, Float(o1.z)), SIMD3(Float(o0.x), yHi, Float(o0.z)),
+                          uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, 1), SIMD2(u0, 1)))
+            }
+        }
+        guard !mesh.isEmpty else { return }
+        let material = StadiumLook.glow(F.rakeColor, opacity: F.rakeOpacity,
+                                        texture: c.assets.texture("lighting.fill"), tile: true)
+        root.addChild(mesh.entity("rim.rakeFill", material))
+    }
+
+    /// Light out of the vomitory mouths.
+    ///
+    /// Bowl measured the stands surface by surface and found their darkness is
+    /// occlusion, not albedo: the parapet cap renders *brighter* than the grass
+    /// and the crowd sits 0.35-0.74 stops under it, while the vomitory mouths
+    /// sit 3.08 stops down and read as holes cut in the crowd. Nothing in a
+    /// night stadium lights the inside of a tunnel from the field; the light
+    /// that fills a real one comes from the concourse behind it. Bowl gave its
+    /// soffits a self-light for the same reason - this is the other half.
+    ///
+    /// Where the mouths are is read from where the seats are *not*: a vomitory
+    /// is a hole in the seating, so for each section the spec flags
+    /// `vomitory`, the rows whose seat runs leave its arc empty are the mouth.
+    /// Reading the gap rather than `bowl.seating.vomitory`'s row list (which
+    /// SceneSpec does not decode) keeps this correct if Bowl moves them, and
+    /// needs no change to the director's file. An aisle is a gap too, but it is
+    /// a gap in *every* row of the tier, so a mouth is a gap in some and not
+    /// all.
+    private func buildVomitoryFill(_ c: StadiumContext) {
+        let F = c.look.lighting.fill, s = c.spec
+        guard F.vomitoryOpacity > 0, !Self.skipped.contains("vomitory"),
+              let seating = s.bowl.seating else { return }
+        var mesh = MeshBuilder()
+        var mouths = 0
+        for tierSeats in seating.tiers {
+            guard let sections = tierSeats.sections, !sections.isEmpty, !tierSeats.rows.isEmpty else { continue }
+            // Rows are ordered from the field up; the mouth opens at the front
+            // of its lowest empty row, into the tier's own ring.
+            let rows = tierSeats.rows.sorted { $0.row < $1.row }
+            for section in sections where section.vomitory == true {
+                let empty = rows.filter { !Self.seated(row: $0, from: section.from, to: section.to) }
+                // A gap in every row is an aisle, not a mouth.
+                guard !empty.isEmpty, empty.count < rows.count else { continue }
+                let lo = empty[0], hi = empty[empty.count - 1]
+                let mid = (section.from + section.to) / 2
+                let half = max(0.5, (section.to - section.from) * lo.length / 2 * F.vomitoryWidthScale)
+                let angle = Self.angle(s.bowl.shape, offset: lo.feet, fraction: mid)
+                let p = SceneMath.bowlPoint(s.bowl.shape, offset: lo.feet + F.vomitoryInsetYards, angle: angle)
+                let outward = simd_normalize(SIMD3(Float(p.x), 0, Float(p.z)))
+                let across = simd_normalize(simd_cross(SIMD3<Float>(0, 1, 0), outward)) * Float(half)
+                let y0 = Float(lo.floor), y1 = Float(hi.floor + F.vomitoryHeadYards)
+                let at = SIMD3(Float(p.x), 0, Float(p.z))
+                mesh.quad(at + across + SIMD3(0, y0, 0), at - across + SIMD3(0, y0, 0),
+                          at - across + SIMD3(0, y1, 0), at + across + SIMD3(0, y1, 0),
+                          uv: (SIMD2(0, 1), SIMD2(1, 1), SIMD2(1, 0), SIMD2(0, 0)), normal: -outward)
+                mouths += 1
+            }
+        }
+        guard !mesh.isEmpty else { return }
+        let material = StadiumLook.glow(F.vomitoryColor, opacity: F.vomitoryOpacity,
+                                        texture: c.assets.texture("lighting.fill"), tile: false)
+        root.addChild(mesh.entity("rim.vomitoryFill", material))
+        StadiumLog.log.notice("[stadium] lighting vomitory mouths \(mouths, privacy: .public)")
+    }
+
+    /// Whether a row's seat runs cover the arc fraction span `from`..`to`.
+    static func seated(row: SceneSpec.SeatingRow, from: Double, to: Double) -> Bool {
+        let mid = ((from + to) / 2).truncatingRemainder(dividingBy: 1)
+        for run in row.runs where run.count >= 2 {
+            let start = run[0] / max(1e-6, row.length)
+            let end = (run[0] + run[1] * row.pitch) / max(1e-6, row.length)
+            if mid >= start && mid < end { return true }
+            if end > 1, mid < end - 1 { return true }          // a run that wraps past angle 0
+        }
+        return false
+    }
+
+    /// The angle whose arc fraction round the ring at `offset` is `fraction`.
+    static func angle(_ shape: SceneSpec.Shape, offset: Double, fraction: Double) -> Double {
+        let (angles, _) = SceneMath.evenAngles(shape, offset: offset, count: 720)
+        let f = fraction.truncatingRemainder(dividingBy: 1)
+        let i = Int((f < 0 ? f + 1 : f) * Double(angles.count)) % angles.count
+        return angles[i]
     }
 
     // MARK: floods
