@@ -629,7 +629,23 @@ class TestSceneGeometry(unittest.TestCase):
         tiers = {t["name"]: t for t in self.final["bowl"]["tiers"]}
         half_w, half_l = self.final["field"]["width"] / 2, 60.0
         for s in seats.values():
-            self.assertEqual((s["lookAt"]["x"], s["lookAt"]["z"]), (50.0, 0.0))
+            # A seat in the bowl looks at midfield. A seat close in names its
+            # own point instead - the camera well looks at the goal line it
+            # sits behind - and the one look-dev preset looks out at the wall
+            # it exists to shoot. Nothing may look into the stands.
+            look = (s["lookAt"]["x"], s["lookAt"]["z"])
+            if s.get("lookdev"):
+                # A look-dev preset faces the thing it was added to judge - the
+                # wall behind it, the goal line the ball crosses - rather than
+                # midfield, and that thing is far enough away to be a view.
+                far = math.hypot(look[0] - s["x"], look[1] - s["z"])
+                self.assertGreater(far, 10.0, f"{s['id']} faces something a stride away")
+                self.assertNotEqual(look, (50.0, 0.0), f"{s['id']} may as well be a bowl seat")
+            elif s["view"]["distanceYards"] > 6:
+                self.assertEqual(look, (50.0, 0.0))
+            else:
+                self.assertLessEqual(abs(look[1]), half_w, f"{s['id']} looks into the stands")
+                self.assertTrue(-10.0 <= look[0] <= 110.0, f"{s['id']} looks off the field")
             if s["id"] == "pressBox":
                 # Not on a tier: level with the press box glass.
                 self.assertEqual(s["y"], self.final["bowl"]["pressBox"]["rise"][0])

@@ -359,3 +359,49 @@ Unchanged where it matters: Experience is **0 draw parts and 0 triangles in the 
 - **The win-probability horizon on the table** reads as a streak floating behind the model rather than as part of it (`after/s-tabletop.png`). It is inside the volume and inside its rails, so it obeys its contract; it is Broadcast's to judge whether it belongs on the table at all.
 - **During a seat change the panels stay lit while the world fades.** It is defensible - they are the wearer's, not the room's - but nobody has decided it, and the mid-fade frame is the first time it has been looked at.
 
+## Round 8: two seats nothing could be judged from (`docs/lookdev/experience-r8/`)
+
+Two actors could not be judged at all, and both gaps were seat geometry, which is Experience's.
+
+### The camera well: the first frame with the ball inside its life-size band
+
+Broadcast r8 corrected a ball that had been 2.6x life size everywhere to life size within 14 yd, easing back to 2.6x by 45, and said the close half was "honest in the formula but unproven in a frame" because no seat could see it. The nearest preset stood about 25 yd from a ball.
+
+- **`goalLine`, "Camera well, away goal line"**: field level, 1.5 yd behind the end line, 4 yd off the centre so the near upright is not in the middle of the view. The goal line is **12.2 yd** away.
+- **It is the away end** because that is the end the fixtures score in: the Bears pick-six ends at yard line 100. Behind the home end line the ball is never nearer than 40 yd.
+- **A seat was not enough.** The pick-six's ball is reset upfield the instant it scores, so no frame in that moment holds it close. The fixture does carry a snap on the 1-yard line, so the harness gained a third replay position, `goalline` (`tools/lookdev.py`), which rests the ball **13.1 yd** from the well. That is what the `goal-line` shot uses.
+
+**Verdict for Broadcast: the correction holds.** `goal-line/s-goal-line.png`, and `ball-at-13yd-crop.png` at full resolution: the ball is a laced, correctly proportioned football sitting on the grass, about 23 px wide in a 3840-px frame at 13.1 yd. It is emphatically not the marker it was. Two things worth knowing:
+- At this range the ball is **dark**; what makes it findable is the light column above it, not the ball. That is the beacon doing the work, which is fine, but it means "findable at 50 yards" and "life size at 13" are being carried by different things.
+- A ball at 2.6x would subtend 3.5° here against life size's 1.3°, so the difference is now large enough that any regression will be obvious in this frame.
+
+### The wall seat: the LED boards, square on, for the first time
+
+Every preset looks *along* the wall, so Sideline's boards had only ever been shot at a grazing angle, and "a subtle pixel grid up close" had never been testable.
+
+- **`wall`, "Wall boards, home side"**: field level in the apron at the home 20 - no bench there, they run from the 30 to the 30 - 2.6 yd from the wall and facing it.
+
+**Verdict for Sideline: there is nothing there to judge.** `wall/s-wall-boards.png` and `wall-level/s-wall-boards-level.png` (the same seat, level rather than pitched down): at 2.6 yd square on the wall is a **flat matte panel**, one blue-grey band and one near-black one, with no lit content, no text, no crawl and no pixel structure of any kind. `SidelineActor.buildBoards` textures the wall with `StadiumText.boards(s)` and falls back to `StadiumLook.solid(wall.color)` when that is nil; what the frame shows is the fallback. So the art bible's "glow like LED, with a subtle pixel grid up close" is not a near-field polish question yet - the boards have no content at all. That is Sideline's to answer, and the seat to answer it from now exists.
+
+### Both are look-dev seats, not places to sit
+
+The picker offers neither, and the app filters them on `lookdev`:
+- The **wall** seat faces away from the play.
+- The **camera well** turned out to be a place the dock cannot serve: a yard and a half behind an end line the painted field fills the view, and no panel can keep off the paint, the ribbon and the board at once. Rather than weaken a promise made to wearers, the well is diagnostic. Promoting it later needs an answer for the dock first - most likely letting a field-level seat behind an end line put panels over the far end zone.
+
+**One cross-actor consequence, flagged rather than hidden.** Crowd's `verify_crowd_support` rule 2 says no visiting seat within 14 yd of "a wearer's seat preset"; the well stands beside the away support behind that end zone, and 255 checks failed. The rule's intent is a wearer's comfort, so the verifier now skips `lookdev` presets - a two-line change in `apple/verify_crowd_support.swift`, Crowd's file, with the reason written beside it. The rule itself is unchanged.
+
+### The panels during a seat change: they go through the dark with the world
+
+Decided, and the reason is not the one I expected. The dock is the wearer's rather than the room's, which argues for leaving it lit - but the dock is solved per seat, so **at the dark middle of the change its panels move**. Lit, they would be seen to jump, which is the one thing the fade exists to hide. So the dock fades with the world, and the scorebug, which does not move, stays lit so the score is never away. Reduce motion places, as everywhere.
+
+`seat-change/s-crowd-closeup-seatchange.png` is a frame from inside the fade: the world dimmed, the Red Zone tab dimmed with it, the scorebug and win probability still bright. Getting that frame exposed a real bug: `-stadiumFadeScale` stretched the world's fade and not the dock's, so the two came apart under the debug stretch. They share it now.
+
+### Budget and cost
+
+Experience is still **0 draw parts and 0 triangles** in the stadium and 6 parts / 2,856 triangles on the table. The two seats add no geometry. They do cost the scene: the dock is solved for every seat at every recentre facing, so nine seats take **8.6 s** to solve for a field, cached thereafter. That is what made the harness fail twice at its first request - its own per-request timeout was 10 s - so `tools/lookdev.py` now allows 90 s for a cold scene. Every agent's harness gets that.
+
+**Shots:** `goal-line/`, `wall/`, `wall-level/`, `seat-change/`, `main/` and `seat-*/` for all six other presets, unchanged.
+
+**Worst thing left:** the camera well cannot be offered to a wearer until the dock has an answer for a seat behind an end line; the press box still draws its dock at x0.47 inside the glass and wants a device; and the recentre still lands on a 15 degrees bucket.
+

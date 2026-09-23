@@ -129,7 +129,9 @@ struct SeatPickerView: View {
         let dims = picker
         let width = CGFloat(dims?.widthPoints ?? 340), height = CGFloat(dims?.heightPoints ?? 260)
         let dot = CGFloat(dims?.dotPoints ?? 60), inset = CGFloat(dims?.insetPoints ?? 18)
-        let seats = spec.presentation.stadium.seats ?? []
+        // Every seat but the ones that exist for the look-dev harness: those
+        // face the wall or the boards rather than the play.
+        let seats = (spec.presentation.stadium.seats ?? []).filter { $0.lookdev != true }
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("Pick a seat").font(.system(size: 22, weight: .semibold))

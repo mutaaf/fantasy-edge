@@ -65,7 +65,12 @@ struct VerifyCrowdSupport {
             let drawn = Set(seating.tiers.map(\.tier))
             let pulls = CrowdSupport.supportBySection(spec, look: C, drawn: drawn)
             let visitorsFar = (spec.bowl.crowd.awaySection?.side ?? "far") == "far"
-            let seats = (spec.presentation.stadium.seats ?? []).map {
+            // "A wearer's seat preset", as rule 2 says: the look-dev presets
+            // (the camera well behind the away end line, the wall) are places
+            // the harness shoots from and the picker never offers, so the
+            // colours around them are nobody's comfort. Added with those
+            // seats in experience-r8; the rule itself is unchanged.
+            let seats = (spec.presentation.stadium.seats ?? []).filter { $0.lookdev != true }.map {
                 SIMD3<Float>(Float($0.x - 50), Float($0.y), Float($0.z))
             }
             var counts: [CrowdSupport.Kind: Int] = [:]

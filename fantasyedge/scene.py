@@ -618,7 +618,8 @@ def _tier_height(name: str, offset: float) -> float:
 
 
 def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: float,
-          look_at=(50.0, 0.0, 0.0), floor: float | None = None, group: str = "sideline") -> dict:
+          look_at=(50.0, 0.0, 0.0), floor: float | None = None, group: str = "sideline",
+          lookdev: bool = False) -> dict:
     """A place to sit: the floor under the wearer, in field yards, and the
     point the seat faces. Heights come from the bowl, so a seat is always on a
     row rather than floating in front of one; `floor` is for the one seat that
@@ -631,10 +632,16 @@ def _seat(sid: str, label: str, x: float, z: float, tier: str | None, offset: fl
     y = floor if floor is not None else (_tier_height(tier, offset) if tier else 0.0)
     dx = max(-10.0 - x, 0.0, x - 110.0)
     dz = max(abs(z) - 80 / 3, 0.0)
-    return {"id": sid, "label": label, "x": x, "y": y, "z": round(z, 3),
-            "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]},
-            "view": {"group": group, "distanceYards": round((dx * dx + dz * dz) ** 0.5, 1),
-                     "heightYards": round(y, 1)}}
+    out = {"id": sid, "label": label, "x": x, "y": y, "z": round(z, 3),
+           "lookAt": {"x": look_at[0], "y": look_at[1], "z": look_at[2]},
+           "view": {"group": group, "distanceYards": round((dx * dx + dz * dz) ** 0.5, 1),
+                    "heightYards": round(y, 1)}}
+    # A place the look-dev harness needs and a wearer would not choose: it
+    # faces away from the play. The picker never offers one; `-stadiumSeat`
+    # and the shot table still reach it.
+    if lookdev:
+        out["lookdev"] = True
+    return out
 
 
 # ── experience ──
@@ -653,6 +660,28 @@ SEATS = [
     # On the far side, level with the press box glass, looking across.
     _seat("pressBox", "Press box, far side", 50.0, -(HALF_WIDTH + BOWL["pressBox"]["offset"] + 1.0), None, 0.0,
           floor=BOWL["pressBox"]["rise"][0], group="press"),
+    # The camera well behind the away end line, a yard and a half back and off
+    # the centre so the near upright does not stand in the middle of the view.
+    # Nothing else in the stadium is near a play: every other preset is 25 yd
+    # or more from the ball, so the ball's life-size band (Broadcast holds it
+    # life size within 14 yd, easing to 2.6x by 45) had never been in a frame.
+    # From here the goal line is 12.2 yd away. It is this end and not the
+    # home one because this is the end the fixtures score in: the Bears'
+    # pick-six, the look-dev touchdown, ends at yard line 100.
+    # Look-dev only, like the wall: a yard and a half behind an end line the
+    # painted field fills the view, and the dock cannot place a panel that
+    # keeps off the paint, the ribbon and the board at once. Promoting it to a
+    # seat a wearer may choose needs an answer for that first.
+    _seat("goalLine", "Camera well, away goal line", 111.5, 4.0, None, 0.0,
+          look_at=(100.0, 0.5, 0.0), group="endzone", lookdev=True),
+    # Square on to the LED boards on the stands' wall, where no bench stands
+    # between (they run from the 30 to the 30). 2.8 yd of apron, then the wall:
+    # near enough for the pixel grid the art bible asks for. Every other
+    # preset looks along the wall, so the boards have only ever been shot at a
+    # grazing angle. The one seat that faces away from the field, and so the
+    # one the picker does not offer.
+    _seat("wall", "Wall boards, home side", 20.0, HALF_WIDTH + 2.8, None, 0.0,
+          look_at=(20.0, 0.5, HALF_WIDTH + 13.0), group="field", lookdev=True),
 ]
 
 PRESENTATION = {

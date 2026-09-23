@@ -497,6 +497,10 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// What the seat picker says about it. Worked out by scene.py so
         /// every client describes the same seat the same way.
         public let view: SeatView?
+        /// A place the look-dev harness needs and a wearer would not choose,
+        /// because it faces away from the play. Never offered by the picker;
+        /// `-stadiumSeat` and the shot table still reach it.
+        public let lookdev: Bool?
     }
 
     public struct SeatView: Decodable, Equatable, Sendable {
@@ -528,7 +532,7 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
             return all.first(where: { $0.id == id })
                 ?? all.first(where: { $0.id == defaultSeat })
                 ?? SeatOption(id: "seat", label: "Seat", x: seat.x, y: seat.y, z: seat.z,
-                              lookAt: Point(x: 50, y: 0, z: 0), view: nil)
+                              lookAt: Point(x: 50, y: 0, z: 0), view: nil, lookdev: nil)
         }
     }
 

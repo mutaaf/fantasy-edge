@@ -27,6 +27,10 @@ public enum StadiumShots {
         "td-moment": Shot(tabletop: false, seat: "club", yaw: 30, pitch: 0),
         "redzone-trails": Shot(tabletop: false, seat: "club", yaw: 22, pitch: -8),
         "sideline-props": Shot(tabletop: false, seat: "endzone", yaw: 0, pitch: -4),
+        // The two views nothing else could give: a ball within the life-size
+        // band, and the wall's LED boards square on rather than edge on.
+        "goal-line": Shot(tabletop: false, seat: "goalLine", yaw: 0, pitch: -2),
+        "wall-boards": Shot(tabletop: false, seat: "wall", yaw: 0, pitch: -6),
     ]
     // SHOTS-END
 
