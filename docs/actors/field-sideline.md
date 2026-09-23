@@ -521,10 +521,51 @@ clears it, with `depth` 12 yd and `fade` 4 yd so the far edge dissolves where
 blades stop resolving anyway. Enlarging the patch adds no triangles - the same
 six quads, larger - only fill.
 
-**Cost.** One draw part and 24 triangles, as before. The shell atlas is the only
-new texture: 1024x512 RGBA = 2.10 MB, 2.80 MB with mips, against a stadium
-sitting at ~67 MB of 300. The turf albedo and the paint mask were already
-resident. Field's own budget is 2k triangles and 12 parts.
+**Cost, measured.** Field goes 10 draw parts to 11 and 693 triangles to 717,
+against a budget of 12 and 2k. The shell atlas is the only new texture:
+1024x512 RGBA = 2.10 MB, 2.80 MB with mips; the stadium's reported texture
+memory is ~67 MB of 300 before and after, so it does not move the figure. The
+turf albedo and the paint mask were already resident. Enlarging the patch cost
+no triangles - the same six quads, larger - only fill.
+
+**Two things were wrong, not one, and the second only showed on a frame.**
+With the sheen matched the patch stopped reading as a darker rectangle - the
+near band's mean luminance is 90.66 without shells and 94.82 with them, four
+levels on 255 - but a banded measurement of the field-level frame showed the
+blades reaching only one thin strip: +116% high-frequency at one band and
+*bit-identical* everywhere else. The shader fades in from `PatchZ0` over
+`fade` and out to `PatchZ1` over `fade`, and with depth 12 and fade 4 the two
+ends met: only four yards in the middle of the patch ever drew at full
+strength, and the near edge - the sideline, where the wearer is closest to the
+grass - faded to nothing. `FieldActor` now sets `PatchZ1` to `half + fade`, so
+the sideline end is not faded at all. The fade is there to hide an edge that
+would read as a line drawn across the grass; the sideline is not such an edge,
+because the grass really does stop there and the border takes over.
+
+I also got this wrong once on the way: I read `canvasQuad`'s `y0`/`y1` as
+canvas y and "fixed" the mesh to `0...depth`, which moved the patch to the
+middle of the field and made it vanish entirely. They are field z, converted
+inside the function. The original placement was right; the fade was not.
+
+**Measured, field-level seat, the same crop with shells the only difference:**
+
+| band (screen y of 3840 x 2160) | HF off | HF on | gain |
+|---|---:|---:|---:|
+| 1450 (mid-field) | 0.490 | 1.066 | +117% |
+| 1550 | 0.650 | 1.272 | +96% |
+| 1620 | 0.866 | 1.505 | +74% |
+| 1680 (nearest grass) | 1.257 | 2.050 | +63% |
+
+College measures the same within a point or two (+118 / +97 / +78 / +64%), so
+it is the seat's geometry doing the work and not one fixture's field.
+
+**Does it meet the bar?** Yes, at the seat the bar names. `crop/nfl-near-turf-
+before.png` against `crop/nfl-near-turf-after.png`, both 2x from the full-
+resolution frame: the before is a flat olive tint carrying a fine grain, and
+the after is a dense, broken, directional texture with blade tips reading
+individually and blades breaking into the yard line's edge. That last part is
+the *paint worn, with blades through it* criterion, which r2 could only call
+partial.
 
 **Tests.** `tests/test_turf_shells.py` pins the bug rather than the numbers:
 both surfaces take the same `SheenColor` and `SheenPower`; the shells' single

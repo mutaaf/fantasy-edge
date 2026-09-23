@@ -86,6 +86,26 @@ class TheBladesAreThereToBeSeen(unittest.TestCase):
         to be a real fraction of the patch, not a token gesture."""
         self.assertGreaterEqual(SHELLS["fade"], SHELLS["depth"] / 4)
 
+    def test_the_fade_cannot_eat_the_whole_patch(self):
+        """It did. The shader fades in from PatchZ0 over `fade` and out to
+        PatchZ1 over `fade`, so with both ends faded only depth - 2 x fade
+        survives at full strength - four yards out of twelve, in the middle of
+        the patch, which measured as the only band of the field-level frame
+        that changed at all. The near edge is not faded now (`FieldActor`
+        pushes PatchZ1 past the sideline), so only one fade is spent; this
+        holds even if someone puts it back."""
+        self.assertGreater(SHELLS["depth"] - 2 * SHELLS["fade"], 0,
+                           "both fades together would leave no full-strength grass")
+
+    def test_the_sideline_end_of_the_patch_is_not_faded(self):
+        """`FieldActor` sets PatchZ1 to half + fade rather than half. The fade
+        hides an edge that would read as a line drawn across the grass; the
+        sideline is not such an edge - the grass really does stop there and the
+        border takes over - and fading it removed the blades exactly where the
+        wearer is closest to them."""
+        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldActor.swift").read_text()
+        self.assertRegex(src, r'"PatchZ1",\s*half \+ Sh\.fade')
+
     def test_the_layers_stay_inside_the_baked_atlas(self):
         self.assertTrue(0 <= SHELLS["firstLayer"] <= SHELLS["lastLayer"] <= 7)
 

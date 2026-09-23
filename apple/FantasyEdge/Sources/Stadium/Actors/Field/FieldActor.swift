@@ -363,7 +363,15 @@ final class FieldActor: StadiumActor {
             StadiumShaderGraph.set(&m, "PatchX0", Sh.fromX - 50)
             StadiumShaderGraph.set(&m, "PatchX1", Sh.toX - 50)
             StadiumShaderGraph.set(&m, "PatchZ0", half - Sh.depth)
-            StadiumShaderGraph.set(&m, "PatchZ1", half)
+            // Past the sideline, so the near edge never fades. The fade exists
+            // to hide an edge that would read as a line drawn across the
+            // grass; the sideline is not one of those - the grass genuinely
+            // stops there, and the paint and the border take over. Fading it
+            // cost the blades exactly where the wearer is closest to them: at
+            // depth 12 with a 4 yd fade the two ends met and left a four-yard
+            // strip in the middle of the patch, which measured as the only
+            // band of the frame that changed at all.
+            StadiumShaderGraph.set(&m, "PatchZ1", half + Sh.fade)
             StadiumShaderGraph.set(&m, "PatchFade", Sh.fade)
             do {
                 try m.setParameter(name: "Atlas", value: .textureResource(atlas))
