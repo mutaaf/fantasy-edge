@@ -16,10 +16,28 @@ sys.path.insert(0, str(ROOT / "tools" / "blender" / "crowd"))   # specs.py and g
 
 
 class CrowdKitTest(unittest.TestCase):
+    # What the far crowd costs, measured rather than assumed.
+    #
+    # The old figure was 50,000: one card per two of a 50,000-seat bowl, two triangles a card. No
+    # one had ever checked it against a frame. crowd-r9 logged the crowd at 140,132 triangles
+    # (docs/lookdev/crowd-r9/stats-*.txt) with its mesh rings at their caps, which is 99,850 - so
+    # the cards in that frame cost 40,282, not 50,000. The bowl is never sold out (`fill` is 0.9,
+    # and keepChance thins the corners further), and the clearance around the wearer's seat takes
+    # more. Assuming the bowl nobody fills was costing about 10k of real budget, which is 80 fans
+    # of mesh circle. This is the measurement with a 4% margin, and widening the mesh circle only
+    # ever takes fans away from the cards, so it can only get smaller from here.
+    CARD_TRIANGLES = 42_000
+
     @classmethod
     def setUpClass(cls):
         cls.C = json.loads((ROOT / "design/tokens.json").read_text())["visual"]["crowd"]
         cls.M = json.loads((ASSETS / cls.C["kit"]["manifest"]).read_text())
+
+    def mesh_triangles(self, extra=0):
+        """What the mesh rings cost at their caps, taking each tier's heaviest fan."""
+        r = self.C["rings"]
+        return sum((r[f"lod{k}Max"] + (extra if k == 3 else 0))
+                   * max(f[f"lod{k}"]["triangles"] for f in self.M["fans"]) for k in range(4))
 
     def test_every_kit_file_exists(self):
         for name, rel in self.C["kit"].items():
@@ -53,23 +71,23 @@ class CrowdKitTest(unittest.TestCase):
 
     def test_pose_models_are_declared_and_named_for_each_fan(self):
         models = self.C["models"]
-        for lod in ("lod0", "lod1", "lod2"):
+        for lod in ("lod0", "lod1", "lod2", "lod3"):
             rel = models[f"{lod}Poses"]
             self.assertEqual(rel, self.M["poseMeshes"][lod]["model"].join(["actors/crowd/", ""]))
             self.assertTrue((ASSETS / rel).with_suffix(".glb").is_file())
 
     def test_rings_fit_the_crowd_budget(self):
-        """ART_BIBLE: crowd triangles (raised to 150k when Bowl seated 52k). Near meshes plus two per card must fit
-        with a sold-out bowl: Bowl seats about 50k, and far cards hold two each."""
+        """ART_BIBLE: crowd triangles (raised to 150k when Bowl seated 52k). Every mesh tier plus the
+        cards the rest of the bowl costs must fit inside it, and the tiers must be a ladder."""
         C, M = self.C, self.M
         r = C["rings"]
         self.assertLess(r["lod0Yards"], r["lod1Yards"])
-        lod0 = max(f["lod0"]["triangles"] for f in M["fans"])
-        lod1 = max(f["lod1"]["triangles"] for f in M["fans"])
-        lod2 = max(f.get("lod2", {"triangles": 250})["triangles"] for f in M["fans"])
-        cards = (50_000 // 2) * 2
         self.assertLess(r["lod1Yards"], r["lod2Yards"])
-        self.assertLessEqual(r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + r["lod2Max"] * lod2 + cards, 150_000)
+        self.assertLess(r["lod2Yards"], r["lod3Yards"])
+        self.assertLessEqual(self.mesh_triangles(), 150_000 - self.CARD_TRIANGLES)
+        # A ladder, not a cliff: each tier is cheaper than the one inside it.
+        tiers = [max(f[f"lod{k}"]["triangles"] for f in M["fans"]) for k in range(4)]
+        self.assertEqual(tiers, sorted(tiers, reverse=True), tiers)
 
     def test_the_crowd_fills_bowls_seats_at_the_fill_token(self):
         """Fans come from bowl.seating, one per seat, kept with probability
@@ -185,7 +203,7 @@ class CrowdKitTest(unittest.TestCase):
         src = (ROOT / "tools/blender/crowd/build.py").read_text()
         ns = {}
         exec(src[src.index("def probe_forward"):src.index("def transfer_normals")], ns)
-        for lod in (0, 1, 2):
+        for lod in (0, 1, 2, 3):
             probes = [(n, p) for n, p in glb.meshes(ASSETS / f"actors/crowd/lod{lod}_poses.glb", suffix="")
                       if n.startswith("forward_probe")]
             self.assertEqual([n for n, _ in probes], [f"forward_probe_lod{lod}"], f"lod{lod} carries its own probe")
@@ -199,7 +217,7 @@ class CrowdKitTest(unittest.TestCase):
         export and records which way its fans face. Blender's USD exporter with forward "Z"
         put a fan's front on -Z, and that is exactly what the headset drew."""
         forward = {k: v for k, v in self.M.get("forward", {}).items() if k != "about"}
-        self.assertEqual(sorted(forward), sorted(f"lod{l}.{e}" for l in (0, 1, 2) for e in ("usdz", "glb")))
+        self.assertEqual(sorted(forward), sorted(f"lod{l}.{e}" for l in (0, 1, 2, 3) for e in ("usdz", "glb")))
         self.assertEqual(set(forward.values()), {"+Z"}, forward)
         src = (ROOT / "tools/blender/crowd/build.py").read_text()
         self.assertIn('USD_FORWARD = "NEGATIVE_Z"', src)
@@ -330,6 +348,10 @@ class CrowdKitTest(unittest.TestCase):
         # The dither may pick which mesh ring a fan lands in; it must not push one out to a card.
         loop = rings[rings.index("let d = Double(placed[i].dist)"):rings.index("#if DEBUG")]
         self.assertNotIn(".card", loop, "the dither must not decide mesh against card")
+        # Round 10: the circle also has an outer edge in yards, so a seat set back from the bowl
+        # does not spend the whole budget out there - the press box's circle runs past 18 yd, and
+        # 30 of its 364 fans stay cards rather than being meshed at a distance nobody reads.
+        self.assertIn("placed[i].dist < Float(C.rings.lod3Yards)", rings)
 
     def test_a_card_is_alpha_tested_and_never_blended(self):
         """Only the card material carries alpha. Blended, a fan reads as a window onto the field."""
@@ -340,16 +362,23 @@ class CrowdKitTest(unittest.TestCase):
         self.assertIn("mat.blending = .opaque", cards)
 
     def test_the_mesh_circle_is_as_wide_as_the_budget_allows(self):
-        """lod2Max is what buys the circle's radius, so it should sit at the budget's edge."""
-        C, M = self.C, self.M
-        r = C["rings"]
-        lod0 = max(f["lod0"]["triangles"] for f in M["fans"])
-        lod1 = max(f["lod1"]["triangles"] for f in M["fans"])
-        lod2 = max(f["lod2"]["triangles"] for f in M["fans"])
-        used = r["lod0Max"] * lod0 + r["lod1Max"] * lod1 + r["lod2Max"] * lod2 + 50_000
-        self.assertLessEqual(used, 150_000)
-        # Within one more lod2 fan of the ceiling: anything less is budget left on the table.
-        self.assertGreater(used + lod2, 150_000, "there is room for another lod2 fan")
+        """The circle's radius is bought in fans, and lod3 is the cheapest fan there is, so
+        lod3Max is what sits at the budget's edge."""
+        ceiling = 150_000 - self.CARD_TRIANGLES
+        self.assertLessEqual(self.mesh_triangles(), ceiling)
+        # Within one more lod3 fan of it: anything less is budget left on the table.
+        self.assertGreater(self.mesh_triangles(extra=1), ceiling, "there is room for another lod3 fan")
+
+    def test_the_fourth_tier_is_what_buys_the_radius(self):
+        """Round 8 left the circle at 7.6 yd, and at the club seat that put every fan in view on a
+        flat card. 250 triangles was the price of one fan; a tier at half of it buys two, so the
+        same budget reaches further. The tier only pays if most of the circle is made of it."""
+        r = self.C["rings"]
+        tiers = {k: max(f[f"lod{k}"]["triangles"] for f in self.M["fans"]) for k in range(4)}
+        self.assertLessEqual(tiers[3], tiers[2] / 1.8, "a fourth tier that is not much cheaper buys nothing")
+        fans = sum(r[f"lod{k}Max"] for k in range(4))
+        self.assertGreater(fans, 300, "the circle should hold far more fans than round 8's 183")
+        self.assertGreater(r["lod3Max"], fans / 2, "lod3 should be most of the circle, or it is not paying for it")
 
     def test_a_stand_wears_its_own_clubs_stated_colour(self):
         """Round 9: the crowd dressed from `bowl.crowd`'s chips, which scene.py solves for

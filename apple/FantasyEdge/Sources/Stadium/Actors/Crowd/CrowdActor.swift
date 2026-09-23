@@ -30,7 +30,8 @@ final class CrowdActor: StadiumActor {
     let name = "crowd"
     let root = Entity()
 
-    enum Ring: Int { case lod0 = 0, lod1 = 1, lod2 = 2, card = 3 }
+    /// The raw value is the kit's LOD number: `poseMesh` and the forward probe read it.
+    enum Ring: Int { case lod0 = 0, lod1 = 1, lod2 = 2, lod3 = 3, card = 4 }
 
     /// A group of fans that move together.
     final class Group {
@@ -249,17 +250,21 @@ final class CrowdActor: StadiumActor {
         var ringOf = [Ring](repeating: .card, count: placed.count)
         if !c.tabletop {
             let order = placed.indices.sorted { placed[$0].dist < placed[$1].dist }
-            let meshes = max(0, C.rings.lod0Max + C.rings.lod1Max + C.rings.lod2Max)
-            var n0 = 0, n1 = 0
-            for (rank, i) in order.enumerated() where rank < meshes {
+            let meshes = max(0, C.rings.lod0Max + C.rings.lod1Max + C.rings.lod2Max + C.rings.lod3Max)
+            var n0 = 0, n1 = 0, n2 = 0
+            // A mesh past the outer ring buys nothing, and a seat set back from the bowl would
+            // spend the whole budget out there: from the press box the circle runs past 18 yd, so
+            // 30 of the 364 stay cards and the crowd draws 96.1k triangles there instead of 99.7k.
+            for (rank, i) in order.enumerated() where rank < meshes && placed[i].dist < Float(C.rings.lod3Yards) {
                 // Dithered: each fan's ring distance wanders by up to ditherYards, so the seam
-                // between lod0, lod1 and lod2 is a ragged band. It never decides mesh or card.
+                // between the four mesh tiers is a ragged band. It never decides mesh or card.
                 var hd = UInt64(truncatingIfNeeded: i) &* 0x9E3779B97F4A7C15
                 hd ^= hd >> 31
                 let d = Double(placed[i].dist) + (Double(hd % 1000) / 1000 - 0.5) * 2 * C.rings.ditherYards
                 if d < C.rings.lod0Yards && n0 < C.rings.lod0Max { ringOf[i] = .lod0; n0 += 1 }
                 else if d < C.rings.lod1Yards && n1 < C.rings.lod1Max { ringOf[i] = .lod1; n1 += 1 }
-                else { ringOf[i] = .lod2 }
+                else if d < C.rings.lod2Yards && n2 < C.rings.lod2Max { ringOf[i] = .lod2; n2 += 1 }
+                else { ringOf[i] = .lod3 }
             }
             #if DEBUG
             if let edge = order.first(where: { ringOf[$0] == .card }).map({ placed[$0].dist }) {
@@ -285,7 +290,7 @@ final class CrowdActor: StadiumActor {
         for (i, f) in placed.enumerated() {
             if consumed.contains(i) { continue }
             switch ringOf[i] {
-            case .lod0, .lod1, .lod2:
+            case .lod0, .lod1, .lod2, .lod3:
                 near[NearKey(ring: ringOf[i], support: f.support, phase: f.slice % max(1, C.nearPhases)), default: []].append(f)
             case .card:
                 var centre = f.base
@@ -427,7 +432,7 @@ final class CrowdActor: StadiumActor {
         if !C.castShadows {
             for g in groups { g.entity.components.set(DynamicLightShadowComponent(castsShadow: false)) }
         }
-        StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
+        StadiumLog.log.notice("[stadium] crowd: \(self.fans) fans, lod0 \(self.counts[.lod0] ?? 0), lod1 \(self.counts[.lod1] ?? 0), lod2 \(self.counts[.lod2] ?? 0), lod3 \(self.counts[.lod3] ?? 0), cards \(self.counts[.card] ?? 0), groups \(self.groups.count)")
         let seatsTaken = max(1, self.supportCounts.values.reduce(0, +))
         StadiumLog.log.notice("[stadium] crowd support: home \(Int(Double(self.supportCounts[.home] ?? 0) / Double(seatsTaken) * 100))%, visiting \(Int(Double(self.supportCounts[.away] ?? 0) / Double(seatsTaken) * 100))%, neutral \(Int(Double(self.supportCounts[.neutral] ?? 0) / Double(seatsTaken) * 100))% of \(seatsTaken) seats taken")
     }
@@ -705,11 +710,11 @@ final class CrowdKit {
            let m = try? JSONDecoder().decode(Manifest.self, from: data) {
             heights = m.fans.map { Float($0.height) }
         }
-        for id in ["lod0Poses", "lod1Poses", "lod2Poses"] {
+        for id in ["lod0Poses", "lod1Poses", "lod2Poses", "lod3Poses"] {
             guard let template = StadiumAssets.shared.model("crowd.\(id)") else { continue }
             collect(template, root: template)
         }
-        for ring in [CrowdActor.Ring.lod0, .lod1, .lod2] {
+        for ring in [CrowdActor.Ring.lod0, .lod1, .lod2, .lod3] {
             let (ok, apex) = measuredForward(ring: ring)
             let z = apex.map { String(format: "%+.3f", $0) } ?? "no probe"
             if ok {

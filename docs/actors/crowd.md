@@ -831,3 +831,78 @@ belong in `tests/fixtures`.
 | `crowd-r9/s-bowl-wide-black-after.png` | With two black clubs the far stands read navy, because the brightest thing left in them is `crowd.neutral`'s `#3B4B68` street clothes. Correct in principle - a black-clad stand shows its coats - but the neutral pool leans blue enough to look like a decision. |
 | `crowd-r9/s-crowd-closeup-phi-after.png` | Midnight green at night reads black at two metres. The club's, not the crowd's, but it is what the frame shows. |
 | `crowd-r9/s-crowd-closeup-black-after.png` | Hair is still one mass; unchanged since round 7. |
+
+## Round 10 (a fourth tier, because a circle is bought in fans)
+
+Round 8 made the mesh boundary a circle and left it at 7.6 yd. At the club seat that is the whole
+problem: every fan in view sits beyond it, so the near rows were flat cards, and
+`crowd-r10/club-near-rows-before.png` shows the sideline stripe running straight through a raised
+arm. Before and after, every seat: `docs/lookdev/crowd-r10/`.
+
+### The tier
+
+`LOD3_TRIS = 120`, built from lod2 with the hair, hat, scarf and prop shells welded at 20 cm
+first - the same trick that got lod2 to 250, one step coarser. **Every fan lands at 119-120
+triangles**, mean 119.6, so nothing hit a floor. Exported as `lod3_poses.usdz` / `.glb` (1.8 / 1.3
+MB) beside the others, and its fans face **+Z off their own probe triangle** like every other tier;
+the manifest now records eight pose files instead of six, and `verify_scene` counts them.
+
+What it gives up: the bounding box holds to a centimetre or two in height (1.828 → 1.842 m
+standing) and loses about 10 cm off a raised arm and 10 cm of depth on a seated fan. At 8-13 yd
+that is a fraction of a degree.
+
+### What a fan costs, and what that buys
+
+The circle is bought in fans, and until now a fan cost 250 triangles. At 120 the same budget buys
+two, so `lod2Max` goes 145 → 40 and `lod3Max` is 286: **183 mesh fans → 364**.
+
+| seat | circle before | circle after |
+|---|---:|---:|
+| club | 7.6 yd | **10.5 yd** |
+| upper | 8.0 | 10.9 |
+| sideline | 8.3 | 12.0 |
+| clubLevel | 9.1 | 12.2 |
+| endzone | 9.5 | 13.6 |
+| field | 10.6 | 15.2 |
+| pressBox | 14.3 | 18.0 |
+
+**+38% at the club seat, not the doubling I estimated in round 8.** That estimate was wrong
+arithmetic and worth saying plainly: doubling a radius is four times the area, so it needs four
+times the fans - 732 of them, which even at 120 triangles is 88k on top of lod0 and lod1, six
+times the headroom. 120 triangles buys +99% fans and about +40% radius, and that is the whole of
+what a fourth tier can do at this budget.
+
+### The 10k nobody had checked
+
+The budget test modelled the far crowd at 50,000 triangles: one card per two of a 50,000-seat
+bowl. The crowd actually measures **40,282** (round 9's own stats, 140,132 total with 99,850 of
+mesh), because the bowl is never sold out - `fill` is 0.9, `keepChance` thins the corners, and the
+clearance round the wearer's seat takes more. The model was costing about 10k of real budget,
+which is 80 fans of circle. It is now the measurement plus a 4% margin, with that reasoning in the
+test itself.
+
+### An outer edge, in yards
+
+The circle now stops at `lod3Yards` 18 as well as at its caps. It binds at exactly one seat: from
+the press box the circle would run past 18 yd, so 30 of the 364 stay cards and the crowd draws
+96.1k triangles there rather than 99.7k. A mesh at that distance buys nothing.
+
+### Cost
+
+**147,918-147,982 triangles** of 150,000, against 140,132-140,151 before: 2,018 spare at the
+worst seat. **38 draw parts** of 45, up from 36 - the fourth tier is two more merged groups, and
+the widened circle did not pull a second support into the near rings. The dress is **2.23-2.57 s**
+against 2.39-2.66 s before, which is what it should be: the dress tints atlases and never touches
+a mesh.
+
+### What I would not do without being asked
+
+Going further means spending lod2 entirely (418 fans, ~11.2 yd) or cutting the tier to 90
+triangles (~446 fans, ~11.7 yd). Both change how a fan at 8 yd looks, and the club seat's crop
+says the defect is already gone, so neither is worth a frame's quality on my say-so.
+
+| Shot | Worst thing left |
+|---|---|
+| `crowd-r10/after/s-crowd-closeup-club.png` | The stands are 1.66 stops under the field (integration-16), so the near rows read almost black. Not the crowd's to fix, but it is what the frame shows. |
+| `crowd-r10/after/s-crowd-closeup-club.png` | Cards still stand a little tall: where a card becomes a mesh the fan drops into the chair, so the crowd line steps down at 10.5 yd. Smaller than the flat-card defect, and next. |
+| `crowd-r10/after/s-crowd-closeup.png` | Hair is still one mass, unchanged since round 7. |
