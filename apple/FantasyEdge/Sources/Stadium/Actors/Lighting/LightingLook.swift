@@ -139,6 +139,11 @@ extension SceneSpec.Look {
         public let vomitoryInsetYards: Double
         public let vomitoryHeadYards: Double
         public let vomitoryWidthScale: Double
+        /// Light lying on the seating rake itself, hugging the tier surface.
+        public let rakeOpacity: Double
+        public let rakeColor: String
+        public let rakeLiftYards: Double
+        public let rakeRepeatsAround: Double
     }
 
     public struct LightingLook: Decodable, Equatable, Sendable {

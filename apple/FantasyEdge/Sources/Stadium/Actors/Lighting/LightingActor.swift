@@ -107,7 +107,7 @@ final class LightingActor: StadiumActor {
         if !skip.contains("floods") { buildFloods(c) }
     }
 
-    /// Debug: `-lightSkip haze,dome,beams,glow,fill,floods` (or `LIGHT_SKIP`)
+    /// Debug: `-lightSkip haze,dome,beams,glow,fill,vomitory,floods` (or `LIGHT_SKIP`)
     /// leaves a layer out, so its share of a frame can be measured rather than
     /// guessed. The night's brightness above the rim is drawn by three things
     /// at once - the sky texture's own city glow, Sky's dome and this haze -
@@ -663,6 +663,56 @@ final class LightingActor: StadiumActor {
         let material = StadiumLook.glow(F.color, opacity: F.opacity, texture: c.assets.texture("lighting.fill"), tile: true)
         root.addChild(mesh.entity("rim.concourseFill", material))
         buildVomitoryFill(c)
+        buildRakeFill(c)
+    }
+
+    /// The floodlights' spill lying on the seating itself.
+    ///
+    /// The art bible asks the stands to sit a stop under the field; at
+    /// integration-16 they measured 1.66, the stadium's widest miss, and the
+    /// crowd cannot close it because a club's colour is the club's. The one
+    /// lever that raises a stand without touching a colour is light.
+    ///
+    /// `glow.spill` was already meant to be that light, but it is a 78x40 yd
+    /// card turned to face the wearer: raising it to reach the bar (0.48, which
+    /// measures a clean +1.01 stops) veils the whole bowl in grey - the crowd
+    /// loses its colour, the sky above the rim goes pale, and the number is met
+    /// by fogging the view rather than by lighting anything. The frames are in
+    /// docs/lookdev/lighting-r3/. So this band lies *on* the rake instead, at
+    /// the tier's own depth, the way `buildFill`'s band hugs the guard wall:
+    /// it cannot fog the field or the sky, because it is never between the eye
+    /// and them - it is coincident with the stand it lifts.
+    private func buildRakeFill(_ c: StadiumContext) {
+        let F = c.look.lighting.fill, s = c.spec
+        guard F.rakeOpacity > 0, !Self.skipped.contains("rake") else { return }
+        var mesh = MeshBuilder()
+        // 64, not the fill band's 128: two tiers at 128 put the actor 64
+        // triangles over its 10k ceiling, and a soft glow round a superellipse
+        // shows no facets at half that.
+        let segments = 64
+        let repeats = Float(max(1, F.rakeRepeatsAround))
+        let lift = Float(F.rakeLiftYards)
+        for tier in c.tiers {
+            for k in 0..<segments {
+                let t0 = Double(k) / Double(segments) * 2 * .pi
+                let t1 = Double(k + 1) / Double(segments) * 2 * .pi
+                let i0 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.inner, angle: t0)
+                let i1 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.inner, angle: t1)
+                let o0 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.outer, angle: t0)
+                let o1 = SceneMath.bowlPoint(s.bowl.shape, offset: tier.outer, angle: t1)
+                let yLo = Float(tier.rise[0]) + lift, yHi = Float(tier.rise[1]) + lift
+                let u0 = Float(k) / Float(segments) * repeats, u1 = Float(k + 1) / Float(segments) * repeats
+                // Up the rake: v runs 0 at the front row to 1 at the back, and
+                // the fill texture fades at both, so the band has no hard edge.
+                mesh.quad(SIMD3(Float(i0.x), yLo, Float(i0.z)), SIMD3(Float(i1.x), yLo, Float(i1.z)),
+                          SIMD3(Float(o1.x), yHi, Float(o1.z)), SIMD3(Float(o0.x), yHi, Float(o0.z)),
+                          uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, 1), SIMD2(u0, 1)))
+            }
+        }
+        guard !mesh.isEmpty else { return }
+        let material = StadiumLook.glow(F.rakeColor, opacity: F.rakeOpacity,
+                                        texture: c.assets.texture("lighting.fill"), tile: true)
+        root.addChild(mesh.entity("rim.rakeFill", material))
     }
 
     /// Light out of the vomitory mouths.
@@ -685,7 +735,8 @@ final class LightingActor: StadiumActor {
     /// all.
     private func buildVomitoryFill(_ c: StadiumContext) {
         let F = c.look.lighting.fill, s = c.spec
-        guard F.vomitoryOpacity > 0, let seating = s.bowl.seating else { return }
+        guard F.vomitoryOpacity > 0, !Self.skipped.contains("vomitory"),
+              let seating = s.bowl.seating else { return }
         var mesh = MeshBuilder()
         var mouths = 0
         for tierSeats in seating.tiers {
