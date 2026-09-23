@@ -10,7 +10,18 @@ import Foundation
 extension SceneSpec.Look {
     public struct Boards: Decodable, Equatable, Sendable {
         public let brightness: Double
+        /// How long one repeat of the ribbon's content is. The wall tiles it,
+        /// the way a real ribbon repeats rather than stretching one message
+        /// around the bowl.
         public let panelYards: Double
+        /// Texture height. With square texels the width follows from
+        /// `panelYards` over the wall's height, so this alone sets the
+        /// resolution: 128 over a 1.4 yd wall is 91 texels per yard.
+        public let heightPixels: Int
+        /// How far in front of the wall's face the boards hang. Bowl draws the
+        /// wall from the same `bowl.wall` spec, so boards laid exactly on it
+        /// are the surface that loses - which is why they had never been seen.
+        public let proudYards: Double
     }
 
     public struct PropMaterial: Decodable, Equatable, Sendable {

@@ -24,6 +24,8 @@ final class SidelineActor: StadiumActor {
     /// Each end's field-goal net, on its own pivot at the top bar so a kick
     /// through can swing it (`shared.netSway`).
     private var nets: [(endX: Double, entity: Entity)] = []
+    /// The wall boards' own texture, redrawn when the shown score changes.
+    private var boardsTexture: TextureResource?
     private var sway: (until: Double, started: Double)?
     private let crew = Entity()
     private var crewKey = ""
@@ -75,6 +77,11 @@ final class SidelineActor: StadiumActor {
 
     func apply(_ c: StadiumContext, previous: SceneSpec?) {
         buildCrew(c)
+        // The boards carry the score, so they follow the shown status the way
+        // the ribbon does - `c.spec.status` is already the gated one.
+        if let tex = boardsTexture, c.spec.status != previous?.status {
+            StadiumText.updateBoards(tex, c.spec, look: c.look)
+        }
     }
 
     /// The net swings back and forth about its top bar, decaying, when Moments
@@ -429,8 +436,11 @@ final class SidelineActor: StadiumActor {
         var run: Float = 0
         for k in 0..<S {
             if c.cut(angles[k], angles[k + 1]) { continue }
-            let a = SceneMath.bowlPoint(shape, offset: wall.offset, angle: angles[k])
-            let b = SceneMath.bowlPoint(shape, offset: wall.offset, angle: angles[k + 1])
+            // Proud of the wall face: Bowl builds the wall from this same
+            // spec, and coincident surfaces are won by whoever draws last.
+            let face = wall.offset - V.boards.proudYards
+            let a = SceneMath.bowlPoint(shape, offset: face, angle: angles[k])
+            let b = SceneMath.bowlPoint(shape, offset: face, angle: angles[k + 1])
             let seg = Float(hypot(b.x - a.x, b.z - a.z))
             let panel = Float(V.boards.panelYards)
             let u0 = run / panel, u1 = (run + seg) / panel
@@ -441,8 +451,20 @@ final class SidelineActor: StadiumActor {
                        SIMD3(Float(b.x), h, Float(b.z)), SIMD3(Float(a.x), h, Float(a.z)),
                        uv: (SIMD2(u0, 0), SIMD2(u1, 0), SIMD2(u1, 1), SIMD2(u0, 1)))
         }
-        let material: any Material = StadiumText.boards(s).map { StadiumLook.emissive("#FFFFFF", scale: V.boards.brightness, texture: $0) }
-            ?? StadiumLook.solid(s.palette[wall.color] ?? "#07090D")
+        let material: any Material
+        if let tex = StadiumText.boards(s, look: c.look) {
+            boardsTexture = tex
+            material = StadiumLook.emissive("#FFFFFF", scale: V.boards.brightness, texture: tex)
+            StadiumLog.log.notice("[stadium] sideline: boards \(tex.width, privacy: .public)x\(tex.height, privacy: .public) repeating every \(V.boards.panelYards, privacy: .public) yd")
+        } else {
+            // Worth saying out loud: this path draws a flat colour, and a
+            // frame of flat colour is indistinguishable from a board whose
+            // content happens to be dark. Round 7 was briefed on the belief
+            // that every frame had been showing this; it never had.
+            boardsTexture = nil
+            material = StadiumLook.solid(s.palette[wall.color] ?? "#07090D")
+            StadiumLog.log.error("[stadium] sideline: boards texture unavailable; drawing flat colour")
+        }
         root.addChild(board.entity("wall.boards", material))
     }
 }
