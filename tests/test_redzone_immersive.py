@@ -15,7 +15,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STADIUM = ROOT / "apple" / "FantasyEdge" / "Sources" / "Stadium"
+STADIUM = ROOT / "packages" / "swift" / "StadiumKit" / "Sources" / "StadiumKit"
 SOURCES = ROOT / "apple" / "FantasyEdge" / "Sources"
 
 VENUE = (STADIUM / "StadiumVenue.swift").read_text()
