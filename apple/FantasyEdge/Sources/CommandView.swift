@@ -349,12 +349,21 @@ struct CommandView: View {
         .menuStyle(.button).buttonStyle(.bordered)
     }
 
+    /// Three states, as in BoardView: unreachable, reachable but empty, and
+    /// not tried yet. See the note there.
     private var empty: some View {
         ContentUnavailableView {
-            Label("No board yet", systemImage: "sportscourt")
+            Label(board.reached ? "No league loaded" : "No board yet",
+                  systemImage: board.reached ? "tray" : "sportscourt")
         } description: {
-            Text(board.lastError.map { "Cannot reach \(board.host).\n\($0)" }
-                 ?? "Start the API on your Mac:\npython3 -m fantasyedge api --host 0.0.0.0")
+            if let err = board.lastError {
+                Text("Cannot reach \(board.host).\n\(err)")
+            } else if let said = board.serverSaid {
+                Text("\(board.host) is answering.\n\(said.error)"
+                     + (said.fix.map { "\n\($0)" } ?? ""))
+            } else {
+                Text("Start the API on your Mac:\npython3 -m fantasyedge api --host 0.0.0.0")
+            }
         } actions: {
             Button("Set address") { showSettings = true }.buttonStyle(.borderedProminent)
             Button("Retry") { Task { await board.load() } }
