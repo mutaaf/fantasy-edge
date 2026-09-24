@@ -129,6 +129,69 @@ class Ranks(unittest.TestCase):
         self.assertNotIn("rank", teams["away"])
 
 
+class DrawnFromCollegeText(unittest.TestCase):
+    """The scene package reads a play's text to draw it, and the two codes do
+    not write the same sentence. These are the places where reading it the NFL
+    way drew a college play wrong."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.arcs = {}
+        for event in ("401856782", "401858224"):
+            scene = scene_of(event)
+            cls.arcs[event] = {a["id"]: a for d in scene["drives"] for a in d["arcs"]}
+        cls.field = scene["field"]
+
+    def phases(self, event: str, arc: str) -> list[str]:
+        return [s["phase"] for s in self.arcs[event][arc]["path"]["segments"]]
+
+    def test_the_kick_clause_is_found_in_either_code(self):
+        """The NFL conjugates the verb, college names it. Splitting on "kicks"
+        left every college kick with an empty clause and no landing spot."""
+        self.assertEqual(shared._kick_clause("J.Moody kicks 65 yards from DET 35").strip(),
+                         "65 yards from DET 35")
+        self.assertEqual(shared._kick_clause("P. Woodring kickoff 65 yards to the ARK00").strip(),
+                         "65 yards to the ARK00")
+        self.assertEqual(shared._kick_clause("G. Rush punt 37 yards to the UGA31").strip(),
+                         "37 yards to the UGA31")
+
+    def test_a_spot_is_read_with_or_without_the_space(self):
+        """"to DAL 32" and "to the PUR36" are the same fact, written twice."""
+        home, away = {"abbr": "PUR"}, {"abbr": "WAKE"}
+        self.assertEqual(shared._spot_after("to PUR 36", ("to",), home, away), 36.0)
+        self.assertEqual(shared._spot_after("to the PUR36", ("to",), home, away), 36.0)
+        self.assertEqual(shared._spot_after("to the ARK00", ("to",), {"abbr": "ARK"}, away), 0.0)
+
+    def test_a_kickoff_out_of_bounds_is_not_returned(self):
+        """It was drawn caught in midfield and carried to the sideline at 105
+        yards a second, because the runback's clock only counted the yards up
+        the field and the ball also had to cross to the touchline."""
+        arc = self.arcs["401858224"]["401858224122"]
+        self.assertIn("out of bounds", arc["text"])
+        self.assertEqual(self.phases("401858224", "401858224122")[-1], "catch")
+        self.assertNotIn("return", self.phases("401858224", "401858224122"))
+        landing = arc["path"]["segments"][2]["to"]
+        self.assertGreater(abs(landing[2]), self.field["width"] / 2 - 1,
+                           "the ball came down past the touchline, not in the middle of the field")
+
+    def test_a_punt_return_ends_where_the_text_says_it_ended(self):
+        arc = self.arcs["401858224"]["401858224683"]
+        self.assertIn("return", arc["text"])
+        self.assertIn("return", self.phases("401858224", "401858224683"))
+        self.assertAlmostEqual(arc["path"]["segments"][3]["to"][0], 36.0, places=3,
+                               msg="the punt came down at PUR36, where the text says")
+
+    def test_a_run_is_not_thrown_because_the_conversion_was_a_pass(self):
+        """"3-yd run, two-point pass conversion failed" is a run. The
+        conversion is a different play, appended to this one; reading it as
+        this one put the ball 2.6 yards in the air on a rushing touchdown."""
+        arc = self.arcs["401858224"]["401858224837"]
+        self.assertEqual(arc["shape"], "run")
+        self.assertIn("pass", arc["text"])
+        self.assertEqual([s["kind"] for s in arc["path"]["segments"] if s["kind"] == "air"], [],
+                         "a run never leaves the ground")
+
+
 class TheLineOnTheBoard(unittest.TestCase):
     """The stadium's boards say the period and the clock, and they say it from
     `status.label`. The NFL gamecast writes that line itself; the college one

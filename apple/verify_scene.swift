@@ -45,8 +45,11 @@ struct VerifyScene {
         exit(2)
     }
     var arcsChecked = 0
-    /// Every scene's venue and livery, by event, for the check below.
-    var venues: [String: (venue: StadiumVenue, livery: String, name: String)] = [:]
+    /// Every scene's venue and livery, by event, for the check below. Keyed
+    /// within a league, because the league *is* part of the building - a
+    /// college field's hash marks stand where an NFL field has none - and a
+    /// whip-around stays inside one code of football.
+    var venues: [String: [String: (venue: StadiumVenue, livery: String, name: String)]] = [:]
     for path in paths {
         guard let blob = FileManager.default.contents(atPath: path) else {
             FileHandle.standardError.write(Data("no scene at \(path)\n".utf8))
@@ -55,7 +58,7 @@ struct VerifyScene {
         let spec = try JSONDecoder().decode(SceneSpec.self, from: blob)
         let name = URL(fileURLWithPath: path).lastPathComponent
         expect(spec.version == "1.3", "\(name): unexpected scene version \(spec.version)")
-        venues[spec.event] = (StadiumVenue(spec), StadiumVenue.livery(spec), name)
+        venues[spec.league, default: [:]][spec.event] = (StadiumVenue(spec), StadiumVenue.livery(spec), name)
 
         // ---- arcs: the apex formula, drawn ----
         for drive in spec.drives {
@@ -403,17 +406,27 @@ struct VerifyScene {
     // If a club-bearing value ever leaks into `StadiumVenue`, this is what
     // says so, and the cost would otherwise only show up as a stadium that
     // stutters every time the channel moves.
-    if venues.count > 1 {
-        let sorted = venues.sorted { $0.key < $1.key }
+    // Checked within each code of football, and both are in the sample set: a
+    // Saturday's whip-around moves between college games, and 74 of them in a
+    // night is far more switching than a Sunday ever asked for.
+    for (league, byEvent) in venues.sorted(by: { $0.key < $1.key }) where byEvent.count > 1 {
+        let sorted = byEvent.sorted { $0.key < $1.key }
         let (firstEvent, first) = sorted[0]
         for (event, other) in sorted.dropFirst() {
             expect(other.venue == first.venue,
-                   "\(other.name): \(event) is the same league and bowl as \(firstEvent) "
+                   "\(other.name): \(event) is the same league (\(league)) and bowl as \(firstEvent) "
                    + "but a different venue, so every switch between them rebuilds")
             expect(other.livery != first.livery,
                    "\(other.name): \(event) and \(firstEvent) are different clubs but the "
                    + "same livery, so a switch between them would not repaint")
         }
+    }
+    // And the two codes must *not* share a venue, or the league has leaked out
+    // of the building and a college field is being drawn with NFL hash marks.
+    if let nfl = venues["nfl"]?.values.first, let cfb = venues["college-football"]?.values.first {
+        expect(nfl.venue != cfb.venue,
+               "an NFL venue and a college venue compare equal, so the hash marks, the "
+               + "team areas and the uprights are not part of the building after all")
     }
 
     print("\(paths.count) scenes, \(arcsChecked) arcs, \(checks) assertions")

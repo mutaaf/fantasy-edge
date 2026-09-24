@@ -1697,6 +1697,27 @@ def goal_kick(play: dict, from_x: float, side: str | None, field: dict, tokens: 
 
 CROSSBAR_YARDS = 3.333   # 10 ft, both codes (_props)
 _RE_YARDS = re.compile(r"(-?\d+)\s+yards?")
+# The verb that announces a kick. The NFL conjugates it ("J.Moody kicks 65
+# yards from DET 35"); college names it ("P.Woodring kickoff 65 yards to the
+# ARK00"). Splitting on the NFL's word alone left every college kick with an
+# empty clause, so nothing knew where the ball came down.
+_RE_KICKED = re.compile(r"\b(?:kicks?|kick ?off|punts?)\b", re.I)
+
+
+def _kick_clause(text: str) -> str:
+    """What the text says after the ball was kicked, in either code."""
+    m = _RE_KICKED.search(text)
+    return text[m.end():] if m else ""
+
+
+def _return_clause(clause: str) -> str:
+    """What the text says about the runback, after the catch. College names it
+    outright ("to the PUR36 X.Townsend return 0 yards to the PUR36"); the NFL
+    starts a new sentence for it."""
+    m = re.search(r"\breturns?\b", clause, re.I)
+    if m:
+        return clause[m.end():]
+    return clause.split(".", 1)[-1] if "." in clause else ""
 
 
 def _club_x(abbr: str, n: float, home: dict, away: dict) -> float | None:
@@ -1711,8 +1732,13 @@ def _club_x(abbr: str, n: float, home: dict, away: dict) -> float | None:
 
 
 def _spot_after(text: str, words: tuple[str, ...], home: dict, away: dict) -> float | None:
-    """The first spot following any of `words` ("at", "to") in `text`."""
-    for m in re.finditer(r"\b(?:%s)\s+(?:the\s+)?(?:([A-Z]{2,4})\s(\d{1,2})|(50)\b)" % "|".join(words), text):
+    """The first spot following any of `words` ("at", "to") in `text`.
+
+    The two codes write a spot differently: the NFL puts a space in it ("to
+    DAL 32"), college runs it together and pads it ("to the ARK00"). Both are
+    a club and a yard line, so both are read here rather than in two places.
+    """
+    for m in re.finditer(r"\b(?:%s)\s+(?:the\s+)?(?:([A-Z]{2,4})\s?(\d{1,2})\b|(50)\b)" % "|".join(words), text):
         if m.group(3):
             return 50.0
         x = _club_x(m.group(1), float(m.group(2)), home, away)
@@ -2000,8 +2026,9 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         p = rule["punt"]
         path.carry([(x0 - attack * p["backYards"], h["carry"], lane)], p["snapSeconds"], "snap")
         path.hold(p["operationSeconds"], "hold")
-        n = _RE_YARDS.search(low.split("punts", 1)[-1]) if "punts" in low else None
-        land_x = _spot_after(text.split("punts", 1)[-1], ("to",), home, away) if "punts" in text else None
+        clause = _kick_clause(text)
+        n = _RE_YARDS.search(clause.lower())
+        land_x = _spot_after(clause, ("to",), home, away)
         kicked = play.get("kickDistance")
         if land_x is None and kicked is not None:
             land_x = x0 + attack * float(kicked)     # nflverse states the distance
@@ -2013,7 +2040,10 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         oob = "out of bounds" in low
         land = (land_x, h["catch"] if not oob else 0.0, clamp_z(lane * 0.5) if not oob else (half + 1.0) * (1 if lane >= 0 else -1))
         path.air(land, hang, p["drag"], g, "kick")
-        tail = text.split("Center-", 1)[-1] if "Center-" in text else ""
+        # The NFL marks the snap that started it ("Center-J.Smith"); college
+        # names the return itself. Either way the spot wanted is the one after
+        # the catch, not the one the punt came down on.
+        tail = text.split("Center-", 1)[-1] if "Center-" in text else _return_clause(clause)
         if "fair catch" in low or "downed" in low or oob or "touchback" in low:
             path.hold(p["fairCatchSeconds"], "catch")
         else:
@@ -2022,22 +2052,21 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
                 back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
             if back is None:
                 back = x1
-            dist = abs(back - land[0])
-            path.carry([(back, h["carry"], clamp_z(land[2] * 0.6))],
-                       max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            end_z = clamp_z(land[2] * 0.6)
+            path.carry([(back, h["carry"], end_z)],
+                       max(0.3, math.dist((land[0], land[2]), (back, end_z)) / rule["returnYardsPerSecond"]),
+                       "return")
             path.hold(rule["run"]["settleSeconds"], "settle")
 
     elif shape == "kick":   # kickoffs, and anything else kicked
         k = rule["kickoff"]
         path.hold(k["approachSeconds"], "approach")
-        clause = text.split("kicks", 1)[-1] if "kicks" in text else ""
+        clause = _kick_clause(text)
         land_x = None
         if "to end zone" in clause.lower():
             land_x = (field["length"] + k["endZoneYards"]) if attack > 0 else -k["endZoneYards"]
         else:
-            m = re.search(r"\bto\s+([A-Z]{2,4})\s(\d{1,2})\b", clause)
-            if m:
-                land_x = _club_x(m.group(1), float(m.group(2)), home, away)
+            land_x = _spot_after(clause, ("to",), home, away)
         n = _RE_YARDS.search(clause)
         kicked = play.get("kickDistance")
         if land_x is None and kicked is not None:
@@ -2046,20 +2075,26 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
             land_x = x0 + attack * (float(n.group(1)) if n else max(10.0, abs(x1 - x0)))
         land_x = clamp_x(land_x)
         hang = k["hangBase"] + k["hangPerYard"] * abs(land_x - x0)
-        land = (land_x, h["catch"], clamp_z(lane * 0.3))
+        # A kick that leaves the field crosses the sideline; it is not caught
+        # in the middle of it and then carried out.
+        oob = "out of bounds" in low
+        land = (land_x, h["catch"] if not oob else 0.0,
+                clamp_z(lane * 0.3) if not oob else (half + 1.0) * (1 if lane >= 0 else -1))
         path.air(land, hang, k["drag"], g, "kick")
-        if "touchback" in low or "fair catch" in low:
+        if "touchback" in low or "fair catch" in low or oob:
+            # None of the three is a return: the ball is dead where it stopped.
             path.hold(k["touchbackSeconds"], "catch")
         else:
-            after = clause.split(".", 1)[-1] if "." in clause else ""
+            after = _return_clause(clause)
             back = _spot_after(after, ("at", "to"), home, away)
             if back is None and "touchdown" in low:
                 back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
             if back is None:
                 back = x1
-            dist = abs(back - land[0])
-            end_z = half * (1 if land[2] >= 0 else -1) if sideline else clamp_z(land[2] * 0.5)
-            path.carry([(back, h["carry"], end_z)], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            end_z = clamp_z(land[2] * 0.5)
+            path.carry([(back, h["carry"], end_z)],
+                       max(0.3, math.dist((land[0], land[2]), (back, end_z)) / rule["returnYardsPerSecond"]),
+                       "return")
             path.hold(rule["run"]["settleSeconds"], "settle")
 
     elif re.search(r"\bkneels?\b", low):
@@ -2107,7 +2142,12 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         path.carry([(back, h["carry"], clamp_z(pick_z * 0.6))], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
         path.hold(rule["run"]["settleSeconds"], "settle")
 
-    elif shape == "pass" or "pass" in kind or re.search(r"\bpass\b", low):
+    # The text is the fallback for a play whose type did not say, never a
+    # second opinion about one that did: "3-yd run, two-point pass conversion
+    # failed" is a run, and drawing it as a pass threw the ball on a rushing
+    # touchdown. The conversion is a different play, appended to this one.
+    elif shape == "pass" or "pass" in kind or (re.search(r"\bpass\b", low)
+                                               and not re.search(r"\b(?:rush|run)", kind)):
         snap_to_qb()
         ps = rule["pass"]
         mode = "shotgun" if shotgun else "underCenter"
