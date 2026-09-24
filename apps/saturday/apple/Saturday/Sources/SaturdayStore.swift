@@ -181,8 +181,17 @@ final class SaturdayStore {
         }
     }
 
+    /// The moment everything else should be asked about: the frame a replay is
+    /// parked on, or nothing at all when the source is live. Anything that
+    /// polls the API on its own - the red-zone channel does - has to ask about
+    /// the same moment, or the bowl and the wall are in different halves of
+    /// the night.
+    var moment: String? {
+        isReplay || position != nil ? (position ?? slate?.clock?.stamp) : nil
+    }
+
     private func readOnce() async {
-        let at = isReplay || position != nil ? (position ?? slate?.clock?.stamp) : nil
+        let at = moment
         do {
             let next: Slate = try await get("/api/slate", at: at)
             apply(next)

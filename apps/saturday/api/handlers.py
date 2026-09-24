@@ -16,6 +16,7 @@ import json
 import time
 
 from cfb import changes, colors, leverage, parse, reconstruct
+from fantasyedge import whip
 from cfb.game import game_from_summary
 from cfb.sources import BadStamp, Source, seconds_between, stamp_of
 
@@ -177,6 +178,138 @@ def scene(source: Source, event: str, at: str | None = None) -> dict:
     from fantasyedge import scene as shared
 
     return shared.build(game(source, event, at))
+
+
+# ── the red zone in the bowl ──────────────────────────────────────────────
+#
+# The stadium can stand in one game or follow the Saturday. Following it is a
+# ranking question Saturday already answers for the wall - `cfb.leverage` -
+# and a *staying* question the wall never had to ask, because a wall changes
+# nothing when its order changes and the bowl repaints the world.
+#
+# The staying question is `fantasyedge.whip.choose`, the same hysteresis the
+# NFL red-zone channel uses. Only the numbers differ, and they differ for two
+# reasons: leverage runs 0..112 where whip's urgency runs 0..100, and a wearer
+# standing in a bowl is not a tile on a page.
+
+# How long a game holds the bowl, in seconds. Measured against the recorded
+# 19 September slate - 74 games, up to 31 live at once and 9 in the red zone
+# together - taking whichever game ranked first each minute changed the bowl
+# 94 times in seven and a half hours, 50 of those visits lasting a minute or
+# two. At three minutes and five points, the same night changes 51 times, none
+# of them shorter than three minutes, and the bowl is on a game 1.0 leverage
+# points off the best available. That is the whole trade: a point of leverage
+# buys every flicker.
+BOWL_DWELL = 180.0
+BOWL_MARGIN = 5.0
+# Below this a game is dull enough that half the margin is enough to leave it.
+BOWL_QUIET = 20.0
+
+# How far back the focus is worked out from. The bowl's game depends on which
+# game it was already on, so it is a walk, not a lookup - but it must not be a
+# walk from a server's memory, or two headsets that joined at different times
+# would be shown different games and a replay would not reproduce. It is a
+# pure function of the moment instead, computed from the last half hour of
+# frames. Held against a walk from the first frame of the recorded night, a
+# thirty-minute look-back gives the same answer at all 450 sampled minutes.
+FOCUS_SECONDS = 30 * 60
+
+
+def _channel_side(team: dict, holder: str | None) -> dict:
+    return {"abbr": team.get("abbr") or "", "score": team.get("score") or 0,
+            "color": team.get("fill") or team.get("color") or "",
+            "rank": team.get("rank"),
+            "hasBall": bool(holder) and str(team.get("id")) == str(holder)}
+
+
+def _channel_row(g: dict, source: Source) -> dict:
+    """One game as the channel states it: the same shape the NFL channel
+    sends, so one panel reads both."""
+    from fantasyedge import scene as shared
+
+    st, sit = g["status"], (g.get("situation") or {})
+    return {
+        "event": g["id"],
+        # Whether the bowl can actually be stood in for this game. A sampled
+        # capture kept six games' live snapshots and not the other sixty-eight,
+        # and a panel that offers one of those opens onto a black stadium - the
+        # same rule the wall's tiles already keep.
+        "detail": source.detail_for(g["id"], st["state"]),
+        "state": st["state"],
+        "label": shared.status_label({"status": st, "period": st.get("period"), "clock": st.get("clock")},
+                                     st["state"], "college-football"),
+        "kickoff": g.get("kickoff") or "",
+        "league": "college-football",
+        "situation": sit.get("text") or "",
+        "redZone": bool((g.get("flags") or {}).get("redZone")),
+        "urgency": g["leverage"]["score"],
+        "reason": ", ".join(g["leverage"]["reasons"]),
+        "lastPlay": (g.get("lastPlay") or {}).get("text") or "",
+        "home": _channel_side(g["home"], sit.get("possession")),
+        "away": _channel_side(g["away"], sit.get("possession")),
+    }
+
+
+def _focus(history: list[tuple[str, list[dict]]], source: Source) -> str:
+    """Which game the bowl should be in, walked forward over the frames.
+
+    Nothing is remembered between requests: the walk starts cold at the oldest
+    frame in the window and arrives at the same answer for every caller asking
+    about the same moment.
+
+    A game this source cannot draw is not a candidate, however much it deserves
+    the screen. On a live Saturday that excludes nothing; on a sampled capture
+    it is the difference between the bowl following the night and the bowl
+    going black.
+    """
+    pick, since = "", ""
+    for stamp, ranked in history:
+        rows = [{"event": g["id"], "state": g["status"]["state"], "urgency": g["leverage"]["score"]}
+                for g in ranked
+                if source.detail_for(g["id"], g["status"]["state"]) == "available"]
+        held = seconds_between(since, stamp) if since else 0.0
+        nxt = whip.choose(rows, pick, held=held, dwell=BOWL_DWELL,
+                          margin=BOWL_MARGIN, quiet=BOWL_QUIET)
+        if nxt != pick:
+            pick, since = nxt, stamp
+    return pick
+
+
+def redzone(source: Source, at: str | None = None) -> dict:
+    """Every live game ranked, and the one the bowl should be standing in.
+
+    The client holds no ranking and no dwell - a test asserts the Swift side
+    does not reimplement them - so that a headset, a second headset and a
+    browser are looking at the same game.
+    """
+    source = positioned(source, at)
+    history = source.history(FOCUS_SECONDS)
+    if not history:
+        raise NotFound(f"{source.label} has no scoreboard at that moment.",
+                       "the recording had not started at that moment")
+    now, load = history[-1]
+    games = _ranked_at(source, now, load)
+    walked = [(s, _ranked_at(source, s, b)) for s, b in history[:-1]] + [(now, games)]
+
+    rows = [_channel_row(g, source) for g in games]
+    rows.sort(key=lambda r: (0 if r["state"] == "in" else 1 if r["state"] == "pre" else 2,
+                             -r["urgency"], r["event"]))
+    live = [r for r in rows if r["state"] == "in"]
+    return {
+        "version": VERSION,
+        "league": "college-football",
+        "asOf": _iso(now) if now else _iso(_now_stamp()),
+        "source": source.label,
+        "replay": bool(source.replay),
+        "clock": clock(source),
+        "focus": _focus(walked, source),
+        "counts": {"total": len(rows), "live": len(live),
+                   "redZone": sum(1 for r in live if r["redZone"]),
+                   "final": sum(1 for r in rows if r["state"] == "post")},
+        "dwellSeconds": BOWL_DWELL,
+        "caveat": leverage.CAVEAT,
+        "games": rows,
+    }
 
 
 def teams(source: Source) -> dict:

@@ -154,3 +154,96 @@ class History(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+MERGED = REPO / "data/capture/2026-09-19-merged"
+
+
+class RedZoneChannel(unittest.TestCase):
+    """Which game the stadium stands in, over a real Saturday."""
+
+    def test_the_channel_matches_its_contract(self):
+        out = handlers.redzone(FixtureSource(FIX))
+        self.assertEqual(CONTRACTS.validate(out, "redzone.schema.json"), [])
+
+    def test_the_caveat_rides_with_the_ranking(self):
+        self.assertTrue(handlers.redzone(FixtureSource(FIX))["caveat"].strip())
+
+    def test_only_a_live_game_may_hold_the_bowl(self):
+        """A channel that opens on a game that finished at lunchtime is worse
+        than one that says nothing is running."""
+        out = handlers.redzone(FixtureSource(FIX))
+        if out["focus"]:
+            game = next(g for g in out["games"] if g["event"] == out["focus"])
+            self.assertEqual(game["state"], "in")
+
+    @unittest.skipUnless((MERGED / "scoreboard").is_dir(), "merged capture not present")
+    def test_the_focus_is_a_function_of_the_moment_not_of_who_asked(self):
+        """Two headsets that joined the night at different times must be in the
+        same game. Nothing is remembered between requests, so the only way that
+        holds is if the same moment always walks to the same answer."""
+        src = CaptureSource(MERGED, "20260920T013000Z")
+        first = handlers.redzone(src)["focus"]
+        for _ in range(3):
+            self.assertEqual(handlers.redzone(CaptureSource(MERGED, "20260920T013000Z"))["focus"], first)
+        self.assertTrue(first)
+
+    @unittest.skipUnless((MERGED / "scoreboard").is_dir(), "merged capture not present")
+    def test_the_bowl_does_not_thrash_over_seventy_four_games(self):
+        """The night of 19 September, an hour of it, minute by minute: 74 games
+        on the slate, up to 31 of them live at once and 9 in the red zone
+        together. Taking whichever game ranks first each minute changed the
+        bowl 94 times in seven and a half hours, half of those visits lasting a
+        minute or two - a fade of the whole world, twice a minute.
+
+        This is the guard on that. An hour is 20 changes if the bowl is picking
+        greedily and about 7 if the dwell is holding."""
+        src = CaptureSource(MERGED, "20260920T013000Z")
+        frames = [f for f in src.frames() if "20260920T0030" <= f <= "20260920T0130"]
+        self.assertGreater(len(frames), 30, "an hour of frames to walk")
+
+        focus, changes_seen = "", 0
+        for stamp in frames:
+            now = handlers.redzone(CaptureSource(MERGED, stamp))["focus"]
+            if now != focus:
+                changes_seen += 1
+            focus = now
+        self.assertLessEqual(changes_seen, 12,
+                             f"the bowl changed game {changes_seen} times in an hour")
+        self.assertGreater(changes_seen, 0, "and it did follow the Saturday")
+
+    @unittest.skipUnless((MERGED / "scoreboard").is_dir(), "merged capture not present")
+    def test_the_bowl_is_never_sent_to_a_game_this_source_cannot_draw(self):
+        """19 September kept the live snapshots of six games and not the other
+        sixty-eight, by the sampling rule. ECU at Old Dominion ranked first at
+        half past midnight and the stadium opened on a black field, because the
+        ranking was asked which game deserved the bowl and never asked whether
+        it could be drawn."""
+        for stamp in ("20260920T003000Z", "20260920T013000Z", "20260920T020000Z"):
+            out = handlers.redzone(CaptureSource(MERGED, stamp))
+            focus = next((g for g in out["games"] if g["event"] == out["focus"]), None)
+            self.assertIsNotNone(focus, f"{stamp}: the focus is on the slate")
+            self.assertEqual(focus["detail"], "available",
+                             f"{stamp}: the bowl was sent to {focus['event']}, which has no plays here")
+
+    @unittest.skipUnless((MERGED / "scoreboard").is_dir(), "merged capture not present")
+    def test_a_game_that_cannot_be_drawn_is_still_listed_and_still_says_so(self):
+        """It is not hidden - it is part of the night, and its score belongs on
+        the panel. It is marked, so the client can refuse to open it."""
+        out = handlers.redzone(CaptureSource(MERGED, "20260920T013000Z"))
+        shut = [g for g in out["games"] if g["detail"] != "available"]
+        self.assertTrue(shut, "a sampled capture has games it cannot draw")
+        self.assertTrue(all(g["detail"] in ("afterFinal", "unavailable") for g in shut))
+
+    @unittest.skipUnless((MERGED / "scoreboard").is_dir(), "merged capture not present")
+    def test_every_live_game_is_ranked_and_the_ball_is_placed(self):
+        out = handlers.redzone(CaptureSource(MERGED, "20260920T013000Z"))
+        live = [g for g in out["games"] if g["state"] == "in"]
+        self.assertGreater(len(live), 20, "a Saturday night has plenty running")
+        self.assertEqual(out["counts"]["live"], len(live))
+        self.assertEqual([g["urgency"] for g in live], sorted((g["urgency"] for g in live), reverse=True))
+        with_ball = [g for g in live if g["home"]["hasBall"] or g["away"]["hasBall"]]
+        self.assertTrue(with_ball, "somebody has the ball in a live game")
+        for g in with_ball:
+            self.assertFalse(g["home"]["hasBall"] and g["away"]["hasBall"],
+                             "both sides cannot have the ball")

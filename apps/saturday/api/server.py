@@ -42,6 +42,7 @@ ROUTES = [
     (re.compile(r"^/api/slate$"), lambda src, m, q: handlers.slate(src, _q(q, "at")), "live"),
     (re.compile(r"^/api/game/(\d+)$"), lambda src, m, q: handlers.game(src, m.group(1), _q(q, "at")), "live"),
     (re.compile(r"^/api/scene/(\d+)$"), lambda src, m, q: handlers.scene(src, m.group(1), _q(q, "at")), "live"),
+    (re.compile(r"^/api/redzone$"), lambda src, m, q: handlers.redzone(src, _q(q, "at")), "live"),
     (re.compile(r"^/api/teams$"), lambda src, m, q: handlers.teams(src), "derived"),
     (re.compile(r"^/api/replay$"), lambda src, m, q: handlers.replay(src), "derived"),
     (re.compile(r"^/api/health$"), _health, "private"),

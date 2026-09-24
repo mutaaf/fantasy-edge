@@ -44,6 +44,11 @@ QUIET = 25.0
 # The shortest a game may hold the screen, in seconds. A viewer needs long
 # enough to read the score and see a snap; below about six seconds a channel
 # reads as a slideshow rather than as coverage.
+#
+# This is the *page's* figure, and it is the default because the page is what
+# `choose` was written for. A surface that costs more to leave passes its own:
+# the stadium fades the whole world out and back to change games, and a wearer
+# standing in a bowl cannot be moved at the rate a tile on a grid can.
 MIN_DWELL = 6.0
 
 # How long a score keeps its game on screen afterwards, in seconds. Long
@@ -233,13 +238,22 @@ def rank(games: list[dict], *, scored: dict | None = None,
     return out
 
 
-def choose(ranked: list[dict], current: str = "", *, held: float = 0.0) -> str:
+def choose(ranked: list[dict], current: str = "", *, held: float = 0.0,
+           dwell: float = MIN_DWELL, margin: float = SWITCH_MARGIN,
+           quiet: float = QUIET) -> str:
     """Which game the channel should be on, given the one it is already on.
 
     Hysteresis rather than "highest wins", because two red-zone drives at once
     would otherwise swap the screen every poll and show neither. The incumbent
-    keeps the screen until it has had `MIN_DWELL` seconds *and* a challenger is
+    keeps the screen until it has had `dwell` seconds *and* a challenger is
     clearly better - or until it has gone quiet enough that anything beats it.
+
+    `dwell`, `margin` and `quiet` are the caller's, because they belong to the surface
+    and to the scale of the numbers, not to this arithmetic. A page changing a
+    tile and a stadium fading the whole world out are not the same act, and an
+    urgency out of `urgency` and one out of `cfb.leverage` are not the same
+    units. The defaults are the red-zone page's, which is what this was
+    written for.
     """
     # Only a game in progress may hold the screen. Ranking alone would put a
     # final on it before kickoff, since everything is zero and something has
@@ -258,12 +272,12 @@ def choose(ranked: list[dict], current: str = "", *, held: float = 0.0) -> str:
         return best.get("event") or ""
     if best.get("event") == current:
         return current
-    if held < MIN_DWELL:
+    if held < dwell:
         return current
 
     gap = best["urgency"] - incumbent["urgency"]
-    margin = SWITCH_MARGIN if incumbent["urgency"] >= QUIET else SWITCH_MARGIN / 2
-    return best.get("event") if gap >= margin else current
+    need = margin if incumbent["urgency"] >= quiet else margin / 2
+    return best.get("event") if gap >= need else current
 
 
 def slate(games: dict, *, colors=None) -> list[dict]:

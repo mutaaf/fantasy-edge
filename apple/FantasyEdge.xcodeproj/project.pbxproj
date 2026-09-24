@@ -36,7 +36,6 @@
 		DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEBA4BC9684357AC9155984 /* PlayersView.swift */; };
 		F8ED720F0D5071B5620CACA3 /* Projections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38E3466D5422E0389280CFCA /* Projections.swift */; };
 		F96424E8A9B7076E203F9B63 /* ProjectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */; };
-		74EC3BB0A11FB5A8C265E13E /* RedZoneChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */; };
 		8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EACBD5850D41E9E135D82C /* Spotlight.swift */; };
 		E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C27A2460C89A62A912EAAF /* StadiumHost.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
@@ -74,7 +73,6 @@
 		4FEBA4BC9684357AC9155984 /* PlayersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersView.swift; sourceTree = "<group>"; };
 		38E3466D5422E0389280CFCA /* Projections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Projections.swift; sourceTree = "<group>"; };
 		EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectionsView.swift; sourceTree = "<group>"; };
-		5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedZoneChannel.swift; sourceTree = "<group>"; };
 		C0EACBD5850D41E9E135D82C /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		29C27A2460C89A62A912EAAF /* StadiumHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumHost.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -133,7 +131,6 @@
 				4FEBA4BC9684357AC9155984 /* PlayersView.swift */,
 				38E3466D5422E0389280CFCA /* Projections.swift */,
 				EBF4CEF26D84F3A99B039723 /* ProjectionsView.swift */,
-				5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */,
 				C0EACBD5850D41E9E135D82C /* Spotlight.swift */,
 				29C27A2460C89A62A912EAAF /* StadiumHost.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
@@ -259,7 +256,6 @@
 				DD1163A7D787CDF26931B2C8 /* PlayersView.swift in Sources */,
 				F8ED720F0D5071B5620CACA3 /* Projections.swift in Sources */,
 				F96424E8A9B7076E203F9B63 /* ProjectionsView.swift in Sources */,
-				74EC3BB0A11FB5A8C265E13E /* RedZoneChannel.swift in Sources */,
 				8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */,
 				E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,

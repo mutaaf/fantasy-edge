@@ -1,4 +1,5 @@
 import Foundation
+import simd
 
 /// The fixed look-dev shots, by name: `-shot crowd-closeup` on the launch
 /// arguments opens the app straight into that view. `tools/lookdev.py` shoots
@@ -55,6 +56,20 @@ public enum StadiumShots {
         case "-stadiumPitch": return String(shot.pitch)
         default: return nil
         }
+    }
+
+    /// (yaw, pitch) from `-stadiumLook` and `-stadiumPitch`, for turning the
+    /// wearer's head in a screenshot - the panels sit at either hand, so a
+    /// frame shot straight ahead never contains one. Debug builds only, and
+    /// it lives here rather than in either app because a panel photographed
+    /// from a different angle in each product is not the same panel.
+    public static var look: SIMD2<Float> {
+        #if DEBUG
+        return SIMD2(Float(argument("-stadiumLook") ?? "") ?? 0,
+                     Float(argument("-stadiumPitch") ?? "") ?? 0)
+        #else
+        return .zero
+        #endif
     }
 
     /// Whether the launch should walk into the stadium.

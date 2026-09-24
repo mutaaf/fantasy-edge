@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "redzone.schema.json",
+  "title": "GET /api/redzone",
+  "description": "Every game ranked for attention, and the one the stadium should be standing in. The choice is made here, not on a client, so two headsets in a room are in the same game.",
+  "type": "object",
+  "required": [
+    "version",
+    "league",
+    "asOf",
+    "source",
+    "replay",
+    "clock",
+    "focus",
+    "counts",
+    "dwellSeconds",
+    "caveat",
+    "games"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "league": {
+      "const": "college-football"
+    },
+    "asOf": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "replay": {
+      "type": "boolean"
+    },
+    "clock": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "replay.schema.json#/$defs/frame"
+        }
+      ],
+      "description": "Where a replay stands in its recorded night; null for a live source."
+    },
+    "focus": {
+      "type": "string",
+      "description": "The event the bowl should show, or \"\" when nothing is live. A pure function of the moment: walked forward over the last half hour of frames, so it does not depend on when a client joined."
+    },
+    "dwellSeconds": {
+      "type": "number",
+      "description": "The shortest time this focus may hold the bowl. A client may show it; it must never enforce it, because two clients enforcing it separately would disagree."
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "total",
+        "live",
+        "redZone",
+        "final"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "live": {
+          "type": "integer"
+        },
+        "redZone": {
+          "type": "integer"
+        },
+        "final": {
+          "type": "integer"
+        }
+      }
+    },
+    "caveat": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The ranking is hand-weighted. Every heuristic carries its caveat."
+    },
+    "games": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "event",
+          "state",
+          "label",
+          "kickoff",
+          "league",
+          "situation",
+          "redZone",
+          "urgency",
+          "reason",
+          "lastPlay",
+          "home",
+          "away",
+          "detail"
+        ],
+        "properties": {
+          "event": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "pre",
+              "in",
+              "post"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "kickoff": {
+            "type": "string"
+          },
+          "league": {
+            "const": "college-football"
+          },
+          "situation": {
+            "type": "string"
+          },
+          "redZone": {
+            "type": "boolean"
+          },
+          "urgency": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "lastPlay": {
+            "type": "string"
+          },
+          "home": {
+            "$ref": "#/$defs/side"
+          },
+          "away": {
+            "$ref": "#/$defs/side"
+          },
+          "detail": {
+            "enum": [
+              "available",
+              "afterFinal",
+              "unavailable"
+            ],
+            "description": "Whether the bowl can be stood in for this game from this source. A panel must not offer a game that opens onto nothing."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "side": {
+      "type": "object",
+      "required": [
+        "abbr",
+        "score",
+        "color",
+        "hasBall"
+      ],
+      "properties": {
+        "abbr": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer"
+        },
+        "color": {
+          "type": "string"
+        },
+        "hasBall": {
+          "type": "boolean"
+        },
+        "rank": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 25,
+          "description": "The AP poll, when the club is in it. Absent from the poll is not the same as 26th."
+        }
+      }
+    }
+  }
+}

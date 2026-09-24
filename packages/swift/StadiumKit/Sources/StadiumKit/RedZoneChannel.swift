@@ -3,10 +3,13 @@ import Observation
 
 /// The red-zone channel: which live game the stadium is showing, and why.
 ///
-/// The ranking is not here. `/api/redzone` decides it - `fantasyedge/whip.py`
-/// scores every game on proximity, down, consequence and aftermath, and holds
-/// the choice steady with hysteresis so two drives in the red zone at once do
-/// not trade the screen every poll. This asks for that answer and follows it.
+/// The ranking is not here. `/api/redzone` decides it, in whichever code of
+/// football the server is serving - `fantasyedge/whip.py` scores a Sunday on
+/// proximity, down, consequence and aftermath; `cfb/leverage.py` scores a
+/// Saturday on closeness, the clock, the AP poll and an upset in the making -
+/// and both hold the choice steady with the same hysteresis, so two drives in
+/// the red zone at once do not trade the bowl every poll. This asks for that
+/// answer and follows it.
 ///
 /// Three reasons the decision stays on the server rather than being ported:
 /// the arithmetic exists once, in the language the recording harness can test
@@ -25,6 +28,12 @@ public final class RedZoneChannel {
         public let score: Double
         public let color: String
         public let hasBall: Bool
+        /// Where the polls had this club, when the code of football has polls.
+        public let rank: Int?
+
+        /// "#16 SMU" on a Saturday, "SMU" without a poll behind it, and always
+        /// "DAL" on a Sunday.
+        public var badge: String { rank.map { "#\($0) \(abbr)" } ?? abbr }
     }
 
     public struct Game: Decodable, Equatable, Sendable, Identifiable {
@@ -39,9 +48,21 @@ public final class RedZoneChannel {
         public let reason: String
         public let home: Side
         public let away: Side
+        /// What happened last, as the server cleaned it. Empty where the feed
+        /// has not said.
+        public let lastPlay: String?
+        /// Whether the bowl can be stood in for this game from this source:
+        /// "available", "afterFinal", or "unavailable". Absent from a server
+        /// that can always answer, which is the same as available.
+        public let detail: String?
+
+        /// Whether walking into this game would land somewhere. A recorded
+        /// night that sampled its snapshots has games it can list and cannot
+        /// draw, and offering one of those opens onto a black stadium.
+        public var openable: Bool { (detail ?? "available") == "available" }
         public var id: String { event }
         public var live: Bool { state == "in" }
-        public var line: String { "\(away.abbr) @ \(home.abbr)" }
+        public var line: String { "\(away.badge) @ \(home.badge)" }
         public var score: String { "\(Int(away.score))–\(Int(home.score))" }
 
         /// Kickoff as a clock time in the wearer's own zone. ESPN sends an
@@ -113,11 +134,24 @@ public final class RedZoneChannel {
     public var reason: String { game(showing)?.reason ?? "" }
 
     @ObservationIgnored private let base: () -> String
+    @ObservationIgnored private var query: () -> String
     @ObservationIgnored private var poll: Task<Void, Never>?
     @ObservationIgnored private var watchers = 0
 
-    public init(base: @escaping () -> String) {
+    /// `query` is appended to the request, for a server being replayed at a
+    /// moment ("?at=..."). It is asked each poll rather than captured, because
+    /// a wearer scrubbing a recorded night moves it under us.
+    public init(base: @escaping () -> String, query: @escaping () -> String = { "" }) {
         self.base = base
+        self.query = query
+    }
+
+    /// Ask about this moment from now on. A replayed night is served frame by
+    /// frame, and a channel asking about "now" while the wall is parked on
+    /// 11:42 PM would put the bowl in a different half of the evening from
+    /// everything else on screen.
+    public func ask(at moment: @escaping () -> String?) {
+        query = { moment().map { "?at=\($0)" } ?? "" }
     }
 
     /// The live tier caches for two seconds; asking faster buys nothing and
@@ -166,7 +200,7 @@ public final class RedZoneChannel {
     }
 
     public func refresh() async {
-        guard let url = URL(string: base() + "/api/redzone") else { return }
+        guard let url = URL(string: base() + "/api/redzone" + query()) else { return }
         do {
             var request = URLRequest(url: url)
             request.cachePolicy = .reloadIgnoringLocalCacheData

@@ -13,6 +13,11 @@ struct SaturdayApp: App {
     // rather than starting a second poll of the same game.
     @State private var scene = SceneFeed(base: { "http://" + (UserDefaults.standard.string(forKey: "saturday.host") ?? "127.0.0.1:8780") })
     @State private var passage = StadiumPassage(frontDoor: .id("wall"))
+    // The red-zone channel, shared with fantasy-edge: it asks the server which
+    // game deserves the bowl and follows that answer. The moment comes from
+    // the store so a replayed night is asked about the frame the wall is on.
+    @State private var channel = RedZoneChannel(
+        base: { "http://" + (UserDefaults.standard.string(forKey: SaturdayStore.hostKey) ?? "127.0.0.1:8780") })
     @State private var immersion: StadiumImmersion = .dial
     #endif
 
@@ -57,6 +62,7 @@ struct SaturdayApp: App {
         ImmersiveSpace(id: "stadium") {
             StadiumSpace(immersion: $immersion)
                 .environment(store).environment(scene).environment(passage)
+                .environment(channel)
         }
         .immersionStyle(selection: style, in: Self.dial, .full)
         #endif
