@@ -166,25 +166,6 @@ struct StadiumHostSpace: View {
             }
             #endif
         }
-        .task {
-            #if DEBUG
-            // `-stadiumWhip a,b,c [-stadiumWhipEvery 8]`: walk the stadium
-            // between these games on a timer, so a changeover can be measured
-            // and captured without waiting for two real drives to reach the
-            // red zone at the same time. The channel's own choosing is tested
-            // on the server; this exercises the half that lives here.
-            guard let list = StadiumHost.argument("-stadiumWhip") else { return }
-            let events = list.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-            guard events.count > 1 else { return }
-            let every = Double(StadiumHost.argument("-stadiumWhipEvery") ?? "") ?? 8
-            var i = 0
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(every))
-                i = (i + 1) % events.count
-                feed.target = .live(event: events[i])
-            }
-            #endif
-        }
         .onDisappear {
             board.stop()
             channel.stop()
