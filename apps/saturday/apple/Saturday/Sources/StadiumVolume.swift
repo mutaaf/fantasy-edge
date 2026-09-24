@@ -14,27 +14,29 @@ import SwiftUI
 /// the iPad draw the 2D field they always did.
 struct StadiumVolume: View {
     @Environment(SaturdayStore.self) private var store
+    @Environment(SceneFeed.self) private var feed
+    @Environment(StadiumPassage.self) private var passage
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
     let gameID: String
-    var onEnterStadium: () -> Void = {}
-
-    @State private var feed: SceneFeed?
 
     var body: some View {
-        Group {
-            if let feed {
-                TabletopView(feed: feed, enterStadium: onEnterStadium)
-            } else {
-                ProgressView("Setting the table…")
-            }
+        TabletopView(feed: feed) {
+            // The dial, not a blackout: the Crown takes you the rest of the
+            // way in, and the passage puts the wall and this table away until
+            // you come back out.
+            let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+            Task { @MainActor in await passage.enter(openSpace: open, dismissWindow: dismiss) }
         }
         .onAppear {
-            // The host is read on every request, so changing it in Settings
-            // reaches the scene without rebuilding the feed.
-            let made = feed ?? SceneFeed(base: { "http://\(store.host)" })
-            made.target = .live(event: gameID)
-            feed = made
+            feed.target = .live(event: gameID)
+            passage.appeared(.init(id: "tabletop", value: gameID))
+            if passage.appearedInside(.init(id: "tabletop", value: gameID)) {
+                dismissWindow(id: "tabletop", value: gameID)
+                dismissWindow(id: "tabletop")
+            }
         }
-        .onDisappear { feed?.target = nil }
+        .onDisappear { passage.disappeared(.init(id: "tabletop", value: gameID)) }
         .navigationTitle(title)
     }
 

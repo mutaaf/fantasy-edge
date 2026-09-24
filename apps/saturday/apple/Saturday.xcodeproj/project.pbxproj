@@ -17,6 +17,7 @@
 		15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA9051C81335C8D903D40AE /* SaturdayWall.swift */; };
 		13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */; };
 		B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 936D5053E2A50560B42233F7 /* Spotlight.swift */; };
+		DFA30932DDF6145B82EFCB7F /* StadiumSpace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A614E27A9DADEDAE8C8B4B /* StadiumSpace.swift */; };
 		CB6BE1D2640E2D67869027A3 /* StadiumVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */; };
 		C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D4FB59DE7619B0CE12329B /* Tokens.swift */; };
 		E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */; };
@@ -38,6 +39,7 @@
 		0CA9051C81335C8D903D40AE /* SaturdayWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SaturdayWall.swift"; path = "Saturday/Sources/SaturdayWall.swift"; sourceTree = SOURCE_ROOT; };
 		8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SharedRendererPlaceholder.swift"; path = "Saturday/Sources/SharedRendererPlaceholder.swift"; sourceTree = SOURCE_ROOT; };
 		936D5053E2A50560B42233F7 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Spotlight.swift"; path = "Saturday/Sources/Spotlight.swift"; sourceTree = SOURCE_ROOT; };
+		C4A614E27A9DADEDAE8C8B4B /* StadiumSpace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StadiumSpace.swift"; path = "Saturday/Sources/StadiumSpace.swift"; sourceTree = SOURCE_ROOT; };
 		E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "StadiumVolume.swift"; path = "Saturday/Sources/StadiumVolume.swift"; sourceTree = SOURCE_ROOT; };
 		12D4FB59DE7619B0CE12329B /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Tokens.swift"; path = "Saturday/Sources/Tokens.swift"; sourceTree = SOURCE_ROOT; };
 		7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "WallChrome.swift"; path = "Saturday/Sources/WallChrome.swift"; sourceTree = SOURCE_ROOT; };
@@ -81,6 +83,7 @@
 				0CA9051C81335C8D903D40AE /* SaturdayWall.swift */,
 				8B8BCB3B21EA6A71A2F6E009 /* SharedRendererPlaceholder.swift */,
 				936D5053E2A50560B42233F7 /* Spotlight.swift */,
+				C4A614E27A9DADEDAE8C8B4B /* StadiumSpace.swift */,
 				E29DCFB59F4D508FE766AED0 /* StadiumVolume.swift */,
 				12D4FB59DE7619B0CE12329B /* Tokens.swift */,
 				7BE9B9F7BE89F883C070BD8C /* WallChrome.swift */,
@@ -201,6 +204,7 @@
 				15B36DBF31CAEF97F2F1178F /* SaturdayWall.swift in Sources */,
 				13A6AF2B4456E2E27ED1DFED /* SharedRendererPlaceholder.swift in Sources */,
 				B7E7F9C3CAEF4B5692C0CF19 /* Spotlight.swift in Sources */,
+				DFA30932DDF6145B82EFCB7F /* StadiumSpace.swift in Sources */,
 				CB6BE1D2640E2D67869027A3 /* StadiumVolume.swift in Sources */,
 				C4331C43512A7D556CA0BEFD /* Tokens.swift in Sources */,
 				E6D779AFAD5F870B954427FE /* WallChrome.swift in Sources */,

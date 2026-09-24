@@ -11,7 +11,7 @@ struct FantasyEdgeApp: App {
     /// channel's memory of what it is showing survives leaving the space.
     @State private var channel: RedZoneChannel
     /// What was open before the stadium, so leaving it restores exactly that.
-    @State private var passage = StadiumPassage()
+    @State private var passage = StadiumPassage(frontDoor: .id("board"))
 
     init() {
         let b = Board()
@@ -27,7 +27,7 @@ struct FantasyEdgeApp: App {
             // them is invisible to them (the first launch trapped on exactly
             // that).
             CommandView()
-                .tracksWindow(.board)
+                .tracksWindow(.id("board"))
                 .modifier(StadiumLaunchArguments())
                 .environment(board).environment(scene).environment(passage).environment(channel)
         }

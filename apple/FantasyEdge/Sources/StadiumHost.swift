@@ -49,7 +49,7 @@ struct StadiumLaunchArguments: ViewModifier {
             let open = openImmersiveSpace, dismiss = dismissWindow
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
-                await passage.enter(style: style, board: board, openSpace: open, dismissWindow: dismiss)
+                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = style }
             }
         }
     }
@@ -76,25 +76,25 @@ struct TabletopHost: View {
             let open = openImmersiveSpace, dismiss = dismissWindow
             // The dial, not a blackout: the Crown takes you the rest of the way.
             Task { @MainActor in
-                await passage.enter(style: .progressive, board: board, openSpace: open, dismissWindow: dismiss)
+                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = .progressive }
             }
         }
         .onAppear {
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
-            passage.appeared(.tabletop(value))
-            if passage.appearedInside(.tabletop(value)) {
+            passage.appeared(.init(id: "tabletop", value: value))
+            if passage.appearedInside(.init(id: "tabletop", value: value)) {
                 dismissWindow(id: "tabletop", value: value)
                 dismissWindow(id: "tabletop")
             }
         }
-        .onDisappear { passage.disappeared(.tabletop(value)) }
+        .onDisappear { passage.disappeared(.init(id: "tabletop", value: value)) }
         // The launch arguments run from whichever window the system restores
         // first. On a relaunch visionOS can bring back only the tabletop the
         // last session left open, and with the hook on the board alone the
         // stadium never opened (once per process either way).
         .modifier(StadiumLaunchArguments())
         .onChange(of: value) { old, new in
-            passage.renamed(from: .tabletop(old), to: .tabletop(new))
+            passage.renamed(from: .init(id: "tabletop", value: old), to: .init(id: "tabletop", value: new))
             feed.target = new == StadiumHost.replayWindow ? .replay : .live(event: new)
         }
     }

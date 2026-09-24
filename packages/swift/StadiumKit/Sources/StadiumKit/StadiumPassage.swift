@@ -2,9 +2,9 @@ import Observation
 import OSLog
 import SwiftUI
 
-private let log = Logger(subsystem: "com.mutaaf.fantasyedge", category: "stadium")
+private let log = Logger(subsystem: "StadiumKit", category: "stadium")
 
-/// The walk into the stadium and back out again.
+/// The walk into the stadium and back out again, for any app that has one.
 ///
 /// Full immersion hides other apps, not this one: the first simulator capture
 /// of the stadium had the tabletop volume sitting in the middle of the bowl and
@@ -17,29 +17,51 @@ private let log = Logger(subsystem: "com.mutaaf.fantasyedge", category: "stadium
 /// own appearance. While a passage is under way the disappearances it causes
 /// are not recorded; otherwise closing the windows would erase the list of
 /// windows to bring back.
-@MainActor
-@Observable
-final class StadiumPassage {
-    enum Window: Hashable {
-        case board
-        case tabletop(String)
+/// A window this app can open, named the way SwiftUI names it: an id, and the
+/// value for a `WindowGroup(for:)`.
+public struct StadiumWindow: Hashable, Sendable {
+    public let id: String
+    public let value: String?
+
+    public init(id: String, value: String? = nil) {
+        self.id = id
+        self.value = value
     }
 
-    private(set) var open: Set<Window> = []
-    private(set) var inStadium = false
+    public static func id(_ id: String) -> StadiumWindow { .init(id: id) }
+}
+
+@MainActor
+@Observable
+public final class StadiumPassage {
+    public typealias Window = StadiumWindow
+
+    public private(set) var open: Set<Window> = []
+    public private(set) var inStadium = false
+
+    /// The space to open, and what to bring back when the wearer walked
+    /// straight into the stadium with nothing behind them - the app's front
+    /// door, which is its board or its wall.
+    private let spaceID: String
+    private let frontDoor: Window
+
+    public init(spaceID: String = "stadium", frontDoor: Window) {
+        self.spaceID = spaceID
+        self.frontDoor = frontDoor
+    }
 
     @ObservationIgnored private var saved: Set<Window> = []
     @ObservationIgnored private var moving = false
     @ObservationIgnored private var leaving = false
 
-    func appeared(_ w: Window) { open.insert(w) }
+    public func appeared(_ w: Window) { open.insert(w) }
 
     /// A window that opens while the stadium is up belongs behind it, not in
     /// the stands. Under load the tabletop the launch opened could finish
     /// appearing after `enter` had already written down what to close, and it
     /// sat in the middle of the bowl, win-probability labels and all. Returns
     /// true when the window should close itself; it comes back on the way out.
-    func appearedInside(_ w: Window) -> Bool {
+    public func appearedInside(_ w: Window) -> Bool {
         guard inStadium else { return false }
         saved.insert(w)
         moving = true
@@ -49,12 +71,12 @@ final class StadiumPassage {
         return true
     }
 
-    func disappeared(_ w: Window) {
+    public func disappeared(_ w: Window) {
         guard !moving else { return }
         open.remove(w)
     }
 
-    func renamed(from old: Window, to new: Window) {
+    public func renamed(from old: Window, to new: Window) {
         open.remove(old)
         open.insert(new)
     }
@@ -64,12 +86,14 @@ final class StadiumPassage {
     /// Tabletops are closed before the board because the stadium is often
     /// entered from the board's own launch task, and closing the board ends
     /// that task; whatever comes after it would never run.
-    func enter(style: RoomStyle, board: Board,
-               openSpace: OpenImmersiveSpaceAction, dismissWindow: DismissWindowAction) async {
+    public func enter(openSpace: OpenImmersiveSpaceAction, dismissWindow: DismissWindowAction,
+                      before: () -> Void = {}) async {
         guard !inStadium else { return }
-        board.stadiumStyle = style
-        let before = open
-        switch await openSpace(id: "stadium") {
+        // The app's own business before the walk - which immersion style the
+        // dial opens at, say - done while nothing has moved yet.
+        before()
+        let opened = open
+        switch await openSpace(id: spaceID) {
         case .opened:
             break
         default:
@@ -77,22 +101,24 @@ final class StadiumPassage {
             // Nothing was closed, so nothing needs restoring.
             return
         }
-        saved = before
+        saved = opened
         inStadium = true
         moving = true
-        log.info("entered stadium; closing \(before.count) window(s)")
-        for case .tabletop(let value) in before { dismissWindow(id: "tabletop", value: value) }
-        // A tabletop visionOS restored on launch carries no value (the host
-        // shows it as the replay), so dismissing by value misses it and it
-        // stayed in the middle of the bowl. Dismiss by id as well.
-        if before.contains(where: { if case .tabletop = $0 { true } else { false } }) { dismissWindow(id: "tabletop") }
-        if before.contains(.board) { dismissWindow(id: "board") }
+        log.info("entered stadium; closing \(opened.count) window(s)")
+        for w in opened where w.value != nil {
+            dismissWindow(id: w.id, value: w.value!)
+            // A window visionOS restored on launch carries no value, so
+            // dismissing by value misses it and it stayed in the middle of the
+            // bowl. Dismiss by id as well.
+            dismissWindow(id: w.id)
+        }
+        for w in opened where w.value == nil { dismissWindow(id: w.id) }
         moving = false
     }
 
     /// Bring back what was open, then close the space. Windows first: an app
     /// whose last scene closes is an app with nothing on screen.
-    func leave(openWindow: OpenWindowAction, dismissSpace: DismissImmersiveSpaceAction) async {
+    public func leave(openWindow: OpenWindowAction, dismissSpace: DismissImmersiveSpaceAction) async {
         guard inStadium else { log.info("leave ignored: not in stadium"); return }
         leaving = true
         restore(openWindow)
@@ -104,7 +130,7 @@ final class StadiumPassage {
 
     /// The space went away without `leave` - the Digital Crown press, or the
     /// system closing it. The windows still have to come back.
-    func spaceDisappeared(openWindow: OpenWindowAction) {
+    public func spaceDisappeared(openWindow: OpenWindowAction) {
         guard inStadium, !leaving else { return }
         restore(openWindow)
     }
@@ -113,31 +139,33 @@ final class StadiumPassage {
         let back = saved
         saved = []
         inStadium = false
-        // Launched straight into the stadium with nothing behind it: the board
-        // is the app's front door, so that is what comes back.
-        if back.isEmpty { openWindow(id: "board"); return }
-        if back.contains(.board) { openWindow(id: "board") }
-        for case .tabletop(let value) in back { openWindow(id: "tabletop", value: value) }
+        // Launched straight into the stadium with nothing behind it: the front
+        // door is what comes back.
+        if back.isEmpty { openWindow(id: frontDoor.id); return }
+        for w in back where w.value == nil { openWindow(id: w.id) }
+        for w in back where w.value != nil { openWindow(id: w.id, value: w.value!) }
     }
 }
 
 /// Reports a window's presence to the passage.
-struct TracksWindow: ViewModifier {
+public struct TracksWindow: ViewModifier {
     let window: StadiumPassage.Window
     @Environment(StadiumPassage.self) private var passage
 
     @Environment(\.dismissWindow) private var dismissWindow
 
-    func body(content: Content) -> some View {
+    public func body(content: Content) -> some View {
         content
             .onAppear {
                 passage.appeared(window)
-                if passage.appearedInside(window), case .board = window { dismissWindow(id: "board") }
+                // A window that opened inside the stadium closes itself and
+                // comes back on the way out.
+                if passage.appearedInside(window), window.value == nil { dismissWindow(id: window.id) }
             }
             .onDisappear { passage.disappeared(window) }
     }
 }
 
 extension View {
-    func tracksWindow(_ w: StadiumPassage.Window) -> some View { modifier(TracksWindow(window: w)) }
+    public func tracksWindow(_ w: StadiumPassage.Window) -> some View { modifier(TracksWindow(window: w)) }
 }

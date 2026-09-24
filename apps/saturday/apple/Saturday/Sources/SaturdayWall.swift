@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(visionOS)
+import StadiumKit
+#endif
 
 enum Route: Hashable {
     case game(String)
@@ -27,6 +30,9 @@ struct SaturdayWall: View {
     @Environment(SaturdayStore.self) private var store
     #if os(visionOS)
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(StadiumPassage.self) private var passage
     #endif
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var filter: WallFilter = .all
@@ -86,6 +92,18 @@ struct SaturdayWall: View {
             if let id = defaults.string(forKey: "openGame"), path.isEmpty { path.append(Route.game(id)) }
             // `-openTabletop <event id>` puts one game straight on the table.
             if let id = defaults.string(forKey: "openTabletop"), path.isEmpty { openTabletop(id) }
+            #if os(visionOS)
+            // `-openStadium <event id>` walks straight in: the table first,
+            // because that is the door, then the space.
+            if let id = defaults.string(forKey: "openStadium") {
+                openWindow(id: "tabletop", value: id)
+                let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(3))
+                    await passage.enter(openSpace: open, dismissWindow: dismiss)
+                }
+            }
+            #endif
         }
         .onDisappear { store.unwatch() }
     }

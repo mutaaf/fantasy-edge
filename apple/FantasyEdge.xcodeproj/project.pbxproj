@@ -39,7 +39,6 @@
 		74EC3BB0A11FB5A8C265E13E /* RedZoneChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */; };
 		8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0EACBD5850D41E9E135D82C /* Spotlight.swift */; };
 		E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C27A2460C89A62A912EAAF /* StadiumHost.swift */; };
-		6ED38DCA7612403AA4FF5F3D /* StadiumPassage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
 		DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B52FBF15637237B331C3961 /* Watch.swift */; };
 /* End PBXBuildFile section */
@@ -78,7 +77,6 @@
 		5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedZoneChannel.swift; sourceTree = "<group>"; };
 		C0EACBD5850D41E9E135D82C /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		29C27A2460C89A62A912EAAF /* StadiumHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumHost.swift; sourceTree = "<group>"; };
-		1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumPassage.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		6B52FBF15637237B331C3961 /* Watch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -138,7 +136,6 @@
 				5B2CEC96E3765109B4BC5E23 /* RedZoneChannel.swift */,
 				C0EACBD5850D41E9E135D82C /* Spotlight.swift */,
 				29C27A2460C89A62A912EAAF /* StadiumHost.swift */,
-				1AB3B6954F6E76C3D2004556 /* StadiumPassage.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
 				6B52FBF15637237B331C3961 /* Watch.swift */,
 			);
@@ -265,7 +262,6 @@
 				74EC3BB0A11FB5A8C265E13E /* RedZoneChannel.swift in Sources */,
 				8590ABF7DB988B9891EE2C2A /* Spotlight.swift in Sources */,
 				E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */,
-				6ED38DCA7612403AA4FF5F3D /* StadiumPassage.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
 				DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */,
 			);
