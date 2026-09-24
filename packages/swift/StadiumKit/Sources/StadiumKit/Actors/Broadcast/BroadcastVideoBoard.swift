@@ -111,8 +111,20 @@ final class BroadcastVideoBoard {
                 ctx.fill(rect)
                 UIColor(white: 0, alpha: 0.28).setFill()
                 ctx.fill(CGRect(x: rect.minX, y: rect.minY, width: rect.width * 0.42, height: rect.height))
-                centred(t.abbr, rounded(bugH * 0.34, .black), .white,
-                        in: CGRect(x: rect.minX, y: rect.minY, width: rect.width * 0.42, height: rect.height).insetBy(dx: pad * 0.6, dy: 0))
+                // A ranked club says so, the way a chyron does: the number
+                // small and above its own abbreviation, never instead of it.
+                let block = CGRect(x: rect.minX, y: rect.minY, width: rect.width * 0.42,
+                                   height: rect.height).insetBy(dx: pad * 0.6, dy: 0)
+                if let rank = t.rank {
+                    centred("#\(rank)", rounded(bugH * 0.17, .heavy), UIColor(white: 1, alpha: 0.85),
+                            in: CGRect(x: block.minX, y: block.minY + bugH * 0.08,
+                                       width: block.width, height: bugH * 0.22))
+                    centred(t.abbr, rounded(bugH * 0.30, .black), .white,
+                            in: CGRect(x: block.minX, y: block.minY + bugH * 0.28,
+                                       width: block.width, height: block.height - bugH * 0.30))
+                } else {
+                    centred(t.abbr, rounded(bugH * 0.34, .black), .white, in: block)
+                }
                 centred("\(Int(score))", rounded(bugH * 0.86, .black), .white,
                         in: CGRect(x: rect.minX + rect.width * 0.42, y: rect.minY, width: rect.width * 0.58, height: rect.height))
                 if possession {

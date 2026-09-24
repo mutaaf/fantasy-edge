@@ -90,6 +90,15 @@ enum BroadcastGraphics {
             let mid = UIFont.systemFont(ofSize: text * 0.82 * scale, weight: .heavy)
             var x: CGFloat = size.height * 0.5
             func chip(_ t: SceneSpec.Team, _ score: Double) {
+                // "#16" before the chip, small: a Saturday's ribbon says who is
+                // ranked, and the crawl has room for two characters more.
+                if let rank = t.rank {
+                    let r = NSAttributedString(string: "#\(rank)", attributes: [
+                        .font: UIFont.systemFont(ofSize: text * 0.5, weight: .heavy),
+                        .foregroundColor: ink.withAlphaComponent(0.85)])
+                    r.draw(at: CGPoint(x: x, y: (size.height - r.size().height) / 2))
+                    x += r.size().width + size.height * 0.16
+                }
                 let rect = CGRect(x: x, y: size.height * 0.1, width: size.height * 1.7, height: size.height * 0.8)
                 StadiumLook.color(t.chip).setFill()
                 UIBezierPath(roundedRect: rect, cornerRadius: size.height * 0.1).fill()

@@ -147,6 +147,10 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         public let chipText: String
         public let hatch: Bool
         public let score: Double
+        /// Where the polls had this club this week, when the code of football
+        /// has polls. Absent for an NFL club, and absent for a college club
+        /// outside the top 25 - which is not the same as being 26th.
+        public let rank: Int?
     }
 
     public struct Teams: Decodable, Equatable, Sendable {

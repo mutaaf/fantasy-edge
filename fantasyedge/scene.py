@@ -95,6 +95,51 @@ def _props(bench_from: float, bench_to: float, upright_above: float,
     }
 
 
+# ── the line the boards read ──
+
+
+def period_label(period: int, league: str) -> str:
+    """"4th", or "2OT" once regulation is over. Both codes play four quarters;
+    they differ in what an overtime is, not in how many precede it."""
+    if period > 4:
+        extra = period - 4
+        return "OT" if extra == 1 else f"{extra}OT"
+    return {1: "1st", 2: "2nd", 3: "3rd", 4: "4th"}.get(period, f"Q{period}")
+
+
+def status_label(game: dict, state: str, league: str) -> str:
+    """What the scoreboard says about the clock, when the payload does not say
+    it itself.
+
+    A gamecast that states a `label` has already decided this and wins. One
+    that does not is not a reason for the boards to go blank: every fact here
+    - the state, the period, the clock, how many overtimes - is stated
+    somewhere in the payload, and the league's rules say whether an overtime
+    has a clock to show. College overtime is untimed, so "2OT" is the whole
+    truth there; an NFL overtime reads "2:43 OT" like any other period.
+    """
+    st = game.get("status") or {}
+    period = int(game.get("period") or st.get("period") or 0)
+    if state == "post":
+        overtimes = int(st.get("overtimes") or max(0, period - 4))
+        if overtimes <= 0:
+            return "Final"
+        return "Final/OT" if overtimes == 1 else f"Final/{overtimes}OT"
+    if state != "in":
+        return "Pre-game"
+    if st.get("halftime"):
+        return "Halftime"
+    if st.get("delayed"):
+        return "Delay"
+    if period <= 0:
+        return ""
+    label = period_label(period, league)
+    clock = (game.get("clock") or st.get("clock") or "").strip()
+    if period > 4 and RULES.get(league, {}).get("overtimeSeconds") is None:
+        return label          # untimed: a college overtime has no clock to show
+    return f"{clock} {label}".strip()
+
+
 # ── field ──
 
 RULES = {
@@ -1509,11 +1554,19 @@ def team_chips(home: dict, away: dict, band: dict) -> tuple[dict, dict]:
         # `location` and `nickname` are the club's name in its two parts, which
         # the field letters its two end zones with. They are carried only when
         # the source states them; see club_lines on why they are never guessed.
-        return {"abbr": t.get("abbr", ""), "name": t.get("name", ""),
-                "location": t.get("location", ""), "nickname": t.get("nickname", ""),
-                "id": str(t.get("id", "")), "color": t.get("color", ""),
-                "chip": chip(t.get("color", ""), band), "chipText": band["text"],
-                "hatch": False, "score": t.get("score", 0)}
+        # `rank` is a college fact and is carried only when the payload states
+        # one: the AP top 25 is half of what a Saturday's boards say, and an
+        # NFL club has no such thing. A team outside the 25 states nothing,
+        # which is not the same as being 26th.
+        rank = t.get("rank")
+        out = {"abbr": t.get("abbr", ""), "name": t.get("name", ""),
+               "location": t.get("location", ""), "nickname": t.get("nickname", ""),
+               "id": str(t.get("id", "")), "color": t.get("color", ""),
+               "chip": chip(t.get("color", ""), band), "chipText": band["text"],
+               "hatch": False, "score": t.get("score", 0)}
+        if isinstance(rank, int) and 1 <= rank <= 25:
+            out["rank"] = rank
+        return out
     h, a = one(home), one(away)
     if clash(h["chip"], a["chip"], band):
         alt = chip(away.get("altColor") or "", band)
@@ -2480,7 +2533,7 @@ def build(game: dict, league: str | None = None, speed: float = 1.0,
                            if tint_side else None,
                            "dim": tokens["motion"]["sectionDim"]}
 
-    status = {"state": state, "label": game.get("label", ""),
+    status = {"state": state, "label": game.get("label") or status_label(game, state, league),
               "clock": game.get("clock", ""), "period": game.get("period", 0),
               "homeScore": home["score"], "awayScore": away["score"],
               "possession": holder, "down": sit.get("down"),

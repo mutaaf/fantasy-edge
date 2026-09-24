@@ -97,22 +97,72 @@ class Overtime(unittest.TestCase):
 
 
 class Ranks(unittest.TestCase):
-    """A college team carries a rank and an NFL team does not. The rank rides
-    on the slate and the detail, not in the scene: the stadium draws a field,
-    and #4 belongs on the board beside the name."""
+    """A college team carries a rank and an NFL team does not. The board beside
+    the name is the stadium's board, so the rank has to reach the scene to be
+    drawn on it - but only ever as the payload stated it. A team outside the 25
+    says nothing, which is not the same as claiming to be 26th."""
 
     def test_a_ranked_team_keeps_its_rank_through_the_gamecast(self):
         out = handlers.game(FixtureSource(FIX), OSU_TEX)
         self.assertEqual(out["away"]["rank"], 1)
         self.assertEqual(out["home"]["rank"], 4)
 
-    def test_the_scene_does_not_invent_a_rank(self):
-        """The stadium draws a field; #4 belongs on the board beside the name,
-        which is the app's business and comes from the slate."""
+    def test_the_rank_reaches_the_board_the_stadium_draws(self):
         teams = scene_of(OSU_TEX)["teams"]
+        self.assertEqual(teams["away"]["rank"], 1)
+        self.assertEqual(teams["home"]["rank"], 4)
+        self.assertEqual({teams["home"]["abbr"], teams["away"]["abbr"]}, {"OSU", "TEX"})
+
+    def test_the_scene_does_not_invent_a_rank(self):
+        """An unranked team and an NFL club are the same case: the key is
+        absent, and the renderer draws the chip without a number."""
+        teams = scene_of(WAKE_PUR)["teams"]
         self.assertNotIn("rank", teams["home"])
         self.assertNotIn("rank", teams["away"])
-        self.assertEqual({teams["home"]["abbr"], teams["away"]["abbr"]}, {"OSU", "TEX"})
+
+    def test_a_rank_outside_the_poll_is_not_carried(self):
+        """Some feeds put 99 in the field to mean unranked. 99 is not a rank."""
+        game = game_from_summary(OSU_TEX, json.loads((FIX / f"summary_{OSU_TEX}.json").read_text()))
+        game["home"]["rank"], game["away"]["rank"] = 99, 0
+        teams = shared.build(game)["teams"]
+        self.assertNotIn("rank", teams["home"])
+        self.assertNotIn("rank", teams["away"])
+
+
+class TheLineOnTheBoard(unittest.TestCase):
+    """The stadium's boards say the period and the clock, and they say it from
+    `status.label`. The NFL gamecast writes that line itself; the college one
+    does not, and a blank board is not an acceptable answer to a payload that
+    states the period, the clock and the overtimes plainly."""
+
+    def label(self, **over) -> str:
+        game = game_from_summary(WAKE_PUR, json.loads((FIX / f"summary_{WAKE_PUR}.json").read_text()))
+        game["status"] = dict(game["status"], **over.pop("status", {}))
+        return shared.build(dict(game, **over))["status"]["label"]
+
+    def test_a_live_college_game_says_the_clock_and_the_quarter(self):
+        self.assertEqual(self.label(state="in", period=4, clock="2:43",
+                                    status={"completed": False}), "2:43 4th")
+
+    def test_a_double_overtime_final_says_so(self):
+        self.assertEqual(self.label(), "Final/2OT")
+
+    def test_college_overtime_shows_no_clock_because_it_has_none(self):
+        """An untimed period with "0:00" on the board is a lie the rules table
+        already knows the answer to."""
+        self.assertEqual(self.label(state="in", period=6, clock="0:00",
+                                    status={"completed": False}), "2OT")
+        self.assertEqual(self.label(league="nfl", state="in", period=5, clock="2:43",
+                                    status={"completed": False}), "2:43 OT")
+
+    def test_a_stated_label_wins(self):
+        """A gamecast that has decided this has decided it; the fallback is for
+        a payload that says nothing, not a second opinion."""
+        self.assertEqual(self.label(label="Delayed"), "Delayed")
+
+    def test_halftime_is_not_a_quarter(self):
+        self.assertEqual(self.label(state="in", period=2, clock="0:00",
+                                    status={"completed": False, "halftime": True}), "Halftime")
 
 
 @unittest.skipUnless(HAVE_CAPTURE, "capture not present")
