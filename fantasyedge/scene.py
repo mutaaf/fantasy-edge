@@ -42,9 +42,11 @@ TOKENS_PATH = pathlib.Path(
     os.environ.get("FANTASYEDGE_TOKENS")
     or pathlib.Path(__file__).resolve().parent.parent / "design" / "tokens.json")
 
-# What differs between codes of football, and nothing else. College is stubbed:
-# its field geometry is here because the stadium is shared, and everything the
-# scene does not yet use for it is left out rather than guessed.
+# What differs between codes of football, and nothing else. Both codes are
+# stated in full: a college field's hash marks are 60 ft in rather than 70 ft
+# 9 in, its uprights stand 30 ft above the crossbar rather than 35, its team
+# area runs between the 20s rather than the 30s, and its overtime has no clock.
+# The league is read from the game (`league_of`), never from the caller.
 # ═══════════════════════ actor sections (docs/ART_BIBLE.md) ═══════════════════════
 # Each block below is owned by one stadium actor. The spec's shape does not
 # change with this layout; it only says whose numbers are whose.
@@ -91,6 +93,51 @@ def _props(bench_from: float, bench_to: float, upright_above: float,
         "chains": {"length": 10.0, "offset": 2.5, "poleHeight": 2.0, "markerWidth": 0.5,
                    "side": "away", "groundMarkers": ground_markers, "color": "prop.chain"},
     }
+
+
+# ── the line the boards read ──
+
+
+def period_label(period: int, league: str) -> str:
+    """"4th", or "2OT" once regulation is over. Both codes play four quarters;
+    they differ in what an overtime is, not in how many precede it."""
+    if period > 4:
+        extra = period - 4
+        return "OT" if extra == 1 else f"{extra}OT"
+    return {1: "1st", 2: "2nd", 3: "3rd", 4: "4th"}.get(period, f"Q{period}")
+
+
+def status_label(game: dict, state: str, league: str) -> str:
+    """What the scoreboard says about the clock, when the payload does not say
+    it itself.
+
+    A gamecast that states a `label` has already decided this and wins. One
+    that does not is not a reason for the boards to go blank: every fact here
+    - the state, the period, the clock, how many overtimes - is stated
+    somewhere in the payload, and the league's rules say whether an overtime
+    has a clock to show. College overtime is untimed, so "2OT" is the whole
+    truth there; an NFL overtime reads "2:43 OT" like any other period.
+    """
+    st = game.get("status") or {}
+    period = int(game.get("period") or st.get("period") or 0)
+    if state == "post":
+        overtimes = int(st.get("overtimes") or max(0, period - 4))
+        if overtimes <= 0:
+            return "Final"
+        return "Final/OT" if overtimes == 1 else f"Final/{overtimes}OT"
+    if state != "in":
+        return "Pre-game"
+    if st.get("halftime"):
+        return "Halftime"
+    if st.get("delayed"):
+        return "Delay"
+    if period <= 0:
+        return ""
+    label = period_label(period, league)
+    clock = (game.get("clock") or st.get("clock") or "").strip()
+    if period > 4 and RULES.get(league, {}).get("overtimeSeconds") is None:
+        return label          # untimed: a college overtime has no clock to show
+    return f"{clock} {label}".strip()
 
 
 # ── field ──
@@ -1507,11 +1554,19 @@ def team_chips(home: dict, away: dict, band: dict) -> tuple[dict, dict]:
         # `location` and `nickname` are the club's name in its two parts, which
         # the field letters its two end zones with. They are carried only when
         # the source states them; see club_lines on why they are never guessed.
-        return {"abbr": t.get("abbr", ""), "name": t.get("name", ""),
-                "location": t.get("location", ""), "nickname": t.get("nickname", ""),
-                "id": str(t.get("id", "")), "color": t.get("color", ""),
-                "chip": chip(t.get("color", ""), band), "chipText": band["text"],
-                "hatch": False, "score": t.get("score", 0)}
+        # `rank` is a college fact and is carried only when the payload states
+        # one: the AP top 25 is half of what a Saturday's boards say, and an
+        # NFL club has no such thing. A team outside the 25 states nothing,
+        # which is not the same as being 26th.
+        rank = t.get("rank")
+        out = {"abbr": t.get("abbr", ""), "name": t.get("name", ""),
+               "location": t.get("location", ""), "nickname": t.get("nickname", ""),
+               "id": str(t.get("id", "")), "color": t.get("color", ""),
+               "chip": chip(t.get("color", ""), band), "chipText": band["text"],
+               "hatch": False, "score": t.get("score", 0)}
+        if isinstance(rank, int) and 1 <= rank <= 25:
+            out["rank"] = rank
+        return out
     h, a = one(home), one(away)
     if clash(h["chip"], a["chip"], band):
         alt = chip(away.get("altColor") or "", band)
@@ -1642,6 +1697,27 @@ def goal_kick(play: dict, from_x: float, side: str | None, field: dict, tokens: 
 
 CROSSBAR_YARDS = 3.333   # 10 ft, both codes (_props)
 _RE_YARDS = re.compile(r"(-?\d+)\s+yards?")
+# The verb that announces a kick. The NFL conjugates it ("J.Moody kicks 65
+# yards from DET 35"); college names it ("P.Woodring kickoff 65 yards to the
+# ARK00"). Splitting on the NFL's word alone left every college kick with an
+# empty clause, so nothing knew where the ball came down.
+_RE_KICKED = re.compile(r"\b(?:kicks?|kick ?off|punts?)\b", re.I)
+
+
+def _kick_clause(text: str) -> str:
+    """What the text says after the ball was kicked, in either code."""
+    m = _RE_KICKED.search(text)
+    return text[m.end():] if m else ""
+
+
+def _return_clause(clause: str) -> str:
+    """What the text says about the runback, after the catch. College names it
+    outright ("to the PUR36 X.Townsend return 0 yards to the PUR36"); the NFL
+    starts a new sentence for it."""
+    m = re.search(r"\breturns?\b", clause, re.I)
+    if m:
+        return clause[m.end():]
+    return clause.split(".", 1)[-1] if "." in clause else ""
 
 
 def _club_x(abbr: str, n: float, home: dict, away: dict) -> float | None:
@@ -1656,8 +1732,13 @@ def _club_x(abbr: str, n: float, home: dict, away: dict) -> float | None:
 
 
 def _spot_after(text: str, words: tuple[str, ...], home: dict, away: dict) -> float | None:
-    """The first spot following any of `words` ("at", "to") in `text`."""
-    for m in re.finditer(r"\b(?:%s)\s+(?:the\s+)?(?:([A-Z]{2,4})\s(\d{1,2})|(50)\b)" % "|".join(words), text):
+    """The first spot following any of `words` ("at", "to") in `text`.
+
+    The two codes write a spot differently: the NFL puts a space in it ("to
+    DAL 32"), college runs it together and pads it ("to the ARK00"). Both are
+    a club and a yard line, so both are read here rather than in two places.
+    """
+    for m in re.finditer(r"\b(?:%s)\s+(?:the\s+)?(?:([A-Z]{2,4})\s?(\d{1,2})\b|(50)\b)" % "|".join(words), text):
         if m.group(3):
             return 50.0
         x = _club_x(m.group(1), float(m.group(2)), home, away)
@@ -1945,8 +2026,9 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         p = rule["punt"]
         path.carry([(x0 - attack * p["backYards"], h["carry"], lane)], p["snapSeconds"], "snap")
         path.hold(p["operationSeconds"], "hold")
-        n = _RE_YARDS.search(low.split("punts", 1)[-1]) if "punts" in low else None
-        land_x = _spot_after(text.split("punts", 1)[-1], ("to",), home, away) if "punts" in text else None
+        clause = _kick_clause(text)
+        n = _RE_YARDS.search(clause.lower())
+        land_x = _spot_after(clause, ("to",), home, away)
         kicked = play.get("kickDistance")
         if land_x is None and kicked is not None:
             land_x = x0 + attack * float(kicked)     # nflverse states the distance
@@ -1958,7 +2040,10 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         oob = "out of bounds" in low
         land = (land_x, h["catch"] if not oob else 0.0, clamp_z(lane * 0.5) if not oob else (half + 1.0) * (1 if lane >= 0 else -1))
         path.air(land, hang, p["drag"], g, "kick")
-        tail = text.split("Center-", 1)[-1] if "Center-" in text else ""
+        # The NFL marks the snap that started it ("Center-J.Smith"); college
+        # names the return itself. Either way the spot wanted is the one after
+        # the catch, not the one the punt came down on.
+        tail = text.split("Center-", 1)[-1] if "Center-" in text else _return_clause(clause)
         if "fair catch" in low or "downed" in low or oob or "touchback" in low:
             path.hold(p["fairCatchSeconds"], "catch")
         else:
@@ -1967,22 +2052,21 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
                 back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
             if back is None:
                 back = x1
-            dist = abs(back - land[0])
-            path.carry([(back, h["carry"], clamp_z(land[2] * 0.6))],
-                       max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            end_z = clamp_z(land[2] * 0.6)
+            path.carry([(back, h["carry"], end_z)],
+                       max(0.3, math.dist((land[0], land[2]), (back, end_z)) / rule["returnYardsPerSecond"]),
+                       "return")
             path.hold(rule["run"]["settleSeconds"], "settle")
 
     elif shape == "kick":   # kickoffs, and anything else kicked
         k = rule["kickoff"]
         path.hold(k["approachSeconds"], "approach")
-        clause = text.split("kicks", 1)[-1] if "kicks" in text else ""
+        clause = _kick_clause(text)
         land_x = None
         if "to end zone" in clause.lower():
             land_x = (field["length"] + k["endZoneYards"]) if attack > 0 else -k["endZoneYards"]
         else:
-            m = re.search(r"\bto\s+([A-Z]{2,4})\s(\d{1,2})\b", clause)
-            if m:
-                land_x = _club_x(m.group(1), float(m.group(2)), home, away)
+            land_x = _spot_after(clause, ("to",), home, away)
         n = _RE_YARDS.search(clause)
         kicked = play.get("kickDistance")
         if land_x is None and kicked is not None:
@@ -1991,20 +2075,26 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
             land_x = x0 + attack * (float(n.group(1)) if n else max(10.0, abs(x1 - x0)))
         land_x = clamp_x(land_x)
         hang = k["hangBase"] + k["hangPerYard"] * abs(land_x - x0)
-        land = (land_x, h["catch"], clamp_z(lane * 0.3))
+        # A kick that leaves the field crosses the sideline; it is not caught
+        # in the middle of it and then carried out.
+        oob = "out of bounds" in low
+        land = (land_x, h["catch"] if not oob else 0.0,
+                clamp_z(lane * 0.3) if not oob else (half + 1.0) * (1 if lane >= 0 else -1))
         path.air(land, hang, k["drag"], g, "kick")
-        if "touchback" in low or "fair catch" in low:
+        if "touchback" in low or "fair catch" in low or oob:
+            # None of the three is a return: the ball is dead where it stopped.
             path.hold(k["touchbackSeconds"], "catch")
         else:
-            after = clause.split(".", 1)[-1] if "." in clause else ""
+            after = _return_clause(clause)
             back = _spot_after(after, ("at", "to"), home, away)
             if back is None and "touchdown" in low:
                 back = -field["endZone"] / 2 if attack > 0 else field["length"] + field["endZone"] / 2
             if back is None:
                 back = x1
-            dist = abs(back - land[0])
-            end_z = half * (1 if land[2] >= 0 else -1) if sideline else clamp_z(land[2] * 0.5)
-            path.carry([(back, h["carry"], end_z)], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
+            end_z = clamp_z(land[2] * 0.5)
+            path.carry([(back, h["carry"], end_z)],
+                       max(0.3, math.dist((land[0], land[2]), (back, end_z)) / rule["returnYardsPerSecond"]),
+                       "return")
             path.hold(rule["run"]["settleSeconds"], "settle")
 
     elif re.search(r"\bkneels?\b", low):
@@ -2052,7 +2142,12 @@ def play_path(play: dict, style: str, shape: str, x0: float, x1: float, lane: fl
         path.carry([(back, h["carry"], clamp_z(pick_z * 0.6))], max(0.3, dist / rule["returnYardsPerSecond"]), "return")
         path.hold(rule["run"]["settleSeconds"], "settle")
 
-    elif shape == "pass" or "pass" in kind or re.search(r"\bpass\b", low):
+    # The text is the fallback for a play whose type did not say, never a
+    # second opinion about one that did: "3-yd run, two-point pass conversion
+    # failed" is a run, and drawing it as a pass threw the ball on a rushing
+    # touchdown. The conversion is a different play, appended to this one.
+    elif shape == "pass" or "pass" in kind or (re.search(r"\bpass\b", low)
+                                               and not re.search(r"\b(?:rush|run)", kind)):
         snap_to_qb()
         ps = rule["pass"]
         mode = "shotgun" if shotgun else "underCenter"
@@ -2478,7 +2573,7 @@ def build(game: dict, league: str | None = None, speed: float = 1.0,
                            if tint_side else None,
                            "dim": tokens["motion"]["sectionDim"]}
 
-    status = {"state": state, "label": game.get("label", ""),
+    status = {"state": state, "label": game.get("label") or status_label(game, state, league),
               "clock": game.get("clock", ""), "period": game.get("period", 0),
               "homeScore": home["score"], "awayScore": away["score"],
               "possession": holder, "down": sit.get("down"),

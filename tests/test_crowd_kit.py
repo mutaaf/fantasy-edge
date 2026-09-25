@@ -103,7 +103,7 @@ class CrowdKitTest(unittest.TestCase):
         seats = 49_982
         kept = sum(rng.random() < C["fill"] for _ in range(seats))
         self.assertAlmostEqual(kept / seats, C["fill"], delta=0.01)
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         seated = src.index("if !c.tabletop, let seating = s.bowl.seating")
         # Round 5: the token is still what fills the bowl, now scaled per seat by where it is and
         # how the game is going (keepChance), so the corners and a decided upper deck thin out.
@@ -117,7 +117,7 @@ class CrowdKitTest(unittest.TestCase):
         inherited the last game's stand-until-forever. The blackboard starts
         empty, and Crowd keeps no static store of its own."""
         import re
-        root = ROOT / "apple/FantasyEdge/Sources/Stadium"
+        root = ROOT / "packages/swift/StadiumKit/Sources/StadiumKit"
         shared = "".join(f.read_text() for f in root.rglob("*.swift") if "class StadiumShared" in f.read_text())
         self.assertRegex(shared, r"var crowdCues\s*:\s*\[CrowdCue\]\s*=\s*\[\]")
         for f in (root / "Actors/Crowd").glob("*.swift"):
@@ -134,7 +134,7 @@ class CrowdKitTest(unittest.TestCase):
     def test_mesh_rings_are_stadium_only(self):
         """The tabletop's crowd budget did not rise with the stadium's: it draws
         cards only. The ring assignment must stay behind the tabletop guard."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         guard = src.index("if !c.tabletop {\n            let order = placed.indices.sorted")
         rings = src.index("ringOf[i] = .lod2")
         self.assertLess(guard, rings)
@@ -209,7 +209,7 @@ class CrowdKitTest(unittest.TestCase):
             self.assertEqual([n for n, _ in probes], [f"forward_probe_lod{lod}"], f"lod{lod} carries its own probe")
             self.assertGreater(ns["probe_forward"](probes[0][1]), 0.01, f"lod{lod} faces -Z")
         # And it is never drawn: the renderer only ever asks for "<fan>_lod<k>_<pose>".
-        actor = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        actor = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         self.assertIn('String(format: "fan%02d_lod%d_%@"', actor)
 
     def test_the_usdz_forward_axis_is_measured_and_plus_z(self):
@@ -227,7 +227,7 @@ class CrowdKitTest(unittest.TestCase):
         """Every near slot draws only poses the kit froze, and its shares sum to 1."""
         import re
         C = self.C
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdChoreography.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdChoreography.swift").read_text()
         body = src[src.index("enum Slot"):src.index("public init(_ pose")]
         names = set()
         for line in re.findall(r"^\s*case (.+)$", body, re.M):
@@ -248,7 +248,7 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreater(C["support"]["visitingShare"], 0.02, "a real away support exists")
         self.assertLess(C["support"]["visitingShare"], 0.25, "a home game is overwhelmingly the home club's")
         self.assertLess(C["support"]["neutralShare"], C["support"]["visitingShare"])
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         support = src[src.index("static func supportBySection"):src.index("static func supportAt")]
         for reads in ("s.bowl.crowd.awaySection", "s.field.props?.benches", "C.support.visitingShare", "C.support.neutralShare"):
             self.assertIn(reads, support, f"the mix must come from {reads}")
@@ -263,12 +263,12 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreaterEqual(b["margin"], 14, "a blowout is a blowout, not a one-score game")
         self.assertLess(b["upperFactor"], C["emptySeats"]["upperFactor"], "a decided game empties the upper deck further")
         import re
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         emptying = src[src.index("static func keepChance"):src.index("static func standingShare")]
         for reads in ("s.status.homeScore", "s.status.awayScore", "s.status.period", "s.status.clock"):
             self.assertIn(reads, emptying, reads)
         # Only fields SceneSpec.Status actually carries, so nothing is invented about the game.
-        spec = (ROOT / "apple/FantasyEdge/Sources/Stadium/SceneSpec.swift").read_text()
+        spec = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/SceneSpec.swift").read_text()
         status = spec[spec.index("public struct Status"):]
         status = status[:status.index("\n    }")]
         known = set(re.findall(r"public let (\w+):", status))
@@ -278,7 +278,7 @@ class CrowdKitTest(unittest.TestCase):
     def test_the_clock_is_read_as_the_broadcast_writes_it(self):
         """status.clock is "12:40", not seconds; a missing or odd clock must not decide a game."""
         import re
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         body = src[src.index("static func clockSeconds"):]
         body = body[:body.index("\n    }")]
         self.assertIn('split(separator: ":")', body)
@@ -286,7 +286,7 @@ class CrowdKitTest(unittest.TestCase):
 
     def test_a_neutral_section_has_somewhere_to_get_its_colours(self):
         """The unaligned wear the scene's own crowd.neutral and crowd.dark, not an invented grey."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         self.assertIn("s.palette[s.bowl.crowd.neutral]", src)
         self.assertIn("s.palette[s.bowl.crowd.dark]", src)
 
@@ -302,7 +302,7 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreaterEqual(s["blockRows"], 2, "a seat-by-seat dither is noise, not a crowd")
         self.assertGreaterEqual(s["blockSeats"], 2)
         self.assertLess(s["tailRows"], 1.0, "the block thins as it climbs its tier")
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         draw = src[src.index("static func supportAt"):src.index("static func keepChance")]
         for reads in ("coreProbability", "edgeProbability", "blockRows", "blockSeats", "tailRows"):
             self.assertIn(reads, draw, f"the per-seat draw must read {reads}")
@@ -316,7 +316,7 @@ class CrowdKitTest(unittest.TestCase):
         self.assertLess(C["blockEmptiness"], 1.0, "a block of empties is emptier than the bowl's average")
         self.assertGreater(C["blockEmptiness"], 0.4, "but a block is not a hole")
         self.assertLessEqual(C["runEndFactor"], 1.0)
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         keep = src[src.index("static func keepChance"):src.index("static func decided")]
         for reads in ("blockRows", "blockSeats", "blockEmptiness", "runEndSeats", "runEndFactor"):
             self.assertIn(reads, keep, f"keepChance must read {reads}")
@@ -326,13 +326,13 @@ class CrowdKitTest(unittest.TestCase):
         C = self.C
         self.assertGreater(C["tintRiseSeconds"], 0.2)
         self.assertGreater(C["tintJitter"], 0.0)
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         self.assertIn("C.tintRiseSeconds", src)
         self.assertIn("C.tintJitter", src)
 
     def test_the_support_decision_is_pure_and_checkable(self):
         """It decides what the wide frame looks like, so it is testable without RealityKit."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdSupport.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdSupport.swift").read_text()
         self.assertNotIn("import RealityKit", src)
         self.assertTrue((ROOT / "apple/verify_crowd_support.swift").is_file())
 
@@ -341,7 +341,7 @@ class CrowdKitTest(unittest.TestCase):
         caps decided mesh against card, that overflow stood among solid fans as flat billboards
         with the field showing through them (docs/lookdev/experience-r7/crowd-cards-near-crop.png).
         The nearest fans are meshes and the boundary is a circle; the caps only say how wide."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         rings = src[src.index("// Rings: the nearest fans"):src.index("// Near rings: one merged mesh")]
         self.assertIn("let order = placed.indices.sorted { placed[$0].dist < placed[$1].dist }", rings)
         self.assertIn("where rank < meshes", rings, "mesh against card is decided by rank in distance, not by cap")
@@ -355,7 +355,7 @@ class CrowdKitTest(unittest.TestCase):
 
     def test_a_card_is_alpha_tested_and_never_blended(self):
         """Only the card material carries alpha. Blended, a fan reads as a window onto the field."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         start = src.index("for (key, mb) in cards.sorted")
         cards = src[start:src.index("let e = ModelEntity(mesh: res", start)]
         self.assertIn("mat.opacityThreshold", cards)
@@ -385,7 +385,7 @@ class CrowdKitTest(unittest.TestCase):
         white text on a panel - so a club that paints its field black had a #6F6F6F crowd and
         two clubs whose chips collided were pushed apart in hue. Cloth comes from
         `teams.*.color` and nothing else."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         dress = src[src.index("func quickDress(for s: SceneSpec"):src.index("let tinted = Date()")]
         self.assertIn("clubCloth(s.teams.home.color", dress)
         self.assertIn("clubCloth(s.teams.away.color", dress)
@@ -404,7 +404,7 @@ class CrowdKitTest(unittest.TestCase):
         self.assertGreater(C["floor"], 0.0)
         self.assertLess(C["floor"], 0.5, "past here a club is not wearing its own colour any more")
         self.assertIn("measured", C["about"].lower())
-        look = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdLook.swift").read_text()
+        look = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdLook.swift").read_text()
         body = look[look.index("/// What a club's supporters wear"):]
         body = body[:body.index("\npublic enum CrowdFacing")]
         self.assertIn("let k = floor / v", body, "the lift must be one scale of all three channels")
@@ -416,7 +416,7 @@ class CrowdKitTest(unittest.TestCase):
     def test_a_club_colour_mottles_around_its_floor(self):
         """The old band clamped every fan into [min, max] *after* the per-fan shade, so a dark
         club's fans all landed on the band's floor exactly: one paint chip, 24k times."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Crowd/CrowdActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Crowd/CrowdActor.swift").read_text()
         loop = src[src.index("for person in 0..<persons"):src.index("let sr = P.secondary.x")]
         self.assertNotIn("P.luma", loop, "the luma band is what flattened a dark club")
         self.assertIn("P.shade.0 + (P.shade.1 - P.shade.0)", loop, "each fan still gets its own shade")

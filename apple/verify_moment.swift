@@ -3,9 +3,9 @@
 // and never stranded when nothing ever lands.
 //
 //   swiftc -parse-as-library -o /tmp/verify-moment \
-//     apple/FantasyEdge/Sources/Stadium/MomentGate.swift \
-//     apple/FantasyEdge/Sources/Stadium/SceneSpec.swift \
-//     apple/FantasyEdge/Sources/Stadium/LaidPlay.swift apple/verify_moment.swift && /tmp/verify-moment
+//     packages/swift/StadiumKit/Sources/StadiumKit/MomentGate.swift \
+//     packages/swift/StadiumKit/Sources/StadiumKit/SceneSpec.swift \
+//     packages/swift/StadiumKit/Sources/StadiumKit/LaidPlay.swift apple/verify_moment.swift && /tmp/verify-moment
 //
 // It sweeps `LaidPlay` too: the same rule seen from the composer's side (the
 // gate names the play it is holding) and Broadcast's side (its trails name the

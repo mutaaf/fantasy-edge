@@ -1,4 +1,5 @@
 import SwiftUI
+import StadiumKit
 
 // Where Fantasy Edge meets the stadium. Everything under `Stadium/` is generic
 // and knows nothing about leagues; this file is the app's side of the seam:
@@ -48,7 +49,7 @@ struct StadiumLaunchArguments: ViewModifier {
             let open = openImmersiveSpace, dismiss = dismissWindow
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
-                await passage.enter(style: style, board: board, openSpace: open, dismissWindow: dismiss)
+                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = style }
             }
         }
     }
@@ -75,25 +76,25 @@ struct TabletopHost: View {
             let open = openImmersiveSpace, dismiss = dismissWindow
             // The dial, not a blackout: the Crown takes you the rest of the way.
             Task { @MainActor in
-                await passage.enter(style: .progressive, board: board, openSpace: open, dismissWindow: dismiss)
+                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = .progressive }
             }
         }
         .onAppear {
             feed.target = value == StadiumHost.replayWindow ? .replay : .live(event: value)
-            passage.appeared(.tabletop(value))
-            if passage.appearedInside(.tabletop(value)) {
+            passage.appeared(.init(id: "tabletop", value: value))
+            if passage.appearedInside(.init(id: "tabletop", value: value)) {
                 dismissWindow(id: "tabletop", value: value)
                 dismissWindow(id: "tabletop")
             }
         }
-        .onDisappear { passage.disappeared(.tabletop(value)) }
+        .onDisappear { passage.disappeared(.init(id: "tabletop", value: value)) }
         // The launch arguments run from whichever window the system restores
         // first. On a relaunch visionOS can bring back only the tabletop the
         // last session left open, and with the hook on the board alone the
         // stadium never opened (once per process either way).
         .modifier(StadiumLaunchArguments())
         .onChange(of: value) { old, new in
-            passage.renamed(from: .tabletop(old), to: .tabletop(new))
+            passage.renamed(from: .init(id: "tabletop", value: old), to: .init(id: "tabletop", value: new))
             feed.target = new == StadiumHost.replayWindow ? .replay : .live(event: new)
         }
     }
@@ -124,7 +125,7 @@ struct StadiumHostSpace: View {
             immersion: Binding(
                 get: { board.stadiumStyle == .full ? .full : .dial },
                 set: { board.stadiumStyle = $0 == .full ? .full : .progressive }),
-            look: Self.look,
+            look: StadiumShots.look,
             trailingTitle: others.isEmpty && channel.games.isEmpty ? nil : "Red Zone",
             leave: {
                 let passage = passage, open = openWindow, dismiss = dismissImmersiveSpace
@@ -165,25 +166,6 @@ struct StadiumHostSpace: View {
             }
             #endif
         }
-        .task {
-            #if DEBUG
-            // `-stadiumWhip a,b,c [-stadiumWhipEvery 8]`: walk the stadium
-            // between these games on a timer, so a changeover can be measured
-            // and captured without waiting for two real drives to reach the
-            // red zone at the same time. The channel's own choosing is tested
-            // on the server; this exercises the half that lives here.
-            guard let list = StadiumHost.argument("-stadiumWhip") else { return }
-            let events = list.split(separator: ",").map(String.init).filter { !$0.isEmpty }
-            guard events.count > 1 else { return }
-            let every = Double(StadiumHost.argument("-stadiumWhipEvery") ?? "") ?? 8
-            var i = 0
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(every))
-                i = (i + 1) % events.count
-                feed.target = .live(event: events[i])
-            }
-            #endif
-        }
         .onDisappear {
             board.stop()
             channel.stop()
@@ -201,115 +183,6 @@ struct StadiumHostSpace: View {
 
     private var currentEvent: String { feed.spec?.event ?? "" }
 
-    /// (yaw, pitch) from `-stadiumLook` and `-stadiumPitch`, debug builds only.
-    private static var look: SIMD2<Float> {
-        #if DEBUG
-        return SIMD2(Float(StadiumHost.argument("-stadiumLook") ?? "") ?? 0,
-                     Float(StadiumHost.argument("-stadiumPitch") ?? "") ?? 0)
-        #else
-        return .zero
-        #endif
-    }
-}
-
-/// The red-zone channel at the wearer's right hand: every game, the most
-/// urgent first, and the switch that lets the bowl follow the ball.
-///
-/// The Elsewhere panel this sits beside answers "what else is on". This
-/// answers "where should I be", which is a different question and the reason
-/// the channel exists: on a sixteen-game Sunday nobody can watch the right
-/// game by reading a list of scores.
-private struct RedZonePanel: View {
-    let channel: RedZoneChannel
-    /// The game the bowl is showing, which is not always the one wanted: a
-    /// changeover takes a moment and the panel must not lie during it.
-    let showing: String
-    var rows = 6
-    @Binding var following: Bool
-    let watch: (String) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Red Zone").font(.system(size: 20, weight: .semibold))
-                if let day = channel.day {
-                    // A rebuilt day is marked beside its own name, not once
-                    // on a screen the wearer may never have seen.
-                    Text("REBUILT \(day.label)")
-                        .font(.system(size: 10, weight: .heavy))
-                        .padding(.horizontal, 5).padding(.vertical, 2)
-                        .background(.orange.opacity(0.28), in: .capsule)
-                        .accessibilityLabel("Rebuilt from timestamps, \(day.label)")
-                }
-                Spacer()
-                Text(headline).font(.system(size: 14)).foregroundStyle(.secondary)
-            }
-            if let day = channel.day, let first = day.caveats.first {
-                Text("Rebuilt from play timestamps, not recorded. \(first)")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Toggle("Follow the ball", isOn: $following)
-                .font(.system(size: 15))
-                .frame(minHeight: 44)
-            if following, !channel.reason.isEmpty {
-                // Why the bowl is where it is. A channel that cuts without
-                // saying why reads as random, and on a headset the wearer
-                // cannot see the producer's reasoning anywhere else.
-                Text("Here because: \(channel.reason)")
-                    .font(.system(size: 14)).foregroundStyle(.secondary)
-            }
-            if let error = channel.error {
-                Text(error).font(.system(size: 13)).foregroundStyle(.secondary)
-            }
-            ForEach(ranked.prefix(rows)) { g in
-                Button { watch(g.event) } label: {
-                    HStack(spacing: 10) {
-                        if g.redZone {
-                            Text("RED ZONE")
-                                .font(.system(size: 10, weight: .heavy))
-                                .padding(.horizontal, 5).padding(.vertical, 2)
-                                .background(.red.opacity(0.85), in: .capsule)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(g.line).font(.system(size: 16, weight: .semibold))
-                            if !g.situation.isEmpty {
-                                Text(g.situation).font(.system(size: 12)).foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                        }
-                        Spacer()
-                        Text(g.live ? g.score : g.kickoffShort)
-                            .font(.system(size: 16, weight: .bold)).monospacedDigit()
-                        Text(g.event == showing ? "▶" : " ")
-                            .font(.system(size: 12)).foregroundStyle(.secondary)
-                    }
-                    .frame(minHeight: 44)
-                    .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(22)
-        .frame(width: 420, alignment: .leading)
-        .glassBackgroundEffect()
-    }
-
-    /// Live games by urgency - the channel's own order - then the rest by
-    /// kickoff. A final is not a destination and sinks to the bottom.
-    private var ranked: [RedZoneChannel.Game] {
-        let live = channel.games.filter(\.live)
-        let rest = channel.games.filter { !$0.live }
-            .sorted { ($0.state == "post" ? 1 : 0, $0.kickoff) < ($1.state == "post" ? 1 : 0, $1.kickoff) }
-        return live + rest
-    }
-
-    private var headline: String {
-        let c = channel.counts
-        if c.live == 0 { return c.total == 0 ? "" : "nothing live yet" }
-        let zone = c.redZone > 0 ? ", \(c.redZone) in the red zone" : ""
-        return "\(c.live) live\(zone)"
-    }
 }
 
 /// The other games, live ones first. A replay is never mixed in here: this

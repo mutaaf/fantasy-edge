@@ -19,7 +19,7 @@ import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STADIUM = ROOT / "apple/FantasyEdge/Sources/Stadium"
+STADIUM = ROOT / "packages/swift/StadiumKit/Sources/StadiumKit"
 RENDERER = (STADIUM / "StadiumRenderer.swift").read_text()
 VIEWS = (STADIUM / "Actors/Experience/StadiumViews.swift").read_text()
 

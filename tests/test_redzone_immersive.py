@@ -15,7 +15,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STADIUM = ROOT / "apple" / "FantasyEdge" / "Sources" / "Stadium"
+STADIUM = ROOT / "packages" / "swift" / "StadiumKit" / "Sources" / "StadiumKit"
 SOURCES = ROOT / "apple" / "FantasyEdge" / "Sources"
 
 VENUE = (STADIUM / "StadiumVenue.swift").read_text()
@@ -23,8 +23,15 @@ RENDERER = (STADIUM / "StadiumRenderer.swift").read_text()
 CROWD = (STADIUM / "Actors" / "Crowd" / "CrowdActor.swift").read_text()
 EXPERIENCE = (STADIUM / "Actors" / "Experience" / "ExperienceActor.swift").read_text()
 FEED = (STADIUM / "SceneFeed.swift").read_text()
-CHANNEL = (SOURCES / "RedZoneChannel.swift").read_text()
+# The channel and its panel live in the package: one implementation over one
+# payload, shown by both products. A second copy in an app is the thing these
+# tests exist to prevent.
+CHANNEL = (STADIUM / "RedZoneChannel.swift").read_text()
+PANEL = (STADIUM / "RedZonePanel.swift").read_text()
 API = (ROOT / "fantasyedge" / "api.py").read_text()
+SATURDAY = ROOT / "apps" / "saturday"
+SAT_SOURCES = SATURDAY / "apple" / "Saturday" / "Sources"
+SAT_HANDLERS = (SATURDAY / "api" / "handlers.py").read_text()
 
 
 class VenueTest(unittest.TestCase):
@@ -132,6 +139,31 @@ class ChannelTest(unittest.TestCase):
         self.assertIn("/api/redzone", CHANNEL)
         for ported in ("SWITCH_MARGIN", "MIN_DWELL", "urgency", "hysteresis "):
             self.assertNotIn(ported, CHANNEL.split("public func refresh")[0].split("///")[0])
+
+    def test_neither_app_holds_a_channel_of_its_own(self):
+        """Both products poll the same route and draw the same panel. A copy
+        in one app is how the two would drift apart - and the one that drifts
+        is the one nobody is looking at that week."""
+        for sources in (SOURCES, SAT_SOURCES):
+            for swift in sources.glob("*.swift"):
+                body = swift.read_text()
+                self.assertNotIn("struct RedZonePanel", body,
+                                 f"{swift.name} draws its own panel")
+                self.assertNotIn("class RedZoneChannel", body,
+                                 f"{swift.name} holds its own channel")
+        self.assertIn("public struct RedZonePanel", PANEL)
+        self.assertIn("StadiumKit", (SAT_SOURCES / "StadiumSpace.swift").read_text())
+
+    def test_the_dwell_is_the_servers_to_set_and_the_clients_to_obey(self):
+        """A dwell enforced on a client is a dwell two headsets disagree about.
+        The bowl's figure is longer than the page's for a reason that is about
+        the surface: changing games fades the whole world out and back."""
+        self.assertIn("dwell: float = MIN_DWELL", (ROOT / "fantasyedge" / "whip.py").read_text())
+        self.assertIn("BOWL_DWELL", SAT_HANDLERS)
+        self.assertNotIn("BOWL_DWELL", CHANNEL)
+        for swift in list(SOURCES.glob("*.swift")) + list(SAT_SOURCES.glob("*.swift")) + [PANEL]:
+            body = swift if isinstance(swift, str) else swift.read_text()
+            self.assertNotIn("dwellSeconds >", body, "a client must not enforce the dwell")
 
     def test_a_pin_outranks_the_channel_but_not_a_final(self):
         body = CHANNEL.split("public var wanted: String {")[1].split("\n    public func")[0]

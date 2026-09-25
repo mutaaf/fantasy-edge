@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.db
+.DS_Store
+apple/build/
+xcuserdata/
+data/capture/*/stdout.log
+# derived, both of them: rebuilt from the summaries and boards that are tracked
+# (tools/backfill_slate.py frames --slate <date>, then tools/merge_capture.py)
+data/capture/*-backfill/scoreboard/
+data/capture/*-merged/
+design/saturday-initial-views.html
+apps/saturday/apple/build/

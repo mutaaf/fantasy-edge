@@ -1,0 +1,421 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "game.schema.json",
+  "title": "GET /api/game/{id}",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "replay",
+    "asOf",
+    "event",
+    "status",
+    "home",
+    "away",
+    "possession",
+    "lastPlay",
+    "drives",
+    "winProbability",
+    "winProbabilityCaveat",
+    "scoringPlays",
+    "boxscore",
+    "seasonAverages",
+    "leaders"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "replay": {
+      "type": "boolean"
+    },
+    "event": {
+      "type": "string"
+    },
+    "status": {
+      "$ref": "common.schema.json#/$defs/status"
+    },
+    "home": {
+      "$ref": "#/$defs/gameTeam"
+    },
+    "away": {
+      "$ref": "#/$defs/gameTeam"
+    },
+    "possession": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastPlay": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/play"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "drives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "team",
+          "description",
+          "result",
+          "scored",
+          "turnover",
+          "current",
+          "plays"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "team": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string",
+            "pattern": "^[^#()]*$",
+            "description": "Sentence case, from cfb/text.py."
+          },
+          "scored": {
+            "type": "boolean"
+          },
+          "turnover": {
+            "type": "boolean"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "yards": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "plays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/play"
+            }
+          }
+        }
+      }
+    },
+    "winProbability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "play",
+          "home"
+        ],
+        "properties": {
+          "play": {
+            "type": "string"
+          },
+          "home": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "winProbabilitySource": {
+      "type": "string"
+    },
+    "winProbabilityCaveat": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scoringPlays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "text",
+          "clock",
+          "period",
+          "team",
+          "home",
+          "away"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "pattern": "^[^#()]*$",
+            "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
+          },
+          "clock": {
+            "type": "string"
+          },
+          "period": {
+            "type": "integer"
+          },
+          "team": {
+            "type": "string"
+          },
+          "home": {
+            "type": "integer"
+          },
+          "away": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "boxscore": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "team",
+          "stats"
+        ],
+        "properties": {
+          "team": {
+            "type": "string"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "value"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "This game's team stats. Empty before kickoff: ESPN's pre-game box score holds season averages, which are in seasonAverages."
+    },
+    "leaders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "team",
+          "category",
+          "name",
+          "labels",
+          "stats"
+        ],
+        "properties": {
+          "team": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "venue": {
+      "type": "string"
+    },
+    "weather": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "asOf": {
+      "type": "string",
+      "description": "the moment this detail was read at: a replay frame, or now"
+    },
+    "seasonAverages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "team",
+          "stats"
+        ],
+        "properties": {
+          "team": {
+            "type": "string"
+          },
+          "stats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "label",
+                "value"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "Before kickoff only: each team's season per-game averages as ESPN publishes them ('Points Per Game'). Empty once the game starts."
+    }
+  },
+  "$defs": {
+    "play": {
+      "type": "object",
+      "required": [
+        "id",
+        "text",
+        "type",
+        "clock",
+        "period",
+        "from",
+        "to",
+        "yards",
+        "scoring",
+        "turnover",
+        "penalty",
+        "home",
+        "away"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string",
+          "pattern": "^[^#()]*$",
+          "description": "Cleaned on the server by cfb/text.py: no clock prefix, formation, jersey numbers, parentheticals or ALL-CAPS tags. Clients draw it as is."
+        },
+        "type": {
+          "type": "string"
+        },
+        "clock": {
+          "type": "string"
+        },
+        "period": {
+          "type": "integer"
+        },
+        "down": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "distance": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "downText": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "to": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "yards": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "scoring": {
+          "type": "boolean"
+        },
+        "turnover": {
+          "type": "boolean"
+        },
+        "penalty": {
+          "type": "boolean"
+        },
+        "home": {
+          "type": "integer"
+        },
+        "away": {
+          "type": "integer"
+        }
+      },
+      "description": "from/to are yards to the offense's end zone, as in fantasy-edge's gamecast."
+    },
+    "gameTeam": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/team"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "score",
+        "linescores"
+      ],
+      "properties": {
+        "score": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "linescores": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "fill": {
+          "type": "string",
+          "pattern": "^#[0-9A-F]{6}$"
+        },
+        "hatch": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

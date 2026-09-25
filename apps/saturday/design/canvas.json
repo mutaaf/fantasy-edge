@@ -1,0 +1,159 @@
+{
+  "pages": [
+    {
+      "id": "page-4",
+      "name": "Immersive"
+    },
+    {
+      "id": "page-1",
+      "name": "Views"
+    },
+    {
+      "id": "page-2",
+      "name": "System"
+    },
+    {
+      "id": "page-3",
+      "name": "Alternates"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "ImmersiveRoom.dc.html",
+      "title": "Saturday Room \u00b7 mixed immersion",
+      "x": 0,
+      "y": 0,
+      "w": 2600,
+      "h": 1500,
+      "page": "page-4"
+    },
+    {
+      "file": "ImmersiveStadium.dc.html",
+      "title": "Stadium \u00b7 full immersion",
+      "x": 2720,
+      "y": 0,
+      "w": 2400,
+      "h": 1350,
+      "page": "page-4"
+    },
+    {
+      "file": "ImmersiveTouchdown.dc.html",
+      "title": "The moment \u00b7 touchdown",
+      "x": 2720,
+      "y": 1490,
+      "w": 2400,
+      "h": 1350,
+      "page": "page-4"
+    },
+    {
+      "file": "ImmersionRamp.dc.html",
+      "title": "Immersion ramp \u00b7 Digital Crown",
+      "x": 0,
+      "y": 1640,
+      "w": 2400,
+      "h": 900,
+      "page": "page-4"
+    },
+    {
+      "file": "Main.dc.html",
+      "title": "Saturday Wall \u00b7 window",
+      "x": 0,
+      "y": 0,
+      "w": 1840,
+      "h": 1180,
+      "page": "page-1"
+    },
+    {
+      "file": "GameVolume.dc.html",
+      "title": "Game Volume \u00b7 tabletop",
+      "x": 1960,
+      "y": 0,
+      "w": 1840,
+      "h": 1580,
+      "page": "page-1"
+    },
+    {
+      "file": "TileStates.dc.html",
+      "title": "Game tile \u00b7 states",
+      "x": 0,
+      "y": 1340,
+      "w": 1840,
+      "h": 1260,
+      "page": "page-1"
+    },
+    {
+      "file": "GameDetail.dc.html",
+      "title": "Game Detail \u00b7 window",
+      "x": 1960,
+      "y": 1740,
+      "w": 1440,
+      "h": 1060,
+      "page": "page-1"
+    },
+    {
+      "file": "System.dc.html",
+      "title": "System",
+      "x": 0,
+      "y": 0,
+      "w": 1840,
+      "h": 1320,
+      "page": "page-2"
+    },
+    {
+      "file": "ConferenceRails.dc.html",
+      "title": "Alternate \u00b7 Conference Rails",
+      "x": 0,
+      "y": 0,
+      "w": 1200,
+      "h": 800,
+      "page": "page-3"
+    },
+    {
+      "file": "OneField.dc.html",
+      "title": "Alternate \u00b7 One Field",
+      "x": 1300,
+      "y": 0,
+      "w": 1200,
+      "h": 800,
+      "page": "page-3"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "no-players",
+      "x": 0,
+      "y": -170,
+      "w": 640,
+      "page": "page-4",
+      "text": "No players on the field, on purpose: ESPN's feed has no tracking data. The stadium shows what the feed knows: the ball (a beam of light), scrimmage and line to gain (lasers on the turf), every play of the drive traced life-size in the air, and ESPN's win probability as a horizon over the far stands."
+    },
+    {
+      "id": "scale-note",
+      "x": 2720,
+      "y": -170,
+      "w": 640,
+      "page": "page-4",
+      "text": "Life-size arcs: a pass peaks at 3 yd + 0.35 yd per air yard, a run at 0.8 yd + 0.12 yd per yard gained. The tabletop uses the same stadium at 4 mm per yard. Everything is drawn in code; no stadium assets, and not a replica of any real venue."
+    },
+    {
+      "id": "wall-order",
+      "x": 0,
+      "y": -150,
+      "w": 560,
+      "page": "page-1",
+      "text": "Real slate at 7:34 PM CT, 2026-09-12. In the headset, importance is depth as well as size: the spotlight sits closest to you, close & late next, everything else furthest back."
+    },
+    {
+      "id": "volume-note",
+      "x": 1960,
+      "y": -150,
+      "w": 560,
+      "page": "page-1",
+      "text": "Drawn with a real perspective projection of the 0.9 \u00d7 0.4 \u00d7 0.6 m volume. Arcs come from ESPN's play-by-play for Ohio State's current drive."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-4"
+  }
+}

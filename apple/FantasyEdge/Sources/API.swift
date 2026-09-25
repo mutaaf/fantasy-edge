@@ -54,6 +54,20 @@ final class Board {
     var selected: String?
     var status: String = "Connecting…"
     var lastError: String?
+    /// Whether the API has answered at all - with a board, or with a reason
+    /// it has none. That is not the same thing as an API nobody can reach,
+    /// and telling someone to start a server they have already started costs
+    /// them the real cause.
+    private(set) var reached = false
+    /// What the API said when it could not serve a board. It answers with a
+    /// sentence and a fix; showing them beats any message this app could
+    /// invent, because the server is the thing that knows.
+    private(set) var serverSaid: ServerError?
+
+    struct ServerError: Decodable {
+        let error: String
+        let fix: String?
+    }
 
     /// Points that have landed since the last poll, per player. A board that
     /// only shows a new total makes you diff it in your head; this is what a
@@ -199,9 +213,25 @@ final class Board {
     func load() async {
         do {
             guard let u = url("/api/mosaic") else { return }
-            let (data, _) = try await URLSession.shared.data(from: u)
+            let (data, response) = try await URLSession.shared.data(from: u)
+            // The API answers a request it cannot serve with a status and a
+            // sentence saying why, and `fix` saying what to do about it.
+            // Decoding straight into the payload threw, and the catch below
+            // reported "cannot reach" for a server that had answered clearly -
+            // which sends someone to restart a server that is already running.
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                reached = true
+                let said = try? JSONDecoder().decode(ServerError.self, from: data)
+                status = "No league loaded"
+                lastError = nil
+                serverSaid = said ?? ServerError(error: "The API answered \(http.statusCode).", fix: nil)
+                leagues = []
+                selected = nil
+                return
+            }
             leagues = Debug.resize(
                 try JSONDecoder().decode(MosaicsPayload.self, from: data).leagues)
+            serverSaid = nil
             // A league that went away - hidden, or gone from the database -
             // must not stay selected, or every rail keeps rendering a board
             // the server no longer sends.
@@ -210,6 +240,7 @@ final class Board {
             }
             status = leagues.count == 1 ? "1 league" : "\(leagues.count) leagues"
             lastError = nil
+            reached = true
         } catch {
             status = "Cannot reach \(host)"
             lastError = error.localizedDescription

@@ -1,0 +1,16 @@
+2026-09-15 19:08:21 EDT plan: {"slate": "2026-09-19", "scoreboard": "https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&week=3&seasontype=2", "games": 74, "byDay": {"Fri": 3, "Sat": 71}, "firstKickoff": "2026-09-18T19:30:00-04:00", "lastKickoff": "2026-09-19T23:00:00-04:00", "start": "2026-09-18T19:00:00-04:00", "hardStop": "2026-09-20T06:00:00-04:00"}
+2026-09-15 19:08:21 EDT recording https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&week=3&seasontype=2 to data/capture/2026-09-19-pregame until every slate game is final or Tue 19:11 EDT
+2026-09-15 19:08:27 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:08:57 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:09:27 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:09:57 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:10:27 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:10:57 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved; watching 401856688,401856686
+2026-09-15 19:11:21 EDT hard stop reached
+2026-09-15 19:11:21 EDT dry run done: 18 requests, 0 errors
+2026-09-15 19:25:49 EDT plan: {"slate": "2026-09-19", "scoreboard": "https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&week=3&seasontype=2", "games": 74, "byDay": {"Fri": 3, "Sat": 71}, "firstKickoff": "2026-09-18T19:30:00-04:00", "lastKickoff": "2026-09-19T23:00:00-04:00", "start": "2026-09-18T19:00:00-04:00", "hardStop": "2026-09-20T06:00:00-04:00"}
+2026-09-15 19:25:49 EDT recording https://site.web.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?groups=80&limit=300&week=3&seasontype=2 to data/capture/2026-09-19-pregame until every slate game is final or Tue 19:26 EDT
+2026-09-15 19:25:49 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved
+2026-09-15 19:26:09 EDT 74 slate games: 0 live, 74 pre, 0 delayed, 0 final, 0 finals saved
+2026-09-15 19:26:29 EDT hard stop reached
+2026-09-15 19:26:29 EDT dry run done: 2 requests, 0 errors

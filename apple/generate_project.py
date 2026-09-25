@@ -91,10 +91,10 @@ def resolve_team() -> tuple[str, str]:
 
 
 def main() -> None:
-    # Recursive, because `Sources/Stadium/` is a folder of its own: the
-    # renderer that is meant to lift out into a Swift package. A flat glob
-    # would have left it out of the target and the build would have failed on
-    # every type it defines.
+    # Recursive because the app's own sources are nested. The renderer is no
+    # longer among them: it lifted out into packages/swift/StadiumKit, which
+    # this project links as a local package (see the XCLocalSwiftPackageReference
+    # below) and three app files import.
     sources = sorted(str(p.relative_to(APP / "Sources"))
                      for p in (APP / "Sources").rglob("*.swift"))
     if not sources:
@@ -169,6 +169,7 @@ def main() -> None:
         "project", "target", "productRef", "mainGroup", "sourcesGroup",
         "productsGroup", "sourcesBuildPhase", "frameworksBuildPhase",
         "resourcesBuildPhase", "assetsBuildPhase", "configListProject",
+        "stadiumPackage", "stadiumProduct", "stadiumBuildFile",
         "configListTarget", "debugProject", "releaseProject", "debugTarget",
         "releaseTarget")}
 
@@ -245,6 +246,7 @@ def main() -> None:
 \tobjects = {{
 
 /* Begin PBXBuildFile section */
+\t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */ = {{isa = PBXBuildFile; productRef = {ids['stadiumProduct']} /* StadiumKit */; }};
 {nl.join(build_files)}
 /* End PBXBuildFile section */
 
@@ -257,7 +259,9 @@ def main() -> None:
 \t\t{ids['frameworksBuildPhase']} = {{
 \t\t\tisa = PBXFrameworksBuildPhase;
 \t\t\tbuildActionMask = 2147483647;
-\t\t\tfiles = ();
+\t\t\tfiles = (
+\t\t\t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */,
+\t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
 /* End PBXFrameworksBuildPhase section */
@@ -301,6 +305,9 @@ def main() -> None:
 \t\t\tbuildRules = ();
 \t\t\tdependencies = ();
 \t\t\tname = FantasyEdge;
+\t\t\tpackageProductDependencies = (
+\t\t\t\t{ids['stadiumProduct']} /* StadiumKit */,
+\t\t\t);
 \t\t\tproductName = FantasyEdge;
 \t\t\tproductReference = {ids['productRef']} /* FantasyEdge.app */;
 \t\t\tproductType = "com.apple.product-type.application";
@@ -310,6 +317,9 @@ def main() -> None:
 /* Begin PBXProject section */
 \t\t{ids['project']} = {{
 \t\t\tisa = PBXProject;
+\t\t\tpackageReferences = (
+\t\t\t\t{ids['stadiumPackage']} /* XCLocalSwiftPackageReference "../packages/swift/StadiumKit" */,
+\t\t\t);
 \t\t\tattributes = {{
 \t\t\t\tBuildIndependentTargetsInParallel = 1;
 \t\t\t\tLastSwiftUpdateCheck = 1600;
@@ -399,6 +409,20 @@ def main() -> None:
 \t\t\tname = Release;
 \t\t}};
 /* End XCBuildConfiguration section */
+
+/* Begin XCLocalSwiftPackageReference section */
+\t\t{ids['stadiumPackage']} /* XCLocalSwiftPackageReference "../packages/swift/StadiumKit" */ = {{
+\t\t\tisa = XCLocalSwiftPackageReference;
+\t\t\trelativePath = ../packages/swift/StadiumKit;
+\t\t}};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+\t\t{ids['stadiumProduct']} /* StadiumKit */ = {{
+\t\t\tisa = XCSwiftPackageProductDependency;
+\t\t\tproductName = StadiumKit;
+\t\t}};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCConfigurationList section */
 \t\t{ids['configListProject']} = {{

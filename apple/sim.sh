@@ -18,11 +18,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-BUNDLE="com.mutaaf.fantasyedge"
-PROJECT="apple/FantasyEdge.xcodeproj"
-SCHEME="FantasyEdge"
+# Both products in this repo run on the same rig: the stadium is one package
+# and one simulator, and a second set of defaults copied into a second script
+# is how the first set got out of date. An app overrides these four and keeps
+# everything below - the destination, the named simulator, the load gate.
+BUNDLE="${FE_BUNDLE:-com.mutaaf.fantasyedge}"
+PROJECT="${FE_PROJECT:-apple/FantasyEdge.xcodeproj}"
+SCHEME="${FE_SCHEME:-FantasyEdge}"
+PRODUCT="${FE_PRODUCT:-FantasyEdge.app}"
 DD="${FE_DD:-$ROOT/.work/dd}"
-APP="$DD/Build/Products/Debug-xrsimulator/FantasyEdge.app"
+APP="$DD/Build/Products/Debug-xrsimulator/$PRODUCT"
 # Named rather than cloned per run: a clone per agent is what filled this Mac
 # with 115 devices and 41 GB of simulator data. FE_SIM overrides for a second
 # rig; keep the name, not the id, so a runtime upgrade does not strand it.
@@ -112,7 +117,16 @@ cmd_run() {
   cmd_build
   local id; id=$(sim_id)
   xcrun simctl boot "$id" 2>/dev/null || true
-  open -a Simulator
+  # Xcode 27 ships no Simulator.app: the window is DeviceHub.app, inside the
+  # Xcode bundle. Fall back to Simulator for older toolchains, and carry on
+  # headless if neither is there - `simctl launch` and the shot harness never
+  # needed a window.
+  if [ -d "$(xcode-select -p)/../Applications/DeviceHub.app" ]; then
+    open "$(xcode-select -p)/../Applications/DeviceHub.app"
+  elif open -a Simulator 2>/dev/null; then :
+  else
+    echo "  no simulator window app found; running headless"
+  fi
   xcrun simctl install "$id" "$APP"
   xcrun simctl launch "$id" "$BUNDLE" "$@"
   echo "launched on $SIM"

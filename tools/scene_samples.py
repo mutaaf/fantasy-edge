@@ -6,6 +6,11 @@ Uses the committed whole-game fixtures, so it needs no network and no
 capture: each game is replayed through the real API at a handful of instants
 - kickoff, mid-drive, a red-zone snap, the pick-six, overtime, the final
 whistle - and the scene the API would serve at that moment is written out.
+
+Both codes are in the set. A Saturday's whip-around moves the bowl between
+college games, and whether that repaints or rebuilds is decided by whether
+two college scenes share a `StadiumVenue` - so there have to be college
+scenes here for anything to check it.
 """
 
 from __future__ import annotations
@@ -21,11 +26,16 @@ sys.path.insert(0, str(ROOT))
 from fantasyedge import api, replay as rp          # noqa: E402
 
 FIX = ROOT / "tests" / "fixtures"
+CFB_FIX = ROOT / "apps" / "saturday" / "tests" / "fixtures"
 GAMES = {
     "401772510": [0, 700, 1500, 2400, 3300, 3600],
     "401772949": [900, 2000, 3600, 3900, 4007],
     "401772810": [600, 1800, None, 3600],
 }
+# College, from Saturday's committed summaries. A summary is one moment - the
+# final - which is all the venue check needs: three different college bowls,
+# with three different sets of clubs in them.
+CFB_GAMES = ["401856682", "401856782", "401858224"]
 
 
 def write_seat_samples(path: pathlib.Path, scene: dict) -> None:
@@ -85,7 +95,28 @@ def main() -> None:
             write_seat_samples(out / f"{event}-{at}.seats", scene)
             written += 1
     app.close()
+    written += write_college(out)
     print(f"wrote {written} scenes to {out}")
+
+
+def write_college(out: pathlib.Path) -> int:
+    """College scenes, built straight through the shared scene package: there
+    is no replay director in the path, because a college summary is already a
+    whole game."""
+    sys.path.insert(0, str(ROOT / "packages"))
+    from cfb.game import game_from_summary
+    from fantasyedge import scene as sc
+
+    written = 0
+    for event in CFB_GAMES:
+        path = CFB_FIX / f"summary_{event}.json"
+        if not path.is_file():          # Saturday's fixtures are not required here
+            continue
+        scene = sc.build(game_from_summary(event, json.loads(path.read_text())))
+        (out / f"cfb-{event}.json").write_text(json.dumps(scene))
+        write_seat_samples(out / f"cfb-{event}.seats", scene)
+        written += 1
+    return written
 
 
 if __name__ == "__main__":

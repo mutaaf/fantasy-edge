@@ -103,7 +103,7 @@ class TheBladesAreThereToBeSeen(unittest.TestCase):
         sideline is not such an edge - the grass really does stop there and the
         border takes over - and fading it removed the blades exactly where the
         wearer is closest to them."""
-        src = (ROOT / "apple/FantasyEdge/Sources/Stadium/Actors/Field/FieldActor.swift").read_text()
+        src = (ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Field/FieldActor.swift").read_text()
         self.assertRegex(src, r'"PatchZ1",\s*half \+ Sh\.fade')
 
     def test_the_layers_stay_inside_the_baked_atlas(self):

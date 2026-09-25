@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../../.."
 W=.work/gates
 rm -rf "$W" && mkdir -p "$W/scenes"
 python3 tools/scene_samples.py "$W/scenes" | tail -1
-S=apple/FantasyEdge/Sources/Stadium
+S=packages/swift/StadiumKit/Sources/StadiumKit
 nice -n 10 swiftc -o "$W/verify-scene" "$S/SceneSpec.swift" "$S/SceneLook.swift" "$S"/Actors/*/*Look.swift \
   "$S/Actors/Field/FieldArtSpec.swift" "$S/SceneMath.swift" "$S/Actors/Broadcast/BroadcastFlight.swift" \
   apple/verify_scene.swift || exit 1
