@@ -16,9 +16,14 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
-DD=".work/dd-device"
-APP_NAME="FantasyEdge.app"
-BUNDLE="com.mutaaf.fantasyedge"
+# Parameterised the way apple/sim.sh is, so Saturday runs on the headset
+# through the same script rather than a second copy of it. Saturday sets these
+# in apps/saturday/apple/device.sh; unset, they mean fantasy-edge.
+BUNDLE="${FE_BUNDLE:-com.mutaaf.fantasyedge}"
+PROJECT="${FE_PROJECT:-apple/FantasyEdge.xcodeproj}"
+SCHEME="${FE_SCHEME:-FantasyEdge}"
+APP_NAME="${FE_PRODUCT:-FantasyEdge.app}"
+DD="${FE_DD:-.work/dd-device-$SCHEME}"
 STATS=0
 BUILD_ONLY=0
 
@@ -102,7 +107,7 @@ mkdir -p .work
 # through tee and grep and read $PIPESTATUS after a trailing `|| true`, which
 # always said success - so a failed build printed its errors and then
 # announced the app it had not built.
-xcodebuild -project apple/FantasyEdge.xcodeproj -scheme FantasyEdge \
+xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
   -destination "generic/platform=visionOS" \
   -derivedDataPath "$DD" -allowProvisioningUpdates build > "$BUILD_LOG" 2>&1
 STATUS=$?
