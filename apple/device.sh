@@ -101,15 +101,28 @@ say "Building for visionOS device"
 # -allowProvisioningUpdates lets Xcode register the App ID and make a profile
 # on first run. Without it the first build of a bundle id nobody has ever
 # built fails with a provisioning error and no explanation of what to do.
+#
+# -allowProvisioningDeviceRegistration is the other half, and it bites the
+# first time a headset is paired: the profile is made from the devices the
+# team knew about, so a device paired afterwards is not in it. The build
+# still succeeds and signs; the INSTALL fails, with "this provisioning
+# profile cannot be installed on this device" and nothing about the real
+# cause. This flag registers the device and re-makes the profile.
 BUILD_LOG=".work/device-build.log"
 mkdir -p .work
 # Status from xcodebuild itself, not from a pipeline. An earlier version piped
 # through tee and grep and read $PIPESTATUS after a trailing `|| true`, which
 # always said success - so a failed build printed its errors and then
 # announced the app it had not built.
+# Build AT the headset when we have one, not at a generic device. Xcode only
+# registers a device it is actually building for, so with the generic
+# destination a newly paired headset is never added to the profile and the
+# install fails however many times you pass the registration flag.
+DEST="generic/platform=visionOS"
+[ -n "${DEVICE_ID:-}" ] && DEST="id=$DEVICE_ID"
 xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
-  -destination "generic/platform=visionOS" \
-  -derivedDataPath "$DD" -allowProvisioningUpdates build > "$BUILD_LOG" 2>&1
+  -destination "$DEST" \
+  -derivedDataPath "$DD" -allowProvisioningUpdates -allowProvisioningDeviceRegistration build > "$BUILD_LOG" 2>&1
 STATUS=$?
 grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)|Signing Identity" "$BUILD_LOG" | sort -u | head -20
 
