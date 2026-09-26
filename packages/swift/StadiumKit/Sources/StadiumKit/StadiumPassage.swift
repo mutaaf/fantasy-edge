@@ -39,6 +39,16 @@ public final class StadiumPassage {
     public private(set) var open: Set<Window> = []
     public private(set) var inStadium = false
 
+    /// Why the last walk into the stadium did not happen, for the caller to
+    /// show. `enter` used to return silently on a refusal, so a tap with the
+    /// board's room already open played the gate, dimmed the table and did
+    /// nothing else - indistinguishable from a bug.
+    public private(set) var refusal: String?
+
+    /// How long the table needs to be up before the space can read the game
+    /// off it. The walk-in hooks each had their own sleep; this is the one.
+    public static let doorSeconds: Double = 3
+
     /// The space to open, and what to bring back when the wearer walked
     /// straight into the stadium with nothing behind them - the app's front
     /// door, which is its board or its wall.
@@ -88,17 +98,28 @@ public final class StadiumPassage {
     /// that task; whatever comes after it would never run.
     public func enter(openSpace: OpenImmersiveSpaceAction, dismissWindow: DismissWindowAction,
                       before: () -> Void = {}) async {
-        guard !inStadium else { return }
+        guard !inStadium else { log.info("enter ignored: already in the stadium"); return }
         // The app's own business before the walk - which immersion style the
         // dial opens at, say - done while nothing has moved yet.
         before()
         let opened = open
+        refusal = nil
         switch await openSpace(id: spaceID) {
         case .opened:
             break
-        default:
-            // Another space is open (the board's room) or the system refused.
-            // Nothing was closed, so nothing needs restoring.
+        case .userCancelled:
+            // Nothing was closed, so nothing needs restoring - but the wearer
+            // has watched the gate rise for nothing unless we say so.
+            refusal = "The stadium was not opened."
+            log.info("enter refused: the wearer cancelled")
+            return
+        case .error:
+            refusal = "Leave the immersive board before entering the stadium."
+            log.error("enter refused: another space is open, or the system refused")
+            return
+        @unknown default:
+            refusal = "The stadium could not be opened."
+            log.error("enter refused: unknown result from openImmersiveSpace")
             return
         }
         saved = opened

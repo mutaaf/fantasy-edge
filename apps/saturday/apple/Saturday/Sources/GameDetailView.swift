@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(visionOS)
+import StadiumKit
+#endif
 
 /// Drives, win probability, box score and leaders for one game. Everything
 /// is read from /api/game/{id}; the chart plots ESPN's published series and
@@ -6,6 +9,12 @@ import SwiftUI
 struct GameDetailView: View {
     @Environment(SaturdayStore.self) private var store
     @Environment(\.horizontalSizeClass) private var sizeClass
+    #if os(visionOS)
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
+    @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(StadiumPassage.self) private var passage
+    #endif
     let gameID: String
     @Binding var path: NavigationPath
     @State private var flourish: Change?
@@ -142,16 +151,45 @@ struct GameDetailView: View {
 
     private var actions: some View {
         HStack(spacing: 12) {
-            Button { path.append(Route.tabletop(gameID)) } label: {
+            Button { openTabletop() } label: {
                 Label("View in 3D", systemImage: Glyph.tabletop)
             }
             .buttonStyle(PillButtonStyle(primary: true))
-            Button { path.append(Route.stadium(gameID)) } label: {
+            Button { enterStadium() } label: {
                 Label("Enter stadium", systemImage: Glyph.stadium)
             }
             .buttonStyle(PillButtonStyle())
         }
         .font(Typeface.sans(17, .semibold))
+    }
+
+    /// The volume and the space have existed since phase 2; until now the only
+    /// thing that opened them was the `-openTabletop` screenshot hook, and a
+    /// tap pushed `Route.tabletop` onto the stack instead, which resolves to
+    /// the "arrives at integration" placeholder. The renderer had arrived; the
+    /// buttons had not been moved off the stand-in. Off visionOS the
+    /// placeholder is still the honest answer.
+    private func openTabletop() {
+        #if os(visionOS)
+        openWindow(id: "tabletop", value: gameID)
+        #else
+        path.append(Route.tabletop(gameID))
+        #endif
+    }
+
+    /// The table is the door: the space reads the game the volume opened, so
+    /// the volume goes up first and the passage walks through it.
+    private func enterStadium() {
+        #if os(visionOS)
+        openWindow(id: "tabletop", value: gameID)
+        let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(StadiumPassage.doorSeconds))
+            await passage.enter(openSpace: open, dismissWindow: dismiss)
+        }
+        #else
+        path.append(Route.stadium(gameID))
+        #endif
     }
 }
 

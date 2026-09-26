@@ -58,6 +58,23 @@ def main() -> None:
         (src_children if phase == "Sources" else font_children).append(f'\t\t\t\t{fref} /* {name} */,')
         (src_phase if phase == "Sources" else res_phase).append(f'\t\t\t\t{bfile} /* {name} in {phase} */,')
 
+    # The design tokens, bundled unchanged, exactly as fantasy-edge bundles
+    # them. Without this Saturday shipped no tokens.json at all, so
+    # SceneSpec.Look.bundled() returned nil and every ExperienceTokens
+    # fallback in the shared stadium was nil here while working next door.
+    tokens = ROOT.parents[2] / "design" / "tokens.json"
+    if tokens.exists():
+        tref, tbuild = oid("fref", "tokens.json"), oid("bfile", "tokens.json")
+        file_refs.append(
+            f'\t\t{tref} /* tokens.json */ = {{isa = PBXFileReference; '
+            f'lastKnownFileType = text.json; path = ../../../design/tokens.json; '
+            f'sourceTree = SOURCE_ROOT; }};')
+        build_files.append(
+            f'\t\t{tbuild} /* tokens.json in Resources */ = {{isa = PBXBuildFile; '
+            f'fileRef = {tref} /* tokens.json */; }};')
+        font_children.append(f'\t\t\t\t{tref} /* tokens.json */,')
+        res_phase.append(f'\t\t\t\t{tbuild} /* tokens.json in Resources */,')
+
     ids = {k: oid(k) for k in (
         "project", "target", "productRef", "mainGroup", "sourcesGroup", "fontsGroup", "productsGroup",
         "sourcesBuildPhase", "frameworksBuildPhase", "resourcesBuildPhase", "configListProject",
