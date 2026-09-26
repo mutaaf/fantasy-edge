@@ -21,9 +21,17 @@ public enum BallFlight {
     public static func manner(_ arc: SceneSpec.Arc, _ f: SceneSpec.Look.BallFlight) -> Manner {
         if let m = f.byStyle[arc.style], let manner = Manner(rawValue: m) { return manner }
         let type = arc.type.lowercased()
-        for (key, value) in f.byType.sorted(by: { $0.key.count > $1.key.count }) where type.contains(key) {
-            if let manner = Manner(rawValue: value) { return manner }
+        // The longest key that matches wins, found in one pass. It used to be
+        // found by materialising and sorting the whole dictionary, which is a
+        // heap array and a comparison closure - and `manner` is called from
+        // `pose`, several times a frame for as long as a ball is in the air, to
+        // answer a question that only depends on the arc and the tokens.
+        var best: (length: Int, manner: Manner)?
+        for (key, value) in f.byType where type.contains(key) {
+            guard let manner = Manner(rawValue: value) else { continue }
+            if best == nil || key.count > best!.length { best = (key.count, manner) }
         }
+        if let best { return best.manner }
         return Manner(rawValue: f.byShape[arc.shape] ?? "") ?? .carry
     }
 

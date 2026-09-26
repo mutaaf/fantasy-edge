@@ -154,6 +154,12 @@ extension SceneSpec.Look {
         public let desaturate: [Double]
         public let clubValue: CrowdValue
         public let cardContrast: Double
+        /// How many matchups' worth of composed atlases to keep. A dress is
+        /// the crowd's whole texture budget - about 71 MB of it - so the cache
+        /// that makes a return to a game instant is also the thing that decides
+        /// how much a channel-hopping session holds. See `dressCacheAbout`.
+        public let dressCache: Int
+        public let dressCacheAbout: String
         public let tint: CrowdTint
         public let roughness: Double
         public let castShadows: Bool

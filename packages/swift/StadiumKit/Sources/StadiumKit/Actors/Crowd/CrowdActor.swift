@@ -75,6 +75,10 @@ final class CrowdActor: StadiumActor {
     private(set) var supportCounts: [CrowdSupport.Kind: Int] = [:]
 
     private var previousTint: String?
+    /// Each pose's row in the impostor atlas, and the `visual.crowd.poses` it
+    /// was solved from. See `update`.
+    private var poseRows: [CrowdChoreography.Pose: Int] = [:]
+    private var poseRowsFor: [String] = []
 
     init() { root.name = "actor.crowd" }
 
@@ -437,6 +441,23 @@ final class CrowdActor: StadiumActor {
         StadiumLog.log.notice("[stadium] crowd support: home \(Int(Double(self.supportCounts[.home] ?? 0) / Double(seatsTaken) * 100))%, visiting \(Int(Double(self.supportCounts[.away] ?? 0) / Double(seatsTaken) * 100))%, neutral \(Int(Double(self.supportCounts[.neutral] ?? 0) / Double(seatsTaken) * 100))% of \(seatsTaken) seats taken")
     }
 
+    /// The crowd is the most expensive thing in the bowl to hold on to: each
+    /// group keeps a merged mesh for every one of the twelve choreography
+    /// slots, so the near rings' 108k drawn triangles are about 1.3M triangles
+    /// of resident vertex and index buffers. `clear()` unparents the group
+    /// entities but `groups` still holds every one of those meshes, so a closed
+    /// space kept the whole crowd alive.
+    func teardown() {
+        clear()
+        groups.removeAll()
+        counts = [:]
+        supportCounts = [:]
+        sectionSlices = [:]
+        fans = 0
+        tint = "unset"
+        seatKey = nil
+    }
+
     /// New clubs in the same bowl: change what the crowd wears, not where it sits.
     ///
     /// Placement is the expensive half - forty-odd thousand fans measured into
@@ -498,7 +519,18 @@ final class CrowdActor: StadiumActor {
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         let C = c.look.crowd, s = c.spec
         let time = frame.time
-        let index = { (name: String) in C.poses.firstIndex(of: name) ?? 0 }
+        // Which row of the impostor atlas each pose sits on. Solved once per
+        // matchup rather than per group per frame: this was a closure over a
+        // linear search of `C.poses`, run for every card group on every frame,
+        // so about seventy string searches a frame to turn an enum the atlas is
+        // built from back into the index the atlas was built with.
+        if poseRowsFor != C.poses {
+            poseRowsFor = C.poses
+            poseRows = [:]
+            for pose in CrowdChoreography.Pose.allCases {
+                poseRows[pose] = C.poses.firstIndex(of: pose.rawValue) ?? 0
+            }
+        }
 
         let surge = c.shared.surge.flatMap { time < $0.until ? $0 : nil }
         let cues = CrowdCues.live(c.shared, at: time)
@@ -554,7 +586,7 @@ final class CrowdActor: StadiumActor {
                 // A wave is a late-game or dead-game thing; a 0-0 first quarter is watching the football.
                 waveAllowed: s.status.period >= C.idleStandShare.aboutPeriod || CrowdSupport.decided(s, C))
             if g.ring == .card {
-                setPose(g, index(CrowdChoreography.pose(input).rawValue))
+                setPose(g, poseRows[CrowdChoreography.pose(input)] ?? 0)
             } else {
                 setSlot(g, CrowdChoreography.slot(input))
             }
@@ -663,7 +695,46 @@ struct CrowdPoseMesh {
 @MainActor
 final class CrowdKit {
     private static var cache: CrowdKit?
-    private static var dressCache: [String: Dress] = [:]
+
+    /// Composed dresses, newest last, at most `visual.crowd.dressCache` deep.
+    ///
+    /// A dress is the crowd's entire texture budget: six tinted atlases, about
+    /// 71 MB with mips (2048² home fans and 2560×2304 home cards at full size,
+    /// the visitors' pair at half, the unaligned pair at a quarter). Keyed per
+    /// matchup and never evicted, it made a return to a game instant and made
+    /// the process grow by 71 MB for every new one - a red-zone channel round
+    /// ten games held ten dresses and nothing ever gave one back. Least
+    /// recently used now falls off the front, so the game on screen and the one
+    /// it came from stay hot and the rest are recomposed if they return.
+    private static var dressKeys: [String] = []
+    private static var dresses: [String: Dress] = [:]
+
+    private static func cachedDress(_ key: String) -> Dress? {
+        guard let d = dresses[key] else { return nil }
+        touch(key)
+        return d
+    }
+
+    private static func store(_ d: Dress, for key: String, limit: Int) {
+        dresses[key] = d
+        touch(key)
+        let keep = max(1, limit)
+        while dressKeys.count > keep {
+            dresses[dressKeys.removeFirst()] = nil
+            StadiumLog.log.notice("[stadium] crowd dress evicted, \(Self.dressKeys.count) of \(keep) kept")
+        }
+        cache?.dropStandIn(key)
+    }
+
+    private static func touch(_ key: String) {
+        dressKeys.removeAll { $0 == key }
+        dressKeys.append(key)
+    }
+
+    private static func emptyDressCache() {
+        dressKeys.removeAll()
+        dresses.removeAll()
+    }
 
     let look: SceneSpec.Look.CrowdLook
     private var meshes: [String: CrowdPoseMesh] = [:]
@@ -695,6 +766,48 @@ final class CrowdKit {
             case .neutral: return cardNeutral
             }
         }
+
+        var all: [TextureResource] { [fanHome, fanAway, cardHome, cardAway, fanNeutral, cardNeutral] }
+    }
+
+    /// What the crowd is holding in texture memory.
+    ///
+    /// `StadiumAssets.bytes` - the number `-stadiumStats` prints as the
+    /// stadium's texture memory - cannot see any of this. The kit's four source
+    /// atlases are decoded here rather than declared in `visual.crowd.assets`,
+    /// and every composed dress is six textures more, so the reported total
+    /// left out the single largest consumer in the bowl and the 300 MB budget
+    /// in docs/ART_BIBLE.md was being checked against roughly a third of what
+    /// the process actually held.
+    ///
+    /// Everything the kit holds is counted, not only the LRU: the full dresses
+    /// land about two seconds after a build, so a count taken at build time
+    /// saw an empty cache and reported nothing while the stand the shot shows
+    /// was already wearing a quarter-size one. The plain atlases stand in for
+    /// six of a dress's fields at once and several dresses share them, so
+    /// every texture is counted once, by identity.
+    static func textureBytes() -> (sources: Int, dresses: Int) {
+        var seen = Set<ObjectIdentifier>()
+        var composed = 0
+        func count(_ d: Dress) {
+            for t in d.all where seen.insert(ObjectIdentifier(t)).inserted {
+                let base = t.width * t.height * 4
+                composed += t.mipmapLevelCount > 1 ? base * 4 / 3 : base
+            }
+        }
+        for d in dresses.values { count(d) }
+        if let kit = cache {
+            for d in kit.quick.values { count(d) }
+            if let p = kit.plain { count(p) }
+        }
+        return (cache?.sourceBytes ?? 0, composed)
+    }
+
+    /// The four kit atlases, decoded and held for as long as the kit is: they
+    /// are what every dress is composed from, so dropping them would mean
+    /// re-reading four PNGs on every game change.
+    private var sourceBytes: Int {
+        [fanAlbedo, fanMask, cardAlbedo, cardMask].reduce(0) { $0 + $1.width * $1.height * 4 }
     }
 
     private init?(_ C: SceneSpec.Look.CrowdLook) {
@@ -728,7 +841,7 @@ final class CrowdKit {
     static func load(_ C: SceneSpec.Look.CrowdLook) -> CrowdKit? {
         if let cache, cache.look == C { return cache }
         cache = CrowdKit(C)
-        dressCache.removeAll()
+        emptyDressCache()
         return cache
     }
 
@@ -814,14 +927,32 @@ final class CrowdKit {
         return d
     }
 
+    /// The quarter-size stand-ins, bounded the same way as the full dresses
+    /// (`visual.crowd.dressCache`). A quarter of each atlas is about 4.8 MB a
+    /// matchup - a fifteenth of a full dress, but it was kept for ever too, so
+    /// a long channel session grew by that much per game on top of everything
+    /// else.
     private var quick: [String: Dress] = [:]
+    private var quickKeys: [String] = []
 
     /// A quarter-size dress, composed synchronously in well under a frame
     /// budget's worth of seconds, so fans never appear in the kit's grey.
+    ///
+    /// This is on the repaint path whenever the full dress for a matchup is not
+    /// cached, which since the cache was bounded means every game a channel
+    /// cycling through more than `visual.crowd.dressCache` of them comes back
+    /// to. It is the synchronous half of a game change, so it is timed: the
+    /// repaint budget is a few tenths of a second and this is what spends it.
     func quickDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress {
         let C = look.crowd
         let key = Self.key(s, C)
-        if let d = quick[key] { return d }
+        if let d = quick[key] {
+            quickKeys.removeAll { $0 == key }
+            quickKeys.append(key)
+            return d
+        }
+        let started = ContinuousClock.now
+        defer { StadiumTiming.log("crowd quick dress", since: started) }
         let home = Self.clubCloth(s.teams.home.color, C), away = Self.clubCloth(s.teams.away.color, C)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Self.cardLayout(C)
@@ -838,7 +969,21 @@ final class CrowdKit {
                       cardAway: StadiumText.texture(make(ca, cm, away, cardLayout, away: true, card: true)) ?? plain.cardAway,
                       fanNeutral: plain.fanNeutral, cardNeutral: plain.cardNeutral)
         quick[key] = d
+        quickKeys.append(key)
+        while quickKeys.count > max(1, C.dressCache) { quick[quickKeys.removeFirst()] = nil }
         return d
+    }
+
+    /// This matchup's full dress has landed, so its quarter-size stand-in has
+    /// done its job. With the last stand-in goes the kit's untinted pair, which
+    /// measured 54 MB of texture that nothing was wearing - `plainDress` only
+    /// exists to cover the two seconds before a dress is composed and to stand
+    /// in for one that fails, and it builds again from the atlases whenever it
+    /// is next asked for.
+    fileprivate func dropStandIn(_ key: String) {
+        quick[key] = nil
+        quickKeys.removeAll { $0 == key }
+        if quick.isEmpty { plain = nil }
     }
 
     /// What a club's stand wears: the club's stated colour, lifted to the floor.
@@ -853,7 +998,7 @@ final class CrowdKit {
     }
 
     func cachedDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress? {
-        Self.dressCache[Self.key(s, look.crowd)]
+        Self.cachedDress(Self.key(s, look.crowd))
     }
 
     private struct Images: @unchecked Sendable {
@@ -869,7 +1014,7 @@ final class CrowdKit {
     func composeDress(for s: SceneSpec, look: SceneSpec.Look, done: @escaping @MainActor (Dress) -> Void) {
         let C = look.crowd
         let key = Self.key(s, C)
-        if let d = Self.dressCache[key] { done(d); return }
+        if let d = Self.cachedDress(key) { done(d); return }
         // Each side wears its own club's stated colour, not its panel chip.
         let home = Self.clubCloth(s.teams.home.color, C), away = Self.clubCloth(s.teams.away.color, C)
         // Neither club: the scene's own neutral and dark crowd colours, worn as
@@ -909,7 +1054,7 @@ final class CrowdKit {
                               cardAway: StadiumText.texture(images.cardAway) ?? plain.cardAway,
                               fanNeutral: StadiumText.texture(images.fanNeutral) ?? plain.fanNeutral,
                               cardNeutral: StadiumText.texture(images.cardNeutral) ?? plain.cardNeutral)
-                Self.dressCache[key] = d
+                Self.store(d, for: key, limit: C.dressCache)
                 let f = { (a: Date, b: Date) in String(format: "%.2f", b.timeIntervalSince(a)) }
                 StadiumLog.log.notice("[stadium] crowd dress composed in \(f(started, Date())) s (decode \(f(started, decoded)), tint \(f(decoded, tinted)), main-actor wait \(f(tinted, hop)), textures \(f(hop, Date())))")
                 done(d)

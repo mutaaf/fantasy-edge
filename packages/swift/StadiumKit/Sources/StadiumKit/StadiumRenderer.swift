@@ -142,6 +142,38 @@ public final class StadiumRenderer {
         for actor in actors { world.addChild(actor.root) }
     }
 
+    /// The space or the volume closed. Give the world back now.
+    ///
+    /// SwiftUI releases a `@State` object when the view's identity goes, and
+    /// RealityKit releases what it was handed when the content goes - but both
+    /// happen whenever they happen, and until they do the bowl is still in
+    /// memory: ten actors, every entity, the crowd's twelve merged meshes per
+    /// group and the context holding all of it. Somebody opening a second
+    /// stadium in the meantime pays for the first one twice. This makes the
+    /// release the moment the space closes instead, and the next `apply`
+    /// rebuilds from nothing.
+    public func teardown() {
+        subscription?.cancel()
+        subscription = nil
+        for actor in actors { actor.teardown() }
+        root.removeFromParent()
+        context = nil
+        builtVenue = nil
+        staticKey = ""
+        shownSpec = nil
+        shownStatus = nil
+        shownDrive = nil
+        liveMoment = nil
+        lastArrivedPlay = nil
+        lastCue = nil
+        lastDriveLine = ""
+        statsDue = []
+        deviceStats = nil
+        openedAt = nil
+        firstFrameDue = false
+        gate.clear()
+    }
+
     // MARK: apply
 
     public func apply(_ next: SceneSpec, reduceMotion: Bool) {
@@ -397,6 +429,13 @@ public final class StadiumRenderer {
     /// goalposts) sets `DynamicLightShadowComponent(castsShadow: true)` itself,
     /// and the composer repeats the pass after every scene and every frame, so
     /// pieces added after build never reach a rendered frame casting.
+    /// Measured at integration-16: 83 models in a tree of a few hundred
+    /// entities, so this is two ECS lookups a node at 90 Hz - real, but small,
+    /// and every cheap way to skip it is wrong. An entity count is the obvious
+    /// dirty flag and it is unsound here: `BroadcastTrails.grow` unparents the
+    /// live trail and adds its replacement in the same frame, so the count is
+    /// unchanged while three entities that must not cast are new. Left alone
+    /// deliberately; the sweep is the thing that makes casting opt-in.
     private func optOutOfShadows(_ e: Entity) {
         for child in e.children {
             if child.components.has(ModelComponent.self), !child.components.has(DynamicLightShadowComponent.self) {
@@ -583,8 +622,14 @@ enum StadiumStats {
                 + "spot lights \(lights), emitters \(emitters), shadow casters \(casters)"
             StadiumLog.log.notice("\(line, privacy: .public)")
         }
+        // The crowd's atlases never go through StadiumAssets, so `assets.bytes`
+        // is only the declared textures. Both halves are named, and the total
+        // is what the 300 MB line in docs/ART_BIBLE.md is actually about.
+        let crowd = CrowdKit.textureBytes()
+        let mb = { (b: Int) in b / 1_048_576 }
         let line = "[stadium-stats] \(label): models \(totals.models), draw parts \(totals.parts), "
-            + "triangles \(totals.triangles), texture memory ~\(assets.bytes / 1_048_576) MB"
+            + "triangles \(totals.triangles), texture memory ~\(mb(assets.bytes + crowd.sources + crowd.dresses)) MB "
+            + "(declared \(mb(assets.bytes)), crowd kit \(mb(crowd.sources)), crowd dresses \(mb(crowd.dresses)))"
         StadiumLog.log.notice("\(line, privacy: .public)")
     }
 }

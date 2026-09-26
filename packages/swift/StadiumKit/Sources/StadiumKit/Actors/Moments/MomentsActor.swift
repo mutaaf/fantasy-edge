@@ -56,6 +56,14 @@ final class MomentsActor: StadiumActor {
         shells.removeAll()
     }
 
+    /// A pending step captures the context, and the frame clock that would have
+    /// drained it has stopped. Dropped here rather than left to pin the world.
+    func teardown() {
+        clear()
+        steps.removeAll()
+        shells.removeAll()
+    }
+
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {
         switch event {
         case .moment(let m):

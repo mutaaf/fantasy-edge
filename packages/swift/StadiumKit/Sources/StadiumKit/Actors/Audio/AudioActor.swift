@@ -69,6 +69,28 @@ final class AudioActor: StadiumActor {
         }
     }
 
+    /// NotificationCenter retains a block observer until it is handed the token
+    /// back, so without this every AudioActor ever built left a live
+    /// registration behind - one per stadium opened, and one more for every
+    /// renderer a SwiftUI body built and dropped.
+    deinit {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+    }
+
+    /// The space closed: stop the beds rather than leave a stadium playing to
+    /// nobody, and drop the scheduled steps, which capture the context and are
+    /// only ever drained on a frame clock that has stopped.
+    func teardown() {
+        beds.forEach { $0.controller.stop() }
+        beds.removeAll()
+        steps.removeAll()
+        events.removeAll()
+        active = 0
+        nearBed = nil
+        applied = .nan
+        clear()
+    }
+
     // MARK: build
 
     func build(_ c: StadiumContext) {
