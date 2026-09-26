@@ -270,6 +270,28 @@ public struct ReplayControls: View {
     }
 }
 
+/// Something built the first time it is asked for, and never again.
+///
+/// `@State private var x = Expensive()` runs that initialiser on every
+/// re-evaluation of the view that builds this one and SwiftUI throws all but
+/// the first away. `StadiumRenderer.init` is not free: two entities, ten
+/// actors, and `BroadcastActor` parents ten more entities of its own - so a
+/// parent redrawing on each poll built and dropped a whole composer every
+/// time. Holding the closure instead costs one object and defers the rest to
+/// the first real use, by which point SwiftUI has settled on the state it kept.
+@MainActor
+final class Lazy<T> {
+    private var made: T?
+    private let make: () -> T
+    init(_ make: @escaping () -> T) { self.make = make }
+    var value: T {
+        if let made { return made }
+        let v = make()
+        made = v
+        return v
+    }
+}
+
 // MARK: - the tabletop
 
 /// A game on the table: a volumetric window sized by `presentation.tabletop.volume`.
@@ -281,7 +303,8 @@ public struct ReplayControls: View {
 public struct TabletopView: View {
     let feed: SceneFeed
     let enterStadium: () -> Void
-    @State private var renderer = StadiumRenderer(mode: .tabletop)
+    @State private var rendererBox = Lazy { StadiumRenderer(mode: .tabletop) }
+    private var renderer: StadiumRenderer { rendererBox.value }
     @State private var holder = Entity()
     @State private var gate = ArrivalGate()
     @State private var gateClock: EventSubscription?
@@ -309,12 +332,16 @@ public struct TabletopView: View {
             holder.addChild(gate.root)
             holder.components.set(InputTargetComponent())
             content.add(holder)
+            // Weakly. The renderer owns its subscription and the subscription's
+            // handler owns whatever it captures, so a strong capture here is a
+            // cycle that strands the whole stadium - both entity trees, all ten
+            // actors, every merged crowd mesh - every time the volume closes.
             let r = renderer, g = gate
-            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { [weak r] event in
+                MainActor.assumeIsolated { r?.tick(event.deltaTime) }
             }
-            gateClock = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { g.tick(event.deltaTime) }
+            gateClock = content.subscribe(to: SceneEvents.Update.self) { [weak g] event in
+                MainActor.assumeIsolated { g?.tick(event.deltaTime) }
             }
         } update: { _ in
             guard let spec = feed.spec else { return }
@@ -393,6 +420,14 @@ public struct TabletopView: View {
         .onDisappear {
             feed.stop()
             gate.cancel()
+            // The frame clock stops with the volume, and the entity tree goes
+            // with it. A subscription left live keeps ticking a stadium nobody
+            // is looking at.
+            renderer.subscription?.cancel()
+            renderer.subscription = nil
+            gateClock?.cancel()
+            gateClock = nil
+            renderer.teardown()
         }
     }
 
@@ -550,7 +585,8 @@ public struct StadiumSpaceView<Trailing: View>: View {
     let trailingTitle: String?
     let leave: () -> Void
     let trailing: Trailing
-    @State private var renderer = StadiumRenderer(mode: .stadium)
+    @State private var rendererBox = Lazy { StadiumRenderer(mode: .stadium) }
+    private var renderer: StadiumRenderer { rendererBox.value }
     @State private var hold = MomentHold()
     /// Everything in the space hangs off `world`, which hangs off `pivot` at
     /// the wearer's eye, so a debug build can turn the whole bowl about the
@@ -598,9 +634,12 @@ public struct StadiumSpaceView<Trailing: View>: View {
     public var body: some View {
         RealityView { content, attachments in
             world.addChild(renderer.root)
+            // Weakly: see TabletopView. The renderer holds the subscription,
+            // so a strong capture is a cycle and every close of the space
+            // leaks the whole bowl.
             let r = renderer
-            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { [weak r] event in
+                MainActor.assumeIsolated { r?.tick(event.deltaTime) }
             }
             let args = ProcessInfo.processInfo.arguments
             // A shot's seat wins; otherwise the seat the wearer last chose.
@@ -816,7 +855,12 @@ public struct StadiumSpaceView<Trailing: View>: View {
             }
             #endif
         }
-        .onDisappear { feed.stop() }
+        .onDisappear {
+            feed.stop()
+            renderer.subscription?.cancel()
+            renderer.subscription = nil
+            renderer.teardown()
+        }
     }
 
     /// Re-seat the dock in front of where the wearer is looking now: the

@@ -109,6 +109,17 @@ final class ExperienceActor: StadiumActor {
     /// Drive the changeover's opacity. A seat fade, if one is also running,
     /// writes opacity after this and wins for its duration; the two never
     /// overlap in practice, because a channel does not change seat and game at
+    #if DEBUG
+    /// Read once. `StadiumShots.argument` bridges the whole argument array out
+    /// of ProcessInfo on every call and twice on a miss, and this sits in
+    /// `updateChangeover`, which runs on the frame clock for the length of
+    /// every changeover - which is exactly when the harness is measuring.
+    private static let fadeScale: Double? = {
+        guard let s = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), s > 0 else { return nil }
+        return s
+    }()
+    #endif
+
     /// the same instant, and if they did the seat fade is the shorter.
     private func updateChangeover(_ frame: StadiumFrame, _ c: StadiumContext) {
         guard var ch = changeover else { return }
@@ -117,7 +128,7 @@ final class ExperienceActor: StadiumActor {
         // `-stadiumFadeScale 8`: stretch the changeover so a simulator
         // screenshot, which costs about a second, can land inside a fade that
         // is otherwise over in a third of one.
-        if let s = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), s > 0 { half *= s }
+        if let s = Self.fadeScale { half *= s }
         #endif
         ch.elapsed += frame.dt
         let opacity: Float

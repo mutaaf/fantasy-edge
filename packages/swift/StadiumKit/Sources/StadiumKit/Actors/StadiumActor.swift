@@ -149,6 +149,12 @@ protocol StadiumActor: AnyObject {
     func update(_ frame: StadiumFrame, _ c: StadiumContext)
     /// Something happened in the game.
     func moment(_ event: StadiumEvent, _ c: StadiumContext)
+    /// The space or the volume closed. Give back everything, including what
+    /// the actor holds *outside* its entity tree - `clear()` only unparents
+    /// children, and the crowd's merged pose meshes, the audio beds and the
+    /// scheduled steps all outlive that. An actor is handed a scene again only
+    /// through `build`, so anything dropped here is rebuilt then.
+    func teardown()
 }
 
 extension StadiumActor {
@@ -156,6 +162,7 @@ extension StadiumActor {
     func apply(_ c: StadiumContext, previous: SceneSpec?) {}
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {}
     func moment(_ event: StadiumEvent, _ c: StadiumContext) {}
+    func teardown() { clear() }
 
     /// Remove everything this actor drew, before a rebuild.
     func clear() { root.children.removeAll() }
