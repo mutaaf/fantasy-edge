@@ -664,11 +664,18 @@ public struct StadiumSpaceView<Trailing: View>: View {
             let reading = feed.spec != nil
             let seatID = feed.spec.map { renderer.seat($0).id }
             let boardHasScore = seatID.flatMap { layout?.perSeat?[$0]?.scorebugHidden } ?? false
+            // The picker stands where the side panels and the controls already
+            // are, and a tap lands on whichever of them is nearest the eye. The
+            // controls sit at the same yaw a tenth of a metre in front of it, so
+            // most seats swallowed the seat under the finger. The picker is
+            // modal - it has its own Close - so while it is up the dock goes
+            // away and nothing is between the wearer and the seats.
+            let pickerUp = reading && pickerOpen
             attachments.entity(for: "scorebug")?.isEnabled = reading && !boardHasScore
-            attachments.entity(for: "drive")?.isEnabled = reading
-            attachments.entity(for: "trailing")?.isEnabled = reading && trailingTitle != nil
+            attachments.entity(for: "drive")?.isEnabled = reading && !pickerUp
+            attachments.entity(for: "trailing")?.isEnabled = reading && trailingTitle != nil && !pickerUp
             attachments.entity(for: "status")?.isEnabled = !reading
-            attachments.entity(for: "picker")?.isEnabled = reading && pickerOpen
+            attachments.entity(for: "picker")?.isEnabled = pickerUp
             attachments.entity(for: "hint")?.isEnabled = hintShown
         } attachments: {
             Attachment(id: "scorebug") {
@@ -947,6 +954,21 @@ public struct StadiumSpaceView<Trailing: View>: View {
     /// Called from `update` on every pass; an attachment moves only when its
     /// seat or its fold changes, and is never re-added.
     private func placeDock(_ seat: String, _ attachments: RealityViewAttachments) {
+        // The picker is not part of the dock - the dock is solved per seat, the
+        // picker is one panel straight ahead - but it still has to be put
+        // somewhere, and it never was. `layout.slots.picker` has carried its
+        // place since the picker was written and nothing ever read it, so the
+        // attachment kept its identity transform and opened at the wearer's
+        // feet. Placed before the dock's guard, because a scene with no
+        // per-seat layout still has a picker.
+        if let slot = layout?.slots.picker, let e = attachments.entity(for: "picker") {
+            placer.entities["picker"] = e
+            let key = "picker.\(Int(dockFacing))"
+            if placer.placed["picker"] != key {
+                placer.placed["picker"] = key
+                face(e, at: StadiumLayout.position(slot, facing: dockFacing))
+            }
+        }
         guard let solved = layout?.perSeat?[seat] else { return }
         let per = solved.at(facing: dockFacing)
         let asTab = yielding && reduceMotion
