@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -32,6 +33,9 @@ STADIUM_PACKAGE = "../../../packages/swift/StadiumKit"
 
 def oid(*parts: str) -> str:
     return hashlib.sha1("/".join(parts).encode()).hexdigest()[:24].upper()
+
+
+TEAM = os.environ.get("FE_TEAM", "")
 
 
 def main() -> None:
@@ -109,9 +113,21 @@ def main() -> None:
         '\t\t\t\tTARGETED_DEVICE_FAMILY = "1,2,7";\n'
         f'\t\t\t\tIPHONEOS_DEPLOYMENT_TARGET = {IOS};\n'
         f'\t\t\t\tXROS_DEPLOYMENT_TARGET = {XROS};\n'
+        # Signing is per SDK, as fantasy-edge's generator does it. The
+        # simulator has never signed and must not start, or every simulator
+        # build and look-dev shot changes; a headset refuses an unsigned
+        # bundle, so the device SDK signs. Saturday shipped with signing off
+        # for ALL SDKs, so a device build succeeded and installed as "No code
+        # signature found" - a failure that names the symptom and not the
+        # cause.
         '\t\t\t\tCODE_SIGN_STYLE = Automatic;\n'
-        '\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n'
-        '\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n')
+        '\t\t\t\t"CODE_SIGNING_ALLOWED[sdk=xrsimulator*]" = NO;\n'
+        '\t\t\t\t"CODE_SIGNING_REQUIRED[sdk=xrsimulator*]" = NO;\n'
+        '\t\t\t\t"CODE_SIGNING_ALLOWED[sdk=iphonesimulator*]" = NO;\n'
+        '\t\t\t\t"CODE_SIGNING_REQUIRED[sdk=iphonesimulator*]" = NO;\n'
+        '\t\t\t\t"CODE_SIGN_IDENTITY[sdk=xros*]" = "Apple Development";\n'
+        '\t\t\t\t"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";\n'
+        + (f'\t\t\t\tDEVELOPMENT_TEAM = {TEAM};\n' if TEAM else ''))
     project_common = (
         '\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;\n'
         '\t\t\t\tCLANG_ENABLE_OBJC_ARC = YES;\n'

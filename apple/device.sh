@@ -95,7 +95,11 @@ if [ -n "$LINE" ]; then
 fi
 
 # ----------------------------------------------------------------- the build
-python3 apple/generate_project.py || exit 1
+# Regenerate the project being built, not always fantasy-edge's: the
+# wrapper sets FE_GENERATOR. Building Saturday while regenerating
+# FantasyEdge.xcodeproj meant Saturday never picked up its own signing
+# settings, and installed as "No code signature found".
+python3 "${FE_GENERATOR:-apple/generate_project.py}" || exit 1
 
 say "Building for visionOS device"
 # -allowProvisioningUpdates lets Xcode register the App ID and make a profile
