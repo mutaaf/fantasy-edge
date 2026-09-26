@@ -29,3 +29,6 @@ data/replay/
 
 # SwiftPM's own build directory (the package is built by Xcode)
 packages/swift/*/.build/
+
+# Agent worktrees: working copies, never part of the app.
+.claude/worktrees/
