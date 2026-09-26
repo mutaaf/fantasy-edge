@@ -937,6 +937,12 @@ final class CrowdKit {
 
     /// A quarter-size dress, composed synchronously in well under a frame
     /// budget's worth of seconds, so fans never appear in the kit's grey.
+    ///
+    /// This is on the repaint path whenever the full dress for a matchup is not
+    /// cached, which since the cache was bounded means every game a channel
+    /// cycling through more than `visual.crowd.dressCache` of them comes back
+    /// to. It is the synchronous half of a game change, so it is timed: the
+    /// repaint budget is a few tenths of a second and this is what spends it.
     func quickDress(for s: SceneSpec, look: SceneSpec.Look) -> Dress {
         let C = look.crowd
         let key = Self.key(s, C)
@@ -945,6 +951,8 @@ final class CrowdKit {
             quickKeys.append(key)
             return d
         }
+        let started = ContinuousClock.now
+        defer { StadiumTiming.log("crowd quick dress", since: started) }
         let home = Self.clubCloth(s.teams.home.color, C), away = Self.clubCloth(s.teams.away.color, C)
         let fanLayout = Layout.grid(cols: C.fanGrid[0], rows: C.fanGrid[1])
         let cardLayout = Self.cardLayout(C)
