@@ -166,6 +166,18 @@ def _period(play: dict) -> int:
     return int((play.get("period") or {}).get("number") or 0)
 
 
+def _clock_seconds(display: str) -> float:
+    """"8:11" as 491.0. A play's clock carries only its display value, and a
+    board's `clock` is seconds; leaving it at the reference board's 0.0 read
+    every rebuilt game as the end of its quarter, so 8:11 in the third was
+    already "late"."""
+    minutes, _, seconds = display.partition(":")
+    try:
+        return float(int(minutes) * 60 + float(seconds or 0))
+    except ValueError:
+        return 0.0
+
+
 def game_at(event: dict, summary: dict, when: dt.datetime) -> dict:
     """The reference event, rewritten to how that game stood at `when`.
 
@@ -216,7 +228,7 @@ def game_at(event: dict, summary: dict, when: dt.datetime) -> dict:
         shown = f"{clock} - {['', '1st', '2nd', '3rd', '4th'][period] if 0 < period < 5 else f'OT{period - 4}'}"
         kind.update({"name": "STATUS_IN_PROGRESS", "state": "in", "completed": False,
                      "description": "In Progress", "detail": shown, "shortDetail": shown})
-        status.update({"period": period, "displayClock": clock})
+        status.update({"period": period, "clock": _clock_seconds(clock), "displayClock": clock})
 
     for side in comp.get("competitors") or []:
         side["score"] = str(home if (side.get("homeAway") or "").lower() == "home" else away)

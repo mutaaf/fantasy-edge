@@ -58,7 +58,11 @@ def recorder_running(capture: pathlib.Path) -> str | None:
 def link_or_copy(src: pathlib.Path, dst: pathlib.Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists():
-        return
+        if os.path.samefile(src, dst):
+            return
+        # A rebuilt backfill writes new files, which breaks the old links;
+        # keeping the stale copy made re-merging after a fix a silent no-op.
+        dst.unlink()
     try:
         os.link(src, dst)
     except OSError:

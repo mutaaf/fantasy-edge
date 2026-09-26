@@ -106,6 +106,14 @@ class RealGame(unittest.TestCase):
         self.assertEqual(record["home"]["score"], int(played[-1]["homeScore"]))
         self.assertEqual(record["away"]["score"], int(played[-1]["awayScore"]))
 
+    def test_mid_game_the_clock_is_the_clock_not_the_end_of_the_quarter(self):
+        """The rebuilt event is a copy of the final board, whose `clock` is 0.0.
+        Left there, leverage read every rebuilt game as out of time in its
+        quarter and filed 8:11 in the third under Close & late."""
+        record = parse.game_record(reconstruct.game_at(self.event, self.summary, at("17:00")))
+        minutes, seconds = record["status"]["clock"].split(":")
+        self.assertEqual(record["status"]["clockSeconds"], int(minutes) * 60 + int(seconds))
+
     def test_the_break_between_halves_draws_no_ball(self):
         """Halftime is the gap between the last play of the second period and
         the first of the third - inferred, and only where ESPN's periods say."""
@@ -276,6 +284,19 @@ class Merge(unittest.TestCase):
         self.assertEqual(src.frames(), ["20260919T160000Z", "20260919T170000Z",
                                         "20260919T204914Z", "20260919T205014Z"])
         self.assertTrue((self.out / "MERGE.json").exists())
+
+    def test_merging_again_after_a_rebuild_carries_the_rebuild(self):
+        """`backfill_slate.py frames` writes fresh files, so the merged night's
+        links point at the old ones. Re-merging must replace them, or a fix to
+        the reconstruction never reaches a replay."""
+        self.build()
+        merge_capture.merge(self.capture, self.backfill, self.out)
+        frame = self.backfill / "scoreboard" / "20260919T160000Z.json.gz"
+        frame.unlink()                                  # a rebuild is a new file, not an edit
+        self.write(frame, {"events": [], "capturedAt": "rebuilt"})
+        merge_capture.merge(self.capture, self.backfill, self.out)
+        kept = json.loads(gzip.open(self.out / "scoreboard" / "20260919T160000Z.json.gz", "rt").read())
+        self.assertEqual(kept["capturedAt"], "rebuilt")
 
     def test_it_refuses_while_the_recorder_is_still_going(self):
         self.build()
