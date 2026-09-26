@@ -12,6 +12,13 @@ extension SceneSpec.Look {
     public struct Camera: Decodable, Equatable, Sendable {
         public let eyeMeters: Double
         public let seatFadeSeconds: Double
+        /// How the world leaves and how it comes back, across a seat change and
+        /// across a changeover: `SceneMath.ease` names. Optional until
+        /// `design/tokens.json` carries them, where a straight ramp stands in -
+        /// which is what both halves were, and what made a dissolve read as a
+        /// wipe.
+        public let fadeOutEase: String?
+        public let fadeInEase: String?
     }
 
     public struct Baseplate: Decodable, Equatable, Sendable {

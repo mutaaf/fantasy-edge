@@ -21,6 +21,7 @@ public struct RedZonePanel: View {
     var rows = 6
     @Binding var following: Bool
     let watch: (String) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(channel: RedZoneChannel, showing: String, rows: Int = 6,
                 following: Binding<Bool>, watch: @escaping (String) -> Void) {
@@ -73,6 +74,7 @@ public struct RedZonePanel: View {
                                 .font(.system(size: 10, weight: .heavy))
                                 .padding(.horizontal, 5).padding(.vertical, 2)
                                 .background(.red.opacity(0.85), in: .capsule)
+                                .transition(.opacity.combined(with: .scale(scale: 0.8)))
                         }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(g.line).font(.system(size: 16, weight: .semibold))
@@ -84,6 +86,7 @@ public struct RedZonePanel: View {
                         Spacer()
                         Text(g.live ? g.score : g.kickoffShort)
                             .font(.system(size: 16, weight: .bold)).monospacedDigit()
+                            .contentTransition(.numericText())
                         // A game this source cannot draw says so here rather
                         // than letting the row look like every other one and
                         // then opening onto nothing.
@@ -102,6 +105,27 @@ public struct RedZonePanel: View {
         .padding(22)
         .frame(width: 420, alignment: .leading)
         .glassBackgroundEffect()
+        // The order is the channel's ranking, and it is re-ranked every poll.
+        // Redrawn without this the list is a slideshow: on a Saturday with
+        // thirty games live, six rows change places every three seconds and
+        // the eye loses whichever one it was reading. Animated, a row that
+        // rises is a row you can follow, which is the only way the panel
+        // answers "where should I be" rather than restating it.
+        //
+        // Reduce motion cuts: for a list, arriving at the new order at once
+        // *is* the reduced form, and it is the one people who ask for it want.
+        .animation(reduceMotion ? nil : .smooth(duration: 0.4), value: shape)
+    }
+
+    /// Everything the rows draw, in order: what has to change before any of
+    /// this is worth animating. Whole rows rather than the order alone, so a
+    /// score that rolls and a badge that appears are on the same curve as the
+    /// row they sit in, instead of one poll animating and the next cutting.
+    private var shape: [String] {
+        ranked.prefix(rows).map {
+            [$0.event, $0.line, $0.situation, $0.live ? $0.score : $0.kickoffShort,
+             $0.redZone ? "!" : "", $0.event == showing ? ">" : ""].joined(separator: "|")
+        }
     }
 
     /// Live games by urgency - the channel's own order - then the rest by

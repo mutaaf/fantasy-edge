@@ -494,8 +494,22 @@ public final class StadiumRenderer {
 
     // MARK: the frame clock
 
-    public func tick(_ dt: TimeInterval) {
+    /// One rendered frame. `dt` is the renderer's own delta, capped at
+    /// `motion.maxFrameSeconds` before anything sees it.
+    ///
+    /// The cap is not a nicety. A relivery costs a fifth of a second of main
+    /// thread and a build costs seconds; that cost arrives as the *next*
+    /// frame's delta, and every actor times its motion off the delta. Uncapped,
+    /// one expensive frame skips a fifth of a second of every animation at
+    /// once: the changeover's fade back finished before it drew, the crowd's
+    /// phase jumped, the ribbon's crawl tore and a moment's schedule fired two
+    /// of its beats in the same frame. Capped, an expensive frame is a slow
+    /// frame. The stadium's clock is its own - every deadline in it, from the
+    /// moment gate to the stats counts, is measured in `shared.time` - so it
+    /// stays consistent with itself while it catches up.
+    public func tick(_ rawDT: TimeInterval) {
         guard let c = context, builtVenue != nil else { return }
+        let dt = min(rawDT, c.spec.motion.maxFrameSeconds ?? .greatestFiniteMagnitude)
         c.shared.time += dt
         // Before the actors update, so a moment released this frame is acted on
         // in the same frame the ball lands. The score first, so the banner that

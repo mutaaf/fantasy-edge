@@ -8,6 +8,31 @@ import simd
 /// reproduces exactly this file and nothing more.
 public enum SceneMath {
 
+    /// `t` eased, 0...1, by the name a token gave. One implementation, so a
+    /// fade in the stadium, a fade on the table and a fade in a port all bend
+    /// the same way, and an easing is a number in `design/tokens.json` rather
+    /// than a curve buried in Swift.
+    ///
+    /// An unknown name is linear on purpose: a token a client has not been
+    /// taught yet degrades to what that client did before it existed, rather
+    /// than to nothing.
+    ///
+    ///   `in`        starts still, arrives at speed
+    ///   `out`       leaves at speed, settles
+    ///   `smooth`    smoothstep: still at both ends, the default for a dissolve
+    ///   `inCubic` / `outCubic`  the same, harder
+    public static func ease(_ t: Double, _ name: String?) -> Double {
+        let u = max(0, min(1, t))
+        switch name {
+        case "in": return u * u
+        case "out": return 1 - (1 - u) * (1 - u)
+        case "smooth": return u * u * (3 - 2 * u)
+        case "inCubic": return u * u * u
+        case "outCubic": return 1 - pow(1 - u, 3)
+        default: return u
+        }
+    }
+
     /// Where a field coordinate lands in the renderer's local space, before
     /// the root's scale. Midfield is the origin, so the field sits centred in
     /// a volume and a seat can be placed relative to it.
@@ -415,8 +440,13 @@ public enum SceneMath {
 ///
 /// A poll can bring several plays at once - at 60x a drive's worth - so they
 /// queue, and each is animated for the duration the scene gave it. A queue
-/// that falls behind halves what is left rather than letting the ball lag the
+/// that falls behind hurries what is left rather than letting the ball lag the
 /// game, and reduce motion skips the flight altogether and lands the ball.
+///
+/// Live and replay run the same rule, which is the point: a live Sunday is
+/// never more than a play or two deep and never hurries, and a 60x replay
+/// settles at whatever pace keeps the ball inside `motion.queue.catchUpSeconds`
+/// of the game. See `share(queued:waiting:)`.
 public struct PlayMotion {
     public private(set) var queue: [SceneSpec.Arc] = []
     public private(set) var seen: Set<String> = []
@@ -441,12 +471,35 @@ public struct PlayMotion {
     }
 
     /// The next arc and how long to fly it. Nil when there is nothing to do.
-    public mutating func next(reduceMotion: Bool, floor: Double) -> (SceneSpec.Arc, Double)? {
-        guard !queue.isEmpty else { return nil }
-        let arc = queue.removeFirst()
+    public mutating func next(reduceMotion: Bool, floor: Double,
+                              queue rule: SceneSpec.Motion.Queue? = nil) -> (SceneSpec.Arc, Double)? {
+        guard !self.queue.isEmpty else { return nil }
+        let arc = self.queue.removeFirst()
         if reduceMotion { return (arc, 0) }
-        let backlog = queue.count
-        let squeeze = backlog > 3 ? 0.5 : 1.0
-        return (arc, max(floor, arc.flightSeconds * squeeze))
+        let owed = self.queue.reduce(0.0) { $0 + $1.flightSeconds }
+        return (arc, max(floor, arc.flightSeconds * Self.share(queued: owed, waiting: self.queue.count, rule: rule)))
+    }
+
+    /// How much of its stated flight a play keeps, given what is waiting behind
+    /// it: 1 while the ball is level with the game, less as the backlog grows.
+    ///
+    /// The first `leadPlays` are free. A live game is one or two deep the
+    /// moment two plays arrive in one poll, and shortening those would make an
+    /// ordinary Sunday look hurried for no reason. Past that the share is the
+    /// *proportion of the seconds owed* that fits in `catchUpSeconds`, so the
+    /// whole backlog is flown inside that window and the ball is never further
+    /// behind the game than it.
+    ///
+    /// It is a proportion rather than a threshold because a threshold is what
+    /// a replay makes visible. The old rule halved the flight the moment more
+    /// than three plays were waiting; at 60x the queue sits on that number and
+    /// trades sides every poll, so the ball changed gear between full speed
+    /// and half speed several times a drive. A proportion moves with the
+    /// backlog and never steps.
+    public static func share(queued: Double, waiting: Int, rule: SceneSpec.Motion.Queue?) -> Double {
+        guard waiting > (rule?.leadPlays ?? 3) else { return 1 }
+        let window = max(1e-6, rule?.catchUpSeconds ?? 2.5)
+        guard queued > window else { return 1 }
+        return max(rule?.minShare ?? 0.25, window / queued)
     }
 }

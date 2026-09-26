@@ -32,10 +32,17 @@ public enum BallFlight {
     /// and bobbing on a run, spiralling on a throw, tumbling on a kick. The
     /// manner follows the segment, so one pass drops, flies and runs on.
     /// Never below `floor` - a ball resting on the grass sits on it, not in it.
+    /// `ease` is `motion.flightEase`, and applies only to an arc with no path:
+    /// a bare parabola walked at a constant rate leaves the line at the same
+    /// speed it arrives, which no thrown ball does. A path is already timed
+    /// segment by segment against gravity, so bending its clock would move the
+    /// ball off the spots the play states - it is passed through untouched.
     public static func pose(_ arc: SceneSpec.Arc, seconds: Double, flight f: SceneSpec.Look.BallFlight,
-                            floor: Float) -> Pose {
+                            floor: Float, ease: Double? = nil) -> Pose {
         guard arc.path != nil else {
-            let t = arc.seconds > 0 ? seconds / arc.seconds : 1
+            let raw = arc.seconds > 0 ? max(0, min(1, seconds / arc.seconds)) : 1
+            let power = ease ?? 1
+            let t = power > 0 && power != 1 ? 1 - pow(1 - raw, power) : raw
             return pose(arc, t: t, elapsed: seconds, manner: manner(arc, f), flight: f, lift: floor)
         }
         let now = SceneMath.ball(on: arc, at: seconds)

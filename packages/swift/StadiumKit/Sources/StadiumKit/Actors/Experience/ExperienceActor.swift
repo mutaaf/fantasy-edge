@@ -13,9 +13,9 @@ final class ExperienceActor: StadiumActor {
     let name = "experience"
     let root = Entity()
     private(set) var seatID: String?
-    private var fade: (elapsed: Double, duration: Double, swapped: Bool, seat: String?)?
+    private var fade: (elapsed: Double, duration: Double, swapped: Bool, held: Bool, seat: String?)?
     /// A game change: fading out, swapping at the dark, fading back.
-    private var changeover: (elapsed: Double, swapped: Bool, swap: () -> Void)?
+    private var changeover: (elapsed: Double, swapped: Bool, held: Bool, swap: () -> Void)?
     /// Called at the dark middle of a seat change, so trails can be relaid
     /// for the new seat's near-seat rule.
     var onSeatChanged: (() -> Void)?
@@ -50,7 +50,7 @@ final class ExperienceActor: StadiumActor {
         // inside a seat change too (`-stadiumFadeScale 8`).
         if let k = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), k > 0 { seconds *= k }
         #endif
-        fade = (0, seconds, false, id)
+        fade = (0, seconds, false, false, id)
     }
 
     /// Leave one game for another: fade the bowl down, swap the clubs while
@@ -74,8 +74,18 @@ final class ExperienceActor: StadiumActor {
             changeover?.swap = swap
             return true
         }
-        changeover = (elapsed: 0, swapped: false, swap: swap)
+        changeover = (elapsed: 0, swapped: false, held: false, swap: swap)
         return true
+    }
+
+    /// The two curves a dissolve bends along, from
+    /// `visual.experience.camera`. The world leaves fast and is gone; it comes
+    /// back on a curve that settles rather than arriving at speed. A straight
+    /// ramp on an opacity is what makes a dissolve read as a wipe, and at 0.35
+    /// s a side it is exactly long enough to notice.
+    private static func curves(_ c: StadiumContext) -> (out: String?, back: String?) {
+        let camera = c.look.experience.camera
+        return (camera.fadeOutEase ?? "out", camera.fadeInEase ?? "smooth")
     }
 
     var changingOver: Bool { changeover != nil }
@@ -83,19 +93,29 @@ final class ExperienceActor: StadiumActor {
     func update(_ frame: StadiumFrame, _ c: StadiumContext) {
         updateChangeover(frame, c)
         guard var fd = fade else { return }
-        fd.elapsed += frame.dt
+        // The frame the seat changed cost whatever relaying every trail for the
+        // new eye cost, and that lands here as this frame's delta. Charging it
+        // to the way back would eat the fade; hold the clock for one frame
+        // instead. Same rule as the changeover below, same reason.
+        if fd.held { fd.held = false } else { fd.elapsed += frame.dt }
         let half = fd.duration / 2
+        let curve = Self.curves(c)
         let opacity: Float
         if fd.elapsed < half {
-            opacity = Float(1 - fd.elapsed / half)
+            opacity = Float(1 - SceneMath.ease(fd.elapsed / half, curve.out))
         } else {
             if !fd.swapped {
                 seatID = fd.seat
                 place(c)
                 onSeatChanged?()
                 fd.swapped = true
+                fd.held = true
+                fd.elapsed = half
+                c.world.components.set(OpacityComponent(opacity: 0))
+                fade = fd
+                return
             }
-            opacity = Float(min(1, (fd.elapsed - half) / half))
+            opacity = Float(SceneMath.ease(min(1, (fd.elapsed - half) / half), curve.back))
         }
         c.world.components.set(OpacityComponent(opacity: opacity))
         if fd.elapsed >= fd.duration {
@@ -110,6 +130,22 @@ final class ExperienceActor: StadiumActor {
     /// writes opacity after this and wins for its duration; the two never
     /// overlap in practice, because a channel does not change seat and game at
     /// the same instant, and if they did the seat fade is the shorter.
+    ///
+    /// Two things make this read as a dissolve rather than as a cut.
+    ///
+    /// **The repaint is not charged to the way back.** `ch.swap()` repaints the
+    /// whole bowl in the dark: 0.19 s for clubs seen before and 0.36 s for new
+    /// ones (docs/REDZONE.md measured all eight). Whatever it costs arrives as
+    /// the *next* frame's delta, and against a 0.35 s rise that delta is the
+    /// whole rise - the first frame after the swap computed an opacity of 1 and
+    /// the world snapped back from black, so every whip-around ended in a cut.
+    /// It only looked right under `-stadiumFadeScale 10`, which is how the
+    /// screenshots in docs/REDZONE.md were taken and how it stayed hidden. The
+    /// clock holds for the one frame the swap happened in, so the rise starts
+    /// from black on the first frame that can actually draw it.
+    ///
+    /// **Both halves are eased.** A straight ramp on an opacity reads as a
+    /// wipe. The curves are `visual.experience.camera`'s.
     private func updateChangeover(_ frame: StadiumFrame, _ c: StadiumContext) {
         guard var ch = changeover else { return }
         var half = max(0.05, c.look.experience.camera.seatFadeSeconds)
@@ -119,22 +155,34 @@ final class ExperienceActor: StadiumActor {
         // is otherwise over in a third of one.
         if let s = Double(StadiumShots.argument("-stadiumFadeScale") ?? ""), s > 0 { half *= s }
         #endif
-        ch.elapsed += frame.dt
+        if ch.held { ch.held = false } else { ch.elapsed += frame.dt }
+        let curve = Self.curves(c)
         let opacity: Float
         if ch.elapsed < half {
-            opacity = Float(1 - ch.elapsed / half)
+            opacity = Float(1 - SceneMath.ease(ch.elapsed / half, curve.out))
         } else {
             if !ch.swapped {
                 ch.swapped = true
                 StadiumLog.log.notice("[stadium] changeover: dark at \(ch.elapsed, format: .fixed(precision: 2)) s, swapping")
                 ch.swap()
+                ch.held = true
+                ch.elapsed = half
+                c.world.components.set(OpacityComponent(opacity: 0))
+                changeover = ch
+                return
             }
-            opacity = Float(min(1, (ch.elapsed - half) / half))
+            opacity = Float(SceneMath.ease(min(1, (ch.elapsed - half) / half), curve.back))
         }
         c.world.components.set(OpacityComponent(opacity: opacity))
         if ch.elapsed >= half * 2 {
             c.world.components.remove(OpacityComponent.self)
             changeover = nil
+            // What the wearer actually saw of the way back. Beside the
+            // `relivery` line it is the whole of the bug this pairs with: a
+            // repaint of 0.20-0.41 s against a rise of 0.35 s, charged to the
+            // rise, left nothing of it. `tools/measure_changeover.py` reads
+            // both lines out of the simulator log.
+            StadiumLog.log.notice("[stadium] changeover: back up over \(half, format: .fixed(precision: 2)) s")
         } else {
             changeover = ch
         }

@@ -271,9 +271,21 @@ extension SceneSpec.Look {
         public let netYards: Double
     }
 
+    /// How the ball, the beacon, the lines and the tag travel between plays.
+    /// A move longer than `maxYards` is a different place rather than a nudge,
+    /// and cuts instead of sliding the length of the field.
+    public struct PlaySettle: Decodable, Equatable, Sendable {
+        public let seconds: Double
+        public let ease: String?
+        public let maxYards: Double
+    }
+
     public struct PlayLook: Decodable, Equatable, Sendable {
         public let heights: PlayHeights
         public let goalKick: PlayGoalKick
+        /// Optional until `design/tokens.json` carries it; the old numbers in
+        /// Swift (0.35 s, 15 yd, ease in and out) stand in.
+        public let settle: PlaySettle?
         /// How long a new drive waits for the play on the field to finish
         /// before it takes the stage.
         public let holdSwitchSeconds: Double
