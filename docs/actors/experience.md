@@ -117,6 +117,55 @@ The sideline seat is the one without a mirrored pair: the ribbon dips on its rig
 
 Combine with `tools/lookdev.py --extra … --suffix …`.
 
+## Resting on a real table (`visual.experience.surface`)
+
+Two tiers, and they are deliberately unequal.
+
+**Tier one, which always works.** A volume declared
+`.volumeWorldAlignment(.gravityAligned)` — one line in each app's `WindowGroup`
+— is snapped to a horizontal surface by visionOS itself, with no ARKit and no
+consent dialog, and the app is told through `\.surfaceSnappingInfo`
+(visionOS 26; `TabletopSurface` reads it and older systems say so in the log).
+On that word `TabletopView.restHeight` lowers the model until its own lowest
+point rests `snap.settleMeters` over the volume's floor, which *is* the table
+top, and `.volumeBaseplateVisibility(.hidden)` takes the system's plate away,
+because on a real table the plinth is the baseplate.
+
+Unsnapped, nothing changes: the stage keeps `presentation.tabletop.floor`,
+0.2 m down, where the plinth's underside hangs 6 mm over the volume's floor —
+invisible in mid-air, and the whole illusion gone on wood. Worse at a pinch:
+the model scales about the volume's centre, so at `tabletop.minScale` that 6 mm
+is 8 cm. The low point is measured off the drawn geometry (`visualBounds`),
+turned by the "Look closer" tilt, rather than worked out from the baseplate's
+tokens — the thing that has to touch the wood is the geometry, and a second
+copy of `buildBaseplate`'s arithmetic would be wrong the first time either
+changed.
+
+**Tier two, which costs a prompt.** `SurfaceScout` runs an `ARKitSession` with a
+`PlaneDetectionProvider(alignments: [.horizontal])` and picks the largest plane
+that is within `planeSearchMeters` of the wearer, `tableHeightMeters` above the
+lowest plane in the room, and at least `minTableMeters` across — which is the
+model's own smallest footprint, so a surface the stadium could not stand on is
+not a table. The model is then scaled, inside `tabletop.minScale…maxScale`, to
+leave `edgeMarginMeters` of clear table at every edge. Once per table; the
+wearer's next pinch is the size from then on.
+
+It is started **only once tier one says the volume has snapped**, and stopped
+when the volume lifts off and when it closes. Nobody is asked for world sensing
+to measure a table they are not sitting at, and no plane pass runs for a volume
+in mid-air. The scout holds four numbers per plane, never ARKit's anchors.
+
+**What it needs, and what it does when it does not get it.**
+`NSWorldSensingUsageDescription` is in both generators
+(`INFOPLIST_KEY_NSWorldSensingUsageDescription`); without it
+`ARKitSession.run` throws. visionOS also hands plane data only to an app that
+holds an immersive space, so from a bare volume the run is expected to be
+refused. Unsupported, denied, refused and "no table in reach" are each a
+`SurfaceScout.Status` and a `[surface]` log line, and every one of them falls
+back to tier one, which asks nothing of anybody. Silence is the one thing this
+area may never do: the head-facing session used to swallow its ARKit error
+whole, which is indistinguishable from a feature that was never written.
+
 ## Needs a device
 
 These can't be verified in the simulator:
@@ -126,6 +175,11 @@ These can't be verified in the simulator:
 - Hover brightening (the simulator's pointer hover is not gaze).
 - Comfort of the lowered panels.
 - The grounding shadow's look on a real table.
+- **Snapping, both tiers.** The simulator has no real surfaces, so nothing
+  ever reports `isSnapped` and no plane is ever detected. Everything above
+  compiles, is wired and is held by `tests/test_experience.py`, and none of it
+  has been seen to happen. On a headset, watch the log for `[surface]`: the
+  volume snapping, the classification, and the table's measured size.
 
 ## Critique log
 

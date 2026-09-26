@@ -59,6 +59,39 @@ extension SceneSpec.Look {
         public let swellLeadSeconds: Double
     }
 
+    /// What the volume does when it is resting on something real, and what a
+    /// plane pass is allowed to change once it knows what that something is.
+    public struct Snap: Decodable, Equatable, Sendable {
+        /// Clearance left under the plinth on a snapped surface, so it meets
+        /// the table rather than fighting it for the same millimetre.
+        public let settleMeters: Double
+        /// How long the model takes to come down onto the surface.
+        public let settleSeconds: Double
+        /// Take the system's baseplate away when the volume is on a real
+        /// surface: there, the plinth is the baseplate.
+        public let hideBaseplate: Bool
+    }
+
+    /// A band of height above the floor, in metres.
+    public struct HeightBand: Decodable, Equatable, Sendable {
+        public let minimum: Double
+        public let maximum: Double
+    }
+
+    /// Snapping to a real table. See `visual.experience.surface`'s `about`.
+    public struct SurfaceLook: Decodable, Equatable, Sendable {
+        public let snap: Snap
+        /// How far from the wearer a plane may be and still be their table.
+        public let planeSearchMeters: Double
+        /// How far above the floor a plane must be to be a table rather than
+        /// the floor itself or a shelf.
+        public let tableHeightMeters: HeightBand
+        /// The shorter side a plane must have before it is worth a stadium.
+        public let minTableMeters: Double
+        /// Clear table left at every edge when the model is fitted to it.
+        public let edgeMarginMeters: Double
+    }
+
     /// One panel's place: degrees to the right, flat metres out, metres above the eye.
     public struct Slot: Decodable, Equatable, Sendable {
         public let yaw: Double
@@ -216,6 +249,9 @@ extension SceneSpec.Look {
         public let baseplate: Baseplate
         public let tabletop: TabletopLook
         public let arrival: Arrival?
+        /// Optional, like every section added after 1.0: a server that predates
+        /// it sends none and the volume keeps its old, floating rest height.
+        public let surface: SurfaceLook?
         public let layout: Layout?
         public let panels: Panels?
         public let controls: Controls?

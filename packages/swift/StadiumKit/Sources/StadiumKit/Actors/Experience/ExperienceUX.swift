@@ -24,6 +24,7 @@ enum ExperienceTokens {
     static func arrival(_ spec: SceneSpec?) -> SceneSpec.Look.Arrival? { look(spec)?.arrival ?? bundled?.arrival }
     static func picker(_ spec: SceneSpec?) -> SceneSpec.Look.SeatPicker? { look(spec)?.seatPicker ?? bundled?.seatPicker }
     static func tabletop(_ spec: SceneSpec?) -> SceneSpec.Look.TabletopLook? { look(spec)?.tabletop ?? bundled?.tabletop }
+    static func surface(_ spec: SceneSpec?) -> SceneSpec.Look.SurfaceLook? { look(spec)?.surface ?? bundled?.surface }
 }
 
 /// What the stadium remembers between visits: the seat, and whether the Crown
@@ -110,6 +111,9 @@ final class HeadFacing {
             log.error("world tracking did not start (\(error.localizedDescription, privacy: .public)); recentring to the seat's own forward instead")
             running = false
             self.session = nil
+            // Silence here is the bug that hid this whole area: no session, no
+            // yaw, and nothing anywhere saying why the recentre felt inert.
+            StadiumLog.log.error("[head] ARKit refused world tracking: \(String(describing: error), privacy: .public); the dock recentres to the seat's own forward")
         }
     }
 

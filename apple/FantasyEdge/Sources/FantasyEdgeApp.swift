@@ -72,6 +72,14 @@ struct FantasyEdgeApp: App {
         // presentation.tabletop.volume: sized for the two-deck bowl on its
         // plinth (fantasyedge/scene.py). Change both together.
         .defaultSize(width: 1.12, height: 0.45, depth: 0.86, in: .meters)
+        // This one line is what lets the volume rest on a real table: visionOS
+        // only snaps a volume to a horizontal surface when the volume is
+        // gravity aligned, and it does it with no ARKit and no consent dialog.
+        // The tabletop reads `\.surfaceSnappingInfo` on the other side of it
+        // and puts the model down on the surface (visual.experience.surface).
+        // Adaptive, the default, tips the volume to face the wearer, which on
+        // a table is the one thing a model on a plinth must not do.
+        .volumeWorldAlignment(.gravityAligned)
 
         // Seated at the fifty. From the tabletop it opens progressive, so the
         // Digital Crown walks you from the room into the bowl; the ornament

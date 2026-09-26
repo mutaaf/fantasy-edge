@@ -607,5 +607,133 @@ class Layout(unittest.TestCase):
         self.assertNotIn("scorebug", ids, "the scorebug does not move, so it does not fade")
 
 
+class RestingOnARealTable(unittest.TestCase):
+    """The tabletop on an actual table.
+
+    Two tiers, deliberately unequal. visionOS snaps a gravity-aligned volume to
+    a horizontal surface by itself, with no ARKit and no consent dialog, and
+    says so through `surfaceSnappingInfo`: that is the tier that has to work for
+    everybody, so it is the one the model's rest height hangs off. Measuring the
+    table - which surface it is and how big - costs the world-sensing prompt, so
+    it is started only once the volume is actually on something and stopped the
+    moment it is not.
+    """
+
+    STADIUM = ROOT / "packages/swift/StadiumKit/Sources/StadiumKit/Actors/Experience"
+
+    def setUp(self):
+        self.surface = EXPERIENCE["surface"]
+        self.table = sc.PRESENTATION["tabletop"]
+        self.views = (self.STADIUM / "StadiumViews.swift").read_text()
+        self.snapping = (self.STADIUM / "SurfaceSnapping.swift").read_text()
+
+    def test_the_settle_is_a_clearance_and_not_a_hover(self):
+        """Snapped, the model is lowered until its own lowest point rests
+        settleMeters over the volume's floor - which is the table top. The
+        clearance exists so the plinth does not fight the wood for the same
+        millimetre, and it has to be far smaller than the plinth is thick, or
+        the jewel is back to floating."""
+        snap = self.surface["snap"]
+        self.assertGreater(snap["settleMeters"], 0.0, "zero clearance z-fights the real table")
+        self.assertLess(snap["settleMeters"], EXPERIENCE["baseplate"]["thicknessMeters"] / 2,
+                        "a clearance you can see is a hover")
+        self.assertLessEqual(snap["settleMeters"], 0.005, "over 5 mm reads as daylight under the plinth")
+        self.assertGreater(snap["settleSeconds"], 0.0)
+        self.assertLessEqual(snap["settleSeconds"], 1.0, "a model that takes a second to land reads as broken")
+        self.assertTrue(snap["hideBaseplate"],
+                        "on a real table the plinth is the baseplate; two of them read as a saucer")
+
+    def test_a_table_too_small_for_the_model_is_not_a_table(self):
+        """minTableMeters is the model's own smallest footprint: the volume at
+        the tabletop's minScale, plus the clear table left at each edge. Below
+        that the fit would clamp and the stadium would hang over the sides,
+        which is worse than not fitting at all."""
+        s, t = self.surface, EXPERIENCE["tabletop"]
+        smallest = max(self.table["volume"][0], self.table["volume"][2]) * t["minScale"] \
+            + 2 * s["edgeMarginMeters"]
+        self.assertGreaterEqual(s["minTableMeters"], smallest,
+                                "the model at its smallest would overhang a table this size")
+        self.assertGreater(s["edgeMarginMeters"], 0.0, "a model flush to the edge looks like it is about to fall")
+
+    def test_the_height_band_holds_tables_and_not_the_floor(self):
+        """The band is measured above the lowest plane in the room, so it has
+        to clear the floor itself and still hold a desk."""
+        band = self.surface["tableHeightMeters"]
+        self.assertGreater(band["minimum"], 0.1, "the floor is a horizontal plane too")
+        self.assertLessEqual(band["minimum"], 0.45, "a coffee table is about 0.45 m")
+        self.assertGreaterEqual(band["maximum"], 1.1, "a standing desk is about 1.1 m")
+        self.assertLess(band["maximum"], 2.0, "that is a shelf")
+        self.assertGreater(self.surface["planeSearchMeters"], 1.0,
+                           "a table you are sitting at is over a metre across the room")
+        self.assertLessEqual(self.surface["planeSearchMeters"], 4.0,
+                             "past that it is the next room's table")
+
+    def test_the_rest_height_is_measured_off_the_model_not_derived_from_it(self):
+        """The thing that has to touch the wood is the drawn geometry, so the
+        low point comes from its bounds. Deriving it from the plinth's tokens
+        would be a second copy of buildBaseplate's arithmetic, out of step the
+        first time either changes."""
+        body = self.views.split("private func restHeight(", 1)[1].split("\n    }\n", 1)[0]
+        self.assertIn("visualBounds", body, "the low point is measured, not worked out")
+        self.assertIn("settleMeters", body)
+        self.assertIn("surface.snapped", body, "unsnapped, the model keeps presentation.tabletop.floor")
+        self.assertIn("rotation.act", body, '"Look closer" tips the model; the lowest corner is the one that lands')
+        self.assertIn("return 0", body, "no surface means the rest height it has always had")
+
+    def test_the_plane_pass_runs_only_while_something_is_asking(self):
+        """World sensing is a prompt and a camera budget. Nobody is asked to
+        allow it until the volume is actually resting on something, and the
+        pass is stopped both when the volume lifts off and when it closes."""
+        snapped = self.views.split(".onChange(of: surface.snapped)", 1)[1].split("\n        }", 1)[0]
+        self.assertIn("scout.start", snapped, "the pass starts on a snap, not on appearing")
+        self.assertIn("scout.stop", snapped, "and stops when the volume lifts off")
+        self.assertNotIn("scout.start", self.views.split(".task {", 1)[1].split("}", 1)[0],
+                         "starting it with the volume asks for world sensing nobody needs yet")
+        self.assertIn("scout.stop()", self.views.split(".onDisappear {", 1)[1].split("\n        }", 1)[0],
+                      "a closed volume must not leave a plane pass running")
+        self.assertIn("seen.removeAll()", self.snapping, "stopping drops the room, not just the session")
+
+    def test_the_scout_holds_numbers_rather_than_anchors(self):
+        """Four numbers per plane and nothing else. Holding ARKit's anchors
+        would make the tabletop's memory the room's size, and another actor is
+        counting those bytes."""
+        self.assertNotIn("[UUID: PlaneAnchor]", self.snapping)
+        self.assertIn("private var seen: [UUID: Plane]", self.snapping)
+
+    def test_every_way_the_table_can_fail_to_be_found_says_so(self):
+        """The bug this area started from was a silent catch: no session, no
+        data, no log, and a feature that looks exactly like one that was never
+        written. Every refusal here is a status and a line."""
+        for why in ("unsupported", "denied", "refused"):
+            self.assertIn(f"status = .{why}", self.snapping, f"{why} must be a state the app can name")
+        for block in self.snapping.split("} catch {")[1:]:
+            self.assertIn("StadiumLog.log", block.split("\n        }", 1)[0], "a silent catch is the original bug")
+        head = (self.STADIUM / "ExperienceUX.swift").read_text()
+        self.assertIn("StadiumLog.log", head.split("try await session.run([provider])", 1)[1].split("\n    }", 1)[0],
+                      "the head-facing session swallowed its own error; it no longer does")
+
+    def test_both_apps_let_their_volume_reach_a_table(self):
+        """visionOS only snaps a volume that is gravity aligned, and it only
+        runs a plane pass for an app that has said why it wants one. Both apps
+        carry both, or the tier that needs no permission never fires either."""
+        apps = {"fantasy-edge": ROOT / "apple/FantasyEdge/Sources/FantasyEdgeApp.swift",
+                "saturday": ROOT / "apps/saturday/apple/Saturday/Sources/SaturdayApp.swift"}
+        for name, path in apps.items():
+            with self.subTest(app=name):
+                volume = path.read_text().split('WindowGroup(id: "tabletop"', 1)[1]
+                self.assertIn(".volumeWorldAlignment(.gravityAligned)", volume,
+                              "an adaptive volume tips toward the wearer and never snaps")
+        for name, path in {"fantasy-edge": ROOT / "apple/generate_project.py",
+                           "saturday": ROOT / "apps/saturday/apple/generate_project.py"}.items():
+            with self.subTest(generator=name):
+                self.assertIn("INFOPLIST_KEY_NSWorldSensingUsageDescription", path.read_text(),
+                              "without the key ARKitSession.run throws and the failure looks like nothing")
+
+    def test_the_scene_carries_the_surface_tokens(self):
+        """A web or Android port reads the same numbers the headset does."""
+        built = sc.build({})
+        self.assertEqual(built["visual"]["experience"]["surface"], self.surface)
+
+
 if __name__ == "__main__":
     unittest.main()
