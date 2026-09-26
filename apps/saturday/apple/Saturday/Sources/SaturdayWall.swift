@@ -98,9 +98,10 @@ struct SaturdayWall: View {
             if let id = defaults.string(forKey: "openStadium") {
                 openWindow(id: "tabletop", value: id)
                 let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+                let reopen = openWindow
                 Task { @MainActor in
                     try? await Task.sleep(for: .seconds(StadiumPassage.doorSeconds))
-                    await passage.enter(openSpace: open, dismissWindow: dismiss)
+                    await passage.enter(openSpace: open, dismissWindow: dismiss, openWindow: reopen)
                 }
             }
             #endif

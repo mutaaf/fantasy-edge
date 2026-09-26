@@ -46,10 +46,11 @@ struct StadiumLaunchArguments: ViewModifier {
             // Unstructured: entering closes this very window, and a `.task`
             // tied to it would be cancelled halfway through closing the rest.
             let passage = passage, board = board
-            let open = openImmersiveSpace, dismiss = dismissWindow
+            let open = openImmersiveSpace, dismiss = dismissWindow, reopen = openWindow
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
-                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = style }
+                await passage.enter(openSpace: open, dismissWindow: dismiss,
+                                    openWindow: reopen) { board.stadiumStyle = style }
             }
         }
     }
@@ -69,14 +70,16 @@ struct TabletopHost: View {
     @Environment(StadiumPassage.self) private var passage
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         TabletopView(feed: feed) {
             let passage = passage, board = board
-            let open = openImmersiveSpace, dismiss = dismissWindow
+            let open = openImmersiveSpace, dismiss = dismissWindow, reopen = openWindow
             // The dial, not a blackout: the Crown takes you the rest of the way.
             Task { @MainActor in
-                await passage.enter(openSpace: open, dismissWindow: dismiss) { board.stadiumStyle = .progressive }
+                await passage.enter(openSpace: open, dismissWindow: dismiss,
+                                    openWindow: reopen) { board.stadiumStyle = .progressive }
             }
         }
         .onAppear {
@@ -166,10 +169,14 @@ struct StadiumHostSpace: View {
             }
             #endif
         }
+        // The passage's own bookkeeping: the space says it came up, keeps
+        // saying it is there, and says it went. The beat is what lets the
+        // passage put the windows back when this view's `onDisappear` never
+        // runs - which used to mean every window closed and no way back.
+        .tracksSpace()
         .onDisappear {
             board.stop()
             channel.stop()
-            passage.spaceDisappeared(openWindow: openWindow)
         }
     }
 

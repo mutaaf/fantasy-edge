@@ -405,3 +405,51 @@ Experience is still **0 draw parts and 0 triangles** in the stadium and 6 parts 
 
 **Worst thing left:** the camera well cannot be offered to a wearer until the dock has an answer for a seat behind an end line; the press box still draws its dock at x0.47 inside the glass and wants a device; and the recentre still lands on a 15 degrees bucket.
 
+
+## Teardown: nothing may open that cannot be closed
+
+The walk in and the walk out are `StadiumPassage`, and the wedges below were
+all reachable from the shipped build. Every one of them ended the same way: a
+control that did nothing, for the rest of the process, with nothing written
+down. They are pinned by `tests/test_teardown.py`, which asserts the shape of
+each fix and names the bug that comes back if it is removed.
+
+**`inStadium` is a belief; the space's own word is the evidence.** `enter`
+guarded on `guard !inStadium else { return }`. The flag is cleared only by
+`spaceDisappeared`, which is an `onDisappear`, and an `onDisappear` that does
+not run left the flag true for good - "Enter stadium" dead, silently. The
+space now reports itself through `.tracksSpace()`: it appeared, it is still
+here, it went. `enter` trusts `inStadium` only when the space has confirmed it
+is on screen; otherwise it says so loudly and walks in anyway.
+
+**A space can be opened and never come up, and by then every window is
+closed.** That is an app with nothing on screen at all and no way back to it.
+`.tracksSpace()` beats every `beatSeconds` while the space is up, and the
+passage puts the windows back when the beat stops for `silenceSeconds`, twice
+running. The beat is measured on a `SuspendingClock`: an app that was asleep
+was not a space that was silent. Two strikes and a suspending clock are both
+there for the same reason - bringing the windows back into a stadium that is
+still standing would hang them in the stands, and that is the one mistake this
+must not make.
+
+**`ArrivalGate.open` stored a completion and waited to be ticked.** The tick
+comes from a `SceneEvents.Update` subscription on the volume's RealityView. If
+that subscription is not alive the completion never fires, `entering` stays
+true, and the button is disabled for the life of the window. The gate keeps a
+clock of its own now and finishes on whichever arrives first; `then` is called
+exactly once either way, and the fallback logs that it had to.
+
+**A `Task` started inside a completion dies with the view that owned it.**
+`entering` was cleared by one, after a sleep, so a table torn down mid-sleep
+could come back with the button dead. It is a `.task(id:)` now, which belongs
+to the view: restarted whenever the view appears, and impossible to strand.
+
+**A frame clock must not own the renderer that owns it.**
+`renderer.subscription` held a closure that called straight into the renderer,
+so each was keeping the other alive: every walk in and out leaked a whole
+stadium behind a closed window. The captures are weak and both clocks are
+cancelled on the way out.
+
+**A refusal that is only logged is still a button that did nothing.**
+`StadiumPassage.refusal` says why a walk did not happen, and the tabletop
+shows it beside the button that was refused.

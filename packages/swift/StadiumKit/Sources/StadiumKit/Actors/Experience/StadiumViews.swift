@@ -1,5 +1,8 @@
+import OSLog
 import RealityKit
 import SwiftUI
+
+private let log = Logger(subsystem: "StadiumKit", category: "stadiumViews")
 
 // The two ways into a game: on the table in front of you, and from a seat at
 // the fifty. Both draw the same `SceneSpec` through the same renderer at a
@@ -293,7 +296,21 @@ public struct TabletopView: View {
     @State private var gestureYaw: Float?
     @State private var closer = false
     @State private var entering = false
+    /// Bumped on every tap of Enter, so the view's own regret timer restarts
+    /// with it. A `.task(id:)` rather than a `Task` inside the gate's
+    /// completion: that one died with the volume and left `entering` true,
+    /// which is a permanently disabled button with nothing said.
+    @State private var attempt = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Optional on purpose: the tabletop draws a scene and does not need a
+    /// passage to do it. When there is one, its refusals are shown here,
+    /// because here is where the button that was refused lives.
+    @Environment(StadiumPassage.self) private var passage: StadiumPassage?
+
+    /// How long the table stays dimmed behind a gate that has handed over,
+    /// waiting to see whether the space took. Past this the table is the only
+    /// thing on screen, so it comes back whatever happened.
+    static let regretSeconds: Double = 2
 
     public init(feed: SceneFeed, enterStadium: @escaping () -> Void) {
         self.feed = feed
@@ -310,11 +327,17 @@ public struct TabletopView: View {
             holder.components.set(InputTargetComponent())
             content.add(holder)
             let r = renderer, g = gate
-            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            // Weakly, both of them. The renderer owns the subscription and the
+            // subscription's closure owned the renderer, so the pair kept each
+            // other alive and a closed volume left a whole stadium - entity
+            // tree, textures, audio - standing behind it for the life of the
+            // process. The comment on `subscription` says the frame clock stops
+            // with the renderer; this is what makes that true.
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { [weak r] event in
+                MainActor.assumeIsolated { r?.tick(event.deltaTime) }
             }
-            gateClock = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { g.tick(event.deltaTime) }
+            gateClock = content.subscribe(to: SceneEvents.Update.self) { [weak g] event in
+                MainActor.assumeIsolated { g?.tick(event.deltaTime) }
             }
         } update: { _ in
             guard let spec = feed.spec else { return }
@@ -385,14 +408,51 @@ public struct TabletopView: View {
                 }
                 .disabled(entering)
                 .accessibilityHint("Opens the stadium around you, seated at your last seat")
+                // A refusal that is only logged is a button that did nothing.
+                if let why = passage?.refusal {
+                    Label(why, systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: 260, minHeight: 60)
+                        .accessibilityLabel("The stadium did not open. \(why)")
+                }
             }
             .padding(12)
             .glassBackgroundEffect()
         }
         .task { feed.start() }
+        // The table comes back out of the dim whatever happened to the walk in.
+        //
+        // This used to be a `Task` started inside the gate's completion, which
+        // died with the volume: a tabletop torn down mid-sleep could come back
+        // with `entering` still true and "Enter stadium" disabled for good. A
+        // `.task(id:)` belongs to the view, so it is restarted whenever the
+        // view appears and cannot outlive or be outlived by it.
+        .task(id: attempt) {
+            guard attempt > 0, entering else { return }
+            let gateSeconds = ExperienceTokens.arrival(feed.spec)?.gateSeconds ?? 0
+            let wait = gateSeconds + ArrivalGate.graceSeconds + Self.regretSeconds
+            do { try await Task.sleep(for: .seconds(wait)) } catch { return }
+            guard entering else { return }
+            // Still here, so the space did not take us. Say so and give the
+            // table back its light and its button.
+            if passage?.refusal == nil {
+                log.error("the stadium did not open \(wait, format: .fixed(precision: 1))s after Enter; giving the table back")
+            }
+            gate.cancel()
+            renderer.root.components.remove(OpacityComponent.self)
+            entering = false
+        }
         .onDisappear {
             feed.stop()
             gate.cancel()
+            // The frame clocks go with the volume. Left running they hold the
+            // scene's subscriptions - and, before the weak captures above, the
+            // renderer itself - alive behind a window nobody can see.
+            renderer.subscription?.cancel()
+            renderer.subscription = nil
+            gateClock?.cancel()
+            gateClock = nil
         }
     }
 
@@ -438,30 +498,28 @@ public struct TabletopView: View {
 
     /// The way in: gate, then the space. Reduce motion opens the space at once.
     private func arrive() {
-        guard !entering else { return }
+        guard !entering else { log.info("Enter ignored: a walk into the stadium is already under way"); return }
+        passage?.clearRefusal()
         guard let arrival = ExperienceTokens.arrival(feed.spec), !reduceMotion else {
+            log.info("no curtain (reduce motion, or no arrival in the tokens); opening the stadium at once")
             ExperienceEvents.post(.gateOpening(seconds: 0, swellLead: 0))
             enterStadium()
             return
         }
         guard prepareGate(arrival) else {
+            log.info("no scene to hang the curtain on yet; opening the stadium at once")
             enterStadium()
             return
         }
         entering = true
+        attempt &+= 1
         renderer.root.components.set(OpacityComponent(opacity: Float(arrival.tabletopDim)))
         ExperienceEvents.post(.gateOpening(seconds: arrival.gateSeconds, swellLead: arrival.swellLeadSeconds))
-        gate.open {
-            enterStadium()
-            // If the space did not open (another space was up, or the system
-            // refused), the table is still here: give it back its light.
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(2))
-                gate.cancel()
-                renderer.root.components.remove(OpacityComponent.self)
-                entering = false
-            }
-        }
+        // The gate finishes on its own clock if nothing ticks it, so this is
+        // reached whether or not the volume's frame clock is alive. Giving the
+        // table back is the `.task(id: attempt)` above, which belongs to the
+        // view and so cannot be killed halfway with the flag still set.
+        gate.open { enterStadium() }
     }
 }
 
@@ -599,8 +657,11 @@ public struct StadiumSpaceView<Trailing: View>: View {
         RealityView { content, attachments in
             world.addChild(renderer.root)
             let r = renderer
-            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { event in
-                MainActor.assumeIsolated { r.tick(event.deltaTime) }
+            // Weakly: the renderer holds the subscription, so a strong capture
+            // here is a cycle, and the stadium every walk in and out builds
+            // would never be released. See the same note on the tabletop.
+            renderer.subscription = content.subscribe(to: SceneEvents.Update.self) { [weak r] event in
+                MainActor.assumeIsolated { r?.tick(event.deltaTime) }
             }
             let args = ProcessInfo.processInfo.arguments
             // A shot's seat wins; otherwise the seat the wearer last chose.
@@ -823,7 +884,17 @@ public struct StadiumSpaceView<Trailing: View>: View {
             }
             #endif
         }
-        .onDisappear { feed.stop() }
+        .onDisappear {
+            feed.stop()
+            // The stadium's frame clock stops with the stadium. Otherwise the
+            // subscription outlives the space that made it, ticking a renderer
+            // whose scene has gone.
+            renderer.subscription?.cancel()
+            renderer.subscription = nil
+            placer.entities.removeAll()
+            placer.placed.removeAll()
+            log.info("the stadium's frame clock and attachments are released")
+        }
     }
 
     /// Re-seat the dock in front of where the wearer is looking now: the

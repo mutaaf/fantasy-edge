@@ -183,9 +183,10 @@ struct GameDetailView: View {
         #if os(visionOS)
         openWindow(id: "tabletop", value: gameID)
         let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+        let reopen = openWindow
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(StadiumPassage.doorSeconds))
-            await passage.enter(openSpace: open, dismissWindow: dismiss)
+            await passage.enter(openSpace: open, dismissWindow: dismiss, openWindow: reopen)
         }
         #else
         path.append(Route.stadium(gameID))

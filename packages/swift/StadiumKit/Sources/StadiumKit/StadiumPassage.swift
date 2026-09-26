@@ -39,6 +39,12 @@ public final class StadiumPassage {
     public private(set) var open: Set<Window> = []
     public private(set) var inStadium = false
 
+    /// Whether the space has said, itself, that it is on screen. `inStadium`
+    /// is a belief written down when `openImmersiveSpace` answered; this is
+    /// evidence, reported by the space through `.tracksSpace()`. The two are
+    /// kept apart on purpose - see `enter` and `watch`.
+    public private(set) var onScreen = false
+
     /// Why the last walk into the stadium did not happen, for the caller to
     /// show. `enter` used to return silently on a refusal, so a tap with the
     /// board's room already open played the gate, dimmed the table and did
@@ -48,6 +54,17 @@ public final class StadiumPassage {
     /// How long the table needs to be up before the space can read the game
     /// off it. The walk-in hooks each had their own sleep; this is the one.
     public static let doorSeconds: Double = 3
+
+    /// How often the open space says it is still there, how long a silence has
+    /// to run before the passage stops believing it, and how many checks in a
+    /// row have to agree. Not design numbers: a beat cheap enough to be free,
+    /// and a silence long enough - and confirmed often enough - that a main
+    /// actor blocked building a stadium cannot fake one. Bringing the windows
+    /// back into a stadium that is still standing is the one mistake this must
+    /// not make, so it is slow to conclude and quick to be talked out of it.
+    public static let beatSeconds: Double = 1.5
+    public static let silenceSeconds: Double = 8
+    public static let strikes = 2
 
     /// The space to open, and what to bring back when the wearer walked
     /// straight into the stadium with nothing behind them - the app's front
@@ -63,8 +80,26 @@ public final class StadiumPassage {
     @ObservationIgnored private var saved: Set<Window> = []
     @ObservationIgnored private var moving = false
     @ObservationIgnored private var leaving = false
+    /// The last time the open space said it was there, and the task that
+    /// checks. Both are the passage's way home from a space that went without
+    /// saying so; see `watch`.
+    ///
+    /// A suspending clock, not a wall clock: an app put to sleep with the
+    /// stadium open comes back with every timer overdue, and on a wall clock
+    /// that reads as a stadium that stopped answering hours ago. Time the app
+    /// was not running is not time the space was silent.
+    @ObservationIgnored private var lastBeat = SuspendingClock.Instant.now
+    @ObservationIgnored private var watchdog: Task<Void, Never>?
+
+    private var silence: Double {
+        let d = lastBeat.duration(to: .now)
+        return Double(d.components.seconds) + Double(d.components.attoseconds) * 1e-18
+    }
 
     public func appeared(_ w: Window) { open.insert(w) }
+
+    /// Forget the last refusal, once the wearer has been told about it.
+    public func clearRefusal() { refusal = nil }
 
     /// A window that opens while the stadium is up belongs behind it, not in
     /// the stands. Under load the tabletop the launch opened could finish
@@ -96,9 +131,25 @@ public final class StadiumPassage {
     /// Tabletops are closed before the board because the stadium is often
     /// entered from the board's own launch task, and closing the board ends
     /// that task; whatever comes after it would never run.
+    ///
+    /// `openWindow` is not used on the way in. It is the way back: the space
+    /// can be opened and then never come up, and every window is already
+    /// closed by then, so the passage has to be able to put them back on its
+    /// own. See `watch`.
     public func enter(openSpace: OpenImmersiveSpaceAction, dismissWindow: DismissWindowAction,
+                      openWindow: OpenWindowAction,
                       before: () -> Void = {}) async {
-        guard !inStadium else { log.info("enter ignored: already in the stadium"); return }
+        // `inStadium` is bookkeeping, and bookkeeping desyncs: a space that
+        // went away without `spaceDisappeared` running used to leave this true
+        // for the rest of the process, and "Enter stadium" dead with it, with
+        // nothing logged and nothing shown. So the belief is only trusted when
+        // the space itself has said it is on screen; otherwise it is wrong,
+        // loudly, and the walk goes ahead.
+        if inStadium {
+            guard !onScreen else { log.info("enter ignored: already in the stadium"); return }
+            log.error("enter: the passage thought it was in the stadium, but the space never said it was on screen; walking in again")
+            heal()
+        }
         // The app's own business before the walk - which immersion style the
         // dial opens at, say - done while nothing has moved yet.
         before()
@@ -124,6 +175,8 @@ public final class StadiumPassage {
         }
         saved = opened
         inStadium = true
+        onScreen = false
+        lastBeat = .now
         moving = true
         log.info("entered stadium; closing \(opened.count) window(s)")
         for w in opened where w.value != nil {
@@ -135,34 +188,103 @@ public final class StadiumPassage {
         }
         for w in opened where w.value == nil { dismissWindow(id: w.id) }
         moving = false
+        watch(openWindow)
     }
+
+    // MARK: - what the space itself says
+
+    /// The space is on screen. Reported by `.tracksSpace()`.
+    public func spaceAppeared() {
+        lastBeat = .now
+        guard !onScreen else { return }
+        onScreen = true
+        log.info("the stadium is on screen")
+    }
+
+    /// The space is still on screen. A beat rather than a one-off, because the
+    /// only other thing that ever says the space has gone is an `onDisappear`,
+    /// and an `onDisappear` that does not run is exactly the failure that left
+    /// an app with every window closed and no way back.
+    public func spaceAlive() { lastBeat = .now }
+
+    /// Put the windows back if the space stops saying it is there. Two
+    /// failures land here: a space that answered `.opened` and never came up,
+    /// and a space that went away without its `onDisappear` running. Both used
+    /// to leave the app with nothing on screen at all, permanently, and
+    /// nothing written down about it.
+    private func watch(_ openWindow: OpenWindowAction) {
+        watchdog?.cancel()
+        watchdog = Task { @MainActor [weak self] in
+            var strikes = 0
+            while let self, self.inStadium {
+                do { try await Task.sleep(for: .seconds(Self.beatSeconds)) } catch { return }
+                guard self.inStadium else { return }
+                let quiet = self.silence
+                guard quiet > Self.silenceSeconds else { strikes = 0; continue }
+                strikes += 1
+                log.error("the stadium has said nothing for \(quiet, format: .fixed(precision: 1))s (\(strikes) of \(Self.strikes))")
+                guard strikes >= Self.strikes else { continue }
+                log.error("the stadium is gone without having said so; putting the windows back")
+                self.refusal = "The stadium closed on its own."
+                self.onScreen = false
+                self.restore(openWindow)
+                return
+            }
+        }
+    }
+
+    // MARK: - the way out
 
     /// Bring back what was open, then close the space. Windows first: an app
     /// whose last scene closes is an app with nothing on screen.
     public func leave(openWindow: OpenWindowAction, dismissSpace: DismissImmersiveSpaceAction) async {
         guard inStadium else { log.info("leave ignored: not in stadium"); return }
         leaving = true
+        // Whatever happens to the dismiss below, `leaving` comes back down. It
+        // gates `spaceDisappeared`, so a `leaving` left standing by a dismiss
+        // that never returned would silently swallow the next Crown press and
+        // the windows would not come back.
+        defer { leaving = false }
         restore(openWindow)
         log.info("windows reopened; dismissing stadium")
         await dismissSpace()
         log.info("stadium dismissed")
-        leaving = false
     }
 
     /// The space went away without `leave` - the Digital Crown press, or the
     /// system closing it. The windows still have to come back.
     public func spaceDisappeared(openWindow: OpenWindowAction) {
-        guard inStadium, !leaving else { return }
+        onScreen = false
+        guard inStadium else { log.info("the stadium went, and the passage was not in it; nothing to restore"); return }
+        guard !leaving else { return }
+        log.info("the stadium went without a Leave; restoring what was open")
         restore(openWindow)
     }
 
+    /// Drop a belief the evidence contradicts, without touching the windows:
+    /// they were never closed, or they are already back.
+    private func heal() {
+        watchdog?.cancel()
+        watchdog = nil
+        saved = []
+        inStadium = false
+        onScreen = false
+    }
+
     private func restore(_ openWindow: OpenWindowAction) {
+        watchdog?.cancel()
+        watchdog = nil
         let back = saved
         saved = []
         inStadium = false
         // Launched straight into the stadium with nothing behind it: the front
         // door is what comes back.
-        if back.isEmpty { openWindow(id: frontDoor.id); return }
+        if back.isEmpty {
+            log.info("nothing was open behind the stadium; reopening the front door")
+            openWindow(id: frontDoor.id)
+            return
+        }
+        log.info("reopening \(back.count) window(s)")
         for w in back where w.value == nil { openWindow(id: w.id) }
         for w in back where w.value != nil { openWindow(id: w.id, value: w.value!) }
     }
@@ -187,6 +309,40 @@ public struct TracksWindow: ViewModifier {
     }
 }
 
+/// Reports the immersive space's presence to the passage: that it came up,
+/// that it is still here, and that it went.
+///
+/// The beat is the point. An `onDisappear` is the only other thing that ever
+/// says the stadium has gone, and an `onDisappear` that does not run left
+/// `inStadium` true for the life of the process - every window closed, the
+/// Enter button dead, and nothing written down. A space that stops saying it
+/// is there is a space that has gone, whatever the bookkeeping believes.
+public struct TracksSpace: ViewModifier {
+    @Environment(StadiumPassage.self) private var passage
+    @Environment(\.openWindow) private var openWindow
+
+    public init() {}
+
+    public func body(content: Content) -> some View {
+        content
+            .onAppear { passage.spaceAppeared() }
+            .task {
+                // `try?` would spin here: a cancelled sleep returns at once and
+                // the loop would run flat out for as long as the task took to
+                // be torn down. Cancellation ends it.
+                while !Task.isCancelled {
+                    passage.spaceAlive()
+                    do { try await Task.sleep(for: .seconds(StadiumPassage.beatSeconds)) } catch { return }
+                }
+            }
+            .onDisappear { passage.spaceDisappeared(openWindow: openWindow) }
+    }
+}
+
 extension View {
     public func tracksWindow(_ w: StadiumPassage.Window) -> some View { modifier(TracksWindow(window: w)) }
+
+    /// The immersive space's side of `tracksWindow`. Every space the passage
+    /// opens wears this; without it the passage has only its own belief.
+    public func tracksSpace() -> some View { modifier(TracksSpace()) }
 }
