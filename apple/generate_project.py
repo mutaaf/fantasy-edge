@@ -225,6 +225,13 @@ def main() -> None:
         f'\t\t\t\tINFOPLIST_KEY_CFBundleDisplayName = "Fantasy Edge";\n'
         f'\t\t\t\tINFOPLIST_KEY_NSLocalNetworkUsageDescription = "Fantasy Edge '
         f'reads your league board from the Mac on your network.";\n'
+        # Without this key ARKitSession.run throws the moment a
+        # PlaneDetectionProvider is started, and the old silent catch made that
+        # look exactly like nothing happening. The volume's own snap needs
+        # neither the key nor the prompt; only measuring the table does.
+        f'\t\t\t\tINFOPLIST_KEY_NSWorldSensingUsageDescription = "Fantasy Edge '
+        f'measures the table in front of you so the stadium sits on it rather '
+        f'than floats over it.";\n'
         f'\t\t\t\tINFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;\n'
         f'\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
         f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {BUNDLE};\n'

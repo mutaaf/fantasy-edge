@@ -21,6 +21,7 @@ enum ExperienceTokens {
     static func arrival(_ spec: SceneSpec?) -> SceneSpec.Look.Arrival? { look(spec)?.arrival ?? bundled?.arrival }
     static func picker(_ spec: SceneSpec?) -> SceneSpec.Look.SeatPicker? { look(spec)?.seatPicker ?? bundled?.seatPicker }
     static func tabletop(_ spec: SceneSpec?) -> SceneSpec.Look.TabletopLook? { look(spec)?.tabletop ?? bundled?.tabletop }
+    static func surface(_ spec: SceneSpec?) -> SceneSpec.Look.SurfaceLook? { look(spec)?.surface ?? bundled?.surface }
 }
 
 /// What the stadium remembers between visits: the seat, and whether the Crown
@@ -89,7 +90,11 @@ final class HeadFacing {
     private var running = false
 
     func start() async {
-        guard !running, WorldTrackingProvider.isSupported else { return }
+        guard !running else { return }
+        guard WorldTrackingProvider.isSupported else {
+            StadiumLog.log.notice("[head] world tracking is unsupported here; the dock recentres to the seat's forward")
+            return
+        }
         running = true
         let session = ARKitSession()
         self.session = session
@@ -98,6 +103,9 @@ final class HeadFacing {
         } catch {
             running = false
             self.session = nil
+            // Silence here is the bug that hid this whole area: no session, no
+            // yaw, and nothing anywhere saying why the recentre felt inert.
+            StadiumLog.log.error("[head] ARKit refused world tracking: \(String(describing: error), privacy: .public); the dock recentres to the seat's own forward")
         }
     }
 

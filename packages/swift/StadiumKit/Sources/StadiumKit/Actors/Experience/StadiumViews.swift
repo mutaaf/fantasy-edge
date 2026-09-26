@@ -293,6 +293,14 @@ public struct TabletopView: View {
     @State private var gestureYaw: Float?
     @State private var closer = false
     @State private var entering = false
+    /// Whether the volume is resting on something real. The system's word, not
+    /// ours, and free of any prompt.
+    @State private var surface = TabletopSurface()
+    /// The plane pass, which costs a prompt and so only runs once the volume
+    /// has actually snapped to something.
+    @State private var scout = SurfaceScout()
+    /// A table is fitted once. After that the wearer's pinch is the size.
+    @State private var fittedTo: SurfaceScout.Table?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(feed: SceneFeed, enterStadium: @escaping () -> Void) {
@@ -301,6 +309,7 @@ public struct TabletopView: View {
     }
 
     private var table: SceneSpec.Look.TabletopLook? { ExperienceTokens.tabletop(feed.spec) }
+    private var snapping: SceneSpec.Look.SurfaceLook? { ExperienceTokens.surface(feed.spec) }
 
     public var body: some View {
         RealityView { content in
@@ -325,13 +334,16 @@ public struct TabletopView: View {
             if !holder.components.has(CollisionComponent.self), v.count == 3 {
                 holder.components.set(CollisionComponent(shapes: [.generateBox(size: SIMD3(Float(v[0]), Float(v[1]), Float(v[2])))]))
             }
+            // The rest height is read off the model's own bounds, so it can
+            // only be right once there is a model. Cheap, and idempotent.
+            if surface.snapped { place(seconds: 0) }
         }
         .gesture(MagnifyGesture().targetedToEntity(holder)
             .onChanged { value in
                 let base = gestureScale ?? scale
                 if gestureScale == nil { gestureScale = scale }
                 scale = clampScale(base * Float(value.magnification))
-                place(animated: false)
+                place(seconds: 0)
             }
             .onEnded { _ in gestureScale = nil })
         .simultaneousGesture(RotateGesture3D(constrainedToAxis: .y).targetedToEntity(holder)
@@ -340,9 +352,24 @@ public struct TabletopView: View {
                 if gestureYaw == nil { gestureYaw = yaw }
                 let turn = Float(value.rotation.angle.radians) * (value.rotation.axis.y < 0 ? -1 : 1)
                 yaw = base + turn
-                place(animated: false)
+                place(seconds: 0)
             }
             .onEnded { _ in gestureYaw = nil })
+        // Tier one: the volume's own snap. No ARKit, no prompt, and the only
+        // thing the model's rest height hangs off.
+        .readsSurfaceSnapping(into: surface)
+        // On a real table the plinth is the baseplate; two of them read as a
+        // model floating over a saucer.
+        .volumeBaseplateVisibility(
+            surface.snapped && (snapping?.snap.hideBaseplate ?? false) ? .hidden : .automatic)
+        .onChange(of: surface.snapped) { _, snapped in
+            // Tier two rides on tier one: nobody is asked for world sensing
+            // until the volume is actually on something, and the pass is
+            // stopped the moment it is not.
+            if snapped { scout.start(snapping) } else { scout.stop(); fittedTo = nil }
+            place(seconds: reduceMotion ? 0 : (snapping?.snap.settleSeconds ?? 0))
+        }
+        .onChange(of: scout.table) { _, found in fit(to: found) }
         #if DEBUG
         // `-arrivalAt <0...1>` freezes the gate part-way open, for a still,
         // once the scene it takes its outline from has arrived.
@@ -370,7 +397,7 @@ public struct TabletopView: View {
                 ReplayControls(feed: feed)
                 Button {
                     closer.toggle()
-                    place(animated: true)
+                    place(seconds: reduceMotion ? 0 : (table?.closerSeconds ?? 0))
                 } label: {
                     Label(closer ? "Step back" : "Look closer",
                           systemImage: closer ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
@@ -393,6 +420,8 @@ public struct TabletopView: View {
         .onDisappear {
             feed.stop()
             gate.cancel()
+            // The volume is going away; nothing is reading the room any more.
+            scout.stop()
         }
     }
 
@@ -401,19 +430,71 @@ public struct TabletopView: View {
         return max(lo, min(hi, s))
     }
 
-    /// The model's pose from the wearer's scale, turn and "Look closer" tilt.
-    /// The wearer never moves; the model does, and only on their gesture.
-    private func place(animated: Bool) {
+    /// The model's pose from the wearer's scale, turn and "Look closer" tilt,
+    /// standing at whatever height the room has given it. The wearer never
+    /// moves; the model does, and only on their gesture or on a snap.
+    private func place(seconds: Double) {
         let tilt = closer ? Float(table?.closerTiltDegrees ?? 0) * .pi / 180 : 0
         var t = holder.transform
         t.scale = SIMD3(repeating: scale)
         t.rotation = simd_quatf(angle: tilt, axis: SIMD3(1, 0, 0)) * simd_quatf(angle: yaw, axis: SIMD3(0, 1, 0))
-        let seconds = animated && !reduceMotion ? (table?.closerSeconds ?? 0) : 0
+        t.translation = SIMD3(0, restHeight(scale: scale, rotation: t.rotation), 0)
         if seconds > 0, holder.parent != nil {
             holder.move(to: t, relativeTo: holder.parent, duration: seconds, timingFunction: .easeInOut)
         } else {
             holder.transform = t
         }
+    }
+
+    /// Where the model's own floor goes, in the volume.
+    ///
+    /// Unsnapped it is the middle of the volume, where it has always been:
+    /// `presentation.tabletop.floor` puts the stage 0.2 m down and the plinth's
+    /// underside 6 mm over the volume's floor, which is invisible in mid-air
+    /// and is what the grounding shadow is for.
+    ///
+    /// Snapped, the volume's floor *is* the table top, and 6 mm of daylight
+    /// under a jewel on a plinth is the whole illusion gone - worse at a pinch,
+    /// because the model scales about the volume's centre, so at the smallest
+    /// size it hangs 8 cm up. So the model is lowered until its own lowest
+    /// point rests `settleMeters` over that floor, whatever its size and
+    /// however far "Look closer" has tipped it. The low point is measured off
+    /// the drawn model rather than worked out from the plinth's tokens: the
+    /// geometry is the thing that has to touch the wood.
+    private func restHeight(scale: Float, rotation: simd_quatf) -> Float {
+        guard surface.snapped, let snap = snapping?.snap,
+              let v = feed.spec?.presentation.tabletop.volume, v.count == 3 else { return 0 }
+        let box = renderer.root.visualBounds(relativeTo: holder)
+        guard box.max.y >= box.min.y, box.min.y.isFinite else { return 0 }
+        // The tilt swings a corner down, so the low point is the lowest of the
+        // eight turned corners, not the untouched min.
+        var low = Float.greatestFiniteMagnitude
+        for i in 0..<8 {
+            let corner = SIMD3(i & 1 == 0 ? box.min.x : box.max.x,
+                               i & 2 == 0 ? box.min.y : box.max.y,
+                               i & 4 == 0 ? box.min.z : box.max.z)
+            low = min(low, rotation.act(corner).y)
+        }
+        return Float(-v[1] / 2 + snap.settleMeters) - scale * low
+    }
+
+    /// The real table's size, spent on the model.
+    ///
+    /// The scout says how much wood there is; the model takes as much of it as
+    /// the tabletop's own scale limits allow, leaving `edgeMarginMeters` clear
+    /// at every edge, so a stadium on a side table does not hang over it. Once
+    /// per table: the wearer's next pinch is the size from then on.
+    private func fit(to found: SurfaceScout.Table?) {
+        guard let found, found != fittedTo, gestureScale == nil,
+              let s = snapping, let v = feed.spec?.presentation.tabletop.volume, v.count == 3 else { return }
+        fittedTo = found
+        let clear = Float(s.edgeMarginMeters) * 2
+        let want = clampScale(min(max(0.01, found.widthMeters - clear) / Float(v[0]),
+                                  max(0.01, found.depthMeters - clear) / Float(v[2])))
+        guard abs(want - scale) > 0.01 else { return }
+        StadiumLog.log.notice("[surface] fitting the model to the table: scale \(want, format: .fixed(precision: 2))")
+        scale = want
+        place(seconds: reduceMotion ? 0 : s.snap.settleSeconds)
     }
 
     /// The gate follows the plinth's edge: the outermost tier the table draws,

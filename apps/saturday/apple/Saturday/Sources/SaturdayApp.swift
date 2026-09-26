@@ -54,6 +54,13 @@ struct SaturdayApp: App {
         }
         .windowStyle(.volumetric)
         .defaultSize(width: 1.12, height: 0.45, depth: 0.86, in: .meters)
+        // What lets the volume rest on a real table: visionOS snaps a volume to
+        // a horizontal surface only when it is gravity aligned, and it does so
+        // with no ARKit and no consent dialog. StadiumKit's TabletopView reads
+        // `\.surfaceSnappingInfo` and puts the model down on the surface
+        // (visual.experience.surface). The default, adaptive, tips the volume
+        // toward the wearer, which is wrong for a model on a plinth.
+        .volumeWorldAlignment(.gravityAligned)
 
         // A seat at the fifty. It opens progressive from the table, so the
         // Digital Crown walks you from the room into the bowl; the dial never

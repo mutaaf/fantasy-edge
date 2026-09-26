@@ -96,6 +96,11 @@ def main() -> None:
         '\t\t\t\tINFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;\n'
         '\t\t\t\tINFOPLIST_KEY_UILaunchScreen_Generation = YES;\n'
         '\t\t\t\tINFOPLIST_KEY_NSLocalNetworkUsageDescription = "Saturday reads the slate from the Mac on your network.";\n'
+        # visionOS only in effect, but the target is multiplatform and an unused
+        # key costs nothing on iPad. Without it ARKitSession.run throws the
+        # moment the plane pass starts, which reads as the feature not existing.
+        # The volume's own snap to a table needs neither this nor the prompt.
+        '\t\t\t\tINFOPLIST_KEY_NSWorldSensingUsageDescription = "Saturday measures the table in front of you so the stadium sits on it rather than floats over it.";\n'
         '\t\t\t\tINFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";\n'
         '\t\t\t\tINFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";\n'
         f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {BUNDLE};\n'

@@ -254,6 +254,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Saturday reads the slate from the Mac on your network.";
+				INFOPLIST_KEY_NSWorldSensingUsageDescription = "Saturday measures the table in front of you so the stadium sits on it rather than floats over it.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.saturday;
@@ -283,6 +284,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Saturday reads the slate from the Mac on your network.";
+				INFOPLIST_KEY_NSWorldSensingUsageDescription = "Saturday measures the table in front of you so the stadium sits on it rather than floats over it.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.saturday;
