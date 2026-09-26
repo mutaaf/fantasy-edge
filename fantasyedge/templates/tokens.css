@@ -56,4 +56,5 @@
   --fe-motion-moment-seconds: 6.0s;
   --fe-motion-moment-hold-grace-seconds: 1.0s;
   --fe-motion-flight-ease: 1.6;
+  --fe-motion-max-frame-seconds: 0.1s;
 }

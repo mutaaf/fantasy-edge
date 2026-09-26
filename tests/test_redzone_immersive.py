@@ -121,6 +121,43 @@ class ChangeoverTest(unittest.TestCase):
         self.assertEqual(written - {"components"}, set(),
                          "a changeover may fade the world, never move it")
 
+    def test_the_repaint_is_not_charged_to_the_fade_back(self):
+        """A changeover repaints the bowl in the dark, and that costs 0.19 s for
+        clubs seen before and 0.36 s for new ones (the eight measured in
+        docs/REDZONE.md). Whatever it costs arrives as the *next* frame's delta,
+        and against a 0.35 s rise that delta is the entire rise: the first frame
+        after the swap computed an opacity of 1 and the world snapped back out
+        of black. Every whip-around ended in a cut. It looked right only under
+        `-stadiumFadeScale 10`, which is how the screenshots were taken, which
+        is how it survived. The clock holds for the frame the swap happened in.
+        """
+        for name, marker in (("updateChangeover", "ch"), ("update", "fd")):
+            body = EXPERIENCE.split(f"private func {name}(" if name == "updateChangeover"
+                                    else "func update(_ frame: StadiumFrame")[1].split("\n    ///")[0]
+            self.assertIn(f"if {marker}.held {{ {marker}.held = false }} else {{ {marker}.elapsed += frame.dt }}",
+                          body, f"{name} charges the frame that did the work to the fade")
+            self.assertIn(f"{marker}.held = true", body)
+
+    def test_both_halves_of_a_dissolve_are_eased(self):
+        """A straight ramp on an opacity reads as a wipe, and at 0.35 s a side
+        it is long enough to see. The curves are tokens, like every other
+        renderer-facing number (docs/ART_BIBLE.md)."""
+        import json
+
+        self.assertEqual(EXPERIENCE.count("SceneMath.ease("), 4,
+                         "both halves of both fades are eased")
+        camera = json.loads((ROOT / "design" / "tokens.json").read_text())["visual"]["experience"]["camera"]
+        self.assertIn("fadeOutEase", camera)
+        self.assertIn("fadeInEase", camera)
+
+    def test_one_expensive_frame_is_a_slow_frame_not_a_skipped_second(self):
+        """The same delta that ate the fade skips a fifth of a second of the
+        crowd's phase, the ribbon's crawl and a moment's schedule. The composer
+        caps it once, for every actor."""
+        body = RENDERER.split("public func tick(")[1].split("\n        releaseStatus")[0]
+        self.assertIn("motion.maxFrameSeconds", body)
+        self.assertIn("min(rawDT,", body)
+
     def test_a_live_switch_keeps_the_old_scene_until_the_new_one_lands(self):
         """Blanking the spec tears the stadium down and rebuilds it in view."""
         body = FEED.split("public var target: Target?")[1].split("@ObservationIgnored")[0]

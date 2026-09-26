@@ -547,6 +547,14 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
     }
 
     public struct Motion: Decodable, Equatable, Sendable {
+        /// How hard the ball hurries when plays are stacked behind it.
+        /// See `PlayMotion.share(queued:waiting:rule:)`.
+        public struct Queue: Decodable, Equatable, Sendable {
+            public let leadPlays: Int?
+            public let catchUpSeconds: Double?
+            public let minShare: Double?
+        }
+
         public let minSeconds: Double
         public let maxSeconds: Double
         public let referenceSpeed: Double
@@ -556,7 +564,25 @@ public struct SceneSpec: Decodable, Equatable, Sendable {
         /// carries it; the views fall back to `MomentHold.defaultSeconds`.
         public let momentSeconds: Double?
         /// 1.1: the ball's flight eases out by this power, quick off the snap.
+        /// Only an arc without a `path` is eased: a path is already timed
+        /// segment by segment, and bending its clock would move the ball off
+        /// the spots the play states.
         public let flightEase: Double?
+        /// The longest a single frame may advance the stadium's own clock.
+        ///
+        /// A changeover's repaint costs a fifth of a second of main thread and
+        /// a build costs seconds; whatever it costs lands in the *next* frame's
+        /// delta, and every animation timed off that delta jumps by it. The
+        /// fade coming out of a changeover was the visible one - it was over
+        /// before its first frame, so the world snapped back rather than
+        /// returning - but the crowd's phase, the ribbon's crawl, a moment's
+        /// schedule and the particle shells all teleport the same way. Capping
+        /// the delta makes one expensive frame a slow frame instead of a
+        /// skipped second. Nil leaves the clock uncapped.
+        public let maxFrameSeconds: Double?
+        /// Optional until `design/tokens.json` carries it; `PlayMotion`'s own
+        /// defaults stand in.
+        public let queue: Queue?
         /// How long past a play's own flight the composer waits for it to land
         /// before firing its moment anyway. Optional until `design/tokens.json`
         /// carries it; `MomentGate.defaultGraceSeconds` stands in.

@@ -103,7 +103,8 @@ final class BroadcastActor: StadiumActor {
 
     func settle(_ c: StadiumContext, animated: Bool) {
         let s = c.spec, look = c.look
-        let duration = animated ? 0.35 : 0
+        let rule = look.broadcast.play.settle
+        let duration = animated ? (rule?.seconds ?? 0.35) : 0
         guard let b = s.ball else {
             ball.isEnabled = false
             beacon.isEnabled = false
@@ -117,7 +118,8 @@ final class BroadcastActor: StadiumActor {
         // Orientation first: writing a transform while move(to:) runs cancels
         // the animation, and the ball stayed wherever it started - the fifty.
         ball.orientation = simd_quatf(angle: 0, axis: SIMD3(0, 1, 0))
-        move(ball, to: rest, duration: simd_distance(ball.position, rest) > 15 ? 0 : duration)
+        let far = Float(rule?.maxYards ?? 15)
+        move(ball, to: rest, duration: simd_distance(ball.position, rest) > far ? 0 : duration, ease: rule?.ease)
 
         let height = b.beacon.height
         let key = "\(height)|\(b.beacon.color)"
@@ -138,7 +140,7 @@ final class BroadcastActor: StadiumActor {
             beacon.addChild(q.entity("beacon", material))
         }
         beacon.isEnabled = true
-        move(beacon, to: SceneMath.local(x: b.x, y: 0, z: b.z), duration: duration)
+        move(beacon, to: SceneMath.local(x: b.x, y: 0, z: b.z), duration: duration, ease: rule?.ease)
 
         let want = Dictionary(uniqueKeysWithValues: s.lasers.map { ($0.kind, $0) })
         for (kind, e) in laserEntities where want[kind] == nil { e.isEnabled = false }
@@ -146,10 +148,10 @@ final class BroadcastActor: StadiumActor {
             let e = laserEntities[kind] ?? makeLine(laser, c)
             laserEntities[kind] = e
             e.isEnabled = true
-            move(e, to: SceneMath.local(x: laser.x, y: look.broadcast.laser.lift), duration: duration)
+            move(e, to: SceneMath.local(x: laser.x, y: look.broadcast.laser.lift), duration: duration, ease: rule?.ease)
         }
         // The physical chains and down box are Sideline's; Broadcast only paints.
-        placeTag(c, scrimmage: want["scrimmage"], gain: want["lineToGain"], duration: duration)
+        placeTag(c, scrimmage: want["scrimmage"], gain: want["lineToGain"], duration: duration, ease: rule?.ease)
     }
 
     /// A line in light on the grass: feathered, broken by blades, sorted
@@ -185,7 +187,8 @@ final class BroadcastActor: StadiumActor {
 
     /// "3RD & 6" painted on the far half of the field beside the line of
     /// scrimmage, reading toward whoever is watching.
-    private func placeTag(_ c: StadiumContext, scrimmage: SceneSpec.Laser?, gain: SceneSpec.Laser?, duration: Double) {
+    private func placeTag(_ c: StadiumContext, scrimmage: SceneSpec.Laser?, gain: SceneSpec.Laser?,
+                          duration: Double, ease: String?) {
         let s = c.spec, look = c.look.broadcast.laser.tag
         let text = s.status.downDistance.components(separatedBy: " at ").first ?? ""
         guard let scrimmage, !text.isEmpty else {
@@ -214,10 +217,16 @@ final class BroadcastActor: StadiumActor {
         let wYards = Double(tag.model?.mesh.bounds.extents.x ?? 0)
         let x = scrimmage.x + ahead * (look.aheadYards + wYards / 2)
         tag.isEnabled = true
-        move(tag, to: SceneMath.local(x: x, y: c.look.broadcast.laser.lift * 2, z: z), duration: duration)
+        move(tag, to: SceneMath.local(x: x, y: c.look.broadcast.laser.lift * 2, z: z), duration: duration, ease: ease)
     }
 
-    private func move(_ e: Entity, to at: SIMD3<Float>, duration: Double) {
+    private func move(_ e: Entity, to at: SIMD3<Float>, duration: Double, ease: String?) {
+        // Already there. `settle` runs on every scene, which in a replay is
+        // every 0.7 s, and most of them move nothing: the clock ticked. Issuing
+        // a move to where the entity already stands restarts its ease from
+        // scratch, so the ball, the beacon, both lines and the tag each began
+        // an animation two or three times a second that had nowhere to go.
+        if simd_distance(e.position, at) < 1e-3 { return }
         // An entity not yet in a scene ignores move(to:) without a word: on a
         // paused replay the first scene arrives before the stadium is on
         // stage, no second one follows, and the ball sat at the origin - the
@@ -226,7 +235,18 @@ final class BroadcastActor: StadiumActor {
             e.position = at
         } else {
             e.move(to: Transform(scale: e.scale, rotation: e.orientation, translation: at),
-                   relativeTo: e.parent, duration: duration, timingFunction: .easeInOut)
+                   relativeTo: e.parent, duration: duration, timingFunction: Self.timing(ease))
+        }
+    }
+
+    /// `visual.broadcast.play.settle.ease` as RealityKit spells it. An unknown
+    /// name eases in and out, which is what this did before the token existed.
+    private static func timing(_ ease: String?) -> AnimationTimingFunction {
+        switch ease {
+        case "linear": return .linear
+        case "easeIn", "in", "inCubic": return .easeIn
+        case "easeOut", "out", "outCubic": return .easeOut
+        default: return .easeInOut
         }
     }
 }
@@ -293,7 +313,8 @@ extension BroadcastActor {
         let seconds = min(t * real, f.cut ?? real)
         let look = c.look.broadcast.ball
         let pose = BallFlight.pose(f.arc, seconds: seconds, flight: look.flight,
-                                   floor: Float(look.widthYards) * ball.scale.x / 2)
+                                   floor: Float(look.widthYards) * ball.scale.x / 2,
+                                   ease: c.spec.motion.flightEase)
         ball.isEnabled = true
         ball.position = pose.position
         ball.orientation = pose.orientation
@@ -570,7 +591,8 @@ extension BroadcastActor {
 
     private func startNextFlight(_ c: StadiumContext) {
         guard flight == nil, beatUntil == nil else { return }
-        guard let (arc, seconds) = motion.next(reduceMotion: c.reduceMotion, floor: c.spec.motion.floorSeconds) else {
+        guard let (arc, seconds) = motion.next(reduceMotion: c.reduceMotion, floor: c.spec.motion.floorSeconds,
+                                               queue: c.spec.motion.queue) else {
             settle(c, animated: !c.reduceMotion)
             return
         }

@@ -1,0 +1,4 @@
+td-moment-t0.5: replay at 1929s (touchdown) -> .work/shots/animation-1/td-moment-t0.5.png
+td-moment-t3: replay at 1929s (touchdown) -> .work/shots/animation-1/td-moment-t3.png
+td-moment-t6: replay at 1929s (touchdown) -> .work/shots/animation-1/td-moment-t6.png
+redzone-trails: replay at 390s (redzone) -> .work/shots/animation-1/redzone-trails.png

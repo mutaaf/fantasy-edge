@@ -1009,13 +1009,30 @@ public struct StadiumSpaceView<Trailing: View>: View {
         return facings.min { abs($0 - yaw) < abs($1 - yaw) } ?? 0
     }
 
-    /// Fade one dock attachment. RealityKit animates an opacity component's
-    /// value, so setting it inside a withAnimation is all a fade needs.
+    /// Fade one dock attachment to `value` over `seconds`.
+    ///
+    /// This used to write the value outright and ignore `seconds` - the sort
+    /// of thing that reads as correct and is not, because nothing about it
+    /// looks like a missing fade until you watch it. Both its callers pass a
+    /// duration and then wait it out, so the dock cut away, waited in the dark
+    /// and cut back while the world either side of it took 0.35 s to dissolve.
+    /// On a seat change that is the two halves of one gesture coming apart,
+    /// which the comment in `sit` says is the one thing it may not do; on a
+    /// recentre it is a blink.
+    ///
+    /// An entity outside a scene ignores `playAnimation` the way it ignores
+    /// `move(to:)`, and a build that cannot make the animation still has to
+    /// land on the value, so both fall back to setting it.
     private func dockOpacity(_ id: String, _ value: Float, seconds: Double) {
         guard let e = placer.entities[id] else { return }
-        var opacity = e.components[OpacityComponent.self] ?? OpacityComponent(opacity: 1)
-        opacity.opacity = value
-        e.components.set(opacity)
+        let now = e.components[OpacityComponent.self]?.opacity ?? 1
+        e.components.set(OpacityComponent(opacity: value))
+        guard seconds > 0.01, abs(now - value) > 0.001, e.scene != nil else { return }
+        let fade = FromToByAnimation(name: "dock.fade.\(id)", from: now, to: value,
+                                     duration: seconds, timing: .easeInOut,
+                                     bindTarget: .opacity, fillMode: .forwards)
+        guard let resource = try? AnimationResource.generate(with: fade) else { return }
+        e.playAnimation(resource)
     }
 
     /// Say once, and only when it would help: the first time the wearer is

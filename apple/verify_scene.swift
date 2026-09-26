@@ -429,6 +429,37 @@ struct VerifyScene {
                + "team areas and the uprights are not part of the building after all")
     }
 
+    // ---- the ball never changes gear ----
+    //
+    // How hard the ball hurries with plays stacked behind it is the one number
+    // that has to be right at 1x and at 60x from the same rule. It used to be a
+    // threshold - half speed past three waiting - and at 60x the queue sits on
+    // the threshold and trades sides every poll, so the ball visibly changed
+    // gear several times a drive. Swept here: no step, no runaway, and a live
+    // game's shallow queue costs nothing.
+    for rule in [nil, SceneSpec.Motion.Queue(leadPlays: 3, catchUpSeconds: 2.5, minShare: 0.25)] {
+        let lead = rule?.leadPlays ?? 3
+        let least = rule?.minShare ?? 0.25
+        let window = rule?.catchUpSeconds ?? 2.5
+        for waiting in 0...lead {
+            expect(PlayMotion.share(queued: 60, waiting: waiting, rule: rule) == 1,
+                   "queue: \(waiting) waiting is a live game, and must fly at full speed")
+        }
+        var previous = 1.0
+        for tenths in 0...600 {
+            let queued = Double(tenths) / 10
+            let s = PlayMotion.share(queued: queued, waiting: lead + 1, rule: rule)
+            expect(s <= previous + 1e-9, "queue: the share rose from \(previous) to \(s) at \(queued) s owed")
+            expect(s >= least - 1e-9 && s <= 1 + 1e-9, "queue: share \(s) out of bounds at \(queued) s owed")
+            // No step: a tenth of a second more owed may not move it far.
+            expect(abs(s - previous) < 0.05, "queue: the share stepped from \(previous) to \(s) at \(queued) s owed")
+            // Inside the window, or floored - never lagging further than asked.
+            expect(queued * s <= window + 1e-9 || s <= least + 1e-9,
+                   "queue: \(queued) s owed flies in \(queued * s) s, past the \(window) s window")
+            previous = s
+        }
+    }
+
     print("\(paths.count) scenes, \(arcsChecked) arcs, \(checks) assertions")
     if failures.isEmpty {
         print("OK")

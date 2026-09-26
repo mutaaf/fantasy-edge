@@ -84,7 +84,40 @@ raise, and a whip-around that rebuilt would pay that on every switch. The
 same figures the NFL side reports — 0.36 s for new clubs, about 0.19 s for
 clubs seen before — now measured for college rather than assumed from it.
 
-Why it holds: `StadiumVenue` is the building and the livery is the paint, and
+## The repaint used to eat the fade back
+
+Those two numbers sit either side of a bug. The changeover dips to dark over
+`visual.experience.camera.seatFadeSeconds` (0.35 s), swaps, and comes back over
+the same. The swap is the relivery on the line above: **0.20 s for clubs seen
+before, 0.41 s for new ones**, all of it on the main thread. It lands in the
+*next* frame's delta, and the way back was measured off that delta - so the
+first frame that could draw the rise computed an opacity of 0.56 for a 0.20 s
+repaint and 1.0 for a 0.41 s one. The way out faded; the way back was a cut.
+
+It only ever looked right in a capture, because a capture stretches the fade
+×10 (`-stadiumFadeScale 10`) and a tenth of the repaint is nothing. That is why
+the frame above shows a world "still dim" coming back up and a headset at 1x
+did not.
+
+Two things now hold it, on the fantasy-edge side:
+
+- `ExperienceActor.updateChangeover` holds its clock for the one frame the swap
+  happened in, so the rise starts from black on the first frame that can draw
+  it. The seat change does the same, for the same reason: it relays every trail
+  for the new eye at its own dark middle.
+- `StadiumRenderer.tick` caps the frame delta at `motion.maxFrameSeconds`
+  (0.1 s) before any actor sees it. One expensive frame is now a slow frame
+  rather than a fifth of a second skipped out of the crowd's phase, the
+  ribbon's crawl, a moment's schedule and every particle shell at once.
+
+Both halves are also eased now (`camera.fadeOutEase`, `camera.fadeInEase`)
+rather than ramped straight, which is what made a dissolve read as a wipe.
+
+Each changeover logs `[stadium] changeover: back up over 0.35 s` beside its
+`relivery` line, so the pair can be read back out of any run of
+`tools/measure_changeover.py`.
+
+Why a relivery and not a rebuild: `StadiumVenue` is the building and the livery is the paint, and
 `league` is part of the building. Two college matchups share a venue and
 differ in livery. `apple/verify_scene.swift` asserts this over every sampled
 scene, grouped by league, with three college scenes in the set.
