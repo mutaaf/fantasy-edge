@@ -723,6 +723,7 @@ final class CrowdKit {
             dresses[dressKeys.removeFirst()] = nil
             StadiumLog.log.notice("[stadium] crowd dress evicted, \(Self.dressKeys.count) of \(keep) kept")
         }
+        cache?.dropStandIn(key)
     }
 
     private static func touch(_ key: String) {
@@ -777,16 +778,27 @@ final class CrowdKit {
     /// and every composed dress is six textures more, so the reported total
     /// left out the single largest consumer in the bowl and the 300 MB budget
     /// in docs/ART_BIBLE.md was being checked against roughly a third of what
-    /// the process actually held. Shared textures (the plain dress stands in
-    /// for six fields at once) are counted once.
+    /// the process actually held.
+    ///
+    /// Everything the kit holds is counted, not only the LRU: the full dresses
+    /// land about two seconds after a build, so a count taken at build time
+    /// saw an empty cache and reported nothing while the stand the shot shows
+    /// was already wearing a quarter-size one. The plain atlases stand in for
+    /// six of a dress's fields at once and several dresses share them, so
+    /// every texture is counted once, by identity.
     static func textureBytes() -> (sources: Int, dresses: Int) {
         var seen = Set<ObjectIdentifier>()
         var composed = 0
-        for d in dresses.values {
+        func count(_ d: Dress) {
             for t in d.all where seen.insert(ObjectIdentifier(t)).inserted {
                 let base = t.width * t.height * 4
                 composed += t.mipmapLevelCount > 1 ? base * 4 / 3 : base
             }
+        }
+        for d in dresses.values { count(d) }
+        if let kit = cache {
+            for d in kit.quick.values { count(d) }
+            if let p = kit.plain { count(p) }
         }
         return (cache?.sourceBytes ?? 0, composed)
     }
@@ -952,6 +964,18 @@ final class CrowdKit {
         quickKeys.append(key)
         while quickKeys.count > max(1, C.dressCache) { quick[quickKeys.removeFirst()] = nil }
         return d
+    }
+
+    /// This matchup's full dress has landed, so its quarter-size stand-in has
+    /// done its job. With the last stand-in goes the kit's untinted pair, which
+    /// measured 54 MB of texture that nothing was wearing - `plainDress` only
+    /// exists to cover the two seconds before a dress is composed and to stand
+    /// in for one that fails, and it builds again from the atlases whenever it
+    /// is next asked for.
+    fileprivate func dropStandIn(_ key: String) {
+        quick[key] = nil
+        quickKeys.removeAll { $0 == key }
+        if quick.isEmpty { plain = nil }
     }
 
     /// What a club's stand wears: the club's stated colour, lifted to the floor.
