@@ -18,6 +18,7 @@ struct StadiumVolume: View {
     @Environment(StadiumPassage.self) private var passage
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.openWindow) private var openWindow
     let gameID: String
 
     var body: some View {
@@ -26,7 +27,10 @@ struct StadiumVolume: View {
             // way in, and the passage puts the wall and this table away until
             // you come back out.
             let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
-            Task { @MainActor in await passage.enter(openSpace: open, dismissWindow: dismiss) }
+            let reopen = openWindow
+            Task { @MainActor in
+                await passage.enter(openSpace: open, dismissWindow: dismiss, openWindow: reopen)
+            }
         }
         .onAppear {
             feed.target = .live(event: gameID)

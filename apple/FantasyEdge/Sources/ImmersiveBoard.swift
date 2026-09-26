@@ -616,7 +616,11 @@ struct ImmersiveBoard: View {
             .pickerStyle(.segmented).frame(width: s(280))
 
             Button {
-                Task { await dismissImmersive(); openWindow(id: "board") }
+                // The window first, then the room. An app whose last scene
+                // closes is an app with nothing on screen, and a dismiss that
+                // takes its time would show exactly that - the rule the
+                // stadium's own passage learnt and this button did not.
+                Task { openWindow(id: "board"); await dismissImmersive() }
             } label: {
                 Label("Back to the window", systemImage: "rectangle.on.rectangle")
                     .font(.system(size: s(17), weight: .medium))

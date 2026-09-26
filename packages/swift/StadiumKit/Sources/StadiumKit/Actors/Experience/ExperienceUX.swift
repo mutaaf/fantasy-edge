@@ -1,8 +1,11 @@
 import ARKit
 import Foundation
+import OSLog
 import QuartzCore
 import RealityKit
 import simd
+
+private let log = Logger(subsystem: "StadiumKit", category: "experience")
 
 // The experience's moving parts that are not panels: where its numbers come
 // from, what it remembers, what it tells the other actors, and the gate of
@@ -89,19 +92,30 @@ final class HeadFacing {
     private var running = false
 
     func start() async {
-        guard !running, WorldTrackingProvider.isSupported else { return }
+        guard !running else { return }
+        guard WorldTrackingProvider.isSupported else {
+            log.info("no world tracking here; the dock will recentre to the seat's own forward")
+            return
+        }
         running = true
         let session = ARKitSession()
         self.session = session
         do {
             try await session.run([provider])
+            log.info("world tracking is running; a recentre can use the head's own facing")
         } catch {
+            // Best-effort, but never silent: this used to swallow the error
+            // whole, and a recentre that quietly fell back to the seat's
+            // forward was indistinguishable from one that worked.
+            log.error("world tracking did not start (\(error.localizedDescription, privacy: .public)); recentring to the seat's own forward instead")
             running = false
             self.session = nil
         }
     }
 
     func stop() {
+        guard running || session != nil else { return }
+        log.info("stopping world tracking")
         session?.stop()
         session = nil
         running = false
@@ -142,6 +156,14 @@ final class ArrivalGate {
     private var elapsed: Double?
     private var arrival: SceneSpec.Look.Arrival?
     private var done: (() -> Void)?
+    /// The gate's own clock, for when nothing ticks it. See `open`.
+    private var fallback: Task<Void, Never>?
+
+    /// How long past `gateSeconds` the gate waits for a tick before finishing
+    /// itself. Not a design number - the curtain's length is
+    /// `visual.experience.arrival.gateSeconds` - but the slack a first frame
+    /// under load is allowed before the way in is called broken.
+    static let graceSeconds: Double = 1.5
 
     init() {
         root.name = "experience.gate"
@@ -178,6 +200,14 @@ final class ArrivalGate {
     }
 
     /// Open the gate, then call `then`. `at` freezes it part-way, for a still.
+    ///
+    /// The gate is driven by a `SceneEvents.Update` subscription made in the
+    /// tabletop's RealityView. If that subscription is not alive - a volume
+    /// torn down mid-open, a RealityView whose make closure never ran, a scene
+    /// that stopped updating - `tick` never runs, `then` never fires and the
+    /// way into the stadium is dead for the life of the window with nothing
+    /// said. So the gate keeps a clock of its own as well and finishes on
+    /// whichever arrives first. `then` is called exactly once either way.
     func open(at progress: Double? = nil, then: @escaping () -> Void) {
         root.isEnabled = true
         if let progress {
@@ -187,9 +217,20 @@ final class ArrivalGate {
         elapsed = 0
         done = then
         draw(0)
+        let limit = (arrival?.gateSeconds ?? 1.4) + Self.graceSeconds
+        fallback?.cancel()
+        fallback = Task { @MainActor [weak self] in
+            do { try await Task.sleep(for: .seconds(limit)) } catch { return }
+            guard let self, self.done != nil else { return }
+            log.error("the arrival gate was never ticked in \(limit, format: .fixed(precision: 1))s; opening the stadium anyway")
+            self.finish()
+        }
     }
 
     func cancel() {
+        if done != nil { log.info("the arrival gate was cancelled part-way") }
+        fallback?.cancel()
+        fallback = nil
         elapsed = nil
         done = nil
         root.isEnabled = false
@@ -201,13 +242,20 @@ final class ArrivalGate {
         let p = min(1, e / max(0.1, arrival.gateSeconds))
         draw(p)
         if p >= 1 {
-            elapsed = nil
-            let finish = done
-            done = nil
-            finish?()
+            finish()
         } else {
             elapsed = e
         }
+    }
+
+    /// Hand the way in over, once, from whichever clock got there first.
+    private func finish() {
+        elapsed = nil
+        fallback?.cancel()
+        fallback = nil
+        let then = done
+        done = nil
+        then?()
     }
 
     /// Ease out, so the gate rushes open and settles rather than crawling.

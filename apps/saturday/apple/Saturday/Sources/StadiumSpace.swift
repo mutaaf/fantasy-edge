@@ -61,12 +61,13 @@ struct StadiumSpace: View {
         .onChange(of: currentEvent, initial: true) { _, event in
             channel.arrived(event)
         }
-        .onDisappear {
-            channel.stop()
-            // The Digital Crown, or the system: the windows still have to come
-            // back, and only the passage knows which they were.
-            passage.spaceDisappeared(openWindow: openWindow)
-        }
+        // The Digital Crown, the system, or a space that never came up at all:
+        // the windows still have to come back, and only the passage knows
+        // which they were. It hears three things from here - the space
+        // appeared, it is still there, it went - because the last of the three
+        // is the one that can fail to arrive.
+        .tracksSpace()
+        .onDisappear { channel.stop() }
     }
 
     /// Watch this game now: pin it, and go. Tapping the game already in the

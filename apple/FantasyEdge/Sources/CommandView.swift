@@ -1,4 +1,7 @@
+import OSLog
 import SwiftUI
+
+private let log = Logger(subsystem: "FantasyEdge", category: "rooms")
 
 /// The command centre: every league at once, on one surface.
 ///
@@ -288,8 +291,14 @@ struct CommandView: View {
 
             Button {
                 Task {
-                    if await openImmersive(id: "board-space") == .opened {
-                        dismissWindow(id: "board")
+                    // The window is only closed once the room is really up:
+                    // closing it on a refusal would leave the app with nothing
+                    // on screen. A refusal is logged rather than swallowed.
+                    switch await openImmersive(id: "board-space") {
+                    case .opened: dismissWindow(id: "board")
+                    case .userCancelled: log.info("the immersive board was not opened: the wearer cancelled")
+                    case .error: log.error("the immersive board was refused; another space is probably open")
+                    @unknown default: log.error("the immersive board was refused for an unknown reason")
                     }
                 }
             } label: { Label("Immersive", systemImage: "visionpro") }
