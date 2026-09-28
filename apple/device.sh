@@ -91,6 +91,12 @@ if [ -n "$LINE" ]; then
     echo "Put it on, unlock it, and make sure it is on the same Wi-Fi as this Mac." >&2
     exit 1
   fi
+  # A build does not need it awake, but building AT an unreachable id fails
+  # with "Unable to find a destination" and a page of rejected simulators.
+  if echo "$STATE" | grep -qi unavailable; then
+    say "Headset $DEVICE_NAME is paired but unavailable; building for a generic device"
+    DEVICE_ID=""
+  fi
   say "Device: $DEVICE_NAME  ($DEVICE_ID)"
 fi
 

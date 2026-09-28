@@ -35,10 +35,25 @@ def oid(*parts: str) -> str:
     return hashlib.sha1("/".join(parts).encode()).hexdigest()[:24].upper()
 
 
-TEAM = os.environ.get("FE_TEAM", "")
+def _resolve_team() -> tuple[str, str]:
+    """The signing team, found the way fantasy-edge finds its own: `FE_TEAM`,
+    then `apple/signing.json`, then the one visionOS team on this Mac's
+    profiles. Reading `FE_TEAM` alone left a device build with no team at all
+    ("Signing for Saturday requires a development team") on a Mac where
+    fantasy-edge's build signed fine."""
+    import importlib.util
+    shared = ROOT.parents[2] / "apple" / "generate_project.py"
+    spec = importlib.util.spec_from_file_location("fe_generate_project", shared)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.resolve_team()
+
+
+TEAM, TEAM_WHY = _resolve_team()
 
 
 def main() -> None:
+    print(f"signing team: {TEAM or '(none)'} - {TEAM_WHY}")
     sources = sorted(p.relative_to(APP).as_posix() for p in (APP / "Sources").rglob("*.swift"))
     resources = sorted(p.relative_to(APP).as_posix() for p in (APP / "Fonts").glob("*.ttf"))
     if not sources:

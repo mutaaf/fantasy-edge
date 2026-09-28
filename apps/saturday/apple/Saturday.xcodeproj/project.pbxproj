@@ -279,6 +279,7 @@
 				"CODE_SIGNING_REQUIRED[sdk=iphonesimulator*]" = NO;
 				"CODE_SIGN_IDENTITY[sdk=xros*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				DEVELOPMENT_TEAM = Z73865R687;
 			};
 			name = Debug;
 		};
@@ -313,6 +314,7 @@
 				"CODE_SIGNING_REQUIRED[sdk=iphonesimulator*]" = NO;
 				"CODE_SIGN_IDENTITY[sdk=xros*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				DEVELOPMENT_TEAM = Z73865R687;
 			};
 			name = Release;
 		};
