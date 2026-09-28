@@ -14,9 +14,9 @@ private let log = Logger(subsystem: "StadiumKit", category: "stadium")
 /// way out reopens exactly them before the space goes.
 ///
 /// SwiftUI cannot be asked which windows are open, so each window reports its
-/// own appearance. While a passage is under way the disappearances it causes
-/// are not recorded; otherwise closing the windows would erase the list of
-/// windows to bring back.
+/// own appearance and disappearance, and the passage counts them. `enter`
+/// writes the list down before it closes anything, so the disappearances it
+/// causes are recorded like any other.
 /// A window this app can open, named the way SwiftUI names it: an id, and the
 /// value for a `WindowGroup(for:)`.
 public struct StadiumWindow: Hashable, Sendable {
@@ -78,8 +78,20 @@ public final class StadiumPassage {
     }
 
     @ObservationIgnored private var saved: Set<Window> = []
-    @ObservationIgnored private var moving = false
+    /// How many live instances of each window have said they appeared and not
+    /// yet that they went. A count, not a set: on a quick way out the passage
+    /// reopens the board before the old board's `onDisappear` has arrived, and
+    /// with a set that late disappearance erased the new board. The passage
+    /// then believed nothing was open, so the next walk in left the board
+    /// standing in the stands and the way out never brought it back
+    /// (tools/stadium_soak.py, with the API down so the stadium comes up fast).
+    @ObservationIgnored private var presence: [Window: Int] = [:]
     @ObservationIgnored private var leaving = false
+    /// A walk in is under way: `openImmersiveSpace` has been asked and has not
+    /// answered. A second Enter in that window asked for a space already
+    /// opening, got `.error`, and told the wearer to leave an immersive board
+    /// that did not exist while the stadium came up behind the message.
+    @ObservationIgnored private var entering = false
     /// The last time the open space said it was there, and the task that
     /// checks. Both are the passage's way home from a space that went without
     /// saying so; see `watch`.
@@ -96,7 +108,10 @@ public final class StadiumPassage {
         return Double(d.components.seconds) + Double(d.components.attoseconds) * 1e-18
     }
 
-    public func appeared(_ w: Window) { open.insert(w) }
+    public func appeared(_ w: Window) {
+        presence[w, default: 0] += 1
+        open.insert(w)
+    }
 
     /// Forget the last refusal, once the wearer has been told about it.
     public func clearRefusal() { refusal = nil }
@@ -108,21 +123,26 @@ public final class StadiumPassage {
     /// true when the window should close itself; it comes back on the way out.
     public func appearedInside(_ w: Window) -> Bool {
         guard inStadium else { return false }
+        // It closes itself, and its own disappearance takes it off the count.
         saved.insert(w)
-        moving = true
-        defer { moving = false }
-        open.remove(w)
         log.info("a window appeared inside the stadium; closing it until the way out")
         return true
     }
 
     public func disappeared(_ w: Window) {
-        guard !moving else { return }
-        open.remove(w)
+        guard let n = presence[w] else { return }
+        if n > 1 {
+            presence[w] = n - 1
+        } else {
+            presence[w] = nil
+            open.remove(w)
+        }
     }
 
     public func renamed(from old: Window, to new: Window) {
+        let n = presence.removeValue(forKey: old) ?? 1
         open.remove(old)
+        presence[new, default: 0] += n
         open.insert(new)
     }
 
@@ -139,6 +159,9 @@ public final class StadiumPassage {
     public func enter(openSpace: OpenImmersiveSpaceAction, dismissWindow: DismissWindowAction,
                       openWindow: OpenWindowAction,
                       before: () -> Void = {}) async {
+        guard !entering else { log.info("enter ignored: already on the way in"); return }
+        entering = true
+        defer { entering = false }
         // `inStadium` is bookkeeping, and bookkeeping desyncs: a space that
         // went away without `spaceDisappeared` running used to leave this true
         // for the rest of the process, and "Enter stadium" dead with it, with
@@ -155,6 +178,12 @@ public final class StadiumPassage {
         before()
         let opened = open
         refusal = nil
+        // Reset before asking, never after the answer: the space can come up
+        // and say so while `openImmersiveSpace` is still suspended, and
+        // clearing it on `.opened` erased that - every stadium then read as
+        // never on screen, and the next Enter from inside "healed" the
+        // passage out of it, leaving Leave ignored and the windows forgotten.
+        onScreen = false
         switch await openSpace(id: spaceID) {
         case .opened:
             break
@@ -175,9 +204,7 @@ public final class StadiumPassage {
         }
         saved = opened
         inStadium = true
-        onScreen = false
         lastBeat = .now
-        moving = true
         log.info("entered stadium; closing \(opened.count) window(s)")
         for w in opened where w.value != nil {
             dismissWindow(id: w.id, value: w.value!)
@@ -187,7 +214,6 @@ public final class StadiumPassage {
             dismissWindow(id: w.id)
         }
         for w in opened where w.value == nil { dismissWindow(id: w.id) }
-        moving = false
         watch(openWindow)
     }
 

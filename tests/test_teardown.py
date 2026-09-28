@@ -92,6 +92,38 @@ class Passage(unittest.TestCase):
         self.assertIn("public private(set) var onScreen", self.src,
                       "nothing records whether the space ever said it was on screen")
 
+    def test_the_space_saying_it_is_on_screen_is_not_erased_by_the_answer(self):
+        """The space comes up, and says so, while `openImmersiveSpace` is still
+        suspended. `enter` cleared `onScreen` on `.opened`, after that report,
+        so every stadium read as never on screen (tools/stadium_soak.py, every
+        cycle) and the next Enter from inside healed the passage out of a
+        stadium it was standing in: Leave ignored, the windows forgotten."""
+        enter = body_of(self.src, "public func enter(")
+        after = enter.split("case .opened:", 1)[1]
+        self.assertNotIn("onScreen = false", after, "the answer erases what the space already said")
+        before = enter.split("await openSpace(", 1)[0]
+        self.assertIn("onScreen = false", before, "a stale report from the last visit is trusted")
+
+    def test_a_second_enter_on_the_way_in_is_ignored_not_refused(self):
+        """Two Enters before the first is answered opened the space twice; the
+        second got `.error` and showed "Leave the immersive board" while the
+        stadium came up behind it."""
+        enter = body_of(self.src, "public func enter(")
+        head = enter.split("await openSpace(", 1)[0]
+        self.assertIn("guard !entering else", head, "a second Enter asks for a space already opening")
+        self.assertIn("defer { entering = false }", head, "a thrown or early return leaves Enter dead")
+
+    def test_a_late_goodbye_from_an_old_window_does_not_erase_the_new_one(self):
+        """On a quick way out the board is reopened before the old board's
+        `onDisappear` arrives. Tracked as a set by id, that late disappearance
+        removed the new board, and the passage believed nothing was open: the
+        next walk in left the board in the stands and the way out never
+        brought it back. Windows are counted, and nothing skips a count."""
+        self.assertIn("presence: [Window: Int]", self.src, "windows are a set, so an old goodbye erases a new window")
+        gone = body_of(self.src, "public func disappeared(")
+        self.assertIn("presence[w]", gone)
+        self.assertNotIn("guard !moving", gone, "a skipped disappearance leaves the count wrong for good")
+
     def test_a_space_that_goes_without_saying_so_still_brings_the_windows_back(self):
         """`enter` closes every window. If the space then never comes up, or
         goes away without its `onDisappear` running, the app is left with
