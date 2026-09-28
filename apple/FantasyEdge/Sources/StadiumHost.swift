@@ -28,6 +28,7 @@ struct StadiumLaunchArguments: ViewModifier {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissWindow) private var dismissWindow
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
     /// Once per process, not per window. Leaving the stadium reopens the
     /// board, a fresh window with fresh `@State`; a per-view flag let that
     /// window read `-openStadium` again and walk straight back in, forever.
@@ -37,6 +38,20 @@ struct StadiumLaunchArguments: ViewModifier {
         content.task {
             guard !Self.done else { return }
             Self.done = true
+            // `-stadiumSoak <cycles>` opens and closes the table and the
+            // stadium over and over (StadiumSoak); `-soakGame` picks the game.
+            if let cycles = StadiumSoak.cycles {
+                let passage = passage, board = board
+                let open = openImmersiveSpace, dismiss = dismissWindow, reopen = openWindow
+                let leave = dismissImmersiveSpace
+                let value = StadiumHost.argument("-soakGame") ?? StadiumHost.replayWindow
+                Task { @MainActor in
+                    await StadiumSoak.run(cycles: cycles, passage: passage, table: .init(id: "tabletop", value: value),
+                                          openWindow: reopen, dismissWindow: dismiss,
+                                          openSpace: open, dismissSpace: leave) { board.stadiumStyle = .progressive }
+                }
+                return
+            }
             // `-shot <name>` fills in any of these (StadiumShots).
             if let value = StadiumShots.argument("-openTabletop") {
                 openWindow(id: "tabletop", value: value)

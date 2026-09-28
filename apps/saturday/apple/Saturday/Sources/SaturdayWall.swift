@@ -32,6 +32,9 @@ struct SaturdayWall: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openImmersiveSpace) private var openImmersiveSpace
     @Environment(\.dismissWindow) private var dismissWindow
+    #if os(visionOS)
+    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
+    #endif
     @Environment(StadiumPassage.self) private var passage
     #endif
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -95,6 +98,17 @@ struct SaturdayWall: View {
             #if os(visionOS)
             // `-openStadium <event id>` walks straight in: the table first,
             // because that is the door, then the space.
+            // `-stadiumSoak <cycles> -soakGame <event id>` opens and closes the
+            // table and the stadium over and over (StadiumSoak).
+            if let cycles = StadiumSoak.cycles, let id = StadiumShots.argument("-soakGame") {
+                let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
+                let reopen = openWindow, leave = dismissImmersiveSpace
+                Task { @MainActor in
+                    await StadiumSoak.run(cycles: cycles, passage: passage, table: .init(id: "tabletop", value: id),
+                                          openWindow: reopen, dismissWindow: dismiss,
+                                          openSpace: open, dismissSpace: leave)
+                }
+            }
             if let id = defaults.string(forKey: "openStadium") {
                 openWindow(id: "tabletop", value: id)
                 let passage = passage, open = openImmersiveSpace, dismiss = dismissWindow
