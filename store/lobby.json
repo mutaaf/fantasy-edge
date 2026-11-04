@@ -29,5 +29,5 @@
   "capture": { "command": "", "notes": "No captures yet. When a Vision Pro target exists: apple/sim.sh shots on the shared visionOS rig." },
   "shots": [],
   "feature": { "title": "Every league. *One board.*", "sub": "Sized by what can still change your week." },
-  "avoid": ["ESPN", "Yahoo", "Sleeper", "NFL", "RedZone", "NFL RedZone", "Vision Pro"]
+  "avoid": ["ESPN", "Yahoo", "Sleeper", "NFL", "RedZone", "NFL RedZone"]
 }
