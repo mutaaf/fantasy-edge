@@ -1,0 +1,33 @@
+{
+  "lobby": 1,
+  "slug": "fantasy-edge",
+  "name": "Fantasy Edge",
+  "category": "Sports",
+  "tagline": "Every league you play, sized by what can still change your week.",
+  "audience": "general",
+  "paused": "visionOS-only native target (apple/, SDKROOT xros); Lobby has no Apple Vision Pro screenshot spec (3840x2160) yet, and there is no App Store Connect record. Unpause when a visionOS target is added to lobby/specs/stores.json and the app has an ASC record. The iPhone/iPad app in apps/saturday is paused separately (it ships ESPN team marks, personal/TestFlight only).",
+  "stores": ["appstore", "web"],
+  "ipad": false,
+  "ios": { "bundleId": "com.mutaaf.fantasyedge" },
+  "icon": "",
+  "brand": {
+    "mode": "dark",
+    "bg": "#0B0F0C",
+    "bg2": "#16241B",
+    "ink": "#F2F5EE",
+    "muted": "#B9C4B5",
+    "accent": "#D4FF3A",
+    "accent2": "#3AD6FF",
+    "glow": ["#D4FF3A", "#3AD6FF", "#1F7A44"],
+    "display": { "family": "Barlow Condensed", "weights": [800] },
+    "body": { "family": "Barlow", "weights": [600, 800] },
+    "mono": { "family": "IBM Plex Mono", "weights": [600] },
+    "texture": "grid",
+    "ribbon": true
+  },
+  "raw": { "iphone": "store/lobby/raw/iphone" },
+  "capture": { "command": "", "notes": "No captures yet. When a Vision Pro target exists: apple/sim.sh shots on the shared visionOS rig." },
+  "shots": [],
+  "feature": { "title": "Every league. *One board.*", "sub": "Sized by what can still change your week." },
+  "avoid": ["ESPN", "Yahoo", "Sleeper", "NFL", "RedZone", "NFL RedZone"]
+}
