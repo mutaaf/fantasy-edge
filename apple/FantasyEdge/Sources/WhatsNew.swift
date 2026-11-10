@@ -28,9 +28,34 @@ enum WhatsNew {
         environmentKeys: ["FE_LEAGUE_COUNT", "BOWL_SKIP", "LIGHT_SKIP", "SIDELINE_SKIP"])
 }
 
+/// Where a "What's new" card can take you: the `destination` values
+/// `WhatsNew.json` may use. A card naming anything else is drawn plain, and
+/// `tests/test_whats_new.py` reads these cases to hold the notes to them.
+enum WhatsNewDestination: String, CaseIterable {
+    /// Live tab, Game mode, with last week's picker open - scores hidden.
+    case lastWeek
+    /// Live tab, Game mode: the field, the slate and "View in 3D".
+    case game
+}
+
+/// A callout's destination, waiting for the view that owns it.
+///
+/// The tab is `CommandView`'s state, the mode `LiveView`'s and the picker
+/// `GameFieldView`'s, and the last two do not exist until the tab before them
+/// has switched. So each takes its own step and passes the rest on: the
+/// command centre goes to Live, Live goes to Game, and the game view opens
+/// the picker and clears the route. A board with no league loaded yet keeps
+/// it until the rails appear, which is where it was going anyway.
+@Observable
+final class WhatsNewRoute {
+    var pending: WhatsNewDestination?
+}
+
 extension View {
-    func fantasyEdgeWhatsNew() -> some View {
+    func fantasyEdgeWhatsNew(_ route: WhatsNewRoute) -> some View {
         whatsNew(WhatsNew.notes, art: WhatsNew.art,
-                 priorStateKeys: WhatsNew.priorStateKeys, suppression: WhatsNew.suppression)
+                 priorStateKeys: WhatsNew.priorStateKeys, suppression: WhatsNew.suppression,
+                 destinations: Set(WhatsNewDestination.allCases.map(\.rawValue)),
+                 open: { route.pending = WhatsNewDestination(rawValue: $0) })
     }
 }

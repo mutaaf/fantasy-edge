@@ -11,6 +11,7 @@ import StadiumKit
 struct GameFieldView: View {
     @Environment(Board.self) private var board
     @Environment(\.openWindow) private var openWindow
+    @Environment(WhatsNewRoute.self) private var whatsNewRoute: WhatsNewRoute?
     /// `-openLastWeek` on the launch arguments opens the picker without a tap,
     /// which is the only way it can be screenshotted: a simulator cannot pinch.
     @State private var showReplays = ProcessInfo.processInfo.arguments
@@ -92,6 +93,15 @@ struct GameFieldView: View {
             playID = nil; allDrives = false; walking = false
         }
         .task(id: walkKey) { await walk() }
+        // The last step of a "What's new" callout: last week's picker.
+        .onAppear { followRoute() }
+        .onChange(of: whatsNewRoute?.pending) { _, _ in followRoute() }
+    }
+
+    private func followRoute() {
+        guard whatsNewRoute?.pending == .lastWeek else { return }
+        whatsNewRoute?.pending = nil
+        showReplays = true
     }
 
     /// Restarted whenever anything the walk depends on changes: switching it

@@ -11,6 +11,7 @@ import SwiftUI
 /// "Game" is the ordinary one: pick a game off the slate and watch the ball.
 struct LiveView: View {
     @Environment(Board.self) private var board
+    @Environment(WhatsNewRoute.self) private var whatsNewRoute: WhatsNewRoute?
     @Binding var focus: String?
     /// Owned by the command centre, because a scoreline tapped on another tab
     /// has to be able to say which game it meant before this view exists.
@@ -71,8 +72,20 @@ struct LiveView: View {
         // Arriving with a game already named means somebody tapped a
         // scoreline to get here, so the field they asked for is what opens -
         // landing on "My Team" would silently ignore the tap.
-        .onAppear { if !event.isEmpty { mode = .game } }
+        .onAppear {
+            if !event.isEmpty { mode = .game }
+            followRoute()
+        }
+        .onChange(of: whatsNewRoute?.pending) { _, _ in followRoute() }
         .onChange(of: event) { _, new in if !new.isEmpty { mode = .game } }
+    }
+
+    /// Both callout destinations are in Game. `game` ends here; `lastWeek`
+    /// is left for `GameFieldView`, which owns the picker.
+    private func followRoute() {
+        guard let to = whatsNewRoute?.pending else { return }
+        mode = .game
+        if to == .game { whatsNewRoute?.pending = nil }
     }
 
     private var switcher: some View {

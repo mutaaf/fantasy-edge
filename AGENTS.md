@@ -131,9 +131,18 @@ side is `apple/FantasyEdge/Sources/WhatsNew.swift`.
   `-trail*`, ...), `FE_LEAGUE_COUNT`, the `*_SKIP` look-dev variables, XCTest,
   or `-whatsNewOff` leaves it hidden and records nothing. A new capture flag
   should follow those prefixes, or be added to `WhatsNew.suppression`.
+- **Callouts go to the feature.** A card with a `destination` (a case of
+  `WhatsNewDestination` in `Sources/WhatsNew.swift`: `lastWeek`, `game`)
+  gets a "Show me" chip; tapping it closes the sheet and walks
+  `WhatsNewRoute` through the tab, the Live mode and the picker. A card about
+  something with nowhere to go has no destination and stays plain; a name the
+  app does not route is drawn plain too, and `make test` rejects it.
 - **To look at it:** `-whatsNewPreview` (plus `-whatsNewOpenNotes` to unfold
-  the notes) shows the current entry in a debug
-  build without recording anything. `make whats-new-test` runs the Swift side.
+  the notes) shows the current entry in a debug build, on a simulator or a
+  device, without recording anything. Add `-whatsNewTap <destination>` to
+  press that callout three seconds in, through the same action a tap runs.
+  The same three flags are listed in `WhatsNew.json`'s `about`.
+  `make whats-new-test` runs the Swift side.
 
 ## TestFlight, internal only
 

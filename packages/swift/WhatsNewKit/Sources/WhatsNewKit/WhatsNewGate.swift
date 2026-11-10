@@ -15,6 +15,9 @@ import Foundation
 /// - **Suppressed launches change nothing.** A screenshot, a test or a demo
 ///   neither shows the sheet nor records a version, so the next ordinary
 ///   launch behaves as if that run never happened.
+/// - **A forced launch shows and records nothing.** `-whatsNewPreview` in a
+///   debug build, so the sheet can be looked at on a simulator or a device
+///   without spending the real upgrade's one showing.
 public enum WhatsNewGate {
     public struct Decision: Equatable, Sendable {
         public var show: Bool
@@ -31,8 +34,11 @@ public enum WhatsNewGate {
     ///     and without this its upgrade would look like a first launch.
     ///   - hasNotes: whether `current` has an entry in the notes.
     ///   - suppressed: a test, capture or demo launch.
+    ///   - forced: the debug preview flag. Wins over everything, because it
+    ///     is only ever typed on purpose, and never records.
     public static func decide(current: String?, seen: String?, priorInstall: Bool,
-                              hasNotes: Bool, suppressed: Bool) -> Decision {
+                              hasNotes: Bool, suppressed: Bool, forced: Bool = false) -> Decision {
+        if forced { return Decision(show: hasNotes, record: nil) }
         guard !suppressed, let current, !current.isEmpty else {
             return Decision(show: false, record: nil)
         }
@@ -69,6 +75,35 @@ public struct WhatsNewSuppression: Sendable {
             return true
         }
         return (Self.alwaysEnvironment + environmentKeys).contains { environment[$0] != nil }
+    }
+}
+
+/// The debug-only switches, read off the launch line.
+///
+/// - `-whatsNewPreview` shows the sheet whatever the store says and records
+///   nothing (see `WhatsNewGate.decide(forced:)`).
+/// - `-whatsNewTap <destination>` presses that card's callout once the sheet
+///   is up, through the same action a tap runs - a simulator cannot tap, and
+///   "it lands on the feature" is the claim worth seeing.
+///
+/// Both are compiled out of a release build by the caller (`isDebug`), so a
+/// shipped app cannot be talked into either.
+public struct WhatsNewForce: Equatable, Sendable {
+    public var preview: Bool
+    public var tap: String?
+
+    public static let previewArgument = "-whatsNewPreview"
+    public static let tapArgument = "-whatsNewTap"
+
+    public init(arguments: [String], isDebug: Bool) {
+        guard isDebug else { preview = false; tap = nil; return }
+        let args = Array(arguments.dropFirst())
+        preview = args.contains(Self.previewArgument)
+        if let i = args.firstIndex(of: Self.tapArgument), i + 1 < args.count {
+            tap = args[i + 1]
+        } else {
+            tap = nil
+        }
     }
 }
 

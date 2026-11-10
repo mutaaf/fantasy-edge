@@ -18,6 +18,9 @@ struct CommandView: View {
     @Environment(Board.self) var board
     @Environment(\.openImmersiveSpace) private var openImmersive
     @Environment(\.dismissWindow) private var dismissWindow
+    /// A "What's new" callout on its way somewhere. Optional so a host that
+    /// never shows the sheet need not supply one.
+    @Environment(WhatsNewRoute.self) private var whatsNewRoute: WhatsNewRoute?
     @State private var showSettings = false
     @State var focus: String?
     /// `-openLastWeek` lands on Live, because that is where the picker it
@@ -107,6 +110,10 @@ struct CommandView: View {
             }
         }
         .onDisappear { board.stop() }
+        // Every destination a callout has today lives on Live; the tab is
+        // this view's step of the route, and Live takes the next one.
+        .onAppear { if whatsNewRoute?.pending != nil { tab = .live } }
+        .onChange(of: whatsNewRoute?.pending) { _, new in if new != nil { tab = .live } }
     }
 
     private var rails: some View {

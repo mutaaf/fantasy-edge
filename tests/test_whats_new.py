@@ -18,6 +18,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 NOTES = ROOT / "apple" / "FantasyEdge" / "WhatsNew.json"
 GENERATOR = ROOT / "apple" / "generate_project.py"
 LOBBY = ROOT / "store" / "lobby.json"
+APP_SIDE = ROOT / "apple" / "FantasyEdge" / "Sources" / "WhatsNew.swift"
 
 # Real leagues, broadcasters, platforms and clubs. The older "saturday" app was
 # paused over a broadcaster's marks; the notes name none of them, ever. The
@@ -39,6 +40,14 @@ def marketing_version() -> str:
     m = re.search(r'^VERSION = "([^"]+)"', GENERATOR.read_text(), re.M)
     assert m, "apple/generate_project.py has no VERSION"
     return m.group(1)
+
+
+def routed_destinations() -> set[str]:
+    """The cases of `WhatsNewDestination`, which is what the app can open."""
+    src = APP_SIDE.read_text()
+    m = re.search(r"enum WhatsNewDestination\b[^{]*\{(.*?)\n\}", src, re.S)
+    assert m, "WhatsNew.swift has no WhatsNewDestination enum"
+    return set(re.findall(r"^\s*case (\w+)", m.group(1), re.M))
 
 
 def copy_of(release: dict) -> list[str]:
@@ -75,6 +84,26 @@ class WhatsNewNotes(unittest.TestCase):
             self.assertLessEqual(len(c["line"]), 120, c["line"])
             self.assertIn(c["tint"], {"green", "gold", "red", "blue"})
             self.assertRegex(c["icon"], r"^[a-z0-9.]+$")
+
+    def test_destinations_are_ones_the_app_routes(self) -> None:
+        # The sheet draws a card with an unknown destination plain, so a typo
+        # here would quietly lose the callout rather than break anything.
+        known = routed_destinations()
+        self.assertTrue(known)
+        for release in self.notes["releases"]:
+            for c in release["cards"]:
+                if "destination" in c:
+                    self.assertIn(c["destination"], known, c["title"])
+
+    def test_current_version_takes_you_somewhere(self) -> None:
+        # The owner's rule: the callouts go to the feature. At least one card
+        # in the shipping entry has to be one.
+        self.assertTrue(any(c.get("destination") for c in self.release()["cards"]))
+
+    def test_the_force_flags_are_documented_beside_the_notes(self) -> None:
+        about = self.notes["about"]
+        for flag in ("-whatsNewPreview", "-whatsNewTap"):
+            self.assertIn(flag, about)
 
     def test_versions_are_unique(self) -> None:
         versions = [r["version"] for r in self.notes["releases"]]

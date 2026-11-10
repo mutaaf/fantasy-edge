@@ -35,6 +35,18 @@ final class GateTests: XCTestCase {
         XCTAssertEqual(decide("1.1", seen: nil, suppressed: true), .init(show: false, record: nil))
     }
 
+    func testForcedShowsWithoutRecordingWhateverTheStoreSays() {
+        let forced = { (seen: String?, suppressed: Bool) in
+            WhatsNewGate.decide(current: "1.0", seen: seen, priorInstall: false,
+                                hasNotes: true, suppressed: suppressed, forced: true)
+        }
+        XCTAssertEqual(forced(nil, false), .init(show: true, record: nil))     // fresh install
+        XCTAssertEqual(forced("1.0", false), .init(show: true, record: nil))   // already seen
+        XCTAssertEqual(forced("0.9", true), .init(show: true, record: nil))    // under a capture flag
+        XCTAssertEqual(WhatsNewGate.decide(current: "1.0", seen: nil, priorInstall: false, hasNotes: false,
+                                           suppressed: false, forced: true), .init(show: false, record: nil))
+    }
+
     func testMissingVersionDoesNothing() {
         XCTAssertEqual(decide(nil, seen: "1.0"), .init(show: false, record: nil))
         XCTAssertEqual(decide("", seen: nil), .init(show: false, record: nil))
@@ -67,6 +79,66 @@ final class SuppressionTests: XCTestCase {
 
     func testTheExecutablePathIsNeverAFlag() {
         XCTAssertFalse(app.isSuppressed(arguments: ["-shot"], environment: [:]))
+    }
+}
+
+final class ForceTests: XCTestCase {
+    func testPreviewAndTapAreReadInADebugBuild() {
+        let f = WhatsNewForce(arguments: ["/a", "-whatsNewPreview", "-whatsNewTap", "lastWeek"], isDebug: true)
+        XCTAssertTrue(f.preview)
+        XCTAssertEqual(f.tap, "lastWeek")
+    }
+
+    func testAReleaseBuildIgnoresBoth() {
+        let f = WhatsNewForce(arguments: ["/a", "-whatsNewPreview", "-whatsNewTap", "lastWeek"], isDebug: false)
+        XCTAssertFalse(f.preview)
+        XCTAssertNil(f.tap)
+    }
+
+    func testAnOrdinaryLaunchIsNotForced() {
+        let f = WhatsNewForce(arguments: ["/a", "-fe.host", "127.0.0.1:8770"], isDebug: true)
+        XCTAssertFalse(f.preview)
+        XCTAssertNil(f.tap)
+        // A dangling tap with no destination is no tap.
+        XCTAssertNil(WhatsNewForce(arguments: ["/a", "-whatsNewTap"], isDebug: true).tap)
+        // The executable path is never a flag.
+        XCTAssertFalse(WhatsNewForce(arguments: ["-whatsNewPreview"], isDebug: true).preview)
+    }
+
+    func testTheForceFlagsAreNotSuppressionFlags() {
+        // -whatsNewPreview must not hide the sheet it asks for.
+        let app = WhatsNewSuppression(argumentPrefixes: ["-shot", "-stadium", "-open"])
+        XCTAssertFalse(app.isSuppressed(arguments: ["/a", "-whatsNewPreview", "-whatsNewTap", "game"],
+                                        environment: [:]))
+    }
+}
+
+final class DestinationTests: XCTestCase {
+    private func card(_ destination: String?) -> Release.Card {
+        .init(icon: "eye.slash", title: "T", line: "L", tint: "blue", destination: destination)
+    }
+
+    func testAKnownDestinationIsACallout() {
+        XCTAssertEqual(card("lastWeek").callout(known: ["lastWeek", "game"]), "lastWeek")
+    }
+
+    func testNoDestinationIsAPlainCard() {
+        XCTAssertNil(card(nil).callout(known: ["lastWeek"]))
+        XCTAssertNil(card("").callout(known: ["lastWeek", ""]))
+    }
+
+    func testAnUnknownDestinationStaysPlainRatherThanGoingNowhere() {
+        XCTAssertNil(card("trades").callout(known: ["lastWeek", "game"]))
+    }
+
+    func testDestinationIsOptionalInTheJSON() throws {
+        let json = """
+        {"releases":[{"version":"1.0","kicker":"k","headline":"h","subhead":"s","notes":["n"],"store":"x",
+          "cards":[{"icon":"a","title":"A","line":"l","tint":"green"},
+                   {"icon":"b","title":"B","line":"l","tint":"blue","destination":"lastWeek"}]}]}
+        """
+        let notes = try JSONDecoder().decode(ReleaseNotes.self, from: Data(json.utf8))
+        XCTAssertEqual(notes.releases[0].cards.map(\.destination), [nil, "lastWeek"])
     }
 }
 
