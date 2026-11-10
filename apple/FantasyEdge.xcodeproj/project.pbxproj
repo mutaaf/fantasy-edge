@@ -7,8 +7,10 @@
 
 /* Begin PBXBuildFile section */
 		4EB6FC9DE714F4CC745B9967 /* StadiumKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5F0434C5DD25E2283073583D /* StadiumKit */; };
+		98B9492DEA4391F5535C0313 /* WhatsNewKit in Frameworks */ = {isa = PBXBuildFile; productRef = B6CE542E5DD4A9D2E3E4FB9C /* WhatsNewKit */; };
 		2F23A17281A75D0875770706 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8EA836F0CC5EB373E9E5F828 /* Assets.xcassets */; };
 		7ABE22B3918893157F7196AD /* tokens.json in Resources */ = {isa = PBXBuildFile; fileRef = 3C0A0E771D8D37D4AA42C18C /* tokens.json */; };
+		38C713C24164270716FAA259 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 74827CCA1B4D8A076C242F57 /* WhatsNew.json */; };
 		7E26EEE0820A17CD784B1348 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADB9BE3BAF33F3F87ED0E5C /* API.swift */; };
 		500B1F20DF1D0ED233B32497 /* AppleIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */; };
 		3FA4EC74D0A31C5C60D8C79E /* Attention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59CBF1E8CC41F06FC909C34E /* Attention.swift */; };
@@ -40,12 +42,14 @@
 		E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C27A2460C89A62A912EAAF /* StadiumHost.swift */; };
 		87EACE04447F94D7CDA2866A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C7B160441874DDB2DC3220 /* Theme.swift */; };
 		DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B52FBF15637237B331C3961 /* Watch.swift */; };
+		55FB492B8412BDEF016C9D0A /* WhatsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A47BFAA7A9CE079B764A823 /* WhatsNew.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		85673086EF6CFD3A1F8591AF /* FantasyEdge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FantasyEdge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EA836F0CC5EB373E9E5F828 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = FantasyEdge/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		3C0A0E771D8D37D4AA42C18C /* tokens.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ../design/tokens.json; sourceTree = SOURCE_ROOT; };
+		74827CCA1B4D8A076C242F57 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = FantasyEdge/WhatsNew.json; sourceTree = SOURCE_ROOT; };
 		8ADB9BE3BAF33F3F87ED0E5C /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligence.swift; sourceTree = "<group>"; };
 		59CBF1E8CC41F06FC909C34E /* Attention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attention.swift; sourceTree = "<group>"; };
@@ -77,6 +81,7 @@
 		29C27A2460C89A62A912EAAF /* StadiumHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StadiumHost.swift; sourceTree = "<group>"; };
 		56C7B160441874DDB2DC3220 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		6B52FBF15637237B331C3961 /* Watch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch.swift; sourceTree = "<group>"; };
+		2A47BFAA7A9CE079B764A823 /* WhatsNew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNew.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +90,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4EB6FC9DE714F4CC745B9967 /* StadiumKit in Frameworks */,
+				98B9492DEA4391F5535C0313 /* WhatsNewKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,6 +110,7 @@
 			children = (
 				8EA836F0CC5EB373E9E5F828 /* Assets.xcassets */,
 				3C0A0E771D8D37D4AA42C18C /* tokens.json */,
+				74827CCA1B4D8A076C242F57 /* WhatsNew.json */,
 				8ADB9BE3BAF33F3F87ED0E5C /* API.swift */,
 				5B82BCADC2AD1506F94D0BEA /* AppleIntelligence.swift */,
 				59CBF1E8CC41F06FC909C34E /* Attention.swift */,
@@ -135,6 +142,7 @@
 				29C27A2460C89A62A912EAAF /* StadiumHost.swift */,
 				56C7B160441874DDB2DC3220 /* Theme.swift */,
 				6B52FBF15637237B331C3961 /* Watch.swift */,
+				2A47BFAA7A9CE079B764A823 /* WhatsNew.swift */,
 			);
 			path = FantasyEdge/Sources;
 			sourceTree = "<group>";
@@ -164,6 +172,7 @@
 			name = FantasyEdge;
 			packageProductDependencies = (
 				5F0434C5DD25E2283073583D /* StadiumKit */,
+				B6CE542E5DD4A9D2E3E4FB9C /* WhatsNewKit */,
 			);
 			productName = FantasyEdge;
 			productReference = 85673086EF6CFD3A1F8591AF /* FantasyEdge.app */;
@@ -176,6 +185,7 @@
 			isa = PBXProject;
 			packageReferences = (
 				3F1D5205D6ED56D4625A68C3 /* XCLocalSwiftPackageReference "../packages/swift/StadiumKit" */,
+				464BD6677CA5402ABEBC625F /* XCLocalSwiftPackageReference "../packages/swift/WhatsNewKit" */,
 			);
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
@@ -204,6 +214,7 @@
 			files = (
 				2F23A17281A75D0875770706 /* Assets.xcassets in Resources */,
 				7ABE22B3918893157F7196AD /* tokens.json in Resources */,
+				38C713C24164270716FAA259 /* WhatsNew.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,6 +271,7 @@
 				E0F9BED430BEACB0D672A815 /* StadiumHost.swift in Sources */,
 				87EACE04447F94D7CDA2866A /* Theme.swift in Sources */,
 				DB09AE26E1DDDB343FD0BFDF /* Watch.swift in Sources */,
+				55FB492B8412BDEF016C9D0A /* WhatsNew.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -306,6 +318,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
 				PRODUCT_NAME = FantasyEdge;
+				MARKETING_VERSION = 1.0;
+				CURRENT_PROJECT_VERSION = 1;
 				SWIFT_VERSION = 5.0;
 				XROS_DEPLOYMENT_TARGET = 2.0;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
@@ -330,6 +344,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
 				PRODUCT_NAME = FantasyEdge;
+				MARKETING_VERSION = 1.0;
+				CURRENT_PROJECT_VERSION = 1;
 				SWIFT_VERSION = 5.0;
 				XROS_DEPLOYMENT_TARGET = 2.0;
 				SUPPORTED_PLATFORMS = "xros xrsimulator";
@@ -351,12 +367,20 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../packages/swift/StadiumKit;
 		};
+		464BD6677CA5402ABEBC625F /* XCLocalSwiftPackageReference "../packages/swift/WhatsNewKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../packages/swift/WhatsNewKit;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		5F0434C5DD25E2283073583D /* StadiumKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = StadiumKit;
+		};
+		B6CE542E5DD4A9D2E3E4FB9C /* WhatsNewKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhatsNewKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 

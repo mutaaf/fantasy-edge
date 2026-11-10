@@ -1,0 +1,6 @@
+{
+  "images" : [
+    { "filename" : "Ball.png", "idiom" : "universal", "scale" : "2x" }
+  ],
+  "info" : { "author" : "fantasy-edge", "version" : 1 }
+}

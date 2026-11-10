@@ -26,6 +26,11 @@ PROJECT = ROOT / "FantasyEdge.xcodeproj"
 BUNDLE = "com.mutaaf.fantasyedge"
 DEPLOY = "2.0"          # runs on the visionOS 2.1 simulator that is installed
 SWIFT = "5.0"
+# The version a reader sees, and the key the "What's new" sheet is filed under:
+# FantasyEdge/WhatsNew.json must carry an entry for it (tests/test_whats_new.py
+# and WhatsNewKit's tests both check). Bump it here and add the notes together.
+VERSION = "1.0"
+BUILD = "1"
 
 PROFILES = pathlib.Path.home() / "Library/Developer/Xcode/UserData/Provisioning Profiles"
 
@@ -135,6 +140,18 @@ def main() -> None:
             f'fileRef = {tref} /* tokens.json */; }};')
         group_children.append(f'\t\t\t\t{tref} /* tokens.json */,')
         resources_phase.append(f'\t\t\t\t{tbuild} /* tokens.json in Resources */,')
+    # The release notes, the one source for the "What's new" sheet.
+    if (APP / "WhatsNew.json").exists():
+        wref, wbuild = oid("fref", "WhatsNew.json"), oid("bfile", "WhatsNew.json")
+        file_refs.append(
+            f'\t\t{wref} /* WhatsNew.json */ = {{isa = PBXFileReference; '
+            f'lastKnownFileType = text.json; path = FantasyEdge/WhatsNew.json; '
+            f'sourceTree = SOURCE_ROOT; }};')
+        build_files.append(
+            f'\t\t{wbuild} /* WhatsNew.json in Resources */ = {{isa = PBXBuildFile; '
+            f'fileRef = {wref} /* WhatsNew.json */; }};')
+        group_children.append(f'\t\t\t\t{wref} /* WhatsNew.json */,')
+        resources_phase.append(f'\t\t\t\t{wbuild} /* WhatsNew.json in Resources */,')
     # The stadium's source assets. `assets/` used to go in as a folder
     # reference, which bundles it byte for byte - including two kinds of file
     # an Apple build never opens:
@@ -170,6 +187,7 @@ def main() -> None:
         "productsGroup", "sourcesBuildPhase", "frameworksBuildPhase",
         "resourcesBuildPhase", "assetsBuildPhase", "configListProject",
         "stadiumPackage", "stadiumProduct", "stadiumBuildFile",
+        "whatsNewPackage", "whatsNewProduct", "whatsNewBuildFile",
         "configListTarget", "debugProject", "releaseProject", "debugTarget",
         "releaseTarget")}
 
@@ -229,6 +247,8 @@ def main() -> None:
         f'\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
         f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {BUNDLE};\n'
         f'\t\t\t\tPRODUCT_NAME = FantasyEdge;\n'
+        f'\t\t\t\tMARKETING_VERSION = {VERSION};\n'
+        f'\t\t\t\tCURRENT_PROJECT_VERSION = {BUILD};\n'
         f'\t\t\t\tSWIFT_VERSION = {SWIFT};\n'
         f'\t\t\t\tXROS_DEPLOYMENT_TARGET = {DEPLOY};\n'
         f'\t\t\t\tSUPPORTED_PLATFORMS = "xros xrsimulator";\n'
@@ -247,6 +267,7 @@ def main() -> None:
 
 /* Begin PBXBuildFile section */
 \t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */ = {{isa = PBXBuildFile; productRef = {ids['stadiumProduct']} /* StadiumKit */; }};
+\t\t{ids['whatsNewBuildFile']} /* WhatsNewKit in Frameworks */ = {{isa = PBXBuildFile; productRef = {ids['whatsNewProduct']} /* WhatsNewKit */; }};
 {nl.join(build_files)}
 /* End PBXBuildFile section */
 
@@ -261,6 +282,7 @@ def main() -> None:
 \t\t\tbuildActionMask = 2147483647;
 \t\t\tfiles = (
 \t\t\t\t{ids['stadiumBuildFile']} /* StadiumKit in Frameworks */,
+\t\t\t\t{ids['whatsNewBuildFile']} /* WhatsNewKit in Frameworks */,
 \t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t}};
@@ -307,6 +329,7 @@ def main() -> None:
 \t\t\tname = FantasyEdge;
 \t\t\tpackageProductDependencies = (
 \t\t\t\t{ids['stadiumProduct']} /* StadiumKit */,
+\t\t\t\t{ids['whatsNewProduct']} /* WhatsNewKit */,
 \t\t\t);
 \t\t\tproductName = FantasyEdge;
 \t\t\tproductReference = {ids['productRef']} /* FantasyEdge.app */;
@@ -319,6 +342,7 @@ def main() -> None:
 \t\t\tisa = PBXProject;
 \t\t\tpackageReferences = (
 \t\t\t\t{ids['stadiumPackage']} /* XCLocalSwiftPackageReference "../packages/swift/StadiumKit" */,
+\t\t\t\t{ids['whatsNewPackage']} /* XCLocalSwiftPackageReference "../packages/swift/WhatsNewKit" */,
 \t\t\t);
 \t\t\tattributes = {{
 \t\t\t\tBuildIndependentTargetsInParallel = 1;
@@ -415,12 +439,20 @@ def main() -> None:
 \t\t\tisa = XCLocalSwiftPackageReference;
 \t\t\trelativePath = ../packages/swift/StadiumKit;
 \t\t}};
+\t\t{ids['whatsNewPackage']} /* XCLocalSwiftPackageReference "../packages/swift/WhatsNewKit" */ = {{
+\t\t\tisa = XCLocalSwiftPackageReference;
+\t\t\trelativePath = ../packages/swift/WhatsNewKit;
+\t\t}};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 \t\t{ids['stadiumProduct']} /* StadiumKit */ = {{
 \t\t\tisa = XCSwiftPackageProductDependency;
 \t\t\tproductName = StadiumKit;
+\t\t}};
+\t\t{ids['whatsNewProduct']} /* WhatsNewKit */ = {{
+\t\t\tisa = XCSwiftPackageProductDependency;
+\t\t\tproductName = WhatsNewKit;
 \t\t}};
 /* End XCSwiftPackageProductDependency section */
 

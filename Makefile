@@ -1,5 +1,5 @@
 .PHONY: test test-all saturday-test saturday-doctor saturday-replay \
-	doctor demo publish-demo report docs api board clean verify-scene \
+	doctor demo publish-demo report docs api board clean verify-scene whats-new-test \
 	sim sim-doctor sim-shots sim-clean \
 	device device-build device-stats device-list
 
@@ -73,6 +73,12 @@ verify-moment:
 		$(STADIUM)/Actors/*/*Look.swift $(STADIUM)/Actors/Field/FieldArtSpec.swift \
 		apple/verify_moment.swift
 	.work/verify-moment
+
+# The "What's new" sheet's once-per-version rule, its launch-flag suppression,
+# and the app's real notes decoding for the version it builds as. Runs on the
+# Mac with SwiftPM; the copy rules themselves are in `make test`.
+whats-new-test:
+	cd packages/swift/WhatsNewKit && swift test
 
 verify-crowd:
 	swiftc -parse-as-library -o .work/verify-crowd \

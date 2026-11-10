@@ -242,6 +242,40 @@ second states one everybody saw. Both would otherwise make a tile flicker.
 fixtures caused a real bug during development where duplicate players
 collided on a primary key and silently dropped 74% of the roster rows.
 
+## What's new, once per version
+
+The headset app shows a "What's new" sheet the first time it opens after an
+upgrade, and never otherwise. The sheet and the rule are
+`packages/swift/WhatsNewKit`, shared so any app here can link it; the app's
+side is `apple/FantasyEdge/Sources/WhatsNew.swift`.
+
+- **One source per version:** `apple/FantasyEdge/WhatsNew.json`, filed under
+  `VERSION` in `apple/generate_project.py` (which also sets
+  `MARKETING_VERSION`). Bump the version and add its entry in the same commit;
+  `make test` fails if the current version has none. The entry's `store`
+  field is the store "What's New" text - there is no release script yet, so
+  it is copied by hand, from here and nowhere else.
+- **Shape:** a kicker, a headline, a subhead, 2-4 cards (an SF Symbol the app
+  already uses for that surface, a title of a few words, one short line, a
+  chip tint), the full notes, and the store paragraph.
+- **The copy:** written from git history, every claim true of that build.
+  Headlines may nod at pop culture and generic season beats (waiver-wire
+  Wednesday, bye weeks, trade-deadline energy, rivalry week). Never a real
+  player, club, league or broadcaster, no logos or marks, no real people,
+  politics or tragedy, family-friendly. `tests/test_whats_new.py` rejects the
+  names it knows plus `store/lobby.json`'s `avoid` list; the rest is on you.
+- **Never on a first launch** - the version is recorded as seen. An install
+  from before versions were recorded counts as an upgrade if it has written
+  `fe.host` (or the other keys in `WhatsNew.priorStateKeys`).
+- **Never under a capture, test or demo flag.** Any launch argument with one of
+  the app's capture prefixes (`-shot`, `-stadium*`, `-open*`, `-replay*`,
+  `-trail*`, ...), `FE_LEAGUE_COUNT`, the `*_SKIP` look-dev variables, XCTest,
+  or `-whatsNewOff` leaves it hidden and records nothing. A new capture flag
+  should follow those prefixes, or be added to `WhatsNew.suppression`.
+- **To look at it:** `-whatsNewPreview` (plus `-whatsNewOpenNotes` to unfold
+  the notes) shows the current entry in a debug
+  build without recording anything. `make whats-new-test` runs the Swift side.
+
 ## Layout
 
 ```

@@ -33,6 +33,7 @@ The app reads a board; it never holds a credential. That lives on the Mac.
 | `Sources/BoardView.swift` | the windowed board |
 | `Sources/ImmersiveBoard.swift` | the board placed around you |
 | `Widgets/` | WidgetKit source, not yet a target - see below |
+| `WhatsNew.json` | the release notes behind the once-per-upgrade "What's new" sheet (`packages/swift/WhatsNewKit`); see AGENTS.md |
 
 ## The model is the same model
 

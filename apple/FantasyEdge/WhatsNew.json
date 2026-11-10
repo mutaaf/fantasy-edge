@@ -1,0 +1,49 @@
+{
+  "about": "The one source of what's new, per version. The app bundles this file for its once-per-upgrade sheet (packages/swift/WhatsNewKit), and `store` is the text a store's What's New field takes. Every line must be true of the build it ships in, written from git history. No real player, team, league or broadcaster names, no logos or marks, no real people, politics or tragedy. tests/test_whats_new.py enforces what it can.",
+  "releases": [
+    {
+      "version": "1.0",
+      "kicker": "Bye-week reading",
+      "headline": "Previously, on Sunday...",
+      "subhead": "Trade-deadline energy: four new moves, and not one of them needs a waiver claim.",
+      "cards": [
+        {
+          "icon": "arrow.clockwise",
+          "title": "Be Kind, Rewind the Day",
+          "line": "Missed a Sunday? The whip-around channel can now replay a finished day, every game at once.",
+          "tint": "green"
+        },
+        {
+          "icon": "eye.slash",
+          "title": "Spoiler Alert: None",
+          "line": "Last week's games, each with a reason it's worth an hour. Final scores stay hidden until you ask.",
+          "tint": "blue"
+        },
+        {
+          "icon": "football.fill",
+          "title": "The Ball Is the Main Character",
+          "line": "Runs stay on the grass, passes drop back and throw, kicks hang - the way the play-by-play tells it.",
+          "tint": "gold"
+        },
+        {
+          "icon": "trophy.fill",
+          "title": "Hold the Confetti",
+          "line": "Banners, fireworks and the crowd now wait for the ball to land before they celebrate.",
+          "tint": "red"
+        }
+      ],
+      "notes": [
+        "Replay a whole finished day: the slate is rebuilt from each play's own timestamp, so the whip-around channel moves between games just as it did live.",
+        "Last week's games: pick one by its reason to watch - lead changes, overtime, a late winning score, a comeback. Final scores stay hidden until you turn Scores on.",
+        "Every play gets its own path: runs on the grass, passes that drop and throw, punts and kicks with real hang time. No players are drawn; the feed has no tracking data.",
+        "Touchdown and field goal celebrations hold until the ball lands, and the board's words and its score now change on the same frame.",
+        "The boards along the stadium wall carry the game: both scores, the clock, the down and distance.",
+        "The home club's colours now paint both end zones. Visitors keep their own stands and bench.",
+        "The crowd faces the field from every seat.",
+        "Tap Controls, or pinch anywhere in the stadium, to bring the panels to where you're facing.",
+        "When the board's server has a problem, the app now shows the server's own explanation instead of blaming your network."
+      ],
+      "store": "Previously, on Sunday... Replay a whole finished day on the whip-around channel. Pick last week's games by why they're worth watching, with final scores hidden until you ask. Every play now flies its own path, and celebrations wait for the ball to land. Plus: game boards along the stadium wall, home colours in both end zones, and clearer messages when the board's server has a problem."
+    }
+  ]
+}
