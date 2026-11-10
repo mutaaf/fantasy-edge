@@ -29,6 +29,9 @@ struct FantasyEdgeApp: App {
             CommandView()
                 .tracksWindow(.id("board"))
                 .modifier(StadiumLaunchArguments())
+                // Once per upgrade, on the board window only - the spaces and
+                // the volume are places you go, not where you land.
+                .fantasyEdgeWhatsNew()
                 .environment(board).environment(scene).environment(passage).environment(channel)
         }
         // .plain would mean painting our own background, which is exactly what
