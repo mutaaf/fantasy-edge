@@ -1,7 +1,7 @@
 .PHONY: test test-all saturday-test saturday-doctor saturday-replay \
 	doctor demo publish-demo report docs api board clean verify-scene whats-new-test \
 	sim sim-doctor sim-shots sim-clean \
-	device device-build device-stats device-list
+	device device-build device-stats device-list testflight testflight-validate
 
 # FANTASYEDGE_CORRECT_PLAYS=0 keeps the promise the suite is built on: no
 # network. Correcting a finished game's plays reads nflverse (truth.py), and a
@@ -116,6 +116,17 @@ device-stats:
 
 device-list:
 	apple/device.sh --list
+
+# Upload the visionOS app to TestFlight for INTERNAL testers ("Fantasy Edge Crew").
+# Runs `make test` and `make whats-new-test` first, then signing, archive, export,
+# upload, processing, What to Test (from WhatsNew.json) and the internal group.
+# Needs apple/.env.testflight (gitignored); see AGENTS.md. Never external, never review.
+testflight:
+	apple/scripts/testflight.sh
+
+# The same archive and export, checked by App Store validation, not uploaded.
+testflight-validate:
+	VALIDATE=1 apple/scripts/testflight.sh
 
 clean:
 	rm -rf data/*.db report.html

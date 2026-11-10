@@ -316,6 +316,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Fantasy Edge reads your league board from the Mac on your network.";
 				INFOPLIST_KEY_NSWorldSensingUsageDescription = "Fantasy Edge measures the table in front of you so the stadium sits on it rather than floats over it.";
 				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
 				PRODUCT_NAME = FantasyEdge;
@@ -343,6 +344,7 @@
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Fantasy Edge reads your league board from the Mac on your network.";
 				INFOPLIST_KEY_NSWorldSensingUsageDescription = "Fantasy Edge measures the table in front of you so the stadium sits on it rather than floats over it.";
 				INFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mutaaf.fantasyedge;
 				PRODUCT_NAME = FantasyEdge;
