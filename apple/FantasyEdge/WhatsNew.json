@@ -1,11 +1,11 @@
 {
-  "about": "The one source of what's new, per version. The app bundles this file for its once-per-upgrade sheet (packages/swift/WhatsNewKit), and `store` is the text a store's What's New field takes. Every line must be true of the build it ships in, written from git history. No real player, team, league or broadcaster names, no logos or marks, no real people, politics or tragedy. tests/test_whats_new.py enforces what it can.",
+  "about": "The one source of what's new, per version. The app bundles this file for its once-per-upgrade sheet (packages/swift/WhatsNewKit), and `store` is the text a store's What's New field takes. Every line must be true of the build it ships in, written from git history. No real player, team, league or broadcaster names, no logos or marks, no real people, politics or tragedy. tests/test_whats_new.py enforces what it can. A card may carry a `destination` (one of WhatsNewDestination's cases in Sources/WhatsNew.swift: `lastWeek`, `game`); it becomes a 'Show me' callout that closes the sheet and opens that place. Leave it out for a change with nowhere to go. To look at it in a debug build without recording a version: launch with `-whatsNewPreview`, add `-whatsNewTap <destination>` to press that callout, `-whatsNewOpenNotes` to unfold the notes.",
   "releases": [
     {
       "version": "1.0",
-      "kicker": "Bye-week reading",
+      "kicker": "Post-deadline edition",
       "headline": "Previously, on Sunday...",
-      "subhead": "Trade-deadline energy: four new moves, and not one of them needs a waiver claim.",
+      "subhead": "The trade window slammed shut on November 10. These four moves never needed a counter-offer.",
       "cards": [
         {
           "icon": "arrow.clockwise",
@@ -17,13 +17,15 @@
           "icon": "eye.slash",
           "title": "Spoiler Alert: None",
           "line": "Last week's games, each with a reason it's worth an hour. Final scores stay hidden until you ask.",
-          "tint": "blue"
+          "tint": "blue",
+          "destination": "lastWeek"
         },
         {
           "icon": "football.fill",
           "title": "The Ball Is the Main Character",
           "line": "Runs stay on the grass, passes drop back and throw, kicks hang - the way the play-by-play tells it.",
-          "tint": "gold"
+          "tint": "gold",
+          "destination": "game"
         },
         {
           "icon": "trophy.fill",

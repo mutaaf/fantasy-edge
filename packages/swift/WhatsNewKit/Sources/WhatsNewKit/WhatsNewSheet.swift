@@ -12,6 +12,10 @@ public struct WhatsNewSheet: View {
     public let release: Release
     /// The app's own art for the hero - on Fantasy Edge, the ball off its icon.
     public let art: Image?
+    /// The destinations the app can open; a card naming any other stays plain.
+    public let destinations: Set<String>
+    /// Closes the sheet and opens a card's destination.
+    public let go: (String) -> Void
     public let dismiss: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,9 +33,12 @@ public struct WhatsNewSheet: View {
         #endif
     }
 
-    public init(release: Release, art: Image? = nil, dismiss: @escaping () -> Void) {
+    public init(release: Release, art: Image? = nil, destinations: Set<String> = [],
+                go: @escaping (String) -> Void = { _ in }, dismiss: @escaping () -> Void) {
         self.release = release
         self.art = art
+        self.destinations = destinations
+        self.go = go
         self.dismiss = dismiss
     }
 
@@ -41,7 +48,7 @@ public struct WhatsNewSheet: View {
                 hero
                 VStack(spacing: 12) {
                     ForEach(Array(release.cards.enumerated()), id: \.element.id) { i, card in
-                        CardRow(card: card)
+                        CardRow(card: card, destination: card.callout(known: destinations), go: go)
                             .opacity(shown ? 1 : 0)
                             .offset(y: shown || reduceMotion ? 0 : 14)
                             .animation(reduceMotion ? nil : .spring(duration: 0.55, bounce: 0.25)
@@ -134,10 +141,29 @@ public struct WhatsNewSheet: View {
     }
 }
 
+/// A card. One with a destination is a button: the whole card is the target,
+/// and a "Show me" chip on its trailing edge says so before anybody has to
+/// find out by tapping - the same offered-not-discovered rule as the board's
+/// chevrons.
 private struct CardRow: View {
     let card: Release.Card
+    let destination: String?
+    let go: (String) -> Void
 
     var body: some View {
+        if let destination {
+            Button { go(destination) } label: { row }
+                .buttonStyle(.plain)
+                #if os(visionOS) || os(iOS)
+                .hoverEffect(.highlight)
+                #endif
+                .accessibilityHint("Closes what's new and opens it")
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
         HStack(spacing: 16) {
             Image(systemName: card.icon)
                 .font(.title2.weight(.bold))
@@ -160,9 +186,22 @@ private struct CardRow: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
+            if destination != nil {
+                HStack(spacing: 4) {
+                    Text("Show me")
+                    Image(systemName: "arrow.up.right")
+                }
+                .font(.caption.weight(.heavy))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(Capsule().fill(WhatsNewPalette.chip(card.tint)))
+                .fixedSize()
+                .accessibilityHidden(true)
+            }
         }
         .padding(14)
         .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.regularMaterial))
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }
@@ -243,12 +282,18 @@ public extension View {
     ///     used would have written; see `WhatsNewGate.decide(priorInstall:)`.
     ///   - suppression: the app's capture, test and demo flags.
     ///
+    ///   - destinations: the card destinations the app routes, and `open`,
+    ///     which takes one there. It runs after the sheet has gone, so the
+    ///     destination may present a sheet of its own.
+    ///
     /// `-whatsNewPreview` on the launch line shows the sheet in a debug build
-    /// without recording anything, so it can be screenshotted.
+    /// without recording anything, so it can be screenshotted; add
+    /// `-whatsNewTap <destination>` to press that callout once it is up.
     func whatsNew(_ notes: ReleaseNotes?, art: Image? = nil, priorStateKeys: [String] = [],
-                  suppression: WhatsNewSuppression = .init()) -> some View {
+                  suppression: WhatsNewSuppression = .init(), destinations: Set<String> = [],
+                  open: @escaping (String) -> Void = { _ in }) -> some View {
         modifier(WhatsNewPresenter(notes: notes, art: art, priorStateKeys: priorStateKeys,
-                                   suppression: suppression))
+                                   suppression: suppression, destinations: destinations, open: open))
     }
 }
 
@@ -257,30 +302,62 @@ private struct WhatsNewPresenter: ViewModifier {
     let art: Image?
     let priorStateKeys: [String]
     let suppression: WhatsNewSuppression
+    let destinations: Set<String>
+    let open: (String) -> Void
     @State private var release: Release?
     @State private var decided = false
+    /// Where a callout asked to go, held until the sheet has finished leaving:
+    /// presenting the destination's own sheet while this one is still on
+    /// screen is refused by SwiftUI, silently.
+    @State private var pending: String?
+
+    private static var force: WhatsNewForce {
+        #if DEBUG
+        WhatsNewForce(arguments: ProcessInfo.processInfo.arguments, isDebug: true)
+        #else
+        WhatsNewForce(arguments: [], isDebug: false)
+        #endif
+    }
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $release) { r in
-                WhatsNewSheet(release: r, art: art) { release = nil }
+            .sheet(item: $release, onDismiss: {
+                if let d = pending { pending = nil; open(d) }
+            }) { r in
+                WhatsNewSheet(release: r, art: art, destinations: destinations,
+                              go: { go($0) }, dismiss: { release = nil })
             }
             .task {
                 guard !decided else { return }
                 decided = true
                 release = Self.evaluate(notes: notes, priorStateKeys: priorStateKeys, suppression: suppression)
+                // The debug tap: the same `go` a finger runs, once the cards
+                // have settled, so a screenshot shows where it landed.
+                if let tap = Self.force.tap, let r = release,
+                   r.cards.contains(where: { $0.callout(known: destinations) == tap }) {
+                    try? await Task.sleep(for: .seconds(3))
+                    go(tap)
+                }
             }
+    }
+
+    private func go(_ destination: String) {
+        pending = destination
+        release = nil
     }
 
     static func evaluate(notes: ReleaseNotes?, priorStateKeys: [String],
                          suppression: WhatsNewSuppression) -> Release? {
         let info = ProcessInfo.processInfo
         let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-        #if DEBUG
-        if info.arguments.contains("-whatsNewPreview") {
-            return current.flatMap { notes?.release(for: $0) } ?? notes?.releases.first
+        if force.preview {
+            // Forced: the current version's entry, else the newest, and the
+            // store is not touched (`WhatsNewGate.decide(forced:)`).
+            let r = current.flatMap { notes?.release(for: $0) } ?? notes?.releases.first
+            let d = WhatsNewGate.decide(current: current, seen: nil, priorInstall: false,
+                                        hasNotes: r != nil, suppressed: false, forced: true)
+            return d.show ? r : nil
         }
-        #endif
         let defaults = UserDefaults.standard
         let decision = WhatsNewGate.decide(
             current: current,

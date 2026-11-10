@@ -12,6 +12,8 @@ struct FantasyEdgeApp: App {
     @State private var channel: RedZoneChannel
     /// What was open before the stadium, so leaving it restores exactly that.
     @State private var passage = StadiumPassage(frontDoor: .id("board"))
+    /// Where a "What's new" callout is taking the board window.
+    @State private var whatsNewRoute = WhatsNewRoute()
 
     init() {
         let b = Board()
@@ -31,8 +33,9 @@ struct FantasyEdgeApp: App {
                 .modifier(StadiumLaunchArguments())
                 // Once per upgrade, on the board window only - the spaces and
                 // the volume are places you go, not where you land.
-                .fantasyEdgeWhatsNew()
+                .fantasyEdgeWhatsNew(whatsNewRoute)
                 .environment(board).environment(scene).environment(passage).environment(channel)
+                .environment(whatsNewRoute)
         }
         // .plain would mean painting our own background, which is exactly what
         // made the first version fight the room. Let the system own the glass.

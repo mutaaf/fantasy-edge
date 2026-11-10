@@ -47,5 +47,24 @@ public struct Release: Decodable, Equatable, Sendable, Identifiable {
         public var line: String
         /// `green`, `gold`, `red` or `blue`: which opaque chip the icon sits on.
         public var tint: String
+        /// Where the card takes you, in the app's own words (`lastWeek`,
+        /// `game`, ...). Absent for a change that has no place to go - a
+        /// celebration that waits for the ball is not a screen. The app says
+        /// which names it knows; see `callout(known:)`.
+        public var destination: String?
+
+        public init(icon: String, title: String, line: String, tint: String, destination: String? = nil) {
+            self.icon = icon; self.title = title; self.line = line; self.tint = tint
+            self.destination = destination
+        }
+
+        /// The destination this card can actually open, or nil for a plain
+        /// card. A name the app does not route stays plain rather than
+        /// becoming a button that closes the sheet and goes nowhere - which
+        /// is what a notes file written ahead of the build would otherwise do.
+        public func callout(known: Set<String>) -> String? {
+            guard let d = destination, !d.isEmpty, known.contains(d) else { return nil }
+            return d
+        }
     }
 }
