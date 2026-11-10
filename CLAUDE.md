@@ -253,8 +253,9 @@ side is `apple/FantasyEdge/Sources/WhatsNew.swift`.
   `VERSION` in `apple/generate_project.py` (which also sets
   `MARKETING_VERSION`). Bump the version and add its entry in the same commit;
   `make test` fails if the current version has none. The entry's `store`
-  field is the store "What's New" text - there is no release script yet, so
-  it is copied by hand, from here and nowhere else.
+  field is the store "What's New" text, copied by hand from here and nowhere
+  else; TestFlight's What to Test is built from the same entry by
+  `make testflight`.
 - **Shape:** a kicker, a headline, a subhead, 2-4 cards (an SF Symbol the app
   already uses for that surface, a title of a few words, one short line, a
   chip tint), the full notes, and the store paragraph.
@@ -275,6 +276,41 @@ side is `apple/FantasyEdge/Sources/WhatsNew.swift`.
 - **To look at it:** `-whatsNewPreview` (plus `-whatsNewOpenNotes` to unfold
   the notes) shows the current entry in a debug
   build without recording anything. `make whats-new-test` runs the Swift side.
+
+## TestFlight, internal only
+
+```bash
+make testflight            # tests, signing, archive, export, upload, wait, What to Test, internal group
+make testflight-validate   # the same archive, checked by App Store validation, not uploaded
+node apple/scripts/asc.mjs status          # the last five builds and their processing state
+```
+
+`apple/scripts/testflight.sh` and `apple/scripts/asc.mjs` (no dependencies;
+Node signs the API JWT) ship the visionOS app to App Store Connect app
+6833213130, "Fantasy Edge: Game Day" (the plain name was taken; the in-app
+name stays Fantasy Edge), bundle id `com.mutaaf.fantasyedge`.
+
+- **Credentials:** `apple/.env.testflight` - `TEAM_ID`, `ASC_KEY_ID`,
+  `ASC_ISSUER_ID`, `ASC_KEY_PATH` - the same team and key as the other apps.
+  Gitignored, never committed, never printed. Missing means ask the user.
+- **Signing:** the key is an App Manager key, which cannot use Xcode cloud
+  signing. `asc.mjs signing` uses the shared Apple Distribution certificate
+  from our own CSR in `~/.appstoreconnect/signing/` and recreates the
+  "Fantasy Edge App Store" profile (`IOS_APP_STORE`: visionOS has no profile
+  type of its own) on every run. The archive signs for development; the
+  export re-signs manually for distribution.
+- **Version and build:** `VERSION` in `apple/generate_project.py`; the build
+  number is the UTC timestamp `YYYYMMDDHHMM`, passed on the command line, so
+  nothing is committed per upload.
+- **What to Test** comes from that version's `WhatsNew.json` entry (headline,
+  subhead, the notes); no entry, no upload.
+- **Testers:** internal group "Fantasy Edge Crew" (access to all builds), and
+  `asc.mjs crew` adds every App Store Connect team member to it.
+- **Export compliance:** the Info.plist says
+  `ITSAppUsesNonExemptEncryption = NO`, so builds are testable without a
+  compliance answer in the browser.
+- **Never** an external group, Beta App Review or App Review submission from
+  these scripts. Those reach people outside the team and need the user.
 
 ## Layout
 

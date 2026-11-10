@@ -251,6 +251,10 @@ def main() -> None:
         f'measures the table in front of you so the stadium sits on it rather '
         f'than floats over it.";\n'
         f'\t\t\t\tINFOPLIST_KEY_UIApplicationSupportsMultipleScenes = YES;\n'
+        # HTTPS to public hosts and plain HTTP on the LAN only: exempt. Without
+        # the key every TestFlight build sits at "Missing Compliance" and no
+        # internal tester can install it until someone answers in the browser.
+        f'\t\t\t\tINFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;\n'
         f'\t\t\t\tGENERATE_INFOPLIST_FILE = YES;\n'
         f'\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {BUNDLE};\n'
         f'\t\t\t\tPRODUCT_NAME = FantasyEdge;\n'
