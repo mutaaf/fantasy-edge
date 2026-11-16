@@ -144,6 +144,24 @@ side is `apple/FantasyEdge/Sources/WhatsNew.swift`.
   The same three flags are listed in `WhatsNew.json`'s `about`.
   `make whats-new-test` runs the Swift side.
 
+## Usage events (from 1.0.1)
+
+The headset app sends two counts to Box Office (mutaaf/box-office rule 6, the
+owner's call 2026-11-16, Cold Gas's design): `session_start` and `space_open`
+(`board`, `board_space`, `tabletop`, `stadium`). The vocabulary, queue and
+bytes are `packages/swift/UsageKit` (`make usage-test`); the sender is
+`apple/FantasyEdge/Sources/Usage.swift`, which POSTs to
+`https://mutaafaziz.com/boxoffice/e/batch/` with `Referer:
+https://mutaaf.github.io/fantasy-edge/` (the relay admits by the Cast List
+page). Numbers and enums only - **never a league, team, player, host or
+anything typed** - a random install id in UserDefaults, `$geoip_disable`, no
+SDK, IDFA or ATT. The gear's Privacy section has the switch (`fe.usage`,
+default on; off deletes the queue and id). Debug builds send nothing unless
+launched with `-insights` (`-insights-dry` prints). The App Privacy label is
+"Data Not Collected" up to 1.0 and must change by hand to Product Interaction
++ Device ID (Analytics, linked, not tracking) **in the same submission as
+1.0.1**: `store/app-privacy.md`.
+
 ## TestFlight, internal only
 
 ```bash

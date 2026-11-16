@@ -14,12 +14,16 @@ struct FantasyEdgeApp: App {
     @State private var passage = StadiumPassage(frontDoor: .id("board"))
     /// Where a "What's new" callout is taking the board window.
     @State private var whatsNewRoute = WhatsNewRoute()
+    /// The usage events' clock: a batch on the way to the background, a new
+    /// session after half an hour away (`Usage.swift`).
+    @Environment(\.scenePhase) private var phase
 
     init() {
         let b = Board()
         _board = State(initialValue: b)
         _scene = State(initialValue: SceneFeed(base: { "http://\(b.host)" }))
         _channel = State(initialValue: RedZoneChannel(base: { "http://\(b.host)" }))
+        Usage.shared.sessionStart()
     }
 
     var body: some Scene {
@@ -36,7 +40,9 @@ struct FantasyEdgeApp: App {
                 .fantasyEdgeWhatsNew(whatsNewRoute)
                 .environment(board).environment(scene).environment(passage).environment(channel)
                 .environment(whatsNewRoute)
+                .onAppear { Usage.shared.opened("board") }
         }
+        .onChange(of: phase) { old, new in Usage.shared.phase(old, new) }
         // .plain would mean painting our own background, which is exactly what
         // made the first version fight the room. Let the system own the glass.
         .windowStyle(.plain)
@@ -60,6 +66,7 @@ struct FantasyEdgeApp: App {
             // The space owns its own detail panel now: a sheet cannot be
             // presented into an immersive space, so the card is placed in it.
             ImmersiveBoard().environment(board).environment(scene).environment(passage).environment(channel)
+                .onAppear { Usage.shared.opened("board_space") }
         }
         // Mixed keeps the room; progressive lets the wearer dial it up with
         // the crown; full is there now too. Mixed stays the *default* for the
@@ -73,6 +80,7 @@ struct FantasyEdgeApp: App {
         WindowGroup(id: "tabletop", for: String.self) { $value in
             TabletopHost(value: value ?? StadiumHost.replayWindow)
                 .environment(board).environment(scene).environment(passage).environment(channel)
+                .onAppear { Usage.shared.opened("tabletop") }
         }
         .windowStyle(.volumetric)
         // presentation.tabletop.volume: sized for the two-deck bowl on its
@@ -93,6 +101,7 @@ struct FantasyEdgeApp: App {
         // the room is the scene and the stadium is a smear at its edge.
         ImmersiveSpace(id: "stadium") {
             StadiumHostSpace().environment(board).environment(scene).environment(passage).environment(channel)
+                .onAppear { Usage.shared.opened("stadium") }
         }
         .immersionStyle(selection: style(\.stadiumStyle, progressive: Self.stadiumDial),
                         in: Self.stadiumDial, .full)

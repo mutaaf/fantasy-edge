@@ -321,6 +321,7 @@ struct HostSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @State private var watch = ""
+    @State private var usage = Usage.shared.enabled
 
     var body: some View {
         NavigationStack {
@@ -362,6 +363,20 @@ struct HostSheet: View {
                          + "weakening every other request it makes to allow it. "
                          + "Nothing is bundled: point it at whatever you are "
                          + "already watching.")
+                }
+                // 1.0.1: the usage counts the app sends, and the one switch
+                // that stops them (off deletes the queue and the install id).
+                Section {
+                    Toggle("Share usage stats", isOn: $usage)
+                        .onChange(of: usage) { _, v in Usage.shared.setOn(v) }
+                        .accessibilityIdentifier("usage")
+                } header: {
+                    Text("Privacy")
+                } footer: {
+                    Text("Counts like the app opened or the stadium entered, and a random "
+                         + "id made on this device, sent to mutaafaziz.com. Never a league, "
+                         + "team, player, address or anything you type, and no location or "
+                         + "advertising id. Off sends nothing and deletes the id.")
                 }
             }
             .navigationTitle("Where is the board?")
