@@ -1,5 +1,5 @@
 .PHONY: test test-all saturday-test saturday-doctor saturday-replay \
-	doctor demo publish-demo report docs api board clean verify-scene whats-new-test \
+	doctor demo publish-demo report docs api board clean verify-scene whats-new-test usage-test \
 	sim sim-doctor sim-shots sim-clean \
 	device device-build device-stats device-list testflight testflight-validate
 
@@ -79,6 +79,11 @@ verify-moment:
 # Mac with SwiftPM; the copy rules themselves are in `make test`.
 whats-new-test:
 	cd packages/swift/WhatsNewKit && swift test
+
+# The usage events' pure half (packages/swift/UsageKit): vocabulary, queue,
+# switch, the batch's bytes. store/app-privacy.md is the label it answers to.
+usage-test:
+	cd packages/swift/UsageKit && swift test
 
 verify-crowd:
 	swiftc -parse-as-library -o .work/verify-crowd \
