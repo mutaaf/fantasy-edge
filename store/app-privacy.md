@@ -45,8 +45,8 @@ from this app?" **Yes**. Tick Usage Data → *Product Interaction* and Identifie
 2026-11-13; every native app follows that design). **Tracking: No**: nothing is combined with other companies' data and
 nothing goes to an ad network or broker.
 
-A label with data collected needs a **privacy policy URL** on the app record. The app's Cast List page
-(https://mutaaf.github.io/fantasy-edge/) has no privacy page yet; one must exist and be set before 1.0.1 is submitted.
+A label with data collected needs a **privacy policy URL** on the app record: **https://mutaaf.github.io/fantasy-edge/privacy.html**
+(`docs/privacy.html`, 2026-11-16; set on the app record's en-US App Information the same day). Change it together with this file.
 
 ## The privacy manifest
 

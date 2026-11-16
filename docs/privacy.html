@@ -1,0 +1,83 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>
+<title>Privacy - Fantasy Edge</title>
+<meta name=description content='What Fantasy Edge collects: nothing on this website; on Apple Vision Pro, from 1.0.1, two anonymous usage counts you can switch off.'>
+<link rel=icon type='image/svg+xml' href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231e5b2a'/%3E%3Crect x='8' y='0' width='10' height='64' fill='%2324642e'/%3E%3Crect x='30' y='0' width='10' height='64' fill='%2324642e'/%3E%3Crect x='52' y='0' width='10' height='64' fill='%2324642e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Figtree:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<!--
+  The privacy policy for the website and the Apple Vision Pro app. Same materials as index.html.
+  It must stay true to store/app-privacy.md (the App Store label) and AGENTS.md; change them together.
+  No script, no third party beyond the typefaces the front page already names.
+-->
+<style>
+:root{--navy-900:#050f38;--navy-700:#0f2472;--green:#5bc236;--amber:#ffb020;
+  --hair:rgba(255,255,255,.16);--ink:#fff;--ink-dim:rgba(255,255,255,.74);--ink-faint:rgba(255,255,255,.46);
+  --card:rgba(255,255,255,.055);
+  --ui:"Figtree",-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  --display:"Anton",'Arial Narrow',sans-serif;--cond:"Barlow Condensed",'Helvetica Neue Condensed',sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--navy-900);color:var(--ink);font:400 17px/1.6 var(--ui);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(60% 40% at 50% 0%,rgba(91,194,54,.16),transparent 70%),
+  repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(255,255,255,.035) calc(10% - 1px) 10%)}
+.wrap{max-width:760px;margin:0 auto;padding:56px 16px 72px}
+.kicker{font:700 14px/1 var(--cond);letter-spacing:.18em;text-transform:uppercase;color:var(--green)}
+h1{font:400 clamp(44px,9vw,76px)/.95 var(--display);margin:12px 0 18px;letter-spacing:.01em;text-transform:uppercase}
+.lede{font-size:20px;color:var(--ink-dim);margin:0 0 36px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 44px}
+@media (max-width:560px){.split{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:20px}
+.card .big{font:400 34px/1 var(--display);text-transform:uppercase;margin:6px 0 8px}
+.card .big.g{color:var(--green)}.card .big.a{color:var(--amber)}
+.card p{margin:0;color:var(--ink-dim);font-size:15px}
+h2{font:700 24px/1.2 var(--cond);letter-spacing:.06em;text-transform:uppercase;margin:44px 0 10px;
+  padding-top:18px;border-top:1px solid var(--hair)}
+p,li{color:var(--ink-dim)} b{color:var(--ink)}
+ul{padding-left:20px} li{margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:10px 0}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--hair);vertical-align:top}
+th{font:700 13px/1.2 var(--cond);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+a{color:var(--green)} a:hover{color:#fff}
+footer{margin-top:56px;color:var(--ink-faint);font-size:14px}
+</style></head><body><div class=wrap>
+
+<div class=kicker>Fantasy Edge &middot; Privacy</div>
+<h1>Your league stays yours</h1>
+<p class=lede>Nothing about your leagues, teams or players ever reaches us. The only thing we count is how the headset app is used, and you can switch that off.</p>
+
+<div class=split>
+  <div class=card><div class=kicker>This website</div><div class="big g">Nothing</div>
+    <p>No server, no account, no cookies, no analytics. Your connection lives in this browser only.</p></div>
+  <div class=card><div class=kicker>Vision Pro app</div><div class="big a">Two counts</div>
+    <p>From version 1.0.1: a session started, and which space you opened. Off with one switch.</p></div>
+</div>
+
+<h2>The website</h2>
+<p>These pages are plain files on GitHub Pages. Your Sleeper username, ESPN league id and team choice are saved in your browser's <b>localStorage</b> and read by nothing but these pages. Your browser talks directly to Sleeper and ESPN's public endpoints to load your league, and to Google Fonts for the typefaces; we never see any of it. <b>Forget this browser</b> on the board, or clearing your browser data, erases it.</p>
+
+<h2>The Apple Vision Pro app</h2>
+<p>The app reads your board from your own Mac on your home network, plays a video address you paste, and writes its summaries on the headset with Apple Intelligence. None of that leaves your network or reaches us.</p>
+<p><b>Up to version 1.0 the app sends us nothing.</b> <b>From version 1.0.1</b> it sends a few usage counts, so we can see which parts of the app are used:</p>
+<table>
+  <tr><th>What</th><th>Details</th></tr>
+  <tr><td><b>session_start</b></td><td>Whether you've opened the app before, and how many days since you last did.</td></tr>
+  <tr><td><b>space_open</b></td><td>Which space you opened: the board, the immersive board, the tabletop or the stadium.</td></tr>
+  <tr><td><b>Install id</b></td><td>A random id made on your headset the first time a count is kept. Deleting the app resets it.</td></tr>
+  <tr><td><b>App facts</b></td><td>The app's version and that it runs on visionOS.</td></tr>
+</table>
+<p><b>Never sent:</b> your name, leagues, teams, managers or players, your board's address, any video address, anything you type, your location, or an advertising id. There's no tracking prompt because nothing tracks you, no ads, no session recording, and no third-party SDK.</p>
+<p><b>Where it goes:</b> the counts go to our own relay at mutaafaziz.com, which strips cookies and shortens your IP address before forwarding them to our analytics service, PostHog (US). No location is worked out from them. They are used only to improve the app, never sold, never shared with advertisers, and never combined with data from other companies.</p>
+<p><b>Turning it off:</b> open the gear, then <b>Privacy</b>, and switch off <b>Share usage stats</b>. That stops the counts and deletes the install id and anything not yet sent.</p>
+
+<h2>Children</h2>
+<p>Fantasy Edge is a fantasy football tool for adults and isn't directed at children under 13.</p>
+
+<h2>Your requests</h2>
+<p>Because we hold no name, email or account, the counts can't be traced back to you. To ask about them, or to have the counts for your install id deleted, contact us through <a href="https://mutaafaziz.com/contact/">mutaafaziz.com/contact</a>. The switch above deletes your id immediately on the headset.</p>
+
+<h2>Changes</h2>
+<p>If what the app collects ever changes, this page and the App Store's privacy details change in the same release.</p>
+
+<footer>Effective 16 November 2026 &middot; <a href="./">Connect your leagues</a> &middot; <a href="demo.html">Demo board</a> &middot; <a href="https://github.com/mutaaf/fantasy-edge">Source</a></footer>
+</div></body></html>
